@@ -1,0 +1,25 @@
+{
+    "name": "hydrofrontend",
+    "version": "0.0.0",
+    "main": "vj5/development.js",
+    "repository": "https://github.com/masnn/vj5.git",
+    "author": "masnn",
+    "license": "MIT",
+    "dependencies": {
+        "amqplib": "^0.5.5",
+        "axios": "^0.19.0",
+        "bson": "^4.0.2",
+        "js-yaml": "^3.13.1",
+        "koa": "^2.11.0",
+        "koa-body": "^4.1.1",
+        "koa-morgan": "^1.0.1",
+        "koa-router": "^7.4.0",
+        "lodash": "^4.17.15",
+        "mongodb": "^3.3.4",
+        "nodemailer": "^6.3.1",
+        "sockjs": "^0.3.20"
+    },
+    "devDependencies": {
+        "eslint": "^6.6.0"
+    }
+}

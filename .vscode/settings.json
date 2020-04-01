@@ -1,0 +1,7 @@
+{
+    "files.autoSave": "onFocusChange",
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
+    "editor.detectIndentation": false,
+    "editor.formatOnSave": false
+}
