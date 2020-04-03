@@ -1,5 +1,4 @@
 const
-    domain = require('./domain'),
     validator = require('../lib/validator'),
     { ValidationError, ContestNotFoundError } = require('../error'),
     RULE_HOMEWORK = require('../module/contest/homework'),
@@ -18,37 +17,37 @@ const RULES = {
 
 module.exports = {
     RULES,
-    async add(domainId, title, content, owner, rule,
+    async add(title, content, owner, rule,
         beginAt = new Date(), endAt = new Date(), pids = [], data) {
         validator.checkTitle(title);
         validator.checkContent(content);
         if (!this.RULES[rule]) throw new ValidationError('rule');
         if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
-        Object.assign(data, { domainId, content, owner, title, rule, beginAt, endAt, pids, attend: 0 });
+        Object.assign(data, { content, owner, title, rule, beginAt, endAt, pids, attend: 0 });
         this.RULES[rule].check(data);
         return await coll.insertOne(data);
     },
     count: query => coll.find(query).count(),
-    async edit(domainId, cid, $set) {
+    async edit(cid, $set) {
         if ($set.title) validator.checkTitle($set.title);
         if ($set.content) validator.checkIntro($set.content);
         if ($set.rule)
             if (!this.RULES[$set.rule]) throw new ValidationError('rule');
         if ($set.beginAt && $set.endAt)
             if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
-        let cdoc = await coll.findOne({ domainId, cid });
-        if (!cdoc) throw new ContestNotFoundError(domainId, cid);
+        let cdoc = await coll.findOne({ cid });
+        if (!cdoc) throw new ContestNotFoundError(cid);
         this.RULES[$set.rule || cdoc.rule].check(Object.assign(cdoc, $set));
-        await coll.findOneAndUpdate({ domainId, cid }, { $set });
+        await coll.findOneAndUpdate({ cid }, { $set });
         return cdoc;
     },
-    async get(domainId, cid) {
-        let tdoc = await coll.findOne({ domainId, cid });
-        if (!tdoc) throw new ContestNotFoundError(domainId, cid);
+    async get( cid) {
+        let tdoc = await coll.findOne({ cid });
+        if (!tdoc) throw new ContestNotFoundError(cid);
         return tdoc;
     },
-    get_multi: (domainId, query, fields) => coll.find(Object.assign({ domainId }, query), { fields }),
-    get_multi_status: (query, fields) => coll.find(query, { fields }),
+    get_multi: (query, fields) => coll.find(query, { fields }),
+    get_multi_status: (query, fields) => coll_status.find(query, { fields }),
     async get_random_id(query) {
         let pdocs = coll.find(query);
         let pcount = await pdocs.count();
@@ -57,8 +56,8 @@ module.exports = {
             return pdoc.pid;
         } else return null;
     },
-    get_status: (domainId, cid, uid, fields) => coll_status.findOne({ domainId, cid, uid }, { fields }),
-    set_status: (domainId, cid, uid, $set) => coll_status.findOneAndUpdate({ domainId, cid, uid }, { $set })
+    get_status: (cid, uid, fields) => coll_status.findOne({ cid, uid }, { fields }),
+    set_status: (cid, uid, $set) => coll_status.findOneAndUpdate({ cid, uid }, { $set })
 };
 
 /*
@@ -321,7 +320,7 @@ class ContestCommonOperationMixin(object):
                                     fields={'doc_id': 1}) \
                          .sort('doc_id', 1) \
                          .to_list()
-    exist_pids = [pdoc['doc_id'] for pdoc in pdocs]
+    exist_pids = [pdoc['_id'] for pdoc in pdocs]
     if len(pids) != len(exist_pids):
       for pid in pids:
         if pid not in exist_pids:

@@ -1,6 +1,8 @@
 let permissions = {
     PERM_NONE: '0',
     PERM_ALL: '-',
+    PERM_LOGGEDIN: '~',
+    PERM_REGISTER_USER: '+',
     PERM_VIEW: '1',
     PERM_EDIT_PERM: '2',
     PERM_MOD_BADGE: '3',
@@ -38,7 +40,7 @@ let permissions = {
     PERM_EDIT_CONTEST: 'Z',
     PERM_VIEW_TRAINING: 'a',
     PERM_CREATE_TRAINING: 'b',
-    PERM_EDIT_TRAINING: 'c'
+    PERM_EDIT_TRAINING: 'c',
 };
 permissions.PERM_BASIC =
     permissions.PERM_VIEW +
@@ -46,7 +48,8 @@ permissions.PERM_BASIC =
     permissions.PERM_VIEW_PROBLEM_SOLUTION +
     permissions.PERM_VIEW_DISCUSSION +
     permissions.PERM_VIEW_CONTEST +
-    permissions.PERM_VIEW_CONTEST_SCOREBOARD;
+    permissions.PERM_VIEW_CONTEST_SCOREBOARD +
+    permissions.PERM_REGISTER_USER;
 permissions.PERM_DEFAULT =
     permissions.PERM_VIEW +
     permissions.PERM_VIEW_PROBLEM +
@@ -62,6 +65,7 @@ permissions.PERM_DEFAULT =
     permissions.PERM_VIEW_CONTEST_SCOREBOARD +
     permissions.PERM_ATTEND_CONTEST +
     permissions.PERM_VIEW_TRAINING +
-    permissions.PERM_CREATE_TRAINING;
+    permissions.PERM_CREATE_TRAINING +
+    permissions.PERM_LOGGEDIN;
 permissions.PERM_ADMIN = permissions.PERM_ALL;
 module.exports = permissions;

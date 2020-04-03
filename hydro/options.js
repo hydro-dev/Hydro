@@ -12,7 +12,9 @@ let options = {
         username: '',
         password: ''
     },
-    mq: '',
+    template: {
+        path: path.join(__dirname, '..', 'templates')
+    },
     listen: {
         host: '127.0.0.1',
         port: 8888,

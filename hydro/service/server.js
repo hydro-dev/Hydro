@@ -1,12 +1,50 @@
+const
+    Koa = require('koa'),
+    morgan = require('koa-morgan'),
+    Body = require('koa-body'),
+    Router = require('koa-router'),
+    SockJS = require('sockjs');
+
 const options = require('../options');
+
 let http = options.listen.https ? require('https') : require('http');
-let app = new (require('koa'))();
+let app = new Koa();
 let server = http.createServer(app.callback());
 app.keys = options.session.keys;
-app.use(require('koa-morgan')(':method :url :status :res[content-length] - :response-time ms'));
-app.use(require('koa-body')());
-let router = (new require('koa-router'))();
-const sockjs = require('sockjs');
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+app.use(Body());
+
+let router = new Router();
+let contexts = [];
+function CONTEXT() {
+    this.router = new Router();
+    /**
+     * @param {import('koa').Middleware} middleware 
+     */
+    function MIDDLEWARE(middleware) {
+        router.use(middleware);
+    }
+    /**
+     * @param {string} route 
+     * @param {...import('koa').Middleware} handler 
+     */
+    function GET(route, ...handler) {
+        router.get(route, ...handler);
+    }
+    /**
+     * @param {string} route 
+     * @param {...import('koa').Middleware} handler 
+     */
+    function POST(route, ...handler) {
+        router.post(route, ...handler);
+    }
+    this.MIDDLEWARE = MIDDLEWARE;
+    this.GET = GET;
+    this.POST = POST;
+    contexts.push(this);
+    return this;
+}
+
 /**
  * @param {import('koa').Middleware} middleware 
  */
@@ -36,16 +74,19 @@ function POST(route, ...handler) {
  * @param {SockJSHandler} handler
  */
 function SOCKET(prefix, handler) {
-    const sock = sockjs.createServer({ prefix });
+    const sock = SockJS.createServer({ prefix });
     sock.on('connection', handler);
     sock.installHandlers(server);
 }
+exports.CONTEXT = CONTEXT;
 exports.MIDDLEWARE = MIDDLEWARE;
 exports.GET = GET;
 exports.POST = POST;
 exports.SOCKET = SOCKET;
 exports.start = function start() {
     app.use(router.routes()).use(router.allowedMethods());
+    for (let c of contexts)
+        app.use(c.router.routes()).use(c.router.allowedMethods());
     app.listen(options.listen.port);
     console.log('Server listening at: %s', options.listen.port);
 };

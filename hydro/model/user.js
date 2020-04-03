@@ -1,28 +1,19 @@
 const
-    { UserNotFoundError, UserAlreadyExistError, DomainNotFoundError,
-        UserAlreadyDomainMemberError } = require('../error'),
+    { UserNotFoundError, UserAlreadyExistError } = require('../error'),
     system = require('./system'),
-    domain = require('./domain'),
     { pwhash, validator } = require('../utils'),
     db = require('../service/db.js'),
     coll = db.collection('user'),
-    coll_domain = db.collection('domain_user');
+    coll_role = db.collection('role');
 
 class USER {
-    constructor(user, domainUser = {}) {
-        if (!user) throw new UserNotFoundError();
+    constructor(user) {
         this._id = user._id;
         this.email = user.email;
         this.uname = user.uname;
-        this.priv = user.priv;
         this.salt = user.salt;
         this.hash = user.hash;
-        this.perm = domainUser.perm || '0';
-        this.displayName = domainUser.displayName || null;
-        this.domainId = domainUser.domainId || 'system';
-    }
-    hasPriv(priv) {
-        return this.priv & priv;
+        this.perm = user.perm;
     }
     hasPerm(perm) {
         console.log('PERM', perm, this.perm);
@@ -31,43 +22,28 @@ class USER {
     checkPassword(password) {
         return pwhash.check(password, this.salt, this.hash);
     }
-    /**
-     * @param {string} role
-     * @param {date} joinAt
-     */
-    async joinDomain(role, joinAt) {
-        validator.checkRole(role);
-        try {
-            await coll_domain.updateOne(
-                { domainId: this.domainId, uid: this._id, role: { $exists: false } },
-                { $set: { role, joinAt: joinAt || new Date() } },
-                { upsert: true }
-            );
-        } catch (e) {
-            throw new UserAlreadyDomainMemberError(this.domainId, this._id);
-        }
-        return true;
-    }
 }
-async function getById(_id, domainId) {
-    let dudoc, udoc = await coll.findOne({ _id });
-    if (domainId) {
-        let ddoc = await domain.get(domainId);
-        if (!ddoc) throw new DomainNotFoundError(domainId);
-        dudoc = (await coll_domain.findOne({ uid: _id, domainId })) || {};
-        console.log(dudoc.role, ddoc.roles, { uid: _id, domainId });
-        dudoc.perm = ddoc.roles[dudoc.role || 'default'];
-    }
-    return new USER(udoc, dudoc);
+async function getById(_id) {
+    let udoc = await coll.findOne({ _id });
+    if (!udoc) throw new UserNotFoundError(_id);
+    let role = await coll_role.findOne({ _id: udoc.role || 'default' });
+    udoc.perm = role.perm;
+    return new USER(udoc);
 }
 async function getByUname(uname) {
     let unameLower = uname.trim().toLowerCase();
     let udoc = await coll.findOne({ unameLower });
+    if (!udoc) throw new UserNotFoundError(uname);
+    let role = await coll_role.findOne({ _id: udoc.role || 'default' });
+    udoc.perm = role.perm;
     return new USER(udoc);
 }
 async function getByEmail(email) {
     let emailLower = email.trim().toLowerCase();
     let udoc = await coll.findOne({ emailLower });
+    if (!udoc) throw new UserNotFoundError(email);
+    let role = await coll_role.findOne({ _id: udoc.role || 'default' });
+    udoc.perm = role.perm;
     return new USER(udoc);
 }
 async function setPassword(uid, password) {
@@ -83,10 +59,6 @@ async function setEmail(uid, email) {
 }
 function setById(uid, args) {
     coll.findOneAndUpdate({ _id: uid }, { $set: args });
-}
-
-function setPriv(uid, priv) {
-    setById(uid, { priv });
 }
 async function changePassword(uid, currentPassword, newPassword) {
     validator.checkPassword(newPassword);
@@ -133,5 +105,5 @@ module.exports = {
     changePassword, create, getByEmail,
     getById, getByUname, getMany,
     setById, setEmail,
-    setPassword, setPriv
+    setPassword
 };

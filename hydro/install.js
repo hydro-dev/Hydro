@@ -1,9 +1,8 @@
 const
     Mongo = require('mongodb'),
-    { pwhash } = require('./utils'),
-    priv = require('./privilege'),
     builtin = require('./model/builtin'),
-    options = require('./lib/options');
+    { pwhash } = require('./utils'),
+    options = require('./options');
 
 async function run() {
     let mongourl = 'mongodb://';
@@ -12,8 +11,7 @@ async function run() {
     let Database = await Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
     let db = Database.db(options.db.name);
     let coll_user = db.collection('user');
-    let coll_domain = db.collection('domain');
-    let coll_domain_user = db.collection('domain_user');
+    let coll_role = db.collection('role');
     let coll_blacklist = db.collection('blacklist');
     async function createRootUser() {
         let salt = pwhash.salt();
@@ -29,15 +27,14 @@ async function run() {
             regip: '127.0.0.1',
             loginat: new Date(),
             loginip: '127.0.0.1',
-            priv: priv.PRIV_ALL,
-            gravatar: 'root@hydro'
+            gravatar: 'root@hydro',
+            role: 'admin'
         });
-        await coll_domain_user.insertOne({ domainId: 'system', uid: -1, role: 'admin', joinAt: new Date() });
     }
     await coll_user.createIndex('unameLower', { unique: true });
     await coll_user.createIndex('emailLower', { sparse: true });
+    await coll_role.insertMany(builtin.BUILTIN_ROLES);
     await coll_user.insertMany(builtin.BUILTIN_USERS);
-    await coll_domain.insertMany(builtin.BUILTIN_DOMAINS);
     await coll_blacklist.createIndex('expireAt', { expireAfterSeconds: 0 });
     await createRootUser();
     console.log('Installed');

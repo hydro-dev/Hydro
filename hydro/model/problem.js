@@ -6,7 +6,6 @@ const
     coll_status = db.collection('problem.status');
 
 /**
- * @param {string} domainId 
  * @param {string} title 
  * @param {string} content 
  * @param {number} owner 
@@ -17,7 +16,6 @@ const
  * @param {boolean} hidden 
  */
 async function add({
-    domainId,
     title,
     content,
     owner,
@@ -30,7 +28,6 @@ async function add({
     validator.checkTitle(title);
     validator.checkContent(content);
     await coll.insertOne({
-        domainId,
         content,
         owner,
         pid,
@@ -44,24 +41,24 @@ async function add({
     });
     return pid;
 }
-async function get({ domainId, pid, uid }) {
+async function get({ pid, uid }) {
     pid = parseInt(pid) || pid;
-    let pdoc = await coll.findOne({ domainId, pid });
-    if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
+    let pdoc = await coll.findOne({ pid });
+    if (!pdoc) throw new ProblemNotFoundError(pid);
     pdoc.psdoc = uid ?
-        await coll_status.findOne({ domainId, pid, uid }) :
+        await coll_status.findOne({ pid, uid }) :
         null;
     return pdoc;
 }
 async function getMany(query, sort, page, limit) {
     return await coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
 }
-async function edit(domainId, pid, $set) {
+async function edit(pid, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
-    await coll.findOneAndUpdate({ domainId, pid }, { $set });
-    let pdoc = await coll.findOne({ domainId, pid });
-    if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
+    await coll.findOneAndUpdate({ pid }, { $set });
+    let pdoc = await coll.findOne({ pid });
+    if (!pdoc) throw new ProblemNotFoundError(pid);
     return pdoc;
 }
 async function count(query) {

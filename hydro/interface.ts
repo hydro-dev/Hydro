@@ -6,17 +6,13 @@ export class User {
     unameLower: string
     salt: string
     hash: string
-    priv: number
-    domainId: string = 'system'
     displayName: string = ''
     nAccept: number = 0
     nSubmit: number = 0
     perm: string = '0'
-    constructor(user, domainUser) { }
-    hasPriv(priv) { }
+    constructor(user) { }
     hasPerm(perm) { }
     checkPassword(password) { }
-    async joinDomain(role, joinAt) { }
 }
 export interface TestCase {
     time: number,
@@ -26,7 +22,6 @@ export interface TestCase {
 }
 export interface Record {
     _id: import('bson').ObjectID,
-    domainId: string,
     pid: string | boolean,
     creator: number,
     lang: string,
@@ -43,7 +38,6 @@ export interface Record {
 }
 export interface Problem {
     _id: number | string,
-    domainId: string,
     title: string,
     content: string,
     timeLimit: number,

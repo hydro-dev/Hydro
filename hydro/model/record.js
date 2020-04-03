@@ -36,10 +36,10 @@ async function get(rid) {
 async function getMany(query, sort, page, limit) {
     return await coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
 }
-async function update(domainId, rid, $set) {
-    await coll.findOneAndUpdate({ domainId, _id: rid }, { $set });
-    let rdoc = await coll.findOne({ domainId, _id: rid });
-    if (!rdoc) throw new RecordNotFoundError(domainId, rid);
+async function update(rid, $set) {
+    await coll.findOneAndUpdate({ _id: rid }, { $set });
+    let rdoc = await coll.findOne({ _id: rid });
+    if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;
 }
 async function count(query) {

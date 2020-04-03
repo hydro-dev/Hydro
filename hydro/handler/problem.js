@@ -1,75 +1,63 @@
 const
-    { GET, POST } = require('../service/server'),
-    { assertQueue, publish } = require('../service/queue'),
-    { requirePerm, requirePriv } = require('./tools'),
     validator = require('../lib/validator'),
     problem = require('../model/problem'),
-    training = require('../model/training'),
-    contest = require('../model/contest'),
     record = require('../model/record'),
-    domain = require('../model/domain'),
     user = require('../model/user'),
+    { GET, POST } = require('../service/server'),
+    queue = require('../service/queue'),
+    { requirePerm } = require('./tools'),
     { NoProblemError } = require('../error'),
-    { PRIV_USER_PROFILE } = require('../privilege'),
+    { constants } = require('../options'),
     {
         PERM_VIEW_PROBLEM,
         PERM_VIEW_PROBLEM_HIDDEN,
-        PERM_VIEW_TRAINING,
-        PERM_VIEW_CONTEST,
-        PERM_VIEW_HOMEWORK,
         PERM_SUBMIT_PROBLEM,
         PERM_CREATE_PROBLEM
     } = require('../permission');
 
-const PROBLEMS_PER_PAGE = 100;
-assertQueue('judge');
+queue.assert('judge');
 
 GET('/p', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    let q = { domainId: ctx.state.domainId },
+    let q = {},
         page = ctx.query.page || 1;
     if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-    let pdocs = await problem.getMany(q, { pid: 1 }, page, PROBLEMS_PER_PAGE);
-    ctx.body = { code: 0, page, pdocs, category: '' };
+    let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
+    ctx.templateName = 'problem_main.html';
+    ctx.body = { page_name: 'problem_list', page, pdocs, category: '' };
 });
 GET('/problem/random', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    let q = { domainId: ctx.state.domainId };
+    let q = {};
     if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
     let pid = await problem.random(q);
     if (!pid) throw new NoProblemError();
     ctx.body = { pid };
+});
+GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
+    let uid = ctx.state.user._id,
+        pid = ctx.params.pid;
+    let pdoc = await problem.get({ pid, uid });
+    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+    let udoc = await user.getById(pdoc.owner);
+    ctx.body = { pdoc, udoc, title: pdoc.title };
 });
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     let rid = await record.add({
         creator: ctx.state.user._id,
         lang: ctx.request.body.language,
         code: ctx.request.body.code,
-        domainId: ctx.state.domainId,
         pid: ctx.params.pid
     });
-    await publish('judge', rid);
+    await queue.push('judge', rid);
     ctx.state.user.nSubmit++;
     ctx.body = { rid };
 });
-GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    let uid = null,
-        pid = Number(ctx.params.pid);
-    if (ctx.state.user.hasPriv(PRIV_USER_PROFILE)) uid = ctx.state.user._id;
-    let pdoc = await problem.get({ domainId: ctx.state.domainId, pid, uid });
-    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-    let udoc = await user.getById(pdoc.owner);
-    ctx.body = { pdoc, udoc, title: pdoc.title };
+POST('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
+    let { title, pid, content, hidden } = ctx.request.body;
+    validator.checkPid(pid);
+    pid = pid || await system.incPidCounter();
+    await problem.add({ title, content, owner: ctx.state.user._id, pid, hidden });
+    ctx.body = { pid };
 });
-POST('/problem/create',
-    requirePriv(PRIV_USER_PROFILE),
-    requirePerm(PERM_CREATE_PROBLEM),
-    async ctx => {
-        let { title, pid, content, hidden } = ctx.request.body;
-        validator.checkPid(pid);
-        pid = pid || await domain.incPidCounter(ctx.state.domainId);
-        await problem.add({ domainId: ctx.state.domainId, title, content, owner: ctx.state.user._id, pid, hidden });
-        ctx.body = { pid };
-    }
-);
 
 /*
 
@@ -110,14 +98,14 @@ class ProblemSubmitHandler(base.Handler):
     else:
       # TODO(iceboy): needs to be in sync with contest_detail_problem_submit
       rdocs = await record \
-          .get_user_in_problem_multi(uid, self.domainId, pdoc['doc_id']) \
+          .get_user_in_problem_multi(uid, self.domainId, pdoc['_id']) \
           .sort([('_id', -1)]) \
           .limit(10) \
           .to_list()
     if not self.prefer_json:
       path_components = self.build_path(
           (self.translate('problem_main'), self.reverse_url('problem_main')),
-          (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+          (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
           (self.translate('problem_submit'), None))
       self.render('problem_submit.html', pdoc=pdoc, udoc=udoc, rdocs=rdocs, dudoc=dudoc,
                   page_title=pdoc['title'], path_components=path_components)
@@ -136,7 +124,7 @@ class ProblemSubmitHandler(base.Handler):
     pdoc = await problem.get(self.domainId, pid)
     if pdoc.get('hidden', False):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-    rid = await record.add(self.domainId, pdoc['doc_id'], constant.record.TYPE_SUBMISSION,
+    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_SUBMISSION,
                            self.user['_id'], lang, code)
     self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
 
@@ -172,7 +160,7 @@ class ProblemPretestHandler(base.Handler):
     zip_file.close()
     fid = await fs.add_data('application/zip', output_buffer.getvalue())
     output_buffer.close()
-    rid = await record.add(self.domainId, pdoc['doc_id'], constant.record.TYPE_PRETEST,
+    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_PRETEST,
                            self.user['_id'], lang, code, fid)
     self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
 
@@ -256,7 +244,7 @@ class ProblemCopyHandler(base.Handler):
       .sort('doc_id', 1) \
       .to_list()
 
-    exist_pids = [pdoc['doc_id'] for pdoc in pdocs]
+    exist_pids = [pdoc['_id'] for pdoc in pdocs]
     if len(src_pids) != len(exist_pids):
       for pid in src_pids:
         if pid not in exist_pids:
@@ -292,7 +280,7 @@ class ProblemEditHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_edit'), None))
     self.render('problem_edit.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 page_title=pdoc['title'], path_components=path_components)
@@ -306,7 +294,7 @@ class ProblemEditHandler(base.Handler):
     pdoc = await problem.get(self.domainId, pid)
     if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    await problem.edit(self.domainId, pdoc['doc_id'], title=title, content=content)
+    await problem.edit(self.domainId, pdoc['_id'], title=title, content=content)
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
 
@@ -324,7 +312,7 @@ class ProblemSettingsHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_settings'), None))
     self.render('problem_settings.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 categories=problem.get_categories(),
@@ -360,10 +348,10 @@ class ProblemSettingsHandler(base.Handler):
           raise error.ValidationError('difficulty_admin')
     else:
       difficulty_admin = None
-    await problem.edit(self.domainId, pdoc['doc_id'], hidden=hidden,
+    await problem.edit(self.domainId, pdoc['_id'], hidden=hidden,
                        category=category, tag=tag,
                        difficulty_setting=difficulty_setting, difficulty_admin=difficulty_admin)
-    await job.difficulty.update_problem(self.domainId, pdoc['doc_id'])
+    await job.difficulty.update_problem(self.domainId, pdoc['_id'])
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
 
@@ -419,7 +407,7 @@ class ProblemStatisticsHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_statistics'), None))
     self.render('problem_statistics.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 page_title=pdoc['title'], path_components=path_components)
@@ -440,7 +428,7 @@ class ProblemSearchHandler(base.Handler):
     except error.ProblemNotFoundError:
       pdoc = None
     if pdoc:
-      self.redirect(self.reverse_url('problem_detail', pid=pdoc['doc_id']))
+      self.redirect(self.reverse_url('problem_detail', pid=pdoc['_id']))
       return
     self.redirect('http://cn.bing.com/search?q={0}+site%3A{1}' \
                   .format(parse.quote(q), parse.quote(options.url_prefix)))

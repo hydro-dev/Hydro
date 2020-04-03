@@ -12,10 +12,17 @@ async function update(_id, update, config) {
 }
 /**
  * Increments the user counter.
- * @returns {Number} Integer value after increment.
+ * @returns {number} Integer value after increment.
  */
 async function incUserCounter() {
-    return this.update('userCounter', { $inc: { value: 1 } }, { upsert: true });
+    return await this.update('userCounter', { $inc: { value: 1 } }, { upsert: true });
+}
+/**
+ * Increments the problem ID counter.
+ * @returns {number} Integer value before increment.
+ */
+async function incPidCounter() {
+    return await this.update('userCounter', { $inc: { value: 1 } }, { upsert: true });
 }
 async function acquireLock(name) {
     let value = Math.floor(Math.random() * 0xFFFFFFFF);
@@ -35,6 +42,7 @@ async function releaseLockAnyway(name) {
 module.exports = {
     get,
     update,
+    incPidCounter,
     incUserCounter,
     acquireLock,
     releaseLock,

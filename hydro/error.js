@@ -1,5 +1,3 @@
-const { PRIV_USER_PROFILE } = require('./privilege');
-
 class UserFacingError extends Error {
     constructor(type) {
         super(type);
@@ -62,12 +60,6 @@ class VerifyPasswordError extends ForbiddenError {
         super('VerifyPasswordError');
     }
 }
-class PrivilegeError extends ForbiddenError {
-    constructor(priv) {
-        super('PrivilegeError');
-        this.params = [priv];
-    }
-}
 class OpcountExceededError extends ForbiddenError {
     constructor(op, period_secs, max_operations) {
         super('OpcountExceededError');
@@ -75,25 +67,6 @@ class OpcountExceededError extends ForbiddenError {
     }
 }
 
-class DomainAlreadyExistError extends ForbiddenError {
-    constructor(domain) {
-        super('DomainAlreadyExistError');
-        this.params = [domain];
-    }
-}
-class DomainNotFoundError extends ForbiddenError {
-    constructor(domain) {
-        super('DomainNotFoundError');
-        this.params = [domain];
-    }
-}
-
-class UserAlreadyDomainMemberError extends ForbiddenError {
-    constructor(domainId, uid) {
-        super('UserAlreadyDomainMemberError');
-        this.params = [domainId, uid];
-    }
-}
 class PermissionError extends ForbiddenError {
     constructor(perm) {
         super('PermissionError');
@@ -108,35 +81,34 @@ class ValidationError extends ForbiddenError {
     }
 }
 class ProblemNotFoundError extends NotFoundError {
-    constructor(domainId, pid) {
+    constructor(pid) {
         super('ProblemNotFoundError');
-        this.params = [domainId, pid];
+        this.params = [pid];
     }
 }
 class RecordNotFoundError extends NotFoundError {
-    constructor(domainId, rid) {
+    constructor(rid) {
         super('RecordNotFoundError');
-        this.params = [domainId, rid];
+        this.params = [rid];
     }
 }
 class TrainingNotFoundError extends NotFoundError {
-    constructor(domainId, tid) {
+    constructor(tid) {
         super('TrainingNotFoundError');
-        this.params = [domainId, tid];
+        this.params = [tid];
     }
 }
 class ContestNotFoundError extends NotFoundError {
-    constructor(domainId, cid) {
+    constructor(cid) {
         super('ContestNotFoundError');
-        this.params = [domainId, cid];
+        this.params = [cid];
     }
 }
 module.exports = {
     BadRequestError, ForbiddenError, NotFoundError,
     LoginError, UserAlreadyExistError, InvalidTokenError,
-    UserNotFoundError, VerifyPasswordError, PrivilegeError,
-    OpcountExceededError, DomainAlreadyExistError, DomainNotFoundError,
-    UserAlreadyDomainMemberError, PermissionError, NoProblemError,
+    UserNotFoundError, VerifyPasswordError, 
+    OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError
 };
@@ -175,11 +147,6 @@ class UserFacingError(Error):
   def message(self):
     return 'An error has occurred.'
 
-
-class BuiltinDomainError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Domain {0} is bulit-in and cannot be modified.'
 
 
 class BlacklistedError(ForbiddenError):
@@ -284,20 +251,6 @@ class MessageNotFoundError(NotFoundError):
     return 'Message {0} not found.'
 
 
-
-
-class DomainJoinForbiddenError(ForbiddenError):
-  @property
-  def message(self):
-    return 'You are not allowed to join the domain. The link is either invalid or expired.'
-
-
-class DomainJoinAlreadyMemberError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Failed to join the domain. You are already a member.'
-
-
 class InvalidJoinInvitationCodeError(ForbiddenError):
   @property
   def message(self):
@@ -368,13 +321,6 @@ class UsageExceededError(ForbiddenError):
   @property
   def message(self):
     return 'Usage exceeded.'
-
-
-class DomainRoleAlreadyExistError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Role {1} already exists in domain {0}.'
-
 
 class ModifyBuiltinRoleError(ForbiddenError):
   @property

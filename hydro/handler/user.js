@@ -1,13 +1,13 @@
 const
-    { GET, POST } = require('../service/server.js'),
+    { GET, POST, CONTEXT } = require('../service/server.js'),
     user = require('../model/user'),
     token = require('../model/token'),
     system = require('../model/system'),
     mail = require('../lib/mail'),
     validator = require('../lib/validator'),
     options = require('../options'),
-    { PRIV_REGISTER_USER, PRIV_USER_PROFILE } = require('../privilege'),
-    { requirePriv, limitRate } = require('./tools'),
+    { PERM_REGISTER_USER, PERM_LOGGEDIN } = require('../permission'),
+    { requirePerm, limitRate } = require('./tools'),
     { UserAlreadyExistError, InvalidTokenError, VerifyPasswordError, UserNotFoundError, LoginError } = require('../error');
 
 GET('/user', async ctx => {
@@ -27,17 +27,20 @@ POST('/login', async ctx => {
     ctx.session.rememberme = rememberme;
     ctx.body = { udoc };
 });
-POST('/logout', requirePriv(PRIV_USER_PROFILE), async ctx => {
+POST('/logout', requirePerm(PERM_LOGGEDIN), async ctx => {
     ctx.session = { uid: 1 };
     ctx.body = {};
 });
-GET('/register/:code', requirePriv(PRIV_REGISTER_USER), async ctx => {
+let { GET: _GET, POST: _POST, MIDDLEWARE: _MIDDLEWARE } = CONTEXT();
+_MIDDLEWARE(requirePerm(PERM_REGISTER_USER));
+
+_GET('/register/:code', async ctx => {
     let code = ctx.request.body.code;
     let { mail } = await token.get(code, token.TYPE_REGISTRATION);
     if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
     ctx.body = { mail };
 });
-GET('/register/:code', requirePriv(PRIV_REGISTER_USER), async ctx => {
+_GET('/register/:code', async ctx => {
     let { code, password, verify_password, uname } = ctx.request.body;
     let { mail } = await token.get(code, token.TYPE_REGISTRATION);
     if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
@@ -50,7 +53,7 @@ GET('/register/:code', requirePriv(PRIV_REGISTER_USER), async ctx => {
 });
 
 if (options.smtp.user) {
-    POST('/register', requirePriv(PRIV_REGISTER_USER), limitRate('send_mail', 3600, 30), async ctx => {
+    _POST('/register', limitRate('send_mail', 3600, 30), async ctx => {
         let email = ctx.request.body.email;
         validator.check_mail(email);
         if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);
@@ -59,7 +62,7 @@ if (options.smtp.user) {
         await mail.send_mail(email, 'Sign Up', 'user_register_mail', m);
         ctx.body = {};
     });
-    POST('/lostpass', requirePriv(PRIV_REGISTER_USER), limitRate('send_mail', 3600, 30), async ctx => {
+    POST('/lostpass', limitRate('send_mail', 3600, 30), async ctx => {
         let email = ctx.request.body.mail;
         validator.check_mail(email);
         let udoc = await user.getByEmail(email);
@@ -73,14 +76,14 @@ if (options.smtp.user) {
         await mail.send_mail(email, 'Lost Password', 'user_lostpass_mail', m);
         ctx.body = {};
     });
-    GET('/lostpass/:code', requirePriv(PRIV_REGISTER_USER), async ctx => {
+    GET('/lostpass/:code', async ctx => {
         let code = ctx.params.code;
         let tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
         let udoc = await user.getById(tdoc.uid);
         ctx.body = { uname: udoc.uname };
     });
-    POST('/lostpass/:code', requirePriv(PRIV_REGISTER_USER), async ctx => {
+    POST('/lostpass/:code', async ctx => {
         let code = ctx.params.code;
         let password = ctx.request.body.password;
         let verify_password = ctx.request.body.verify_password;
@@ -92,7 +95,7 @@ if (options.smtp.user) {
         ctx.redirect('/');
     });
 } else
-    POST('/register', requirePriv(PRIV_REGISTER_USER), async ctx => {
+    _POST('/register', async ctx => {
         let email = ctx.request.body.email;
         validator.check_mail(email);
         if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);

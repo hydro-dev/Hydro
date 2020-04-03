@@ -1,5 +1,4 @@
 const
-    domain = require('./domain'),
     validator = require('../lib/validator'),
     { ValidationError, TrainingNotFoundError } = require('../error'),
     db = require('../service/db.js'),
@@ -11,7 +10,7 @@ module.exports = {
     SETTING_DIFFICULTY_ADMIN: 1,
     SETTING_DIFFICULTY_AVERAGE: 2,
 
-    async add(domainId, title, content, owner_uid, dag = [], desc = '') {
+    async add(title, content, owner_uid, dag = [], desc = '') {
         validator.check_title(title);
         validator.check_intro(content);
         validator.check_description(desc);
@@ -20,12 +19,12 @@ module.exports = {
                 if (nid >= node._id)
                     throw new ValidationError('dag');
         return await coll.insertOne({
-            domainId, content, owner_uid,
+            content, owner_uid,
             dag, title, desc, enroll: 0
         });
     },
-    count: (domainId, query) => coll.find(Object.assign({ domainId }, query)).count(),
-    async edit(domainId, tid, $set) {
+    count: (query) => coll.find(query).count(),
+    async edit(tid, $set) {
         if ($set.title) validator.check_title($set.title);
         if ($set.content) validator.check_intro($set.content);
         if ($set.desc) validator.check_description($set.desc);
@@ -33,28 +32,20 @@ module.exports = {
             for (let node of $set.dag)
                 for (let nid of node.require_nids)
                     if (nid >= node._id) throw new ValidationError('dag');
-        await coll.findOneAndUpdate({ domainId, tid }, { $set });
-        let tdoc = await coll.findOne({ domainId, tid });
-        if (!tdoc) throw new TrainingNotFoundError(domainId, tid);
+        await coll.findOneAndUpdate({ tid }, { $set });
+        let tdoc = await coll.findOne({ tid });
+        if (!tdoc) throw new TrainingNotFoundError(tid);
         return tdoc;
     },
-    async get(domainId, tid) {
-        let tdoc = await coll.findOne({ domainId, tid });
-        if (!tdoc) throw new TrainingNotFoundError(domainId, tid);
+    async get(tid) {
+        let tdoc = await coll.findOne({ tid });
+        if (!tdoc) throw new TrainingNotFoundError(tid);
         return tdoc;
     },
-    get_multi: (domainId, query) => coll.find(Object.assign({ domainId }, query)),
-    get_multi_status: (query) => coll.find(query),
-    async get_random_id(query) {
-        let pdocs = coll.find(query);
-        let pcount = await pdocs.count();
-        if (pcount) {
-            let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
-            return pdoc.pid;
-        } else return null;
-    },
-    get_status: (domainId, tid, uid) => coll_status.findOne({ domainId, tid, uid }),
-    set_status: (domainId, tid, uid, $set) => coll_status.findOneAndUpdate({ domainId, tid, uid }, { $set })
+    get_multi: (query) => coll.find( query),
+    get_multi_status: (query) => coll_status.find(query),
+    get_status: (tid, uid) => coll_status.findOne({ tid, uid }),
+    set_status: (tid, uid, $set) => coll_status.findOneAndUpdate({ tid, uid }, { $set })
 
 };
 

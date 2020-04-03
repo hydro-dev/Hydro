@@ -34,19 +34,8 @@ module.exports = {
     isPid, checkPid
 };
 /*
-domainId_RE = re.compile(r'[_A-Za-z][_0-9A-Za-z]{3,255}')
 ID_RE = re.compile(r'[^\\/\s\u3000]([^\\/\n\r]*[^\\/\s\u3000])?')
 ROLE_RE = re.compile(r'[_0-9A-Za-z]{1,256}')
-DOMAIN_INVITATION_CODE_RE = re.compile(r'[0-9A-Za-z]{1,64}')
-
-
-def is_domainId(s):
-  return bool(domainId_RE.fullmatch(s))
-
-
-def check_domainId(s):
-  if not is_domainId(s):
-    raise error.ValidationError('domainId')
 
 
 def is_id(s):

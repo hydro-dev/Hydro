@@ -1,19 +1,12 @@
 const
     bson = require('bson'),
     { constants } = require('../options'),
-    { GET, POST } = require('../service/server'),
-    { publish } = require('../service/queue'),
-    { requirePerm, requirePriv } = require('./tools'),
-    validator = require('../lib/validator'),
-    problem = require('../model/problem'),
+    { GET } = require('../service/server'),
     record = require('../model/record'),
-    domain = require('../model/domain'),
-    user = require('../model/user'),
-    { PRIV_USER_PROFILE } = require('../privilege'),
     { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
 
 GET('/r', async ctx => {
-    let q = { domainId: ctx.state.domainId },
+    let q = {},
         page = ctx.query.page || 1;
     let rdocs = await record.getMany(q, { rid: 1 }, page, constants.RECORD_PER_PAGE);
     ctx.body = { page, rdocs };
@@ -65,14 +58,14 @@ class ProblemSubmitHandler(base.Handler):
     else:
       # TODO(iceboy): needs to be in sync with contest_detail_problem_submit
       rdocs = await record \
-          .get_user_in_problem_multi(uid, self.domainId, pdoc['doc_id']) \
+          .get_user_in_problem_multi(uid, self.domainId, pdoc['_id']) \
           .sort([('_id', -1)]) \
           .limit(10) \
           .to_list()
     if not self.prefer_json:
       path_components = self.build_path(
           (self.translate('problem_main'), self.reverse_url('problem_main')),
-          (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+          (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
           (self.translate('problem_submit'), None))
       self.render('problem_submit.html', pdoc=pdoc, udoc=udoc, rdocs=rdocs, dudoc=dudoc,
                   page_title=pdoc['title'], path_components=path_components)
@@ -91,7 +84,7 @@ class ProblemSubmitHandler(base.Handler):
     pdoc = await problem.get(self.domainId, pid)
     if pdoc.get('hidden', False):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-    rid = await record.add(self.domainId, pdoc['doc_id'], constant.record.TYPE_SUBMISSION,
+    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_SUBMISSION,
                            self.user['_id'], lang, code)
     self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
 
@@ -127,7 +120,7 @@ class ProblemPretestHandler(base.Handler):
     zip_file.close()
     fid = await fs.add_data('application/zip', output_buffer.getvalue())
     output_buffer.close()
-    rid = await record.add(self.domainId, pdoc['doc_id'], constant.record.TYPE_PRETEST,
+    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_PRETEST,
                            self.user['_id'], lang, code, fid)
     self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
 
@@ -211,7 +204,7 @@ class ProblemCopyHandler(base.Handler):
       .sort('doc_id', 1) \
       .to_list()
 
-    exist_pids = [pdoc['doc_id'] for pdoc in pdocs]
+    exist_pids = [pdoc['_id'] for pdoc in pdocs]
     if len(src_pids) != len(exist_pids):
       for pid in src_pids:
         if pid not in exist_pids:
@@ -247,7 +240,7 @@ class ProblemEditHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_edit'), None))
     self.render('problem_edit.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 page_title=pdoc['title'], path_components=path_components)
@@ -261,7 +254,7 @@ class ProblemEditHandler(base.Handler):
     pdoc = await problem.get(self.domainId, pid)
     if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    await problem.edit(self.domainId, pdoc['doc_id'], title=title, content=content)
+    await problem.edit(self.domainId, pdoc['_id'], title=title, content=content)
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
 
@@ -279,7 +272,7 @@ class ProblemSettingsHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_settings'), None))
     self.render('problem_settings.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 categories=problem.get_categories(),
@@ -315,10 +308,10 @@ class ProblemSettingsHandler(base.Handler):
           raise error.ValidationError('difficulty_admin')
     else:
       difficulty_admin = None
-    await problem.edit(self.domainId, pdoc['doc_id'], hidden=hidden,
+    await problem.edit(self.domainId, pdoc['_id'], hidden=hidden,
                        category=category, tag=tag,
                        difficulty_setting=difficulty_setting, difficulty_admin=difficulty_admin)
-    await job.difficulty.update_problem(self.domainId, pdoc['doc_id'])
+    await job.difficulty.update_problem(self.domainId, pdoc['_id'])
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
 
@@ -374,7 +367,7 @@ class ProblemStatisticsHandler(base.Handler):
                                        domain.get_user(self.domainId, pdoc['owner_uid']))
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
+        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
         (self.translate('problem_statistics'), None))
     self.render('problem_statistics.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 page_title=pdoc['title'], path_components=path_components)
@@ -395,7 +388,7 @@ class ProblemSearchHandler(base.Handler):
     except error.ProblemNotFoundError:
       pdoc = None
     if pdoc:
-      self.redirect(self.reverse_url('problem_detail', pid=pdoc['doc_id']))
+      self.redirect(self.reverse_url('problem_detail', pid=pdoc['_id']))
       return
     self.redirect('http://cn.bing.com/search?q={0}+site%3A{1}' \
                   .format(parse.quote(q), parse.quote(options.url_prefix)))

@@ -31,6 +31,6 @@
         ],
         "no-unused-vars": "warn",
         "no-unreachable": "warn",
-        "require-atomic-updates": "warn"
+        "require-atomic-updates": "off"
     }
 }

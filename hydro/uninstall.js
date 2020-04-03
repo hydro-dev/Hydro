@@ -1,6 +1,6 @@
 const
     Mongo = require('mongodb'),
-    options = require('./lib/options');
+    options = require('./options');
 
 async function run() {
     let mongourl = 'mongodb://';

@@ -27,9 +27,10 @@ async function run() {
         });
     });
     let server = require('./service/server');
+    require('./lib/i18n');
+    require('./handler/ui');
     require('./handler/base');
     require('./handler/home');
-    require('./handler/user');
     require('./handler/problem');
     require('./handler/record');
     require('./handler/judge');
