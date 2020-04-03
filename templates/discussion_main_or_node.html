@@ -23,7 +23,7 @@
       </div>
       <div class="section__body">
       {% if vnode %}
-      {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_DISCUSSION) %}
+      {% if handler.has_perm(perm.PERM_CREATE_DISCUSSION) %}
         <p><a href="{{ reverse_url('discussion_create', doc_id=vnode['doc_id']) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
       {% else %}
         {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}

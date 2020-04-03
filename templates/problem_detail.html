@@ -1,43 +1,15 @@
+{% set page_name = "problem_detail" %}
 {% extends "layout/basic.html" %}
 {% block content %}
-<div style="display: none" class="dialog__body--copy-to">
-  <div>
-    <div class="row"><div class="columns">
-      <h1>{{ _('Copy Problem To') }}</h1>
-    </div></div>
-    <div class="row">
-      <div class="medium-12 columns">
-        <label>
-          {{ _('Destination Domain') }}
-          <input name="domain_id" placeholder="{{ _('Domain ID') }}" type="text" class="textbox" autocomplete="off" data-autofocus>
-        </label>
-      </div>
-    </div>
-    <div class="row">
-      <div class="medium-12 columns">
-        <label>
-          <label class="checkbox">
-            <input type="checkbox" name="numeric_pid" checked>{{ _('Numeric PID') }}
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" name="hidden">{{ _('Hidden') }}
-          </label>
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
 <script>
-  var Context = {{ {
-    'problemId': pdoc['_id'],
-    'socketUrl': '{}-conn'.format(reverse_url('problem_pretest', pid=pdoc['_id'])),
-    'postPretestUrl': reverse_url('problem_pretest', pid=pdoc['_id']),
-    'postSubmitUrl': reverse_url('problem_submit', pid=pdoc['_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']),
-    'getSubmissionsUrl': reverse_url('problem_submit', pid=pdoc['_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']),
-    'getRecordDetailUrl': reverse_url('record_detail', rid='{rid}'),
-    'code_lang': handler.get_setting('code_lang'),
-    'code_template': handler.get_code_template(),
-  }|json|safe }};
+  var Context = {
+    'problemId': "{{ pdoc.pid }}",
+    'postSubmitUrl': "/p/{{ pdoc.pid }}",
+    'getSubmissionsUrl': "/p/{{ pdoc.pid }}",
+    'getRecordDetailUrl': "/r/{{ rid }}",
+    'code_lang': "{{ handler.user.codeLang }}",
+    'code_template': "{{ handler.user.codeTemplate }}",
+  };
 </script>
 <div class="row">
   <div class="medium-9 columns">
@@ -51,10 +23,9 @@
           <blockquote class="warn">
             <p>{{ _('No dataset at present.') }}</p>
           </blockquote>
-        {% endif %}
-        {% if pdoc['data'] is mapping %}
+        {% elif pdoc.data.startsWith('from:') %}
           <blockquote class="note">
-            <p>{{ _('Test data comes from') }} <a href="{{ reverse_url('problem_detail', domain_id=pdoc['data']['domain'], pid=pdoc['data']['pid']) }}" target="_blank">{{ pdoc['data']['domain'] }}/{{ pdoc['data']['pid'] }}</a></p>
+            <p>{{ _('Test data comes from') }} <a href="#" target="_blank">{{ pdoc.data.split(':')[1] }}</a></p>
           </blockquote>
         {% endif %}
         {% if tdoc %}
@@ -64,27 +35,17 @@
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
         {% endif %}{# handler.is_done(tdoc) #}
-        {% else %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
-        {% if handler.is_homework_extended(tdoc) %}
-          <blockquote class="note">
-            <p>{{ _('The homework\'s deadline is due but in extension. You can still submit for this problem but your score will be penalized.') }}</p>
-          </blockquote>
-        {% elif handler.is_done(tdoc) %}{# handler.is_homework_extended(tdoc) #}
-          <blockquote class="note">
-            <p>{{ _('You cannot submit for this problem because the homework\'s deadline is due.') }}</p>
-          </blockquote>
-        {% endif %}{# handler.is_homework_extended(tdoc) #}
         {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
         {% endif %}{# tdoc #}
-          {{ pdoc['content']|markdown }}
+          {{ pdoc['content']|markdown|safe }}
         </div>
       </div></div>
     </div>
   </div>
   <div class="medium-3 columns">
-    {% with owner_udoc=udoc, owner_dudoc=dudoc %}
+    {% set owner_udoc=udoc %}
+    {% set owner_dudoc=dudoc %}
     {% include "partials/problem_sidebar.html" %}
-    {% endwith %}
   </div>
 </div>
 <div class="scratchpad-container" style="display:none">

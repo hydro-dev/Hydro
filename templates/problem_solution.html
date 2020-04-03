@@ -22,16 +22,16 @@
           reply_edit_op = 'edit_reply',
           comment_delete_op = 'delete_solution',
           reply_delete_op = 'delete_reply',
-          comment_post_perm = vj4.model.builtin.PERM_CREATE_PROBLEM_SOLUTION,
-          comment_edit_perm = vj4.model.builtin.PERM_EDIT_PROBLEM_SOLUTION,
-          comment_edit_self_perm = vj4.model.builtin.PERM_EDIT_PROBLEM_SOLUTION_SELF,
-          comment_delete_perm = vj4.model.builtin.PERM_DELETE_PROBLEM_SOLUTION,
-          comment_delete_self_perm = vj4.model.builtin.PERM_DELETE_PROBLEM_SOLUTION_SELF,
-          reply_post_perm = vj4.model.builtin.PERM_REPLY_PROBLEM_SOLUTION,
-          reply_edit_perm = vj4.model.builtin.PERM_EDIT_PROBLEM_SOLUTION_REPLY,
-          reply_edit_self_perm = vj4.model.builtin.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF,
-          reply_delete_perm = vj4.model.builtin.PERM_DELETE_PROBLEM_SOLUTION_REPLY,
-          reply_delete_self_perm = vj4.model.builtin.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF
+          comment_post_perm = perm.PERM_CREATE_PROBLEM_SOLUTION,
+          comment_edit_perm = perm.PERM_EDIT_PROBLEM_SOLUTION,
+          comment_edit_self_perm = perm.PERM_EDIT_PROBLEM_SOLUTION_SELF,
+          comment_delete_perm = perm.PERM_DELETE_PROBLEM_SOLUTION,
+          comment_delete_self_perm = perm.PERM_DELETE_PROBLEM_SOLUTION_SELF,
+          reply_post_perm = perm.PERM_REPLY_PROBLEM_SOLUTION,
+          reply_edit_perm = perm.PERM_EDIT_PROBLEM_SOLUTION_REPLY,
+          reply_edit_self_perm = perm.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF,
+          reply_delete_perm = perm.PERM_DELETE_PROBLEM_SOLUTION_REPLY,
+          reply_delete_self_perm = perm.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}

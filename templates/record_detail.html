@@ -27,7 +27,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Information') }}</h1>
       </div>
-    {% if handler.has_perm(vj4.model.builtin.PERM_REJUDGE) %}
+    {% if handler.has_perm(perm.PERM_REJUDGE) %}
       <div class="section__body no-padding">
         <ol class="menu">
           <li class="menu__item">
@@ -79,7 +79,7 @@
         {% if rdoc['type'] == vj4.constant.record.TYPE_PRETEST and (handler.own(rdoc, priv=vj4.model.builtin.PRIV_READ_PRETEST_DATA_SELF, field='uid') or handler.has_priv(vj4.model.builtin.PRIV_READ_PRETEST_DATA)) %}
           <dt>{{ _('Pretest Data') }}</dt>
           <dd><a href="{{ reverse_url('record_pretest_data', rid=rdoc['_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
-        {% elif rdoc['type'] == vj4.constant.record.TYPE_SUBMISSION and pdoc and (handler.own(pdoc, vj4.model.builtin.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(vj4.model.builtin.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
+        {% elif rdoc['type'] == vj4.constant.record.TYPE_SUBMISSION and pdoc and (handler.own(pdoc, perm.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(perm.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
           <dt>{{ _('Problem Data') }}</dt>
           <dd><a href="{{ reverse_url('problem_data', pid=pdoc['_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
         {% endif %}

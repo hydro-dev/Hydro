@@ -38,6 +38,7 @@ GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     let pdoc = await problem.get({ pid, uid });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
     let udoc = await user.getById(pdoc.owner);
+    ctx.templateName = 'problem_detail.html';
     ctx.body = { pdoc, udoc, title: pdoc.title };
 });
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {

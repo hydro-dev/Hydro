@@ -25,8 +25,8 @@ String.prototype.rawformat = function (object) {
     let res = this.split('{@}');
     return [res[0], object, res[1]];
 };
-String.prototype.translate = function (language = 'zh-CN') {
-    if (locales[language]) return this;
+String.prototype.translate = function (language = 'zh_CN') {
+    if (locales[language]) return locales[language][this] || this;
     else return this;
 };
 

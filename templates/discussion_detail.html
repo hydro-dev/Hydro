@@ -29,7 +29,7 @@
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if handler.own(ddoc, vj4.model.builtin.PERM_EDIT_DISCUSSION_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_DISCUSSION) %}
+      {% if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_SELF) or handler.has_perm(perm.PERM_EDIT_DISCUSSION) %}
         <li>
           <a href="{{ reverse_url('discussion_edit', did=ddoc['doc_id']) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
@@ -63,16 +63,16 @@
           udict = udict,
           comment_ref = 'drid',
           reply_ref = 'drrid',
-          comment_post_perm = vj4.model.builtin.PERM_REPLY_DISCUSSION,
-          comment_edit_perm = vj4.model.builtin.PERM_NONE if handler.own(ddoc, vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY,
-          comment_edit_self_perm = vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY_SELF,
-          comment_delete_perm = vj4.model.builtin.PERM_NONE if handler.own(ddoc, vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY,
-          comment_delete_self_perm = vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY_SELF,
-          reply_post_perm = vj4.model.builtin.PERM_REPLY_DISCUSSION,
-          reply_edit_perm = vj4.model.builtin.PERM_NONE if handler.own(ddoc, vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY,
-          reply_edit_self_perm = vj4.model.builtin.PERM_EDIT_DISCUSSION_REPLY_SELF,
-          reply_delete_perm = vj4.model.builtin.PERM_NONE if handler.own(ddoc, vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY,
-          reply_delete_self_perm = vj4.model.builtin.PERM_DELETE_DISCUSSION_REPLY_SELF
+          comment_post_perm = perm.PERM_REPLY_DISCUSSION,
+          comment_edit_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_EDIT_DISCUSSION_REPLY,
+          comment_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
+          comment_delete_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_DELETE_DISCUSSION_REPLY,
+          comment_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
+          reply_post_perm = perm.PERM_REPLY_DISCUSSION,
+          reply_edit_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_EDIT_DISCUSSION_REPLY,
+          reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
+          reply_delete_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_DELETE_DISCUSSION_REPLY,
+          reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}

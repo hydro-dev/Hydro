@@ -21,7 +21,7 @@
         {% endfor %}
         </tr>
       </thead>
-    {% for family, perms in vj4.model.builtin.PERMS_BY_FAMILY.items() %}
+    {% for family, perms in perm.PERMS_BY_FAMILY.items() %}
       <tbody>
         <tr>
           <td class="col--family" colspan="{{ (roles|length)+1 }}">

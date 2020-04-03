@@ -24,11 +24,11 @@
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif handler.is_done(tdoc) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['_id']) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
-    {% if handler.own(pdoc, vj4.model.builtin.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_PROBLEM) %}
+    {% if handler.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}

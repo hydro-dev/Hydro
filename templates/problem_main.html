@@ -28,13 +28,13 @@
                             {% for sub_categories in category %}
                                 <li class="group-list__item">
                                     <h2 class="section__title">
-                                        <a href="{{ reverse_url('problem_category', category=category|urlencode) }}">{{ category }}</a>
+                                        <a href="/p?category={{ category|urlencode }}">{{ category }}</a>
                                     </h2>
                                     {% if sub_categories | length > 0 %}
                                         <ol class="chip-list">
                                             {% for sub_category in sub_categories %}
                                                 <li class="chip-list__item">
-                                                    <a class="typo-a" href="{{ reverse_url('problem_category', category=(category|urlencode + ',' + sub_category|urlencode)) }}">{{ sub_category }}</a>
+                                                    <a class="typo-a" href="/p?category={{ category|urlencode + ',' + sub_category|urlencode }}">{{ sub_category }}</a>
                                                 </li>
                                             {% endfor %}
                                         </ol>
@@ -52,9 +52,8 @@
                 <div class="section__header">
                     <h1 class="section__title">{{ _('Search') }}</h1>
                 </div>
-                <form method="get" action="{{ reverse_url('problem_search') }}">
+                <form method="get" action="/problem/search">
                     <div class="section__body">
-                        <!-- TODO: replace with form_builder -->
                         <label>
                             <input name="q" type="text" class="textbox" value="" placeholder="1001">
                         </label>
@@ -62,21 +61,21 @@
                     </div>
                 </form>
             </div>
-            {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_PROBLEM) %}
+            {% if handler.has_perm(perm.PERM_CREATE_PROBLEM) %}
                 <div class="section side">
                     <div class="section__header">
                         <h1 class="section__title">{{ _('Create Problem') }}</h1>
                     </div>
                     <ol class="menu">
                         <li class="menu__item">
-                            <a href="{{ reverse_url('problem_create') }}" class="menu__link">
+                            <a href="/problem/create" class="menu__link">
                                 <span class="icon icon-add"></span>
                                 {{ _('Create Problem') }}</a>
                         </li>
                         <li class="menu__item">
-                            <a href="{{ reverse_url('problem_copy') }}" class="menu__link">
+                            <a href="/problem/import" class="menu__link">
                                 <span class="icon icon-copy"></span>
-                                {{ _('Copy Problem') }}</a>
+                                {{ _('Import Problem') }}</a>
                         </li>
                     </ol>
                     <div class="section__body">

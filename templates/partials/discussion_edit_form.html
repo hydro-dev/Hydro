@@ -1,5 +1,5 @@
 {% import "components/form.html" as form with context %}
-{% if ddoc['highlight'] or handler.has_perm(vj4.model.builtin.PERM_HIGHLIGHT_DISCUSSION) %}
+{% if ddoc['highlight'] or handler.has_perm(perm.PERM_HIGHLIGHT_DISCUSSION) %}
   {{ form.form_checkbox(label='Highlight', name='highlight', value=ddoc['highlight']|default(false)) }}
 {% endif %}
   {{ form.form_text(label='Title', name='title', value=ddoc['title']|default(''), autofocus=true, required=true) }}

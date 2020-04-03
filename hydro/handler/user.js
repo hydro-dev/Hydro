@@ -12,12 +12,16 @@ const
 
 GET('/user', async ctx => {
     let udoc = await user.getById(ctx.session.uid);
+    ctx.templateName = 'user_detail.html';
     ctx.body = { udoc };
 });
+GET('/login', async ctx => {
+    ctx.templateName = 'user_login.html';
+});
 POST('/login', async ctx => {
-    let { username, password, rememberme } = ctx.request.body;
-    let udoc = await user.getByUname(username);
-    if (!udoc) throw new LoginError(username);
+    let { uname, password, rememberme = false } = ctx.request.body;
+    let udoc = await user.getByUname(uname);
+    if (!udoc) throw new LoginError(uname);
     if (udoc) udoc.checkPassword(password);
     await user.setById(udoc._id, { loginat: new Date(), loginip: ctx.request.ip });
     udoc.salt = '';
@@ -25,22 +29,20 @@ POST('/login', async ctx => {
     console.log(udoc);
     ctx.session.uid = udoc._id;
     ctx.session.rememberme = rememberme;
-    ctx.body = { udoc };
+    ctx.body = {};
+    ctx.setRedirect = ctx.request.headers.referer || '/';
 });
 POST('/logout', requirePerm(PERM_LOGGEDIN), async ctx => {
     ctx.session = { uid: 1 };
     ctx.body = {};
 });
-let { GET: _GET, POST: _POST, MIDDLEWARE: _MIDDLEWARE } = CONTEXT();
-_MIDDLEWARE(requirePerm(PERM_REGISTER_USER));
-
-_GET('/register/:code', async ctx => {
+GET('/register/:code', requirePerm(PERM_REGISTER_USER), async ctx => {
     let code = ctx.request.body.code;
     let { mail } = await token.get(code, token.TYPE_REGISTRATION);
     if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
     ctx.body = { mail };
 });
-_GET('/register/:code', async ctx => {
+GET('/register/:code', requirePerm(PERM_REGISTER_USER), async ctx => {
     let { code, password, verify_password, uname } = ctx.request.body;
     let { mail } = await token.get(code, token.TYPE_REGISTRATION);
     if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
@@ -53,7 +55,7 @@ _GET('/register/:code', async ctx => {
 });
 
 if (options.smtp.user) {
-    _POST('/register', limitRate('send_mail', 3600, 30), async ctx => {
+    POST('/register', requirePerm(PERM_REGISTER_USER), limitRate('send_mail', 3600, 30), async ctx => {
         let email = ctx.request.body.email;
         validator.check_mail(email);
         if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);
@@ -95,7 +97,7 @@ if (options.smtp.user) {
         ctx.redirect('/');
     });
 } else
-    _POST('/register', async ctx => {
+    POST('/register', requirePerm(PERM_REGISTER_USER), async ctx => {
         let email = ctx.request.body.email;
         validator.check_mail(email);
         if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);

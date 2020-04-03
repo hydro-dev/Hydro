@@ -15,13 +15,9 @@ MIDDLEWARE(async (ctx, next) => {
         let sid = ctx.cookies.get('sid');
         let save = ctx.cookies.get('save');
         let tokenType, expireSeconds;
-        if (save) {
-            tokenType = token.TYPE_SAVED_SESSION;
-            expireSeconds = options.session.saved_expire_seconds;
-        } else {
-            tokenType = token.TYPE_UNSAVED_SESSION;
-            expireSeconds = options.session.unsaved_expire_seconds;
-        }
+        tokenType = token.TYPE_SESSION;
+        if (save) expireSeconds = options.session.saved_expire_seconds;
+        else expireSeconds = options.session.unsaved_expire_seconds;
         ctx.session = sid ?
             await token.update(sid, tokenType, expireSeconds, Object.assign({
                 update_ip: ctx.request.ip,
@@ -48,6 +44,7 @@ MIDDLEWARE(async (ctx, next) => {
                 }
             }
         };
+        console.log(ctx.session.uid);
         await next();
         if (ctx.session.sid)
             await token.update(ctx.session.sid, tokenType, expireSeconds, Object.assign({
@@ -61,7 +58,8 @@ MIDDLEWARE(async (ctx, next) => {
                 update_ip: ctx.request.ip,
                 update_ua: ctx.request.headers['user-agent'] || ''
             }, ctx.session));
-        let cookie = { domain: options.session.domain, secure: options.session.secure, httponly: true };
+        console.log(ctx.session.sid, ctx.session.uid);
+        let cookie = { secure: options.session.secure, httponly: true };
         if (save) {
             cookie.expires = ctx.session.expireAt, cookie.maxAge = expireSeconds;
             ctx.cookies.set('save', 'true', cookie);

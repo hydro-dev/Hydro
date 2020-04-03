@@ -2,7 +2,7 @@
   {%- if not invalid %}
   <a
   {%- if tdoc is none %}
-    href="{{ reverse_url('problem_detail', domain_id=pdoc['domain_id'], pid=pdoc['_id']) }}"
+    href="/p/{{ pdoc.pid }}"
   {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
     href="{{ reverse_url('contest_detail_problem', domain_id=pdoc['domain_id'], pid=pdoc['_id'], tid=tdoc['doc_id']) }}"
   {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_HOMEWORK %}
@@ -29,7 +29,7 @@
 {%- if pdoc['tag']|length > 0 %}
   <ul class="problem__tags">
   {%- for tag in pdoc['tag'] %}
-    <li class="problem__tag"><a class="problem__tag-link" href="{{ reverse_url('problem_category', category=tag) }}">{{ tag }}</a></li>
+    <li class="problem__tag"><a class="problem__tag-link" href="/p?category={{ tag }}">{{ tag }}</a></li>
   {%- endfor %}
   </ul>
 {%- else %}

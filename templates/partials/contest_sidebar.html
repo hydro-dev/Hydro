@@ -18,7 +18,7 @@
   <div>
     <ol class="menu">
     {% if page_name == 'discussion_node' %}
-    {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_DISCUSSION) %}
+    {% if handler.has_perm(perm.PERM_CREATE_DISCUSSION) %}
       <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=tdoc['doc_type'], doc_id=tdoc['doc_id']) }}">
         <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
       </a></li>
@@ -40,7 +40,7 @@
     {% endif %}
     {% if not attended and not handler.is_done(tdoc) %}
       <li class="menu__item">
-    {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_CONTEST) and handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if handler.has_perm(perm.PERM_ATTEND_CONTEST) and handler.has_perm(perm.PERM_LOGGEDIN) %}
         <form action="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
@@ -68,12 +68,12 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if handler.own(tdoc, vj4.model.builtin.PERM_EDIT_CONTEST_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_CONTEST) %}
+    {% if handler.own(tdoc, perm.PERM_EDIT_CONTEST_SELF) or handler.has_perm(perm.PERM_EDIT_CONTEST) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_edit', tid=tdoc['doc_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit Contest') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(vj4.model.builtin.PERM_READ_RECORD_CODE) %}
+    {% if handler.has_perm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_code', tid=tdoc['doc_id']) }}">
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>

@@ -28,8 +28,8 @@
   <script>
     var _htmlNode = document.documentElement;
     _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
-    var UiContext = {{ handler.ui_context|json|safe }};
-    var UserContext = {{ handler.user_context|json|safe }};
+    var UiContext = {{ handler.UIContext|json|safe }};
+    var UserContext = {{ handler.user|json|safe }};
   </script>
 </head>
 <body>

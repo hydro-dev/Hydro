@@ -3,7 +3,7 @@
 <tr data-rid="{{ rdoc['_id'] }}">
   {{ record.render_status_td(rdoc) }}
   <td class="col--problem col--problem-name">
-  {% if (rdoc['domain_id'] == handler.domain_id and handler.has_perm(vj4.model.builtin.PERM_REJUDGE)) or handler.has_priv(vj4.model.builtin.PRIV_REJUDGE) %}
+  {% if (rdoc['domain_id'] == handler.domain_id and handler.has_perm(perm.PERM_REJUDGE)) or handler.has_priv(vj4.model.builtin.PRIV_REJUDGE) %}
     <form class="form--inline" method="post" action="{{ reverse_url('record_rejudge', rid=rdoc['_id']) }}">
       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
       <button type="submit" class="link text-maroon lighter">
@@ -15,7 +15,7 @@
   {% if rdoc['type'] == vj4.constant.record.TYPE_PRETEST %}
     ({{ _('Pretest') }})
   {% endif %}
-  {% if pdoc and (not pdoc['hidden'] or (pdoc['domain_id'] == handler.domain_id and handler.has_perm(vj4.model.builtin.PERM_VIEW_PROBLEM_HIDDEN))) %}
+  {% if pdoc and (not pdoc['hidden'] or (pdoc['domain_id'] == handler.domain_id and handler.has_perm(perm.PERM_VIEW_PROBLEM_HIDDEN))) %}
     {{ problem.render_problem_title(pdoc, show_tags=false) }}
   {% else %}
     *

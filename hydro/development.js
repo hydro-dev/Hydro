@@ -16,6 +16,11 @@ process.on('restart', async () => {
     delete require.cache;
     run();
 });
+const path = require('path');
+const i18n = require('./lib/i18n');
+i18n(path.resolve(__dirname, '..', 'locales', 'zh_CN.yaml'), 'zh_CN');
+
+
 const EventEmitter = require('events');
 global.bus = new EventEmitter();
 async function run() {
@@ -27,13 +32,14 @@ async function run() {
         });
     });
     let server = require('./service/server');
-    require('./lib/i18n');
+
     require('./handler/ui');
     require('./handler/base');
     require('./handler/home');
     require('./handler/problem');
     require('./handler/record');
     require('./handler/judge');
+    require('./handler/user');
     server.start();
 }
 run().catch(e => {

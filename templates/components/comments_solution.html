@@ -34,7 +34,7 @@
     <div class="media__left top">
     {% if not mode_create %}
       <div class="vote vote--discussion">
-      {% if handler.has_perm(vj4.model.builtin.PERM_VOTE_PROBLEM_SOLUTION) %}
+      {% if handler.has_perm(perm.PERM_VOTE_PROBLEM_SOLUTION) %}
         <div class="vote-number rotator--enabled">{{ doc['vote'] }}</div>
         <div class="vote-op clearfix">
           <form method="post">

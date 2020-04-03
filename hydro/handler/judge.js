@@ -1,5 +1,5 @@
 const
-    { CONTEXT } = require('../service/server'),
+    { GET, POST } = require('../service/server'),
     queue = require('../service/queue'),
     record = require('../model/record'),
     { requirePerm } = require('./tools'),
@@ -7,12 +7,10 @@ const
 
 queue.assert('judge');
 
-const { MIDDLEWARE, GET, POST } = CONTEXT();
-MIDDLEWARE(requirePerm(PERM_JUDGE));
-GET('/judge/noop', async ctx => {
+GET('/judge/noop', requirePerm(PERM_JUDGE), async ctx => {
     ctx.body = {};
 });
-GET('/judge/fetch', async ctx => {
+GET('/judge/fetch', requirePerm(PERM_JUDGE), async ctx => {
     let rid = await queue.get('judge', false);
     if (rid) {
         let rdoc = await record.get(rid);
@@ -27,9 +25,9 @@ GET('/judge/fetch', async ctx => {
         ctx.body = data;
     }
 });
-POST('/judge/next', async ctx => {
+POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
     console.log(ctx.request.body);
 });
-POST('/judge/end', async ctx => {
+POST('/judge/end', requirePerm(PERM_JUDGE), async ctx => {
     console.log(ctx.request.body);
 });

@@ -9,7 +9,7 @@
       <div class="section__body">
         <iframe src="{{ reverse_url('problem_upload', pid=pdoc['_id']) }}" frameborder="0" style="width: 100%; height: 100px;"></iframe>
         <p class="help-text">{{ _('Hint') }}: <a href="{{ reverse_url('wiki_help') }}#upload">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
-        {% if pdoc and (handler.own(pdoc, vj4.model.builtin.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(vj4.model.builtin.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
+        {% if pdoc and (handler.own(pdoc, perm.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(perm.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
         <p><a href="{{ reverse_url('problem_data', pid=pdoc['_id']) }}" class="expanded button">{{ _('Download Dataset') }}</a></p>
         {% endif %}
       </div>

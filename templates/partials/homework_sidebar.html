@@ -24,7 +24,7 @@
     {% endif %}
     {% if not attended and not handler.is_done(tdoc) %}
       <li class="menu__item">
-    {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_HOMEWORK) and handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if handler.has_perm(perm.PERM_ATTEND_HOMEWORK) and handler.has_perm(perm.PERM_LOGGEDIN) %}
         <form action="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
@@ -52,12 +52,12 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if handler.own(tdoc, vj4.model.builtin.PERM_EDIT_HOMEWORK_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_HOMEWORK) %}
+    {% if handler.own(tdoc, perm.PERM_EDIT_HOMEWORK_SELF) or handler.has_perm(perm.PERM_EDIT_HOMEWORK) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_edit', tid=tdoc['doc_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit Homework') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(vj4.model.builtin.PERM_READ_RECORD_CODE) %}
+    {% if handler.has_perm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_code', tid=tdoc['doc_id']) }}">
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>

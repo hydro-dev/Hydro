@@ -175,7 +175,7 @@
             </form>
           </li>
         {% endif %}
-        {% if handler.own(tdoc, vj4.model.builtin.PERM_EDIT_TRAINING_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_TRAINING) %}
+        {% if handler.own(tdoc, perm.PERM_EDIT_TRAINING_SELF) or handler.has_perm(perm.PERM_EDIT_TRAINING) %}
           <li class="menu__item"><a class="menu__link" href="{{ reverse_url('training_edit', tid=tdoc['doc_id']) }}">
             <span class="icon icon-edit"></span>  {{ _('Edit') }}
           </a></li>
