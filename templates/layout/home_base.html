@@ -1,0 +1,13 @@
+{% import "components/home.html" as home with context %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row" data-sticky-parent>
+  <div class="medium-9 columns">
+    {% block home_content %}{% endblock %}
+  </div>
+  <div class="medium-3 columns"><div data-sticky="large">
+    {{ home.render_sidebar() }}
+    {% block home_sidebar %}{% endblock %}
+  </div></div>
+</div>
+{% endblock %}

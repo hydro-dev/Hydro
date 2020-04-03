@@ -1,0 +1,74 @@
+<div class="footer">
+  <div class="row"><div class="columns">
+  {% if show_topics|default(true) %}
+    <div class="row footer__links">
+      <div class="medium-3 large-2 columns footer__category expandable">
+        <h1>
+          {{ _('Status') }}
+          <span class="expand-icon">
+            <span class="icon icon-expand_more"></span>
+          </span>
+        </h1>
+        <div class="footer__category__expander"><ul class="footer__category__list">
+          <li class="footer__category__item"><a href="{{ reverse_url('record_main') }}">{{ _('Judging Queue') }}</a></li>
+          <li class="footer__category__item"><a href="#">{{ _('Service Status') }}</a></li>
+        </ul></div>
+      </div>
+      <div class="medium-3 large-2 columns footer__category expandable">
+        <h1>
+          {{ _('Development') }}
+          <span class="expand-icon">
+            <span class="icon icon-expand_more"></span>
+          </span>
+        </h1>
+        <div class="footer__category__expander"><ul class="footer__category__list">
+          <li class="footer__category__item"><a href="https://github.com/vijos/vj4" target="_blank">{{ _('Open Source') }}</a></li>
+          <li class="footer__category__item"><a href="https://github.com/vijos/vj4/wiki">{{ _('API') }}</a></li>
+        </ul></div>
+      </div>
+      <div class="medium-3 large-2 columns footer__category expandable end">
+        <h1>
+          {{ _('Support') }}
+          <span class="expand-icon">
+            <span class="icon icon-expand_more"></span>
+          </span>
+        </h1>
+        <div class="footer__category__expander"><ul class="footer__category__list">
+        {% if domain_id != vj4.model.builtin.DOMAIN_ID_SYSTEM %}
+          <li class="footer__category__item"><a href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}">{{ _('Vijos') }}</a></li>
+        {% endif %}
+          <li class="footer__category__item"><a href="//vijos.github.io/about-vijos/">{{ _('Help') }}</a></li>
+          <!--<li class="footer__category__item"><a href="#">{{ _('Blog') }}</a></li>-->
+          <li class="footer__category__item"><a href="//vijos.github.io/about-vijos/about/contact-us/">{{ _('QQ Group') }}</a></li>
+        </ul></div>
+      </div>
+    </div>
+  {% endif %}
+    <div class="footer__extra-link clearfix">
+      <div class="footer__extra-left">
+        <ol class="clearfix">
+          <li class="footer__extra-link-item"><a href="//vijos.github.io/about-vijos/about/about-vijos/">{{ _('About') }}</a></li>
+          <li class="footer__extra-link-item"><a href="//vijos.github.io/about-vijos/about/contact-us/">{{ _('Contact Us') }}</a></li>
+          <li class="footer__extra-link-item"><a href="//vijos.github.io/about-vijos/about/privacy-policy/">{{ _('Privacy') }}</a></li>
+          <li class="footer__extra-link-item"><a href="//vijos.github.io/about-vijos/about/terms-of-service/">{{ _('Terms of Service') }}</a></li>
+          <li class="footer__extra-link-item"><a href="//vijos.github.io/about-vijos/about/copyright-complaint/">{{ _('Copyright Complaint') }}</a></li>
+          <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-lang">
+            <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
+            <ol class="dropdown-target menu" id="menu-footer-lang">
+            {% for code, name in vj4.util.locale.VIEW_LANGS.items() %}
+              <li class="menu__item"><a class="menu__link" href="/lang/{{ code }}">{{ name }}</a></li>
+            {% endfor %}
+            </ol>
+          </li>
+        </ol>
+      </div>
+      <div class="footer__extra-right">
+        <ol class="clearfix">
+        {% for html in vj4.model.builtin.FOOTER_EXTRA_HTMLS %}
+          <li class="footer__extra-link-item">{{ html|safe }}</li>
+        {% endfor %}
+        </ol>
+      </div>
+    </div>
+  </div></div>
+</div>

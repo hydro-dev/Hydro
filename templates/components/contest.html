@@ -1,0 +1,8 @@
+{% import "components/user.html" as user with context %}
+{% macro render_time(tdoc_time) %}
+{{ datetime_span(tdoc_time, false, '%Y-%m-%d %H:%M') }}
+{% endmacro %}
+
+{% macro render_duration(tdoc) %}
+{{ ((tdoc['end_at'] - tdoc['begin_at']).total_seconds() / 3600)|round(1) }}
+{% endmacro %}

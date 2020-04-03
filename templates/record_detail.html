@@ -1,0 +1,112 @@
+{% extends "layout/basic.html" %}
+{% import "components/problem.html" as problem with context %}
+{% block content %}
+<script>
+  var Context = {{ {
+    'socketUrl': socket_url,
+  }|json|safe }};
+</script>
+<div class="row">
+  <div class="medium-9 columns">
+    {% if show_status %}
+    {% include 'record_detail_status.html' %}
+    {% endif %}
+    {% if rdoc['code'] %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Code') }}</h1>
+      </div>
+      <div class="section__body" data-syntax-hl-show-line-number>
+        <pre><code class="language-{{ vj4.constant.language.LANG_HIGHLIGHT_ID[rdoc['lang']] }}">{{ rdoc['code'] }}</code></pre>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Information') }}</h1>
+      </div>
+    {% if handler.has_perm(vj4.model.builtin.PERM_REJUDGE) %}
+      <div class="section__body no-padding">
+        <ol class="menu">
+          <li class="menu__item">
+            <form method="post" action="{{ reverse_url('record_rejudge', rid=rdoc['_id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+              <button type="submit" class="menu__link">
+                <span class="icon icon-refresh"></span> {{ _('Rejudge') }}
+              </button>
+            </form>
+          </li>
+          <li class="menu__item">
+            <form method="post" action="{{ reverse_url('judge_score', rid=rdoc['_id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+              <input type="hidden" name="score" value="0">
+              <input type="hidden" name="message" value="{{ _('score canceled') }}">
+              <button type="submit" class="menu__link">
+                <span class="icon icon-close"></span> {{ _('Cancel Score') }}
+              </button>
+            </form>
+          </li>
+        </ol>
+      </div>
+    {% endif %}
+      <div class="section__body typo">
+        <dl class="large horizontal">
+          <dt>{{ _('Submit By') }}</dt>
+          <dd>{{ user.render_inline(udoc, dudoc, modbadge=false) }}</dd>
+          <dt>{{ _('Type') }}</dt>
+          <dd>{{ _(vj4.constant.record.TYPE_TEXTS[rdoc['type']]) }}</dd>
+        {% if pdoc %}
+          <dt>{{ _('Problem') }}</dt>
+          <dd>
+            {{ problem.render_problem_title(pdoc, tdoc, show_tags=false, show_invisible_flag=false, rp=none) }}
+          </dd>
+        {% endif %}
+        {% if tdoc %}
+        {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
+          <dt>{{ _('Contest') }}</dt>
+          <dd>
+            <a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a>
+          </dd>
+        {% else %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
+          <dt>{{ _('Homework') }}</dt>
+          <dd>
+            <a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a>
+          </dd>
+        {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
+        {% endif %}{# tdoc #}
+        {% if rdoc['type'] == vj4.constant.record.TYPE_PRETEST and (handler.own(rdoc, priv=vj4.model.builtin.PRIV_READ_PRETEST_DATA_SELF, field='uid') or handler.has_priv(vj4.model.builtin.PRIV_READ_PRETEST_DATA)) %}
+          <dt>{{ _('Pretest Data') }}</dt>
+          <dd><a href="{{ reverse_url('record_pretest_data', rid=rdoc['_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
+        {% elif rdoc['type'] == vj4.constant.record.TYPE_SUBMISSION and pdoc and (handler.own(pdoc, vj4.model.builtin.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(vj4.model.builtin.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
+          <dt>{{ _('Problem Data') }}</dt>
+          <dd><a href="{{ reverse_url('problem_data', pid=pdoc['doc_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
+        {% endif %}
+          <dt>{{ _('Language') }}</dt>
+          <dd>
+            {{ vj4.constant.language.LANG_TEXTS[rdoc['lang']] }}
+          </dd>
+          <dt>
+            {{ _('Submit At') }}
+          </dt>
+          <dd>
+            {{ datetime_span(rdoc['_id'].generation_time) }}
+          </dd>
+          {% if rdoc['judge_at'] %}
+          <dt>{{ _('Judged At') }}</dt>
+          <dd>{{ datetime_span(rdoc['judge_at']) }}</dd>
+          {% endif %}
+          {% if judge_udoc %}
+          <dt>{{ _('Judged By') }}</dt>
+          <dd>{{ user.render_inline(judge_udoc, badge=false) }}</dd>
+          {% endif %}
+        </dl>
+        {% if show_status %}
+        {% include 'record_detail_summary.html' %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

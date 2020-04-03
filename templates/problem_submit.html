@@ -1,0 +1,64 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+  {% if not tdoc or rdocs %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Recent {0} Records').format(10) }}</h1>
+      </div>
+      <div class="section__body no-padding">
+      {% if not rdocs %}
+        {{ nothing.render('You have not submitted any solutions for this problem') }}
+      {% else %}
+        <table class="data-table">
+          <colgroup>
+            <col class="col--status">
+            <col class="col--pretest">
+            <col class="col--memory">
+            <col class="col--time">
+            <col class="col--submit-at">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--status record-status--border">{{ _('Status') }}</th>
+              <th class="col--pretest">{{ _('Pretest?') }}</th>
+              <th class="col--memory">{{ _('Peak Memory') }}</th>
+              <th class="col--time">{{ _('Total Time') }}</th>
+              <th class="col--submit-at">{{ _('Submit At') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for rdoc in rdocs %}
+            {% include 'problem_submit_tr.html' %}
+          {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+      </div>
+    </div>
+  {% endif %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Submit to Judge') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_select(label='Code language', options=vj4.constant.language.LANG_TEXTS.items(), name='lang', value=handler.get_setting('code_lang')) }}
+          {{ form.form_textarea(label='Code', columns=12, name='code', extra_class='monospace', autofocus=true) }}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% with owner_udoc=udoc, owner_dudoc=dudoc %}
+    {% include "partials/problem_sidebar.html" %}
+    {% endwith %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% import "components/user.html" as user %}
+{% extends "domain_base.html" %}
+{% block domain_content %}
+{% if handler.domain['bulletin'] %}
+<div class="section">
+  <div class="section__body typo">
+    {{ handler.domain['bulletin']|markdown }}
+  </div>
+</div>
+{% endif %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title" data-heading>{{ _('Information') }}</h1>
+  </div>
+  <div class="section__body typo">
+    <dl class="large horizontal">
+    <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ handler.domain['gravatar']|gravatar_url }}" width="32" height="32"></dd>
+    <dt>{{ _('Name') }}</dt><dd>{{ handler.domain['name'] }}</dd>
+    </dl>
+  </div>
+</div>
+{% endblock %}

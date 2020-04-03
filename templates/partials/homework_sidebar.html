@@ -1,0 +1,85 @@
+{% import "components/user.html" as user with context %}
+{% import "components/homework.html" as homework with context %}
+<div class="section side">
+{% if page_name != 'homework_detail' %}
+  <a class="contest-sidebar__bg" href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">
+    <div class="section__body">
+      <h1>{{ tdoc['title'] }}</h1>
+      <div class="contest-sidebar__status">
+      {% if attended %}
+        <span class="icon icon-check"></span> {{ _('Claimed') }}
+      {% else %}
+        <span class="icon icon-schedule"></span> {{ _('Not Claimed') }}
+      {% endif %}
+      </div>
+    </div>
+  </a>
+{% endif %}
+  <div>
+    <ol class="menu">
+    {% if page_name != 'homework_detail' %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-homework"></span> {{ _('View Homework') }}
+      </a></li>
+    {% endif %}
+    {% if not attended and not handler.is_done(tdoc) %}
+      <li class="menu__item">
+    {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_HOMEWORK) and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+        <form action="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" method="POST">
+          <input type="hidden" name="operation" value="attend">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <button class="menu__link" type="submit">
+            <span class="icon icon-add"></span> {{ _('Claim Homework') }}
+          </button>
+        </form>
+    {% elif not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+        <a class="menu__link" href="javascript:showSignInDialog()">
+          <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
+        </a>
+    {% else %}
+        <a class="menu__link disabled" href="javascript:;">
+          <span class="icon icon-add"></span> {{ _('No Permission to Claim Homework') }}
+        </a>
+    {% endif %}
+      </li>
+    {% endif %}
+    {% if handler.can_show_scoreboard(tdoc, False) %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_scoreboard', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
+      </a></li>
+    {% elif handler.can_view_hidden_scoreboard(tdoc) %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_scoreboard', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
+      </a></li>
+    {% endif %}
+    {% if handler.own(tdoc, vj4.model.builtin.PERM_EDIT_HOMEWORK_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_HOMEWORK) %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_edit', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-edit"></span>  {{ _('Edit Homework') }}
+      </a></li>
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_READ_RECORD_CODE) %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_code', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-download"></span> {{ _('Export All Code') }}
+      </a></li>
+    {% endif %}
+    {% if attended %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('record_main') }}?uid_or_name={{ handler.user['_id'] }}&tid={{ tdoc['doc_id'] }}">
+        <span class="icon icon-flag"></span> {{ _('My Recent Submissions') }}
+      </a></li>
+    {% endif %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('wiki_help') }}#homework">
+        <span class="icon icon-help"></span> {{ _('Help') }}
+      </a></li>
+      <li class="menu__seperator"></li>
+    </ol>
+  </div>
+  <div class="section__body typo">
+    <dl class="large horizontal">
+      <dt>{{ _('Status') }}</dt><dd><span class="homework-status--text {{ handler.get_status(tdoc) }}">{{ _(handler.status_text(tdoc)) }}</span></dd>
+      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
+      <dt>{{ _('Open Since') }}</dt><dd>{{ homework.render_time(tdoc['begin_at']) }}</dd>
+      <dt>{{ _('Deadline') }}</dt><dd>{{ homework.render_time(tdoc['penalty_since']) }}</dd>
+      <dt>{{ _('Can be Extended For') }}</dt><dd>{{ homework.render_extension(tdoc) }} {{ _('hour(s)') }}</dd>
+    </dl>
+  </div>
+</div>

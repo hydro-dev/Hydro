@@ -1,0 +1,8 @@
+<div data-fragment-id="problem_lucky">
+  <p>
+    <a href="{% if not category %}{{ reverse_url('problem_random') }}{% else %}{{ reverse_url('problem_category_random', category=category) }}{% endif %}" class="expanded button" target="_blank"><span class="icon icon-feeling-lucky"></span> {{ _('Lucky') }}</a>
+  </p>
+  <div class="typo supplementary">
+    <p>{{ _('Pick a problem randomly based on current filter') }}</p>
+  </div>
+</div>

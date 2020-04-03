@@ -1,0 +1,40 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row" data-sticky-parent>
+  <div class="medium-9 columns">
+  {% block domain_content %}{% endblock %}
+  </div>
+  <div class="medium-3 columns"><div data-sticky="large">
+    <div class="section side">
+      <ol class="menu">
+        <li class="menu__item">
+          <div class="menu__link expandable">
+            <span class="icon icon-info"></span> {{ _('Properties') }}
+          </div>
+          <ol class="menu collapsed">
+            {{ sidemenu.render_item(null, 'domain_manage_dashboard') }}
+          {% if handler.has_perm(vj4.model.builtin.PERM_EDIT_DESCRIPTION) %}
+            {{ sidemenu.render_item(null, 'domain_manage_edit') }}
+            {{ sidemenu.render_item(null, 'domain_manage_join_applications') }}
+            {{ sidemenu.render_item(null, 'domain_manage_discussion') }}
+          {% endif %}
+            <!-- Ranking Settings -->
+          </ol>
+        </li>
+      {% if handler.has_perm(vj4.model.builtin.PERM_EDIT_PERM) %}
+        <li class="menu__item">
+          <div class="menu__link expandable">
+            <span class="icon icon-user"></span> {{ _('Access Control') }}
+          </div>
+          <ol class="menu collapsed">
+            {{ sidemenu.render_item(null, 'domain_manage_role') }}
+            {{ sidemenu.render_item(null, 'domain_manage_user') }}
+            {{ sidemenu.render_item(null, 'domain_manage_permission') }}
+          </ol>
+        </li>
+      {% endif %}
+      </ol>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% import "components/form.html" as form with context %}
+{% import "components/sidemenu.html" as sidemenu with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% import "components/nothing.html" as nothing with context %}
+{% import "components/noscript_note.html" as noscript_note with context %}
+{% import "components/user.html" as user with context %}
+<!DOCTYPE html>
+<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} nojs" lang="{{ handler.view_lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ static_url('apple-touch-icon-180x180.png') }}">
+  <link rel="icon" type="image/png" href="{{ static_url('favicon-32x32.png') }}" sizes="32x32">
+  <link rel="icon" type="image/png" href="{{ static_url('android-chrome-192x192.png') }}" sizes="192x192">
+  <link rel="icon" type="image/png" href="{{ static_url('favicon-96x96.png') }}" sizes="96x96">
+  <link rel="icon" type="image/png" href="{{ static_url('favicon-16x16.png') }}" sizes="16x16">
+  <link rel="manifest" href="{{ static_url('manifest.json') }}">
+  <meta name="msapplication-TileColor" content="#579e9a">
+  <meta name="msapplication-TileImage" content="{{ static_url('mstile-144x144.png') }}">
+  <meta name="theme-color" content="#56758f">
+
+  <link rel="stylesheet" media="all" href="{{ static_url('vendors.css') }}">
+  <link rel="stylesheet" media="all" href="{{ static_url('vj4.css') }}">
+  <title>{{ handler.render_title(page_title) }}</title>
+  <script>
+    var _htmlNode = document.documentElement;
+    _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
+    var UiContext = {{ handler.ui_context|json|safe }};
+    var UserContext = {{ handler.user_context|json|safe }};
+  </script>
+</head>
+<body>
+  {% block body %}{% endblock %}
+  <!-- TODO: includes jQuery, JSON3, ES5-shim in the shim -->
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="{{ static_url('shim.js') }}"></script>
+  <![endif]-->
+  <script type="text/javascript" src="{{ static_url('manifest.js') }}"></script>
+  <script type="text/javascript" src="{{ static_url('vendors.js') }}"></script>
+  <script type="text/javascript" src="{{ static_url('locale/{0}.js'.format(handler.view_lang)) }}"></script>
+  <script type="text/javascript" src="{{ static_url('vj4.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{% import "components/user.html" as user with context %}
+{% macro reply(mode_create, udoc, doc = {}, rdoc = {}) %}
+<li class="dczcomments__reply{% if mode_create %} commentbox-container{% endif %}">
+  <div class="media">
+    <div class="media__body top no-heading">
+    {% if not mode_create %}
+      <div class="clearfix">
+        <div class="supplementary dczcomments__supplementary">
+          {{ user.render_inline(udoc, badge=false) }}
+          @ {{ datetime_span(rdoc['_id'].generation_time) }}
+        </div>
+        {{ comment_base.reply_operations(doc, rdoc) }}
+      </div>
+      <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('problem_solution_reply_raw', pid=doc['parent_doc_id'], psid=doc['doc_id'], psrid=rdoc['_id']) }}">
+        {{ rdoc['content']|markdown }}
+      </div>
+      <div class="commentbox-edit-target"></div>
+    {% else %}
+      <div class="clearfix">
+        <div class="supplementary dczcomments__supplementary">
+          {{ user.render_inline(udoc, badge=false) }}
+        </div>
+      </div>
+      <div class="commentbox-placeholder"></div>
+    {% endif %}
+    </div>
+  </div>
+</li>
+{% endmacro %}
+
+{% macro comment(mode_create, udoc, doc = {}) %}
+<li class="dczcomments__item">
+  <div class="media">
+    <div class="media__left top">
+    {% if not mode_create %}
+      <div class="vote vote--discussion">
+      {% if handler.has_perm(vj4.model.builtin.PERM_VOTE_PROBLEM_SOLUTION) %}
+        <div class="vote-number rotator--enabled">{{ doc['vote'] }}</div>
+        <div class="vote-op clearfix">
+          <form method="post">
+            <input type="hidden" name="operation" value="upvote">
+            <input type="hidden" name="psid" value="{{ doc['doc_id'] }}">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <button type="submit" class="vote-button upvote{% if pssdict[doc['doc_id']]['vote'] == 1 %} active{% endif %}" data-tooltip="{{ _('Upvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Upvote') }}"><span class="icon icon-vote--up"></span></button>
+          </form>
+          <form method="post">
+            <input type="hidden" name="operation" value="downvote">
+            <input type="hidden" name="psid" value="{{ doc['doc_id'] }}">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <button type="submit" class="vote-button downvote{% if pssdict[doc['doc_id']]['vote'] == -1 %} active{% endif %}" data-tooltip="{{ _('Downvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Downvote') }}"><span class="icon icon-vote--down"></span></button>
+          </form>
+        </div>
+      {% else %}
+        <div class="vote-number">{{ doc['vote'] }}</div>
+      {% endif %}
+      </div>
+    {% else %}
+      <div class="vote vote--discussion">
+        <div class="vote-number">0</div>
+      </div>
+    {% endif %}
+    </div>
+    <div class="media__body top no-heading">
+    {% if not mode_create %}
+      <div class="clearfix">
+        <div class="supplementary dczcomments__supplementary">
+          {{ user.render_inline(udoc, dudict[udoc['_id']]) }}
+          @ {{ datetime_span(doc['_id'].generation_time) }}
+        </div>
+        {{ comment_base.comment_operations(doc) }}
+      </div>
+      <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('problem_solution_raw', pid=doc['parent_doc_id'], psid=doc['doc_id']) }}">
+        {{ doc['content']|markdown }}
+      </div>
+      <div class="commentbox-edit-target"></div>
+      <ul class="dczcomments__replies commentbox-reply-target">
+      {% for rdoc in doc['reply'] %}
+        {{ reply(mode_create, udict[rdoc['owner_uid']], doc, rdoc) }}
+      {% endfor %}
+      </ul>
+    {% else %}
+      <div class="clearfix">
+        <div class="supplementary dczcomments__supplementary">
+          {{ user.render_inline(udoc, dudict[udoc['_id']]) }}
+        </div>
+      </div>
+      {{ comment_base.comment_form() }}
+      <div class="commentbox-placeholder"></div>
+      <ul style="display:none">
+        {{ reply(mode_create, udoc) }}
+      </ul>
+    {% endif %}
+    </div>
+  </div>
+</li>
+{% endmacro %}

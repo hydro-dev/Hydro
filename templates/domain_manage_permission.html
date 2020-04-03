@@ -1,0 +1,60 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+<form method="post">
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('{0}: Permissions').format(handler.domain['name']) }}</h1>
+  </div>
+  <div class="section__body no-padding domain-users">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--description">
+      {% for role in roles %}
+        <col class="col--p">
+      {% endfor %}
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--description">{{ _('Permissions') }}</th>
+        {% for role in roles %}
+          <th class="col--p"><span data-tooltip="{{ role }}">{{ role }}</span></th>
+        {% endfor %}
+        </tr>
+      </thead>
+    {% for family, perms in vj4.model.builtin.PERMS_BY_FAMILY.items() %}
+      <tbody>
+        <tr>
+          <td class="col--family" colspan="{{ (roles|length)+1 }}">
+            {{ _(family) }}
+          </td>
+        </tr>
+      {% for perm in perms %}
+        <tr>
+          <td class="col--description">
+            {{ _(perm.desc) }}
+          </td>
+        {% for role in roles %}
+          <td class="col--p">
+            <label class="compact checkbox">
+              <input name="{{ role }}" data-checkbox-group="{{ role }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if bitand(handler.domain['roles'][role], perm.key) == perm.key %} checked{% endif %}>
+            </label>
+          </td>
+        {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    {% endfor %}
+    </table>
+  </div>
+  <div class="section__body">
+    <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+    <button class="rounded primary button" role="submit">
+      {{ _('Update Permission') }}
+    </button>
+    <button type="button" class="rounded button" onclick="window.history.go(-1)">
+      {{ _('Cancel') }}
+    </button>
+  </div>
+</div>
+</form>
+{% endblock %}

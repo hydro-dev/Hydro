@@ -1,0 +1,70 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          <div class="row">
+            <div class="medium-8 columns">
+              <label>
+                {{ _('Title') }}
+                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox" autofocus>
+              </label>
+            </div>
+            {% if page_name == 'problem_create' %}
+            <div class="medium-2 columns">
+              <label>
+                {{ _('Settings') }}
+                <br>
+                <label class="checkbox">
+                  <input type="checkbox" name="numeric_pid" value="on" checked>{{ _('Numeric PID') }}
+                </label>
+              </label>
+            </div>
+            <div class="medium-2 columns">
+              <label>
+                <br>
+                <label class="checkbox">
+                  <input type="checkbox" name="hidden" value="on"{% if pdoc['hidden'] %} checked{% endif %}>{{ _('Hidden') }}
+                </label>
+              </label>
+            </div>
+            {% endif %}
+          </div>
+          <div class="row"><div class="columns">
+            <label>
+              {{ _('Content') }}
+              <textarea name="content" class="textbox" data-markdown style="height: 500px">{% if pdoc %}{{ pdoc['content'] }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
+            </label>
+          </div></div>
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          {% if page_name == 'problem_edit' %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Update') }}
+            </button>
+          {% else %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Create') }}
+            </button>
+          {% endif %}
+            <button type="button" class="rounded button" onclick="window.history.go(-1)">
+              {{ _('Cancel') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+  {% if page_name == 'problem_edit' %}
+    {% with owner_udoc=udoc, owner_dudoc=dudoc %}
+    {% include "partials/problem_sidebar.html" %}
+    {% endwith %}
+  {% else %}
+    {% include 'components/md_hint.html' %}
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

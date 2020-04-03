@@ -1,0 +1,17 @@
+{% import "components/sidemenu.html" as sidemenu with context %}
+{% macro render_sidebar() %}
+<div class="section side">
+  <ol class="menu">
+    {{ sidemenu.render_item('account--circle', 'user_detail', label='My Profile', uid=handler.user['_id']) }}
+    {{ sidemenu.render_item('comment--multiple', 'home_messages') }}
+    <li class="menu__seperator"></li>
+    {{ sidemenu.render_item('wrench', 'home_account') }}
+    {{ sidemenu.render_item('web', 'home_domain_account', label='@ '+handler.domain['name']) }}
+    {{ sidemenu.render_item('sliders', 'home_preference') }}
+    {{ sidemenu.render_item('security', 'home_security') }}
+    <li class="menu__seperator"></li>
+    {{ sidemenu.render_item('file', 'home_file') }}
+    {{ sidemenu.render_item('web', 'home_domain') }}
+  </ol>
+</div>
+{% endmacro %}

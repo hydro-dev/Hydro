@@ -1,0 +1,19 @@
+<div class="location" data-fragment-id="path">
+{% if not no_path_section %}
+  <div class="row"><div class="columns">
+    <div class="media">
+      <div class="media__body">
+        <div class="location-path">
+        {% for c in path_components %}
+          / {% if c[1] %}<a href="{{ c[1] }}">{{ c[0] }}</a>{% endif %}
+        {%- endfor %}
+        </div>
+        <h1 class="location-current" data-emoji-enabled>{{ path_components[-1][0] }}</h1>
+      </div>
+      <div class="media__right">
+        {% include "partials/hamburger.html" %}
+      </div>
+    </div>
+  </div></div>
+{% endif %}
+</div>

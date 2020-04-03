@@ -1,0 +1,31 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          {% include "partials/discussion_edit_form.html" %}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <button name="operation" value="update" type="submit" class="rounded primary button">
+              {{ _('Update') }} (Ctrl+Enter)
+            </button>
+          {% if handler.own(ddoc, vj4.model.builtin.PERM_DELETE_DISCUSSION_SELF) or handler.has_perm(vj4.model.builtin.PERM_DELETE_DISCUSSION) %}
+            <button name="operation" value="delete" type="submit" class="rounded button">
+              {{ _('Delete') }}
+            </button>
+          {% endif %}
+            <button type="button" class="rounded button" onclick="window.history.go(-1)">
+              {{ _('Cancel') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include 'components/md_hint.html' %}
+  </div>
+</div>
+{% endblock %}

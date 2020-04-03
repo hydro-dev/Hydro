@@ -1,0 +1,21 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+<div class="section">
+  <div class="section__body">
+    <form method="post">
+    {% with ddoc=handler.domain %}
+      {% include "partials/domain_edit_form.html" %}
+    {% endwith %}
+      <div class="row"><div class="columns">
+        <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+        <button type="submit" class="rounded primary button">
+          {{ _('Update') }}
+        </button>
+        <button type="button" class="rounded button" onclick="window.history.go(-1)">
+          {{ _('Cancel') }}
+        </button>
+      </div></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

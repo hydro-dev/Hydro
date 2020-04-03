@@ -1,0 +1,57 @@
+<div class="section visible" id="status">
+  <div class="section__header">
+    <h1 class="section__title">
+      <span class="icon record-status--icon {{ vj4.constant.record.STATUS_CODES[rdoc['status']] }}"></span>
+      <span class="record-status--text {{ vj4.constant.record.STATUS_CODES[rdoc['status']] }}">
+        {{ vj4.constant.record.STATUS_TEXTS[rdoc['status']] }}
+      </span>
+    </h1>
+  </div>
+  <div class="section__body">
+    <pre class="compiler-text">{{ rdoc['compiler_texts']|join('\n') }}</pre>
+  </div>
+{% if rdoc['judge_texts'] %}
+  <div class="section__body">
+    <pre class="judge-text">{{ rdoc['judge_texts']|join('\n') }}</pre>
+  </div>
+{% endif %}
+{% if rdoc['cases'] %}
+  <div class="section__body no-padding">
+    <table class="data-table record_detail__table">
+      <colgroup>
+        <col class="col--case">
+        <col class="col--status">
+        <col class="col--time">
+        <col class="col--memory">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--case record-status--border">#</th>
+          <th class="col--status">{{ _('Status') }}</th>
+          <th class="col--time">{{ _('Time Cost') }}</th>
+          <th class="col--memory">{{ _('Memory Cost') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for rcdoc in rdoc['cases'] %}
+        <tr>
+          <td class="col--case record-status--border {{ vj4.constant.record.STATUS_CODES[rcdoc['status']] }}">
+            #{{ loop.index }}
+          </td>
+          <td class="col--status">
+            <span class="icon record-status--icon {{ vj4.constant.record.STATUS_CODES[rcdoc['status']] }}"></span>
+            <span class="record-status--text {{ vj4.constant.record.STATUS_CODES[rcdoc['status']] }}">
+              {{ vj4.constant.record.STATUS_TEXTS[rcdoc['status']] }}
+            </span>
+            <span>{{ rcdoc['judge_text'] }}</span>
+            <a class="tool-button" href="{{ reverse_url('wiki_help') }}#status"><span class="icon icon-help"></span></a>
+          </td>
+          <td class="col--time">{% if rcdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc['time_ms'] }}ms</td>
+          <td class="col--memory">{% if rcdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc['memory_kb']|format_size(1024) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+</div>

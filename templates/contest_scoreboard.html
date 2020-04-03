@@ -1,0 +1,58 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row"><div class="medium-12 columns">
+  <div class="section visible">
+    <div class="section__header">
+      <a class="button" target="_blank" href="{{ reverse_url('contest_scoreboard_download' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_scoreboard_download', tid=tdoc['doc_id'], ext='html') }}">
+        <span class="icon icon-download"></span> {{ _('Export as HTML') }}
+      </a>
+      <a class="button" href="{{ reverse_url('contest_scoreboard_download' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_scoreboard_download', tid=tdoc['doc_id'], ext='csv') }}">
+        <span class="icon icon-download"></span> {{ _('Export as CSV') }}
+      </a>
+    </div>
+    <div class="section__body no-padding">
+      <table class="data-table">
+        <colgroup>
+        {%- for column in rows[0] -%}
+          <col class="col--{{ column['type'] }}">
+        {%- endfor -%}
+        </colgroup>
+        <thead>
+          <tr>
+          {%- for column in rows[0] -%}
+            <th class="col--{{ column['type'] }}">
+            {% if column['type'] == 'problem_detail' %}
+              <a href="{{ reverse_url('contest_detail_problem' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem', tid=tdoc['doc_id'], pid=column['raw']['doc_id']) }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
+            {% else %}
+              {{ column['value'] }}
+            {% endif %}
+            </th>
+          {%- endfor -%}
+          </tr>
+        </thead>
+        <tbody>
+        {%- for row in rows[1:] -%}
+          <tr>
+            {%- for column in row -%}
+              <td class="col--{{ rows[0][loop.index0]['type'] }}">
+              {% if column['type'] == 'user' %}
+                {{ user.render_inline(column['raw'], badge=false) }}
+              {% elif column['type'] == 'record' %}
+              {% if column['raw'] %}
+                <a href="{{ reverse_url('record_detail', rid=column['raw']) }}">{{ column['value']|nl2br }}</a>
+              {% else %}
+                {{ column['value']|nl2br }}
+              {% endif %}
+              {% else %}
+                {{ column['value']|nl2br }}
+              {% endif %}
+              </td>
+            {%- endfor -%}
+          </tr>
+        {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div></div>
+{% endblock %}

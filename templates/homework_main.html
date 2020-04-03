@@ -1,0 +1,68 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<script>
+  var Context = {{ {
+    'docs': calendar_tdocs,
+  }|json|safe }};
+</script>
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('All Homeworks') }}</h1>
+        <div class="section__tools">
+          <span class="nojs-hide">
+            {{ _('View') }}:
+            <select class="inline compact select" name="homework_display">
+              <option value="calendar">{{ _('Calendar View') }}</option>
+              <option value="list">{{ _('List View') }}</option>
+            </select>
+          </span>
+        {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_HOMEWORK) %}
+          <a class="compact button" href="{{ reverse_url('homework_create') }}">{{ _('Create Homework') }}</a>
+        {% endif %}
+        </div>
+      </div>
+      <div class="section__body no-padding">
+      {% if not tdocs %}
+        {{ nothing.render('There is no homework so far ╰(*°▽°*)╯') }}
+      {% else %}
+        <ol class="section__list homework__list hasjs--hide">
+        {% for tdoc in tdocs %}
+          <li class="section__list__item homework__item">
+            <div class="media">
+              <div class="media__left medium">
+                <div class="homework__date numbox">
+                  <div class="numbox__num large">{{ datetime_span(tdoc['penalty_since'], false, '%d') }}</div>
+                  <div class="numbox__text">{{ datetime_span(tdoc['penalty_since'], false, '%Y-%m') }}</div>
+                </div>
+              </div>
+              <div class="media__body medium">
+                <h1 class="homework__title"><a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+                <ul class="supplementary list">
+                  <li>
+                    {{ _('Status') }}: <span class="homework-status--text {{ handler.get_status(tdoc) }}">{{ _(handler.status_text(tdoc)) }}</span>
+                  </li>
+                  <li>
+                    {{ _('Open Since') }}: {{ datetime_span(tdoc['begin_at']) }}
+                  </li>
+                  <li>
+                  {% if handler.is_homework_extended(tdoc) or handler.is_done(tdoc) %}
+                    {{ _('Hard Deadline') }}: {{ datetime_span(tdoc['end_at']) }}
+                  {% else %}
+                    {{ _('Deadline') }}: {{ datetime_span(tdoc['penalty_since']) }}
+                  {% endif %}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+        </ol>
+        <div name="calendar_entry"></div>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

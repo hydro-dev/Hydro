@@ -1,0 +1,101 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+<div style="display: none" class="dialog__body--add-user">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Add User') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label>
+          {{ _('Username / UID') }}
+          <input name="user" type="text" class="textbox" autocomplete="off" data-autofocus>
+        </label>
+      </div>
+      <div class="medium-6 columns">
+        <label>
+          {{ _('Role') }}
+          {{ form.select([('', _('Select a role'))] + roles_with_text, 'role') }}
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div style="display: none" class="dialog__body--set-role">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Set Role') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-12 columns">
+        <label>
+          {{ _('Set Roles for selected users') }}
+          {{ form.select([('', _('Select a role'))] + roles_with_text, 'role') }}
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('{0}: Users').format(handler.domain['name']) }}</h1>
+    <div class="section__tools">
+      <button class="primary rounded button" name="add_user">{{ _('Add User to Domain') }}</button>
+    </div>
+  </div>
+  {{ noscript_note.render() }}
+  <div class="section__body no-padding domain-users">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--checkbox">
+        <col class="col--uid">
+        <col class="col--user">
+        <col class="col--role">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" name="select_all" data-checkbox-toggle="user">
+            </label>
+          </th>
+          <th class="col--uid">{{ _('User ID') }}</th>
+          <th class="col--user">{{ _('Username') }}</th>
+          <th class="col--user">{{ _('Display Name') }}</th>
+          <th class="col--role">{{ _('Role') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for role in roles %}
+        {% for rudoc in rudocs[role] %}
+        {% set is_disabled=(rudoc['uid'] == handler.domain['owner_uid']) %}
+        <tr data-uid="{{ rudoc['uid'] }}">
+          <td class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" data-checkbox-group="user" {% if is_disabled %}disabled{% else %}data-checkbox-range{% endif %}>
+            </label>
+          </td>
+          <td class="col--uid">
+            {{ rudoc['uid'] }}
+          </td>
+          <td class="col--user">
+            {{ user.render_inline(udict[rudoc['uid']], badge=false) }}
+          </td>
+          <td class="col--name-alias">
+            {{ rudoc['display_name']|default('') }}
+          </td>
+          <td class="col--role">
+            {{ form.select(roles_with_text, 'role', value=rudoc['role'], extra_class='compact', disabled=is_disabled) }}
+          </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="section__body">
+    <button class="rounded button" name="remove_selected">{{ _('Remove Selected User from Domain') }}</button>
+    <button class="rounded button" name="set_roles">{{ _('Set Roles for Selected User') }}</button>
+  </div>
+</div>
+{% endblock %}

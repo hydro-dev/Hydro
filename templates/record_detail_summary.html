@@ -1,0 +1,10 @@
+<dl class="large horizontal" id="summary">
+  {% if rdoc['score'] is defined %}
+  <dt>{{ _('Score') }}</dt>
+  <dd>{{ rdoc['score'] }}</dd>
+  {% endif %}
+  <dt>{{ _('Total Time') }}</dt>
+  <dd>{% if rdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc['time_ms'] }}ms</dd>
+  <dt>{{ _('Peak Memory') }}</dt>
+  <dd>{% if rdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc['memory_kb']|format_size(1024) }}</dd>
+</dl>

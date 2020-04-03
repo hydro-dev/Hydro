@@ -1,0 +1,14 @@
+{% extends "layout/immersive.html" %}
+{% block content %}
+<div class="row"><div class="columns">
+  <div class="immersive--content immersive--center">
+    <h1>{{ _('Logout') }}</h1>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+      <div class="text-center">
+        <input type="submit" value="{{ _('Logout') }}" class="inverse rounded primary button">
+      </div>
+    </form>
+  </div>
+</div></div>
+{% endblock %}

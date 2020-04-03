@@ -1,0 +1,22 @@
+{% set no_path_section = true %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="error__container clearfix">
+  <div class="error__icon-container">
+    <div class="error__twd2"></div>
+  </div>
+  <div class="error__text-container">
+    <h1>{{ _('Oops!') }}</h1>
+    <p>{{ _(error.message).format(*error.args) }}</p>
+    <p>{{ _('Technical Information') }}:</p>
+    <p>{{ _('Type') }}: {{ error.__class__.__name__ }}</p>
+    <p>{{ _('Arguments') }}:
+      <ol>
+      {% for arg in error.args %}
+        <li>{{ arg }}</li>
+      {% endfor %}
+      </ol>
+    </p>
+  </div>
+</div>
+{% endblock %}

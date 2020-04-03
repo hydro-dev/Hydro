@@ -1,0 +1,198 @@
+{% extends "layout/wiki_base.html" %}
+{% block wiki_content %}
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="domain" data-heading>{{ _('Domain') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>每个用户可以创建自己的域。比如，老师可以为课程创建一个域，然后把题目和学生加入到此域中。再如，可以把域作为团队功能。</p>
+        <p>通过合理的设置角色及其权限，可以把域设为公开或私有。</p>
+        <p>默认域为Vijos，用户直接访问Vijos域名就会访问此域，点击Vijos Logo会从任意域跳转回Vijos域。</p>
+        <p>每个域的题库、讨论、训练以及比赛是独立且自治的。</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="compiler" data-heading>{{ _('Compilers\' Version and Parameters') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>Vijos使用<a href="https://github.com/vijos/jd4">jd4</a>进行评测，以docker镜像的形式安装至评测机。所使用的编译器均为创建镜像时<a href="https://wiki.debian.org/DebianTesting">debian testing</a>分支的最新版。编译参数如下：</p>
+        <blockquote><ul>
+          <li>Free Pascal <pre>fpc -O2 -o/out/foo /in/foo.pas</pre></li>
+          <li>C <pre>gcc -O2 -Wall -std=c99 -o /out/foo /in/foo.c -lm</pre></li>
+          <li>C++ <pre>g++ -O2 -Wall -std=c++11 -o /out/foo /in/foo.cc -lm</pre></li>
+          <li>Java <pre>javac Main.java</pre></li>
+          <li>Python <pre>python foo.py</pre></li>
+          <li>Python 3 <pre>python3 foo.py</pre></li>
+          <li>PHP <pre>php foo.php</pre></li>
+          <li>Rust <pre>rustc -O -o /out/foo /in/foo.rs</pre></li>
+          <li>Haskell <pre>ghc -O -outputdir /tmp -o /out/foo /in/foo.hs</pre></li>
+        </ul></blockquote>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="limits" data-heading>{{ _('Limitations') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>Vijos 评测机使用进程的CPU时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p><p>Vijos 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。内存空间默认限定为256MiB，题目中特别指明的，限定为题目中评测点所指定的内存空间。</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="io" data-heading>{{ _('IO') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>Vijos 支持且仅支持标准输入输出（控制台输入输出，屏幕输入输出，STD I/O），不支持文件输入输出。</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="status" data-heading>{{ _('Judge Status') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <ul>
+		      <li><span class="record-status--text pending">Waiting</span> 评测：评测请求正在等待被评测机抓取</li>
+		      <li><span class="record-status--text progress">Fetched</span> 评测：评测请求已被评测机抓取，正在准备开始评测</li>
+		      <li><span class="record-status--text progress">Compiling</span> 评测：正在编译中</li>
+		      <li><span class="record-status--text progress">Judging</span> 评测：编译成功，正在评测中</li>
+		      <li><span class="record-status--text pass">Accepted</span> 通过：程序输出完全正确</li>
+		      <li><span class="record-status--text fail">Wrong Answer</span> 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）</li>
+		      <li><span class="record-status--text fail">Time Exceeded</span> 不通过：程序运行时间超过了题目限制</li>
+		      <li><span class="record-status--text fail">Memory Exceeded</span> 不通过：程序运行内存空间超过了题目限制</li>
+		      <li><span class="record-status--text fail">Runtime Error</span> 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）</li>
+		      <li><span class="record-status--text fail">Compile Error</span> 不通过：编译失败</li>
+		      <li><span class="record-status--text fail">System Error</span> 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）</li>
+		      <li><span class="record-status--text ignored">Canceled</span> 其他：评测被取消</li>
+		      <li><span class="record-status--text fail">Unknown Error</span> 其他：未知错误</li>
+		      <li><span class="record-status--text ignored">Ignored</span> 其他：被忽略</li>
+		    </ul>
+		    <blockquote class="note">有“成绩取消”字样则说明管理员手动标记此记录为取消，可能违反了服务条款，比如代码被发现与其他用户的代码十分相似。</blockquote>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="ce" data-heading>{{ _('Compile Error') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>可能有以下情况：</p>
+        <blockquote><ul>
+        <li>1. 递交时选错了编程语言</li>
+        <li>2. Java 的主类名没有使用 "Main"</li>
+        <li>3. 对于 C/C++：见下</li>
+        <li>4. 一般性的编译错误</li>
+        </ul></blockquote>
+        
+        <blockquote class="warn">
+          <p>对 C/C++ 选手的特别提醒：</p>
+          <ul>
+          <li>1. __int64 在 GNU C++ 中应写成 long long 类型</li>
+          <li>2. main() 返回值必须定义为 int ，而不是 void</li>
+          <li>3. for 语句中的指标变量 i 将会在如"for (int i = 0...) {...}"语句之后变为无效</li>
+          <li>4. itoa 不是一个通用 ANSI 函数（标准 C/C++ 中无此函数）</li>
+          <li>5. printf 中使用 %lf 格式是不正确的</li>
+          </ul>
+        </blockquote>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="training" data-heading>{{ _('Training') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>我们精心挑选了一些题目组成了训练计划。单击导航栏的“训练”即可进入！</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="contest" data-heading>{{ _('Contest') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>按照赛制不同，有不同的递交、排名规则。
+        <p>OI 赛制所有题目均以最后一次递交为准，特别地，请避免编译错误。</p>
+        <p>OI 赛制排名规则为：总分高的排在前面，总分相等则排名相同。</p>
+        <p>ACM/ICPC 赛制所有题目递交后立即评测，以是否通过为准。</p>
+        <p>ACM/ICPC 赛制排名规则为：通过题目数多的排在前面，通过题目数相同的做题耗时（含罚时）少的排在前。</p>
+        <p>时间与空间限制以题目说明为准，默认限制参见<a href="#limits">{{ _('Limitations') }}</a>。</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="acratio" data-heading>{{ _('Accepted Ratio') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>通过率的影响极其恶劣，现在 Vijos 不提供也不承认通过率。</p>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="rp" data-heading>{{ _('RP Algorithm') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>Vijos RP 分为固定 RP 与浮动 RP ，固定 RP 可由活动、比赛等的奖励获得，浮动 RP 由一般性通过题目获得。</p>
+        <p>浮动 RP 是一个动态的数值，每个用户在每道题上获得的 RP 都不一样，并且未来也不固定（即浮动之意）。</p>
+        <blockquote class="note">每道题的浮动 RP 由该题通过总人数与该用户通过此题的名次计算得来。</blockquote>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="pbmdiff" data-heading>{{ _('Difficulty Algorithm') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>Vijos 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，通过算法计算得出。</p>
+        <p>因此，请注意以下几点：</p>
+        <ul>
+        <li>0. 一般地，难度的数值越大，该题目越难。</li>
+        <li>1. 新题目的难度可能不准确；在题目获得大量递交之后，难度才会变得较为准确。</li>
+        <li>2. 越早递交评测的用户代码的评测结果对题目难度影响越大。</li>
+        <li>3. 题目的难度由算法计算得出，有可能出现不准确的结果。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="upload" data-heading>{{ _('Dataset Format') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>我们只接受后缀名为zip的数据包上传，必须包含以下内容：
+        </p><blockquote><ul>
+        <li>- Config.ini: 题目配置文件</li>
+        <li>+ Input (目录): 放置所有标准测试输入文件</li>
+        <li>|- input0.txt</li>
+        <li>|- input1.txt</li>
+        <li>|- ...</li>
+        <li>+ Output (目录): 放置所有标准测试输出文件</li>
+        <li>|- output0.txt</li>
+        <li>|- output1.txt</li>
+        <li>|- ...</li>
+        </ul></blockquote>
+        <blockquote class="note"><p>Config.ini格式</p>
+        <p>第一行包含一个整数n，表示总共有n组数据(即Input目录中文件总数等于Output目录中文件总数等于n)；</p>
+        <p>接下来n行，第k行代表第k个测试点，格式为：<pre>[输入文件名]|[输出文件名]|[时限(单位为秒)]|[得分]|[内存限制(单位为KiB)]</pre><br>
+        其中，输入和输出文件名为 Input 或者 Output 目录中的文件名（不包含Input或者Output目录），且所有数据点得分之和必须为100，如：<br>
+        <pre>input0.txt|output0.txt|1|10|</pre></blockquote>
+      </div>
+    </div>
+    <div class="section" data-heading-extract-to="#menu-item-wiki_help">
+      <div class="section__header">
+        <h1 class="section__title" id="lostpass" data-heading>{{ _('Forgot Password and/or Username') }}</h1>
+      </div>
+      <div class="section__body typo">
+        {{ _('no_translation_warn')|safe }}
+        <p>如果您无法登录，请仔细想想，是不是用户名记错了。比如，自己原本想要注册的用户名已经被注册，所以使用了一个带有前和/或后缀的用户名。</p>
+        <p>如果您确信您的账号被盗或者忘记了账号和/或密码，请及时<a href="{{ reverse_url('user_lostpass') }}">{{ _('Reset Password or Find Username') }}</a>。</p>
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "layout/mail.html" %}
+{% block title %}{{ _('Change Email') }}{% endblock %}
+{% block content %}
+<p>{{ _('Hello, {0}! You can click following link to active your new email of your Vijos account:').format(uname) }}</p>
+<p><a href="{{ url_prefix }}{{ url }}">{{ url_prefix }}{{ url }}</a></p>
+{% endblock %}

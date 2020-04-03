@@ -1,0 +1,22 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Initialize') }}</h1>
+    <div class="section__tools">
+    <form method="post">
+      <div class="row"><div class="columns">
+        <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+        <button type="submit" class="rounded primary button">
+          <span class="icon icon-add"></span> {{ _('Initialize') }}
+        </button>
+      </div></div>
+    </form>
+    </div>
+  </div>
+  <div class="section__body">
+    
+  </div>
+</div>
+{% include 'discussion_nodes_widget.html' %}
+{% endblock %}

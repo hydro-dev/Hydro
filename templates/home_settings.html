@@ -1,0 +1,69 @@
+{% extends "layout/home_base.html" %}
+{% block home_content %}
+<div class="section" data-heading-extract-to="#menu-item-home_{{ category }}">
+  <form method="post">
+  {% for family, family_settings in settings|groupby('family') %}
+    <div class="section__header">
+      <h1 class="section__title" id="{{ family }}" data-heading>{{ _(family) }}</h1>
+    </div>
+    <div class="section__body">
+    {% for setting in family_settings %}
+    {% if setting.ui == 'text' or setting.ui == 'password' %}
+      {{ form.form_text(
+        type=setting.ui,
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key))
+      }}
+    {% elif setting.ui == 'select' %}
+      {{ form.form_select(
+        options=setting.range.items(),
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key))
+      }}
+    {% elif setting.ui == 'radio' %}
+      {{ form.form_radio(
+        options=setting.range.items(),
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key))
+      }}
+    {% elif setting.ui == 'image_radio' %}
+      {{ form.form_image_radio(
+        options=setting.range.items(),
+        image_class=setting.image_class,
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key))
+      }}
+    {% elif setting.ui == 'textarea' %}
+      {{ form.form_textarea(
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key))
+      }}
+    {% elif setting.ui == 'markdown' %}
+      {{ form.form_textarea(
+        label=setting.name,
+        help_text=setting.desc,
+        name=setting.key,
+        value=handler.get_setting(setting.key),
+        markdown=true)
+      }}
+    {% endif %}
+    {% endfor %}
+    </div>
+  {% endfor %}
+    <div class="section__body">
+      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+      <input type="submit" class="rounded primary button" value="{{ _('Save All Changes') }}">
+    </div>
+  </form>
+</div>
+{% endblock %}

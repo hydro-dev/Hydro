@@ -1,0 +1,192 @@
+{% import "components/user.html" as user with context %}
+{% import "components/problem.html" as problem with context %}
+<div class="section side section--problem-sidebar">
+{% if page_name != 'problem_detail' and page_name != 'contest_detail_problem' %}
+  <div class="section__header">
+    <h1 class="section__title">{{ pdoc['title'] }}</h1>
+  </div>
+{% endif %}
+  <div>
+    <ol class="menu">
+    {% if page_name == 'discussion_node' or page_name == 'discussion_detail' %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_DISCUSSION) %}
+      <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['doc_id']) }}">
+        <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
+      </a></li>
+    {% else %}
+      {% if not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+        <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
+        <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
+      {% else %}
+        <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
+        <span class="icon icon-add"></span> {{ _('No Permission to Create a Discussion') }}</a></li>
+      {% endif %}
+    {% endif %}
+      <li class="menu__seperator"></li>
+    {% endif %}
+    {% if page_name == 'problem_detail' %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_SUBMIT_PROBLEM) %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
+        <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
+      </a></li>
+      <li class="menu__item non-scratchpad--hide"><a class="menu__link" name="problem-sidebar__quit-scratchpad" href="javascript:;" data-global-hotkey="alt+q">
+        <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
+      </a></li>
+    {% endif %}
+    {% else %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['doc_id']) }}">
+        <span class="icon icon-flag"></span> {{ _('View Problem') }}
+      </a></li>
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_SUBMIT_PROBLEM) %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="{{ reverse_url('problem_submit', pid=pdoc['doc_id']) }}">
+        <span class="icon icon-send"></span> {{ _('Submit') }}
+      </a></li>
+    {% elif not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="javascript:showSignInDialog();">
+        <span class="icon icon-send"></span> {{ _('Login to Submit') }}
+      </a></li>
+    {% else %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link disabled{% if page_name == 'problem_submit' %} active{% endif %}" href="javascript:;">
+        <span class="icon icon-send"></span> {{ _('No Permission to Submit') }}
+      </a></li>
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_DISCUSSION) or handler.has_perm(vj4.model.builtin.PERM_VIEW_PROBLEM_SOLUTION) %}
+      <li class="menu__seperator"></li>
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_DISCUSSION) %}
+      <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="{{ reverse_url('discussion_node_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['doc_id']) }}">
+        <span class="icon icon-comment--text"></span> {{ _('Discussions') }}
+      </a></li>
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_PROBLEM_SOLUTION) %}
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="{{ reverse_url('problem_solution', pid=pdoc['doc_id']) }}">
+        <span class="icon icon-comment--text"></span> {{ _('Solutions') }}
+      </a></li>
+    {% endif %}
+    {% if page_name == 'problem_detail' and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      <li class="menu__seperator"></li>
+      <li class="menu__item"><a class="menu__link" name="problem-sidebar__copy-to" href="javascript:;">
+        <span class="icon icon-copy"></span> {{ _('Copy Problem') }}
+      </a></li>
+    {% endif %}
+    {% if handler.own(pdoc, vj4.model.builtin.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_PROBLEM) %}
+      <li class="menu__seperator"></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['doc_id']) }}">
+        <span class="icon icon-edit"></span>  {{ _('Edit') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ reverse_url('problem_settings', pid=pdoc['doc_id']) }}">
+        <span class="icon icon-wrench"></span> {{ _('Settings') }}
+      </a></li>
+    {% endif %}
+    </ol>
+  </div>
+</div>
+
+<div class="section side">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Information') }}</h1>
+  </div>
+  <div class="section__body typo">
+    <dl class="large horizontal">
+    {% if pdoc['doc_id']|string|length < 10 %}
+      <dt>{{ _('ID') }}</dt>
+      <dd>{{ pdoc['doc_id'] }}</dd>
+    {% endif %}
+    {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
+    {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      <dt>{{ _('Submission') }}</dt>
+      <dd>
+      {% if pdoc['psdoc']['status'] %}
+        <span class="icon record-status--icon {{ vj4.constant.record.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
+        <a href="{{ reverse_url('record_detail', rid=pdoc['psdoc']['rid'], domain_id=pdoc['psdoc']['domain_id']) }}" class="record-status--text {{ vj4.constant.record.STATUS_CODES[pdoc['psdoc']['status']] }}">
+          {{ vj4.constant.record.STATUS_TEXTS[pdoc['psdoc']['status']] }}
+        </a>
+      {% else %}
+        {{ _('(None)') }}
+      {% endif %}
+      </dd>
+      {% if pdoc['ac_msg'] and pdoc['psdoc']['status'] == vj4.constant.record.STATUS_ACCEPTED %}
+        <dt>{{ _('AC Message') }}</dt>
+        <dd>{{ pdoc['ac_msg'] }}</dd>
+      {% endif %}
+    {% endif %}
+    {% endif %}
+      <dt>{{ _('Difficulty') }}</dt>
+      <dd>{{ pdoc['difficulty'] or _('(None)') }}</dd>
+      <dt>{{ _('Category') }}</dt>
+      <dd>
+        {% if pdoc['category'] %}
+          <span class="hasjs--hide" name="problem-sidebar__categories">
+          {% for category in pdoc['category'] %}
+            <a href="{{ reverse_url('problem_category', category=category) }}">{{ category }}</a>
+            {% if loop.index < pdoc['category']|length %}
+              {% if category in vj4.model.builtin.PROBLEM_CATEGORIES %}
+                {{ _('problem-category-delim') }}
+              {% else %}
+                {{ _('problem-subcategory-delim') }}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          </span>
+          <span class="nojs--hide">
+            <a href="javascript:;" name="problem-sidebar__show-category">{{ _('page.problem_detail.sidebar.show_category') }}</a>
+          </span>
+        {% else %}
+          {{ _('(None)') }}
+        {% endif %}
+      </dd>
+      <dt>{{ _('Tags') }}</dt>
+      <dd>
+        {{ problem.render_problem_tags(pdoc, true) }}
+      </dd>
+      <dt>{{ _('# Submissions') }}</dt>
+      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['doc_id'] }}">{{ pdoc['num_submit'] }}</a></dd>
+      {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
+      {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      <dt>{{ _('# My Submissions') }}</dt>
+      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['doc_id'] }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc']['num_submit']|default(0) }}</a></dd>
+      {% endif %}
+      {% endif %}
+      <dt>{{ _('Accepted') }}</dt>
+      <dd>{{ pdoc['num_accept'] }}</dd>
+      <dt>{{ _('Accepted Ratio') }}</dt>
+      <dd>{% if pdoc['num_submit'] > 0 %}{{ (100 * pdoc['num_accept'] / pdoc['num_submit'])|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
+    {% if pdoc['num_be_copied'] %}
+      <dt>{{ _('Be Copied') }}</dt>
+      <dd>{{ pdoc['num_be_copied'] }}</dd>
+    {% endif %}
+    {% if pdoc['owner_uid'] != 0 %}
+      <dt>{{ _('Uploaded By') }}</dt>
+      <dd>{{ user.render_inline(owner_udoc, owner_dudoc, badge=false) }}</dd>
+    {% endif %}
+    </dl>
+  </div>
+</div>
+{% if page_name == 'problem_detail' and (tdocs or ctdocs) %}
+<div class="section side">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Related') }}</h1>
+  </div>
+  <div class="section__body typo">
+  {% if tdocs %}
+    <p>{{ _('In following training plans') }}: </p>
+    {% for tdoc in tdocs %}
+    <p><a href="{{ reverse_url('training_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a></p>
+    {% endfor %}
+  {% endif %}
+  {% if ctdocs %}
+    <p>{{ _('In following contests') }}: </p>
+    {% for tdoc in ctdocs %}
+    <p><a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a></p>
+    {% endfor %}
+  {% endif %}
+  {% if htdocs %}
+    <p>{{ _('In following homework') }}: </p>
+    {% for tdoc in htdocs %}
+    <p><a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a></p>
+    {% endfor %}
+  {% endif %}
+  </div>
+</div>
+{% endif %}

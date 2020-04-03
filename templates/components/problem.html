@@ -1,0 +1,40 @@
+{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
+  {%- if not invalid %}
+  <a
+  {%- if tdoc is none %}
+    href="{{ reverse_url('problem_detail', domain_id=pdoc['domain_id'], pid=pdoc['doc_id']) }}"
+  {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
+    href="{{ reverse_url('contest_detail_problem', domain_id=pdoc['domain_id'], pid=pdoc['doc_id'], tid=tdoc['doc_id']) }}"
+  {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_HOMEWORK %}
+    href="{{ reverse_url('homework_detail_problem', domain_id=pdoc['domain_id'], pid=pdoc['doc_id'], tid=tdoc['doc_id']) }}"
+  {%- endif %}
+  >
+  {%- endif %}
+    {% if pdoc['doc_id']|string|length < 10 %}P{{ pdoc['doc_id'] }} {% endif %}{{ pdoc['title'] }}
+  {%- if not invalid %}
+  </a>
+  {%- endif %}
+{%- if pdoc['hidden'] and show_invisible_flag %}
+  <span class="text-orange">({{ _('Hidden') }})</span>
+{%- endif %}
+{%- if not rp is none %}
+  <span class="problem__rp-tag">RP+{{ rp|round|int }}</span>
+{%- endif %}
+{%- if show_tags %}
+  {{ render_problem_tags(pdoc) }}
+{%- endif %}
+{% endmacro %}
+
+{% macro render_problem_tags(pdoc, show_none_label=false) %}
+{%- if pdoc['tag']|length > 0 %}
+  <ul class="problem__tags">
+  {%- for tag in pdoc['tag'] %}
+    <li class="problem__tag"><a class="problem__tag-link" href="{{ reverse_url('problem_category', category=tag) }}">{{ tag }}</a></li>
+  {%- endfor %}
+  </ul>
+{%- else %}
+{%- if show_none_label %}
+  {{ _('(None)') }}
+{%- endif %}
+{%- endif %}
+{% endmacro %}

@@ -1,0 +1,97 @@
+{% macro nav_item(target_page_name, target_page_prefix) %}
+<li class="nav__list-item">
+  <a href="{{ reverse_url(target_page_name) }}" class="nav__item{% if page_name.startswith(target_page_prefix) %} nav--active{% endif %}">
+    {{ _(target_page_name) }}
+  </a>
+</li>
+{% endmacro %}
+
+<nav class="nav slideout-menu" id="menu">
+  <div class="row"><div class="columns clearfix">
+    <ol class="nav__list nav__list--main clearfix">
+    {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}
+      <li class="nav__list-item"><a href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}" class="nav__logo">&nbsp;</a></li>
+    {% endif %}
+      {{ nav_item('domain_main', 'domain_main') }}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_PROBLEM) %}
+      {{ nav_item('problem_main', 'problem') }}
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_TRAINING) %}
+      {{ nav_item('training_main', 'training') }}
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_DISCUSSION) %}
+      {{ nav_item('discussion_main', 'discussion') }}
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CONTEST) %}
+      {{ nav_item('contest_main', 'contest') }}
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_HOMEWORK) %}
+      {{ nav_item('homework_main', 'homework') }}
+    {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_EDIT_DESCRIPTION) or handler.has_perm(vj4.model.builtin.PERM_EDIT_PERM) %}
+      {{ nav_item('domain_manage', 'domain_manage') }}
+    {% endif %}
+    </ol>
+    <ol class="nav__list nav__list--secondary clearfix">
+    {% if not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      <li class="nav__list-item"><a href="{{ reverse_url('user_login') }}" class="nav__item" name="nav_login">{{ _('Login') }}</a></li>
+      <li class="nav__list-item"><a href="{{ reverse_url('user_register') }}" class="nav__item--round">{{ _('Sign Up') }}</a></li>
+    {% else %}
+      <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-user" data-dropdown-trigger-desktop-only>
+        <a href="{{ reverse_url('user_detail', uid=handler.user['_id']) }}" class="nav__item">{{ handler.domain_user['display_name']|default(handler.user['uname'], true) }} <span class="icon icon-expand_more nojs--hide"></span></a>
+        <ol class="dropdown-target menu" id="menu-nav-user">
+          <li class="menu__item">
+            <a href="{{ reverse_url('user_detail', uid=handler.user['_id']) }}" class="menu__link">
+              <span class="icon icon-account--circle"></span> {{ _('My Profile') }}
+            </a>
+          </li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_messages') }}" class="menu__link">
+              <span class="icon icon-comment--multiple"></span> {{ _('home_messages') }}
+            </a>
+          </li>
+          <li class="menu__seperator"></li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_account') }}" class="menu__link">
+              <span class="icon icon-wrench"></span> {{ _('home_account') }}
+            </a>
+          </li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_domain_account') }}" class="menu__link">
+              <span class="icon icon-web"></span> @ {{ handler.domain['name'] }}
+            </a>
+          </li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_preference') }}" class="menu__link">
+              <span class="icon icon-sliders"></span> {{ _('home_preference') }}
+            </a>
+          </li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_security') }}" class="menu__link">
+              <span class="icon icon-security"></span> {{ _('home_security') }}
+            </a>
+          </li>
+          <li class="menu__seperator"></li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_file') }}" class="menu__link">
+              <span class="icon icon-file"></span> {{ _('My Files') }}
+            </a>
+          </li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('home_domain') }}" class="menu__link">
+              <span class="icon icon-web"></span> {{ _('My Domains') }}
+            </a>
+          </li>
+          <li class="menu__seperator"></li>
+          <li class="menu__item">
+            <a href="{{ reverse_url('user_logout') }}" class="menu__link" name="nav_logout">
+              <span class="icon icon-logout"></span> {{ _('Logout') }}
+            </a>
+          </li>
+        </ol>
+      </li>
+    {% endif %}
+    </ol>
+  </div></div>
+</nav>
+<nav class="nav--shadow"></nav>

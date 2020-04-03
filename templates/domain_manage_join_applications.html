@@ -1,0 +1,60 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+{% if join_settings != None %}
+<div class="section">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Information') }}</h1>
+    </div>
+    <div class="section__body typo">
+      <p>{{ _('User can join this domain by visiting the following URL') }}:</p>
+      <pre><code class="language-data">{{ handler.ui_context['url_prefix'] }}{{ reverse_url('domain_join') }}</code></pre>
+    {% if join_settings['method'] == vj4.constant.domain.JOIN_METHOD_CODE %}
+      <p>{{ _('Or, with automatically filled invitation code') }}:</p>
+      <pre><code class="language-data">{{ handler.ui_context['url_prefix'] }}{{ reverse_url('domain_join') }}?code={{ join_settings['code']|urlencode }}</code></pre>
+    {% endif %}
+    {% if join_settings['expire'] != None %}
+      <br/>
+      <blockquote class="note">
+        {{ (_('The link will be expired at {0}').format(datetime_span(join_settings['expire'], relative=false)))|safe }}
+      </blockquote>
+    {% endif %}
+    </div>
+  </div>
+{% endif %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Settings') }}</h1>
+  </div>
+  <div class="section__body">
+    <form method="POST">
+      {{ form.form_radio(
+        options=vj4.constant.domain.JOIN_METHOD_RANGE.items(),
+        label='Method',
+        name='method',
+        value=join_settings['method']|default(vj4.constant.domain.JOIN_METHOD_NONE),
+        columns=8) }}
+      {{ form.form_select(
+        options=roles_with_text,
+        label='Role Assignment',
+        name='role',
+        help_text='The role to assign when user joining the domain.',
+        value=join_settings['role']|default('')) }}
+      {{ form.form_select(
+        options=expirations.items(),
+        label='Expire',
+        name='expire',
+        help_text='User will no longer be allowed to join the domain after expiration.'
+        ) }}
+      {{ form.form_text(
+        label='Invitation Code',
+        name='invitation_code',
+        help_text='The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.',
+        value=join_settings['code']|default('')) }}
+      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+      <button class="rounded primary button" role="submit">
+        {{ _('Update Settings') }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

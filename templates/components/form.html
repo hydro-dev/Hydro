@@ -1,0 +1,201 @@
+{% macro form_begin() %}
+{% set label = kwargs.pop('label') %}
+{% set columns = kwargs.pop('columns') %}
+{% set last_column = kwargs.pop('last_column', true) %}
+{% set required = kwargs.pop('required', false) %}
+{% set hotkeys = kwargs.pop('hotkeys', none) %}
+{% set row = kwargs.pop('row', true) %}
+{% set no_label = kwargs.pop('no_label', false) %}
+{% set label_wrap = kwargs.pop('label_wrap', true) %}
+{% if row %}
+<div class="row">
+{% endif %}
+  <div
+    class="{% if columns %}medium-{{ columns }} {% endif %}columns form__item{% if last_column %} end{% endif %}"
+    {% if hotkeys %}data-hotkey="{{ hotkeys }}"{% endif %}
+  >
+    {% if not no_label %}
+    <label>
+      {{ _(label) }}
+    {% if required %}
+      ({{ _('required') }})
+    {% endif %}
+    {% if not label_wrap %}
+    </label>
+    {% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro form_end() %}
+{% set help_text = kwargs.pop('help_text', none) %}
+{% set row = kwargs.pop('row', true) %}
+{% set no_label = kwargs.pop('no_label', false) %}
+{% set label_wrap = kwargs.pop('label_wrap', true) %}
+  {% if not no_label and label_wrap %}
+    </label>
+  {% endif %}
+  {% if help_text %}
+    <p class="help-text">{{ _(help_text)|safe }}</p>
+  {% endif %}
+  </div>
+{% if row %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro form_attr(form_class) %}
+{% set disabled = kwargs.pop('disabled', false) %}
+{% set required = kwargs.pop('required', false) %}
+{% set autofocus = kwargs.pop('autofocus', false) %}
+{% set date = kwargs.pop('date', false) %}
+{% set time = kwargs.pop('time', false) %}
+  class="{{ form_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
+  {% if disabled %}disabled{% endif %}
+  {% if required %}required{% endif %}
+  {% if autofocus %}autofocus data-autofocus{% endif %}
+  {% if date %}data-pick-date{% endif %}
+  {% if time %}data-pick-time{% endif %}
+{% endmacro %}
+
+{% macro container_attr(container_class) %}
+{% set extra_class = kwargs.pop('extra_class', none) %}
+  class="{{ container_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
+{% endmacro %}
+
+{% macro select(options, name='', value='') %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('select-container', **kwargs) }}
+>
+  <select
+    name="{{ name }}"
+    {{ form_attr('select', **kwargs) }}
+  >
+  {% for k, v in options %}
+    <option value="{{ k }}"{% if value == k %} selected{% endif %}>
+      {{ _(v) }}
+    </option>
+  {% endfor %}
+  </select>
+</div>
+{% endmacro %}
+
+{% macro form_select(columns=5) %}
+{{ form_begin(columns=columns, **kwargs) }}
+{{ select(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, **kwargs) }}
+{% endmacro %}
+
+{% macro radio(options, name='', value='') %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('radiobox-container', **kwargs) }}
+>
+{% for k, v in options %}
+  <label class="radiobox">
+    <input
+      value="{{ k }}"
+      type="radio"
+      name="{{ name }}"
+      {{ form_attr('radiobox__input', **kwargs) }}
+      {% if value == k %} checked{% endif %}
+    /> {{ _(v) }}
+  </label>
+{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro form_radio(columns=5) %}
+{{ form_begin(columns=columns, label_wrap=false, **kwargs) }}
+{{ radio(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, label_wrap=false, **kwargs) }}
+{% endmacro %}
+
+{% macro image_radio(options, name='', value='', image_class='') %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('radiobox-container with-image', **kwargs) }}
+>
+{% for k, v in options %}
+  <label class="radiobox with-image">
+    <input
+      value="{{ k }}"
+      type="radio"
+      name="{{ name }}"
+      {{ form_attr('radiobox__input', **kwargs) }}
+      {% if value == k %} checked{% endif %}
+    />
+    <div class="radiobox__image-container" data-tooltip="{{ _(v) }}">
+      <div class="radiobox__image {{ image_class.format(k) }}"></div>
+    </div>
+  </label>
+{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro form_image_radio(columns=8) %}
+{{ form_begin(columns=columns, label_wrap=false, **kwargs) }}
+{{ image_radio(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, label_wrap=false, **kwargs) }}
+{% endmacro %}
+
+{% macro text(name='', value='', placeholder='', type='text') %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('textbox-container', **kwargs) }}
+>
+  <input
+    type="{{ type }}"
+    name="{{ name }}"
+    value="{{ value }}"
+    placeholder="{{ placeholder }}"
+    {{ form_attr('textbox', **kwargs) }}
+  >
+</div>
+{% endmacro %}
+
+{% macro form_text(columns=5) %}
+{{ form_begin(columns=columns, **kwargs) }}
+{{ text(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, **kwargs) }}
+{% endmacro %}
+
+{% macro textarea(name='', value='', placeholder='') %}
+{% set markdown = kwargs.pop('markdown', false) %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('textarea-container', **kwargs) }}
+>
+  <textarea
+    name="{{ name }}"
+    placeholder="{{ placeholder }}"
+    {% if markdown %}data-markdown{% endif %}
+    {{ form_attr('textbox', **kwargs) }}
+  >{{ value }}</textarea>
+</div>
+{% endmacro %}
+
+{% macro form_textarea(columns=8) %}
+{{ form_begin(columns=columns, **kwargs) }}
+{{ textarea(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, **kwargs) }}
+{% endmacro %}
+
+{% macro checkbox(label='', name='', value=false) %}
+<div
+  name="form_item_{{ name }}"
+  {{ container_attr('checkbox-container', **kwargs) }}
+>
+  <label class="checkbox">
+    <input type="checkbox" name="{{ name }}"{% if value %} checked{% endif %}
+      {{ form_attr('checkbox', **kwargs) }}
+    >{{ _(label) }}
+  </label>
+</div>
+{% endmacro %}
+
+{% macro form_checkbox(columns=5) %}
+{{ form_begin(columns=columns, no_label=True, **kwargs) }}
+{{ checkbox(columns=columns, **kwargs) }}
+{{ form_end(columns=columns, no_label=True, **kwargs) }}
+{% endmacro %}

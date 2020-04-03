@@ -1,0 +1,18 @@
+{% import "components/record.html" as record with context %}
+<tr data-rid="{{ rdoc['_id'] }}">
+  {{ record.render_status_td(rdoc) }}
+  <td class="col--pretest">
+  {% if rdoc['type'] == vj4.constant.record.TYPE_PRETEST %}
+    {{ _('Yes') }}
+  {% else %}
+    {{ _('No') }}
+  {% endif %}
+  </td>
+  <td class="col--memory">
+    {{ (rdoc['memory_kb'] / 1000)|round(0, 'ceil')|int }} MB
+  </td>
+  <td class="col--time">
+    {{ (rdoc['time_ms'] / 1000)|round(1) }}s
+  </td>
+  <td class="col--submit-at">{{ datetime_span(rdoc['_id'].generation_time) }}</td>
+</tr>

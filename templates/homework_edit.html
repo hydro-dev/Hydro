@@ -1,0 +1,48 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_text(columns=8, label='Title', name='title', placeholder=_('title'), value=tdoc['title']|default(''), autofocus=True) }}
+          <div class="row">
+            {{ form.form_text(columns=4, label='Begin Date', name='begin_at_date', placeholder='YYYY-mm-dd', value=date_begin_text, date=True, row=False) }}
+            {{ form.form_text(columns=4, last_column=True, label='Begin Time', name='begin_at_time', placeholder='HH:MM', value=time_begin_text, time=True, row=False) }}
+          </div><div class="row">
+            {{ form.form_text(columns=4, label='End Date', name='penalty_since_date', placeholder='YYYY-mm-dd', value=date_penalty_text, date=True, row=False) }}
+            {{ form.form_text(columns=4, last_column=True, label='End Time', name='penalty_since_time', placeholder='HH:MM', value=time_penalty_text, time=True, row=False) }}
+          </div>
+          {{ form.form_text(columns=4, label='Extension (days)', name='extension_days', value=extension_days) }}
+          <div class="row"><div class="columns">
+            <label>
+              {{ _('Extension Score Penalty') }}
+              <textarea name="penalty_rules" class="monospace textbox">{% if tdoc %}{{ penalty_rules }}{% else %}{% include 'partials/homework_default_penalty_rules.yaml' %}{% endif %}</textarea>
+            </label>
+          </div></div>
+          {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
+          {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          {% if page_name == 'homework_edit' %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Update') }}
+            </button>
+          {% else %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Create') }}
+            </button>
+          {% endif %}
+            <button type="button" class="rounded button" onclick="window.history.go(-1)">
+              {{ _('Cancel') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include 'components/md_hint.html' %}
+  </div>
+</div>
+{% endblock %}

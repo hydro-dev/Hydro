@@ -1,0 +1,17 @@
+{% extends 'layout/simple.html' %}
+{% block body %}
+<form method="post" enctype="multipart/form-data">
+{% if pdoc['data'] is mapping %}
+<p><b>{{ _('Current dataset comes from') }} <a href="{{ reverse_url('problem_detail', domain_id=pdoc['data']['domain'], pid=pdoc['data']['pid']) }}" target="_blank">{{ pdoc['data']['domain'] }}/{{ pdoc['data']['pid'] }}</a></b></p>
+{% else %}
+<p>{{ _('Current dataset: {0}').format(pdoc['data']|default(_('(None)'))) }}</p>
+<p>{{ _('MD5: {0}').format(md5|default(_('(None)'))) }}</p>
+{% endif %}
+<p>
+{{ _('New dataset') }}:
+<input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+<input type="file" name="file">
+<input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
+</p>
+</form>
+{% endblock %}

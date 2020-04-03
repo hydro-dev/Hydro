@@ -1,0 +1,6 @@
+{% extends "layout/mail.html" %}
+{% block title %}{{ _('Lost Password') }}{% endblock %}
+{% block content %}
+<p>{{ _('Hello, {0}! You can click following link to reset the password of your Vijos account:').format(uname) }}</p>
+<p><a href="{{ url_prefix }}{{ url }}">{{ url_prefix }}{{ url }}</a></p>
+{% endblock %}

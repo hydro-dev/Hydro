@@ -1,0 +1,15 @@
+{% macro render_item(icon_name, page_name, label=none) %}
+<li class="menu__item" id="menu-item-{{ page_name }}">
+  {% set target_url = reverse_url(page_name, **kwargs) %}
+  <a href="{{ target_url }}" class="menu__link{% if handler.request.path_qs == target_url %} active{% endif %}">
+  {% if icon_name %}
+    <span class="icon icon-{{ icon_name }}"></span>
+  {% endif %}
+  {% if label %}
+    {{ _(label) }}
+  {% else %}
+    {{ _(page_name) }}
+  {% endif %}
+  </a>
+</li>
+{% endmacro %}
