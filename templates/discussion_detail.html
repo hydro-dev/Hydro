@@ -37,7 +37,7 @@
         <li>
           {{ _('{0} views').format(ddoc['views']) }}
         </li>
-      {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
         <li><form class="form--inline" method="post">
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">

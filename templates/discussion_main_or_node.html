@@ -26,7 +26,7 @@
       {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_DISCUSSION) %}
         <p><a href="{{ reverse_url('discussion_create', doc_id=vnode['doc_id']) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
       {% else %}
-        {% if not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+        {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}
           <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>
         {% else %}
           <p><a href="javascript:;" class="disabled expanded primary button">{{ _('No Permission to Create a Discussion') }}</a></p>

@@ -81,7 +81,7 @@
           <dd><a href="{{ reverse_url('record_pretest_data', rid=rdoc['_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
         {% elif rdoc['type'] == vj4.constant.record.TYPE_SUBMISSION and pdoc and (handler.own(pdoc, vj4.model.builtin.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(vj4.model.builtin.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
           <dt>{{ _('Problem Data') }}</dt>
-          <dd><a href="{{ reverse_url('problem_data', pid=pdoc['doc_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
+          <dd><a href="{{ reverse_url('problem_data', pid=pdoc['_id']) }}"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>
         {% endif %}
           <dt>{{ _('Language') }}</dt>
           <dd>

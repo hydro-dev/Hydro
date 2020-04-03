@@ -1,8 +1,8 @@
 {% extends "layout/mail.html" %}
-{% block title %}{{ _('P{0} - {1} Accepted!').format(pdoc['doc_id'], pdoc['title']) }}{% endblock %}
+{% block title %}{{ _('P{0} - {1} Accepted!').format(pdoc['_id'], pdoc['title']) }}{% endblock %}
 {% block content %}
 <p>{{ _('Congratulations! Your submission is accepted.') }}</p>
-<p>{{ _('Problem') }}: <a href="{{ url_prefix }}{{ reverse_url('problem_detail', domain_id=pdoc['domain_id'], pid=pdoc['doc_id']) }}">P{{ pdoc['doc_id'] }} {{ pdoc['title'] }}</a></p>
+<p>{{ _('Problem') }}: <a href="{{ url_prefix }}{{ reverse_url('problem_detail', domain_id=pdoc['domain_id'], pid=pdoc['_id']) }}">P{{ pdoc['_id'] }} {{ pdoc['title'] }}</a></p>
 <p>{{ _('Code') }}:</p>
 <pre>
 {{ rdoc['code'] }}

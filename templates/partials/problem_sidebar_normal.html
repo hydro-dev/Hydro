@@ -10,11 +10,11 @@
     <ol class="menu">
     {% if page_name == 'discussion_node' or page_name == 'discussion_detail' %}
     {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_DISCUSSION) %}
-      <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['_id']) }}">
         <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
       </a></li>
     {% else %}
-      {% if not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}
         <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
         <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
       {% else %}
@@ -34,15 +34,15 @@
       </a></li>
     {% endif %}
     {% else %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['_id']) }}">
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
     {% if handler.has_perm(vj4.model.builtin.PERM_SUBMIT_PROBLEM) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="{{ reverse_url('problem_submit', pid=pdoc['doc_id']) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="{{ reverse_url('problem_submit', pid=pdoc['_id']) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    {% elif not handler.has_perm(perm.PERM_LOGGEDIN) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="javascript:showSignInDialog();">
         <span class="icon icon-send"></span> {{ _('Login to Submit') }}
       </a></li>
@@ -55,16 +55,16 @@
       <li class="menu__seperator"></li>
     {% endif %}
     {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_DISCUSSION) %}
-      <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="{{ reverse_url('discussion_node_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="{{ reverse_url('discussion_node_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['_id']) }}">
         <span class="icon icon-comment--text"></span> {{ _('Discussions') }}
       </a></li>
     {% endif %}
     {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_PROBLEM_SOLUTION) %}
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="{{ reverse_url('problem_solution', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="{{ reverse_url('problem_solution', pid=pdoc['_id']) }}">
         <span class="icon icon-comment--text"></span> {{ _('Solutions') }}
       </a></li>
     {% endif %}
-    {% if page_name == 'problem_detail' and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    {% if page_name == 'problem_detail' and handler.has_perm(perm.PERM_LOGGEDIN) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link" name="problem-sidebar__copy-to" href="javascript:;">
         <span class="icon icon-copy"></span> {{ _('Copy Problem') }}
@@ -72,10 +72,10 @@
     {% endif %}
     {% if handler.own(pdoc, vj4.model.builtin.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ reverse_url('problem_settings', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ reverse_url('problem_settings', pid=pdoc['_id']) }}">
         <span class="icon icon-wrench"></span> {{ _('Settings') }}
       </a></li>
     {% endif %}
@@ -89,12 +89,12 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-    {% if pdoc['doc_id']|string|length < 10 %}
+    {% if pdoc['_id']|string|length < 10 %}
       <dt>{{ _('ID') }}</dt>
-      <dd>{{ pdoc['doc_id'] }}</dd>
+      <dd>{{ pdoc['_id'] }}</dd>
     {% endif %}
     {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-    {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('Submission') }}</dt>
       <dd>
       {% if pdoc['psdoc']['status'] %}
@@ -141,11 +141,11 @@
         {{ problem.render_problem_tags(pdoc, true) }}
       </dd>
       <dt>{{ _('# Submissions') }}</dt>
-      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['doc_id'] }}">{{ pdoc['num_submit'] }}</a></dd>
+      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['_id'] }}">{{ pdoc['num_submit'] }}</a></dd>
       {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-      {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+      {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('# My Submissions') }}</dt>
-      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['doc_id'] }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc']['num_submit']|default(0) }}</a></dd>
+      <dd><a href="{{ reverse_url('record_main') }}?pid={{ pdoc['_id'] }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc']['num_submit']|default(0) }}</a></dd>
       {% endif %}
       {% endif %}
       <dt>{{ _('Accepted') }}</dt>

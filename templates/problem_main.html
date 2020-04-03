@@ -2,84 +2,96 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-<script>
-  var Context = {{ {
-    'getProblemUrlWithCategory': reverse_url('problem_category', category='{category}'),
-    'getProblemUrlWithoutCategory': reverse_url('problem_main'),
-    'currentCategory': category,
-  }|json|safe }};
-</script>
-<div class="row">
-  <div class="medium-9 columns">
-    <div class="section">
-      <div class="section__body no-padding">
-        {% include "partials/problem_list.html" %}
-      </div>
-    </div>
-  </div>
-  <div class="medium-3 columns">
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Categories') }}</h1>
-      </div>
-      <div class="section__body"><ul class="group-list" data-widget-cf-container>
-      {% for category, sub_categories in categories.items() %}
-        <li class="group-list__item">
-          <h2 class="section__title"><a href="{{ reverse_url('problem_category', category=category|urlencode) }}">{{ category }}</a></h2>
-        {% if sub_categories|length > 0 %}
-          <ol class="chip-list">
-          {% for sub_category in sub_categories %}
-            <li class="chip-list__item"><a class="typo-a" href="{{ reverse_url('problem_category', category=(category|urlencode + ',' + sub_category|urlencode)) }}">{{ sub_category }}</a></li>
-          {% endfor %}
-          </ol>
-        {% endif %}
-        </li>
-      {% endfor %}
-      </ul></div>
-      <div class="section__body">
-        {% include "partials/problem_lucky.html" %}
-      </div>
-    </div>
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Search') }}</h1>
-      </div>
-      <form method="get" action="{{ reverse_url('problem_search') }}">
-        <div class="section__body">
-          <!-- TODO: replace with form_builder -->
-          <label>
-            <input name="q" type="text" class="textbox" value="" placeholder="1001">
-          </label>
-          <button type="submit" class="primary button">{{ _('Search') }}</button>
+    <script>
+        var Context = {
+            getProblemUrlWithCategory: "/p?category={{category}}",
+            getProblemUrlWithoutCategory: "/p",
+            currentCategory: "{{category}}"
+        };
+    </script>
+    <div class="row">
+        <div class="medium-9 columns">
+            <div class="section">
+                <div class="section__body no-padding">
+                    {% include "partials/problem_list.html" %}
+                </div>
+            </div>
         </div>
-      </form>
-    </div>
-  {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_PROBLEM) %}
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Create Problem') }}</h1>
-      </div>
-      <ol class="menu">
-        <li class="menu__item">
-          <a href="{{ reverse_url('problem_create') }}" class="menu__link"><span class="icon icon-add"></span> {{ _('Create Problem') }}</a>
-        </li>
-        <li class="menu__item">
-          <a href="{{ reverse_url('problem_copy') }}" class="menu__link"><span class="icon icon-copy"></span> {{ _('Copy Problem') }}</a>
-        </li>
-      </ol>
-      <div class="section__body">
-        <div class="typo supplementary">
-          <p>{{ _('You have permissions to create problems for this domain.') }}</p>
+        <div class="medium-3 columns">
+            <div class="section side">
+                <div class="section__header">
+                    <h1 class="section__title">{{ _('Categories') }}</h1>
+                </div>
+                <div class="section__body">
+                    <ul class="group-list" data-widget-cf-container>
+                        {% for category in builtin.CATEGORIES %}
+                            {% for sub_categories in category %}
+                                <li class="group-list__item">
+                                    <h2 class="section__title">
+                                        <a href="{{ reverse_url('problem_category', category=category|urlencode) }}">{{ category }}</a>
+                                    </h2>
+                                    {% if sub_categories | length > 0 %}
+                                        <ol class="chip-list">
+                                            {% for sub_category in sub_categories %}
+                                                <li class="chip-list__item">
+                                                    <a class="typo-a" href="{{ reverse_url('problem_category', category=(category|urlencode + ',' + sub_category|urlencode)) }}">{{ sub_category }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ol>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section__body">
+                    {% include "partials/problem_lucky.html" %}
+                </div>
+            </div>
+            <div class="section side">
+                <div class="section__header">
+                    <h1 class="section__title">{{ _('Search') }}</h1>
+                </div>
+                <form method="get" action="{{ reverse_url('problem_search') }}">
+                    <div class="section__body">
+                        <!-- TODO: replace with form_builder -->
+                        <label>
+                            <input name="q" type="text" class="textbox" value="" placeholder="1001">
+                        </label>
+                        <button type="submit" class="primary button">{{ _('Search') }}</button>
+                    </div>
+                </form>
+            </div>
+            {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_PROBLEM) %}
+                <div class="section side">
+                    <div class="section__header">
+                        <h1 class="section__title">{{ _('Create Problem') }}</h1>
+                    </div>
+                    <ol class="menu">
+                        <li class="menu__item">
+                            <a href="{{ reverse_url('problem_create') }}" class="menu__link">
+                                <span class="icon icon-add"></span>
+                                {{ _('Create Problem') }}</a>
+                        </li>
+                        <li class="menu__item">
+                            <a href="{{ reverse_url('problem_copy') }}" class="menu__link">
+                                <span class="icon icon-copy"></span>
+                                {{ _('Copy Problem') }}</a>
+                        </li>
+                    </ol>
+                    <div class="section__body">
+                        <div class="typo supplementary">
+                            <p>{{ _('You have permissions to create problems for this domain.') }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="section side">
+                <div class="section__header">
+                    <h1 class="section__title">{{ _('Statistics') }}</h1>
+                </div>
+                {% include "partials/problem_stat.html" %}
+            </div>
         </div>
-      </div>
     </div>
-  {% endif %}
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Statistics') }}</h1>
-      </div>
-      {% include "partials/problem_stat.html" %}
-    </div>
-  </div>
-</div>
 {% endblock %}

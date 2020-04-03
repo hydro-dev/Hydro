@@ -111,7 +111,7 @@
                 </div>
                 <div class="section__body">
                 {% for pdoc in pdocs %}
-                  <p><a href="{{ reverse_url('problem_detail', pid=pdoc['doc_id']) }}">{{ pdoc['title'] }}</a></p>
+                  <p><a href="{{ reverse_url('problem_detail', pid=pdoc['_id']) }}">{{ pdoc['title'] }}</a></p>
                 {% endfor %}
                 </div>
               {% endif %}{# if pdocs #}

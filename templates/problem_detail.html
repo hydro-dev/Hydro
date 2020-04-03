@@ -29,11 +29,11 @@
 </div>
 <script>
   var Context = {{ {
-    'problemId': pdoc['doc_id'],
-    'socketUrl': '{}-conn'.format(reverse_url('problem_pretest', pid=pdoc['doc_id'])),
-    'postPretestUrl': reverse_url('problem_pretest', pid=pdoc['doc_id']),
-    'postSubmitUrl': reverse_url('problem_submit', pid=pdoc['doc_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['doc_id']),
-    'getSubmissionsUrl': reverse_url('problem_submit', pid=pdoc['doc_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['doc_id']),
+    'problemId': pdoc['_id'],
+    'socketUrl': '{}-conn'.format(reverse_url('problem_pretest', pid=pdoc['_id'])),
+    'postPretestUrl': reverse_url('problem_pretest', pid=pdoc['_id']),
+    'postSubmitUrl': reverse_url('problem_submit', pid=pdoc['_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']),
+    'getSubmissionsUrl': reverse_url('problem_submit', pid=pdoc['_id']) if not tdoc else reverse_url('contest_detail_problem_submit' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']),
     'getRecordDetailUrl': reverse_url('record_detail', rid='{rid}'),
     'code_lang': handler.get_setting('code_lang'),
     'code_template': handler.get_code_template(),

@@ -24,7 +24,7 @@
     {% endif %}
     {% if not attended and not handler.is_done(tdoc) %}
       <li class="menu__item">
-    {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_HOMEWORK) and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_HOMEWORK) and handler.has_perm(perm.PERM_LOGGEDIN) %}
         <form action="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
@@ -32,7 +32,7 @@
             <span class="icon icon-add"></span> {{ _('Claim Homework') }}
           </button>
         </form>
-    {% elif not handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    {% elif not handler.has_perm(perm.PERM_LOGGEDIN) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
         </a>

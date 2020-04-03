@@ -139,7 +139,7 @@
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>
                   {% endif %}
-                {% elif handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+                {% elif handler.has_perm(perm.PERM_LOGGEDIN) %}
                   <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
                 {% endif %}
                 </li>

@@ -16,24 +16,24 @@
         <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
       </a></li>
     {% else %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_detail_problem', tid=tdoc['doc_id'], pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_detail_problem', tid=tdoc['doc_id'], pid=pdoc['_id']) }}">
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="{{ reverse_url('homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['doc_id']) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="{{ reverse_url('homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif handler.is_done(tdoc) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['doc_id']) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ reverse_url('problem_detail', pid=pdoc['_id']) }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
     {% if handler.own(pdoc, vj4.model.builtin.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(vj4.model.builtin.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ reverse_url('problem_edit', pid=pdoc['_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ reverse_url('problem_settings', pid=pdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ reverse_url('problem_settings', pid=pdoc['_id']) }}">
         <span class="icon icon-wrench"></span> {{ _('Settings') }}
       </a></li>
     {% endif %}
