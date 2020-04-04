@@ -1,9 +1,10 @@
+{% set page_name = "record_main" %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <script>
-  var Context = {{ {
-    'socketUrl': socket_url,
-  }|json|safe }};
+  var Context = {
+    'socketUrl': "/socket/{{ socket_url }}",
+  };
 </script>
 <div class="row">
   <div class="medium-12 columns">
@@ -13,7 +14,7 @@
           <h1 class="section__title">{{ _('Filter') }}</h1>
           <div class="section__tools">
             <button type="submit" class="primary button"><span class="icon icon-filter"></span> {{ _('Filter') }}</button>
-            <a href="{{ reverse_url('record_main') }}" class="button">{{ _('Reset') }}</a>
+            <a href="/r" class="button">{{ _('Reset') }}</a>
           </div>
         </div>
         <div class="section__body">
@@ -73,13 +74,13 @@
           </thead>
           <tbody>
           {% for rdoc in rdocs %}
-          {% with udoc = udict[rdoc['uid']], dudoc = dudict[rdoc['uid']], pdoc = pdict[(rdoc['domain_id'], rdoc['pid'])] %}
+            {% set udoc = udict[rdoc['uid']] %}
+            {% set pdoc = pdict[rdoc['pid']] %}
             {% include 'record_main_tr.html' %}
-          {% endwith %}
           {% endfor %}
           </tbody>
         </table>
-        {% if handler.has_priv(vj4.model.builtin.PRIV_VIEW_JUDGE_STATISTICS) %}
+        {% if handler.has_perm(perm.PERM_VIEW_JUDGE_STATISTICS) %}
         <ul class="pager">
           <li>
             <a class="pager__item next link" href="?start={{ rdocs[-1]['_id'] }}&{{ query_string }}">{{ _('pager_next') }}</a>

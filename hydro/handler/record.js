@@ -3,19 +3,28 @@ const
     { constants } = require('../options'),
     { GET } = require('../service/server'),
     record = require('../model/record'),
+    user = require('../model/user'),
+    problem = require('../model/problem'),
     { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
 
 GET('/r', async ctx => {
     let q = {},
         page = ctx.query.page || 1;
     let rdocs = await record.getMany(q, { rid: 1 }, page, constants.RECORD_PER_PAGE);
-    ctx.body = { page, rdocs };
+    let pdict, udict;
+    for (let rdoc in rdocs) {
+        udict[rdoc.uid] = await user.getById(rdoc.uid);
+        pdict[rdoc.pid] = await problem.get({ pid: rdoc.pid, uid: ctx.state.user._id });
+    }
+    ctx.templateName = 'record_main.html';
+    ctx.body = { page, rdocs, pdict, udict };
 });
 GET('/r/:rid', async ctx => {
     let uid = ctx.state.user._id, rid = new bson.ObjectID(ctx.params.rid);
     let rdoc = await record.get(rid);
     if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-    if (rdoc.creator != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
+    if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
+    ctx.templateName = 'record_detail.html';
     ctx.body = { rdoc };
 });
 

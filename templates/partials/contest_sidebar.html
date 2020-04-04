@@ -2,7 +2,7 @@
 {% import "components/contest.html" as contest with context %}
 <div class="section side">
 {% if page_name != 'contest_detail' %}
-  <a class="contest-sidebar__bg" href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}">
+  <a class="contest-sidebar__bg" href="/t/{{ tdoc._id }}">
     <div class="section__body">
       <h1>{{ tdoc['title'] }}</h1>
       <div class="contest-sidebar__status">
@@ -34,14 +34,14 @@
       <li class="menu__seperator"></li>
     {% endif %}
     {% if page_name != 'contest_detail' %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link" href="/t/{{ tdoc._id }}">
         <span class="icon icon-award"></span> {{ _('View Contest') }}
       </a></li>
     {% endif %}
     {% if not attended and not handler.is_done(tdoc) %}
       <li class="menu__item">
     {% if handler.has_perm(perm.PERM_ATTEND_CONTEST) and handler.has_perm(perm.PERM_LOGGEDIN) %}
-        <form action="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" method="POST">
+        <form action="/t/{{ tdoc._id }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
           <button class="menu__link" type="submit">
@@ -78,7 +78,7 @@
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>
     {% endif %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('record_main') }}?tid={{ tdoc['doc_id'] }}">
+      <li class="menu__item"><a class="menu__link" href="/r?tid={{ tdoc['doc_id'] }}">
         <span class="icon icon-flag"></span> {{ _('All Submissions') }}
       </a></li>
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('wiki_help') }}#contest">

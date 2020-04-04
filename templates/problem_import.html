@@ -8,8 +8,8 @@
           <div class="row">
             <div class="medium-8 columns">
               <label>
-                {{ _('Copy from') }}
-                <input name="src_domain_id" placeholder="{{ _('Domain ID') }}" class="textbox" autocomplete="off">
+                {{ _('Import from') }}
+                <input name="src" placeholder="{{ _('Source') }}" class="textbox" autocomplete="off">
               </label>
             </div>
             <div class="medium-2 columns">
@@ -17,7 +17,7 @@
                 {{ _('Settings') }}
                 <br>
                 <label class="checkbox">
-                  <input type="checkbox" name="numeric_pid" value="on" checked>{{ _('Numeric PID') }}
+                <input name="src" placeholder="{{ _('ProblemID') }}" class="textbox" autocomplete="off">
                 </label>
               </label>
             </div>
@@ -32,8 +32,8 @@
           </div>
           <div class="row"><div class="columns">
             <label>
-              {{ _('Problem ID List') }}
-              <textarea name="src_pids" class="textbox" style="height: 300px"></textarea>
+              {{ _('Source URL') }}
+              <textarea name="src" class="textbox" style="height: 300px"></textarea>
             </label>
           </div></div>
           <div class="row"><div class="columns">
@@ -52,10 +52,10 @@
   <div class="medium-3 columns">
     <div class="section side">
       <div class="section__body typo">
-        <h2>{{ _('What\'s this?') }}</h2>
-        <p>{{ _('With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.') }}</p>
+        <h2>{{ _('What is this?') }}</h2>
+        <p>{{ _('With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported. However, their test data are not copied directly.') }}</p>
         <h2>{{ _('About test data') }}</h2>
-        <p>{{ _('Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.') }}</p>
+        <p>{{ _('Instead of copying the test data directly, the test data of the import problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.') }}</p>
       </div>
     </div>
   </div>

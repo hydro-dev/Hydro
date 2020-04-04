@@ -1,12 +1,12 @@
 {% macro form_begin(args) %}
-{% set label = args.pop('label') %}
-{% set columns = args.pop('columns') %}
-{% set last_column = args.pop('last_column', true) %}
-{% set required = args.pop('required', false) %}
-{% set hotkeys = args.pop('hotkeys', none) %}
-{% set row = args.pop('row', true) %}
-{% set no_label = args.pop('no_label', false) %}
-{% set label_wrap = args.pop('label_wrap', true) %}
+{% set label = args.label %}
+{% set columns = args.columns %}
+{% set last_column = args.last_column or true %}
+{% set required = args.required or false %}
+{% set hotkeys = args.hotkeys or none %}
+{% set row = args.row or true %}
+{% set no_label = args.no_label or false %}
+{% set label_wrap = args.label_wrap or true %}
 {% if row %}
 <div class="row">
 {% endif %}
@@ -27,10 +27,10 @@
 {% endmacro %}
 
 {% macro form_end(args) %}
-{% set help_text = args.pop('help_text', none) %}
-{% set row = args.pop('row', true) %}
-{% set no_label = args.pop('no_label', false) %}
-{% set label_wrap = args.pop('label_wrap', true) %}
+{% set help_text = args.help_text or none %}
+{% set row = args.row or true %}
+{% set no_label = args.no_label or false %}
+{% set label_wrap = args.label_wrap or true %}
   {% if not no_label and label_wrap %}
     </label>
   {% endif %}
@@ -44,11 +44,11 @@
 {% endmacro %}
 
 {% macro form_attr(form_class, args) %}
-{% set disabled = args.pop('disabled', false) %}
-{% set required = args.pop('required', false) %}
-{% set autofocus = args.pop('autofocus', false) %}
-{% set date = args.pop('date', false) %}
-{% set time = args.pop('time', false) %}
+{% set disabled = args.disabled or false %}
+{% set required = args.required or false %}
+{% set autofocus = args.autofocus or false %}
+{% set date = args.date or false %}
+{% set time = args.time or false %}
   class="{{ form_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
   {% if disabled %}disabled{% endif %}
   {% if required %}required{% endif %}
@@ -58,22 +58,22 @@
 {% endmacro %}
 
 {% macro container_attr(container_class, args) %}
-{% set extra_class = args.pop('extra_class', none) %}
+{% set extra_class = args.extra_class or none %}
   class="{{ container_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
 {% endmacro %}
 
-{% macro select(options, name='', value='', args) %}
+{% macro select(args) %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('select-container', args) }}
 >
   <select
-    name="{{ name }}"
+    name="{{ args.name }}"
     {{ form_attr('select', args) }}
   >
-  {% for k, v in options %}
-    <option value="{{ k }}"{% if value == k %} selected{% endif %}>
-      {{ _(v) }}
+  {% for item in args.options %}
+    <option value="{{ item.id }}"{% if value == item.id %} selected{% endif %}>
+      {{ _(item.name) }}
     </option>
   {% endfor %}
   </select>
@@ -86,20 +86,20 @@
 {{ form_end({columns:columns}|assign(args)) }}
 {% endmacro %}
 
-{% macro radio(options, name='', value='', args) %}
+{% macro radio(args) %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('radiobox-container', args) }}
 >
-{% for k, v in options %}
+{% for item in options %}
   <label class="radiobox">
     <input
-      value="{{ k }}"
+      value="{{ item.id }}"
       type="radio"
-      name="{{ name }}"
+      name="{{ args.name }}"
       {{ form_attr('radiobox__input', args) }}
-      {% if value == k %} checked{% endif %}
-    /> {{ _(v) }}
+      {% if value == args.id %} checked{% endif %}
+    /> {{ _(item.name) }}
   </label>
 {% endfor %}
 </div>
@@ -111,22 +111,22 @@
 {{ form_end({columns:columns, label_warp:false}|assign(args)) }}
 {% endmacro %}
 
-{% macro image_radio(options, name='', value='', image_class='', args) %}
+{% macro image_radio(args) %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('radiobox-container with-image', args) }}
 >
-{% for k, v in options %}
+{% for item in options %}
   <label class="radiobox with-image">
     <input
-      value="{{ k }}"
+      value="{{ item.id }}"
       type="radio"
       name="{{ name }}"
       {{ form_attr('radiobox__input', args) }}
-      {% if value == k %} checked{% endif %}
+      {% if value == item.id %} checked{% endif %}
     />
-    <div class="radiobox__image-container" data-tooltip="{{ _(v) }}">
-      <div class="radiobox__image {{ image_class.format(k) }}"></div>
+    <div class="radiobox__image-container" data-tooltip="{{ _(item.name) }}">
+      <div class="radiobox__image {{ image_class.format(item.id) }}"></div>
     </div>
   </label>
 {% endfor %}
@@ -139,16 +139,16 @@
 {{ form_end({columns:columns, label_warp:false}|assign(args)) }}
 {% endmacro %}
 
-{% macro text(name='', value='', placeholder='', type='text', args) %}
+{% macro text(args) %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('textbox-container', args) }}
 >
   <input
-    type="{{ type }}"
-    name="{{ name }}"
-    value="{{ value }}"
-    placeholder="{{ placeholder }}"
+    type="{{ args.type or 'text' }}"
+    name="{{ args.name }}"
+    value="{{ args.value }}"
+    placeholder="{{ args.placeholder }}"
     {{ form_attr('textbox', args) }}
   >
 </div>
@@ -160,18 +160,18 @@
 {{ form_end({columns:columns}|assign(args)) }}
 {% endmacro %}
 
-{% macro textarea(name='', value='', placeholder='', args) %}
-{% set markdown = args.pop('markdown', false) %}
+{% macro textarea(args) %}
+{% set markdown = args.markdown or false %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('textarea-container', args) }}
 >
   <textarea
-    name="{{ name }}"
-    placeholder="{{ placeholder }}"
+    name="{{ args.name }}"
+    placeholder="{{ args.placeholder }}"
     {% if markdown %}data-markdown{% endif %}
     {{ form_attr('textbox', args) }}
-  >{{ value }}</textarea>
+  >{{ args.value }}</textarea>
 </div>
 {% endmacro %}
 
@@ -181,15 +181,15 @@
 {{ form_end({columns:columns}|assign(args)) }}
 {% endmacro %}
 
-{% macro checkbox(label='', name='', value=false, args) %}
+{% macro checkbox(args) %}
 <div
-  name="form_item_{{ name }}"
+  name="form_item_{{ args.name }}"
   {{ container_attr('checkbox-container', args) }}
 >
   <label class="checkbox">
-    <input type="checkbox" name="{{ name }}"{% if value %} checked{% endif %}
+    <input type="checkbox" name="{{ args.name }}"{% if args.value %} checked{% endif %}
       {{ form_attr('checkbox', args) }}
-    >{{ _(label) }}
+    >{{ _(args.label) }}
   </label>
 </div>
 {% endmacro %}

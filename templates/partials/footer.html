@@ -10,7 +10,7 @@
           </span>
         </h1>
         <div class="footer__category__expander"><ul class="footer__category__list">
-          <li class="footer__category__item"><a href="{{ reverse_url('record_main') }}">{{ _('Judging Queue') }}</a></li>
+          <li class="footer__category__item"><a href="/r">{{ _('Judging Queue') }}</a></li>
           <li class="footer__category__item"><a href="#">{{ _('Service Status') }}</a></li>
         </ul></div>
       </div>
@@ -34,9 +34,6 @@
           </span>
         </h1>
         <div class="footer__category__expander"><ul class="footer__category__list">
-        {% if domain_id != vj4.model.builtin.DOMAIN_ID_SYSTEM %}
-          <li class="footer__category__item"><a href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}">{{ _('Vijos') }}</a></li>
-        {% endif %}
           <li class="footer__category__item"><a href="//vijos.github.io/about-vijos/">{{ _('Help') }}</a></li>
           <!--<li class="footer__category__item"><a href="#">{{ _('Blog') }}</a></li>-->
           <li class="footer__category__item"><a href="//vijos.github.io/about-vijos/about/contact-us/">{{ _('QQ Group') }}</a></li>

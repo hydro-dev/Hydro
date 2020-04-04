@@ -63,7 +63,7 @@
       </a></li>
     {% endif %}
     {% if attended %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('record_main') }}?uid_or_name={{ handler.user['_id'] }}&tid={{ tdoc['doc_id'] }}">
+      <li class="menu__item"><a class="menu__link" href="/r?uid_or_name={{ handler.user['_id'] }}&tid={{ tdoc['doc_id'] }}">
         <span class="icon icon-flag"></span> {{ _('My Recent Submissions') }}
       </a></li>
     {% endif %}

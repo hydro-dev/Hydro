@@ -1,5 +1,5 @@
 const
-    { GET, POST, CONTEXT } = require('../service/server.js'),
+    { GET, POST } = require('../service/server.js'),
     user = require('../model/user'),
     token = require('../model/token'),
     system = require('../model/system'),
@@ -30,7 +30,8 @@ POST('/login', async ctx => {
     ctx.session.uid = udoc._id;
     ctx.session.rememberme = rememberme;
     ctx.body = {};
-    ctx.setRedirect = ctx.request.headers.referer || '/';
+    let referer = ctx.request.headers.referer || '/';
+    ctx.setRedirect = referer.endsWith('/login') ? '/' : referer;
 });
 POST('/logout', requirePerm(PERM_LOGGEDIN), async ctx => {
     ctx.session = { uid: 1 };

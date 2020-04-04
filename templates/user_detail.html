@@ -12,12 +12,7 @@
             </div>
             <div class="media__body profile-header__main">
               <h1>
-                {% if dudoc['display_name'] %}
-                  {{ dudoc['display_name'] }}
-                  <small>{{ udoc['uname'] }}</small>
-                {% else %}
-                  {{ udoc['uname'] }}
-                {% endif %}
+                {{ udoc['uname'] }}
                 <small>({{ _('UID') }}: {{ udoc['_id'] }})</small>
               </h1>
               <p>
@@ -29,14 +24,14 @@
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(dudoc['num_accept']|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?')) }}</p>
+              <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(dudoc.nAccept|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?')) }}</p>
               <div class="profile-header__contact-bar">
               {% if is_self_profile %}
                 <a class="profile-header__contact-item" href="{{ reverse_url('home_account') }}#setting_info" data-tooltip="{{ _('Edit Profile') }}">
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
-                <a class="profile-header__contact-item" href="{{ reverse_url('home_messages') }}?target_uid={{ udoc['_id'] }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
+                <a class="profile-header__contact-item" href="/home/messages?target_uid={{ udoc['_id'] }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
               {% if handler.can_view(udoc, 'mail') and udoc['mail'] %}
@@ -137,7 +132,7 @@
               </div>
             </li>
             <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Submissions') }} ({{ dudoc['num_submit']|default(0) }})</h1>
+              <h1 class="section__tab-title">{{ _('Submissions') }} ({{ dudoc.nSubmit|default(0) }})</h1>
               <div class="section__tab-main">
               {% if not rdocs %}
                 {{ nothing.render('Oh, the user hasn\'t submitted yet!') }}
@@ -193,7 +188,7 @@
         <div class="balancer sidebar-user-stat">
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ dudoc['num_accept'] or 0 }}</div>
+              <div class="numbox__num medium">{{ dudoc.nAccept or 0 }}</div>
               <div class="numbox__text">{{ _('Accepted') }}</div>
             </div>
           </div>

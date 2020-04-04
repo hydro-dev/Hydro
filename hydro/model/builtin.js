@@ -177,6 +177,40 @@ const FOOTER_EXTRA_HTMLS = [];
 const VIEW_LANGS = [
     { code: 'zh-CN', name: 'zh-CN' }
 ];
+const LANGS = [
+    { id: 'cc', name: 'cpp' }
+];
+const LANG_TEXTS = {
+    c: 'C',
+    cc: 'C++',
+    cs: 'C#',
+    pas: 'Pascal',
+    java: 'Java',
+    py: 'Python',
+    py3: 'Python 3',
+    php: 'PHP',
+    rs: 'Rust',
+    hs: 'Haskell',
+    js: 'JavaScript',
+    go: 'Go',
+    rb: 'Ruby',
+};
+const LANG_HIGHLIGHT_ID = {
+    c: 'c',
+    cc: 'cpp',
+    cs: 'csharp',
+    pas: 'pascal',
+    java: 'java',
+    py: 'python',
+    py3: 'python',
+    php: 'php',
+    rs: 'rust',
+    hs: 'haskell',
+    js: 'javascript',
+    go: 'go',
+    rb: 'ruby',
+};
 module.exports = {
-    BUILTIN_USERS, BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS
+    BUILTIN_USERS, BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS, LANGS,
+    LANG_TEXTS, LANG_HIGHLIGHT_ID
 };

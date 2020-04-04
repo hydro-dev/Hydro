@@ -21,7 +21,7 @@ class ForbiddenError extends UserFacingError {
 }
 class NotFoundError extends UserFacingError {
     constructor(type) {
-        super(type);
+        super(type || 'NotFoundError');
         this.code = 404;
     }
 }
@@ -107,7 +107,7 @@ class ContestNotFoundError extends NotFoundError {
 module.exports = {
     BadRequestError, ForbiddenError, NotFoundError,
     LoginError, UserAlreadyExistError, InvalidTokenError,
-    UserNotFoundError, VerifyPasswordError, 
+    UserNotFoundError, VerifyPasswordError,
     OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError

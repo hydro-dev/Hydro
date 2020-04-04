@@ -101,7 +101,7 @@
         <div class="balancer sidebar-user-stat">
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ dudict[ddoc['owner_uid']]['num_accept'] or 0 }}</div>
+              <div class="numbox__num medium">{{ dudict[ddoc['owner_uid']].nAccept or 0 }}</div>
               <div class="numbox__text">{{ _('Accepted') }}</div>
             </div>
           </div>

@@ -59,7 +59,7 @@
   </div>
   <div class="medium-3 columns">
   {% if page_name == 'problem_edit' %}
-    {% with owner_udoc=udoc, owner_dudoc=dudoc %}
+    {% set owner_udoc=udoc %}{% set owner_dudoc=dudoc %}
     {% include "partials/problem_sidebar.html" %}
     {% endwith %}
   {% else %}

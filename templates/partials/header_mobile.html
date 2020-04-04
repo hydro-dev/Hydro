@@ -2,12 +2,7 @@
 <div class="header--mobile">
   <div class="row"><div class="columns clearfix">
     <div class="float-left">
-      {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}
-        <a class="header--mobile__domain is--system" href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}" target="_self">&nbsp;</a>
-      {% else %}
-        <a class="header--mobile__domain" href="{{ reverse_url('domain_main') }}" target="_self">{{ domain['name'] }}</a>
-        <a class="header--mobile__system" href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}" target="_blank">Powered by Vijos</a>
-      {% endif %}
+        <a class="header--mobile__domain is--system" href="/" target="_self">&nbsp;</a>
     </div>
     <div class="float-right">
       {% include "partials/hamburger.html" %}

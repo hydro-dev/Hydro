@@ -4,6 +4,7 @@ const
 
 module.exports = {
     TYPE_SESSION: 0,
+    TYPE_CSRF_TOKEN: 1,
     TYPE_REGISTER: 2,
     /**
      * Add a token.

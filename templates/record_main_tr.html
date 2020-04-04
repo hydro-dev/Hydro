@@ -3,8 +3,8 @@
 <tr data-rid="{{ rdoc['_id'] }}">
   {{ record.render_status_td(rdoc) }}
   <td class="col--problem col--problem-name">
-  {% if (rdoc['domain_id'] == handler.domain_id and handler.has_perm(perm.PERM_REJUDGE)) or handler.has_priv(vj4.model.builtin.PRIV_REJUDGE) %}
-    <form class="form--inline" method="post" action="{{ reverse_url('record_rejudge', rid=rdoc['_id']) }}">
+  {% if = handler.has_perm(perm.PERM_REJUDGE) %}
+    <form class="form--inline" method="post" action="/r/{{ rdoc._id }}/rejudge">
       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
       <button type="submit" class="link text-maroon lighter">
         <span class="icon icon-refresh"></span>
@@ -15,23 +15,19 @@
   {% if rdoc['type'] == vj4.constant.record.TYPE_PRETEST %}
     ({{ _('Pretest') }})
   {% endif %}
-  {% if pdoc and (not pdoc['hidden'] or (pdoc['domain_id'] == handler.domain_id and handler.has_perm(perm.PERM_VIEW_PROBLEM_HIDDEN))) %}
+  {% if pdoc and (not pdoc['hidden'] or handler.has_perm(perm.PERM_VIEW_PROBLEM_HIDDEN)) %}
     {{ problem.render_problem_title(pdoc, show_tags=false) }}
   {% else %}
     *
   {% endif %}
   </td>
   <td class="col--submit-by">
-    <a href="{{ reverse_url('user_detail', uid=rdoc['uid']) }}">
-      {% if dudoc['display_name'] %}
-        {{ dudoc['display_name'] }} ({{ udoc['uname'] }})
-      {% else %}
-        {{ udoc['uname'] }}
-      {% endif %}
+    <a href="/u/{{ rdoc.uid }}">
+      {{ udoc['uname'] }}
     </a>
   </td>
-  <td class="col--time">{% if rdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc['time_ms'] }}ms</td>
-  <td class="col--memory">{% if rdoc['status'] == vj4.constant.record.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == vj4.constant.record.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc['memory_kb']|format_size(1024) }}</td>
+  <td class="col--time">{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time }}ms</td>
+  <td class="col--memory">{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.memory|format_size(1024) }}</td>
   <td class="col--lang">{{ vj4.constant.language.LANG_TEXTS[rdoc['lang']] }}</td>
   <td class="col--submit-at">{{ datetime_span(rdoc['_id'].generation_time) }}</td>
 </tr>

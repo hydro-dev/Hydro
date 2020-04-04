@@ -41,9 +41,18 @@ GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     ctx.templateName = 'problem_detail.html';
     ctx.body = { pdoc, udoc, title: pdoc.title };
 });
+GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
+    let uid = ctx.state.user._id,
+        pid = ctx.params.pid;
+    let pdoc = await problem.get({ pid, uid });
+    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+    let udoc = await user.getById(pdoc.owner);
+    ctx.templateName = 'problem_submit.html';
+    ctx.body = { pdoc, udoc, title: pdoc.title };
+});
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     let rid = await record.add({
-        creator: ctx.state.user._id,
+        uid: ctx.state.user._id,
         lang: ctx.request.body.language,
         code: ctx.request.body.code,
         pid: ctx.params.pid

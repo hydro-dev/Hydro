@@ -31,7 +31,7 @@
     </div>
     <div class="media__right middle">
       <div class="section__body">
-        <a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" class="detail-button">{{ _('View Details') }}</a>
+        <a href="/t/{{ tdoc._id }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
         {% if tsdict[tdoc['doc_id']]['attend'] == 1 %}
           <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
@@ -87,7 +87,7 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+                <h1 class="contest__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
                 <ul class="supplementary list">
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</a>

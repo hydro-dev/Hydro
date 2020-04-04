@@ -1,12 +1,12 @@
 {% macro render_status_td(rdoc, rid_key='_id') %}
-<td class="col--status record-status--border {{ vj4.constant.record.STATUS_CODES[rdoc['status']] }}">
+<td class="col--status record-status--border {{ status.STATUS_CODES[rdoc['status']] }}">
   <div class="col--status__text">
-    <span class="icon record-status--icon {{ vj4.constant.record.STATUS_CODES[rdoc['status']] }}"></span>
-    <a href="{{ reverse_url('record_detail', rid=rdoc[rid_key], domain_id=rdoc['domain_id']) }}" class="record-status--text {{ vj4.constant.record.STATUS_CODES[rdoc['status']] }}">
-      {{ vj4.constant.record.STATUS_TEXTS[rdoc['status']] }}
+    <span class="icon record-status--icon {{ status.STATUS_CODES[rdoc['status']] }}"></span>
+    <a href="{{ reverse_url('record_detail', rid=rdoc[rid_key], domain_id=rdoc['domain_id']) }}" class="record-status--text {{ status.STATUS_CODES[rdoc['status']] }}">
+      {{ status.STATUS_TEXTS[rdoc['status']] }}
     </a>
   </div>
-{% if rdoc['status'] == vj4.constant.record.STATUS_JUDGING %}
+{% if rdoc['status'] == status.STATUS_JUDGING %}
   <div class="col--status__progress-container">
     <div class="col--status__progress" style="width: {{ rdoc['progress']|default(50)|int }}%"></div>
   </div>

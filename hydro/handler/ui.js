@@ -70,7 +70,8 @@ MIDDLEWARE(async (ctx, next) => {
     ctx.render = async (name, context) => {
         ctx.user = ctx.state.user;
         ctx.translate = str => {
-            return str.translate(ctx.state.user.language);
+            if (!str) return '';
+            return str.toString().translate(ctx.state.user.language);
         };
         ctx.has_perm = perm => ctx.state.user.hasPerm(perm);
         ctx.body = await new Promise((resolve, reject) => {
@@ -87,15 +88,18 @@ MIDDLEWARE(async (ctx, next) => {
     try {
         try {
             await next();
-            if (!ctx.body) throw new NotFoundError();
-            if (ctx.query.template || ctx.templateName) {
-                Object.assign(ctx.body, JSON.parse(ctx.query.data || '{}'));
-                await ctx.render(ctx.query.template || ctx.templateName, ctx.body);
-            } else if (ctx.setRedirect) {
-                ctx.response.type = 'application/octet-stream';
-                ctx.redirect(ctx.setRedirect);
-            }
+            if (ctx.body || ctx.templateName) {
+                if (ctx.query.template || ctx.templateName) {
+                    ctx.body = ctx.body || {};
+                    Object.assign(ctx.body, JSON.parse(ctx.query.data || '{}'));
+                    await ctx.render(ctx.query.template || ctx.templateName, ctx.body);
+                } else if (ctx.setRedirect) {
+                    ctx.response.type = 'application/octet-stream';
+                    ctx.redirect(ctx.setRedirect);
+                }
+            } else throw new NotFoundError();
         } catch (error) {
+            console.log(error);
             if (error.toString().startsWith('Template render error')) throw error;
             await ctx.render('error.html', { error });
         }

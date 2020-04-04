@@ -13,10 +13,8 @@
     {% block content %}{% endblock %}
   </div>
 
-{% with show_topics = false %}
-  {% include "partials/footer.html" %}
-{% endwith %}
-
+{% set show_topics = false %}
+{% include "partials/footer.html" %}
 </div>
 
 {% include "partials/login_dialog.html" %}
