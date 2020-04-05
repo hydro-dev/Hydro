@@ -1,3 +1,4 @@
+{% set page_name = "problem_main" %}
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
@@ -24,23 +25,21 @@
                 </div>
                 <div class="section__body">
                     <ul class="group-list" data-widget-cf-container>
-                        {% for category in builtin.CATEGORIES %}
-                            {% for sub_categories in category %}
-                                <li class="group-list__item">
-                                    <h2 class="section__title">
-                                        <a href="/p?category={{ category|urlencode }}">{{ category }}</a>
-                                    </h2>
-                                    {% if sub_categories | length > 0 %}
-                                        <ol class="chip-list">
-                                            {% for sub_category in sub_categories %}
-                                                <li class="chip-list__item">
-                                                    <a class="typo-a" href="/p?category={{ category|urlencode + ',' + sub_category|urlencode }}">{{ sub_category }}</a>
-                                                </li>
-                                            {% endfor %}
-                                        </ol>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
+                        {% for category, sub_categories in builtin.CATEGORIES %}
+                            <li class="group-list__item">
+                                <h2 class="section__title">
+                                    <a href="/p?category={{ category|urlencode }}">{{ category }}</a>
+                                </h2>
+                                {% if sub_categories | length > 0 %}
+                                    <ol class="chip-list">
+                                        {% for sub_category in sub_categories %}
+                                            <li class="chip-list__item">
+                                                <a class="typo-a" href="/p?category={{ category|urlencode + ',' + sub_category|urlencode }}">{{ sub_category }}</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ol>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>

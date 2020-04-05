@@ -1,3 +1,4 @@
+{% set page_name = "problem_settings" %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
@@ -7,9 +8,9 @@
         <h1 class="section__title">{{ _('Dataset') }}</h1>
       </div>
       <div class="section__body">
-        <iframe src="{{ reverse_url('problem_upload', pid=pdoc['_id']) }}" frameborder="0" style="width: 100%; height: 100px;"></iframe>
-        <p class="help-text">{{ _('Hint') }}: <a href="{{ reverse_url('wiki_help') }}#upload">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
-        {% if pdoc and (handler.own(pdoc, perm.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(perm.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
+        <iframe src="/p/{{ pdoc.pid }}/upload" frameborder="0" style="width: 100%; height: 100px;"></iframe>
+        <p class="help-text">{{ _('Hint') }}: <a href="/wiki/help#upload">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
+        {% if pdoc and (pdoc.owner == user._id or handler.has_perm(perm.PERM_READ_PROBLEM_DATA)) %}
         <p><a href="/p/{{ pdoc.pid }}/data" class="expanded button">{{ _('Download Dataset') }}</a></p>
         {% endif %}
       </div>
@@ -20,26 +21,30 @@
       </div>
       <div class="section__body">
         <form method="post">
-          {{ form.form_checkbox(label='Hidden', help_text='Note: Problem title may not be hidden.', name='hidden', value=pdoc['hidden']) }}
-          {{ form.form_text(columns=12, label='Category', help_text='Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...', name='category', value=pdoc['category']|join(', ')) }}
-          {{ form.form_text(columns=12, label='Tags', help_text='Splitted by \', \'.', name='tag', value=pdoc['tag']|join(', ')) }}
-          {{ form.form_text(columns=12, label='AC Message', help_text='This message will be presented to those whose submissions are accepted.', name='ac_msg', value=(pdoc['ac_msg'] or '' )) }}
-          <div class="row">
-            {{ form.form_select(columns=4, label='Difficulty', name='difficulty_setting', options=vj4.model.adaptor.problem.SETTING_DIFFICULTY_RANGE.items(), value=pdoc['difficulty_setting']|default(0), row=false) }}
-            {{ form.form_text(columns=4, label='Evaluated difficulty', help_text='Effects only when Difficulty is not \'Use algorithm calculated\'.', name='difficulty_admin', placeholder='9', value=pdoc['difficulty_admin'] or '', row=False) }}
-            <div class="medium-4 columns">
-              <p class="help-text">{{ _('Difficulty displayed') }}: {{ pdoc['difficulty'] or _('(None)') }}</p>
-              <p class="help-text">{{ _('Difficulty by algorithm') }}: {{ pdoc['difficulty_algo'] or _('(None)') }}</p>
-              <p class="help-text">{{ _('Difficulty by admin') }}: {{ pdoc['difficulty_admin'] or _('(None)') }}</p>
-            </div>
-          </div>
+          {{ form.form_checkbox({
+               label:'Hidden', 
+               help_text:'Note: Problem title may not be hidden.', 
+               name:'hidden', 
+               value:pdoc['hidden']
+             }) }}
+          {{ form.form_text({
+               columns:12, 
+               label:'Category', 
+               help_text:'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...', 
+               name:'category', 
+               value:pdoc['category']|join(', ')
+             }) }}
+          {{ form.form_text({
+               columns:12, 
+               label:'Tags', 
+               help_text:'Splitted by \', \'.', 
+               name:'tag', 
+               value:pdoc['tag']|join(', ')
+             }) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}
-            </button>
-            <button type="button" class="rounded button" onclick="window.history.go(-1)">
-              {{ _('Cancel') }}
             </button>
           </div></div>
         </form>
@@ -50,8 +55,7 @@
         <h1 class="section__title">{{ _('Categories') }} ({{ _('click to add') }})</h1>
       </div>
       <div class="section__body">
-      <!-- TODO: chip -->
-      {% for category, sub_categories in categories.items() %}
+      {% for category, sub_categories in builtin.CATEGORIES %}
         <div>
           <h2 class="section__title"><a class="category-a" href="javascript:;" data-category="{{ category }}">{{ category }}</a></h2>
           <ol>
@@ -67,7 +71,6 @@
   <div class="medium-3 columns">
     {% set owner_udoc=udoc %}{% set owner_dudoc=dudoc %}
     {% include "partials/problem_sidebar.html" %}
-    {% endwith %}
   </div>
 </div>
 {% endblock %}

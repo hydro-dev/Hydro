@@ -41,6 +41,7 @@ let permissions = {
     PERM_VIEW_TRAINING: 'a',
     PERM_CREATE_TRAINING: 'b',
     PERM_EDIT_TRAINING: 'c',
+    PERM_JUDGE: 'd'
 };
 permissions.PERM_BASIC =
     permissions.PERM_VIEW +

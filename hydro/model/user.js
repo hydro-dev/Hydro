@@ -16,7 +16,6 @@ class USER {
         this.perm = user.perm;
     }
     hasPerm(perm) {
-        console.log('PERM', perm, this.perm);
         return this.perm == '-' || (this.perm || '').includes(perm);
     }
     checkPassword(password) {

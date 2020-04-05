@@ -23,7 +23,7 @@
           <blockquote class="warn">
             <p>{{ _('No dataset at present.') }}</p>
           </blockquote>
-        {% elif pdoc.data.startsWith('from:') %}
+        {% elif typeof(pdoc.data) == 'string' %}
           <blockquote class="note">
             <p>{{ _('Test data comes from') }} <a href="#" target="_blank">{{ pdoc.data.split(':')[1] }}</a></p>
           </blockquote>

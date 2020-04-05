@@ -31,8 +31,8 @@ async function run() {
             resolve();
         });
     });
+    require('./service/gridfs');
     let server = require('./service/server');
-
     require('./handler/ui');
     require('./handler/base');
     require('./handler/home');

@@ -6,7 +6,7 @@
   {% if not tdoc or rdocs %}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Recent {0} Records').format(10) }}</h1>
+        <h1 class="section__title">{{ _('Recent 10 Records') }}</h1>
       </div>
       <div class="section__body no-padding">
       {% if not rdocs %}
@@ -23,7 +23,6 @@
           <thead>
             <tr>
               <th class="col--status record-status--border">{{ _('Status') }}</th>
-              <th class="col--pretest">{{ _('Pretest?') }}</th>
               <th class="col--memory">{{ _('Peak Memory') }}</th>
               <th class="col--time">{{ _('Total Time') }}</th>
               <th class="col--submit-at">{{ _('Submit At') }}</th>
@@ -45,8 +44,8 @@
       </div>
       <div class="section__body">
         <form method="post">
-          {{ form.form_select(label='Code language', options=builtin.LANGS, name='lang', value=handler.user.codeLang) }}
-          {{ form.form_textarea(label='Code', columns=12, name='code', extra_class='monospace', autofocus=true) }}
+          {{ form.form_select({label:'Code language', options:builtin.LANG_TEXTS, name:'lang', value:handler.user.codeLang}) }}
+          {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
             <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">

@@ -1,6 +1,5 @@
 const
     path = require('path'),
-    md5 = require('blueimp-md5'),
     static = require('koa-static'),
     nunjucks = require('nunjucks'),
     hljs = require('hljs'),
@@ -9,14 +8,9 @@ const
     options = require('../options'),
     perm = require('../permission'),
     builtin = require('../model/builtin'),
+    md5 = require('../lib/md5'),
     { MIDDLEWARE } = require('../service/server'),
-    { NotFoundError } = require('../error'),
-    MD5_REGEX = /^[0-9a-f]{32}$/;
-
-function getHash(email) {
-    email = (typeof email === 'string') ? email.trim().toLowerCase() : 'unspecified';
-    return email.match(MD5_REGEX) ? email : md5(email);
-}
+    { NotFoundError } = require('../error');
 
 class Markdown extends MarkdownIt {
     constructor() {
@@ -35,6 +29,14 @@ class Markdown extends MarkdownIt {
     }
 }
 const md = new Markdown();
+function datetime_span(dt, { relative = true } = {}) {
+    dt = new Date(dt);
+    return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(
+        relative ? ' relative' : '',
+        dt.getTime(),
+        dt.toLocaleString()
+    );
+}
 class Nunjucks extends nunjucks.Environment {
     constructor() {
         super(
@@ -51,12 +53,26 @@ class Nunjucks extends nunjucks.Environment {
             return md.render(self);
         });
         this.addFilter('gravatar_url', function (email, size) {
-            return `//gravatar.loli.net/avatar/${getHash(email)}?d=mm&s=${size}`;
+            return `//gravatar.loli.net/avatar/${md5(email.toString().trim().toLowerCase())}?d=mm&s=${size}`;
         });
+        this.addFilter('format_size', function (size, base = 1) {
+            size *= base;
+            let unit = 1024;
+            let unit_names = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+            for (let unit_name of unit_names) {
+                if (size < unit) return '{0} {1}'.format(Math.round(size), unit_name);
+                size /= unit;
+            }
+            return '{0} {1}'.format(Math.round(size * unit), unit_names[unit_names.length - 1]);
+        });
+        this.addGlobal('typeof', o => typeof o);
+        this.addGlobal('console', console);
         this.addGlobal('static_url', str => `/${str}`);
         this.addGlobal('reverse_url', str => str);
+        this.addGlobal('datetime_span', datetime_span);
         this.addGlobal('perm', perm);
         this.addGlobal('builtin', builtin);
+        this.addGlobal('status', builtin.STATUS);
     }
 }
 const env = new Nunjucks();
@@ -67,6 +83,7 @@ MIDDLEWARE(async (ctx, next) => {
         cdn_prefix: '/',
         url_prefix: '/'
     };
+    ctx.preferJson = ctx.request.headers['accept'].includes('application/json');
     ctx.render = async (name, context) => {
         ctx.user = ctx.state.user;
         ctx.translate = str => {
@@ -77,7 +94,8 @@ MIDDLEWARE(async (ctx, next) => {
         ctx.body = await new Promise((resolve, reject) => {
             env.render(name, Object.assign(ctx.state, context, {
                 handler: ctx,
-                _: ctx.translate
+                _: ctx.translate,
+                user: ctx.state.user
             }), (error, res) => {
                 if (error) reject(error);
                 else resolve(res);
@@ -89,6 +107,7 @@ MIDDLEWARE(async (ctx, next) => {
         try {
             await next();
             if (ctx.body || ctx.templateName) {
+                if (ctx.preferJson) return;
                 if (ctx.query.template || ctx.templateName) {
                     ctx.body = ctx.body || {};
                     Object.assign(ctx.body, JSON.parse(ctx.query.data || '{}'));
@@ -99,11 +118,13 @@ MIDDLEWARE(async (ctx, next) => {
                 }
             } else throw new NotFoundError();
         } catch (error) {
-            console.log(error);
+            if (error.toString().startsWith('NotFoundError')) console.log(error);
             if (error.toString().startsWith('Template render error')) throw error;
-            await ctx.render('error.html', { error });
+            if (ctx.preferJson) ctx.body = { error };
+            else await ctx.render('error.html', { error });
         }
     } catch (error) {
-        await ctx.render('bsod.html', { error });
+        if (ctx.preferJson) ctx.body = { error };
+        else await ctx.render('bsod.html', { error });
     }
 });

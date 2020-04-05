@@ -9,7 +9,7 @@ module.exports = {
                 naccept[j.pid]++;
         }
         function _time(jdoc) {
-            let real = jdoc.rid.generation_time - Math.floor(tdoc.begin_at / 1000);
+            let real = jdoc.rid.generationTime - Math.floor(tdoc.begin_at / 1000);
             let penalty = 20 * 60 * naccept[jdoc.pid];
             return real + penalty;
         }

@@ -59,7 +59,6 @@ MIDDLEWARE(async (ctx, next) => {
                 update_ip: ctx.request.ip,
                 update_ua: ctx.request.headers['user-agent'] || ''
             }, ctx.session));
-        console.log(ctx.session.sid, ctx.session.uid);
         let cookie = { secure: options.session.secure, httponly: true };
         if (save) {
             cookie.expires = ctx.session.expireAt, cookie.maxAge = expireSeconds;

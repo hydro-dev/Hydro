@@ -71,19 +71,19 @@
     name="{{ args.name }}"
     {{ form_attr('select', args) }}
   >
-  {% for item in args.options %}
-    <option value="{{ item.id }}"{% if value == item.id %} selected{% endif %}>
-      {{ _(item.name) }}
+  {% for k, v in args.options %}
+    <option value="{{ k }}"{% if value == k %} selected{% endif %}>
+      {{ _(v) }}
     </option>
   {% endfor %}
   </select>
 </div>
 {% endmacro %}
 
-{% macro form_select(columns=5, args) %}
-{{ form_begin({columns:columns}|assign(args)) }}
-{{ select({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns}|assign(args)) }}
+{% macro form_select(args) %}
+{{ form_begin({columns:5}|assign(args)) }}
+{{ select(args) }}
+{{ form_end(args) }}
 {% endmacro %}
 
 {% macro radio(args) %}
@@ -91,24 +91,24 @@
   name="form_item_{{ args.name }}"
   {{ container_attr('radiobox-container', args) }}
 >
-{% for item in options %}
+{% for k, v in options %}
   <label class="radiobox">
     <input
-      value="{{ item.id }}"
+      value="{{ k }}"
       type="radio"
-      name="{{ args.name }}"
+      name="{{ v }}"
       {{ form_attr('radiobox__input', args) }}
       {% if value == args.id %} checked{% endif %}
-    /> {{ _(item.name) }}
+    /> {{ _(v) }}
   </label>
 {% endfor %}
 </div>
 {% endmacro %}
 
-{% macro form_radio(columns=5, args) %}
-{{ form_begin({columns:columns, label_wrap:false}|assign(args)) }}
-{{ radio({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns, label_warp:false}|assign(args)) }}
+{% macro form_radio(args) %}
+{{ form_begin({columns:5, label_wrap:false}|assign(args)) }}
+{{ radio(args) }}
+{{ form_end({label_warp:false}|assign(args)) }}
 {% endmacro %}
 
 {% macro image_radio(args) %}
@@ -116,27 +116,27 @@
   name="form_item_{{ args.name }}"
   {{ container_attr('radiobox-container with-image', args) }}
 >
-{% for item in options %}
+{% for k, v in options %}
   <label class="radiobox with-image">
     <input
-      value="{{ item.id }}"
+      value="{{ k }}"
       type="radio"
-      name="{{ name }}"
+      name="{{ args.name }}"
       {{ form_attr('radiobox__input', args) }}
-      {% if value == item.id %} checked{% endif %}
+      {% if value == k %} checked{% endif %}
     />
-    <div class="radiobox__image-container" data-tooltip="{{ _(item.name) }}">
-      <div class="radiobox__image {{ image_class.format(item.id) }}"></div>
+    <div class="radiobox__image-container" data-tooltip="{{ _(v) }}">
+      <div class="radiobox__image {{ image_class.format(k) }}"></div>
     </div>
   </label>
 {% endfor %}
 </div>
 {% endmacro %}
 
-{% macro form_image_radio(columns=8, args) %}
-{{ form_begin({columns:columns, label_warp:false}|assign(args)) }}
-{{ image_radio({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns, label_warp:false}|assign(args)) }}
+{% macro form_image_radio(args) %}
+{{ form_begin({columns:8, label_warp:false}|assign(args)) }}
+{{ image_radio(args) }}
+{{ form_end({label_warp:false}|assign(args)) }}
 {% endmacro %}
 
 {% macro text(args) %}
@@ -154,10 +154,10 @@
 </div>
 {% endmacro %}
 
-{% macro form_text(columns=5, args) %}
-{{ form_begin({columns:columns}|assign(args)) }}
-{{ text({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns}|assign(args)) }}
+{% macro form_text(args) %}
+{{ form_begin({columns:5}|assign(args)) }}
+{{ text(args) }}
+{{ form_end(args) }}
 {% endmacro %}
 
 {% macro textarea(args) %}
@@ -175,10 +175,10 @@
 </div>
 {% endmacro %}
 
-{% macro form_textarea(columns=8) %}
-{{ form_begin({columns:columns}|assign(args)) }}
-{{ textarea({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns}|assign(args)) }}
+{% macro form_textarea(args) %}
+{{ form_begin({columns:8}|assign(args)) }}
+{{ textarea(args) }}
+{{ form_end(args) }}
 {% endmacro %}
 
 {% macro checkbox(args) %}
@@ -194,8 +194,8 @@
 </div>
 {% endmacro %}
 
-{% macro form_checkbox(columns=5, args) %}
-{{ form_begin({columns:columns, no_label:true}|assign(args)) }}
-{{ checkbox({columns:columns}|assign(args)) }}
-{{ form_end({columns:columns, no_label:true}|assign(args)) }}
+{% macro form_checkbox(args) %}
+{{ form_begin({columns:5, no_label:true}|assign(args)) }}
+{{ checkbox(args) }}
+{{ form_end({no_label:true}|assign(args)) }}
 {% endmacro %}

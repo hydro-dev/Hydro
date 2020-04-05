@@ -12,7 +12,12 @@ let app = new Koa();
 let server = http.createServer(app.callback());
 app.keys = options.session.keys;
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
-app.use(Body());
+app.use(Body({
+    multipart: true,
+    formidable: {
+        maxFileSize: 256 * 1024 * 1024
+    }
+}));
 let router = new Router();
 
 /**

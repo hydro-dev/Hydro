@@ -70,7 +70,7 @@
         <span class="icon icon-copy"></span> {{ _('Copy Problem') }}
       </a></li>
     {% endif %}
-    {% if handler.user._id == pdoc.owner or handler.has_perm(perm.PERM_EDIT_PROBLEM) %}
+    {% if user._id == pdoc.owner or handler.has_perm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}
@@ -98,8 +98,8 @@
       <dt>{{ _('Submission') }}</dt>
       <dd>
       {% if pdoc['psdoc']['status'] %}
-        <span class="icon record-status--icon {{ status.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
-        <a href="/r/{{ pdoc['psdoc']['rid'] }}" class="record-status--text {{ status.STATUS_CODES[pdoc['psdoc']['status']] }}">
+        <span class="icon record-status--icon {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
+        <a href="/r/{{ pdoc['psdoc']['rid'] }}" class="record-status--text {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
           {{ status.STATUS_TEXTS[pdoc['psdoc']['status']] }}
         </a>
       {% else %}

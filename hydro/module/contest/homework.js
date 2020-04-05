@@ -12,7 +12,7 @@ module.exports = {
                 effective[j.pid] = j;
         const _time = jdoc => jdoc.rid.generationTime - Math.floor(tdoc.begin_at / 1000);
         function _penalty_score(jdoc) {
-            let exceed_seconds = jdoc.rid.generation_time - Math.floor(tdoc.penalty_since / 1000);
+            let exceed_seconds = jdoc.rid.generationTime - Math.floor(tdoc.penalty_since / 1000);
             if (exceed_seconds < 0) return jdoc.score;
             else return 0.5 * jdoc.score;
         }

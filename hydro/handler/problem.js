@@ -1,29 +1,37 @@
 const
+    fs = require('fs'),
+    bson = require('bson'),
     validator = require('../lib/validator'),
     problem = require('../model/problem'),
     record = require('../model/record'),
     user = require('../model/user'),
+    system = require('../model/system'),
     { GET, POST } = require('../service/server'),
+    gridfs = require('../service/gridfs'),
     queue = require('../service/queue'),
     { requirePerm } = require('./tools'),
-    { NoProblemError } = require('../error'),
+    { NoProblemError, ProblemDataNotFoundError, BadRequestError } = require('../error'),
     { constants } = require('../options'),
     {
         PERM_VIEW_PROBLEM,
         PERM_VIEW_PROBLEM_HIDDEN,
         PERM_SUBMIT_PROBLEM,
-        PERM_CREATE_PROBLEM
+        PERM_CREATE_PROBLEM,
+        PERM_READ_PROBLEM_DATA,
+        PERM_EDIT_PROBLEM,
+        PERM_JUDGE
     } = require('../permission');
 
 queue.assert('judge');
 
 GET('/p', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
+    ctx.templateName = 'problem_main.html';
     let q = {},
         page = ctx.query.page || 1;
+    if (ctx.query.category) q.category = ctx.query.category;
     if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
     let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
-    ctx.templateName = 'problem_main.html';
-    ctx.body = { page_name: 'problem_list', page, pdocs, category: '' };
+    ctx.body = { page, pdocs, category: '' };
 });
 GET('/problem/random', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     let q = {};
@@ -33,33 +41,89 @@ GET('/problem/random', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     ctx.body = { pid };
 });
 GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
+    ctx.templateName = 'problem_detail.html';
     let uid = ctx.state.user._id,
         pid = ctx.params.pid;
     let pdoc = await problem.get({ pid, uid });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
     let udoc = await user.getById(pdoc.owner);
-    ctx.templateName = 'problem_detail.html';
     ctx.body = { pdoc, udoc, title: pdoc.title };
 });
 GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
+    ctx.templateName = 'problem_submit.html';
     let uid = ctx.state.user._id,
         pid = ctx.params.pid;
     let pdoc = await problem.get({ pid, uid });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
     let udoc = await user.getById(pdoc.owner);
-    ctx.templateName = 'problem_submit.html';
     ctx.body = { pdoc, udoc, title: pdoc.title };
 });
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     let rid = await record.add({
         uid: ctx.state.user._id,
-        lang: ctx.request.body.language,
+        lang: ctx.request.body.lang,
         code: ctx.request.body.code,
         pid: ctx.params.pid
     });
     await queue.push('judge', rid);
     ctx.state.user.nSubmit++;
     ctx.body = { rid };
+    ctx.setRedirect = `/r/${rid}`;
+});
+GET('/p/:pid/settings', async ctx => {
+    ctx.templateName = 'problem_settings.html';
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+    ctx.body = { pdoc };
+});
+POST('/p/:pid/settings', async ctx => {
+    ctx.templateName = 'problem_settings.html';
+    // TODO(masnn)
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    ctx.body = { pdoc };
+});
+GET('/p/:pid/upload', async ctx => {
+    ctx.templateName = 'problem_upload.html';
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
+    let md5;
+    if (typeof pdoc.data == 'object') {
+        let files = await gridfs.find({ _id: pdoc.data }).toArray();
+        md5 = files[0].md5;
+    }
+    ctx.body = { pdoc, md5 };
+});
+POST('/p/:pid/upload', async ctx => {
+    ctx.templateName = 'problem_upload.html';
+    if (!ctx.request.files.file) throw new BadRequestError();
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
+    const r = fs.createReadStream(ctx.request.files.file.path);
+    let f = gridfs.openUploadStream('data.zip');
+    await new Promise((resolve, reject) => {
+        r.pipe(f);
+        f.once('finish', resolve);
+        f.once('error', reject);
+    });
+    let md5;
+    if (typeof pdoc.data == 'object') {
+        let files = await gridfs.find({ _id: pdoc.data }).toArray();
+        md5 = files[0].md5;
+    }
+    pdoc = await problem.edit(ctx.params.pid, { data: f.id });
+    ctx.body = { pdoc, md5 };
+});
+GET('/p/:pid/data', async ctx => {
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    if (!ctx.state.user._id == pdoc.owner) ctx.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
+    if (!pdoc.data) throw new ProblemDataNotFoundError(ctx.params.pid);
+    else if (typeof pdoc.data == 'string') ctx.setRedirect = pdoc.data.split('from:')[1];
+    ctx.attachment(`${pdoc.title}.zip`);
+    ctx.body = gridfs.openDownloadStream(pdoc.data);
+});
+GET('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
+    ctx.templateName = 'problem_edit.html';
+    ctx.body = { page_name: 'problem_create' };
 });
 POST('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
     let { title, pid, content, hidden } = ctx.request.body;
@@ -67,7 +131,9 @@ POST('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
     pid = pid || await system.incPidCounter();
     await problem.add({ title, content, owner: ctx.state.user._id, pid, hidden });
     ctx.body = { pid };
+    ctx.setRedirect = `/p/${pid}/settings`;
 });
+
 
 /*
 

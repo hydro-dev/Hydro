@@ -21,7 +21,7 @@
           <li>
             {{ user.render_inline(udict[ddoc['owner_uid']], dudict[ddoc['owner_uid']]) }}
             @
-            {{ datetime_span(ddoc['_id'].generation_time) }}
+            {{ datetime_span(ddoc['_id'].generationTime) }}
           </li>
         </ul>
         <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_detail_raw', did=ddoc['_id']) }}">

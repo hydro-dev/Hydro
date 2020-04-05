@@ -7,7 +7,6 @@
     "license": "MIT",
     "dependencies": {
         "axios": "^0.19.0",
-        "blueimp-md5": "^2.13.0",
         "bson": "^4.0.2",
         "hljs": "^6.2.3",
         "js-yaml": "^3.13.1",
@@ -19,7 +18,7 @@
         "lodash": "^4.17.15",
         "markdown-it": "^10.0.0",
         "markdown-it-katex": "^2.0.3",
-        "mongodb": "^3.3.4",
+        "mongodb": "^3.5.5",
         "nodemailer": "^6.3.1",
         "nunjucks": "^3.2.1",
         "sockjs": "^0.3.20"

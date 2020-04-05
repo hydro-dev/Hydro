@@ -177,9 +177,9 @@ const FOOTER_EXTRA_HTMLS = [];
 const VIEW_LANGS = [
     { code: 'zh-CN', name: 'zh-CN' }
 ];
-const LANGS = [
-    { id: 'cc', name: 'cpp' }
-];
+const LANGS = {
+    cc: 'cpp'
+};
 const LANG_TEXTS = {
     c: 'C',
     cc: 'C++',
@@ -210,7 +210,58 @@ const LANG_HIGHLIGHT_ID = {
     go: 'go',
     rb: 'ruby',
 };
+const STATUS = {
+    STATUS_WAITING: 0,
+    STATUS_ACCEPTED: 1,
+    STATUS_WRONG_ANSWER: 2,
+    STATUS_TIME_LIMIT_EXCEEDED: 3,
+    STATUS_MEMORY_LIMIT_EXCEEDED: 4,
+    STATUS_OUTPUT_LIMIT_EXCEEDED: 5,
+    STATUS_RUNTIME_ERROR: 6,
+    STATUS_COMPILE_ERROR: 7,
+    STATUS_SYSTEM_ERROR: 8,
+    STATUS_CANCELED: 9,
+    STATUS_ETC: 10,
+    STATUS_JUDGING: 20,
+    STATUS_COMPILING: 21,
+    STATUS_FETCHED: 22,
+    STATUS_IGNORED: 30
+};
+const STATUS_TEXTS = {
+    [STATUS.STATUS_WAITING]: 'Waiting',
+    [STATUS.STATUS_ACCEPTED]: 'Accepted',
+    [STATUS.STATUS_WRONG_ANSWER]: 'Wrong Answer',
+    [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Time Exceeded',
+    [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Memory Exceeded',
+    [STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED]: 'Output Exceeded',
+    [STATUS.STATUS_RUNTIME_ERROR]: 'Runtime Error',
+    [STATUS.STATUS_COMPILE_ERROR]: 'Compile Error',
+    [STATUS.STATUS_SYSTEM_ERROR]: 'System Error',
+    [STATUS.STATUS_CANCELED]: 'Cancelled',
+    [STATUS.STATUS_ETC]: 'Unknown Error',
+    [STATUS.STATUS_JUDGING]: 'Running',
+    [STATUS.STATUS_COMPILING]: 'Compiling',
+    [STATUS.STATUS_FETCHED]: 'Fetched',
+    [STATUS.STATUS_IGNORED]: 'Ignored',
+};
+const STATUS_CODES = {
+    0: 'pending',
+    1: 'pass',
+    2: 'fail',
+    3: 'fail',
+    4: 'fail',
+    5: 'fail',
+    6: 'fail',
+    7: 'fail',
+    8: 'fail',
+    9: 'ignored',
+    10: 'fail',
+    20: 'progress',
+    21: 'progress',
+    22: 'progress',
+    30: 'ignored'
+};
 module.exports = {
     BUILTIN_USERS, BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS, LANGS,
-    LANG_TEXTS, LANG_HIGHLIGHT_ID
+    LANG_TEXTS, LANG_HIGHLIGHT_ID, STATUS, STATUS_TEXTS, STATUS_CODES
 };

@@ -7,7 +7,7 @@
     {% if handler.has_priv(vj4.model.builtin.PRIV_CREATE_FILE) %}
       <a class="primary rounded button" href="{{ reverse_url('fs_upload') }}" target="_blank"><span class="icon icon-add"></span> {{ _('Upload File') }}</a>
     {% endif %}
-      <a class="tool-button" href="{{ reverse_url('wiki_help') }}#file"><span class="icon icon-help"></span> {{ _('What\'s file?') }}</a>
+      <a class="tool-button" href="/wiki/help#file"><span class="icon icon-help"></span> {{ _('What\'s file?') }}</a>
     </div>
   </div>
   <div class="section__body no-padding">

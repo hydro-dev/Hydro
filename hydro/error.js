@@ -104,10 +104,17 @@ class ContestNotFoundError extends NotFoundError {
         this.params = [cid];
     }
 }
+
+class ProblemDataNotFoundError extends NotFoundError {
+    constructor(pid) {
+        super('Data of problem {0} not found.');
+        this.params = [pid];
+    }
+}
 module.exports = {
     BadRequestError, ForbiddenError, NotFoundError,
     LoginError, UserAlreadyExistError, InvalidTokenError,
-    UserNotFoundError, VerifyPasswordError,
+    UserNotFoundError, VerifyPasswordError, ProblemDataNotFoundError,
     OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError
@@ -177,18 +184,6 @@ class DocumentNotFoundError(NotFoundError):
   @property
   def message(self):
     return 'Document {2} not found.'
-
-
-class ProblemDataNotFoundError(NotFoundError):
-  @property
-  def message(self):
-    return 'Data of problem {1} not found.'
-
-
-class RecordDataNotFoundError(NotFoundError):
-  @property
-  def message(self):
-    return 'Data of record {0} not found.'
 
 
 class CsrfTokenError(ForbiddenError):

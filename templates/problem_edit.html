@@ -6,19 +6,18 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            <div class="medium-8 columns">
+            <div class="medium-7 columns">
               <label>
                 {{ _('Title') }}
                 <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox" autofocus>
               </label>
             </div>
-            {% if page_name == 'problem_create' %}
-            <div class="medium-2 columns">
+            <div class="medium-3 columns">
               <label>
-                {{ _('Settings') }}
+                {{ _('pid') }}
                 <br>
-                <label class="checkbox">
-                  <input type="checkbox" name="numeric_pid" value="on" checked>{{ _('Numeric PID') }}
+                <label>
+                  <input name="pid" placeholder="{{ _('Leave blank to use numeric pid.') }}" value="{{ pdoc['pid']|default('') }}" class="textbox">
                 </label>
               </label>
             </div>
@@ -30,7 +29,6 @@
                 </label>
               </label>
             </div>
-            {% endif %}
           </div>
           <div class="row"><div class="columns">
             <label>
@@ -49,9 +47,6 @@
               {{ _('Create') }}
             </button>
           {% endif %}
-            <button type="button" class="rounded button" onclick="window.history.go(-1)">
-              {{ _('Cancel') }}
-            </button>
           </div></div>
         </form>
       </div>
@@ -61,7 +56,6 @@
   {% if page_name == 'problem_edit' %}
     {% set owner_udoc=udoc %}{% set owner_dudoc=dudoc %}
     {% include "partials/problem_sidebar.html" %}
-    {% endwith %}
   {% else %}
     {% include 'components/md_hint.html' %}
   {% endif %}

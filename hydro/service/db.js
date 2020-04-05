@@ -10,6 +10,7 @@ let db = null;
 Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(Database => {
         db = Database.db(options.db.name);
+        db.Db = Database;
         global.bus.emit('connected');
     });
 

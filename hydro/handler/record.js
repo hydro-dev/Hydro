@@ -1,13 +1,16 @@
 const
     bson = require('bson'),
     { constants } = require('../options'),
-    { GET } = require('../service/server'),
+    { GET, POST } = require('../service/server'),
+    { requirePerm } = require('../handler/tools'),
+    queue = require('../service/queue'),
     record = require('../model/record'),
     user = require('../model/user'),
     problem = require('../model/problem'),
-    { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
+    { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_REJUDGE } = require('../permission');
 
 GET('/r', async ctx => {
+    ctx.templateName = 'record_main.html';
     let q = {},
         page = ctx.query.page || 1;
     let rdocs = await record.getMany(q, { rid: 1 }, page, constants.RECORD_PER_PAGE);
@@ -16,16 +19,24 @@ GET('/r', async ctx => {
         udict[rdoc.uid] = await user.getById(rdoc.uid);
         pdict[rdoc.pid] = await problem.get({ pid: rdoc.pid, uid: ctx.state.user._id });
     }
-    ctx.templateName = 'record_main.html';
     ctx.body = { page, rdocs, pdict, udict };
 });
 GET('/r/:rid', async ctx => {
+    ctx.templateName = 'record_detail.html';
     let uid = ctx.state.user._id, rid = new bson.ObjectID(ctx.params.rid);
     let rdoc = await record.get(rid);
     if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
+    ctx.body = { rdoc, show_status: true };
+});
+POST('/r/:rid/rejudge', requirePerm(PERM_REJUDGE), async ctx => {
     ctx.templateName = 'record_detail.html';
-    ctx.body = { rdoc };
+    let uid = ctx.state.user._id, rid = new bson.ObjectID(ctx.params.rid);
+    let rdoc = await record.get(rid);
+    if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+    if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
+    if (rdoc) await queue.push('judge', rid);
+    ctx.body = { rdoc, show_status: true };
 });
 
 /*
