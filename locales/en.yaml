@@ -1,0 +1,81 @@
+#English
+---
+contest_main: Contest
+contest_create: Contest Create
+contest_edit: Contest Edit
+contest_scoreboard: Scoreboard
+contest_detail_problem_submit: Submit Contest Problem
+discussion_create: Create Discussion
+discussion_main: Discussion
+discussion_node: Discussion
+home_account: Account Settings
+home_domain_account: Profile @ Domain
+home_preference: Preference
+home_messages: Messages
+home_security: Security
+home_domain: My Domains
+homework_main: Homework
+homework_create: Homework Create
+homework_edit: Homework Edit
+homework_scoreboard: Scoreboard
+homework_detail_problem_submit: Submit Homework Problem
+judge_playground: Judge Playground
+main: Home
+pager_first: « First
+pager_last: Last »
+pager_next: Next ›
+pager_previous: ‹ Previous
+problem_create: Problem Create
+problem_edit: Problem Edit
+problem_main: Problem Set
+problem_solution: Problem Solution
+problem_submit: Problem Submit
+problem_settings: Problem Settings
+problem_statistics: Problem Statistics
+record_detail: Record Detail
+record_main: Judging Queue
+setting_function: Function
+setting_info: Personal Info
+setting_preference: Preference
+setting_privacy: Privacy
+setting_customize: Customize
+training_main: Training
+training_edit: Training Edit
+training_create: Training Create
+user_detail: User Detail
+user_login: Login
+user_logout: Logout
+user_lostpass: Lost Password
+user_register: Register
+home_domain_create: Create Domain
+domain_main: Main
+domain_manage: Domain Manage
+domain_manage_dashboard: Dashboard
+domain_manage_discussion: Discussion Nodes
+domain_manage_edit: Edit Info
+domain_manage_join_applications: Join Applications
+domain_manage_role: Domain Role
+domain_manage_user: Domain User
+domain_manage_permission: Domain Permission
+timeago_locale: en
+perm_general: General
+perm_problem: Problems
+perm_record: Records
+perm_problem_solution: Problem Solutions
+perm_discussion: Discussions
+perm_contest: Contests
+perm_training: Trainings
+discussion_edit: Discussion Edit
+wiki_help: Help
+no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
+problem-category-delim: '|'
+problem-subcategory-delim: ', '
+setting_display: Display Preference
+setting_usage: Usage Preference
+home_file: My Files
+fs_upload: File Upload
+page.training_detail.invalid_when_not_enrolled: You cannot view problem details unless enrolled.
+page.problem_detail.sidebar.show_category: Click to Show
+setting_info_domain: Personal Info
+display_name: Display Name
+Can be Extended For: Extension
