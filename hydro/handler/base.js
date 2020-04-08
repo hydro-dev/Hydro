@@ -45,7 +45,6 @@ MIDDLEWARE(async (ctx, next) => {
             }
         };
         ctx.csrf_token = await token.add(token.TYPE_CSRF_TOKEN, 600, ctx.path);
-        console.log(ctx.session.uid);
         await next();
         if (ctx.session.sid)
             await token.update(ctx.session.sid, tokenType, expireSeconds, Object.assign({

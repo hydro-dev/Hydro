@@ -1,3 +1,8 @@
 node_modules/
 config.yaml
 .uibuild/
+__*
+ui/misc/.iconfont
+ui/static/locale
+.webpackStats.json
+.cache

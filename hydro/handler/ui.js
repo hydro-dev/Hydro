@@ -1,8 +1,8 @@
 const
     path = require('path'),
-    static = require('koa-static'),
+    send = require('koa-send'),
     nunjucks = require('nunjucks'),
-    hljs = require('hljs'),
+    hljs = require('highlight.js'),
     MarkdownIt = require('markdown-it'),
     katex = require('markdown-it-katex'),
     options = require('../options'),
@@ -75,15 +75,24 @@ class Nunjucks extends nunjucks.Environment {
         this.addGlobal('status', builtin.STATUS);
     }
 }
-const env = new Nunjucks();
-MIDDLEWARE(static(path.resolve(process.cwd(), '.uibuild')));
+let env = new Nunjucks();
+MIDDLEWARE(async (ctx, next) => {
+    let done = false;
+    if (ctx.method === 'HEAD' || ctx.method === 'GET')
+        try {
+            done = await send(ctx, ctx.path, { root: path.resolve(process.cwd(), '.uibuild'), index: 'index.html' });
+        } catch (err) {
+            if (err.status !== 404) throw err;
+        }
+    if (!done) await next();
+});
 MIDDLEWARE(async (ctx, next) => {
     ctx.render_title = str => str;
     ctx.UIContext = {
         cdn_prefix: '/',
         url_prefix: '/'
     };
-    ctx.preferJson = ctx.request.headers['accept'].includes('application/json');
+    ctx.preferJson = (ctx.request.headers['accept'] || '').includes('application/json');
     ctx.render = async (name, context) => {
         ctx.user = ctx.state.user;
         ctx.translate = str => {

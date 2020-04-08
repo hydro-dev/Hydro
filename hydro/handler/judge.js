@@ -27,7 +27,6 @@ GET('/judge/fetch', requirePerm(PERM_JUDGE), async ctx => {
     else ctx.body = {};
 });
 POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
-    console.log(ctx.request.body);
     let body = ctx.request.body;
     let rdoc = await record.get(body.rid);
     let $set = {};
@@ -51,7 +50,6 @@ POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
     ctx.body = {};
 });
 POST('/judge/end', requirePerm(PERM_JUDGE), async ctx => {
-    console.log(ctx.request.body);
     let body = ctx.request.body;
     let rdoc = await record.get(body.rid);
     let $set = {};

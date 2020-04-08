@@ -3,15 +3,15 @@ const
     morgan = require('koa-morgan'),
     Body = require('koa-body'),
     Router = require('koa-router'),
-    SockJS = require('sockjs');
+    SocketIO = require('socket.io');
 
 const options = require('../options');
 
 let http = options.listen.https ? require('https') : require('http');
 let app = new Koa();
 let server = http.createServer(app.callback());
+let io = SocketIO(server);
 app.keys = options.session.keys;
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 app.use(Body({
     multipart: true,
     formidable: {
@@ -41,23 +41,22 @@ function POST(route, ...handler) {
     router.post(route, ...handler);
 }
 /**
- * @callback SockJSHandler
- * @param {import('sockjs').Connection} conn
+ * @callback SocketIOHandler
+ * @param {import('socket.io').Socket} socket
  */
 /**
  * @param {string} prefix
- * @param {SockJSHandler} handler
+ * @param {SocketIOHandler} handler
  */
 function SOCKET(prefix, handler) {
-    const sock = SockJS.createServer({ prefix });
-    sock.on('connection', handler);
-    sock.installHandlers(server);
+    io.of(prefix).on('connection', handler);
 }
 exports.MIDDLEWARE = MIDDLEWARE;
 exports.GET = GET;
 exports.POST = POST;
 exports.SOCKET = SOCKET;
 exports.start = function start() {
+    app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     app.listen(options.listen.port);
     console.log('Server listening at: %s', options.listen.port);
