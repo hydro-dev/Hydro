@@ -1,0 +1,29 @@
+.loader-container
+  position: absolute
+  left: 0
+  width: 100%
+  top: 0
+  height: 100%
+
+.loader
+  text-indent: -9999em
+  border: rem(5px) solid rgba($primary-color, .2)
+  border-left: rem(5px) solid $primary-color
+  animation: load8 1.1s infinite linear
+  border-radius: 50%
+  width: rem(50px)
+  height: rem(50px)
+  margin-left: rem(-25px)
+  margin-top: rem(-25px)
+  left: 50%
+  top: 50%
+  position: absolute
+
+@keyframes load8
+  0%
+    transform: rotate(0deg)
+
+  100%
+    transform: rotate(360deg)
+
+

@@ -1,0 +1,63 @@
+@import './var.inc.styl'
+
+.scratchpad__panel-tab
+  margin-top: rem(-($panel-header-height))
+
+  &.rc-tabs-top
+    border: 0
+
+  &.rc-tabs-top .rc-tabs-bar
+    border: 0
+
+  .rc-tabs-bar
+    padding-left: rem(120px)
+
+  .rc-tabs-ink-bar
+    background: $tab-color
+
+  .rc-tabs-tab-prev-icon, .rc-tabs-tab-next-icon
+    display: none
+    font-family: $icon-font-name !important
+    line-height: rem($panel-header-height)
+    font-size: rem($font-size)
+    color: #FFF
+
+  .rc-tabs-tab-arrow-show
+    display: block
+
+  &.rc-tabs-top .rc-tabs-tab-prev-icon:before
+    content: $icon-chevron_left
+
+  &.rc-tabs-top .rc-tabs-tab-next-icon:before
+    content: $icon-chevron_right
+
+  .rc-tabs-content
+    flex: 1
+
+  .rc-tabs-tabpane
+    display: flex
+    flex-direction: column
+
+  &.rc-tabs-top .rc-tabs-tab
+    padding: rem(0 5px)
+    line-height: rem($panel-header-height)
+    margin: 0
+    margin-right: rem(5px)
+    color: rgba(#FFF, 0.8)
+
+  &.rc-tabs-top .rc-tabs-tab-active
+    &, &:hover
+      color: #FFF
+
+  .rc-tabs-bar, .rc-tabs-nav-container
+    line-height: 1
+    font-size: rem($font-size-small)
+
+  .rc-tabs-tab-btn-disabled
+    color: rgba(#FFF, 0.7)
+
+  .rc-tabs-tabpane-hidden
+    display: none
+
+  .rc-tabs-tabpane
+    overflow: auto

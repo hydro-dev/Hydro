@@ -1,0 +1,126 @@
+.hasjs .hasjs--hide
+  display: none
+
+.nojs .nojs--hide
+  display: none
+
+.non-scratchpad--hide
+  display: none
+
+.mode--scratchpad .non-scratchpad--hide
+  display: block
+
+.scratchpad--hide
+  display: block
+
+.mode--scratchpad .scratchpad--hide
+  display: none
+
+.main
+  padding: rem(20px 0)
+  flex: 1
+
+  +above(rupture.desktop-cutoff)
+    padding: rem(30px 0)
+
+  +mobile()
+    padding: 0
+
+.v-center
+  vertical-align: middle
+
+// Media Object
+// Heavily borrowed from http://csswizardry.com/2013/05/the-flag-object/
+
+.media
+  display: table
+  width: 100%
+
+.media__left, .media__right, .media__body
+  display: table-cell
+  vertical-align: middle
+
+  &.top
+    vertical-align: top
+
+  &.bottom
+    vertical-align: bottom
+
+.media__left
+  padding-right: rem(10px)
+
+.media__right
+  padding-left: rem(10px)
+
+.media__left, .media__right
+  img
+    display: block
+
+.media__body
+  width: 100%
+
+// Number Box Object
+.numbox
+  text-align: center
+
+.numbox__num.large
+  font-size: 1.6rem
+
+.numbox__num.medium
+  font-size: 1.3rem
+
+.numbox__text
+  font-size: rem($font-size-small)
+  margin-top: rem(10px)
+  color: #AAA
+
+// Balancer: horizontally equally distributed columns
+.balancer
+  width: 100%
+  display: table
+  table-layout: fixed
+
+.balancer__body
+  display: table-cell
+  vertical-align: middle
+
+  &.top
+    vertical-align: top
+
+  &.bottom
+    vertical-align: bottom
+
+// Flexbox helper
+.flex-row
+  display: flex
+  flex-direction: row
+
+.flex-col
+  display: flex
+  flex-direction: column
+
+.flex-fill
+  flex: 1
+  min-width: 0
+  min-height: 0
+
+.flex-main-start
+  justify-content: flex-start
+
+.flex-main-end
+  justify-content: flex-end
+
+.flex-main-center
+  justify-content: center
+
+.flex-cross-start
+  align-items: flex-start
+
+.flex-cross-end
+  align-items: flex-end
+
+.flex-cross-center
+  align-items: center
+
+.flex-cross-stretch
+  align-items: stretch

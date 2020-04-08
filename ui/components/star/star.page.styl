@@ -1,0 +1,20 @@
+.star
+  border: 0
+  background: none
+  outline: 0
+  padding: 0
+  margin: 0
+  color: gray
+
+  .starred--show
+    display: none
+  .starred--hide
+    display: block
+
+  &.activated
+    color: orange
+    .starred--show
+      display: block
+    .starred--hide
+      display: none
+

@@ -1,0 +1,72 @@
+.data-table
+  width: 100%
+  table-layout: fixed
+  white-space: nowrap
+  font-size: rem($font-size-small)
+  font-weight: normal
+
+  th
+    font-size: rem($font-size-secondary)
+
+  tr
+    border-top: 1px solid $table-border-color
+    border-bottom: 1px solid $table-border-color
+
+    &:nth-child(even)
+      background: $table-alternate-bg-color
+
+    &.highlight
+      background: lighten($highlight-color, 85%)
+
+  &.is--full-row tr
+    cursor: pointer
+
+    &:hover
+      background: lighten($primary-color, 85%)
+
+  thead > tr
+    color: #888
+    border-top: 0
+    border-bottom: 1px solid $table-border-color
+
+  td, th
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
+    line-height: rem($table-lh)
+
+  td
+    padding: rem(5px $table-padding-h)
+
+  th
+    padding: rem(13px $table-padding-h)
+
+  .empty-row
+    color: #AAA
+    font-size: rem($font-size-small)
+
+.section__table-container
+  overflow: hidden
+
+.section__table-header
+  background: $table-header-bg-color
+  box-shadow: $table-header-shadow
+  position: relative
+  z-index: 100
+  transition: box-shadow .2s linear
+
+  thead > tr
+    border-bottom: 0
+
+  &.is_stuck
+    box-shadow: $table-header-shadow-floating
+
+.section__table-container,
+.section__body
+  & > .data-table
+    td, th
+      &:first-child
+        padding-left: rem($section-gap-h)
+
+      &:last-child
+        padding-right: rem($section-gap-h)

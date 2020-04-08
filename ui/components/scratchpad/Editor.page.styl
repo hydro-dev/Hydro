@@ -1,0 +1,24 @@
+.ReactCodeMirror
+  flex: 1
+  position: relative
+  overflow: hidden
+
+.cm-s-vjcm
+  position: absolute
+  left: 0
+  top: 0
+  width: 100%
+  height: 100%
+  font-family: $code-font-family
+  font-size: rem($font-size-secondary)
+  line-height: 1.2
+
+  &.CodeMirror-focused .CodeMirror-selected
+    background: #cee4f2
+
+  .CodeMirror-gutters
+    border-right: 0
+    background: none
+
+  .CodeMirror-linenumber
+    color: #DDD

@@ -1,0 +1,46 @@
+.notification
+  position: fixed
+  left: rem(20px)
+  bottom: rem(20px)
+  padding: rem(10px)
+  border-radius: rem(2px)
+  background: rgba(#222, 0.9)
+  color: #FFF
+  font-size: rem($font-size-secondary)
+  transition: transform .2s, opacity .2s
+  transition-timing-function: ease-out-cubic
+  z-index: 1000  // managed
+  line-height: rem(20px)
+  box-shadow: 0 4px 10px rgba(#000, 0.4)
+  min-width: rem(150px)
+
+  &.hide
+    opacity: 0
+    transform: translateY(20px) scale(0.9)
+
+  &:before
+    display: inline-block
+    font-family: $icon-font-name !important
+    margin-right: rem(10px)
+    font-size: rem($font-size-icon)
+    line-height: 1
+    vertical-align: top
+    margin-top: rem((20px - $font-size-icon) / 2)
+
+  for key, value in $notification-color
+    &.{key}
+      border-left: 5px solid value
+      &:before
+        color: value
+
+  for key, value in $notification-icon
+    &.{key}:before
+      content: value
+
++mobile()
+  .notification
+    padding: rem(20px 15px)
+    left: 0
+    width: 100%
+    min-width: auto
+    bottom: 0

@@ -1,0 +1,62 @@
+@import './var.inc.styl'
+
+$radiobox-size = 16px
+
+.radiobox
+  display: block
+  font-size: rem($font-size-secondary)
+  line-height: 1.4
+  border: 0
+  cursor: pointer
+  user-select: none
+  color: lighten($text-1-color, 30%)
+  margin: $input-multi-line-margin
+
+  &:hover
+    color: $text-1-color
+
+  input
+    display: inline-block
+
+.radiobox-container
+  margin: $input-margin
+
+// Image Radio Box
+
+.radiobox.with-image
+  margin: $input-image-radio-margin
+
+  .radiobox__image-container
+    cursor: pointer
+    border: 2px solid #DDD
+    transition: border-color .1s linear, opacity .1s linear
+    padding: 1px
+    overflow: hidden
+    position: relative
+    opacity: 0.7
+
+    &:hover
+      border: 2px solid $primary-color
+      opacity: 1
+
+    &:after
+      position: absolute
+      width: rem(20px)
+      height: rem(20px)
+      right: rem(-10px)
+      top: rem(-10px)
+      transform: translateX(10px) translateY(-10px) rotate(45deg)
+      background: $highlight-color
+      content: ''
+      transition: transform .1s ease-out-cubic
+
+  input
+    visibility: hidden
+    position: absolute
+
+    &:checked + .radiobox__image-container
+      border: 2px solid $highlight-color
+      opacity: 1
+
+      &:after
+        transform: rotate(45deg)

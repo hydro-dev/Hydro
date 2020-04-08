@@ -1,0 +1,27 @@
+$resizer-extend = 4px
+$resizer-extend-color = rgba($primary-color, 0.3)
+
+.Resizer
+  background: #000
+  opacity: .2
+  z-index: 1
+  box-sizing: border-box
+  background-clip: padding-box
+
+.Resizer.horizontal
+  height: ($resizer-extend * 2 + 1px)
+  margin: -($resizer-extend) 0
+  border-top: $resizer-extend solid transparent
+  border-bottom: $resizer-extend solid transparent
+  cursor: row-resize
+  width: 100%
+
+.Resizer.vertical
+  width: ($resizer-extend * 2 + 1px)
+  margin: 0 -($resizer-extend)
+  border-left: $resizer-extend solid transparent
+  border-right: $resizer-extend solid transparent
+  cursor: col-resize
+
+.Resizer:hover
+  border-color: $resizer-extend-color

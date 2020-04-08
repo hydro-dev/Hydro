@@ -1,0 +1,26 @@
+.record-status--text
+  for key, value in $record-status-color
+    &.{key}
+      color: value !important
+
+.record-status--icon
+  display: inline-block
+  width: 1.15em
+  for key, value in $record-status-icon
+    &.{key}:before
+      content: value
+      color: $record-status-color[key]
+
+.record-status--border
+  border-left: rem(3px) solid transparent
+  for key, value in $record-status-color
+    &.{key}
+      border-left: rem(3px) solid lighten(value, 10%)
+
+.record-status--background
+  color: #FFF
+
+  for key, value in $record-status-color
+    &.{key}
+      background: value
+

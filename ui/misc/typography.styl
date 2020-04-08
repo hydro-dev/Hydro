@@ -1,0 +1,439 @@
+// The typography stylesheet is based on typo.css: http://typo.sofi.sh/
+
+html
+  box-sizing: border-box
+
++mobile()
+  html
+    font-size: 13px
+
+*, *:before, *:after
+  box-sizing: inherit
+
+html
+  color: $text-1-color
+  -webkit-text-size-adjust: 100%
+  -ms-text-size-adjust: 100%
+  text-rendering: optimizelegibility
+
+#panel
+  background: $page-bg-color
+
+body, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td, hr, button, article, aside, details, figcaption, figure, footer, header, menu, nav, section
+  margin: 0
+  padding: 0
+
+dt
+  line-height: 1.8
+  color: lighten($text-1-color, 30%)
+
+dd
+  margin-bottom: rem(10px)
+
++above(rupture.desktop-cutoff)
+  dl.large.horizontal
+    overflow: hidden
+    dt
+      float: left
+      width: 37%
+      overflow: hidden
+      clear: left
+      text-align: left
+      text-overflow: ellipsis
+      white-space: nowrap
+      box-sizing: border-box
+      padding-right: rem(10px)
+    dd
+      float: left
+      width: 62%
+
+    dt, dd
+      line-height: 1.2rem
+      margin: rem(5px 0)
+
+article, aside, details, figcaption, figure, footer, header, menu, nav, section
+  display: block
+
+audio, canvas, video
+  display: inline-block
+
+body
+  font-family: $primary-font-family
+  font-weight: 400
+  font-size: rem($font-size)
+  line-height: 1
+
+button, input, optgroup, select, textarea
+  color: inherit
+  font: inherit
+  margin: 0
+
+table
+  border-collapse: collapse
+  border-spacing: 0
+
+fieldset, img
+  border: 0
+
+blockquote
+  position: relative
+  color: $blockquote-color
+  font-weight: 400
+  border-left: 3px solid #DDD
+  padding: 1rem
+  margin: 0.5rem 0 1rem 0
+  font-size: ($font-size-secondary)
+
+  &:before
+    display: block
+    margin-bottom: 0.6rem
+
+  &.note
+    border-color: $primary-color
+    background: #F8F8F8
+    color: lighten($text-1-color, 10%)
+
+    &:before
+      content: 'NOTE:'
+      color: $primary-color
+
+  &.warn
+    border-color: red
+    background: #F8F8F8
+    color: lighten($text-1-color, 10%)
+
+    &:before
+      content: 'WARNING:'
+      color: red
+
+acronym, abbr
+  border-bottom: 1px dotted
+  font-variant: normal
+
+abbr
+  cursor: help
+
+del
+  text-decoration: line-through
+
+address, caption, cite, th, var
+  font-style: normal
+  font-weight: 400
+
+ul, ol
+  list-style: none
+
+caption, th
+  text-align: left
+
+q:before, q:after
+  content: ''
+
+sub, sup
+  font-size: 75%
+  line-height: 0
+  position: relative
+
+:root sub, :root sup
+  vertical-align: baseline
+
+sup
+  top: -0.5em
+
+sub
+  bottom: -0.25em
+
+a, .link
+  &, &:visited, &:hover, &:active
+    color: $text-1-color
+
+  &:hover
+    text-decoration: underline
+
+ins, a, .link
+  text-decoration: none
+
+u, .typo-u
+  text-decoration: underline
+
+.supplementary
+  font-size: rem($font-size-secondary)
+  line-height: 1
+  color: $supplementary-color
+
+  a
+    &, &:visited, &:hover
+      color: $supplementary-link-color
+
+  &.list
+    li
+      display: inline-block
+      margin-right: rem(15px)
+      vertical-align: middle
+
+  &.dot.list
+    li
+      margin-right: 0
+
+    li:after
+      display: inline-block
+      content: '·'
+      margin: 0 rem(5px)
+
+    li:last-child:after
+      display: none
+
+.supplementary.inverse
+  color: rgba($immersive-text-color, 0.8)
+
+  a
+    &, &:visited, &:hover
+      color: rgba($immersive-text-color, 0.8)
+
+.group-list__item
+  margin-bottom: 1rem
+
+  &:last-child
+    margin-bottom: 0
+
+.chip-list__item
+  line-height: 1.5
+  display: inline-block
+  margin-right: 0.5rem
+
+mark
+  background: #fffdd1
+  border-bottom: 1px solid #ffedce
+  padding: rem(2px)
+  margin: rem(0 5px)
+
+pre, code, pre tt
+  font-family: $code-font-family
+
+.monospace
+  font-family: $code-font-family
+
+pre
+  background: none
+  border: 0
+  display: block
+  white-space: pre-wrap
+  overflow: auto
+  word-wrap()
+
+hr
+  border: none
+  border-bottom: 1px solid #cfcfcf
+  margin-bottom: 0.8em
+  height: 10px
+
+small, figcaption
+  font-size: 0.9em
+  color: $text-3-color
+
+.typo
+  word-wrap()
+
+.typo a, .typo .link, .typo-a
+  &, &:visited, &:active, &:hover
+    color: $primary-color
+
+.typo p, .typo dl, .typo form, .typo hr, .typo table
+  padding-top: 0.3em
+  padding-bottom: 0.3em
+
+.typo li, .typo ol
+  padding-top: 0.25em
+  padding-bottom: 0.25em
+
+.typo p
+  line-height: 1.5
+  font-size: inherit
+
+h1, h2, h3, h4, h5, h6
+  font-family: $header-font-family
+  font-weight: 300
+  color: $header-1-color
+  line-height: 1.1
+
+.typo h1, .typo h2, .typo h3, .typo h4, .typo h5, .typo h6
+  margin-top: 1.0em
+  margin-bottom: 0.6em
+  line-height: 1.1
+
+.typo h1
+  font-size: 1.8em
+
+.typo h2
+  font-size: 1.4em
+
+.typo h3
+  font-size: 1.17em
+
+.typo h4, .typo h5, .typo h6
+  font-size: 1em
+
+.typo ul
+  margin-left: 1.3em
+  list-style: square
+
+.no-heading
+  h1, h2, h3, h4, h5, h6
+    padding-top: 0.3em
+    padding-bottom: 0.3em
+    margin: 0
+    font-size: inherit
+    font-weight: 400
+    line-height: 1
+    margin-top: 0.6em
+
+.typo ol
+  list-style: decimal
+  margin-left: 1.9em
+
+.typo li ul, .typo li ol
+  margin-top: 1.2em
+  margin-bottom: 1.2em
+  margin-left: 2em
+
+.typo li ul
+  list-style: circle
+
+.typo table th, .typo table td, .typo table caption
+  border: 1px solid #ddd
+  padding: 0.5em 1em
+  color: #666
+
+.typo table th
+  background: #fbfbfb
+
+.typo table thead th
+  background: #f1f1f1
+
+.typo table caption
+  border-bottom: none
+
+.typo img
+  max-width: 100%
+
+
+.text-aqua
+  color: aqua
+  &.lighter
+    color: lighten(aqua, 40%)
+  &.darker
+    color: darken(aqua, 40%)
+
+.text-blue
+  color: blue
+  &.lighter
+    color: lighten(blue, 40%)
+  &.darker
+    color: darken(blue, 40%)
+
+.text-navy
+  color: navy
+  &.lighter
+    color: lighten(navy, 40%)
+  &.darker
+    color: darken(navy, 40%)
+
+.text-teal
+  color: teal
+  &.lighter
+    color: lighten(teal, 40%)
+  &.darker
+    color: darken(teal, 40%)
+
+.text-green
+  color: green
+  &.lighter
+    color: lighten(green, 40%)
+  &.darker
+    color: darken(green, 40%)
+
+.text-olive
+  color: olive
+  &.lighter
+    color: lighten(olive, 40%)
+  &.darker
+    color: darken(olive, 40%)
+
+.text-lime
+  color: lime
+  &.lighter
+    color: lighten(lime, 40%)
+  &.darker
+    color: darken(lime, 40%)
+
+.text-yellow
+  color: yellow
+  &.lighter
+    color: lighten(yellow, 40%)
+  &.darker
+    color: darken(yellow, 40%)
+
+.text-orange
+  color: orange
+  &.lighter
+    color: lighten(orange, 40%)
+  &.darker
+    color: darken(orange, 40%)
+
+.text-red
+  color: red
+  &.lighter
+    color: lighten(red, 40%)
+  &.darker
+    color: darken(red, 40%)
+
+.text-fuchsia
+  color: fuchsia
+  &.lighter
+    color: lighten(fuchsia, 40%)
+  &.darker
+    color: darken(fuchsia, 40%)
+
+.text-purple
+  color: purple
+  &.lighter
+    color: lighten(purple, 40%)
+  &.darker
+    color: darken(purple, 40%)
+
+.text-maroon
+  color: maroon
+  &.lighter
+    color: lighten(maroon, 40%)
+  &.darker
+    color: darken(maroon, 40%)
+
+.text-white
+  color: white
+  &.lighter
+    color: lighten(white, 40%)
+  &.darker
+    color: darken(white, 40%)
+
+.text-silver
+  color: silver
+  &.lighter
+    color: lighten(silver, 40%)
+  &.darker
+    color: darken(silver, 40%)
+
+.text-gray
+  color: gray
+  &.lighter
+    color: lighten(gray, 40%)
+  &.darker
+    color: darken(gray, 40%)
+
+.text-black
+  color: black
+  &.lighter
+    color: lighten(black, 40%)
+  &.darker
+    color: darken(black, 40%)
+
+

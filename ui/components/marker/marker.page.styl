@@ -1,0 +1,54 @@
+[data-marker-enabled]
+  outline: 0
+
+.marker
+  position: fixed
+  z-index: 100
+  display: none
+  box-shadow: 0 2px 7px rgba(#000, 0.3)
+  background: #FFF
+  font-size: rem($font-size-small)
+  transition: transform .1s ease-out, opacity .1s ease-out
+  transform: scale(0.8)
+  transform-origin: 0 100%
+  pointer-events: none
+  background: #FFF
+  padding: 1px
+  border: 1px solid #AAA
+
+  &.open
+    transform: none
+    pointer-events: auto
+
+  &__toolbar
+    padding: 1px
+    background: $toolbar-bg
+    white-space: nowrap
+    font-size: 0
+
+  &__action
+    display: inline-block
+    text-align: center
+    font-size: rem($font-size-icon)
+    vertical-align: top
+    cursor: pointer
+    padding: rem(8px)
+    color: $toolbar-fore
+    position: relative
+
+    &:hover
+      background: $toolbar-bg-hover
+      color: $toolbar-fore-hover
+
+  &__icon
+    display: block
+    margin: rem(2px)
+    width: rem(12px)
+    height: rem(12px)
+    border-radius: 50%
+
+    &.icon-yellow
+      background: #ffc100
+
+    &.icon-green
+      background: #54d651

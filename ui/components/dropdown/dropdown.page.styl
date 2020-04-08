@@ -1,0 +1,24 @@
+.dropdown-target
+  display: none
+
+.drop .dropdown-target
+  display: block
+
+.dropdown
+  .menu
+    min-width: rem(150px)
+    box-shadow: $menu-drop-shadow
+    background: $menu-drop-bg-color
+    font-size: rem($font-size-small)
+
+  .menu__link
+    padding: rem(8px 10px)
+
+.dropdown
+  .drop-content
+    transition: transform .1s ease-in-out
+    transform: scale(0.9) translateZ(0)
+
+  &.drop-after-open
+    .drop-content
+      transform: scale(1) translateZ(0)

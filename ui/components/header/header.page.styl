@@ -1,0 +1,171 @@
+$header-gap-mini = ($header-bg-height-mini - $nav-item-height - $header-logo-height) / 2
+$header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-logo-domain-lh - $header-logo-system-lh) / 2
+
+.global-notification
+  padding: rem(20px 0)
+  background: #FFF
+
+  &.warning
+    background: #ffe1a6
+
+.header
+  position: relative
+  height: rem($header-bg-height)
+  background: #5eafca url(./header-background.png) no-repeat center top
+  background-size: cover
+  transition: height .5s
+  transition-timing-function: ease-out-cubic
+  overflow: hidden
+  +retina()
+    background-image: url(./header-background.png)
+    background-size: rem($header-bg-width $header-bg-height)
+
+  &.mini
+    height: rem($header-bg-height-mini)
+
+  +mobile()
+    background: #FFF
+    height: auto !important
+    .header__content
+      display: none
+
+.header__logo
+  display: block
+  width: rem($header-logo-width-real)
+  height: rem($header-logo-height + $header-gap-mini + $nav-item-height)
+  background: url(header-logo-summer.png) no-repeat
+  background-size: rem($header-logo-width-real) rem($header-logo-height-real)
+  background-position: 0 rem($header-gap-mini + $nav-item-height - ($header-logo-height-real - $header-logo-height))
+  transition: transform .5s, opacity .5s
+  transition-timing-function: ease-out-cubic
+  transform-origin: 0 0
+  opacity: 1
+  +retina()
+    background-image: url(./header-logo-summer@2x.png)
+  +mobile()
+    display: inline-block
+
+.header__logo--domain
+  font-size: rem(40px)
+  margin-top: rem($header-gap-mini-domain + $nav-item-height)
+  height: rem($header-logo-domain-lh)
+  line-height: rem($header-logo-domain-lh)
+
+  a
+    text-shadow: 1px 1px 5px rgba(#000, 0.4)
+
+    &, &:hover, &:visited, &:link
+      color: #FFF
+      text-decoration: none
+
+.header__logo--system
+  line-height: rem($header-logo-system-lh)
+  color: #FFF
+  font-size: rem($font-size-small)
+
+  a
+    opacity: 0.8
+
+    &, &:hover, &:visited, &:link
+      text-decoration: none
+      color: #FFF
+
+    &:hover
+      opacity: 1
+      text-decoration: underline
+
+.header--collapsed
+
+  #panel
+    padding-top: $header-bg-height
+
+  .header
+    position: absolute
+    left: 0
+    top: 0
+    width: 100%
+    height: 0
+
+  .header__logo
+    transform: scale(0)
+    opacity: 0
+
+.location
+  position: absolute
+  left: 0
+  bottom: 0
+  width: 100%
+  height: rem($header-layer-height)
+  background: rgba(#000, 0.5)
+
+  +mobile()
+    position: relative
+    height: auto
+
+  .header__hamburger
+    display: none
+
+    +mobile()
+      display: block
+
+.header.mini .location
+  display: none
+
+.location-path
+  color: rgba(#FFF, 0.3)
+  line-height: rem(30px)
+  margin-top: rem(10px)
+  a, a:visited
+    color: rgba(#FFF, 0.6)
+  a:hover
+    color: rgba(#FFF, 0.9)
+
+.location-current
+  color: #9ad4f1
+  line-height: rem(40px)
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+  +mobile()
+    color: #91fcff
+    font-size: 1.7rem
+    white-space: normal
+
+.header--mobile
+  display: none
+
+.header--mobile, .location
+  +mobile()
+    display: block
+    background: #56758f
+    color: #FFF
+    line-height: rem($nav-item-height)
+    font-size: rem($font-size-title)
+    padding: rem(10px 0)
+
+  a, a:visited, a:hover
+    color: #FFF
+
+.header--mobile__domain.is--system
+  display: block
+  width: $nav-logo-width    // no rem
+  height: $nav-logo-height  // no rem
+  margin-top: rem(10px)
+  background: url('../navigation/nav-logo-small_light.png') no-repeat
+  +retina()
+    background: url('../navigation/nav-logo-small@2x_light.png') no-repeat
+    background-size: $nav-logo-width $nav-logo-height // no rem
+
+.header--mobile__system
+  margin-left: rem(10px)
+  font-size: rem($font-size-secondary)
+
+  &, &:hover, &:visited
+    color: $supplementary-color
+
+.header__hamburger
+  background: none
+  border: 0
+  border-radius: 0
+  outline: 0

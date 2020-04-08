@@ -1,0 +1,122 @@
+/*
+
+VS theme by Andrew Lock
+
+https://github.com/PrismJS/prism-themes/blob/master/themes/prism-vs.css
+
+*/
+
+pre, code
+  background: $syntax-hl-bg-color
+
+pre > code
+  background: none
+  line-height: 1.5
+
+pre
+  position: relative
+  padding: rem(5px)
+
+code
+  color: $code-color
+  font-size: rem($font-size-secondary)
+
+pre > code
+  color: black
+  text-align: left
+  white-space: pre-wrap
+  word-spacing: normal
+  word-break: normal
+  tab-size: 4
+  hyphens: none
+
+[data-syntax-hl-show-line-number] pre.line-numbers > code
+  white-space: pre
+
+.syntax-hl
+  .token
+    &.comment, &.prolog, &.doctype, &.cdata
+      color: #008000
+      font-style: italic
+    &.namespace
+      opacity: 0.7
+    &.string
+      color: #a31515
+    &.punctuation, &.operator
+      color: #393A34
+    &.url, &.symbol, &.number, &.boolean, &.inserted
+      color: #36acaa
+    &.atrule, &.keyword, &.attr-value, .language-autohotkey&.selector, .language-json&.boolean, .language-json&.number
+      color: #0000ff
+    &.function
+      color: #393A34
+    &.deleted, .language-autohotkey&.tag
+      color: #9a050f
+    &.selector, .language-autohotkey&.keyword
+      color: #00009f
+    &.important, &.bold
+      font-weight: bold
+    &.italic
+      font-style: italic
+    &.class-name, .language-json&.property
+      color: #2B91AF
+    &.tag, &.selector
+      color: #800000
+    &.attr-name, &.property, &.regex, &.entity
+      color: #ff0000
+    &.directive.tag .tag
+      background: #ffff00
+      color: #393A34
+    &.macro
+      &, .token
+        color: #2b91af
+    &.builtin
+      color: #077
+
+  .toolbar
+    position: absolute
+    white-space: no-wrap
+    right: 0
+    top: 0
+    padding: rem(5px)
+    background: rgba($syntax-hl-bg-color, 0.8)
+    font-family: $primary-font-family
+    font-size: rem($font-size-small)
+    opacity: 0
+    pointer-events: none
+    transition: opacity .1s linear
+    user-select: none
+
+  &:hover .toolbar
+    opacity: 1
+    pointer-events: all
+
+[data-syntax-hl-show-line-number]
+  pre
+    padding-left: 3.8em
+    counter-reset: linenumber
+
+  pre > code
+    position: relative
+
+  .line-numbers-rows
+    position: absolute
+    pointer-events: none
+    top: 0
+    font-size: 100%
+    left: -3.8em
+    width: 3em
+    letter-spacing: -1px
+    user-select: none
+
+    span
+      pointer-events: none
+      display: block
+      counter-increment: linenumber
+
+      &:before
+        content: counter(linenumber)
+        color: #ddd
+        display: block
+        padding-right: 0.8em
+        text-align: right
