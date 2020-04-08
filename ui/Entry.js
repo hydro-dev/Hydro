@@ -31,8 +31,7 @@ const includedPages = pageLoader.getAutoloadPages();
 function buildSequence(pages, type) {
   if (process.env.NODE_ENV !== 'production') {
     if (['before', 'after'].indexOf(type) === -1) {
-      // eslint-disable-next-line quotes
-      throw new Error(`'type' should be one of 'before' or 'after'`);
+      throw new Error(`'type' should be one of 'before' or 'after'`); // eslint-disable-line quotes
     }
   }
   return pages
@@ -51,7 +50,7 @@ async function load() {
     ...buildSequence(includedPages, 'after'),
     ...buildSequence([currentPage], 'after'),
   ];
-  // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax
   for (const { page, func, type } of loadSequence) {
     if (typeof func !== 'function') {
       if (process.env.NODE_ENV !== 'production') {
