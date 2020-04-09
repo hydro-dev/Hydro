@@ -69,4 +69,4 @@ MIDDLEWARE(async (ctx, next) => {
         console.error(e.stack);
         ctx.body = { error: { message: e.message, params: e.params, stack: e.stack } };
     }
-});
+}, true);

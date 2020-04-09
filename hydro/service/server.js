@@ -3,14 +3,13 @@ const
     morgan = require('koa-morgan'),
     Body = require('koa-body'),
     Router = require('koa-router'),
-    SocketIO = require('socket.io');
+    sockjs = require('sockjs');
 
 const options = require('../options');
 
 let http = options.listen.https ? require('https') : require('http');
 let app = new Koa();
 let server = http.createServer(app.callback());
-let io = SocketIO(server);
 app.keys = options.session.keys;
 app.use(Body({
     multipart: true,
@@ -19,12 +18,14 @@ app.use(Body({
     }
 }));
 let router = new Router();
-
+let m = [];
 /**
  * @param {import('koa').Middleware} middleware 
+ * @param {boolean} installForSocket
  */
-function MIDDLEWARE(middleware) {
+function MIDDLEWARE(middleware, installForSocket = false) {
     app.use(middleware);
+    if (installForSocket) m.push(middleware);
 }
 /**
  * @param {string} route 
@@ -45,12 +46,56 @@ function POST(route, ...handler) {
  * @param {import('socket.io').Socket} socket
  */
 /**
+ * @callback SockJSHandler
+ * @param {import('sockjs').Connection} conn
+ */
+/**
  * @param {string} prefix
  * @param {SocketIOHandler} handler
  */
 function SOCKET(prefix, handler) {
-    io.of(prefix).on('connection', handler);
+    const sock = sockjs.createServer({ prefix });
+    sock.on('connection', async conn => {
+        conn.cookies = {
+            get(name) {
+                return conn.cookies[name];
+            },
+            set() { }
+        };
+        conn.state = {};
+        conn.params = {};
+        conn.request = {
+            headers: conn.headers
+        };
+        let p = conn.url.split('?')[1].split('&');
+        for (let i in p) p[i] = p[i].split('=');
+        for (let i in p) conn.params[p[i][0]] = decodeURIComponent(p[i][1]);
+        await new Promise((resolve, reject) => {
+            conn.once('data', msg => {
+                for (let i of msg.split(';')) {
+                    i = i.trim().split('=');
+                    conn.cookies[i[0]] = i[1];
+                }
+                resolve();
+            });
+            setTimeout(reject, 5000);
+        });
+        for (let i of m) {
+            await new Promise((resolve, reject) => {
+                i(conn, resolve).catch(reject);
+            });
+        }
+        conn.send = data => {
+            conn.write(JSON.stringify(data));
+        };
+        let h = new handler(conn);
+        if (h.onOpen) conn.on('open', h.onOpen);
+        if (h.onClose) conn.on('close', h.onClose);
+        if (h.onMessage) conn.on('data', h.onMessage);
+    });
+    sock.installHandlers(server);
 }
+
 exports.MIDDLEWARE = MIDDLEWARE;
 exports.GET = GET;
 exports.POST = POST;
@@ -58,6 +103,6 @@ exports.SOCKET = SOCKET;
 exports.start = function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
-    app.listen(options.listen.port);
+    server.listen(options.listen.port);
     console.log('Server listening at: %s', options.listen.port);
 };

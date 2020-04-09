@@ -1,9 +1,10 @@
 const
-    { GET, POST } = require('../service/server'),
-    queue = require('../service/queue'),
-    record = require('../model/record'),
     { requirePerm } = require('./tools'),
-    { PERM_JUDGE } = require('../permission');
+    { PERM_JUDGE } = require('../permission'),
+    record = require('../model/record'),
+    bus = require('../service/bus'),
+    queue = require('../service/queue'),
+    { GET, POST } = require('../service/server');
 
 queue.assert('judge');
 
@@ -46,7 +47,8 @@ POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
     if (body.score) $set.score = body.score;
     if (body.time_ms) $set.time = body.time_ms;
     if (body.memory_kb) $set.memory = body.memory_kb;
-    await record.update(body.rid, $set);
+    rdoc = await record.update(body.rid, $set);
+    bus.publish('record_change', rdoc);
     ctx.body = {};
 });
 POST('/judge/end', requirePerm(PERM_JUDGE), async ctx => {
@@ -71,6 +73,7 @@ POST('/judge/end', requirePerm(PERM_JUDGE), async ctx => {
     if (body.memory_kb) $set.memory = body.memory_kb;
     $set.judgeAt = new Date();
     $set.judger = ctx.state.user._id;
-    await record.update(body.rid, $set);
+    rdoc = await record.update(body.rid, $set);
+    bus.publish('record_change', rdoc);
     ctx.body = {};
 });

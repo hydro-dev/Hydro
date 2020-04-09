@@ -3,7 +3,7 @@
   <div class="col--status__text">
     <span class="icon record-status--icon {{ builtin.STATUS_CODES[rdoc['status']] }}"></span>
     <a href="/r/{{ rdoc._id }}" class="record-status--text {{ builtin.STATUS_CODES[rdoc['status']] }}">
-      {{ status.STATUS_TEXTS[rdoc['status']] }}
+      {{ builtin.STATUS_TEXTS[rdoc['status']] }}
     </a>
   </div>
 {% if rdoc['status'] == status.STATUS_JUDGING %}

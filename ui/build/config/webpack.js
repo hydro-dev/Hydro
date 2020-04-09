@@ -203,7 +203,7 @@ export default function (env = {}) {
           name: 'vendors',
           minChunks: (module, count) => (
             module.resource
-                        && module.resource.indexOf(root()) === -1
+                        && module.resource.indexOf(root('node_modules'))
                         && module.resource.match(/\.jsx?$/)
           ),
         }),

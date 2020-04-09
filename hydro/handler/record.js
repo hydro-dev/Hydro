@@ -1,25 +1,48 @@
 const
     bson = require('bson'),
     { constants } = require('../options'),
-    { GET, POST } = require('../service/server'),
+    { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD,
+        PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../permission'),
     { requirePerm } = require('../handler/tools'),
-    queue = require('../service/queue'),
+    problem = require('../model/problem'),
     record = require('../model/record'),
     user = require('../model/user'),
-    problem = require('../model/problem'),
-    { PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_REJUDGE } = require('../permission');
+    bus = require('../service/bus'),
+    queue = require('../service/queue'),
+    { GET, POST, SOCKET } = require('../service/server');
 
 GET('/r', async ctx => {
     ctx.templateName = 'record_main.html';
     let q = {},
         page = ctx.query.page || 1;
     let rdocs = await record.getMany(q, { rid: 1 }, page, constants.RECORD_PER_PAGE);
-    let pdict, udict;
-    for (let rdoc in rdocs) {
+    let pdict = {}, udict = {};
+    for (let rdoc of rdocs) {
         udict[rdoc.uid] = await user.getById(rdoc.uid);
         pdict[rdoc.pid] = await problem.get({ pid: rdoc.pid, uid: ctx.state.user._id });
     }
     ctx.body = { page, rdocs, pdict, udict };
+});
+SOCKET('/record-conn', class RecordConnHandler {
+    constructor(conn) {
+        this.tid = null;
+        this.h = async data => {
+            let rdoc = data.value;
+            if (rdoc.tid && rdoc.tid != this.tid.toString()) return;
+            let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
+            if (pdoc.hidden && !conn.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+            conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        };
+    }
+    onOpen() {
+        bus.subscribe(['record_change'], this.h);
+    }
+    onMessage(data) {
+        if (data.tid) this.tid = data.tid;
+    }
+    onClose() {
+        bus.unsubscribe(['record_change'], this.h);
+    }
 });
 GET('/r/:rid', async ctx => {
     ctx.templateName = 'record_detail.html';
@@ -28,6 +51,27 @@ GET('/r/:rid', async ctx => {
     if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
     ctx.body = { rdoc, show_status: true };
+});
+SOCKET('/record-detail-conn', class RecordDetailConnHandler {
+    constructor(conn) {
+        this.rid = conn.params.rid;
+        this.h = async data => {
+            let rdoc = data.value;
+            if (rdoc.rid.toString() != this.rid) return;
+            let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
+            if (pdoc.hidden && !conn.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+            conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        };
+    }
+    async onOpen() {
+        bus.subscribe(['record_change'], this.h);
+    }
+    onMessage(data) {
+        if (data.rid) this.rid = data.rid;
+    }
+    onClose() {
+        bus.unsubscribe(['record_change'], this.h);
+    }
 });
 POST('/r/:rid/rejudge', requirePerm(PERM_REJUDGE), async ctx => {
     ctx.templateName = 'record_detail.html';

@@ -14,6 +14,9 @@ class USER {
         this.salt = user.salt;
         this.hash = user.hash;
         this.perm = user.perm;
+        this.lang = user.language || 'zh_CN';
+        this.codeLang = user.codeLang || 'c';
+        this.codeTemplate = user.codeTemplate || '';
     }
     hasPerm(perm) {
         return this.perm == '-' || (this.perm || '').includes(perm);

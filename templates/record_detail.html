@@ -4,7 +4,7 @@
 {% block content %}
 <script>
   var Context = {
-    'socketUrl': "{{ socket_url }}",
+    'socketUrl': "/record-detail-conn?rid={{ rdoc._id }}"
   };
 </script>
 <div class="row">
@@ -57,8 +57,6 @@
         <dl class="large horizontal">
           <dt>{{ _('Submit By') }}</dt>
           <dd>{{ user.render_inline(udoc, dudoc, modbadge=false) }}</dd>
-          <dt>{{ _('Type') }}</dt>
-          <dd>{{ _(vj4.constant.record.TYPE_TEXTS[rdoc['type']]) }}</dd>
         {% if pdoc %}
           <dt>{{ _('Problem') }}</dt>
           <dd>
@@ -84,13 +82,13 @@
         {% endif %}
           <dt>{{ _('Language') }}</dt>
           <dd>
-            {{ vj4.constant.language.LANG_TEXTS[rdoc['lang']] }}
+            {{ builtin.LANG_TEXTS[rdoc['lang']] }}
           </dd>
           <dt>
             {{ _('Submit At') }}
           </dt>
           <dd>
-            {{ datetime_span(rdoc['_id'].generationTime)|safe }}
+            {{ datetime_span(rdoc._id)|safe }}
           </dd>
           {% if rdoc.judgeAt %}
           <dt>{{ _('Judged At') }}</dt>

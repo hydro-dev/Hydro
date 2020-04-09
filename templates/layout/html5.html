@@ -40,7 +40,7 @@
   <![endif]-->
   <script type="text/javascript" src="{{ static_url('manifest.js') }}"></script>
   <script type="text/javascript" src="{{ static_url('vendors.js') }}"></script>
-  <script type="text/javascript" src="{{ static_url('locale/{0}.js'.format(handler.view_lang)) }}"></script>
+  <script type="text/javascript" src="{{ static_url('locale/{0}.js'.format(handler.user.lang)) }}"></script>
   <script type="text/javascript" src="{{ static_url('vj4.js') }}"></script>
 </body>
 </html>

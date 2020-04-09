@@ -7,17 +7,17 @@
       </span>
     </h1>
   </div>
-{% if rdoc.compilerTexts %}
+{% if rdoc.compilerTexts.length %}
   <div class="section__body">
     <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n') }}</pre>
   </div>
 {% endif %}
-{% if rdoc.judgeTexts %}
+{% if rdoc.judgeTexts.length %}
   <div class="section__body">
     <pre class="judge-text">{{ rdoc.judgeTexts|join('\n') }}</pre>
   </div>
 {% endif %}
-{% if rdoc['cases'] %}
+{% if rdoc.cases.length %}
   <div class="section__body no-padding">
     <table class="data-table record_detail__table">
       <colgroup>
@@ -35,7 +35,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for rcdoc in rdoc['cases'] %}
+      {% for rcdoc in rdoc.cases %}
         <tr>
           <td class="col--case record-status--border {{ builtin.STATUS_CODES[rcdoc['status']] }}">
             #{{ loop.index }}

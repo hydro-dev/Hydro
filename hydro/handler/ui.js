@@ -30,10 +30,11 @@ class Markdown extends MarkdownIt {
 }
 const md = new Markdown();
 function datetime_span(dt, { relative = true } = {}) {
-    dt = new Date(dt);
+    if (dt.generationTime) dt = new Date(dt.generationTime * 1000);
+    else if (typeof dt == 'number' || typeof dt == 'string') dt = new Date(dt);
     return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(
         relative ? ' relative' : '',
-        dt.getTime(),
+        dt.getTime() / 1000,
         dt.toLocaleString()
     );
 }
@@ -93,14 +94,14 @@ MIDDLEWARE(async (ctx, next) => {
         url_prefix: '/'
     };
     ctx.preferJson = (ctx.request.headers['accept'] || '').includes('application/json');
-    ctx.render = async (name, context) => {
+    ctx.renderHTML = (name, context) => {
         ctx.user = ctx.state.user;
         ctx.translate = str => {
             if (!str) return '';
             return str.toString().translate(ctx.state.user.language);
         };
         ctx.has_perm = perm => ctx.state.user.hasPerm(perm);
-        ctx.body = await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             env.render(name, Object.assign(ctx.state, context, {
                 handler: ctx,
                 _: ctx.translate,
@@ -110,6 +111,9 @@ MIDDLEWARE(async (ctx, next) => {
                 else resolve(res);
             });
         });
+    };
+    ctx.render = async (name, context) => {
+        ctx.body = await ctx.renderHTML(name, context);
         ctx.response.type = 'text/html';
     };
     try {
@@ -125,8 +129,11 @@ MIDDLEWARE(async (ctx, next) => {
                     ctx.response.type = 'application/octet-stream';
                     ctx.redirect(ctx.setRedirect);
                 }
-            } else throw new NotFoundError();
+            } else {
+                throw new NotFoundError();
+            }
         } catch (error) {
+            if (error instanceof NotFoundError) ctx.status = 404;
             if (error.toString().startsWith('NotFoundError')) console.log(error);
             if (error.toString().startsWith('Template render error')) throw error;
             if (ctx.preferJson) ctx.body = { error };
@@ -136,4 +143,4 @@ MIDDLEWARE(async (ctx, next) => {
         if (ctx.preferJson) ctx.body = { error };
         else await ctx.render('bsod.html', { error });
     }
-});
+}, true);
