@@ -31,7 +31,13 @@ GET('/p', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     if (ctx.query.category) q.category = ctx.query.category;
     if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
     let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
-    ctx.body = { page, pdocs, category: '' };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', null]
+        ],
+        page, pdocs, category: ''
+    };
 });
 GET('/problem/random', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     let q = {};
@@ -47,7 +53,14 @@ GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
     let pdoc = await problem.get({ pid, uid });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
     let udoc = await user.getById(pdoc.owner);
-    ctx.body = { pdoc, udoc, title: pdoc.title };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [pdoc.title, null, true]
+        ],
+        pdoc, udoc, title: pdoc.title
+    };
 });
 GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     ctx.templateName = 'problem_submit.html';
@@ -56,7 +69,15 @@ GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     let pdoc = await problem.get({ pid, uid });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
     let udoc = await user.getById(pdoc.owner);
-    ctx.body = { pdoc, udoc, title: pdoc.title };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [pdoc.title, `/p/${pid}`, true],
+            ['problem_submit', null]
+        ],
+        pdoc, udoc, title: pdoc.title
+    };
 });
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     let rid = await record.add({
@@ -74,13 +95,19 @@ GET('/p/:pid/settings', async ctx => {
     ctx.templateName = 'problem_settings.html';
     let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
     if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-    ctx.body = { pdoc };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [pdoc.title, `/p/${ctx.params.pid}`, true],
+            ['problem_settings', null]
+        ], pdoc
+    };
 });
 POST('/p/:pid/settings', async ctx => {
     ctx.templateName = 'problem_settings.html';
     // TODO(masnn)
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    ctx.body = { pdoc };
+    ctx.back();
 });
 GET('/p/:pid/upload', async ctx => {
     ctx.templateName = 'problem_upload.html';
@@ -123,7 +150,13 @@ GET('/p/:pid/data', async ctx => {
 });
 GET('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
     ctx.templateName = 'problem_edit.html';
-    ctx.body = { page_name: 'problem_create' };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            ['problem_create', null]
+        ], page_name: 'problem_create'
+    };
 });
 POST('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
     let { title, pid, content, hidden } = ctx.request.body;

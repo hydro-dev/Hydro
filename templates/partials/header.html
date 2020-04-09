@@ -1,11 +1,6 @@
 <div class="header{% if no_path_section %} mini{% endif %}">
   <div class="header__content"><div class="row"><div class="columns">
-  {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}
-    <a class="header__logo" href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}" target="_self"></a>
-  {% else %}
-    <div class="header__logo--domain"><a href="{{ reverse_url('domain_main') }}" target="_self">{{ domain['name'] }}</a></div>
-    <div class="header__logo--system"><a href="{{ reverse_url('domain_main', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM) }}" target="_blank">Powered by Vijos</a></div>
-  {% endif %}
+    <a class="header__logo" href="/" target="_self"></a>
   </div></div></div>
   {% include "partials/path.html" %}
 </div>

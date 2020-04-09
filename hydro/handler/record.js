@@ -21,7 +21,13 @@ GET('/r', async ctx => {
         udict[rdoc.uid] = await user.getById(rdoc.uid);
         pdict[rdoc.pid] = await problem.get({ pid: rdoc.pid, uid: ctx.state.user._id });
     }
-    ctx.body = { page, rdocs, pdict, udict };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['record_main', null]
+        ],
+        page, rdocs, pdict, udict
+    };
 });
 SOCKET('/record-conn', [], conn => {
     let tid = conn.params.tid;
@@ -43,7 +49,13 @@ GET('/r/:rid', async ctx => {
     let rdoc = await record.get(rid);
     if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
-    ctx.body = { rdoc, show_status: true };
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['record_detail', null]
+        ],
+        rdoc, show_status: true
+    };
 });
 SOCKET('/record-detail-conn', [], async conn => {
     let rdoc = await record.get(conn.params.rid);

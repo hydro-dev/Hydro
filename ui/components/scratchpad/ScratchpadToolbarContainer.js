@@ -13,20 +13,11 @@ import Toolbar, {
   ToolbarSplitComponent as ToolbarSplit,
 } from './ToolbarComponent';
 
-function isTestCaseDataValid(data) {
-  return data.input.trim().length > 0 && data.output.trim().length > 0;
-}
-
-function isPretestValid(state) {
-  return _.some(state.tabs, id => isTestCaseDataValid(state.data[id]));
-}
-
 const mapStateToProps = state => ({
   pretestVisible: state.ui.pretest.visible,
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
   editorLang: state.editor.lang,
-  pretestValid: isPretestValid(state.pretest),
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -45,9 +36,7 @@ const mapDispatchToProps = dispatch => ({
   postPretest(context) {
     const state = context.store.getState();
     const { pretest } = state;
-    const testCases = pretest.tabs
-      .filter(tabId => isTestCaseDataValid(pretest.data[tabId]));
-    // const titles = testCases.map(tabId => pretest.meta[tabId].title);
+    const testCases = pretest.tabs;
     const inputs = testCases.map(tabId => pretest.data[tabId].input);
     const outputs = testCases.map(tabId => pretest.data[tabId].output);
     const req = request.post(Context.postPretestUrl, {
@@ -123,7 +112,7 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
         </ToolbarItem>
         <ToolbarSplit />
         <ToolbarButton
-          activated={this.props.pretestVisible}
+          activated
           onClick={() => this.props.togglePanel('pretest')}
           data-global-hotkey="alt+p"
           data-tooltip={`${i18n('Toggle Pretest Panel')} (Alt+P)`}
