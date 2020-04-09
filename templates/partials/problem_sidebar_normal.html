@@ -100,16 +100,12 @@
       {% if pdoc['psdoc']['status'] %}
         <span class="icon record-status--icon {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
         <a href="/r/{{ pdoc['psdoc']['rid'] }}" class="record-status--text {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
-          {{ status.STATUS_TEXTS[pdoc['psdoc']['status']] }}
+          {{ builtin.STATUS_TEXTS[pdoc['psdoc']['status']] }}
         </a>
       {% else %}
         {{ _('(None)') }}
       {% endif %}
       </dd>
-      {% if pdoc['ac_msg'] and pdoc['psdoc']['status'] == status.STATUS_ACCEPTED %}
-        <dt>{{ _('AC Message') }}</dt>
-        <dd>{{ pdoc['ac_msg'] }}</dd>
-      {% endif %}
     {% endif %}
     {% endif %}
       <dt>{{ _('Difficulty') }}</dt>

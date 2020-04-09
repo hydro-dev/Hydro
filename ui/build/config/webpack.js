@@ -4,6 +4,7 @@ import _ from 'lodash';
 import webpack from 'webpack';
 import fs from 'fs-extra';
 
+import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
@@ -183,9 +184,10 @@ export default function (env = {}) {
       // don't include momentjs locale files
       new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
 
-      // don't include timeago.js locale files
-      // no use. FIXME.
-      // new webpack.IgnorePlugin(/locales\//, /timeago/),
+      new MonacoWebpackPlugin({
+        // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
+        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go']
+      }),
 
       // extract stylesheets into a standalone file
       env.watch
