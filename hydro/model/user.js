@@ -1,8 +1,9 @@
 const
-    { UserNotFoundError, UserAlreadyExistError } = require('../error'),
     system = require('./system'),
-    { pwhash, validator } = require('../utils'),
-    db = require('../service/db.js'),
+    { UserNotFoundError, UserAlreadyExistError } = require('../error'),
+    { pwhash } = require('../utils'),
+    validator = require('../lib/validator'),
+    db = require('../service/db'),
     coll = db.collection('user'),
     coll_role = db.collection('role');
 
@@ -40,10 +41,13 @@ async function getByUname(uname) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
-async function getByEmail(email) {
+async function getByEmail(email, ignoreMissing = false) {
     let emailLower = email.trim().toLowerCase();
     let udoc = await coll.findOne({ emailLower });
-    if (!udoc) throw new UserNotFoundError(email);
+    if (!udoc) {
+        if (ignoreMissing) return null;
+        else throw new UserNotFoundError(email);
+    }
     let role = await coll_role.findOne({ _id: udoc.role || 'default' });
     udoc.perm = role.perm;
     return new USER(udoc);
@@ -73,7 +77,7 @@ async function changePassword(uid, currentPassword, newPassword) {
         $set: { salt, hash: pwhash.hash(newPassword, salt) }
     });
 }
-async function create({ uid, email, uname, password, regip, perm = this.perm.PERM_DEFAULT || 0 }) {
+async function create({ uid, email, uname, password, regip = '127.0.0.1', role = 'default' }) {
     validator.checkUname(uname);
     validator.checkPassword(password);
     validator.checkEmail(email);
@@ -81,21 +85,22 @@ async function create({ uid, email, uname, password, regip, perm = this.perm.PER
     if (!uid) uid = system.incUserCounter();
     try {
         await coll.insertOne({
+            _id: uid,
             email,
-            emailLower: email.strip().toLowerCase(),
+            emailLower: email.trim().toLowerCase(),
             uname,
-            unameLower: uname.strip().toLowerCase(),
+            unameLower: uname.trim().toLowerCase(),
             password: pwhash.hash(password, salt),
             salt,
             regat: new Date(),
             regip,
             loginat: new Date(),
             loginip: regip,
-            perm,
+            role,
             gravatar: email
         });
     } catch (e) {
-        throw new UserAlreadyExistError(uid, uname, email);
+        throw new UserAlreadyExistError([uid, uname, email]);
     }
 }
 

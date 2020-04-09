@@ -37,37 +37,43 @@ POST('/logout', requirePerm(PERM_LOGGEDIN), async ctx => {
     ctx.session = { uid: 1 };
     ctx.body = {};
 });
-GET('/register/:code', requirePerm(PERM_REGISTER_USER), async ctx => {
-    let code = ctx.request.body.code;
-    let { mail } = await token.get(code, token.TYPE_REGISTRATION);
-    if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
-    ctx.body = { mail };
+GET('/register', requirePerm(PERM_REGISTER_USER), async ctx => {
+    ctx.templateName = 'user_register.html';
 });
 GET('/register/:code', requirePerm(PERM_REGISTER_USER), async ctx => {
-    let { code, password, verify_password, uname } = ctx.request.body;
-    let { mail } = await token.get(code, token.TYPE_REGISTRATION);
-    if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
+    ctx.templateName = 'user_register_with_code.html';
+    let code = ctx.params.code;
+    let { email } = await token.get(code, token.TYPE_REGISTRATION);
+    if (!email) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
+    ctx.body = { email };
+});
+POST('/register/:code', requirePerm(PERM_REGISTER_USER), async ctx => {
+    let code = ctx.params.code;
+    let { password, verify_password, uname } = ctx.request.body;
+    let { email } = await token.get(code, token.TYPE_REGISTRATION);
+    if (!email) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
     if (password != verify_password) throw new VerifyPasswordError();
     let uid = await system.incUserCounter();
-    await user.add(uid, uname, password, mail, ctx.remote_ip);
+    await user.create({ uid, uname, password, email, regip: ctx.request.ip });
     await token.delete(code, token.TYPE_REGISTRATION);
     ctx.session.uid = uid;
     ctx.body = {};
+    ctx.setRedirect = '/';
 });
 
 if (options.smtp.user) {
     POST('/register', requirePerm(PERM_REGISTER_USER), limitRate('send_mail', 3600, 30), async ctx => {
-        let email = ctx.request.body.email;
-        validator.check_mail(email);
-        if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);
-        let rid = await token.add(token.TYPE_REGISTRATION, options.registration_token_expire_seconds, { mail: email });
+        let email = ctx.request.body.mail;
+        validator.checkEmail(email);
+        if (await user.getByEmail(email, true)) throw new UserAlreadyExistError(email);
+        let rid = await token.add(token.TYPE_REGISTRATION, options.registration_token_expire_seconds, { email });
         let m = await ctx.render('user_register_mail', { url: `/register/${rid}` }, true);
-        await mail.send_mail(email, 'Sign Up', 'user_register_mail', m);
+        await mail.sendMail(email, 'Sign Up', 'user_register_mail', m);
         ctx.body = {};
     });
     POST('/lostpass', limitRate('send_mail', 3600, 30), async ctx => {
         let email = ctx.request.body.mail;
-        validator.check_mail(email);
+        validator.checkEmail(email);
         let udoc = await user.getByEmail(email);
         if (!udoc) throw new UserNotFoundError(email);
         let tid = await token.add(
@@ -76,7 +82,7 @@ if (options.smtp.user) {
             { uid: udoc._id }
         );
         let m = await ctx.render('user_lostpass_mail', { url: `/lostpass/${tid}`, uname: udoc.uname }, true);
-        await mail.send_mail(email, 'Lost Password', 'user_lostpass_mail', m);
+        await mail.sendMail(email, 'Lost Password', 'user_lostpass_mail', m);
         ctx.body = {};
     });
     GET('/lostpass/:code', async ctx => {
@@ -93,19 +99,18 @@ if (options.smtp.user) {
         let tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
         if (password != verify_password) throw new VerifyPasswordError();
-        await user.set_password(tdoc.uid, password);
+        await user.setPassword(tdoc.uid, password);
         await token.delete(code, token.TYPE_LOSTPASS);
         ctx.redirect('/');
     });
 } else
-    POST('/register', requirePerm(PERM_REGISTER_USER), async ctx => {
-        let email = ctx.request.body.email;
-        validator.check_mail(email);
-        if (await user.get_by_mail(email)) throw new UserAlreadyExistError(email);
-        let token = await token.add(token.TYPE_REGISTRATION, options.registration_token_expire_seconds, { mail: email });
-        ctx.body = { token };
+    POST('/register', requirePerm(PERM_REGISTER_USER), limitRate('send_mail', 3600, 60), async ctx => {
+        let email = ctx.request.body.mail;
+        validator.checkEmail(email);
+        if (await user.getByEmail(email, true)) throw new UserAlreadyExistError(email);
+        let t = await token.add(token.TYPE_REGISTRATION, options.session.registration_token_expire_seconds, { email });
+        ctx.setRedirect = `/register/${t[0]}`;
     });
-
 /*
 
 @app.route('/user/{uid:-?\d+}', 'user_detail')

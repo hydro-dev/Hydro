@@ -34,7 +34,8 @@ let options = {
         secure: false,
         domain: '127.0.0.1',
         saved_expire_seconds: 3600 * 24,
-        unsaved_expire_seconds: 600
+        unsaved_expire_seconds: 600,
+        registration_token_expire_seconds: 600
     },
     constants: {
         PROBLEM_PER_PAGE: 100,

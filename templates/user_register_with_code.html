@@ -1,3 +1,4 @@
+{% set page_name = "user_register_with_code" %}
 {% extends "layout/immersive.html" %}
 {% block content %}
 <div class="immersive--content immersive--center">
@@ -6,7 +7,7 @@
     <div>
       <label class="inverse material textbox">
         {{ _('Email') }}
-        <input type="text" value="{{ mail }}" disabled>
+        <input type="text" value="{{ email }}" disabled>
       </label>
     </div>
     <div>

@@ -11,7 +11,7 @@ module.exports = {
      * @param {number} tokenType type of the token.
      * @param {number} expireSeconds expire time, in seconds.
      * @param {object} data extra data.
-     * @returns {string} token ID
+     * @returns {Array} token ID, token data
      */
     async add(tokenType, expireSeconds, data) {
         let now = new Date();
@@ -62,7 +62,7 @@ module.exports = {
      * @returns {boolean} true if deleted, or false.
      */
     async delete(tokenId, tokenType) {
-        let result = await coll.delete_one({ _id: tokenId, tokenType });
+        let result = await coll.deleteOne({ _id: tokenId, tokenType });
         return !!result.deletedCount;
     },
 

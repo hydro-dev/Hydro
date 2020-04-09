@@ -122,6 +122,9 @@ MIDDLEWARE(async (ctx, next) => {
                     ctx.response.type = 'application/octet-stream';
                     ctx.redirect(ctx.setRedirect);
                 }
+            } else if (ctx.setRedirect) {
+                ctx.response.type = 'application/octet-stream';
+                ctx.redirect(ctx.setRedirect);
             } else {
                 throw new NotFoundError();
             }

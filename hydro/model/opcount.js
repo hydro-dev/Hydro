@@ -15,7 +15,7 @@ module.exports = {
         let begin_at = new Date(cur_time - cur_time % (period_secs * 1000));
         let expire_at = new Date(begin_at.getTime() + period_secs * 1000);
         try {
-            await coll.find_one_and_update({
+            await coll.findOneAndUpdate({
                 ident, begin_at, expire_at,
                 op: { $not: { $gte: max_operations } }
             }, { $inc: { op: 1 } }, { upsert: true });
