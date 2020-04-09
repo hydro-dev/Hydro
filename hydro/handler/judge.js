@@ -2,6 +2,7 @@ const
     { requirePerm } = require('./tools'),
     { PERM_JUDGE } = require('../permission'),
     record = require('../model/record'),
+    problem = require('../model/problem'),
     bus = require('../service/bus'),
     queue = require('../service/queue'),
     { GET, POST } = require('../service/server');
@@ -15,11 +16,12 @@ GET('/judge/fetch', requirePerm(PERM_JUDGE), async ctx => {
     let rid = await queue.get('judge', false);
     if (rid) {
         let rdoc = await record.get(rid);
+        let pdoc = await problem.getById(rdoc.pid);
         let task = {
             event: 'judge',
             rid, type: 0,
             pid: rdoc.pid,
-            data: rdoc.data,
+            data: pdoc.data,
             lang: rdoc.lang,
             code: rdoc.code
         };
@@ -28,6 +30,7 @@ GET('/judge/fetch', requirePerm(PERM_JUDGE), async ctx => {
     else ctx.body = {};
 });
 POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
+    console.log(ctx.request.body);
     let body = ctx.request.body;
     let rdoc = await record.get(body.rid);
     let $set = {};
@@ -40,7 +43,7 @@ POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
         $set.judgeTexts = rdoc.judgeTexts;
     }
     if (body.compiler_text) {
-        rdoc.compilerTexts.push(body.compilerTexts);
+        rdoc.compilerTexts.push(body.compiler_text);
         $set.compilerTexts = rdoc.compilerTexts;
     }
     if (body.status) $set.status = body.status;

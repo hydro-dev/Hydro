@@ -3,7 +3,7 @@
 {% import "components/problem.html" as problem with context %}
 {% import "components/nothing.html" as nothing with context %}
 <div data-fragment-id="problem_list">
-{% if not pdocs %}
+{% if not pdocs.length %}
   {{ nothing.render('Sorry, there is no problem in the problem set') }}
 {% else %}
   <table class="data-table">

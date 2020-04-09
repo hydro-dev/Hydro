@@ -80,11 +80,12 @@ GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
     };
 });
 POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
+    let pdoc = await problem.get({ pid: ctx.params.pid });
     let rid = await record.add({
         uid: ctx.state.user._id,
         lang: ctx.request.body.lang,
         code: ctx.request.body.code,
-        pid: ctx.params.pid
+        pid: pdoc._id
     });
     await queue.push('judge', rid);
     ctx.state.user.nSubmit++;
@@ -94,7 +95,7 @@ POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
 GET('/p/:pid/settings', async ctx => {
     ctx.templateName = 'problem_settings.html';
     let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
     ctx.body = {
         path: [
             ['Hydro', '/'],
@@ -109,12 +110,36 @@ POST('/p/:pid/settings', async ctx => {
     // TODO(masnn)
     ctx.back();
 });
+GET('/p/:pid/edit', async ctx => {
+    ctx.templateName = 'problem_edit.html';
+    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
+    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
+    ctx.body = {
+        path: [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [pdoc.title, `/p/${ctx.params.pid}`, true],
+            ['problem_edit', null]
+        ],
+        pdoc, page_name: 'problem_edit'
+    };
+});
+POST('/p/:pid/edit', async ctx => {
+    let title = validator.checkTitle(ctx.request.body.title);
+    let content = validator.checkContent(ctx.request.body.content);
+    let pid = validator.checkPid(ctx.request.body.pid);
+    let pdoc = await problem.get({ pid: ctx.params.pid });
+    await problem.edit(pdoc._id, {
+        title, content, pid
+    });
+    ctx.setRedirect = `/p/${pid}`;
+});
 GET('/p/:pid/upload', async ctx => {
     ctx.templateName = 'problem_upload.html';
     let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
     if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
     let md5;
-    if (typeof pdoc.data == 'object') {
+    if (pdoc.data && typeof pdoc.data == 'object') {
         let files = await gridfs.find({ _id: pdoc.data }).toArray();
         md5 = files[0].md5;
     }
@@ -133,11 +158,14 @@ POST('/p/:pid/upload', async ctx => {
         f.once('error', reject);
     });
     let md5;
-    if (typeof pdoc.data == 'object') {
+    if (pdoc.data && typeof pdoc.data == 'object') {
+        gridfs.delete(pdoc.data);
+    }
+    pdoc = await problem.edit(pdoc._id, { data: f.id });
+    if (pdoc.data && typeof pdoc.data == 'object') {
         let files = await gridfs.find({ _id: pdoc.data }).toArray();
         md5 = files[0].md5;
     }
-    pdoc = await problem.edit(ctx.params.pid, { data: f.id });
     ctx.body = { pdoc, md5 };
 });
 GET('/p/:pid/data', async ctx => {

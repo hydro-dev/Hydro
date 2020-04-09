@@ -1,7 +1,6 @@
 class UserFacingError extends Error {
     constructor(type) {
         super(type);
-        this.template = 'error';
         this.code = 500;
         //this.stack = '';
         this.params = [];

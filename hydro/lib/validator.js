@@ -7,21 +7,21 @@ const
 
 const
     isTitle = s => s && s.length < 64,
-    checkTitle = s => { if (!isTitle(s)) throw new ValidationError('title'); },
+    checkTitle = s => { if (!isTitle(s)) throw new ValidationError('title'); else return s; },
     isUid = s => RE_UID.test(s),
-    checkUid = s => { if (!isUid(s)) throw new ValidationError('uid'); },
+    checkUid = s => { if (!isUid(s)) throw new ValidationError('uid'); else return s; },
     isUname = s => RE_UNAME.test(s),
-    checkUname = s => { if (!isUname(s)) throw new ValidationError('uname'); },
+    checkUname = s => { if (!isUname(s)) throw new ValidationError('uname'); else return s; },
     isPassword = s => s.length >= 5,
-    checkPassword = s => { if (!isPassword(s)) throw new ValidationError('password'); },
+    checkPassword = s => { if (!isPassword(s)) throw new ValidationError('password'); else return s; },
     isEmail = s => RE_MAIL.test(s),
-    checkEmail = s => { if (!isEmail(s)) throw new ValidationError('mail'); },
+    checkEmail = s => { if (!isEmail(s)) throw new ValidationError('mail'); else return s; },
     isContent = s => s && s.length < 65536,
-    checkContent = s => { if (!isContent(s)) throw new ValidationError('content'); },
+    checkContent = s => { if (!isContent(s)) throw new ValidationError('content'); else return s; },
     isName = s => s && s.length < 256,
-    checkName = s => { if (!isName(s)) throw new ValidationError('name'); },
+    checkName = s => { if (!isName(s)) throw new ValidationError('name'); else return s; },
     isPid = s => RE_PID.test(s.toString()),
-    checkPid = s => { if (!RE_PID.test(s)) throw new ValidationError('pid'); };
+    checkPid = s => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };
 
 module.exports = {
     isTitle, checkTitle,

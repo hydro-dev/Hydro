@@ -128,7 +128,10 @@ MIDDLEWARE(async (ctx, next) => {
             } else {
                 throw new NotFoundError();
             }
-        } catch (error) {
+        } catch (e) {
+            let error;
+            if (ctx.body && ctx.body.error) error = ctx.body.error;
+            else error = e;
             if (error instanceof NotFoundError) ctx.status = 404;
             if (error.toString().startsWith('NotFoundError')) console.log(error);
             if (error.toString().startsWith('Template render error')) throw error;

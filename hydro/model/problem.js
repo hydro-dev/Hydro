@@ -1,6 +1,7 @@
 const
-    validator = require('../lib/validator'),
+    { ObjectID } = require('bson'),
     { ProblemNotFoundError } = require('../error'),
+    validator = require('../lib/validator'),
     db = require('../service/db.js'),
     coll = db.collection('problem'),
     coll_status = db.collection('problem.status');
@@ -42,23 +43,32 @@ async function add({
     return pid;
 }
 async function get({ pid, uid }) {
-    pid = parseInt(pid) || pid;
-    let pdoc = await coll.findOne({ pid });
+    let query = {};
+    if (pid.generationTime || pid.length == 24) query = { _id: new ObjectID(pid) };
+    else query = { pid: parseInt(pid) || pid };
+    let pdoc = await coll.findOne(query);
     if (!pdoc) throw new ProblemNotFoundError(pid);
-    pdoc.psdoc = uid ?
-        await coll_status.findOne({ pid, uid }) :
-        null;
+    if (uid) {
+        query.uid = uid;
+        pdoc.psdoc = await coll_status.findOne(query);
+    }
+    return pdoc;
+}
+async function getById(_id) {
+    _id = new ObjectID(_id);
+    let pdoc = await coll.findOne({ _id });
+    if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
 async function getMany(query, sort, page, limit) {
     return await coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
 }
-async function edit(pid, $set) {
+async function edit(_id, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
-    await coll.findOneAndUpdate({ pid }, { $set });
-    let pdoc = await coll.findOne({ pid });
-    if (!pdoc) throw new ProblemNotFoundError(pid);
+    await coll.findOneAndUpdate({ _id }, { $set });
+    let pdoc = await getById(_id);
+    if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
 async function count(query) {
@@ -80,5 +90,6 @@ module.exports = {
     getMany,
     edit,
     count,
-    random
+    random,
+    getById
 };
