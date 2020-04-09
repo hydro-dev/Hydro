@@ -41,19 +41,16 @@ function GET(route, ...handler) {
 function POST(route, ...handler) {
     router.post(route, ...handler);
 }
-/**
- * @callback SocketIOHandler
- * @param {import('socket.io').Socket} socket
- */
+
 /**
  * @callback SockJSHandler
  * @param {import('sockjs').Connection} conn
  */
 /**
  * @param {string} prefix
- * @param {SocketIOHandler} handler
+ * @param {SockJSHandler} handler
  */
-function SOCKET(prefix, handler) {
+function SOCKET(prefix, middlewares, handler) {
     const sock = sockjs.createServer({ prefix });
     sock.on('connection', async conn => {
         conn.cookies = {
@@ -80,18 +77,18 @@ function SOCKET(prefix, handler) {
             });
             setTimeout(reject, 5000);
         });
-        for (let i of m) {
+        for (let i of m)
             await new Promise((resolve, reject) => {
                 i(conn, resolve).catch(reject);
             });
-        }
+        for (let i of middlewares)
+            await new Promise((resolve, reject) => {
+                i(conn, resolve).catch(reject);
+            });
         conn.send = data => {
             conn.write(JSON.stringify(data));
         };
-        let h = new handler(conn);
-        if (h.onOpen) conn.on('open', h.onOpen);
-        if (h.onClose) conn.on('close', h.onClose);
-        if (h.onMessage) conn.on('data', h.onMessage);
+        handler(conn);
     });
     sock.installHandlers(server);
 }

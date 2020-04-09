@@ -45,6 +45,19 @@ async function update(rid, $set) {
     if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;
 }
+async function reset(rid) {
+    return await update(rid, {
+        score: 0,
+        status: STATUS_WAITING,
+        time: 0,
+        memory: 0,
+        cases: [],
+        judgeTexts: [],
+        compilerTexts: [],
+        judgeAt: null,
+        judger: null
+    });
+}
 async function count(query) {
     return await coll.find(query).count();
 }
@@ -54,5 +67,6 @@ module.exports = {
     get,
     getMany,
     update,
-    count
+    count,
+    reset
 };

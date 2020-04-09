@@ -44,6 +44,10 @@ MIDDLEWARE(async (ctx, next) => {
                 }
             }
         };
+        ctx.back = () => {
+            console.log(122143);
+            ctx.redirect(ctx.request.headers.referer || '/');
+        };
         ctx.csrf_token = await token.add(token.TYPE_CSRF_TOKEN, 600, ctx.path);
         await next();
         if (ctx.session.sid)
@@ -58,7 +62,7 @@ MIDDLEWARE(async (ctx, next) => {
                 update_ip: ctx.request.ip,
                 update_ua: ctx.request.headers['user-agent'] || ''
             }, ctx.session));
-        let cookie = { secure: options.session.secure, httponly: true };
+        let cookie = { secure: options.session.secure };
         if (save) {
             cookie.expires = ctx.session.expireAt, cookie.maxAge = expireSeconds;
             ctx.cookies.set('save', 'true', cookie);

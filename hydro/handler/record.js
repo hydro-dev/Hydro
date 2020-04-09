@@ -23,26 +23,19 @@ GET('/r', async ctx => {
     }
     ctx.body = { page, rdocs, pdict, udict };
 });
-SOCKET('/record-conn', class RecordConnHandler {
-    constructor(conn) {
-        this.tid = null;
-        this.h = async data => {
-            let rdoc = data.value;
-            if (rdoc.tid && rdoc.tid != this.tid.toString()) return;
-            let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
-            if (pdoc.hidden && !conn.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
-            conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
-        };
+SOCKET('/record-conn', [], conn => {
+    let tid = conn.params.tid;
+    async function onRecordChange(data) {
+        let rdoc = data.value;
+        if (rdoc.tid && rdoc.tid.toString() != tid) return;
+        let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
+        if (pdoc.hidden && !conn.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+        conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
-    onOpen() {
-        bus.subscribe(['record_change'], this.h);
-    }
-    onMessage(data) {
-        if (data.tid) this.tid = data.tid;
-    }
-    onClose() {
-        bus.unsubscribe(['record_change'], this.h);
-    }
+    bus.subscribe(['record_change'], onRecordChange);
+    conn.on('close', () => {
+        bus.unsubscribe(['record_change'], onRecordChange);
+    });
 });
 GET('/r/:rid', async ctx => {
     ctx.templateName = 'record_detail.html';
@@ -52,35 +45,37 @@ GET('/r/:rid', async ctx => {
     if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
     ctx.body = { rdoc, show_status: true };
 });
-SOCKET('/record-detail-conn', class RecordDetailConnHandler {
-    constructor(conn) {
-        this.rid = conn.params.rid;
-        this.h = async data => {
-            let rdoc = data.value;
-            if (rdoc.rid.toString() != this.rid) return;
-            let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
-            if (pdoc.hidden && !conn.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
-            conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
-        };
+SOCKET('/record-detail-conn', [], async conn => {
+    let rdoc = await record.get(conn.params.rid);
+    if (rdoc.tid)
+        if (!await conn.rdoc_contest_visible(rdoc)) {
+            conn.close();
+            return;
+        }
+    async function onRecordChange(data) {
+        let rdoc = data.value;
+        if (rdoc._id.toString() != conn.params.rid) return;
+        conn.send({
+            status_html: await conn.renderHTML('record_detail_status.html', { rdoc }),
+            summary_html: await conn.renderHTML('record_detail_summary.html', { rdoc })
+        });
     }
-    async onOpen() {
-        bus.subscribe(['record_change'], this.h);
-    }
-    onMessage(data) {
-        if (data.rid) this.rid = data.rid;
-    }
-    onClose() {
-        bus.unsubscribe(['record_change'], this.h);
-    }
+    bus.subscribe(['record_change'], onRecordChange);
+    onRecordChange({ value: rdoc });
+    conn.on('close', () => {
+        bus.unsubscribe(['record_change'], onRecordChange);
+    });
 });
 POST('/r/:rid/rejudge', requirePerm(PERM_REJUDGE), async ctx => {
-    ctx.templateName = 'record_detail.html';
     let uid = ctx.state.user._id, rid = new bson.ObjectID(ctx.params.rid);
     let rdoc = await record.get(rid);
     if (rdoc.hidden) ctx.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     if (rdoc.uid != uid && !ctx.state.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
-    if (rdoc) await queue.push('judge', rid);
-    ctx.body = { rdoc, show_status: true };
+    if (rdoc) {
+        await record.reset(rid);
+        await queue.push('judge', rid);
+    }
+    ctx.back();
 });
 
 /*

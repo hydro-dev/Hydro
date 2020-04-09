@@ -1,6 +1,6 @@
 const
     path = require('path'),
-    send = require('koa-send'),
+    staticCache = require('koa-static-cache'),
     nunjucks = require('nunjucks'),
     hljs = require('highlight.js'),
     MarkdownIt = require('markdown-it'),
@@ -77,16 +77,9 @@ class Nunjucks extends nunjucks.Environment {
     }
 }
 let env = new Nunjucks();
-MIDDLEWARE(async (ctx, next) => {
-    let done = false;
-    if (ctx.method === 'HEAD' || ctx.method === 'GET')
-        try {
-            done = await send(ctx, ctx.path, { root: path.resolve(process.cwd(), '.uibuild'), index: 'index.html' });
-        } catch (err) {
-            if (err.status !== 404) throw err;
-        }
-    if (!done) await next();
-});
+MIDDLEWARE(staticCache(path.join(process.cwd(), '.uibuild'), {
+    maxAge: 365 * 24 * 60 * 60
+}));
 MIDDLEWARE(async (ctx, next) => {
     ctx.render_title = str => str;
     ctx.UIContext = {
