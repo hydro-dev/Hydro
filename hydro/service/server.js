@@ -53,42 +53,46 @@ function POST(route, ...handler) {
 function SOCKET(prefix, middlewares, handler) {
     const sock = sockjs.createServer({ prefix });
     sock.on('connection', async conn => {
-        conn.cookies = {
-            get(name) {
-                return conn.cookies[name];
-            },
-            set() { }
-        };
-        conn.state = {};
-        conn.params = {};
-        conn.request = {
-            headers: conn.headers
-        };
-        let p = conn.url.split('?')[1].split('&');
-        for (let i in p) p[i] = p[i].split('=');
-        for (let i in p) conn.params[p[i][0]] = decodeURIComponent(p[i][1]);
-        await new Promise((resolve, reject) => {
-            conn.once('data', msg => {
-                for (let i of msg.split(';')) {
-                    i = i.trim().split('=');
-                    conn.cookies[i[0]] = i[1];
-                }
-                resolve();
-            });
-            setTimeout(reject, 5000);
-        });
-        for (let i of m)
+        try {
+            conn.cookies = {
+                get(name) {
+                    return conn.cookies[name];
+                },
+                set() { }
+            };
+            conn.state = {};
+            conn.params = {};
+            conn.request = {
+                headers: conn.headers
+            };
+            let p = (conn.url.split('?')[1] || '').split('&');
+            for (let i in p) p[i] = p[i].split('=');
+            for (let i in p) conn.params[p[i][0]] = decodeURIComponent(p[i][1]);
             await new Promise((resolve, reject) => {
-                i(conn, resolve).catch(reject);
+                conn.once('data', msg => {
+                    for (let i of msg.split(';')) {
+                        i = i.trim().split('=');
+                        conn.cookies[i[0]] = i[1];
+                    }
+                    resolve();
+                });
+                setTimeout(reject, 5000);
             });
-        for (let i of middlewares)
-            await new Promise((resolve, reject) => {
-                i(conn, resolve).catch(reject);
-            });
-        conn.send = data => {
-            conn.write(JSON.stringify(data));
-        };
-        handler(conn);
+            for (let i of m)
+                await new Promise((resolve, reject) => {
+                    i(conn, resolve).catch(reject);
+                });
+            for (let i of middlewares)
+                await new Promise((resolve, reject) => {
+                    i(conn, resolve).catch(reject);
+                });
+            conn.send = data => {
+                conn.write(JSON.stringify(data));
+            };
+            handler(conn);
+        } catch (e) {
+            console.error(e);
+        }
     });
     sock.installHandlers(server);
 }
