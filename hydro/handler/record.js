@@ -15,7 +15,7 @@ GET('/r', async ctx => {
     ctx.templateName = 'record_main.html';
     let q = {},
         page = ctx.query.page || 1;
-    let rdocs = await record.getMany(q, { rid: 1 }, page, constants.RECORD_PER_PAGE);
+    let rdocs = await record.getMany(q, { _id: -1 }, page, constants.RECORD_PER_PAGE);
     let pdict = {}, udict = {};
     for (let rdoc of rdocs) {
         udict[rdoc.uid] = await user.getById(rdoc.uid);
@@ -39,6 +39,14 @@ SOCKET('/record-conn', [], conn => {
         conn.send({ html: await conn.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
     bus.subscribe(['record_change'], onRecordChange);
+    conn.on('data', async message => {
+        console.log(message);
+        let { rids } = JSON.parse(message);
+        for (let rid of rids) {
+            let rdoc = await record.get(rid);
+            await onRecordChange({ value: rdoc });
+        }
+    });
     conn.on('close', () => {
         bus.unsubscribe(['record_change'], onRecordChange);
     });

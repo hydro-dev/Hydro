@@ -4,6 +4,9 @@
 <script>
   var Context = {
     'socketUrl': "/record-conn",
+    'rids': [
+        {% for rdoc in rdocs %}"{{ rdoc._id.toString() }}",{% endfor %}
+    ]
   };
 </script>
 <div class="row">

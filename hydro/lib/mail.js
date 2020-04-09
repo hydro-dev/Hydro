@@ -25,7 +25,7 @@ module.exports = {
      * @param {string} text
      * @param {string} html
      */
-    async send_mail(to, subject, text, html) {
+    async sendMail(to, subject, text, html) {
         let t;
         try {
             t = await new Promise((resolve, reject) => {

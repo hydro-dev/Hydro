@@ -8,6 +8,12 @@ const page = new NamedPage('record_main', async () => {
   const sock = new SockJs(Context.socketUrl);
   const dd = new DiffDOM();
 
+  sock.onopen = () => {
+    sock.send(document.cookie);
+    setTimeout(() => {
+      sock.send(JSON.stringify({ rdocs: Context.rids }));
+    }, 300);
+  };
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
     const $newTr = $(msg.html);

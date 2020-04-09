@@ -43,7 +43,7 @@
           <td class="col--status">
             <span class="icon record-status--icon {{ builtin.STATUS_CODES[rcdoc['status']] }}"></span>
             <span class="record-status--text {{ builtin.STATUS_CODES[rcdoc['status']] }}">
-              {{ status.STATUS_TEXTS[rcdoc['status']] }}
+              {{ builtin.STATUS_TEXTS[rcdoc['status']] }}
             </span>
             <span>{{ rcdoc['judgeText'] }}</span>
             <a class="tool-button" href="/wiki/help#status"><span class="icon icon-help"></span></a>
