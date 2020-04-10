@@ -1,14 +1,15 @@
+{% set page_name = "user_detail" %}
 {% import "components/home.html" as home with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
-      <div class="profile-header user-profile-bg--{{ vj4.model.adaptor.setting.UserSetting(udoc, dudoc).get_setting('background_img') }}">
+      <div class="profile-header user-profile-bg--{{ udoc.background_img }}">
         <div class="profile-header__content">
           <div class="media">
             <div class="media__left">
-              <img src="{{ udoc['gravatar']|gravatar_url }}" width="120" height="120" class="large user-profile-avatar">
+              <img src="{{ udoc.gravatar|gravatar_url }}" width="120" height="120" class="large user-profile-avatar">
             </div>
             <div class="media__body profile-header__main">
               <h1>
@@ -16,55 +17,51 @@
                 <small>({{ _('UID') }}: {{ udoc['_id'] }})</small>
               </h1>
               <p>
-                {{ _('Registered at') }} {{ datetime_span(udoc['regat']) }},
-                {{ _('last login at') }} {{ datetime_span(udoc['loginat']) }},
+                {{ _('Registered at') }} {{ datetime_span(udoc['regat'])|safe }},
+                {{ _('last login at') }} {{ datetime_span(udoc['loginat'])|safe }},
               {% if sdoc %}
-                {{ _('last active at') }} {{ datetime_span(sdoc['update_at']) }}.
+                {{ _('last active at') }} {{ datetime_span(sdoc['updateAt'])|safe }}.
               {% else %}
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(dudoc.nAccept|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?')) }}</p>
+              <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</p>
               <div class="profile-header__contact-bar">
               {% if is_self_profile %}
-                <a class="profile-header__contact-item" href="{{ reverse_url('home_account') }}#setting_info" data-tooltip="{{ _('Edit Profile') }}">
+                <a class="profile-header__contact-item" href="/home/account#setting_info" data-tooltip="{{ _('Edit Profile') }}">
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
                 <a class="profile-header__contact-item" href="/home/messages?target_uid={{ udoc['_id'] }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
-              {% if handler.can_view(udoc, 'mail') and udoc['mail'] %}
+              {% if udoc['mail'] %}
                 <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['mail'] | base64_encode }}" data-tooltip="{{ _('Copy Email') }}">
                   <span class="icon icon-mail"></span>
                 </a>
               {% endif %}
-              {% if handler.can_view(udoc, 'qq') and udoc['qq'] %}
+              {% if udoc['qq'] %}
                 <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['qq'] | base64_encode }}" data-tooltip="{{ _('Copy QQ Number') }}">
                   <span class="icon icon-qq"></span>
                 </a>
               {% endif %}
-              {% if handler.can_view(udoc, 'wechat') and udoc['wechat'] %}
+              {% if udoc['wechat'] %}
                 <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['wechat'] | base64_encode }}" data-tooltip="{{ _('Copy WeChat Account') }}">
                   <span class="icon icon-wechat"></span>
                 </a>
               {% endif %}
-              {% if
-                handler.get_udoc_setting(udoc, 'gender') != none
-                and handler.get_udoc_setting(udoc, 'gender') != vj4.constant.model.USER_GENDER_OTHER
-                and handler.can_view(udoc, 'gender')
-              %}
+              {% if udoc.gender and udoc.gender != builtin.USER_GENDER_OTHER %}
                 <span
                   class="profile-header__contact-item"
-                  data-tooltip="{{ vj4.constant.model.USER_GENDER_RANGE[handler.get_udoc_setting(udoc, 'gender')] }}"
+                  data-tooltip="{{ builtin.USER_GENDER_RANGE[udoc.gender] }}"
                 >
-                  {{ vj4.constant.model.USER_GENDER_ICONS[handler.get_udoc_setting(udoc, 'gender')] }}
+                  {{ builtin.USER_GENDER_ICONS[udoc.gender] }}
                 </span>
               {% endif %}
-              {% if handler.dudoc_has_perm(udoc, dudoc, perm.PERM_MOD_BADGE) %}
+              {% if handler.has_perm(perm.PERM_MOD_BADGE) %}
                 <span
                   class="profile-header__contact-item user-profile-badge badge--mod"
-                  data-tooltip="{{ _('{} is a moderator of this domain.').format(_('She' if handler.get_udoc_setting(udoc, 'gender') == 1 else 'He')) }}"
+                  data-tooltip="{{ _('{0} is a moderator of this domain.').format(_('She' if udoc.gender == 1 else 'He')) }}"
                 >
                   MOD
                 </span>
@@ -77,103 +74,7 @@
       <div class="profile-content">
         <div class="section__tab-container immersive">
           <ul class="section__tabs">
-            <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Discussions') }} ({{ dcount }})</h1>
-              <div class="section__tab-main">
-              {% if not ddocs %}
-                {{ nothing.render('Oh, the user hasn\'t created any discussions yet!') }}
-              {% else %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Recently Created Discussions') }}</h1>
-                </div>
-                <div class="section__body no-padding">
-                {% with udict = {udoc['_id']: udoc} %}
-                  {% include "partials/discussion_list.html" %}
-                {% endwith %}
-                </div>
-              {% endif %}
-              </div>
-            </li>
-            <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Contributions') }} ({{ pcount + pscount }})</h1>
-              <div class="section__tab-main">
-              {% if not pdocs and not psdocs %}
-                {{ nothing.render('Oh, the user doesn\'t have any contributions!') }}
-              {% else %}
-              {% if pdocs %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Contributed Problems') }}</h1>
-                </div>
-                <div class="section__body">
-                {% for pdoc in pdocs %}
-                  <p><a href="/p/{{ pdoc.pid }}">{{ pdoc['title'] }}</a></p>
-                {% endfor %}
-                </div>
-              {% endif %}{# if pdocs #}
-              {% if psdocs %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Most Upvoted Solutions') }}</h1>
-                </div>
-                <div class="section__body">
-                {% for psdoc in psdocs_hot %}
-                  <p><a href="{{ reverse_url('problem_solution', pid=psdoc['parent_doc_id']) }}">PS{{ psdoc['doc_id'] }}</a></p>
-                {% endfor %}
-                </div>
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Recent Solutions') }}</h1>
-                </div>
-                <div class="section__body">
-                {% for psdoc in psdocs %}
-                  <p><a href="{{ reverse_url('problem_solution', pid=psdoc['parent_doc_id']) }}">PS{{ psdoc['doc_id'] }}</a></p>
-                {% endfor %}
-                </div>
-              {% endif %}{# if psdocs #}
-              {% endif %}{# if not pdocs and not psdocs #}
-              </div>
-            </li>
-            <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Submissions') }} ({{ dudoc.nSubmit|default(0) }})</h1>
-              <div class="section__tab-main">
-              {% if not rdocs %}
-                {{ nothing.render('Oh, the user hasn\'t submitted yet!') }}
-              {% else %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Recent Submissions') }}</h1>
-                </div>
-                <div class="section__body no-padding">
-                  <table class="data-table record_main__table">
-                    <colgroup>
-                      <col class="col--status">
-                      <col class="col--problem">
-                      <col class="col--submit-by">
-                      <col class="col--time">
-                      <col class="col--memory">
-                      <col class="col--lang">
-                      <col class="col--submit-at">
-                    </colgroup>
-                    <thead>
-                      <tr>
-                        <th class="col--status record-status--border">{{ _('Status') }}</th>
-                        <th class="col--problem">{{ _('Problem') }}</th>
-                        <th class="col--submit-by">{{ _('Submit By') }}</th>
-                        <th class="col--time">{{ _('Time') }}</th>
-                        <th class="col--memory">{{ _('Memory') }}</th>
-                        <th class="col--lang">{{ _('Language') }}</th>
-                        <th class="col--submit-at">{{ _('Submit At') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {% for rdoc in rdocs %}
-                      {% with pdoc = pdict[(rdoc['domain_id'], rdoc['pid'])] %}
-                      {% include 'record_main_tr.html' %}
-                      {% endwith %}
-                    {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              {% endif %}
-              </div>
-            </li>
+            {{ udoc.bio|markdown|safe }}
           </ul>
         </div>
       </div>
@@ -188,39 +89,25 @@
         <div class="balancer sidebar-user-stat">
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ dudoc.nAccept or 0 }}</div>
+              <div class="numbox__num medium">{{ udoc.nAccept or 0 }}</div>
               <div class="numbox__text">{{ _('Accepted') }}</div>
             </div>
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ dudoc['num_liked'] or 0 }}</div>
+              <div class="numbox__num medium">{{ udoc.nLiked or 0 }}</div>
               <div class="numbox__text">{{ _('Solutions Liked') }}</div>
             </div>
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ dudoc['num_problems'] or 0 }}</div>
+              <div class="numbox__num medium">{{ udoc.nProblems or 0 }}</div>
               <div class="numbox__text">{{ _('Upload Problem') }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  {% if handler.can_view(udoc, 'bio') %}
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Bio') }}{% if is_self_profile %} <small><a href="{{ reverse_url('home_account') }}#setting_info">[{{ _('Edit') }}]</a></small>{% endif %}</h1>
-      </div>
-      <div class="section__body typo">
-      {% if udoc['bio'] and udoc['bio']|length > 0 %}
-        {{ udoc['bio']|markdown }}
-      {% else %}
-        {{ _('The user is too lazy to leave something here...') }}
-      {% endif %}
-      </div>
-    </div>
-  {% endif %}
   </div>
 </div>
 {% endblock %}

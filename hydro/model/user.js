@@ -1,7 +1,7 @@
 const
     system = require('./system'),
     { UserNotFoundError, UserAlreadyExistError } = require('../error'),
-    pwhash = require('./lib/pwhash'),
+    pwhash = require('../lib/pwhash'),
     validator = require('../lib/validator'),
     db = require('../service/db'),
     coll = db.collection('user'),
@@ -18,6 +18,11 @@ class USER {
         this.lang = user.language || 'zh_CN';
         this.codeLang = user.codeLang || 'c';
         this.codeTemplate = user.codeTemplate || '';
+        this.regat = user.regat;
+        this.loginat = user.loginat;
+        this.bio = user.bio || '';
+        this.nAccept = user.nAccept || 0;
+        this.nSubmit = user.nSubmit || 0;
     }
     hasPerm(perm) {
         return this.perm == '-' || (this.perm || '').includes(perm);

@@ -1,9 +1,10 @@
 const
-    { GET, POST } = require('../service/server.js'),
+    { GET, POST, ROUTE } = require('../service/server.js'),
     user = require('../model/user'),
     token = require('../model/token'),
     system = require('../model/system'),
     mail = require('../lib/mail'),
+    misc = require('../lib/misc'),
     validator = require('../lib/validator'),
     options = require('../options'),
     { PERM_REGISTER_USER, PERM_LOGGEDIN } = require('../permission'),
@@ -111,83 +112,38 @@ if (options.smtp.user) {
         let t = await token.add(token.TYPE_REGISTRATION, options.session.registration_token_expire_seconds, { email });
         ctx.setRedirect = `/register/${t[0]}`;
     });
-/*
 
-@app.route('/user/{uid:-?\d+}', 'user_detail')
-class UserDetailHandler(base.Handler, UserSettingsMixin):
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, uid: int):
-    is_self_profile = self.has_priv(builtin.PRIV_USER_PROFILE) and self.user['_id'] == uid
-    udoc = await user.get_by_uid(uid)
-    if not udoc:
-      raise error.UserNotFoundError(uid)
-    dudoc, sdoc = await asyncio.gather(domain.get_user(self.domainId, udoc['_id']),
-                                       token.get_most_recent_session_by_uid(udoc['_id']))
+ROUTE('/user/:uid', class UserDetailHandler {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.ctx.templateName = 'user_detail.html';
+    }
+    async get({ uid }) {
+        let isSelfProfile = this.ctx.state.user._id == uid;
+        let udoc = await user.getById(uid);
+        if (!udoc) throw new UserNotFoundError(uid);
+        let sdoc = await token.getMostRecentSessionByUid(uid);
+        this.ctx.body = { isSelfProfile, udoc, sdoc };
+    }
+});
 
-    rdocs = record.get_multi(get_hidden=self.has_priv(builtin.PRIV_VIEW_HIDDEN_RECORD),
-                             uid=uid).sort([('_id', -1)])
-    rdocs = await rdocs.limit(10).to_list()
-    pdict = await problem.get_dict_multi_domain((rdoc['domainId'], rdoc['pid']) for rdoc in rdocs)
-    # check hidden problem
-    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'hidden': False}
-    else:
-      f = {}
-    pdocs = problem.get_multi(domainId=self.domainId, owner_uid=uid, **f).sort([('_id', -1)])
-    pcount = await pdocs.count()
-    pdocs = await pdocs.limit(10).to_list()
-
-    psdocs = problem.get_multi_solution_by_uid(self.domainId, uid)
-    psdocs_hot = problem.get_multi_solution_by_uid(self.domainId, uid)
-    pscount = await psdocs.count()
-    psdocs = await psdocs.limit(10).to_list()
-    psdocs_hot = await psdocs_hot.sort([('vote', -1), ('doc_id', -1)]).limit(10).to_list()
-
-    if self.has_perm(builtin.PERM_VIEW_DISCUSSION):
-      ddocs = discussion.get_multi(self.domainId, owner_uid=uid)
-      dcount = await ddocs.count()
-      ddocs = await ddocs.limit(10).to_list()
-      vndict = await discussion.get_dict_vnodes(self.domainId, map(discussion.node_id, ddocs))
-    else:
-      ddocs = []
-      vndict = {}
-      dcount = 0
-
-    self.render('user_detail.html', is_self_profile=is_self_profile,
-                udoc=udoc, dudoc=dudoc, sdoc=sdoc,
-                rdocs=rdocs, pdict=pdict, pdocs=pdocs, pcount=pcount,
-                psdocs=psdocs, pscount=pscount, psdocs_hot=psdocs_hot,
-                ddocs=ddocs, dcount=dcount, vndict=vndict)
-
-
-@app.route('/user/search', 'user_search')
-class UserSearchHandler(base.Handler):
-  def modify_udoc(self, udict, key):
-    udoc = udict[key]
-    gravatar_url = misc.gravatar_url(udoc.get('gravatar'))
-    if 'gravatar' in udoc and udoc['gravatar']:
-      udict[key] = {**udoc,
-                    'gravatar_url': gravatar_url,
-                    'gravatar': ''}
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.get_argument
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, q: str, exact_match: bool=False):
-    if exact_match:
-      udocs = []
-    else:
-      udocs = await user.get_prefix_list(q, user.PROJECTION_PUBLIC, 20)
-    try:
-      udoc = await user.get_by_uid(int(q), user.PROJECTION_PUBLIC)
-      if udoc:
-        udocs.insert(0, udoc)
-    except ValueError as e:
-      pass
-    for i in range(len(udocs)):
-      self.modify_udoc(udocs, i)
-    self.json(udocs)
-
-*/
+ROUTE('/user/search', class UserSearchHandler {
+    constructor(ctx) {
+        this.ctx = ctx;
+    }
+    async get({ q, exact_match = false }) {
+        let udocs;
+        if (exact_match) udocs = [];
+        else udocs = await user.getPrefixList(q, 20);
+        try {
+            let udoc = await user.getById(parseInt(q));
+            if (udoc) udocs.insert(0, udoc);
+        } catch (e) {
+            /* Ignore */
+        }
+        for (let i in udocs)
+            if (udocs[i].gravatar)
+                udocs[i].gravatar_url = misc.gravatar_url[udocs[i].gravatar];
+        this.ctx.body = { udocs };
+    }
+});

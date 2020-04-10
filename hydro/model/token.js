@@ -65,7 +65,9 @@ module.exports = {
         let result = await coll.deleteOne({ _id: tokenId, tokenType });
         return !!result.deletedCount;
     },
-
+    async getMostRecentSessionByUid(uid) {
+        return await coll.findOne({ data: { uid }, token_type: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
+    },
     init: () => Promise.all([
         coll.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true }),
         coll.createIndex('expireAt', { expireAfterSeconds: 0 })
