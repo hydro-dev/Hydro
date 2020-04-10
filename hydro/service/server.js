@@ -60,6 +60,7 @@ function ROUTE(route, handler) {
         let args = Object.assign({}, ctx.params, ctx.query, ctx.request.body);
         if (args.content) validator.checkContent(args.content);
         if (args.title) validator.checkContent(args.title);
+        if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
         if (h[`_${method}`]) await h[`_${method}`](args);

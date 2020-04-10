@@ -1,7 +1,7 @@
 const
     system = require('./system'),
     { UserNotFoundError, UserAlreadyExistError } = require('../error'),
-    { pwhash } = require('../utils'),
+    pwhash = require('./lib/pwhash'),
     validator = require('../lib/validator'),
     db = require('../service/db'),
     coll = db.collection('user'),

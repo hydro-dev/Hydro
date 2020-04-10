@@ -19,11 +19,13 @@ process.on('restart', async () => {
 const path = require('path');
 const i18n = require('./lib/i18n');
 i18n(path.resolve(__dirname, '..', 'locales', 'zh_CN.yaml'), 'zh_CN');
-
+i18n(path.resolve(__dirname, '..', 'locales', 'zh_TW.yaml'), 'zh_TW');
+i18n(path.resolve(__dirname, '..', 'locales', 'en.yaml'), 'en');
 
 const EventEmitter = require('events');
 global.bus = new EventEmitter();
 async function run() {
+    require('./utils');
     require('./service/db');
     await new Promise((resolve) => {
         global.bus.once('connected', () => {

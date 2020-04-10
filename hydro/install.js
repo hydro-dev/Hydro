@@ -1,7 +1,7 @@
 const
     Mongo = require('mongodb'),
     builtin = require('./model/builtin'),
-    { pwhash } = require('./utils'),
+    pwhash = require('./lib/pwhash'),
     options = require('./options');
 
 async function run() {
