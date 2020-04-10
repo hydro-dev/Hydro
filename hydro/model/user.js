@@ -33,6 +33,12 @@ async function getById(_id) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
+async function getList(uids) {
+    let r = {};
+    for (let uid of uids)
+        r[uid] = await getById(uid);
+    return r;
+}
 async function getByUname(uname) {
     let unameLower = uname.trim().toLowerCase();
     let udoc = await coll.findOne({ unameLower });
@@ -112,5 +118,5 @@ module.exports = {
     changePassword, create, getByEmail,
     getById, getByUname, getMany,
     setById, setEmail,
-    setPassword
+    setPassword, getList
 };

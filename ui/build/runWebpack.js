@@ -16,13 +16,10 @@ export default function ({ watch, production }) {
 
   function compilerCallback(err, stats) {
     if (err) {
-      // config errors
       console.error(err.stack || err);
       if (err.details) console.error(err.details);
       process.exit(1);
-      return;
     }
-    console.log(stats.toString(outputOptions));
     fs.writeFileSync(root('./.webpackStats.json'), JSON.stringify(stats.toJson(), null, 2));
     if (!watch && stats.hasErrors()) process.exitCode = 1;
   }

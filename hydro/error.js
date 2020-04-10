@@ -91,6 +91,12 @@ class RecordNotFoundError extends NotFoundError {
         this.params = [rid];
     }
 }
+class SolutionNotFoundError extends NotFoundError {
+    constructor(psid) {
+        super('SolutionNotFoundError');
+        this.params = [psid];
+    }
+}
 class TrainingNotFoundError extends NotFoundError {
     constructor(tid) {
         super('TrainingNotFoundError');
@@ -116,7 +122,7 @@ module.exports = {
     UserNotFoundError, VerifyPasswordError, ProblemDataNotFoundError,
     OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
-    ContestNotFoundError, RecordNotFoundError
+    ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError
 };
 
 /*

@@ -3,7 +3,8 @@ const
     morgan = require('koa-morgan'),
     Body = require('koa-body'),
     Router = require('koa-router'),
-    sockjs = require('sockjs');
+    sockjs = require('sockjs'),
+    validator = require('../lib/validator');
 
 const options = require('../options');
 
@@ -40,6 +41,35 @@ function GET(route, ...handler) {
  */
 function POST(route, ...handler) {
     router.post(route, ...handler);
+}
+/**
+ * @param {string} route 
+ * @param {...import('koa').Middleware} handler 
+ */
+function ALL(route, ...handler) {
+    router.all(route, ...handler);
+}
+/**
+ * @param {string} route 
+ * @param {class} handler 
+ */
+function ROUTE(route, handler) {
+    router.all(route, async (ctx) => {
+        let h = new handler(ctx);
+        let method = ctx.method.toLowerCase();
+        let args = Object.assign({}, ctx.params, ctx.query, ctx.request.body);
+        if (args.content) validator.checkContent(args.content);
+        if (args.title) validator.checkContent(args.title);
+        if (h._prepare) await h._prepare(args);
+        if (h.prepare) await h.prepare(args);
+        if (h[`_${method}`]) await h[`_${method}`](args);
+        if (h[method]) await h[method](args);
+        console.log(ctx.request.body);
+        if (method == 'post' && ctx.request.body.operation) {
+            if (h[`${method}_${ctx.request.body.operation}`])
+                await h[`${method}_${ctx.request.body.operation}`](args);
+        }
+    });
 }
 
 /**
@@ -97,9 +127,11 @@ function SOCKET(prefix, middlewares, handler) {
     sock.installHandlers(server);
 }
 
+exports.ROUTE = ROUTE;
 exports.MIDDLEWARE = MIDDLEWARE;
 exports.GET = GET;
 exports.POST = POST;
+exports.ALL = ALL;
 exports.SOCKET = SOCKET;
 exports.start = function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));

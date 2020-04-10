@@ -1,15 +1,15 @@
 const
     fs = require('fs'),
-    bson = require('bson'),
+    paginate = require('../lib/paginate'),
     validator = require('../lib/validator'),
     problem = require('../model/problem'),
     record = require('../model/record'),
     user = require('../model/user'),
+    solution = require('../model/solution'),
     system = require('../model/system'),
-    { GET, POST } = require('../service/server'),
+    { ROUTE } = require('../service/server'),
     gridfs = require('../service/gridfs'),
     queue = require('../service/queue'),
-    { requirePerm } = require('./tools'),
     { NoProblemError, ProblemDataNotFoundError, BadRequestError } = require('../error'),
     { constants } = require('../options'),
     {
@@ -19,252 +19,343 @@ const
         PERM_CREATE_PROBLEM,
         PERM_READ_PROBLEM_DATA,
         PERM_EDIT_PROBLEM,
-        PERM_JUDGE
+        PERM_JUDGE,
+        PERM_VIEW_PROBLEM_SOLUTION,
+        PERM_CREATE_PROBLEM_SOLUTION,
+        PERM_EDIT_PROBLEM_SOLUTION,
+        PERM_DELETE_PROBLEM_SOLUTION,
+        PERM_EDIT_PROBLEM_SOLUTION_REPLY,
+        PERM_REPLY_PROBLEM_SOLUTION
     } = require('../permission');
 
 queue.assert('judge');
 
-GET('/p', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    ctx.templateName = 'problem_main.html';
-    let q = {},
-        page = ctx.query.page || 1;
-    if (ctx.query.category) q.category = ctx.query.category;
-    if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-    let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
-    ctx.body = {
-        path: [
-            ['Hydro', '/'],
-            ['problem_main', null]
-        ],
-        page, pdocs, category: ''
-    };
-});
-GET('/problem/random', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    let q = {};
-    if (!ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-    let pid = await problem.random(q);
-    if (!pid) throw new NoProblemError();
-    ctx.body = { pid };
-});
-GET('/p/:pid', requirePerm(PERM_VIEW_PROBLEM), async ctx => {
-    ctx.templateName = 'problem_detail.html';
-    let uid = ctx.state.user._id,
-        pid = ctx.params.pid;
-    let pdoc = await problem.get({ pid, uid });
-    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-    let udoc = await user.getById(pdoc.owner);
-    ctx.body = {
-        path: [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
-            [pdoc.title, null, true]
-        ],
-        pdoc, udoc, title: pdoc.title
-    };
-});
-GET('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
-    ctx.templateName = 'problem_submit.html';
-    let uid = ctx.state.user._id,
-        pid = ctx.params.pid;
-    let pdoc = await problem.get({ pid, uid });
-    if (pdoc.hidden) ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-    let udoc = await user.getById(pdoc.owner);
-    ctx.body = {
-        path: [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
-            [pdoc.title, `/p/${pid}`, true],
-            ['problem_submit', null]
-        ],
-        pdoc, udoc, title: pdoc.title
-    };
-});
-POST('/p/:pid/submit', requirePerm(PERM_SUBMIT_PROBLEM), async ctx => {
-    let pdoc = await problem.get({ pid: ctx.params.pid });
-    let rid = await record.add({
-        uid: ctx.state.user._id,
-        lang: ctx.request.body.lang,
-        code: ctx.request.body.code,
-        pid: pdoc._id
-    });
-    await queue.push('judge', rid);
-    ctx.state.user.nSubmit++;
-    ctx.body = { rid };
-    ctx.setRedirect = `/r/${rid}`;
-});
-GET('/p/:pid/settings', async ctx => {
-    ctx.templateName = 'problem_settings.html';
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
-    ctx.body = {
-        path: [
+class ProblemHandler {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.ctx.templateName = 'problem_main.html';
+        this.ctx.checkPerm(PERM_VIEW_PROBLEM);
+    }
+    async get({ page = 1, category = null }) {
+        let q = {};
+        if (category) q.category = category;
+        if (!this.ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
+        this.ctx.body = {
+            path: [
+                ['Hydro', '/'],
+                ['problem_main', null]
+            ],
+            page, pdocs, category: ''
+        };
+    }
+}
+
+class ProblemRandomHandler extends ProblemHandler {
+    constructor(ctx) {
+        super(ctx);
+    }
+    async get() {
+        let q = {};
+        if (!this.ctx.state.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        let pid = await problem.random(q);
+        if (!pid) throw new NoProblemError();
+        this.ctx.body = { pid };
+    }
+}
+
+class ProblemDetailHandler extends ProblemHandler {
+    constructor(ctx) {
+        super(ctx);
+        this.uid = ctx.state.user._id;
+        this.pid = ctx.params.pid;
+        this.ctx.templateName = 'problem_detail.html';
+    }
+    async _prepare() {
+        if (this.pid) this.pdoc = await problem.get(this);
+        if (this.pdoc.hidden && this.pdoc.owner != this.uid) this.ctx.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+        if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
+        this.ctx.body = {
+            pdoc: this.pdoc,
+            udoc: this.udoc,
+            title: (this.pdoc || {}).title || ''
+        };
+    }
+    async get() {
+        this.ctx.body.path = [
             ['Hydro', '/'],
             ['problem_main', '/p'],
-            [pdoc.title, `/p/${ctx.params.pid}`, true],
+            [this.pdoc.title, null, true]
+        ];
+    }
+}
+
+class ProblemSubmitHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        this.ctx.templateName = 'problem_submit.html';
+        this.ctx.checkPerm(PERM_SUBMIT_PROBLEM);
+    }
+    async get() {
+        let rdocs = await record.getUserInProblemMulti(this.uid, this.pdoc._id).sort({ _id: -1 }).limit(10).toArray();
+        this.ctx.body = {
+            path: [
+                ['Hydro', '/'],
+                ['problem_main', '/p'],
+                [this.pdoc.title, `/p/${this.pid}`, true],
+                ['problem_submit', null]
+            ],
+            pdoc: this.pdoc,
+            udoc: this.udoc,
+            rdocs,
+            title: this.pdoc.title
+        };
+    }
+    async post() {
+        let { lang, code } = this.ctx.request.body;
+        let rid = await record.add({
+            uid: this.uid, lang, code, pid: this.pdoc._id
+        });
+        await queue.push('judge', rid);
+        this.ctx.state.user.nSubmit++;
+        this.ctx.body = { rid };
+        this.ctx.setRedirect = `/r/${rid}`;
+    }
+}
+
+class ProblemSettingsHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        this.ctx.templateName = 'problem_settings.html';
+    }
+    async prepare() {
+        if (this.pdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM);
+    }
+    async get() {
+        this.ctx.body.path = [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [this.pdoc.title, `/p/${this.pid}`, true],
             ['problem_settings', null]
-        ], pdoc
-    };
-});
-POST('/p/:pid/settings', async ctx => {
-    ctx.templateName = 'problem_settings.html';
-    // TODO(masnn)
-    ctx.back();
-});
-GET('/p/:pid/edit', async ctx => {
-    ctx.templateName = 'problem_edit.html';
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
-    ctx.body = {
-        path: [
+        ];
+    }
+    async post() {
+        // TODO(masnn)
+        this.ctx.back();
+    }
+}
+
+class ProblemEditHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        this.ctx.templateName = 'problem_edit.html';
+    }
+    async prepare() {
+        if (this.pdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM);
+    }
+    async get() {
+        this.ctx.body.path = [
             ['Hydro', '/'],
             ['problem_main', '/p'],
-            [pdoc.title, `/p/${ctx.params.pid}`, true],
+            [this.pdoc.title, `/p/${this.ctx.params.pid}`, true],
             ['problem_edit', null]
-        ],
-        pdoc, page_name: 'problem_edit'
-    };
-});
-POST('/p/:pid/edit', async ctx => {
-    let title = validator.checkTitle(ctx.request.body.title);
-    let content = validator.checkContent(ctx.request.body.content);
-    let pid = validator.checkPid(ctx.request.body.pid);
-    let pdoc = await problem.get({ pid: ctx.params.pid });
-    await problem.edit(pdoc._id, {
-        title, content, pid
-    });
-    ctx.setRedirect = `/p/${pid}`;
-});
-GET('/p/:pid/upload', async ctx => {
-    ctx.templateName = 'problem_upload.html';
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
-    let md5;
-    if (pdoc.data && typeof pdoc.data == 'object') {
-        let files = await gridfs.find({ _id: pdoc.data }).toArray();
-        md5 = files[0].md5;
+        ];
+        this.ctx.page_name = 'problem_edit';
     }
-    ctx.body = { pdoc, md5 };
-});
-POST('/p/:pid/upload', async ctx => {
-    ctx.templateName = 'problem_upload.html';
-    if (!ctx.request.files.file) throw new BadRequestError();
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (pdoc.owner != ctx.state.user._id) ctx.checkPerm(PERM_EDIT_PROBLEM);
-    const r = fs.createReadStream(ctx.request.files.file.path);
-    let f = gridfs.openUploadStream('data.zip');
-    await new Promise((resolve, reject) => {
-        r.pipe(f);
-        f.once('finish', resolve);
-        f.once('error', reject);
-    });
-    let md5;
-    if (pdoc.data && typeof pdoc.data == 'object') {
-        gridfs.delete(pdoc.data);
+    async post() {
+        let title = validator.checkTitle(this.ctx.request.body.title);
+        let content = validator.checkContent(this.ctx.request.body.content);
+        let pid = validator.checkPid(this.ctx.request.body.pid);
+        let pdoc = await problem.get({ pid: this.ctx.params.pid });
+        await problem.edit(pdoc._id, {
+            title, content, pid
+        });
+        this.ctx.setRedirect = `/p/${pid}`;
     }
-    pdoc = await problem.edit(pdoc._id, { data: f.id });
-    if (pdoc.data && typeof pdoc.data == 'object') {
-        let files = await gridfs.find({ _id: pdoc.data }).toArray();
-        md5 = files[0].md5;
+}
+
+class ProblemDataUploadHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        this.ctx.templateName = 'problem_upload.html';
     }
-    ctx.body = { pdoc, md5 };
-});
-GET('/p/:pid/data', async ctx => {
-    let pdoc = await problem.get({ pid: ctx.params.pid, uid: ctx.state.user._id });
-    if (!ctx.state.user._id == pdoc.owner) ctx.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
-    if (!pdoc.data) throw new ProblemDataNotFoundError(ctx.params.pid);
-    else if (typeof pdoc.data == 'string') ctx.setRedirect = pdoc.data.split('from:')[1];
-    ctx.attachment(`${pdoc.title}.zip`);
-    ctx.body = gridfs.openDownloadStream(pdoc.data);
-});
-GET('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
-    ctx.templateName = 'problem_edit.html';
-    ctx.body = {
-        path: [
-            ['Hydro', '/'],
+    async prepare() {
+        if (this.pdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM);
+        if (this.pdoc.data && typeof this.pdoc.data == 'object') {
+            let files = await gridfs.find({ _id: this.pdoc.data }).toArray();
+            this.md5 = files[0].md5;
+        }
+    }
+    async get() {
+        this.ctx.body.md5 = this.md5;
+    }
+    async post() {
+        if (!this.ctx.request.files.file) throw new BadRequestError();
+        const r = fs.createReadStream(this.ctx.request.files.file.path);
+        let f = gridfs.openUploadStream('data.zip');
+        await new Promise((resolve, reject) => {
+            r.pipe(f);
+            f.once('finish', resolve);
+            f.once('error', reject);
+        });
+        if (this.pdoc.data && typeof this.pdoc.data == 'object')
+            gridfs.delete(this.pdoc.data);
+        this.pdoc = await problem.edit(this.pdoc._id, { data: f.id });
+        if (this.pdoc.data && typeof this.pdoc.data == 'object') {
+            let files = await gridfs.find({ _id: this.pdoc.data }).toArray();
+            this.md5 = files[0].md5;
+        }
+        this.ctx.body.md5 = this.md5;
+    }
+}
+
+class ProblemDataDownloadHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+    }
+    async get({ pid }) {
+        if (this.uid != this.pdoc.owner) this.ctx.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
+        if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
+        else if (typeof this.pdoc.data == 'string') this.ctx.setRedirect = this.pdoc.data.split('from:')[1];
+        this.ctx.attachment(`${this.pdoc.title}.zip`);
+        this.ctx.body = gridfs.openDownloadStream(this.pdoc.data);
+    }
+}
+
+class ProblemSolutionHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        ctx.templateName = 'problem_solution.html';
+    }
+    async get() {
+        let page = this.ctx.query.page || 1;
+        this.ctx.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
+        let [psdocs, pcount, pscount] = await paginate(solution.getMulti(this.pdoc._id), page, constants.SOLUTION_PER_PAGE);
+        let uids = [this.pdoc.owner], docids = [];
+        for (let psdoc of psdocs) {
+            docids.push(psdoc._id);
+            uids.push(psdoc.owner);
+            if (psdoc.reply.length) {
+                for (let psrdoc of psdoc.reply) {
+                    uids.push(psrdoc.owner);
+                }
+            }
+        }
+        let udict = await user.getList(uids);
+        this.ctx.body.path = [
             ['problem_main', '/p'],
-            ['problem_create', null]
-        ], page_name: 'problem_create'
-    };
-});
-POST('/problem/create', requirePerm(PERM_CREATE_PROBLEM), async ctx => {
-    let { title, pid, content, hidden } = ctx.request.body;
-    validator.checkPid(pid);
-    pid = pid || await system.incPidCounter();
-    await problem.add({ title, content, owner: ctx.state.user._id, pid, hidden });
-    ctx.body = { pid };
-    ctx.setRedirect = `/p/${pid}/settings`;
-});
+            [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
+            ['problem_solution', null]
+        ];
+        this.ctx.body = Object.assign(this.ctx.body, {
+            psdocs, page, pcount, pscount, udict
+        });
+    }
+    async post({ psid }) {
+        if (psid) this.psdoc = await solution.get(psid);
+    }
+    async post_submit({ content }) {
+        this.ctx.checkPerm(PERM_CREATE_PROBLEM_SOLUTION);
+        await solution.add(this.pdoc._id, this.uid, content);
+        this.ctx.back();
+    }
+    async post_edit_solution({ content }) {
+        if (this.psdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
+        this.psdoc = await solution.edit(this.psdoc._id, content);
+        this.ctx.body.psdoc = this.psdoc;
+        this.ctx.back();
+    }
+    async post_delete_solution() {
+        if (this.psdoc.owner != this.uid) this.ctx.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
+        await solution.del(this.psdoc._id);
+        this.ctx.back();
+    }
+    async post_reply({ psid, content }) {
+        this.ctx.checkPerm(PERM_REPLY_PROBLEM_SOLUTION);
+        let psdoc = await solution.get(psid);
+        await solution.reply(psdoc._id, this.uid, content);
+    }
+    async post_edit_reply({ content }) {
+        let { psid, psrid } = this.ctx.request.body;
+        let [psdoc, psrdoc] = await solution.getReply(psid, psrid);
+        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
+        if (psrdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+        await solution.editReply(psid, psrid, content);
+    }
+    async post_delete_reply({ psid, psrid }) {
+        let [psdoc, psrdoc] = await solution.getReply(psid, psrid);
+        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
+        if (psrdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+        await solution.delReply(psid, psrid);
+        this.ctx.back();
+    }
+}
+
+class ProblemSolutionRawHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        ctx.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
+    }
+    async get({ psid }) {
+        let psdoc = await solution.get(psid);
+        this.ctx.response.type = 'text/markdown';
+        this.ctx.body = psdoc.content;
+    }
+}
+
+class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
+    constructor(ctx) {
+        super(ctx);
+        ctx.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
+    }
+    async get({ psid }) {
+        let [psdoc, psrdoc] = await solution.getReply(psid);
+        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
+        this.ctx.response.type = 'text/markdown';
+        this.ctx.body = psrdoc.content;
+    }
+}
+
+class ProblemCreateHandler {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.ctx.templateName = 'problem_edit.html';
+        this.ctx.checkPerm(PERM_CREATE_PROBLEM);
+    }
+    async get() {
+        this.ctx.body = {
+            path: [
+                ['Hydro', '/'],
+                ['problem_main', '/p'],
+                ['problem_create', null]
+            ], page_name: 'problem_create'
+        };
+    }
+    async post() {
+        let { title, pid, content, hidden } = this.ctx.request.body;
+        validator.checkPid(pid);
+        pid = pid || await system.incPidCounter();
+        await problem.add({ title, content, owner: this.ctx.state.user._id, pid, hidden });
+        this.ctx.body = { pid };
+        this.ctx.setRedirect = `/p/${pid}/settings`;
+    }
+}
+
+ROUTE('/p', ProblemHandler);
+ROUTE('/problem/random', ProblemRandomHandler);
+ROUTE('/p/:pid', ProblemDetailHandler);
+ROUTE('/p/:pid/submit', ProblemSubmitHandler);
+ROUTE('/p/:pid/settings', ProblemSettingsHandler);
+ROUTE('/p/:pid/edit', ProblemEditHandler);
+ROUTE('/p/:pid/upload', ProblemDataUploadHandler);
+ROUTE('/p/:pid/data', ProblemDataDownloadHandler);
+ROUTE('/p/:pid/solution', ProblemSolutionHandler);
+ROUTE('/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
+ROUTE('/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
+ROUTE('/problem/create', ProblemCreateHandler);
 
 
 /*
-
-@app.route('/p/category/{category:[^/]*}/random', 'problem_category_random')
-class ProblemCategoryRandomHandler(base.Handler):
-  @base.requirePerm(builtin.PERM_VIEW_PROBLEM)
-  @base.get_argument
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, category: str):
-    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'hidden': False}
-    else:
-      f = {}
-    query = ProblemCategoryHandler.build_query(category)
-    pid = await problem.get_random_id(self.domainId, **query, **f)
-    if pid:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
-    else:
-      self.json_or_redirect(self.referer_or_main)
-
-
-@app.route('/p/{pid}/submit', 'problem_submit')
-class ProblemSubmitHandler(base.Handler):
-  @base.requirePerm(builtin.PERM_SUBMIT_PROBLEM)
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    # TODO(twd2): check status, eg. test, hidden problem, ...
-    uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
-    pdoc = await problem.get(self.domainId, pid, uid)
-    if pdoc.get('hidden', False):
-      self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-    udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
-                                       domain.get_user(self.domainId, pdoc['owner_uid']))
-    if uid == None:
-      rdocs = []
-    else:
-      # TODO(iceboy): needs to be in sync with contest_detail_problem_submit
-      rdocs = await record \
-          .get_user_in_problem_multi(uid, self.domainId, pdoc['_id']) \
-          .sort([('_id', -1)]) \
-          .limit(10) \
-          .to_list()
-    if not self.prefer_json:
-      path_components = self.build_path(
-          (self.translate('problem_main'), self.reverse_url('problem_main')),
-          (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
-          (self.translate('problem_submit'), None))
-      self.render('problem_submit.html', pdoc=pdoc, udoc=udoc, rdocs=rdocs, dudoc=dudoc,
-                  page_title=pdoc['title'], path_components=path_components)
-    else:
-      self.json({'rdocs': rdocs})
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.requirePerm(builtin.PERM_SUBMIT_PROBLEM)
-  @base.route_argument
-  @base.post_argument
-  @base.require_csrf_token
-  @base.sanitize
-  @base.limitRate('add_record', 60, 100)
-  async def post(self, *, pid: document.convert_doc_id, lang: str, code: str):
-    # TODO(twd2): check status, eg. test, hidden problem, ...
-    pdoc = await problem.get(self.domainId, pid)
-    if pdoc.get('hidden', False):
-      self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_SUBMISSION,
-                           self.user['_id'], lang, code)
-    self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
-
 
 @app.route('/p/{pid}/pretest', 'problem_pretest')
 class ProblemPretestHandler(base.Handler):
@@ -324,103 +415,6 @@ class ProblemPretestConnection(record_handler.RecordVisibilityMixin, base.Connec
   async def on_close(self):
     bus.unsubscribe(self.on_record_change)
 
-@app.route('/p/{pid}/data', 'problem_data')
-class ProblemDataHandler(base.Handler):
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    # Judges will have PRIV_READ_PROBLEM_DATA,
-    # domain administrators will have PERM_READ_PROBLEM_DATA,
-    # problem owner will have PERM_READ_PROBLEM_DATA_SELF.
-    pdoc = await problem.get(self.domainId, pid)
-    if type(pdoc['data']) is dict:
-      return self.redirect(self.reverse_url('problem_data',
-                           domainId=pdoc['data']['domain'],
-                           pid=pdoc['data']['pid']))
-    if (not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF)
-        and not self.has_perm(builtin.PERM_READ_PROBLEM_DATA)):
-      self.check_priv(builtin.PRIV_READ_PROBLEM_DATA)
-    fdoc = await problem.get_data(pdoc)
-    if not fdoc:
-      raise error.ProblemDataNotFoundError(self.domainId, pid)
-    self.redirect(options.cdn_prefix.rstrip('/') + \
-                  self.reverse_url('fs_get', domainId=builtin.domainId_SYSTEM,
-                                   secret=fdoc['metadata']['secret']))
-
-
-@app.route('/p/copy', 'problem_copy')
-class ProblemCopyHandler(base.Handler):
-  MAX_PROBLEMS_PER_REQUEST = 20
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.requirePerm(builtin.PERM_CREATE_PROBLEM)
-  async def get(self):
-    self.render('problem_copy.html')
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.requirePerm(builtin.PERM_CREATE_PROBLEM)
-  @base.post_argument
-  @base.require_csrf_token
-  @base.sanitize
-  @base.limitRate('copy_problems', 30, 10)
-  async def post(self, *, src_domainId: str, src_pids: str,
-                 numeric_pid: bool=False, hidden: bool=False):
-    src_ddoc, src_dudoc = await asyncio.gather(domain.get(src_domainId),
-                                               domain.get_user(src_domainId, self.user['_id']))
-    if not src_dudoc:
-      src_dudoc = {}
-    if not self.dudoc_has_perm(ddoc=src_ddoc, dudoc=src_dudoc, udoc=self.user,
-                               perm=builtin.PERM_VIEW_PROBLEM):
-      # TODO: This is the source domain's PermissionError.
-      raise error.PermissionError(builtin.PERM_VIEW_PROBLEM)
-
-    src_pids = misc.dedupe(map(document.convert_doc_id, src_pids.replace('\r\n', '\n').split('\n')))
-    if len(src_pids) > self.MAX_PROBLEMS_PER_REQUEST:
-      raise error.BatchCopyLimitExceededError(self.MAX_PROBLEMS_PER_REQUEST, len(src_pids))
-    pdocs = await problem.get_multi(domainId=src_domainId, doc_id={'$in': src_pids}) \
-      .sort('doc_id', 1) \
-      .to_list()
-
-    exist_pids = [pdoc['_id'] for pdoc in pdocs]
-    if len(src_pids) != len(exist_pids):
-      for pid in src_pids:
-        if pid not in exist_pids:
-          raise error.ProblemNotFoundError(src_domainId, pid)
-
-    for pdoc in pdocs:
-      if pdoc.get('hidden', False):
-        if not self.dudoc_has_perm(ddoc=src_ddoc, dudoc=src_dudoc, udoc=self.user,
-                                   perm=builtin.PERM_VIEW_PROBLEM_HIDDEN):
-          # TODO: This is the source domain's PermissionError.
-          raise error.PermissionError(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-
-    for pdoc in pdocs:
-      pid = None
-      if numeric_pid:
-        pid = await domain.inc_pid_counter(self.domainId)
-      await problem.copy(pdoc, self.domainId, self.user['_id'], pid, hidden)
-
-    self.redirect(self.reverse_url('problem_main'))
-
-
-@app.route('/p/{pid}/edit', 'problem_edit')
-class ProblemEditHandler(base.Handler):
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
-    pdoc = await problem.get(self.domainId, pid, uid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
-                                       domain.get_user(self.domainId, pdoc['owner_uid']))
-    path_components = self.build_path(
-        (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
-        (self.translate('problem_edit'), None))
-    self.render('problem_edit.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
-                page_title=pdoc['title'], path_components=path_components)
 
   @base.requirePriv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
@@ -433,101 +427,6 @@ class ProblemEditHandler(base.Handler):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
     await problem.edit(self.domainId, pdoc['_id'], title=title, content=content)
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
-
-
-@app.route('/p/{pid}/settings', 'problem_settings')
-class ProblemSettingsHandler(base.Handler):
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
-    pdoc = await problem.get(self.domainId, pid, uid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
-                                       domain.get_user(self.domainId, pdoc['owner_uid']))
-    path_components = self.build_path(
-        (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
-        (self.translate('problem_settings'), None))
-    self.render('problem_settings.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
-                categories=problem.get_categories(),
-                page_title=pdoc['title'], path_components=path_components)
-
-  def split_tags(self, s):
-    s = s.replace('ï¼Œ', ',') # Chinese ', '
-    return list(filter(lambda _: _ != '', map(lambda _: _.strip(), s.split(','))))
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.post_argument
-  @base.require_csrf_token
-  @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, hidden: bool=False,
-                 category: str, tag: str,
-                 difficulty_setting: int, difficulty_admin: str=''):
-    pdoc = await problem.get(self.domainId, pid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    category = self.split_tags(category)
-    tag = self.split_tags(tag)
-    for c in category:
-      if not (c in builtin.PROBLEM_CATEGORIES
-              or c in builtin.PROBLEM_SUB_CATEGORIES):
-        raise error.ValidationError('category')
-    if difficulty_setting not in problem.SETTING_DIFFICULTY_RANGE:
-        raise error.ValidationError('difficulty_setting')
-    if difficulty_admin:
-        try:
-          difficulty_admin = int(difficulty_admin)
-        except ValueError:
-          raise error.ValidationError('difficulty_admin')
-    else:
-      difficulty_admin = None
-    await problem.edit(self.domainId, pdoc['_id'], hidden=hidden,
-                       category=category, tag=tag,
-                       difficulty_setting=difficulty_setting, difficulty_admin=difficulty_admin)
-    await job.difficulty.update_problem(self.domainId, pdoc['_id'])
-    self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
-
-
-@app.route('/p/{pid}/upload', 'problem_upload')
-class ProblemUploadHandler(base.Handler):
-  def get_content_type(self, filename):
-    if os.path.splitext(filename)[1].lower() != '.zip':
-      raise error.FileTypeNotAllowedError(filename)
-    return 'application/zip'
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    pdoc = await problem.get(self.domainId, pid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    if (not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF)
-        and not self.has_perm(builtin.PERM_READ_PROBLEM_DATA)):
-      self.check_priv(builtin.PRIV_READ_PROBLEM_DATA)
-    md5 = await fs.get_md5(await problem.get_data(pdoc))
-    self.render('problem_upload.html', pdoc=pdoc, md5=md5)
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.multipart_argument
-  @base.require_csrf_token
-  @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, file: objectid.ObjectId):
-    pdoc = await problem.get(self.domainId, pid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    if (not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF)
-        and not self.has_perm(builtin.PERM_READ_PROBLEM_DATA)):
-      self.check_priv(builtin.PRIV_READ_PROBLEM_DATA)
-    if pdoc.get('data') and type(pdoc['data']) is objectid.ObjectId:
-      await fs.unlink(pdoc['data'])
-    await problem.set_data(self.domainId, pid, file)
-    self.json_or_redirect(self.url)
 
 
 @app.route('/p/{pid}/statistics', 'problem_statistics')
@@ -548,26 +447,5 @@ class ProblemStatisticsHandler(base.Handler):
         (self.translate('problem_statistics'), None))
     self.render('problem_statistics.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
                 page_title=pdoc['title'], path_components=path_components)
-
-
-@app.route('/p/search', 'problem_search')
-class ProblemSearchHandler(base.Handler):
-  @base.get_argument
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, q: str):
-    q = q.strip()
-    if not q:
-      self.json_or_redirect(self.referer_or_main)
-      return
-    try:
-      pdoc = await problem.get(self.domainId, document.convert_doc_id(q))
-    except error.ProblemNotFoundError:
-      pdoc = None
-    if pdoc:
-      self.redirect(self.reverse_url('problem_detail', pid=pdoc['_id']))
-      return
-    self.redirect('http://cn.bing.com/search?q={0}+site%3A{1}' \
-                  .format(parse.quote(q), parse.quote(options.url_prefix)))
 
 */

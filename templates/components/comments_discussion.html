@@ -9,13 +9,13 @@
     {% if not mode_create %}
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
-          {{ user.render_inline(udoc, dudict[udoc['_id']], avatar=false) }}
-          @ {{ datetime_span(rdoc['_id'].generationTime) }}
+          {{ user.render_inline(udoc, avatar=false) }}
+          @ {{ datetime_span(rdoc['_id'])|safe }}
         </div>
-        {{ comment_base.reply_operations(doc, rdoc) }}
+        {{ reply_operations(doc, rdoc) }}
       </div>
       <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_tail_reply_raw', did=doc['parent_doc_id'], drid=doc['doc_id'], drrid=rdoc['_id']) }}">
-        {{ rdoc['content']|markdown }}
+        {{ rdoc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
     {% else %}
@@ -26,38 +26,129 @@
 </li>
 {% endmacro %}
 
-{% macro comment(mode_create, udoc, doc = {}) %}
+{% macro comment_operations(doc) %}
+<div class="dczcomments__operations nojs--hide">
+{% if handler.has_perm(reply_post_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
+    data-form="{&quot;operation&quot;:&quot;{{reply_post_op}}&quot;, &quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+  ><span class="icon icon-reply"></span></a>
+{% endif %}
+{% if doc.owner == handler.state.user._id or handler.has_perm(comment_edit_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
+    data-form="{&quot;operation&quot;:&quot;{{comment_edit_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+  ><span class="icon icon-edit"></span></a>
+{% endif %}
+{% if doc.owner == handler.state.user._id or handler.has_perm(comment_delete_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
+    data-form="{&quot;operation&quot;:&quot;{{comment_delete_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+  ><span class="icon icon-delete"></span></a>
+{% endif %}
+</div>
+{% endmacro %}
+
+{% macro reply_operations(doc, rdoc) %}
+<div class="dczcomments__operations nojs--hide">
+{% if handler.has_perm(reply_post_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-reply"><span class="icon icon-reply"></span></a>
+{% endif %}
+{% if doc.owner == handler.state.user._id or handler.has_perm(reply_edit_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-reply"
+    data-form="{&quot;operation&quot;:&quot;{{reply_edit_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;,&quot;{{reply_ref}}&quot;:&quot;{{rdoc._id}}&quot;}"
+  ><span class="icon icon-edit"></span></a>
+{% endif %}
+{% if doc.owner == handler.state.user._id or handler.has_perm(reply_delete_perm) %}
+  <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-reply"
+    data-form="{&quot;operation&quot;:&quot;{{reply_delete_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;,&quot;{{reply_ref}}&quot;:&quot;{{rdoc._id}}&quot;}"
+  ><span class="icon icon-delete"></span></a>
+{% endif %}
+</div>
+{% endmacro %}
+
+{% macro render(
+  view, docs, udict,
+  comment_ref,
+  reply_ref,
+  comment_post_perm,
+  comment_edit_perm,
+  comment_edit_self_perm,
+  comment_delete_perm,
+  comment_delete_self_perm,
+  reply_post_perm,
+  reply_edit_perm,
+  reply_edit_self_perm,
+  reply_delete_perm,
+  reply_delete_self_perm,
+  comment_placeholder = 'Write Your Comment',
+  comment_post_op = 'reply',
+  comment_edit_op = 'edit_reply',
+  comment_post_text = 'Comment',
+  comment_edit_text = 'Update',
+  reply_post_op = 'tail_reply',
+  reply_post_text = 'Reply',
+  reply_edit_op = 'edit_tail_reply',
+  reply_edit_text = 'Update',
+  comment_delete_op = 'delete_reply',
+  reply_delete_op = 'delete_tail_reply'
+) %}
+<ul class="dczcomments__list view--discussion">
+{% if handler.has_perm(comment_post_perm) %}
 <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
       <img src="{{ udoc['gravatar']|gravatar_url }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
-    {% if not mode_create %}
+      <div class="hasjs--hide">
+        <form method="post" class="dczcomments__box" name="dczcomments__box__form" data-hotkey="ctrl+enter:submit,esc:vjCommentBoxCancel">
+          <div>
+            <textarea name="content" class="textbox" data-markdown required></textarea>
+          </div>
+          <div>
+            <input type="submit" class="rounded primary button dczcomments__box__submit" value="{{ _(comment_post_text) }} (Ctrl+Enter)" data-value-reply="{{ _(reply_post_text) }} (Ctrl+Enter)" data-value-comment="{{ _(comment_post_text) }} (Ctrl+Enter)" data-value-comment-update="{{ _(comment_edit_text) }} (Ctrl+Enter)" data-value-reply-update="{{ _(reply_edit_text) }} (Ctrl+Enter)">
+            <input type="button" class="rounded button nojs--hide" name="dczcomments__box__cancel" value="{{ _('Cancel') }} (Esc)">
+          </div>
+          <input type="hidden" name="operation" value="{{ comment_post_op }}">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+        </form>
+      </div>
+      <div class="nojs--hide">
+        <textarea class="textbox" name="dczcomments__dummy-box" readonly data-form="{&quot;operation&quot;:&quot;{{comment_post_op}}&quot;}" placeholder="{{ _(comment_placeholder) }}"></textarea>
+      </div>
+      <div class="commentbox-placeholder"></div>
+      <ul style="display:none">
+        {{ reply(true, udoc) }}
+      </ul>
+    </div>
+  </div>
+</li>
+{% endif %}
+{% for doc in docs %}
+  {% set udoc = udict[doc.owner] %}
+  <li class="dczcomments__item">
+  <div class="media">
+    <div class="media__left top">
+      <img src="{{ udoc['gravatar']|gravatar_url }}" width="60" height="60" class="medium user-profile-avatar">
+    </div>
+    <div class="media__body top no-heading">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
-          {{ user.render_inline(udoc, dudict[udoc['_id']], avatar=false) }}
-          @ {{ datetime_span(doc['_id'].generationTime) }}
+          {{ user.render_inline(udoc, avatar=false) }}
+          @ {{ datetime_span(doc['_id'])|safe }}
         </div>
-        {{ comment_base.comment_operations(doc) }}
+        {{ comment_operations(doc) }}
       </div>
       <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_reply_raw', did=doc['parent_doc_id'], drid=doc['doc_id']) }}">
-        {{ doc['content']|markdown }}
+        {{ doc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
       <ul class="dczcomments__replies commentbox-reply-target">
       {% for rdoc in doc['reply'] %}
-        {{ reply(mode_create, udict[rdoc['owner_uid']], doc, rdoc) }}
+        {{ reply(mode_create, udict[rdoc['owner']], doc, rdoc) }}
       {% endfor %}
       </ul>
-    {% else %}
-      {{ comment_base.comment_form() }}
-      <div class="commentbox-placeholder"></div>
-      <ul style="display:none">
-        {{ reply(mode_create, udoc) }}
-      </ul>
-    {% endif %}
     </div>
   </div>
 </li>
+{% endfor %}
+</ul>
 {% endmacro %}

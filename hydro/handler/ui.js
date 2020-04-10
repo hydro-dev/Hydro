@@ -38,6 +38,24 @@ function datetime_span(dt, { relative = true } = {}) {
         dt.toLocaleString()
     );
 }
+function* paginate(page, num_pages) {
+    let radius = 2, first, last;
+    if (page > 1) {
+        yield ['first', 1];
+        yield ['previous', page - 1];
+    }
+    if (page <= radius) [first, last] = [1, Math.min(1 + radius * 2, num_pages)];
+    else if (page >= num_pages - radius) [first, last] = [Math.max(1, num_pages - radius * 2), num_pages];
+    else[first, last] = [page - radius, page + radius];
+    if (first > 1) yield ['ellipsis', 0];
+    for (let page0 = first; page0 < last + 1; page0++) {
+        if (page0 != page) yield ['page', page0];
+        else yield ['current', page];
+    }
+    if (last < num_pages) yield ['ellipsis', 0];
+    if (page < num_pages) yield ['next', page + 1];
+    yield ['last', num_pages];
+}
 class Nunjucks extends nunjucks.Environment {
     constructor() {
         super(
@@ -71,6 +89,7 @@ class Nunjucks extends nunjucks.Environment {
         this.addGlobal('static_url', str => `/${str}`);
         this.addGlobal('reverse_url', str => str);
         this.addGlobal('datetime_span', datetime_span);
+        this.addGlobal('paginate', paginate);
         this.addGlobal('perm', perm);
         this.addGlobal('builtin', builtin);
         this.addGlobal('status', builtin.STATUS);
@@ -112,19 +131,16 @@ MIDDLEWARE(async (ctx, next) => {
     try {
         try {
             await next();
-            if (ctx.body || ctx.templateName) {
-                if (ctx.preferJson) return;
+            if (ctx.setRedirect) {
+                ctx.response.type = 'application/octet-stream';
+                ctx.redirect(ctx.setRedirect);
+            } else if (ctx.body || ctx.templateName) {
+                if (ctx.query.noTemplate || ctx.preferJson) return;
                 if (ctx.query.template || ctx.templateName) {
                     ctx.body = ctx.body || {};
                     Object.assign(ctx.body, JSON.parse(ctx.query.data || '{}'));
                     await ctx.render(ctx.query.template || ctx.templateName, ctx.body);
-                } else if (ctx.setRedirect) {
-                    ctx.response.type = 'application/octet-stream';
-                    ctx.redirect(ctx.setRedirect);
                 }
-            } else if (ctx.setRedirect) {
-                ctx.response.type = 'application/octet-stream';
-                ctx.redirect(ctx.setRedirect);
             } else {
                 throw new NotFoundError();
             }

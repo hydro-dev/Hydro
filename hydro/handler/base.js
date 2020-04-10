@@ -45,7 +45,7 @@ MIDDLEWARE(async (ctx, next) => {
             }
         };
         ctx.back = () => ctx.redirect(ctx.request.headers.referer || '/');
-        ctx.csrf_token = await token.add(token.TYPE_CSRF_TOKEN, 600, ctx.path);
+        ctx.csrf_token = (await token.add(token.TYPE_CSRF_TOKEN, 600, ctx.path))[0];
         await next();
         if (ctx.session.sid)
             await token.update(ctx.session.sid, tokenType, expireSeconds, Object.assign({

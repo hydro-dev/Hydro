@@ -1,5 +1,3 @@
-import attachObjectMeta from './util/objectMeta';
-
 export const LANG_TEXTS = {
   c: 'C',
   cc: 'C++',

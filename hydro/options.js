@@ -39,7 +39,8 @@ let options = {
     },
     constants: {
         PROBLEM_PER_PAGE: 100,
-        RECORD_PER_PAGE: 100
+        RECORD_PER_PAGE: 100,
+        SOLUTION_PER_PAGE: 20
     }
 };
 
