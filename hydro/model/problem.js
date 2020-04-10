@@ -81,7 +81,6 @@ async function random(query) {
         let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
         return pdoc.pid;
     } else return null;
-
 }
 
 module.exports = {

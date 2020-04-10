@@ -4,9 +4,7 @@ const res = [];
 function checkResources() {
   for (let i = res.length - 1; i >= 0; --i) {
     if (res[i].detached || !document.body.contains(res[i].$dom[0])) {
-      if (!res[i].detached) {
-        res[i].detach();
-      }
+      if (!res[i].detached) res[i].detach();
       res.splice(i, 1);
     }
   }
@@ -36,15 +34,11 @@ export default class DOMAttachedObject {
     const key = this.DOMAttachKey;
     const Protoclass = this;
     const instance = this.get($singleObj);
-    if (instance !== undefined) {
-      return instance;
-    }
+    if (instance !== undefined) return instance;
     const newInstance = new Protoclass($singleObj, ...args);
     // $dom may be updated in constructor so that we use $dom instead
     // of $singleObj here.
-    if (!newInstance.$dom) {
-      return null;
-    }
+    if (!newInstance.$dom) return null;
     newInstance.$dom.data(key, newInstance);
     return newInstance;
   }

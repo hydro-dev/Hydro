@@ -10,7 +10,8 @@ const
     { ROUTE } = require('../service/server'),
     gridfs = require('../service/gridfs'),
     queue = require('../service/queue'),
-    { NoProblemError, ProblemDataNotFoundError, BadRequestError } = require('../error'),
+    { NoProblemError, ProblemDataNotFoundError, BadRequestError,
+        SolutionNotFoundError } = require('../error'),
     { constants } = require('../options'),
     {
         PERM_VIEW_PROBLEM,
@@ -242,13 +243,14 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
             }
         }
         let udict = await user.getList(uids);
+        let pssdict = solution.getListStatus(docids, this.uid);
         this.ctx.body.path = [
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
             ['problem_solution', null]
         ];
         this.ctx.body = Object.assign(this.ctx.body, {
-            psdocs, page, pcount, pscount, udict
+            psdocs, page, pcount, pscount, udict, pssdict
         });
     }
     async post({ psid }) {
@@ -288,6 +290,16 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         if (psrdoc.owner != this.uid) this.ctx.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         await solution.delReply(psid, psrid);
         this.ctx.back();
+    }
+    async post_upvote() {
+        let [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, 1);
+        this.ctx.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
+        if (!this.ctx.preferJson) this.ctx.back();
+    }
+    async post_downvote() {
+        let [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, -1);
+        this.ctx.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
+        if (!this.ctx.preferJson) this.ctx.back();
     }
 }
 

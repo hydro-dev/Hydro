@@ -25,6 +25,13 @@ class NotFoundError extends UserFacingError {
     }
 }
 
+class AlreadyVotedError extends BadRequestError {
+    constructor(psid, uid) {
+        super('You\'ve already voted.');
+        this.params = [psid, uid];
+    }
+}
+
 class LoginError extends ForbiddenError {
     constructor(uname) {
         super('LoginError');
@@ -122,7 +129,8 @@ module.exports = {
     UserNotFoundError, VerifyPasswordError, ProblemDataNotFoundError,
     OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
-    ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError
+    ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError,
+    AlreadyVotedError
 };
 
 /*
@@ -198,11 +206,6 @@ class CsrfTokenError(ForbiddenError):
 class InvalidOperationError(ForbiddenError):
   pass
 
-
-class AlreadyVotedError(ForbiddenError):
-  @property
-  def message(self):
-    return "You've already voted."
 
 
 class InvalidTokenDigestError(ForbiddenError):

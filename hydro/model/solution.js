@@ -1,9 +1,10 @@
 const
     { ObjectID } = require('bson'),
-    { SolutionNotFoundError } = require('../error'),
+    { SolutionNotFoundError, AlreadyVotedError } = require('../error'),
     validator = require('../lib/validator'),
     db = require('../service/db.js'),
-    coll = db.collection('solution');
+    coll = db.collection('solution'),
+    coll_status = db.collection('solution.status');
 
 /** 
  * @param {string} pid
@@ -73,6 +74,22 @@ async function editReply(psid, psrid, content) {
 async function delReply(psid, psrid) {
     return await coll.findOneAndUpdate({ _id: psid }, { $pull: { reply: { _id: psrid } } });
 }
+async function vote(psid, uid, value) {
+    let pssdoc = await coll_status.findOne({ psid, uid });
+    if (pssdoc) await coll_status.deleteOne({ psid, uid });
+    await coll_status.insertOne({ psid, uid, vote: value });
+    if (pssdoc) value += -pssdoc.vote;
+    await coll.findOneAndUpdate({ _id: psid }, { $inc: { vote: value } });
+    pssdoc = await coll_status.findOne({ psid, uid });
+    let psdoc = await coll.findOne({ _id: psid });
+    return [psdoc, pssdoc];
+}
+async function getListStatus(list, uid) {
+    let result = {};
+    let res = await coll_status.find({ uid, psid: { $in: list } }).toArray();
+    for (let i of res) result[i.psid] = i;
+    return result;
+}
 module.exports = {
     count,
     add,
@@ -84,5 +101,7 @@ module.exports = {
     reply,
     getReply,
     editReply,
-    delReply
+    delReply,
+    vote,
+    getListStatus
 };
