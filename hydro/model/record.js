@@ -61,6 +61,11 @@ async function reset(rid) {
 async function count(query) {
     return await coll.find(query).count();
 }
+async function getList(rids) {
+    let r = {};
+    for (let rid of rids) r[rid] = await get(rid);
+    return r;
+}
 
 module.exports = {
     add,
@@ -68,5 +73,6 @@ module.exports = {
     getMany,
     update,
     count,
-    reset
+    reset,
+    getList
 };

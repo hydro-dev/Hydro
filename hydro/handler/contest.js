@@ -1,6 +1,8 @@
 const
-    { ContestNotLiveError, ValidationError, ProblemNotFoundError } = require('../error'),
-    { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_CREATE_CONTEST } = require('../permission'),
+    { ContestNotLiveError, ValidationError, ProblemNotFoundError,
+        ContestNotAttendedError,ContestScoreboardHiddenError } = require('../error'),
+    { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_CREATE_CONTEST,
+        PERM_EDIT_CONTEST } = require('../permission'),
     { constants } = require('../options'),
     paginate = require('../lib/paginate'),
     contest = require('../model/contest'),
@@ -23,6 +25,16 @@ class ContestHandler extends Handler {
         if (contest.RULES[tdoc.rule].showScoreboardFunc(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
         return false;
+    }
+    async getScoreboard(tid, isExport = false) {
+        let [tdoc, tsdocs] = await contest.getAndListStatus(tid);
+        if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
+        let uids = [];
+        for (let tsdoc of tsdocs) uids.push(tsdoc.uid);
+        let [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc['pids'])]);
+        let ranked_tsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
+        let rows = contest.RULES[tdoc.rule].scoreboard(isExport, this.translate, tdoc, ranked_tsdocs, udict, pdict);
+        return tdoc, rows, udict;
     }
     async verifyProblems(pids) {
         let pdocs = await problem.getMulti({ _id: { $in: pids } }).sort({ doc_id: 1 }).toArray();
@@ -74,19 +86,19 @@ class ContestDetailHandler extends ContestHandler {
         if (tsdoc) {
             attended = tsdoc.attend == 1;
             for (let pdetail in tsdoc.detail || [])
-                psdict[pdetail['pid']] = pdetail;
+                psdict[pdetail.pid] = pdetail;
             if (this.canShowRecord(this.tdoc)) {
                 let q = [];
                 for (let i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(q, { getHidden: true });
+                rdict = await record.getList(q);
             } else
                 for (let i in psdict)
                     rdict[psdict[i].rid] = { _id: psdict[i].rid };
         } else attended = false;
-        let udict = await user.get_dict([this.tdoc.owner]);
+        let udict = await user.getList([this.tdoc.owner]);
         let path = [
             ['contest_main', '/c'],
-            [this.tdoc['title'], null, true]
+            [this.tdoc.title, null, true]
         ];
         this.response.body = {
             path, tdoc: this.tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page
@@ -98,10 +110,116 @@ class ContestDetailHandler extends ContestHandler {
         this.back();
     }
 }
+class ContestScoreboardHandler extends ContestDetailHandler {
+    async get({ tid }) {
+        let [tdoc, rows, udict] = await this.getScoreboard(tid);
+        let path = [
+            ['contest_main', '/c'],
+            [tdoc.title, `/c/${tid}`, true],
+            ['contest_scoreboard', null]
+        ];
+        this.response.template = 'contest_scoreboard.html';
+        this.response.body = { tdoc, rows, path, udict };
+    }
+}
+class ContestEditHandler extends ContestDetailHandler {
+    async prepare({ tid }) {
+        let tdoc = await contest.get(tid);
+        if (!tdoc.owner != this.user._id) this.checkPerm(PERM_EDIT_CONTEST);
+    }
+    async get() {
+        this.response.template = 'contest_edit.html';
+        let rules = {};
+        for (let i in contest.RULES)
+            rules[i] = contest.RULES[i].TEXT;
+        let duration = (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / 3600 / 1000;
+        let path = [
+            ['contest_main', '/c'],
+            [this.tdoc.title, `/c/${this.tdoc._id}`, true],
+            ['contest_edit', null]
+        ];
+        let dt = this.tdoc.beginAt;
+        this.response.body = {
+            rules, tdoc: this.tdoc, duration, path, pids: this.tdoc.pids.join(','),
+            date_text: `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`,
+            time_text: `${dt.getHours()}:${dt.getMinutes()}`,
+            page_name: 'contest_edit'
+        };
+    }
+    async post({ beginAtDate, beginAtTime, duration, title, content, rule, pids }) {
+        let beginAt, endAt;
+        try {
+            beginAt = Date.parse(`${beginAtDate}T${beginAtTime}+8:00`);
+        } catch (e) {
+            throw new ValidationError('beginAtDate', 'beginAtTime');
+        }
+        endAt = new Date(beginAt + duration * 3600 * 1000);
+        if (beginAt >= endAt) throw new ValidationError('duration');
+        await this.verifyProblems(pids);
+        await contest.edit(this.tdoc._id, title, content, rule, beginAt, endAt, pids);
+        if (this.tdoc.beginAt != beginAt || this.tdoc.endAt != endAt
+            || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule != rule)
+            await contest.recalcStatus(this.tdoc._id);
+        if (this.preferJson) this.response.body = { tid: this.tdoc._id };
+        else this.response.redirect = `/c/${this.tdoc._id}`;
+    }
+}
 class ContestProblemHandler extends ContestDetailHandler {
-    constructor(ctx) {
-        super(ctx);
-        this.response.template = '';
+    async prepare({ tid, pid }) {
+        [this.tdoc, this.pdoc] = await Promise.all([contest.get(tid), problem.get({ pid, uid: this.user._id })]);
+        [this.tsdoc, this.udoc] = await Promise.all([
+            contest.getStatus(this.tdoc._id, this.user._id),
+            user.getById(this.tdoc.owner)
+        ]);
+        this.attended = this.tsdoc && this.tsdoc.attend == 1;
+        this.response.template = 'problem_detail.html';
+        if (contest.is_done(this.tdoc)) {
+            if (!this.attended) throw new ContestNotAttendedError(this.tdoc._id);
+            if (!contest.is_ongoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
+        }
+        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(pid, this.tdoc._id);
+    }
+    async get({ tid }) {
+        let path = [
+            ['contest_main', '/c'],
+            [this.tdoc.title, `/c/${tid}`, true],
+            [this.pdoc.title, null, true]
+        ];
+        this.response.body = {
+            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc,
+            udoc: this.udoc, attended: this.attended, path
+        };
+    }
+}
+class ContestProblemSubmitHandler extends ContestProblemHandler {
+    async get({ tid, pid }) {
+        let rdocs = [];
+        if (this.canShowRecord(this.tdoc))
+            rdocs = await record.getUserInProblemMulti(this.user._id, this.pdoc._id, true)
+                .sort({ _id: -1 }).limit(10).toArray();
+        this.response.template = 'problem_submit.html';
+        let path = [
+            ['contest_main', '/c'],
+            [this.tdoc.title, `/c/${tid}`, true],
+            [this.pdoc.title, `/c/${tid}/p/${pid}`, true],
+            ['contest_detail_problem_submit', null]
+        ];
+        this.response.body = {
+            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc,
+            udoc: this.udoc, attended: this.attend, path, rdocs
+        };
+    }
+    async post({ tid, lang, code }) {
+        await this.limitRate('add_record', 60, 100);
+        let rid = await record.add({ pid: this.pdoc._id, uid: this.user._id, lang, code, tid: this.tdoc._id, hidden: true });
+        await contest.updateStatus(this.tdoc._id, this.user._id, rid, this.pdoc._id, false, 0);
+        if (!this.canShowRecord(this.tdoc)) {
+            this.response.body = { tid };
+            this.response.redirect = `/c/${tid}`;
+        } else {
+            this.response.body = { rid };
+            this.response.redirect = `/r/${rid}`;
+        }
     }
 }
 class ContestCreateHandler extends ContestHandler {
@@ -141,6 +259,9 @@ class ContestCreateHandler extends ContestHandler {
 }
 
 Route('/c', ContestListHandler);
-Route('/c/:cid', ContestDetailHandler);
-Route('/c/:cid/p/:pid', ContestProblemHandler);
+Route('/c/:tid', ContestDetailHandler);
+Route('/c/:tid/edit', ContestEditHandler);
+Route('/c/:tid/scoreboard', ContestScoreboardHandler);
+Route('/c/:tid/p/:pid', ContestProblemHandler);
+Route('/c/:tid/p/:pid/submit', ContestProblemSubmitHandler);
 Route('/contest/create', ContestCreateHandler);

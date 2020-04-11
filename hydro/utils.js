@@ -14,3 +14,16 @@ String.random = function (digit) {
         str += map[Math.floor(Math.random() * 62)];
     return str;
 };
+
+/**
+ * @param {Array} a
+ * @param {Array} b
+ */
+Array.isDiff = function isDiff(a, b) {
+    if (a.length != b.length) return true;
+    a.sort();
+    b.sort();
+    for (let i in a)
+        if (a[i] != b[i]) return true;
+    return false;
+};

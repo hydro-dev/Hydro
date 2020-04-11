@@ -86,6 +86,24 @@ class ValidationError extends ForbiddenError {
         else this.params = [field0, field1];
     }
 }
+class ContestNotAttendedError extends ForbiddenError {
+    constructor(tid) {
+        super('You haven\'t attended this contest yet.');
+        this.params = [tid];
+    }
+}
+class ContestNotLiveError extends ForbiddenError {
+    constructor(tid) {
+        super('This contest is not live.');
+        this.params = [tid];
+    }
+}
+class ContestScoreboardHiddenError extends ForbiddenError {
+    constructor(tid) {
+        super('Contest scoreboard is not visible.');
+        this.params = [tid];
+    }
+}
 class ProblemNotFoundError extends NotFoundError {
     constructor(pid) {
         super('ProblemNotFoundError');
@@ -116,7 +134,6 @@ class ContestNotFoundError extends NotFoundError {
         this.params = [cid];
     }
 }
-
 class ProblemDataNotFoundError extends NotFoundError {
     constructor(pid) {
         super('Data of problem {0} not found.');
@@ -130,7 +147,8 @@ module.exports = {
     OpcountExceededError, PermissionError, NoProblemError,
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError,
-    AlreadyVotedError
+    AlreadyVotedError, ContestNotAttendedError, ContestNotLiveError,
+    ContestScoreboardHiddenError
 };
 
 /*
@@ -264,24 +282,6 @@ class ContestAlreadyAttendedError(ForbiddenError):
   @property
   def message(self):
     return "You've already attended this contest."
-
-
-class ContestNotAttendedError(ForbiddenError):
-  @property
-  def message(self):
-    return "You haven't attended this contest yet."
-
-
-class ContestScoreboardHiddenError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Contest scoreboard is not visible.'
-
-
-class ContestNotLiveError(ForbiddenError):
-  @property
-  def message(self):
-    return 'This contest is not live.'
 
 
 class HomeworkScoreboardHiddenError(ForbiddenError):
