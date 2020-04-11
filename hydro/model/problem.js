@@ -63,6 +63,9 @@ async function getById(_id) {
 async function getMany(query, sort, page, limit) {
     return await coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
 }
+function getMulti(query) {
+    return coll.find(query);
+}
 async function edit(_id, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
@@ -90,5 +93,6 @@ module.exports = {
     edit,
     count,
     random,
-    getById
+    getById,
+    getMulti
 };

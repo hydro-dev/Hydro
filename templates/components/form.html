@@ -1,12 +1,12 @@
 {% macro form_begin(args) %}
 {% set label = args.label %}
 {% set columns = args.columns %}
-{% set last_column = args.last_column or true %}
+{% set last_column = args.last_column|default(true) %}
 {% set required = args.required or false %}
 {% set hotkeys = args.hotkeys or none %}
-{% set row = args.row or true %}
+{% set row = args.row|default(true) %}
 {% set no_label = args.no_label or false %}
-{% set label_wrap = args.label_wrap or true %}
+{% set label_wrap = args.label_wrap|default(true) %}
 {% if row %}
 <div class="row">
 {% endif %}
@@ -28,9 +28,9 @@
 
 {% macro form_end(args) %}
 {% set help_text = args.help_text or none %}
-{% set row = args.row or true %}
+{% set row = args.row|default(true) %}
 {% set no_label = args.no_label or false %}
-{% set label_wrap = args.label_wrap or true %}
+{% set label_wrap = args.label_wrap|default(true) %}
   {% if not no_label and label_wrap %}
     </label>
   {% endif %}

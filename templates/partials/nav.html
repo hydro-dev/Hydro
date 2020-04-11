@@ -11,27 +11,27 @@
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item"><a href="/" class="nav__logo">&nbsp;</a></li>
       {{ nav_item('/', 'domain_main', 'domain_main') }}
-    {% if handler.has_perm(perm.PERM_VIEW_PROBLEM) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_PROBLEM) %}
       {{ nav_item('/p', 'problem_main', 'problem') }}
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_TRAINING) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_TRAINING) %}
       {{ nav_item('/t', 'training_main', 'training') }}
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_DISCUSSION) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
       {{ nav_item('/d', 'discussion_main', 'discussion') }}
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_CONTEST) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_CONTEST) %}
       {{ nav_item('/c', 'contest_main', 'contest') }}
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_HOMEWORK) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_HOMEWORK) %}
       {{ nav_item('/h', 'homework_main', 'homework') }}
     {% endif %}
-    {% if handler.has_perm(perm.PERM_EDIT_DESCRIPTION) or handler.has_perm(perm.PERM_EDIT_PERM) %}
+    {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) or handler.hasPerm(perm.PERM_EDIT_PERM) %}
       {{ nav_item('/d', 'domain_manage', 'domain_manage') }}
     {% endif %}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">
-    {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <li class="nav__list-item"><a href="/login" class="nav__item" name="nav_login">{{ _('Login') }}</a></li>
       <li class="nav__list-item"><a href="/register" class="nav__item--round">{{ _('Sign Up') }}</a></li>
     {% else %}

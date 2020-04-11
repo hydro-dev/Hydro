@@ -28,7 +28,7 @@
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
-    {% if handler.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.has_perm(perm.PERM_EDIT_PROBLEM) %}
+    {% if handler.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}

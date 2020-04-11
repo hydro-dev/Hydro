@@ -9,12 +9,12 @@
   <div>
     <ol class="menu">
     {% if page_name == 'discussion_node' or page_name == 'discussion_detail' %}
-    {% if handler.has_perm(perm.PERM_CREATE_DISCUSSION) %}
+    {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
       <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['_id']) }}">
         <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
       </a></li>
     {% else %}
-      {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}
+      {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
         <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
       {% else %}
@@ -25,7 +25,7 @@
       <li class="menu__seperator"></li>
     {% endif %}
     {% if page_name == 'problem_detail' %}
-    {% if handler.has_perm(perm.PERM_SUBMIT_PROBLEM) %}
+    {% if handler.hasPerm(perm.PERM_SUBMIT_PROBLEM) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
       </a></li>
@@ -38,11 +38,11 @@
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(perm.PERM_SUBMIT_PROBLEM) %}
+    {% if handler.hasPerm(perm.PERM_SUBMIT_PROBLEM) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/submit">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif not handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% elif not handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'problem_submit' %} active{% endif %}" href="javascript:showSignInDialog();">
         <span class="icon icon-send"></span> {{ _('Login to Submit') }}
       </a></li>
@@ -51,26 +51,26 @@
         <span class="icon icon-send"></span> {{ _('No Permission to Submit') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_DISCUSSION) or handler.has_perm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) or handler.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
       <li class="menu__seperator"></li>
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_DISCUSSION) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="{{ reverse_url('discussion_node_document_as_node', doc_type=pdoc['doc_type'], doc_id=pdoc['_id']) }}">
         <span class="icon icon-comment--text"></span> {{ _('Discussions') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
+    {% if handler.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="/p/{{ pdoc.pid }}/solution">
         <span class="icon icon-comment--text"></span> {{ _('Solutions') }}
       </a></li>
     {% endif %}
-    {% if page_name == 'problem_detail' and handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if page_name == 'problem_detail' and handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link" name="problem-sidebar__copy-to" href="javascript:;">
         <span class="icon icon-copy"></span> {{ _('Copy Problem') }}
       </a></li>
     {% endif %}
-    {% if user._id == pdoc.owner or handler.has_perm(perm.PERM_EDIT_PROBLEM) %}
+    {% if user._id == pdoc.owner or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}
@@ -94,7 +94,7 @@
       <dd>{{ pdoc['_id'] }}</dd>
     {% endif %}
     {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-    {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('Submission') }}</dt>
       <dd>
       {% if pdoc['psdoc']['status'] %}
@@ -139,7 +139,7 @@
       <dt>{{ _('# Submissions') }}</dt>
       <dd><a href="/r?pid={{ pdoc['_id'] }}">{{ pdoc.nSubmit }}</a></dd>
       {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-      {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+      {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('# My Submissions') }}</dt>
       <dd><a href="/r?pid={{ pdoc['_id'] }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
       {% endif %}

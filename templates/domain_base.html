@@ -13,7 +13,7 @@
           </div>
           <ol class="menu collapsed">
             {{ sidemenu.render_item(null, 'domain_manage_dashboard') }}
-          {% if handler.has_perm(perm.PERM_EDIT_DESCRIPTION) %}
+          {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) %}
             {{ sidemenu.render_item(null, 'domain_manage_edit') }}
             {{ sidemenu.render_item(null, 'domain_manage_join_applications') }}
             {{ sidemenu.render_item(null, 'domain_manage_discussion') }}
@@ -21,7 +21,7 @@
             <!-- Ranking Settings -->
           </ol>
         </li>
-      {% if handler.has_perm(perm.PERM_EDIT_PERM) %}
+      {% if handler.hasPerm(perm.PERM_EDIT_PERM) %}
         <li class="menu__item">
           <div class="menu__link expandable">
             <span class="icon icon-user"></span> {{ _('Access Control') }}

@@ -5,7 +5,7 @@
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
-      <div class="profile-header user-profile-bg--{{ udoc.background_img }}">
+      <div class="profile-header user-profile-bg--{{ udoc.background_img or 1 }}">
         <div class="profile-header__content">
           <div class="media">
             <div class="media__left">
@@ -58,7 +58,7 @@
                   {{ builtin.USER_GENDER_ICONS[udoc.gender] }}
                 </span>
               {% endif %}
-              {% if handler.has_perm(perm.PERM_MOD_BADGE) %}
+              {% if handler.hasPerm(perm.PERM_MOD_BADGE) %}
                 <span
                   class="profile-header__contact-item user-profile-badge badge--mod"
                   data-tooltip="{{ _('{0} is a moderator of this domain.').format(_('She' if udoc.gender == 1 else 'He')) }}"
@@ -74,14 +74,82 @@
       <div class="profile-content">
         <div class="section__tab-container immersive">
           <ul class="section__tabs">
-            {{ udoc.bio|markdown|safe }}
+          <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ _('Bio') }}</h1>
+              <div class="section__tab-main">
+              {% if not udoc.bio %}
+                {{ nothing.render("This person is lazy and didn't wrote anything.") }}
+              {% else %}
+                {{ udoc.bio|markdown|safe }}
+              {% endif %}
+              </div>
+            </li>
+            <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ _('Contributions') }} ({{ pcount }})</h1>
+              <div class="section__tab-main">
+              {% if not pdocs %}
+                {{ nothing.render("Oh, the user doesn't have any contributions!") }}
+              {% else %}
+                <div class="section__header">
+                  <h1 class="section__title">{{ _('Contributed Problems') }}</h1>
+                </div>
+                <div class="section__body">
+                {% for pdoc in pdocs %}
+                  <p><a href="/p/{{pdoc.pid}}">{{ pdoc['title'] }}</a></p>
+                {% endfor %}
+                </div>
+              {% endif %}
+              </div>
+            </li>
+            <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ _('Submissions') }} ({{ udoc['nSubmit']|default(0) }})</h1>
+              <div class="section__tab-main">
+              {% if not rdocs %}
+                {{ nothing.render("Oh, the user hasn't submitted yet!") }}
+              {% else %}
+                <div class="section__header">
+                  <h1 class="section__title">{{ _('Recent Submissions') }}</h1>
+                </div>
+                <div class="section__body no-padding">
+                  <table class="data-table record_main__table">
+                    <colgroup>
+                      <col class="col--status">
+                      <col class="col--problem">
+                      <col class="col--submit-by">
+                      <col class="col--time">
+                      <col class="col--memory">
+                      <col class="col--lang">
+                      <col class="col--submit-at">
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th class="col--status record-status--border">{{ _('Status') }}</th>
+                        <th class="col--problem">{{ _('Problem') }}</th>
+                        <th class="col--submit-by">{{ _('Submit By') }}</th>
+                        <th class="col--time">{{ _('Time') }}</th>
+                        <th class="col--memory">{{ _('Memory') }}</th>
+                        <th class="col--lang">{{ _('Language') }}</th>
+                        <th class="col--submit-at">{{ _('Submit At') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for rdoc in rdocs %}
+                      {% set pdoc = pdict[rdoc.pid] %}
+                      {% include 'record_main_tr.html' %}
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% endif %}
+              </div>
+            </li>
           </ul>
         </div>
       </div>
     </div>
   </div>
   <div class="medium-3 columns">
-  {% if is_self_profile %}
+  {% if isSelfProfile %}
     {{ home.render_sidebar() }}
   {% endif %}
     <div class="section side">

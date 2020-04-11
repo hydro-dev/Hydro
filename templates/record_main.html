@@ -83,7 +83,7 @@
           {% endfor %}
           </tbody>
         </table>
-        {% if handler.has_perm(perm.PERM_VIEW_JUDGE_STATISTICS) %}
+        {% if handler.hasPerm(perm.PERM_VIEW_JUDGE_STATISTICS) %}
         <ul class="pager">
           <li>
             <a class="pager__item next link" href="?start={{ rdocs[-1]['_id'] }}&{{ query_string }}">{{ _('pager_next') }}</a>

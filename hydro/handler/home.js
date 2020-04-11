@@ -1,5 +1,9 @@
-const { GET } = require('../service/server');
+const { Route, Handler } = require('../service/server');
 
-GET('/', async ctx => {
-    ctx.body = {};
-});
+class HomeHandler extends Handler {
+    async get() {
+        this.response.body = {};
+    }
+}
+
+Route('/', HomeHandler);

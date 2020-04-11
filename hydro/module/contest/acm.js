@@ -1,4 +1,5 @@
 module.exports = {
+    TEXT: 'ACM/ICPC',
     check: () => { },
     stat: (tdoc, journal) => {
         let naccept = {}, effective = {}, detail = [], accept = 0, time = 0;

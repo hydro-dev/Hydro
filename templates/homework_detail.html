@@ -23,7 +23,7 @@
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
-          {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+          {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
             <col class="col--status">
             <col class="col--submit-at">
           {% endif %}
@@ -31,7 +31,7 @@
           </colgroup>
           <thead>
             <tr>
-            {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+            {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
               <th class="col--submit-at">{{ _('Last Submit At') }}</th>
             {% endif %}
@@ -41,7 +41,7 @@
           <tbody>
           {% for pid in tdoc['pids'] %}
             <tr>
-            {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+            {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
               {% if psdict[pid] and psdict[pid]['rid'] %}
               {% with rdoc=rdict[psdict[pid]['rid']] %}
               {% if handler.can_show_record(tdoc) %}

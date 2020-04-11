@@ -1,12 +1,10 @@
 const
-    { requirePerm } = require('./tools'),
-    { sleep } = require('../utils'),
     { PERM_JUDGE } = require('../permission'),
     record = require('../model/record'),
     problem = require('../model/problem'),
     bus = require('../service/bus'),
     queue = require('../service/queue'),
-    { GET, POST, SOCKET } = require('../service/server');
+    { Route, Handler, Connection, ConnectionHandler } = require('../service/server');
 
 queue.assert('judge');
 
@@ -57,45 +55,45 @@ async function end(body) {
     bus.publish('record_change', rdoc);
 }
 
-GET('/judge/noop', requirePerm(PERM_JUDGE), async ctx => {
-    ctx.body = {};
-});
-GET('/judge/fetch', requirePerm(PERM_JUDGE), async ctx => {
-    let rid = await queue.get('judge', false);
-    if (rid) {
-        let rdoc = await record.get(rid);
-        let pdoc = await problem.getById(rdoc.pid);
-        let task = {
-            event: 'judge',
-            rid, type: 0,
-            pid: rdoc.pid,
-            data: pdoc.data,
-            lang: rdoc.lang,
-            code: rdoc.code
-        };
-        ctx.body = { task };
+class JudgeHandler extends Handler {
+    async prepare(){
+        this.checkPerm(PERM_JUDGE);
     }
-    else ctx.body = {};
-});
-SOCKET('/judge/conn', [requirePerm(PERM_JUDGE)], async conn => {
-    let isOpen = true, processing = null;
-    conn.on('close', async () => {
-        isOpen = false;
-        if (processing) {
-            await record.reset(processing);
-            queue.push('judge', processing);
+    async get() {
+        let rid = await queue.get('judge', false);
+        if (rid) {
+            let rdoc = await record.get(rid);
+            let pdoc = await problem.getById(rdoc.pid);
+            let task = {
+                event: 'judge',
+                rid, type: 0,
+                pid: rdoc.pid,
+                data: pdoc.data,
+                lang: rdoc.lang,
+                code: rdoc.code
+            };
+            this.response.body = { task };
         }
-    });
-    conn.on('data', async message => {
-        message = JSON.parse(message);
-        if (message.key == 'next') await next(message);
-        else if (message.key == 'end') {
-            await end(Object.assign({ judger: conn.state.user._id }, message));
-            processing = null;
-        }
-    });
-    while (isOpen) {
-        if (!processing) {
+        else this.response.body = {};
+    }
+    async post_next() {
+        await next(this.request.body);
+        this.response.body = {};
+    }
+    async post_end() {
+        await end(this.request.body);
+        this.response.body = {};
+    }
+}
+class JudgeConnectionHandler extends ConnectionHandler {
+    async prepare() {
+        this.checkPerm(PERM_JUDGE);
+    }
+    async message(msg) {
+        if (msg.key == 'next') await next(msg);
+        else if (msg.key == 'end') {
+            await end({ judger: this.user._id, ...msg });
+            this.processing = null;
             let rid = await queue.get('judge');
             let rdoc = await record.get(rid);
             let pdoc = await problem.getById(rdoc.pid);
@@ -107,16 +105,17 @@ SOCKET('/judge/conn', [requirePerm(PERM_JUDGE)], async conn => {
                 lang: rdoc.lang,
                 code: rdoc.code
             };
-            conn.write(JSON.stringify({ task }));
-            processing = task.rid;
-        } else await sleep(100);
+            this.send({ task });
+            this.processing = task.rid;
+        }
     }
-});
-POST('/judge/next', requirePerm(PERM_JUDGE), async ctx => {
-    await next(ctx.request.body);
-    ctx.body = {};
-});
-POST('/judge/end', requirePerm(PERM_JUDGE), async ctx => {
-    await end(Object.assign({ judger: ctx.state.user._id }, ctx.request.body));
-    ctx.body = {};
-});
+    async cleanup() {
+        if (this.processing) {
+            await record.reset(this.processing);
+            queue.push('judge', this.processing);
+        }
+    }
+}
+
+Route('/judge', JudgeHandler);
+Connection('/judge/conn', JudgeConnectionHandler);

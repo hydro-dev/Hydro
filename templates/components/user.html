@@ -13,7 +13,7 @@
   </a>
 {% if badge %}
   <a class="user-profile-badge v-center badge--lv{{ udoc['level']|default(0) }}" href="/u/{{ udoc['_id']|default(0) }}" title="LV {{ udoc['level']|default(0) }}: Top {{ builtin.LEVELS[udoc['level']|default(0)]|default('N/A') }}%">LV {{ udoc['level']|default(0) }}</a>
-{% if modbadge and handler.has_perm(perm.PERM_MOD_BADGE) %}
+{% if modbadge and handler.hasPerm(perm.PERM_MOD_BADGE) %}
   <span class="user-profile-badge v-center badge--mod" title="Moderator">MOD</span>
 {% endif %}
 {% endif %}

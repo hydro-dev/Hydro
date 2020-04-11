@@ -1,5 +1,6 @@
 const { ValidationError } = require('../../error');
 module.exports = {
+    TEXT: 'Assignment',
     check(data) {
         if (!data.penalty_since) throw new ValidationError('penalty_since');
         if (data.penalty_since < data.begin_at) throw new ValidationError('penalty_since', 'begin_at');

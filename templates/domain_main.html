@@ -139,7 +139,7 @@
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>
                   {% endif %}
-                {% elif handler.has_perm(perm.PERM_LOGGEDIN) %}
+                {% elif handler.hasPerm(perm.PERM_LOGGEDIN) %}
                   <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
                 {% endif %}
                 </li>
@@ -164,7 +164,7 @@
   {% endif %}
   </div>
   <div class="large-3 columns">
-  {% if handler.has_perm(perm.PERM_VIEW_DISCUSSION) %}
+  {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
     {% include 'discussion_nodes_widget.html' %}
   {% endif %}
   {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}

@@ -1,18 +1,15 @@
 const
     validator = require('../lib/validator'),
     { ValidationError, ContestNotFoundError } = require('../error'),
-    RULE_HOMEWORK = require('../module/contest/homework'),
-    RULE_OI = require('../module/contest/oi'),
-    RULE_ACM = require('../module/contest/acm'),
     db = require('../service/db.js'),
     coll = db.collection('contest'),
     coll_status = db.collection('contest.status');
 
 
 const RULES = {
-    homework: RULE_HOMEWORK,
-    oi: RULE_OI,
-    acm: RULE_ACM
+    homework: require('../module/contest/homework'),
+    oi: require('../module/contest/oi'),
+    acm: require('../module/contest/acm')
 };
 
 module.exports = {
@@ -28,26 +25,26 @@ module.exports = {
         return await coll.insertOne(data);
     },
     count: query => coll.find(query).count(),
-    async edit(cid, $set) {
+    async edit(tid, $set) {
         if ($set.title) validator.checkTitle($set.title);
         if ($set.content) validator.checkIntro($set.content);
         if ($set.rule)
             if (!this.RULES[$set.rule]) throw new ValidationError('rule');
         if ($set.beginAt && $set.endAt)
             if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
-        let cdoc = await coll.findOne({ cid });
-        if (!cdoc) throw new ContestNotFoundError(cid);
-        this.RULES[$set.rule || cdoc.rule].check(Object.assign(cdoc, $set));
-        await coll.findOneAndUpdate({ cid }, { $set });
-        return cdoc;
-    },
-    async get( cid) {
-        let tdoc = await coll.findOne({ cid });
-        if (!tdoc) throw new ContestNotFoundError(cid);
+        let tdoc = await coll.findOne({ tid });
+        if (!tdoc) throw new ContestNotFoundError(tid);
+        this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
+        await coll.findOneAndUpdate({ tid }, { $set });
         return tdoc;
     },
-    get_multi: (query, fields) => coll.find(query, { fields }),
-    get_multi_status: (query, fields) => coll_status.find(query, { fields }),
+    async get(tid) {
+        let tdoc = await coll.findOne({ tid });
+        if (!tdoc) throw new ContestNotFoundError(tid);
+        return tdoc;
+    },
+    getMulti: query => coll.find(query),
+    getMultiStatus: query => coll_status.find(query),
     async get_random_id(query) {
         let pdocs = coll.find(query);
         let pcount = await pdocs.count();
@@ -56,8 +53,43 @@ module.exports = {
             return pdoc.pid;
         } else return null;
     },
-    get_status: (cid, uid, fields) => coll_status.findOne({ cid, uid }, { fields }),
-    set_status: (cid, uid, $set) => coll_status.findOneAndUpdate({ cid, uid }, { $set })
+    getStatus: (tid, uid) => coll_status.findOne({ tid, uid }),
+    setStatus: (tid, uid, $set) => coll_status.findOneAndUpdate({ tid, uid }, { $set }),
+    async getListStatus(uid, tids) {
+        let r = {};
+        for (let tid of tids) r[tid] = await this.getStatus(tid, uid);
+        return r;
+    },
+    is_new(tdoc, days = 1) {
+        let now = new Date().getTime();
+        let readyAt = tdoc.beginAt.getTime();
+        return (now < readyAt - days * 24 * 3600 * 1000);
+    },
+    is_upcoming(tdoc, days = 1) {
+        let now = new Date().getTime();
+        let readyAt = tdoc.beginAt.getTime();
+        return (now > readyAt + days * 24 * 3600 * 1000 && now < tdoc.beginAt);
+    },
+    is_not_started: tdoc => new Date() < tdoc.beginAt,
+    is_ongoing(tdoc) {
+        let now = new Date();
+        return (tdoc.beginAt <= now && now < tdoc.endAt);
+    },
+    is_done: tdoc => tdoc.endAt <= new Date(),
+    status_text: tdoc =>
+        this.is_new(tdoc)
+            ? 'New'
+            : this.is_upcoming(tdoc)
+                ? 'Ready (☆▽☆)'
+                : this.is_ongoing(tdoc)
+                    ? 'Live...'
+                    : 'Done',
+    get_status: tdoc =>
+        this.is_not_started(tdoc)
+            ? 'not_started'
+            : this.is_ongoing(tdoc)
+                ? 'ongoing'
+                : 'finished',
 };
 
 /*
@@ -275,9 +307,9 @@ class ContestVisibilityMixin(object):
     if self.domainId != tdoc['domainId']:
       return False
     if tdoc['doc_type'] == document.TYPE_CONTEST:
-      return self.has_perm(builtin.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
+      return self.hasPerm(builtin.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
     elif tdoc['doc_type'] == document.TYPE_HOMEWORK:
-      return self.has_perm(builtin.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
+      return self.hasPerm(builtin.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
     else:
       return False
 

@@ -22,10 +22,5 @@ module.exports = {
             await next();
         };
     },
-    limitRate(op, period_secs, max_operations) {
-        return async (ctx, next) => {
-            await opcount.inc(op, ctx.request.ip, period_secs, max_operations);
-            await next();
-        };
-    }
+    
 };

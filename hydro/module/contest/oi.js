@@ -1,4 +1,5 @@
 module.exports = {
+    TEXT: 'OI',
     check: () => { },
     stat: (tdoc, journal) => {
         let detail = {}, score = 0;

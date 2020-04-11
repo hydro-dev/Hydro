@@ -1,3 +1,4 @@
+{% set page_name = "contest_main" %}
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
 {% macro render_important_contest(view, title, tdoc) %}
@@ -12,15 +13,15 @@
         <ul class="info">
           <li>
             <span class="icon icon-award"></span>
-            {{ _('Rule') }}: {{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}
+            {{ _('Rule') }}: {{ model.contest.RULES[tdoc['rule']].TEXT }}
           </li>
           <li>
             <span class="icon icon-calendar"></span>
-            {{ _('Start at') }}: {{ contest.render_time(tdoc['begin_at']) }}
+            {{ _('Start at') }}: {{ model.contest.render_time(tdoc['beginAt']) }}
           </li>
           <li>
             <span class="icon icon-schedule--fill"></span>
-            {{ _('Duration') }}: {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
+            {{ _('Duration') }}: {{ model.contest.render_duration(tdoc) }} {{ _('hour(s)') }}
           </li>
           <li>
             <span class="icon icon-user--multiple"></span>
@@ -33,7 +34,7 @@
       <div class="section__body">
         <a href="/t/{{ tdoc._id }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
-        {% if tsdict[tdoc['doc_id']]['attend'] == 1 %}
+        {% if tsdict[tdoc._id].attend %}
           <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
         {% else %}
           <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
@@ -56,14 +57,14 @@
   {% endfor %}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{% if not rule %}{{ _('All Contests') }}{% else %}{{ _('All {0} Contests').format(_(vj4.constant.contest.RULE_TEXTS[rule])) }}{% endif %}</h1>
+        <h1 class="section__title">{% if not rule %}{{ _('All Contests') }}{% else %}{{ _('All {0} Contests').format(_(model.contest.RULES[rule].TEXT)) }}{% endif %}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
             <select class="inline compact select" name="rule">
               <option value="0"{% if not rule %} selected{% endif %}>{{ _('All') }}</option>
-            {% for k, v in vj4.constant.contest.RULE_TEXTS.items() %}
-              <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(_(v)) }}</option>
+            {% for k, v in model.contest.RULES %}
+              <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(_(v.TEXT)) }}</option>
             {% endfor %}
             </select>
             <button type="submit" class="button hasjs--hide">
@@ -73,24 +74,24 @@
         </div>
       </div>
       <div class="section__body no-padding">
-      {% if not tdocs %}
+      {% if not tdocs.length %}
         {{ nothing.render('There are no contests...') }}
       {% else %}
         <ol class="section__list contest__list">
         {% for tdoc in tdocs %}
-          <li class="section__list__item contest__item contest-type--{{ vj4.constant.contest.RULE_ID[tdoc['rule']] }}">
+          <li class="section__list__item contest__item contest-type--{{ tdoc['rule'] }}">
             <div class="media">
               <div class="media__left medium">
                 <div class="contest__date numbox">
-                  <div class="numbox__num large">{{ datetime_span(tdoc['begin_at'], false, '%d') }}</div>
-                  <div class="numbox__text">{{ datetime_span(tdoc['begin_at'], false, '%Y-%m') }}</div>
+                  <div class="numbox__num large">{{ datetime_span(tdoc['beginAt'], false, '%d') }}</div>
+                  <div class="numbox__text">{{ datetime_span(tdoc['beginAt'], false, '%Y-%m') }}</div>
                 </div>
               </div>
               <div class="media__body medium">
                 <h1 class="contest__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
                 <ul class="supplementary list">
                   <li>
-                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</a>
+                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
                   </li>
                   <li>
                     <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
@@ -98,7 +99,7 @@
                   <li>
                     <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
                   </li>
-                {% if tsdict[tdoc['doc_id']]['attend'] == 1 %}
+                {% if tsdict[tdoc._id]['attend'] == 1 %}
                   <li class="contest__info-attended">
                     <span class="icon icon-check"></span> {{ _('Attended') }}
                   </li>
@@ -115,7 +116,7 @@
     </div>
   </div>
   <div class="medium-3 columns">
-  {% if handler.has_perm(perm.PERM_CREATE_CONTEST) %}
+  {% if handler.hasPerm(perm.PERM_CREATE_CONTEST) %}
     <div class="section side">
       <div class="section__header">
         <h1 class="section__title">
@@ -123,7 +124,7 @@
         </h1>
       </div>
       <div class="section__body">
-        <p><a href="{{ reverse_url('contest_create') }}" class="expanded primary button">{{ _('Create a contest') }}</a></p>
+        <p><a href="/contest/create" class="expanded primary button">{{ _('Create a contest') }}</a></p>
       </div>
     </div>
   {% endif %}

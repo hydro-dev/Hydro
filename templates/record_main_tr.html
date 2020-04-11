@@ -3,7 +3,7 @@
 <tr data-rid="{{ rdoc['_id'] }}">
   {{ record.render_status_td(rdoc) }}
   <td class="col--problem col--problem-name">
-  {% if handler.has_perm(perm.PERM_REJUDGE) %}
+  {% if handler.hasPerm(perm.PERM_REJUDGE) %}
     <form class="form--inline" method="post" action="/r/{{ rdoc._id }}/rejudge">
       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
       <button type="submit" class="link text-maroon lighter">
@@ -12,7 +12,7 @@
       </button> |
     </form>
   {% endif %}
-  {% if pdoc and (not pdoc.hidden or handler.has_perm(perm.PERM_VIEW_PROBLEM_HIDDEN)) %}
+  {% if pdoc and (not pdoc.hidden or handler.hasPerm(perm.PERM_VIEW_PROBLEM_HIDDEN)) %}
     {{ problem.render_problem_title(pdoc, show_tags=false) }}
   {% else %}
     *

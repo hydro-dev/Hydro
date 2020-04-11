@@ -29,7 +29,7 @@
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_SELF) or handler.has_perm(perm.PERM_EDIT_DISCUSSION) %}
+      {% if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_SELF) or handler.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
         <li>
           <a href="{{ reverse_url('discussion_edit', did=ddoc['doc_id']) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
@@ -37,7 +37,7 @@
         <li>
           {{ _('{0} views').format(ddoc['views']) }}
         </li>
-      {% if handler.has_perm(perm.PERM_LOGGEDIN) %}
+      {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <li><form class="form--inline" method="post">
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">

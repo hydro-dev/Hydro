@@ -35,13 +35,12 @@ async function run() {
     });
     require('./service/gridfs');
     let server = require('./service/server');
-    require('./handler/ui');
-    require('./handler/base');
     require('./handler/home');
     require('./handler/problem');
     require('./handler/record');
     require('./handler/judge');
     require('./handler/user');
+    require('./handler/contest');
     server.start();
 }
 run().catch(e => {

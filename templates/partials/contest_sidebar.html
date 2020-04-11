@@ -18,12 +18,12 @@
   <div>
     <ol class="menu">
     {% if page_name == 'discussion_node' %}
-    {% if handler.has_perm(perm.PERM_CREATE_DISCUSSION) %}
+    {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
       <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=tdoc['doc_type'], doc_id=tdoc['doc_id']) }}">
         <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
       </a></li>
     {% else %}
-      {% if not handler.has_perm(perm.PERM_LOGGEDIN) %}
+      {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
         <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
       {% else %}
@@ -40,7 +40,7 @@
     {% endif %}
     {% if not attended and not handler.is_done(tdoc) %}
       <li class="menu__item">
-    {% if handler.has_perm(perm.PERM_ATTEND_CONTEST) and handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% if handler.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <form action="/t/{{ tdoc._id }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
@@ -48,7 +48,7 @@
             <span class="icon icon-add"></span> {{ _('Attend Contest') }}
           </button>
         </form>
-    {% elif not handler.has_perm(perm.PERM_LOGGEDIN) %}
+    {% elif not handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}
         </a>
@@ -68,12 +68,12 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if handler.own(tdoc, perm.PERM_EDIT_CONTEST_SELF) or handler.has_perm(perm.PERM_EDIT_CONTEST) %}
+    {% if handler.own(tdoc, perm.PERM_EDIT_CONTEST_SELF) or handler.hasPerm(perm.PERM_EDIT_CONTEST) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_edit', tid=tdoc['doc_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit Contest') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(perm.PERM_READ_RECORD_CODE) %}
+    {% if handler.hasPerm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_code', tid=tdoc['doc_id']) }}">
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>
