@@ -8,13 +8,13 @@
   </div>
   <div class="error__text-container">
     <h1>{{ _('Oops!') }}</h1>
-    <p>{{ _(error.message).format(error.args) }}</p>
+    <p>{{ _(error.message).format(error.params) }}</p>
     <p>{{ _('Technical Information') }}:</p>
     <p>{{ _('Type') }}: {{ error.code }}</p>
     <p>{{ _('Arguments') }}:
       <ol>
-      {% for arg in error.args %}
-        <li>{{ arg }}</li>
+      {% for param in error.params %}
+        <li>{{ param }}</li>
       {% endfor %}
       </ol>
     </p>

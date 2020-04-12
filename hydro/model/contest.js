@@ -12,82 +12,96 @@ const RULES = {
     acm: require('../module/contest/acm')
 };
 
+async function add(title, content, owner, rule,
+    beginAt = new Date(), endAt = new Date(), pids = [], data = {}) {
+    validator.checkTitle(title);
+    validator.checkContent(content);
+    if (!this.RULES[rule]) throw new ValidationError('rule');
+    if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
+    Object.assign(data, { content, owner, title, rule, beginAt, endAt, pids, attend: 0 });
+    this.RULES[rule].check(data);
+    let res = await coll.insertOne(data);
+    return res.insertedId;
+}
+async function edit(tid, $set) {
+    if ($set.title) validator.checkTitle($set.title);
+    if ($set.content) validator.checkIntro($set.content);
+    if ($set.rule)
+        if (!this.RULES[$set.rule]) throw new ValidationError('rule');
+    if ($set.beginAt && $set.endAt)
+        if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
+    let tdoc = await coll.findOne({ tid });
+    if (!tdoc) throw new ContestNotFoundError(tid);
+    this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
+    await coll.findOneAndUpdate({ tid }, { $set });
+    return tdoc;
+}
+async function get(tid) {
+    let tdoc = await coll.findOne({ _id: tid });
+    if (!tdoc) throw new ContestNotFoundError(tid);
+    return tdoc;
+}
+async function get_random_id(query) {
+    let pdocs = coll.find(query);
+    let pcount = await pdocs.count();
+    if (pcount) {
+        let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
+        return pdoc.pid;
+    } else return null;
+}
+async function getListStatus(uid, tids) {
+    let r = {};
+    for (let tid of tids) r[tid] = await this.getStatus(tid, uid);
+    return r;
+}
+async function attend(tid, uid) {
+    try {
+        await coll_status.insertOne({ tid, uid });
+    } catch (e) {
+        throw new ContestAlreadyAttendedError(tid, uid);
+    }
+    await coll.findOneAndUpdate({ _id: tid }, { $inc: { attend: 1 } });
+}
+function is_new(tdoc, days = 1) {
+    let now = new Date().getTime();
+    let readyAt = tdoc.beginAt.getTime();
+    return (now < readyAt - days * 24 * 3600 * 1000);
+}
+function is_upcoming(tdoc, days = 1) {
+    let now = new Date().getTime();
+    let readyAt = tdoc.beginAt.getTime();
+    return (now > readyAt + days * 24 * 3600 * 1000 && now < tdoc.beginAt);
+}
+function is_not_started(tdoc) {
+    return new Date() < tdoc.beginAt;
+}
+function is_ongoing(tdoc) {
+    let now = new Date();
+    return (tdoc.beginAt <= now && now < tdoc.endAt);
+}
+function is_done(tdoc) {
+    return tdoc.endAt <= new Date();
+}
 module.exports = {
-    RULES,
-    async add(title, content, owner, rule,
-        beginAt = new Date(), endAt = new Date(), pids = [], data) {
-        validator.checkTitle(title);
-        validator.checkContent(content);
-        if (!this.RULES[rule]) throw new ValidationError('rule');
-        if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
-        Object.assign(data, { content, owner, title, rule, beginAt, endAt, pids, attend: 0 });
-        this.RULES[rule].check(data);
-        return await coll.insertOne(data);
-    },
+    RULES, add, getListStatus, attend, edit, get, get_random_id,
     count: query => coll.find(query).count(),
-    async edit(tid, $set) {
-        if ($set.title) validator.checkTitle($set.title);
-        if ($set.content) validator.checkIntro($set.content);
-        if ($set.rule)
-            if (!this.RULES[$set.rule]) throw new ValidationError('rule');
-        if ($set.beginAt && $set.endAt)
-            if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
-        let tdoc = await coll.findOne({ tid });
-        if (!tdoc) throw new ContestNotFoundError(tid);
-        this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
-        await coll.findOneAndUpdate({ tid }, { $set });
-        return tdoc;
-    },
-    async get(tid) {
-        let tdoc = await coll.findOne({ tid });
-        if (!tdoc) throw new ContestNotFoundError(tid);
-        return tdoc;
-    },
     getMulti: query => coll.find(query),
     getMultiStatus: query => coll_status.find(query),
-    async get_random_id(query) {
-        let pdocs = coll.find(query);
-        let pcount = await pdocs.count();
-        if (pcount) {
-            let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
-            return pdoc.pid;
-        } else return null;
-    },
     getStatus: (tid, uid) => coll_status.findOne({ tid, uid }),
     setStatus: (tid, uid, $set) => coll_status.findOneAndUpdate({ tid, uid }, { $set }),
-    async getListStatus(uid, tids) {
-        let r = {};
-        for (let tid of tids) r[tid] = await this.getStatus(tid, uid);
-        return r;
-    },
-    is_new(tdoc, days = 1) {
-        let now = new Date().getTime();
-        let readyAt = tdoc.beginAt.getTime();
-        return (now < readyAt - days * 24 * 3600 * 1000);
-    },
-    is_upcoming(tdoc, days = 1) {
-        let now = new Date().getTime();
-        let readyAt = tdoc.beginAt.getTime();
-        return (now > readyAt + days * 24 * 3600 * 1000 && now < tdoc.beginAt);
-    },
-    is_not_started: tdoc => new Date() < tdoc.beginAt,
-    is_ongoing(tdoc) {
-        let now = new Date();
-        return (tdoc.beginAt <= now && now < tdoc.endAt);
-    },
-    is_done: tdoc => tdoc.endAt <= new Date(),
+    is_new, is_upcoming, is_not_started, is_ongoing, is_done,
     status_text: tdoc =>
-        this.is_new(tdoc)
+        is_new(tdoc)
             ? 'New'
-            : this.is_upcoming(tdoc)
+            : is_upcoming(tdoc)
                 ? 'Ready (☆▽☆)'
-                : this.is_ongoing(tdoc)
+                : is_ongoing(tdoc)
                     ? 'Live...'
                     : 'Done',
     get_status: tdoc =>
-        this.is_not_started(tdoc)
+        is_not_started(tdoc)
             ? 'not_started'
-            : this.is_ongoing(tdoc)
+            : is_ongoing(tdoc)
                 ? 'ongoing'
                 : 'finished',
 };

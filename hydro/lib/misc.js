@@ -2,13 +2,13 @@ const md5 = require('./md5');
 exports.gravatar_url = function (email, size) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size}`;
 };
-exports.datetime_span = function (dt, { relative = true } = {}) {
+exports.datetime_span = function (dt, relative = true, format = '%Y-%m-%d %H:%M:%S') {
     if (dt.generationTime) dt = new Date(dt.generationTime * 1000);
     else if (typeof dt == 'number' || typeof dt == 'string') dt = new Date(dt);
     return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(
         relative ? ' relative' : '',
         dt.getTime() / 1000,
-        dt.toLocaleString()
+        dt.format(format)
     );
 };
 exports.paginate = function* (page, num_pages) {

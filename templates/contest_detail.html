@@ -1,3 +1,4 @@
+{% set page_name = "contest_detail" %}
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
 {% import "components/record.html" as record with context %}
@@ -7,20 +8,20 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__body typo">
-        {{ tdoc['content']|markdown }}
-      {% if handler.is_ongoing(tdoc) %}
+        {{ tdoc['content']|markdown|safe }}
+      {% if model.contest.is_ongoing(tdoc) %}
         <blockquote class="warn">
           <p>{{ _('We will check code similarity after this contest.') }}</p>
         </blockquote>
       {% endif %}
       </div>
     </div>
-  {% if handler.is_ongoing(tdoc) or handler.is_done(tdoc) %}
+  {% if model.contest.is_ongoing(tdoc) or model.contest.is_done(tdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if attended or handler.is_done(tdoc) %}
+    {% if attended or model.contest.is_done(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
@@ -40,18 +41,17 @@
             </tr>
           </thead>
           <tbody>
-          {% for pid in tdoc['pids'] %}
+          {% for pid in tdoc.pids %}
             <tr>
             {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
-              {% if psdict[pid] and psdict[pid]['rid'] %}
-              {% with rdoc=rdict[psdict[pid]['rid']] %}
+              {% if psdict[pid] and psdict[pid].rid %}
+              {% set rdoc = rdict[psdict[pid].rid] %}
               {% if handler.can_show_record(tdoc) %}
                 {{ record.render_status_td(rdoc) }}
               {% else %}
                 <td class="col--status record-status--border"><a href="/r/{{ rdoc._id }}">{{ _('Submitted') }}</a></td>
               {% endif %}
-                <td class="col--submit-at">{{ datetime_span(rdoc['_id'].generationTime) }}</td>
-              {% endwith %}
+                <td class="col--submit-at">{{ datetime_span(rdoc._id) }}</td>
               {% else %}
                 <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
                 <td class="col--submit-at">-</td>
@@ -73,9 +73,8 @@
   {% endif %}
   </div>
   <div class="medium-3 columns">
-  {% with owner_udoc=udict[tdoc['owner_uid']], owner_dudoc=dudict[tdoc['owner_uid']] %}
-    {% include "partials/contest_sidebar.html" %}
-  {% endwith %}
+  {% set owner_udoc = udict[tdoc.owner] %}
+  {% include "partials/contest_sidebar.html" %}
   </div>
 </div>
 {% endblock %}

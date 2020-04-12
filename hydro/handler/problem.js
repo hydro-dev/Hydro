@@ -52,14 +52,11 @@ class ProblemRandomHandler extends ProblemHandler {
 }
 
 class ProblemDetailHandler extends ProblemHandler {
-    constructor(ctx) {
-        super(ctx);
-        this.uid = ctx.state.user._id;
-        this.pid = ctx.params.pid;
+    async _prepare({ pid }) {
         this.response.template = 'problem_detail.html';
-    }
-    async _prepare() {
-        if (this.pid) this.pdoc = await problem.get(this);
+        this.uid = this.user._id;
+        this.pid = pid;
+        if (pid) this.pdoc = await problem.get(this);
         if (this.pdoc.hidden && this.pdoc.owner != this.uid) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
         this.response.body = {

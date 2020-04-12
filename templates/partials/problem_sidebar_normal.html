@@ -174,7 +174,7 @@
   {% if ctdocs %}
     <p>{{ _('In following contests') }}: </p>
     {% for tdoc in ctdocs %}
-    <p><a href="/t/{{ tdoc._id }}">{{ tdoc['title'] }}</a></p>
+    <p><a href="/c/{{ tdoc._id }}">{{ tdoc['title'] }}</a></p>
     {% endfor %}
   {% endif %}
   {% if htdocs %}

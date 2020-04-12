@@ -2,7 +2,7 @@
 {% import "components/contest.html" as contest with context %}
 <div class="section side">
 {% if page_name != 'contest_detail' %}
-  <a class="contest-sidebar__bg" href="/t/{{ tdoc._id }}">
+  <a class="contest-sidebar__bg" href="/c/{{ tdoc._id }}">
     <div class="section__body">
       <h1>{{ tdoc['title'] }}</h1>
       <div class="contest-sidebar__status">
@@ -17,31 +17,15 @@
 {% endif %}
   <div>
     <ol class="menu">
-    {% if page_name == 'discussion_node' %}
-    {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
-      <li class="menu__item"><a class="menu__link highlight" href="{{ reverse_url('discussion_create_document_as_node', doc_type=tdoc['doc_type'], doc_id=tdoc['doc_id']) }}">
-        <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
-      </a></li>
-    {% else %}
-      {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
-        <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
-        <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
-      {% else %}
-        <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
-        <span class="icon icon-add"></span> {{ _('No Permission to Create a Discussion') }}</a></li>
-      {% endif %}
-    {% endif %}
-      <li class="menu__seperator"></li>
-    {% endif %}
     {% if page_name != 'contest_detail' %}
-      <li class="menu__item"><a class="menu__link" href="/t/{{ tdoc._id }}">
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}">
         <span class="icon icon-award"></span> {{ _('View Contest') }}
       </a></li>
     {% endif %}
-    {% if not attended and not handler.is_done(tdoc) %}
+    {% if not attended and not model.contest.is_done(tdoc) %}
       <li class="menu__item">
     {% if handler.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
-        <form action="/t/{{ tdoc._id }}" method="POST">
+        <form action="/c/{{ tdoc._id }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
           <button class="menu__link" type="submit">
@@ -59,26 +43,26 @@
     {% endif %}
       </li>
     {% endif %}
-    {% if handler.can_show_scoreboard(tdoc, False) %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_scoreboard', tid=tdoc['doc_id']) }}">
+    {% if handler.canShowScoreboard(tdoc, False) %}
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}/scoreboard">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
       </a></li>
-    {% elif handler.can_view_hidden_scoreboard(tdoc) %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_scoreboard', tid=tdoc['doc_id']) }}">
+    {% elif handler.canViewHiddenScoreboard(tdoc) %}
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}/scoreboard">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if handler.own(tdoc, perm.PERM_EDIT_CONTEST_SELF) or handler.hasPerm(perm.PERM_EDIT_CONTEST) %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_edit', tid=tdoc['doc_id']) }}">
+    {% if user._id == tdoc.owner or handler.hasPerm(perm.PERM_EDIT_CONTEST) %}
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}/edit">
         <span class="icon icon-edit"></span>  {{ _('Edit Contest') }}
       </a></li>
     {% endif %}
     {% if handler.hasPerm(perm.PERM_READ_RECORD_CODE) %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_code', tid=tdoc['doc_id']) }}">
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}/code">
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>
     {% endif %}
-      <li class="menu__item"><a class="menu__link" href="/r?tid={{ tdoc['doc_id'] }}">
+      <li class="menu__item"><a class="menu__link" href="/r?tid={{ tdoc._id }}">
         <span class="icon icon-flag"></span> {{ _('All Submissions') }}
       </a></li>
       <li class="menu__item"><a class="menu__link" href="/wiki/help#contest">
@@ -89,13 +73,13 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-      <dt>{{ _('Status') }}</dt><dd>{{ _(handler.status_text(tdoc)) }}</dd>
-      <dt>{{ _('Rule') }}</dt><dd>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</dd>
-      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
-      <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tdoc['begin_at']) }}</dd>
-      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tdoc['end_at']) }}</dd>
+      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.status_text(tdoc)) }}</dd>
+      <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
+      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
+      <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tdoc.beginAt) }}</dd>
+      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tdoc.endAt) }}</dd>
       <dt>{{ _('Duration') }}</dt><dd>{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</dd>
-      <dt>{{ _('Host') }}</dt><dd>{{ user.render_inline(owner_udoc, dudoc=owner_dudoc, badge=false) }}</dd>
+      <dt>{{ _('Host') }}</dt><dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
       <dt>{{ _('Partic.') }}</dt>
       <dd>
         {{ tdoc['attend']|default(0) }}

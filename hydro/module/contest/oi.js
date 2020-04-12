@@ -10,6 +10,9 @@ module.exports = {
             }
         return { score, detail };
     },
+    showScoreboard(tdoc,now){
+        return now>tdoc.endAt; 
+    },
     scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict) {
         let columns = [
             { type: 'rank', value: _('Rank') },

@@ -13,8 +13,7 @@ const
     blacklist = require('../model/blacklist'),
     token = require('../model/token'),
     opcount = require('../model/opcount'),
-    { UserNotFoundError, BlacklistedError, PermissionError,
-        NotFoundError } = require('../error');
+    { UserNotFoundError, BlacklistedError, PermissionError } = require('../error');
 
 const options = require('../options');
 let http = options.listen.https ? require('https') : require('http');
@@ -128,40 +127,33 @@ class Handler {
     async ___cleanup() {
         try {
             await this.renderBody();
-        } catch (e) {
-            try {
-                let error;
-                if (this.response.body && this.response.body.error) error = this.response.body.error;
-                else error = e;
-                if (error instanceof NotFoundError) this.response.status = 404;
-                if (error.name == 'Template render error') throw error;
-                if (this.preferJson) this.response.body = { error };
-                else await this.render('error.html', { error });
-            } catch (error) {
-                if (this.preferJson) this.response.body = { error };
-                else await this.render('bsod.html', { error });
-            }
+        } catch (error) {
+            if (this.preferJson) this.response.body = { error };
+            else await this.render('bsod.html', { error });
         }
         await this.putResponse();
         await this.saveCookie();
     }
     async renderBody() {
-        if (this.response.body || this.response.template) {
-            if (this.request.query.noTemplate || this.preferJson) return;
-            if (this.request.query.template || this.response.template) {
-                this.response.body = this.response.body || {};
-                await this.render(this.request.query.template || this.response.template, this.response.body);
+        if (!this.preferJson)
+            if (this.response.body || this.response.template) {
+                if (this.request.query.noTemplate || this.preferJson) return;
+                if (this.request.query.template || this.response.template) {
+                    this.response.body = this.response.body || {};
+                    await this.render(this.request.query.template || this.response.template, this.response.body);
+                }
             }
-        }
     }
     async putResponse() {
-        if (this.response.redirect) {
-            this.response.type = 'application/octet-stream';
-            this.redirect(this.response.redirect);
+        if (this.response.redirect && !this.preferJson) {
+            this.ctx.response.type = 'application/octet-stream';
+            this.ctx.response.status = 302;
+            this.ctx.redirect(this.response.redirect);
+        } else {
+            if (this.response.body) this.ctx.body = this.response.body;
+            if (this.response.type) this.ctx.response.type = this.response.type;
+            if (this.response.status) this.ctx.response.status = this.response.status;
         }
-        if (this.response.body) this.ctx.body = this.response.body;
-        if (this.response.type) this.ctx.response.type = this.response.type;
-        if (this.response.status) this.ctx.response.status = this.response.status;
     }
     async saveCookie() {
         if (this.session.sid)
@@ -184,9 +176,11 @@ class Handler {
         }
         this.ctx.cookies.set('sid', this.session.sid, cookie);
     }
-    async onerror(e) {
-        console.error(e.message, e.params);
-        console.error(e.stack);
+    async onerror(error) {
+        console.error(error.message, error.params);
+        console.error(error.stack);
+        this.response.template = 'error.html';
+        this.response.body = { error };
         await this.___cleanup();
     }
 }
@@ -203,6 +197,8 @@ function Route(route, handler) {
             if (args.page) args.page = parseInt(args.page);
             if (args.rid) args.rid = new ObjectID(args.rid);
             if (args.tid) args.tid = new ObjectID(args.tid);
+            if (args.duration) args.duration = parseFloat(args.duration);
+            if (args.pids) args.pids = args.pids.split(',').map(i => i.trim());
 
             if (h.___prepare) await h.___prepare(args);
             if (h.__prepare) await h.__prepare(args);
@@ -330,6 +326,7 @@ exports.Connection = Connection;
 exports.start = function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
+    Route('*', Handler);
     server.listen(options.listen.port);
     console.log('Server listening at: %s', options.listen.port);
 };

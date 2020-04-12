@@ -27,3 +27,14 @@ Array.isDiff = function isDiff(a, b) {
         if (a[i] != b[i]) return true;
     return false;
 };
+
+Date.prototype.format = function (fmt = '%Y-%m-%d %H:%M:%S') {
+    return fmt
+        .replace('%Y', this.getFullYear())
+        .replace('%m', this.getMonth() + 1)
+        .replace('%D', this.getDate())
+        .replace('%d', this.getDate())
+        .replace('%H', this.getHours())
+        .replace('%M', this.getMinutes())
+        .replace('%S', this.getSeconds());
+};

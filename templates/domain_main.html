@@ -33,7 +33,7 @@
               </div>
             </div>
             <div class="media__body medium">
-              <h1 class="contest__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+              <h1 class="contest__title"><a href="/c/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
               <ul class="supplementary list">
                 <li>
                   <a href="{{ reverse_url('contest_main') }}?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</a>

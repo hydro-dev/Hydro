@@ -1,6 +1,6 @@
 const
     { ContestNotLiveError, ValidationError, ProblemNotFoundError,
-        ContestNotAttendedError,ContestScoreboardHiddenError } = require('../error'),
+        ContestNotAttendedError, ContestScoreboardHiddenError } = require('../error'),
     { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_CREATE_CONTEST,
         PERM_EDIT_CONTEST } = require('../permission'),
     { constants } = require('../options'),
@@ -22,7 +22,7 @@ class ContestHandler extends Handler {
         return false;
     }
     canShowScoreboard(tdoc, allowPermOverride = true) {
-        if (contest.RULES[tdoc.rule].showScoreboardFunc(tdoc, new Date())) return true;
+        if (contest.RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
         return false;
     }
@@ -37,12 +37,17 @@ class ContestHandler extends Handler {
         return tdoc, rows, udict;
     }
     async verifyProblems(pids) {
-        let pdocs = await problem.getMulti({ _id: { $in: pids } }).sort({ doc_id: 1 }).toArray();
+        console.log(pids);
+        let pdocs = await problem.getMulti({
+            $or: [
+                { _id: { $in: pids } }, { pid: { $in: pids } }
+            ]
+        }).sort({ _id: 1 }).toArray();
         if (pids.length != pdocs.length)
             for (let pid of pids) {
                 let p = false;
                 for (let pdoc of pdocs)
-                    if (pid == pdoc._id) {
+                    if (pid == pdoc._id || pid == pdoc.pid) {
                         p = true;
                         break;
                     }
@@ -105,7 +110,7 @@ class ContestDetailHandler extends ContestHandler {
         };
     }
     async post_attend() {
-        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
+        if (contest.is_done(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
         await contest.attend(this.tdoc._id, this.uid);
         this.back();
     }
@@ -141,7 +146,7 @@ class ContestEditHandler extends ContestDetailHandler {
         let dt = this.tdoc.beginAt;
         this.response.body = {
             rules, tdoc: this.tdoc, duration, path, pids: this.tdoc.pids.join(','),
-            date_text: `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`,
+            date_text: `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`,
             time_text: `${dt.getHours()}:${dt.getMinutes()}`,
             page_name: 'contest_edit'
         };
@@ -149,7 +154,7 @@ class ContestEditHandler extends ContestDetailHandler {
     async post({ beginAtDate, beginAtTime, duration, title, content, rule, pids }) {
         let beginAt, endAt;
         try {
-            beginAt = Date.parse(`${beginAtDate}T${beginAtTime}+8:00`);
+            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
@@ -237,19 +242,22 @@ class ContestCreateHandler extends ContestHandler {
         let dt = new Date(ts);
         this.response.body = {
             rules, page_name: 'contest_create',
-            date_text: `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`,
-            time_text: `${dt.getHours()}-${dt.getMinutes()}`,
+            date_text: `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`,
+            time_text: `${dt.getHours()}:${dt.getMinutes()}`,
             pids: '1000, 1001'
         };
     }
     async post({ title, content, rule, beginAtDate, beginAtTime, duration, pids }) {
         let beginAt, endAt;
+        console.log(beginAtDate, beginAtTime);
         try {
-            beginAt = Date.parse(`${beginAtDate}T${beginAtTime}+8:00`);
+            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
+            console.log(beginAt, duration);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        endAt = new Date(beginAt + duration * 3600 * 1000);
+        endAt = new Date(beginAt.getTime() + duration * 3600 * 1000);
+        console.log(endAt);
         if (beginAt >= endAt) throw new ValidationError('duration');
         await this.verifyProblems(pids);
         let tid = await contest.add(title, content, this.user._id, rule, beginAt, endAt, pids);

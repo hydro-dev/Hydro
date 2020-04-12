@@ -67,7 +67,7 @@
         {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
           <dt>{{ _('Contest') }}</dt>
           <dd>
-            <a href="/t/{{ tdoc._id }}">{{ tdoc['title'] }}</a>
+            <a href="/c/{{ tdoc._id }}">{{ tdoc['title'] }}</a>
           </dd>
         {% else %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
           <dt>{{ _('Homework') }}</dt>

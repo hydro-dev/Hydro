@@ -85,6 +85,11 @@ async function random(query) {
         return pdoc.pid;
     } else return null;
 }
+async function getList(pids) {
+    let r = {};
+    for (let pid of pids) r[pid] = await get({pid});
+    return r;
+}
 
 module.exports = {
     add,
@@ -94,5 +99,6 @@ module.exports = {
     count,
     random,
     getById,
-    getMulti
+    getMulti,
+    getList
 };
