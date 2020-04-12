@@ -1,6 +1,6 @@
 const
     validator = require('../lib/validator'),
-    { ValidationError, ContestNotFoundError } = require('../error'),
+    { ValidationError, ContestNotFoundError, ContestAlreadyAttendedError } = require('../error'),
     db = require('../service/db.js'),
     coll = db.collection('contest'),
     coll_status = db.collection('contest.status');
@@ -56,7 +56,7 @@ async function getListStatus(uid, tids) {
 }
 async function attend(tid, uid) {
     try {
-        await coll_status.insertOne({ tid, uid });
+        await coll_status.insertOne({ tid, uid, attend: 1 });
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
@@ -70,10 +70,10 @@ function is_new(tdoc, days = 1) {
 function is_upcoming(tdoc, days = 1) {
     let now = new Date().getTime();
     let readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt + days * 24 * 3600 * 1000 && now < tdoc.beginAt);
+    return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt);
 }
 function is_not_started(tdoc) {
-    return new Date() < tdoc.beginAt;
+    return (new Date()) < tdoc.beginAt;
 }
 function is_ongoing(tdoc) {
     let now = new Date();

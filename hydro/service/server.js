@@ -252,7 +252,7 @@ class ConnectionHandler {
         return new Promise((resolve, reject) => {
             template.render(name, Object.assign(context, {
                 handler: this,
-                _: this.translate,
+                _: str => str ? str.toString().translate(this.user.language) : '',
                 user: this.user
             }), (error, res) => {
                 console.timeEnd(name);

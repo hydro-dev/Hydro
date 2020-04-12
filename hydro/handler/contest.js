@@ -14,10 +14,10 @@ const
 
 class ContestHandler extends Handler {
     canViewHiddenScoreboard() {
-        return this.hasPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        return this.user.hasPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     }
     canShowRecord(tdoc, allowPermOverride = true) {
-        if (contest.RULES[tdoc.rule].showRecordFunc(tdoc, new Date())) return true;
+        if (contest.RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
         return false;
     }
@@ -27,14 +27,15 @@ class ContestHandler extends Handler {
         return false;
     }
     async getScoreboard(tid, isExport = false) {
-        let [tdoc, tsdocs] = await contest.getAndListStatus(tid);
+        let tdoc = await contest.get(tid);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
+        let tsdocs = await contest.getMultiStatus(tid).sort(contest.RULES[tdoc.rule].statusSort).toArray();
         let uids = [];
         for (let tsdoc of tsdocs) uids.push(tsdoc.uid);
         let [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc['pids'])]);
         let ranked_tsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
-        let rows = contest.RULES[tdoc.rule].scoreboard(isExport, this.translate, tdoc, ranked_tsdocs, udict, pdict);
-        return tdoc, rows, udict;
+        let rows = contest.RULES[tdoc.rule].scoreboard(isExport, str => str ? str.toString().translate(this.user.language) : '', tdoc, ranked_tsdocs, udict, pdict);
+        return [tdoc, rows, udict];
     }
     async verifyProblems(pids) {
         console.log(pids);
@@ -61,17 +62,17 @@ class ContestListHandler extends ContestHandler {
         this.response.template = 'contest_main.html';
         let tdocs, qs, tpcount;
         if (!rule) {
-            tdocs = contest.getMulti();
+            tdocs = contest.getMulti().sort({ beginAt: -1 });
             qs = '';
         } else {
             if (!contest.CONTEST_RULES.includes(rule)) throw new ValidationError('rule');
-            tdocs = contest.getMulti({ rule });
+            tdocs = contest.getMulti({ rule }).sort({ beginAt: -1 });
             qs = 'rule={0}'.format(rule);
         }
         [tdocs, tpcount] = await paginate(tdocs, page, constants.CONTEST_PER_PAGE);
         let tids = [];
         for (let tdoc of tdocs) tids.push(tdoc._id);
-        let tsdict = await contest.getListStatus(this.uid, tids);
+        let tsdict = await contest.getListStatus(this.user._id, tids);
         this.response.body = {
             page, tpcount, qs, rule, tdocs, tsdict
         };
@@ -84,7 +85,7 @@ class ContestDetailHandler extends ContestHandler {
     async get({ page = 1 }) {
         this.response.template = 'contest_detail.html';
         let [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(this.tdoc._id, this.uid),
+            contest.getStatus(this.tdoc._id, this.user._id),
             problem.getList(this.tdoc.pids)
         ]);
         let psdict = {}, rdict = {}, attended;
@@ -111,7 +112,7 @@ class ContestDetailHandler extends ContestHandler {
     }
     async post_attend() {
         if (contest.is_done(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
-        await contest.attend(this.tdoc._id, this.uid);
+        await contest.attend(this.tdoc._id, this.user._id);
         this.back();
     }
 }

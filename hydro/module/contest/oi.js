@@ -1,3 +1,5 @@
+const ranked = require('../../lib/rank');
+
 module.exports = {
     TEXT: 'OI',
     check: () => { },
@@ -10,10 +12,13 @@ module.exports = {
             }
         return { score, detail };
     },
-    showScoreboard(tdoc,now){
-        return now>tdoc.endAt; 
+    showScoreboard(tdoc, now) {
+        return now > tdoc.endAt;
     },
-    scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict) {
+    showRecord(tdoc, now) {
+        return now > tdoc.endAt;
+    },
+    scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, pdict) {
         let columns = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
@@ -49,5 +54,6 @@ module.exports = {
             rows.push(row);
         }
         return rows;
-    }
+    },
+    rank: tdocs => ranked(tdocs, (a, b) => a.score == b.score)
 };

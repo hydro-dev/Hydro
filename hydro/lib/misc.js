@@ -11,6 +11,9 @@ exports.datetime_span = function (dt, relative = true, format = '%Y-%m-%d %H:%M:
         dt.format(format)
     );
 };
+exports.nl2br = function (self) {
+    return self.replace(/\n/gm, '<br>');
+};
 exports.paginate = function* (page, num_pages) {
     let radius = 2, first, last;
     if (page > 1) {

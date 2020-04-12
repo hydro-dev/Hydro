@@ -43,11 +43,11 @@
     {% endif %}
       </li>
     {% endif %}
-    {% if handler.can_show_scoreboard(tdoc, False) %}
+    {% if handler.canShowScoreboard(tdoc, False) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_scoreboard', tid=tdoc['doc_id']) }}">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
       </a></li>
-    {% elif handler.can_view_hidden_scoreboard(tdoc) %}
+    {% elif handler.canViewHiddenScoreboard(tdoc) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('homework_scoreboard', tid=tdoc['doc_id']) }}">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>

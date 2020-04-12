@@ -1,6 +1,8 @@
 module.exports = {
     TEXT: 'ACM/ICPC',
     check: () => { },
+    showScoreboard: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
     stat: (tdoc, journal) => {
         let naccept = {}, effective = {}, detail = [], accept = 0, time = 0;
         for (let j in journal) {

@@ -92,6 +92,12 @@ class ContestNotAttendedError extends ForbiddenError {
         this.params = [tid];
     }
 }
+class ContestAlreadyAttendedError extends ForbiddenError {
+    constructor(tid, uid) {
+        super('You\'ve already attended this contest.');
+        this.params = [tid, uid];
+    }
+}
 class ContestNotLiveError extends ForbiddenError {
     constructor(tid) {
         super('This contest is not live.');
@@ -148,7 +154,7 @@ module.exports = {
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError,
     AlreadyVotedError, ContestNotAttendedError, ContestNotLiveError,
-    ContestScoreboardHiddenError
+    ContestScoreboardHiddenError, ContestAlreadyAttendedError
 };
 
 /*
@@ -276,12 +282,6 @@ class InvalidJoinInvitationCodeError(ForbiddenError):
   @property
   def message(self):
     return 'The invitation code you provided is invalid.'
-
-
-class ContestAlreadyAttendedError(ForbiddenError):
-  @property
-  def message(self):
-    return "You've already attended this contest."
 
 
 class HomeworkScoreboardHiddenError(ForbiddenError):
