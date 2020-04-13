@@ -22,12 +22,14 @@ module.exports = {
         let columns = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
-            { type: 'display_name', value: _('Display Name') },
             { type: 'total_score', value: _('Total Score') }
         ];
         for (let i in tdoc.pids)
             if (is_export)
-                columns.push({ type: 'problem_score', value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title) });
+                columns.push({
+                    type: 'problem_score',
+                    value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title)
+                });
             else
                 columns.push({
                     type: 'problem_detail',
@@ -37,13 +39,12 @@ module.exports = {
         let rows = [columns];
         for (let [rank, tsdoc] of ranked_tsdocs) {
             let tsddict = {};
-            if (tdoc.detail)
-                for (let item of tsdoc.detail)
+            if (tsdoc.journal)
+                for (let item of tsdoc.journal)
                     tsddict[item.pid] = item;
             let row = [];
             row.push({ type: 'string', value: rank });
             row.push({ type: 'user', value: udict[tsdoc.uid].uname, raw: udict[tsdoc.uid] });
-            row.push({ type: 'display_name', value: dudict[tsdoc.uid].display_name || '' });
             row.push({ type: 'string', value: tsdoc.score || 0 });
             for (let pid of tdoc.pids)
                 row.push({

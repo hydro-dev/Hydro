@@ -4,10 +4,10 @@
 <div class="row"><div class="medium-12 columns">
   <div class="section visible">
     <div class="section__header">
-      <a class="button" target="_blank" href="{{ reverse_url('contest_scoreboard_download' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_scoreboard_download', tid=tdoc['doc_id'], ext='html') }}">
+      <a class="button" target="_blank" href="/c/{{ tdoc._id }}/export?format=html">
         <span class="icon icon-download"></span> {{ _('Export as HTML') }}
       </a>
-      <a class="button" href="{{ reverse_url('contest_scoreboard_download' if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST else 'homework_scoreboard_download', tid=tdoc['doc_id'], ext='csv') }}">
+      <a class="button" href="/c/{{ tdoc._id }}/export?format=csv">
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
     </div>
@@ -32,20 +32,16 @@
           </tr>
         </thead>
         <tbody>
-        {%- for i, row in rows -%}{% if i>0 %}
+        {%- for row in rows -%}{% if loop.index0>0 %}
           <tr>
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}">
               {% if column.type == 'user' %}
                 {{ user.render_inline(column.raw, badge=false) }}
-              {% elif column.type == 'record' %}
-              {% if column.raw %}
-                <a href="/r/{{ column.raw }}">{{ column.value|nl2br }}</a>
+              {% elif column.type == 'record' and column.raw %}
+                <a href="/r/{{ column.raw }}">{{ column.value }}</a>
               {% else %}
-                {{ column['value']|nl2br }}
-              {% endif %}
-              {% else %}
-                {{ column['value']|nl2br }}
+                {{ column.value }}
               {% endif %}
               </td>
             {%- endfor -%}
