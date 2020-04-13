@@ -7,6 +7,12 @@ const
     coll_status = db.collection('problem.status');
 
 /**
+ * @typedef {import('../interface').Pdoc} Pdoc
+ * @typedef {import('bson').ObjectID} ObjectID
+ * @typedef {import('mongodb').Cursor} Cursor
+ */
+
+/**
  * @param {string} title 
  * @param {string} content 
  * @param {number} owner 
@@ -42,7 +48,12 @@ async function add({
     });
     return pid;
 }
-async function get({ pid, uid }) {
+/**
+ * @param {string|ObjectID} pid
+ * @param {number} uid
+ * @returns {Pdoc}
+ */
+async function get(pid, uid = null) {
     let query = {};
     if (pid.generationTime || pid.length == 24) query = { _id: new ObjectID(pid) };
     else query = { pid: parseInt(pid) || pid };
@@ -54,18 +65,36 @@ async function get({ pid, uid }) {
     }
     return pdoc;
 }
+/**
+ * @param {ObjectID} pid
+ * @returns {Pdoc}
+ */
 async function getById(_id) {
     _id = new ObjectID(_id);
     let pdoc = await coll.findOne({ _id });
     if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
-async function getMany(query, sort, page, limit) {
-    return await coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
+/**
+ * @param {string|ObjectID} pid
+ * @param {number} uid
+ * @returns {Pdoc[]}
+ */
+function getMany(query, sort, page, limit) {
+    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
 }
+/**
+ * @param {object} query
+ * @returns {Cursor}
+ */
 function getMulti(query) {
     return coll.find(query);
 }
+/**
+ * @param {ObjectID} _id
+ * @param {object} query
+ * @returns {Pdoc}
+ */
 async function edit(_id, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
@@ -74,6 +103,10 @@ async function edit(_id, $set) {
     if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
+/**
+ * @param {object} query 
+ * @returns {number}
+ */
 async function count(query) {
     return await coll.find(query).count();
 }
@@ -87,7 +120,7 @@ async function random(query) {
 }
 async function getList(pids) {
     let r = {};
-    for (let pid of pids) r[pid] = await get({pid});
+    for (let pid of pids) r[pid] = await get({ pid });
     return r;
 }
 

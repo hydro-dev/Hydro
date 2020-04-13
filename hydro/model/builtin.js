@@ -1,37 +1,4 @@
 const perm = require('../permission');
-const BUILTIN_USERS = [
-    {
-        _id: 0,
-        uname: 'Hydro',
-        unameLower: 'hydro',
-        email: '',
-        emailLower: '',
-        salt: '',
-        hash: '',
-        gender: 'other',
-        regat: new Date(),
-        regip: '127.0.0.1',
-        gravatar: '',
-        loginat: new Date(),
-        loginip: '127.0.0.1',
-        role: 'guest'
-    },
-    {
-        _id: 1,
-        email: 'guest@hydro',
-        emailLower: 'guest@hydro',
-        uname: 'Guest',
-        unameLower: 'guest',
-        hash: '',
-        salt: '',
-        regat: new Date(),
-        regip: '127.0.0.1',
-        loginat: new Date(),
-        loginip: '127.0.0.1',
-        gravatar: 'guest@hydro',
-        role: 'guest'
-    }
-];
 const BUILTIN_ROLES = [
     { _id: 'guest', perm: perm.PERM_BASIC },
     { _id: 'default', perm: perm.PERM_DEFAULT },
@@ -262,6 +229,6 @@ const STATUS_CODES = {
     30: 'ignored'
 };
 module.exports = {
-    BUILTIN_USERS, BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS, LANGS,
+    BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS, LANGS,
     LANG_TEXTS, LANG_HIGHLIGHT_ID, STATUS, STATUS_TEXTS, STATUS_CODES
 };

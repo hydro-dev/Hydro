@@ -1,21 +1,25 @@
-import { ObjectID } from 'bson';
-
-export interface Udoc {
-    _id: number
-    mail: string
-    mailLower: string
-    uname: string
-    unameLower: string
-    salt: string
-    hash: string
-    hashType: string
-    nAccept: number
-    nSubmit: number
-    nLike: number
-    perm: string
-    hasPerm: Function
-    checkPassword: Function
-}
+const { ObjectID } = require('bson');
+exports.udoc = {
+    _id: 0,
+    mail: '',
+    mailLower: '',
+    uname: '',
+    unameLower: '',
+    salt: '',
+    hash: '',
+    hashType: 'hydro',
+    nAccept: 0,
+    nSubmit: 0,
+    nLike: 0,
+    bio: '',
+    gender: 0,
+    regat: new Date(),
+    regip: '0.0.0.0',
+    gravatar: '',
+    loginat: new Date(),
+    loginip: '0.0.0.0'
+};
+/*
 export interface Pdoc {
     _id: ObjectID
     pid: string
@@ -65,3 +69,4 @@ export interface Tdoc {
     content: string
     pids: ObjectID[]
 }
+*/

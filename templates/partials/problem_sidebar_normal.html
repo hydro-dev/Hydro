@@ -98,9 +98,9 @@
       <dt>{{ _('Submission') }}</dt>
       <dd>
       {% if pdoc['psdoc']['status'] %}
-        <span class="icon record-status--icon {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
-        <a href="/r/{{ pdoc['psdoc']['rid'] }}" class="record-status--text {{ builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
-          {{ builtin.STATUS_TEXTS[pdoc['psdoc']['status']] }}
+        <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
+        <a href="/r/{{ pdoc['psdoc']['rid'] }}" class="record-status--text {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
+          {{ model.builtin.STATUS_TEXTS[pdoc['psdoc']['status']] }}
         </a>
       {% else %}
         {{ _('(None)') }}

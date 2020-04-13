@@ -1,6 +1,6 @@
 const
     yaml = require('js-yaml'),
-    { defaults } = require('lodash'),
+    { defaultsDeep } = require('lodash'),
     fs = require('fs'),
     path = require('path');
 
@@ -47,7 +47,7 @@ let options = {
 
 try {
     let t = yaml.safeLoad(fs.readFileSync(path.resolve(process.cwd(), 'config.yaml')));
-    options = defaults(t, options);
+    options = defaultsDeep(t, options);
 } catch (e) {
     console.error('Cannot load config');
 }

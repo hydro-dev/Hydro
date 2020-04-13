@@ -56,7 +56,7 @@ class ProblemDetailHandler extends ProblemHandler {
         this.response.template = 'problem_detail.html';
         this.uid = this.user._id;
         this.pid = pid;
-        if (pid) this.pdoc = await problem.get(this);
+        if (pid) this.pdoc = await problem.get(this.pid, this.uid);
         if (this.pdoc.hidden && this.pdoc.owner != this.uid) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
         this.response.body = {
@@ -115,7 +115,7 @@ class ProblemManageHandler extends ProblemDetailHandler {
 class ProblemSettingsHandler extends ProblemManageHandler {
     async get() {
         this.response.template = 'problem_settings.html';
-        this.ctx.body.path = [
+        this.response.body.path = [
             ['Hydro', '/'],
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pid}`, true],
@@ -141,15 +141,14 @@ class ProblemEditHandler extends ProblemManageHandler {
     }
     async post({ title, content }) {
         let pid = validator.checkPid(this.request.body.pid);
-        let pdoc = await problem.get({ pid: this.params.pid });
+        let pdoc = await problem.get(this.params.pid);
         await problem.edit(pdoc._id, { title, content, pid });
         this.response.redirect = `/p/${pid}`;
     }
 }
 
 class ProblemDataUploadHandler extends ProblemManageHandler {
-    constructor(ctx) {
-        super(ctx);
+    async prepare(){
         this.response.template = 'problem_upload.html';
     }
     async get() {

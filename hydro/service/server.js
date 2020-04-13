@@ -13,7 +13,8 @@ const
     blacklist = require('../model/blacklist'),
     token = require('../model/token'),
     opcount = require('../model/opcount'),
-    { UserNotFoundError, BlacklistedError, PermissionError } = require('../error');
+    { UserNotFoundError, BlacklistedError, PermissionError,
+        NotFoundError } = require('../error');
 
 const options = require('../options');
 let http = options.listen.https ? require('https') : require('http');
@@ -49,7 +50,7 @@ class Handler {
         this.response = {
             body: '',
             type: '',
-            status: 404,
+            status: null,
             template: null,
             redirect: null,
             attachment: name => ctx.attachment(name)
@@ -102,9 +103,10 @@ class Handler {
         await opcount.inc(op, this.request.ip, period_secs, max_operations);
     }
     back() {
-        this.ctx.redirect(this.request.headers.referer || '/');
+        this.response.redirect = this.request.headers.referer || '/';
     }
     async ___prepare() {
+        this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
         this._handler.save = this.request.cookies.get('save');
         this._handler.tokenType = token.TYPE_SESSION;
@@ -119,9 +121,8 @@ class Handler {
         let bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(this.session.uid);
-        console.log(this.user, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
-        this.csrf_token = (await token.add(token.TYPE_CSRF_TOKEN, 600, this.request.path))[0];
+        this.csrf_token = (await token.add(token.TYPE_CSRF_TOKEN, 600, { path: this.request.path }))[0];
         this.preferJson = (this.request.headers['accept'] || '').includes('application/json');
     }
     async ___cleanup() {
@@ -135,6 +136,10 @@ class Handler {
         await this.saveCookie();
     }
     async renderBody() {
+        if (!(this.response.body || this.response.template)) {
+            this.response.body = { error: new NotFoundError() };
+            this.response.template = 'error.html';
+        }
         if (!this.preferJson)
             if (this.response.body || this.response.template) {
                 if (this.request.query.noTemplate || this.preferJson) return;
@@ -150,9 +155,11 @@ class Handler {
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            if (this.response.body) this.ctx.body = this.response.body;
+            if (this.response.body != null) {
+                this.ctx.response.body = this.response.body;
+                this.ctx.response.status = this.response.status || 200;
+            }
             if (this.response.type) this.ctx.response.type = this.response.type;
-            if (this.response.status) this.ctx.response.status = this.response.status;
         }
     }
     async saveCookie() {
@@ -210,7 +217,6 @@ function Route(route, handler) {
             if (h[`_${method}`]) await h[`_${method}`](args);
             if (h[method]) await h[method](args);
 
-            console.log(ctx.request.body);
             if (method == 'post' && ctx.request.body.operation) {
                 if (h[`${method}_${ctx.request.body.operation}`])
                     await h[`${method}_${ctx.request.body.operation}`](args);
@@ -231,20 +237,22 @@ class ConnectionHandler {
      * @param {import('sockjs').Connection} conn 
      */
     constructor(conn) {
+        let that = this;
         this.conn = conn;
         this.request = {
             cookies: {
                 get(name) {
-                    return conn.cookies[name];
+                    return that.request.cookies[name];
                 },
                 set() { }
             },
             params: {},
             headers: conn.headers
         };
+        this._handler = {};
         let p = (conn.url.split('?')[1] || '').split('&');
         for (let i in p) p[i] = p[i].split('=');
-        for (let i in p) conn.params[p[i][0]] = decodeURIComponent(p[i][1]);
+        for (let i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
     renderHTML(name, context) {
         console.time(name);
@@ -292,7 +300,7 @@ function Connection(prefix, handler) {
     sock.on('connection', async conn => {
         let h = new handler(conn);
         try {
-            let args = Object.assign({}, h.conn.params);
+            let args = Object.assign({}, h.request.params);
 
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
             if (args.page) args.page = parseInt(args.page);
@@ -313,6 +321,7 @@ function Connection(prefix, handler) {
                 if (h.___cleanup) await h.___cleanup(args);
             });
         } catch (e) {
+            console.log(e);
             if (h.onerror) await h.onerror(e);
         }
     });

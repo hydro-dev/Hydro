@@ -56,10 +56,12 @@ async function end(body) {
 }
 
 class JudgeHandler extends Handler {
-    async prepare(){
+    async prepare() {
         this.checkPerm(PERM_JUDGE);
     }
-    async get() {
+    async get({ check = false }) {
+        this.response.body = {};
+        if (check) return;
         let rid = await queue.get('judge', false);
         if (rid) {
             let rdoc = await record.get(rid);
@@ -74,7 +76,6 @@ class JudgeHandler extends Handler {
             };
             this.response.body = { task };
         }
-        else this.response.body = {};
     }
     async post_next() {
         await next(this.request.body);

@@ -5,13 +5,28 @@ const
     coll = db.collection('contest'),
     coll_status = db.collection('contest.status');
 
-
 const RULES = {
     homework: require('../module/contest/homework'),
     oi: require('../module/contest/oi'),
     acm: require('../module/contest/acm')
 };
 
+/**
+ * @typedef {import('bson').ObjectID} ObjectID
+ * @typedef {import('../interface').Tdoc} Tdoc
+ */
+
+/**
+ * @param {string} title 
+ * @param {string} content 
+ * @param {number} owner 
+ * @param {string} rule 
+ * @param {Date} beginAt 
+ * @param {Date} endAt 
+ * @param {ObjectID[]} pids 
+ * @param {object} data
+ * @returns {ObjectID} tid
+ */
 async function add(title, content, owner, rule,
     beginAt = new Date(), endAt = new Date(), pids = [], data = {}) {
     validator.checkTitle(title);
@@ -23,6 +38,11 @@ async function add(title, content, owner, rule,
     let res = await coll.insertOne(data);
     return res.insertedId;
 }
+/**
+ * @param {ObjectID} tid 
+ * @param {object} $set 
+ * @returns {Tdoc} tdoc after modification
+ */
 async function edit(tid, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkIntro($set.content);
@@ -36,6 +56,10 @@ async function edit(tid, $set) {
     await coll.findOneAndUpdate({ tid }, { $set });
     return tdoc;
 }
+/**
+ * @param {ObjectID} tid 
+ * @returns {Tdoc}
+ */
 async function get(tid) {
     let tdoc = await coll.findOne({ _id: tid });
     if (!tdoc) throw new ContestNotFoundError(tid);

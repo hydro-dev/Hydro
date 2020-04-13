@@ -25,7 +25,7 @@
                 </div>
                 <div class="section__body">
                     <ul class="group-list" data-widget-cf-container>
-                        {% for category, sub_categories in builtin.CATEGORIES %}
+                        {% for category, sub_categories in model.builtin.CATEGORIES %}
                             <li class="group-list__item">
                                 <h2 class="section__title">
                                     <a href="/p?category={{ category|urlencode }}">{{ category }}</a>

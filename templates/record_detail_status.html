@@ -1,9 +1,9 @@
 <div class="section visible" id="status">
   <div class="section__header">
     <h1 class="section__title">
-      <span class="icon record-status--icon {{ builtin.STATUS_CODES[rdoc['status']] }}"></span>
-      <span class="record-status--text {{ builtin.STATUS_CODES[rdoc['status']] }}">
-        {{ builtin.STATUS_TEXTS[rdoc['status']] }}
+      <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+      <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+        {{ model.builtin.STATUS_TEXTS[rdoc['status']] }}
       </span>
     </h1>
   </div>
@@ -37,13 +37,13 @@
       <tbody>
       {% for rcdoc in rdoc.cases %}
         <tr>
-          <td class="col--case record-status--border {{ builtin.STATUS_CODES[rcdoc['status']] }}">
+          <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
             #{{ loop.index }}
           </td>
           <td class="col--status">
-            <span class="icon record-status--icon {{ builtin.STATUS_CODES[rcdoc['status']] }}"></span>
-            <span class="record-status--text {{ builtin.STATUS_CODES[rcdoc['status']] }}">
-              {{ builtin.STATUS_TEXTS[rcdoc['status']] }}
+            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+            <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+              {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
             </span>
             <span>{{ rcdoc['judgeText'] }}</span>
             <a class="tool-button" href="/wiki/help#status"><span class="icon icon-help"></span></a>

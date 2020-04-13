@@ -3,13 +3,13 @@
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
-  {% if not tdoc or rdocs %}
+  {% if not tdoc or rdocs.length %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Recent 10 Records') }}</h1>
       </div>
       <div class="section__body no-padding">
-      {% if not rdocs %}
+      {% if not rdocs.length %}
         {{ nothing.render('You have not submitted any solutions for this problem') }}
       {% else %}
         <table class="data-table">
@@ -44,7 +44,12 @@
       </div>
       <div class="section__body">
         <form method="post">
-          {{ form.form_select({label:'Code language', options:builtin.LANG_TEXTS, name:'lang', value:handler.user.codeLang}) }}
+          {{ form.form_select({
+               label:'Code language',
+               options:model.builtin.LANG_TEXTS,
+               name:'lang',
+               value:handler.user.codeLang
+             }) }}
           {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">

@@ -10,7 +10,7 @@ const
 class USER {
     constructor(user) {
         this._id = user._id;
-        this.email = user.email;
+        this.mail = user.mail;
         this.uname = user.uname;
         this.salt = user.salt;
         this.hash = user.hash;
@@ -52,12 +52,12 @@ async function getByUname(uname) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
-async function getByEmail(email, ignoreMissing = false) {
-    let emailLower = email.trim().toLowerCase();
-    let udoc = await coll.findOne({ emailLower });
+async function getByEmail(mail, ignoreMissing = false) {
+    let mailLower = mail.trim().toLowerCase();
+    let udoc = await coll.findOne({ mailLower });
     if (!udoc) {
         if (ignoreMissing) return null;
-        else throw new UserNotFoundError(email);
+        else throw new UserNotFoundError(mail);
     }
     let role = await coll_role.findOne({ _id: udoc.role || 'default' });
     udoc.perm = role.perm;
@@ -70,9 +70,9 @@ async function setPassword(uid, password) {
         $set: { salt, hash: pwhash.hash(password, salt) }
     });
 }
-async function setEmail(uid, email) {
-    validator.checkEmail(email);
-    return await setById(uid, { email, emailLower: email.trim().toLowerCase() });
+async function setEmail(uid, mail) {
+    validator.checkEmail(mail);
+    return await setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
 }
 function setById(uid, args) {
     coll.findOneAndUpdate({ _id: uid }, { $set: args });
@@ -88,17 +88,17 @@ async function changePassword(uid, currentPassword, newPassword) {
         $set: { salt, hash: pwhash.hash(newPassword, salt) }
     });
 }
-async function create({ uid, email, uname, password, regip = '127.0.0.1', role = 'default' }) {
+async function create({ uid, mail, uname, password, regip = '127.0.0.1', role = 'default' }) {
     validator.checkUname(uname);
     validator.checkPassword(password);
-    validator.checkEmail(email);
+    validator.checkEmail(mail);
     let salt = pwhash.salt();
     if (!uid) uid = system.incUserCounter();
     try {
         await coll.insertOne({
             _id: uid,
-            email,
-            emailLower: email.trim().toLowerCase(),
+            mail,
+            mailLower: mail.trim().toLowerCase(),
             uname,
             unameLower: uname.trim().toLowerCase(),
             password: pwhash.hash(password, salt),
@@ -108,7 +108,7 @@ async function create({ uid, email, uname, password, regip = '127.0.0.1', role =
             loginat: new Date(),
             loginip: regip,
             role,
-            gravatar: email
+            gravatar: mail
         });
     } catch (e) {
         throw new UserAlreadyExistError([uid, uname, email]);

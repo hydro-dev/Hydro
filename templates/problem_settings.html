@@ -55,7 +55,7 @@
         <h1 class="section__title">{{ _('Categories') }} ({{ _('click to add') }})</h1>
       </div>
       <div class="section__body">
-      {% for category, sub_categories in builtin.CATEGORIES %}
+      {% for category, sub_categories in model.builtin.CATEGORIES %}
         <div>
           <h2 class="section__title"><a class="category-a" href="javascript:;" data-category="{{ category }}">{{ category }}</a></h2>
           <ol>

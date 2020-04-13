@@ -17,7 +17,7 @@ class RecordListHandler extends Handler {
         let pdict = {}, udict = {};
         for (let rdoc of rdocs) {
             udict[rdoc.uid] = await user.getById(rdoc.uid);
-            pdict[rdoc.pid] = await problem.get({ pid: rdoc.pid, uid: this.user._id });
+            pdict[rdoc.pid] = await problem.get(rdoc.pid, this.user._id);
         }
         this.response.body = {
             path: [
@@ -51,7 +51,7 @@ class RecordRejudgeHandler extends Handler {
             await record.reset(rid);
             await queue.push('judge', rid);
         }
-        this.response.back();
+        this.back();
     }
 }
 class RecordConnectionHandler extends ConnectionHandler {
@@ -70,7 +70,7 @@ class RecordConnectionHandler extends ConnectionHandler {
     async onRecordChange(data) {
         let rdoc = data.value;
         if (rdoc.tid && rdoc.tid.toString() != this.tid) return;
-        let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.get({ pid: rdoc.pid })]);
+        let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.getById(rdoc.pid)]);
         if (pdoc.hidden && !this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }

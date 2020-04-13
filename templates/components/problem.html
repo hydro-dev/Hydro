@@ -4,9 +4,7 @@
   {%- if tdoc is none %}
     href="/p/{{ pdoc.pid }}"
   {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-    href="{{ reverse_url('contest_detail_problem', domain_id=pdoc['domain_id'], pid=pdoc['_id'], tid=tdoc['doc_id']) }}"
-  {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_HOMEWORK %}
-    href="{{ reverse_url('homework_detail_problem', domain_id=pdoc['domain_id'], pid=pdoc['_id'], tid=tdoc['doc_id']) }}"
+    href="/t/{{ tdoc._id }}/{{ pdoc._id }}"
   {%- endif %}
   >
   {%- endif %}

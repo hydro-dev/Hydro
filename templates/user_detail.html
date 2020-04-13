@@ -50,12 +50,12 @@
                   <span class="icon icon-wechat"></span>
                 </a>
               {% endif %}
-              {% if udoc.gender and udoc.gender != builtin.USER_GENDER_OTHER %}
+              {% if udoc.gender and udoc.gender != model.builtin.USER_GENDER_OTHER %}
                 <span
                   class="profile-header__contact-item"
-                  data-tooltip="{{ builtin.USER_GENDER_RANGE[udoc.gender] }}"
+                  data-tooltip="{{ model.builtin.USER_GENDER_RANGE[udoc.gender] }}"
                 >
-                  {{ builtin.USER_GENDER_ICONS[udoc.gender] }}
+                  {{ model.builtin.USER_GENDER_ICONS[udoc.gender] }}
                 </span>
               {% endif %}
               {% if handler.hasPerm(perm.PERM_MOD_BADGE) %}

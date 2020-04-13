@@ -55,7 +55,8 @@ async function reset(rid) {
         judgeTexts: [],
         compilerTexts: [],
         judgeAt: null,
-        judger: null
+        judger: null,
+        rejudged: true
     });
 }
 async function count(query) {
@@ -66,6 +67,9 @@ async function getList(rids) {
     for (let rid of rids) r[rid] = await get(rid);
     return r;
 }
+function getUserInProblemMulti(uid, pid) {
+    return coll.find({ owner: uid, pid });
+}
 
 module.exports = {
     add,
@@ -74,5 +78,6 @@ module.exports = {
     update,
     count,
     reset,
-    getList
+    getList,
+    getUserInProblemMulti
 };

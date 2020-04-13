@@ -250,15 +250,12 @@ class ContestCreateHandler extends ContestHandler {
     }
     async post({ title, content, rule, beginAtDate, beginAtTime, duration, pids }) {
         let beginAt, endAt;
-        console.log(beginAtDate, beginAtTime);
         try {
             beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
-            console.log(beginAt, duration);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         endAt = new Date(beginAt.getTime() + duration * 3600 * 1000);
-        console.log(endAt);
         if (beginAt >= endAt) throw new ValidationError('duration');
         await this.verifyProblems(pids);
         let tid = await contest.add(title, content, this.user._id, rule, beginAt, endAt, pids);

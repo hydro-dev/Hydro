@@ -20,7 +20,7 @@
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="{{ reverse_url('contest_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="/t/{{ tdoc._id }}/p/{{ pdoc._id }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif handler.is_done(tdoc) %}
