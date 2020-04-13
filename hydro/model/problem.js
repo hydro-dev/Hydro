@@ -120,7 +120,7 @@ async function random(query) {
 }
 async function getList(pids) {
     let r = {};
-    for (let pid of pids) r[pid] = await get({ pid });
+    for (let pid of pids) r[pid] = await get(pid);
     return r;
 }
 

@@ -4,6 +4,7 @@ const
         PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../permission'),
     problem = require('../model/problem'),
     record = require('../model/record'),
+    contest = require('../model/contest'),
     user = require('../model/user'),
     bus = require('../service/bus'),
     queue = require('../service/queue'),
@@ -75,14 +76,16 @@ class RecordConnectionHandler extends ConnectionHandler {
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
-class RecordDetailConnectionHandler extends ConnectionHandler {
+class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(ConnectionHandler) {
     async prepare({ rid }) {
         let rdoc = await record.get(rid);
-        if (rdoc.tid)
-            if (!await this.rdocContestVisible(rdoc)) {
+        if (rdoc.tid) {
+            let tdoc = await contest.get(rdoc.tid);
+            if (!this.canShowRecord(tdoc)) {
                 this.close();
                 return;
             }
+        }
         this.rid = rid;
         bus.subscribe(['record_change'], this.onRecordChange);
         this.onRecordChange({ value: rdoc });

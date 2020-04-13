@@ -30,7 +30,7 @@
         {% endif %}
         {% if tdoc %}
         {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-        {% if handler.is_done(tdoc) %}
+        {% if model.contest.is_done(tdoc) %}
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>

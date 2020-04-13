@@ -1,7 +1,11 @@
 const
+    user = require('./user'),
+    problem = require('./problem'),
+    { ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
+        ContestNotAttendedError, ProblemNotFoundError, ContestScoreboardHiddenError } = require('../error'),
+    { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission'),
     validator = require('../lib/validator'),
-    { ValidationError, ContestNotFoundError, ContestAlreadyAttendedError } = require('../error'),
-    db = require('../service/db.js'),
+    db = require('../service/db'),
     coll = db.collection('contest'),
     coll_status = db.collection('contest.status');
 
@@ -65,13 +69,13 @@ async function get(tid) {
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
-async function get_random_id(query) {
-    let pdocs = coll.find(query);
-    let pcount = await pdocs.count();
-    if (pcount) {
-        let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
-        return pdoc.pid;
-    } else return null;
+async function updateStatus(tid, uid, rid, pid, accept, score) {
+    let tdoc = await get(tid);
+    let tsdoc = await coll_status.findOneAndUpdate({ tid: tdoc._id, uid }, {
+        $push: { journal: { rid, pid, accept, score } },
+        $inc: { rev: 1 }
+    }, { upsert: true });
+    if (!tsdoc.value.attend) throw new ContestNotAttendedError(tid, uid);
 }
 async function getListStatus(uid, tids) {
     let r = {};
@@ -85,6 +89,9 @@ async function attend(tid, uid) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
     await coll.findOneAndUpdate({ _id: tid }, { $inc: { attend: 1 } });
+}
+function getMultiStatus(query) {
+    return coll_status.find(query);
 }
 function is_new(tdoc, days = 1) {
     let now = new Date().getTime();
@@ -106,11 +113,47 @@ function is_ongoing(tdoc) {
 function is_done(tdoc) {
     return tdoc.endAt <= new Date();
 }
+
+const ContestHandlerMixin = c => class extends c {
+    canViewHiddenScoreboard() {
+        return this.user.hasPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+    }
+    canShowRecord(tdoc, allowPermOverride = true) {
+        if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
+        if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
+        return false;
+    }
+    canShowScoreboard(tdoc, allowPermOverride = true) {
+        if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
+        if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
+        return false;
+    }
+    async getScoreboard(tid, isExport = false) {
+        let tdoc = await get(tid);
+        if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
+        let tsdocs = await getMultiStatus(tid).sort(RULES[tdoc.rule].statusSort).toArray();
+        let uids = [];
+        for (let tsdoc of tsdocs) uids.push(tsdoc.uid);
+        let [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc['pids'])]);
+        let ranked_tsdocs = RULES[tdoc.rule].rank(tsdocs);
+        let rows = RULES[tdoc.rule].scoreboard(isExport, str => str ? str.toString().translate(this.user.language) : '', tdoc, ranked_tsdocs, udict, pdict);
+        return [tdoc, rows, udict];
+    }
+    async verifyProblems(pids) {
+        let r = [];
+        for (let pid of pids) {
+            let res = await problem.get(pid);
+            if (res) r.push(res._id);
+            else throw new ProblemNotFoundError(pid);
+        }
+        return r;
+    }
+};
+
 module.exports = {
-    RULES, add, getListStatus, attend, edit, get, get_random_id,
+    RULES, ContestHandlerMixin, add, getListStatus, attend, edit, get, updateStatus,
     count: query => coll.find(query).count(),
     getMulti: query => coll.find(query),
-    getMultiStatus: query => coll_status.find(query),
     getStatus: (tid, uid) => coll_status.findOne({ tid, uid }),
     setStatus: (tid, uid, $set) => coll_status.findOneAndUpdate({ tid, uid }, { $set }),
     is_new, is_upcoming, is_not_started, is_ongoing, is_done,

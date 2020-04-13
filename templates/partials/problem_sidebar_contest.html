@@ -7,7 +7,7 @@
 {% endif %}
   <div>
     <ol class="menu">
-    {% if handler.is_ongoing(tdoc) %}
+    {% if model.contest.is_ongoing(tdoc) %}
     {% if page_name == 'contest_detail_problem' %}
       <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
@@ -16,19 +16,19 @@
         <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
       </a></li>
     {% else %}
-      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_detail_problem', tid=tdoc['doc_id'], pid=pdoc['_id']) }}">
+      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc._id }}/p/{{ pdoc._id }}">
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="/t/{{ tdoc._id }}/p/{{ pdoc._id }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="/c/{{ tdoc._id }}/p/{{ pdoc._id }}/submit">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif handler.is_done(tdoc) %}
+    {% elif model.contest.is_done(tdoc) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
-    {% if handler.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+    {% if pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
         <span class="icon icon-edit"></span>  {{ _('Edit') }}

@@ -1,8 +1,7 @@
 const
     { ContestNotLiveError, ValidationError, ProblemNotFoundError,
-        ContestNotAttendedError, ContestScoreboardHiddenError } = require('../error'),
-    { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, PERM_CREATE_CONTEST,
-        PERM_EDIT_CONTEST } = require('../permission'),
+        ContestNotAttendedError } = require('../error'),
+    { PERM_CREATE_CONTEST, PERM_EDIT_CONTEST } = require('../permission'),
     { constants } = require('../options'),
     paginate = require('../lib/paginate'),
     contest = require('../model/contest'),
@@ -11,52 +10,7 @@ const
     user = require('../model/user'),
     { Route, Handler } = require('../service/server');
 
-
-class ContestHandler extends Handler {
-    canViewHiddenScoreboard() {
-        return this.user.hasPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-    }
-    canShowRecord(tdoc, allowPermOverride = true) {
-        if (contest.RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
-        if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
-        return false;
-    }
-    canShowScoreboard(tdoc, allowPermOverride = true) {
-        if (contest.RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
-        if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
-        return false;
-    }
-    async getScoreboard(tid, isExport = false) {
-        let tdoc = await contest.get(tid);
-        if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        let tsdocs = await contest.getMultiStatus(tid).sort(contest.RULES[tdoc.rule].statusSort).toArray();
-        let uids = [];
-        for (let tsdoc of tsdocs) uids.push(tsdoc.uid);
-        let [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc['pids'])]);
-        let ranked_tsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
-        let rows = contest.RULES[tdoc.rule].scoreboard(isExport, str => str ? str.toString().translate(this.user.language) : '', tdoc, ranked_tsdocs, udict, pdict);
-        return [tdoc, rows, udict];
-    }
-    async verifyProblems(pids) {
-        console.log(pids);
-        let pdocs = await problem.getMulti({
-            $or: [
-                { _id: { $in: pids } }, { pid: { $in: pids } }
-            ]
-        }).sort({ _id: 1 }).toArray();
-        if (pids.length != pdocs.length)
-            for (let pid of pids) {
-                let p = false;
-                for (let pdoc of pdocs)
-                    if (pid == pdoc._id || pid == pdoc.pid) {
-                        p = true;
-                        break;
-                    }
-                if (!p) throw new ProblemNotFoundError(pid);
-            }
-        return pids;
-    }
-}
+const ContestHandler = contest.ContestHandlerMixin(Handler);
 class ContestListHandler extends ContestHandler {
     async get({ rule = 0, page = 1 }) {
         this.response.template = 'contest_main.html';
@@ -91,7 +45,7 @@ class ContestDetailHandler extends ContestHandler {
         let psdict = {}, rdict = {}, attended;
         if (tsdoc) {
             attended = tsdoc.attend == 1;
-            for (let pdetail in tsdoc.detail || [])
+            for (let pdetail of tsdoc.journal || [])
                 psdict[pdetail.pid] = pdetail;
             if (this.canShowRecord(this.tdoc)) {
                 let q = [];
@@ -161,7 +115,7 @@ class ContestEditHandler extends ContestDetailHandler {
         }
         endAt = new Date(beginAt + duration * 3600 * 1000);
         if (beginAt >= endAt) throw new ValidationError('duration');
-        await this.verifyProblems(pids);
+        pids = await this.verifyProblems(pids);
         await contest.edit(this.tdoc._id, title, content, rule, beginAt, endAt, pids);
         if (this.tdoc.beginAt != beginAt || this.tdoc.endAt != endAt
             || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule != rule)
@@ -172,7 +126,7 @@ class ContestEditHandler extends ContestDetailHandler {
 }
 class ContestProblemHandler extends ContestDetailHandler {
     async prepare({ tid, pid }) {
-        [this.tdoc, this.pdoc] = await Promise.all([contest.get(tid), problem.get({ pid, uid: this.user._id })]);
+        [this.tdoc, this.pdoc] = await Promise.all([contest.get(tid), problem.get(pid, this.user._id)]);
         [this.tsdoc, this.udoc] = await Promise.all([
             contest.getStatus(this.tdoc._id, this.user._id),
             user.getById(this.tdoc.owner)
@@ -183,7 +137,9 @@ class ContestProblemHandler extends ContestDetailHandler {
             if (!this.attended) throw new ContestNotAttendedError(this.tdoc._id);
             if (!contest.is_ongoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
         }
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(pid, this.tdoc._id);
+        console.log(this.tdoc.pids, this.pdoc._id);
+        if (!this.tdoc.pids.map(s => s.toString()).includes(this.pdoc._id.toString()))
+            throw new ProblemNotFoundError(pid, this.tdoc._id);
     }
     async get({ tid }) {
         let path = [
@@ -257,7 +213,7 @@ class ContestCreateHandler extends ContestHandler {
         }
         endAt = new Date(beginAt.getTime() + duration * 3600 * 1000);
         if (beginAt >= endAt) throw new ValidationError('duration');
-        await this.verifyProblems(pids);
+        pids = await this.verifyProblems(pids);
         let tid = await contest.add(title, content, this.user._id, rule, beginAt, endAt, pids);
         this.response.body = { tid };
         this.response.redirect = `/c/${tid}`;

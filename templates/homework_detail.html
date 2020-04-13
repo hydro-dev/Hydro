@@ -19,7 +19,7 @@
     {% if handler.is_not_started(tdoc) %}
       {{ nothing.render('This homework is not open and you cannot view problems.') }}
     {% else %}
-    {% if attended or handler.is_done(tdoc) %}
+    {% if attended or model.contest.is_done(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>

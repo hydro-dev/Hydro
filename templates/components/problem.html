@@ -3,8 +3,8 @@
   <a
   {%- if tdoc is none %}
     href="/p/{{ pdoc.pid }}"
-  {%- elif tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-    href="/t/{{ tdoc._id }}/{{ pdoc._id }}"
+  {%- else %}
+    href="/c/{{ tdoc._id }}/p/{{ pdoc._id }}"
   {%- endif %}
   >
   {%- endif %}

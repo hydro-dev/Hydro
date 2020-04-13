@@ -22,7 +22,7 @@
         <span class="icon icon-homework"></span> {{ _('View Homework') }}
       </a></li>
     {% endif %}
-    {% if not attended and not handler.is_done(tdoc) %}
+    {% if not attended and not model.contest.is_done(tdoc) %}
       <li class="menu__item">
     {% if handler.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <form action="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" method="POST">

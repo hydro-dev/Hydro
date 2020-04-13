@@ -23,7 +23,7 @@
       <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="{{ reverse_url('homework_detail_problem_submit', tid=tdoc['doc_id'], pid=pdoc['_id']) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif handler.is_done(tdoc) %}
+    {% elif model.contest.is_done(tdoc) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>

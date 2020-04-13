@@ -47,7 +47,7 @@
                     {{ _('Open Since') }}: {{ datetime_span(tdoc['begin_at']) }}
                   </li>
                   <li>
-                  {% if handler.is_homework_extended(tdoc) or handler.is_done(tdoc) %}
+                  {% if handler.is_homework_extended(tdoc) or model.homework.is_done(tdoc) %}
                     {{ _('Hard Deadline') }}: {{ datetime_span(tdoc['end_at']) }}
                   {% else %}
                     {{ _('Deadline') }}: {{ datetime_span(tdoc['penalty_since']) }}

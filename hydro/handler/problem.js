@@ -56,7 +56,7 @@ class ProblemDetailHandler extends ProblemHandler {
         this.response.template = 'problem_detail.html';
         this.uid = this.user._id;
         this.pid = pid;
-        if (pid) this.pdoc = await problem.get(this.pid, this.uid);
+        if (pid) this.pdoc = await problem.get(pid, this.uid);
         if (this.pdoc.hidden && this.pdoc.owner != this.uid) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
         this.response.body = {
