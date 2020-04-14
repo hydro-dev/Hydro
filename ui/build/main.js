@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import { argv } from 'yargs';
 import root from './utils/root';
 import runGulp from './runGulp';

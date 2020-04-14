@@ -1,22 +1,16 @@
-/* eslint-disable */
-import _ from 'lodash';
-
+/* eslint-disable import/no-extraneous-dependencies */
 import webpack from 'webpack';
 import fs from 'fs-extra';
 
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import ExtractCssPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import UglifyJsPlugin from 'uglifyjs-webpack-plugin';
-import StaticManifestPlugin from '../plugins/webpackStaticManifestPlugin.js';
-import DummyOutputPlugin from '../plugins/webpackDummyOutputPlugin.js';
-import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix.js';
-import root from '../utils/root.js';
-
-const extractProjectCSS = new ExtractTextPlugin({ filename: 'vj4.css?[sha1:contenthash:hex:10]', allChunks: true });
-const extractVendorCSS = new ExtractTextPlugin({ filename: 'vendors.css?[sha1:contenthash:hex:10]', allChunks: true });
+import StaticManifestPlugin from '../plugins/webpackStaticManifestPlugin';
+import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
+import root from '../utils/root';
 
 const beautifyOutputUrl = mapWebpackUrlPrefix([
   { prefix: 'node_modules/katex/dist/', replace: 'katex/' },
@@ -49,10 +43,6 @@ export default function (env = {}) {
     };
   }
 
-  function jsonLoader() {
-    return 'json-loader';
-  }
-
   function postcssLoader() {
     return {
       loader: 'postcss-loader',
@@ -60,18 +50,6 @@ export default function (env = {}) {
         sourceMap: env.production,
       },
     };
-  }
-
-  function styleLoader() {
-    return 'style-loader';
-  }
-
-  function cssLoader() {
-    return 'css-loader?importLoaders=1';
-  }
-
-  function stylusLoader() {
-    return 'stylus-loader';
   }
 
   function fileLoader() {
@@ -83,8 +61,18 @@ export default function (env = {}) {
     };
   }
 
+  function extractCssLoader() {
+    return {
+      loader: ExtractCssPlugin.loader,
+      options: {
+        publicPath: '/public/path/to/',
+      },
+    };
+  }
+
   const config = {
     bail: true,
+    mode: 'production',
     profile: true,
     context: root(),
     devtool: env.production ? 'source-map' : false,
@@ -112,7 +100,7 @@ export default function (env = {}) {
       rules: [
         {
           test: /\.jsx?$/,
-          exclude: /node_modules[\/\\]/,
+          exclude: /node_modules[/\\]/,
           enforce: 'pre',
           use: [eslintLoader()],
         },
@@ -124,12 +112,8 @@ export default function (env = {}) {
         {
           // ES2015 scripts
           test: /\.js$/,
-          exclude: /node_modules[\/\\]/,
+          exclude: /node_modules[/\\]/,
           use: [babelLoader()],
-        },
-        {
-          test: /\.json$/,
-          use: [jsonLoader()],
         },
         {
           // fix pickadate loading
@@ -142,35 +126,23 @@ export default function (env = {}) {
           ],
         },
         {
-          // project stylus stylesheets
           test: /\.styl$/,
-          use: env.watch
-            ? [styleLoader(), cssLoader(), postcssLoader(), stylusLoader()]
-            : extractProjectCSS.extract([cssLoader(), postcssLoader(), stylusLoader()])
+          use: [extractCssLoader(), 'css-loader?importLoaders=1', postcssLoader(), 'stylus-loader']
           ,
         },
         {
-          // vendors stylesheets
           test: /\.css$/,
-          include: /node_modules[\/\\]/,
-          use: env.watch
-            ? [styleLoader(), cssLoader()]
-            : extractVendorCSS.extract([cssLoader()])
-          ,
-        },
-        {
-          // project stylesheets
-          test: /\.css$/,
-          exclude: /node_modules[\/\\]/,
-          use: env.watch
-            ? [styleLoader(), cssLoader(), postcssLoader()]
-            : extractProjectCSS.extract([cssLoader(), postcssLoader()])
+          use: [extractCssLoader(), 'css-loader?importLoaders=1', postcssLoader()]
           ,
         },
       ],
     },
+    optimization: {
+      splitChunks: {
+        minChunks: 2,
+      },
+    },
     plugins: [
-
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery',
@@ -186,41 +158,12 @@ export default function (env = {}) {
 
       new MonacoWebpackPlugin({
         // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go']
+        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go'],
       }),
 
-      // extract stylesheets into a standalone file
-      env.watch
-        ? new DummyOutputPlugin('vendors.css')
-        : extractVendorCSS,
-
-      env.watch
-        ? new DummyOutputPlugin('vj4.css')
-        : extractProjectCSS,
-
-      // extract 3rd-party JavaScript libraries into a standalone file
-      env.watch
-        ? new DummyOutputPlugin('vendors.js')
-        : new webpack.optimize.CommonsChunkPlugin({
-          name: 'vendors',
-          minChunks: (module, count) => (
-            module.resource
-                        && module.resource.indexOf(root('node_modules'))
-                        && module.resource.match(/\.jsx?$/)
-          ),
-        }),
-
-      // extract manifest into a standalone file
-      env.watch
-        ? new DummyOutputPlugin('manifest.js')
-        : new webpack.optimize.CommonsChunkPlugin({
-          name: 'manifest',
-        }),
-
-      new webpack.optimize.CommonsChunkPlugin({
-        children: true,
-        async: true,
-        minChunks: 2,
+      new ExtractCssPlugin({
+        filename: 'vj4.css?[contenthash:10]',
+        allChunks: true,
       }),
 
       // copy static assets
@@ -272,8 +215,6 @@ export default function (env = {}) {
       new webpack.LoaderOptionsPlugin({
         options: {
           context: root(),
-
-          // Beautify the output path of assets
           customInterpolateName: (url, name, options) => beautifyOutputUrl(url),
         },
       }),

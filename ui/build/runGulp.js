@@ -1,9 +1,8 @@
-/* eslint-disable */
-import _ from 'lodash';
+/* eslint-disable import/no-extraneous-dependencies */
 import gulp from 'gulp';
 import log from 'fancy-log';
 import chalk from 'chalk';
-import gulpConfig from './config/gulp.js';
+import gulpConfig from './config/gulp';
 
 export default async function ({ watch, production }) {
   function handleError(err) {

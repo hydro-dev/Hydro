@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 const _ = require('lodash');
 const crypto = require('crypto');
 

@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import yaml from 'js-yaml';
 
 import PluginError from 'plugin-error';

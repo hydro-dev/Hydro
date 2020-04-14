@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import fs from 'fs';
 import webpack from 'webpack';
 import root from './utils/root';
@@ -7,12 +7,6 @@ import webpackConfig from './config/webpack';
 export default function ({ watch, production }) {
   const compiler = webpack(webpackConfig({ watch, production }));
   compiler.apply(new webpack.ProgressPlugin());
-
-  const outputOptions = {
-    colors: true,
-    errorDetails: true,
-    optimizationBailout: production,
-  };
 
   function compilerCallback(err, stats) {
     if (err) {

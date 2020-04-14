@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import PluginError from 'plugin-error';
 import through from 'through2';
 import fs from 'fs-extra';

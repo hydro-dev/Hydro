@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import _ from 'lodash';
 
 export default function mapWebpackUrlPrefix(mapList) {

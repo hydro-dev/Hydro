@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable import/no-extraneous-dependencies */
 import _ from 'lodash';
 import moment from 'moment';
 import gulp from 'gulp';
@@ -14,7 +14,7 @@ import vjGenerateLocales from '../plugins/gulpGenerateLocales';
 import vjTouch from '../plugins/gulpTouch';
 
 let isInWatchMode = false;
-export let tasks = {};
+export const tasks = {};
 const iconTimestamp = moment.utc([2017, 0, 1, 0, 0, 0, 0]).unix();
 
 function handleWatchChange(name, r = 300) {
