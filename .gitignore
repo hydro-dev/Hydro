@@ -6,3 +6,4 @@ ui/misc/.iconfont
 ui/static/locale
 .webpackStats.json
 .cache
+dist/

@@ -1,10 +1,10 @@
 {
-    "name": "hydrofrontend",
+    "name": "hydro",
     "version": "0.0.0",
-    "main": "vj5/development.js",
-    "repository": "https://github.com/masnn/vj5.git",
+    "main": "hydro/development.js",
+    "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
-    "license": "MIT",
+    "license": "GPL-3.0-only",
     "dependencies": {
         "axios": "^0.19.0",
         "bson": "^4.0.2",
@@ -25,5 +25,23 @@
     },
     "devDependencies": {
         "eslint": "^6.6.0"
+    },
+    "scripts": {
+        "build": "webpack --config webpack.config.js",
+        "pack": "pkg .",
+        "lint": "eslint judger --fix"
+    },
+    "pkg": {
+        "scripts": [
+            "hydro/**.js"
+        ],
+        "assets": [
+            ".uibuild/*",
+            "locales/*",
+            "templates/*"
+        ]
+    },
+    "bin": {
+        "judger": "hydro/development.js"
     }
 }

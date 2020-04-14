@@ -1,4 +1,3 @@
-const { ObjectID } = require('bson');
 exports.udoc = {
     _id: 0,
     mail: '',

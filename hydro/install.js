@@ -5,7 +5,7 @@ const
     builtin = require('./model/builtin'),
     pwhash = require('./lib/pwhash'),
     options = require('./options'),
-    { udoc } = require('../interfaces');
+    { udoc } = require('./interface');
 
 async function run() {
     let mongourl = 'mongodb://';

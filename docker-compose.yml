@@ -1,0 +1,16 @@
+version: '3'
+services:
+    hydro:
+        image: hydrooj/hydro:latest
+        restart: always
+        links:
+        - mongo
+        volumes: 
+        - ./config.yaml:/config/config.yaml
+        ports:
+        - 8888:8888
+    mongo:
+        image: mongo:latest
+        restart: always
+        volumes:
+        - ./db:/data/db

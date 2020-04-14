@@ -1,8 +1,9 @@
 const
-    yaml = require('js-yaml'),
-    { defaultsDeep } = require('lodash'),
     fs = require('fs'),
-    path = require('path');
+    os = require('os'),
+    path = require('path'),
+    yaml = require('js-yaml'),
+    { defaultsDeep } = require('lodash');
 
 let options = {
     db: {
@@ -46,7 +47,10 @@ let options = {
 };
 
 try {
-    let t = yaml.safeLoad(fs.readFileSync(path.resolve(process.cwd(), 'config.yaml')));
+    let f = path.resolve(process.cwd(), 'config.yaml');
+    if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.yaml');
+    if (!fs.existsSync(f)) f = path.resolve('/config/config.yaml');
+    let t = yaml.safeLoad(fs.readFileSync(f));
     options = defaultsDeep(t, options);
 } catch (e) {
     console.error('Cannot load config');
