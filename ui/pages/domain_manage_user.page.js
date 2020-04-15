@@ -73,7 +73,7 @@ const page = new NamedPage('domain_manage_user', () => {
   function ensureAndGetSelectedUsers() {
     const users = _.map(
       $('.domain-users tbody [type="checkbox"]:checked'),
-      ch => $(ch).closest('tr').attr('data-uid'),
+      (ch) => $(ch).closest('tr').attr('data-uid'),
     );
     if (users.length === 0) {
       Notification.error(i18n('Please select at least one user to perform this operation.'));
@@ -153,7 +153,7 @@ const page = new NamedPage('domain_manage_user', () => {
   $('[name="add_user"]').click(() => handleClickAddUser());
   $('[name="remove_selected"]').click(() => handleClickRemoveSelected());
   $('[name="set_roles"]').click(() => handleClickSetSelected());
-  $('.domain-users [name="role"]').change(ev => handleChangeUserRole(ev));
+  $('.domain-users [name="role"]').change((ev) => handleChangeUserRole(ev));
 });
 
 export default page;

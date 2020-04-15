@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import ScratchpadRecordsRow from './ScratchpadRecordsRowContainer';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   rows: state.records.rows,
   isLoading: state.ui.records.isLoading,
 });
@@ -23,7 +23,7 @@ export default class ScratchpadRecordsTableContainer extends React.PureComponent
           <col className="col--at" />
         </colgroup>
         <tbody>
-          {this.props.rows.map(rowId => (
+          {this.props.rows.map((rowId) => (
             <ScratchpadRecordsRow key={rowId} id={rowId} />
           ))}
         </tbody>

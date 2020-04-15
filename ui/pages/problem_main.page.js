@@ -20,7 +20,7 @@ function setDomSelected($dom, selected) {
 async function updateSelection(sendRequest = true) {
   dirtyCategories.forEach(({ type, category, subcategory }) => {
     let item = categories[category];
-    const isSelected = item.select || _.some(item.children, c => c.select);
+    const isSelected = item.select || _.some(item.children, (c) => c.select);
     setDomSelected(item.$tag, isSelected);
     if (isSelected) {
       selections.push(category);
@@ -43,8 +43,8 @@ async function updateSelection(sendRequest = true) {
   if (sendRequest) {
     // a list of categories which subcategory is selected
     const requestCategoryTags = _.uniq(selections
-      .filter(s => s.indexOf(',') !== -1)
-      .map(s => s.split(',')[0]));
+      .filter((s) => s.indexOf(',') !== -1)
+      .map((s) => s.split(',')[0]));
     // drop the category if its subcategory is selected
     const requestTags = _.uniq(_.pullAll(selections, requestCategoryTags));
     let url;
@@ -53,7 +53,7 @@ async function updateSelection(sendRequest = true) {
     } else {
       url = substitute(decodeURIComponent(Context.getProblemUrlWithCategory), {
         category: requestTags
-          .map(tag => tag.split(',').map(encodeURIComponent).join(','))
+          .map((tag) => tag.split(',').map(encodeURIComponent).join(','))
           .join('+'), // build a beautiful URL
       });
     }

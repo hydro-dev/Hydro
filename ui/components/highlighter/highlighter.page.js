@@ -7,7 +7,7 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
       prismjs.highlightBlocks($container);
     }
     runHighlight($('body'));
-    $(document).on('vjContentNew', e => runHighlight($(e.target)));
+    $(document).on('vjContentNew', (e) => runHighlight($(e.target)));
   });
 });
 

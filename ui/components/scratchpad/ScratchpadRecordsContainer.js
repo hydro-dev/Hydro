@@ -11,7 +11,7 @@ import Panel from './PanelComponent';
 import PanelButton from './PanelButtonComponent';
 import ScratchpadRecordsTable from './ScratchpadRecordsTableContainer';
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   loadSubmissions() {
     dispatch({
       type: 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS',

@@ -9,7 +9,7 @@ import 'jquery.easing';
 import i18n from 'vj/utils/i18n';
 import Message from './MessageComponent';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   activeId: state.activeId,
   item: state.activeId !== null
     ? state.dialogues[state.activeId]

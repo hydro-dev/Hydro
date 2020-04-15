@@ -4,11 +4,11 @@ import { connect } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import DataInput from './DataInputComponent';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   data: state.pretest.data,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   handleDataChange(id, type, value) {
     dispatch({
       type: 'SCRATCHPAD_PRETEST_DATA_CHANGE',
@@ -36,12 +36,12 @@ export default class ScratchpadPretestTabPaneContainer extends React.PureCompone
         <DataInput
           title={i18n('Sample Input')}
           value={this.props.input}
-          onChange={v => this.props.handleDataChange(this.props.id, 'input', v)}
+          onChange={(v) => this.props.handleDataChange(this.props.id, 'input', v)}
         />
         <DataInput
           title={i18n('Sample Output')}
           value={this.props.output}
-          onChange={v => this.props.handleDataChange(this.props.id, 'output', v)}
+          onChange={(v) => this.props.handleDataChange(this.props.id, 'output', v)}
         />
       </div>
     );

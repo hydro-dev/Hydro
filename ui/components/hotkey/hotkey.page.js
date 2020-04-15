@@ -54,7 +54,7 @@ function testElementHotkey(hotkey, $element, attr) {
 
 const hotkeyPage = new AutoloadPage('hotkeyPage', () => {
   $(document).on('keydown', (ev) => {
-    const hotkey = ['alt', 'ctrl', 'shift'].filter(modifyKey => ev[`${modifyKey}Key`]);
+    const hotkey = ['alt', 'ctrl', 'shift'].filter((modifyKey) => ev[`${modifyKey}Key`]);
     if (ev.metaKey && !ev.ctrlKey) {
       hotkey.push('ctrl');
     }

@@ -5,7 +5,7 @@ export default function reducer(state = {}, action) {
   switch (action.type) {
   case 'DIALOGUES_LOAD_DIALOGUES_FULFILLED': {
     const dialogues = action.payload.messages;
-    return _.fromPairs(_.map(dialogues, d => [d._id, false]));
+    return _.fromPairs(_.map(dialogues, (d) => [d._id, false]));
   }
   case 'DIALOGUES_CREATE': {
     const { id } = action.payload;

@@ -11,9 +11,9 @@ import { parse as parseMongoId } from 'vj/utils/mongoId';
 import i18n from 'vj/utils/i18n';
 import * as recordEnum from 'vj/constant/record';
 
-const shouldShowDetail = data => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status];
+const shouldShowDetail = (data) => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status];
 
-const isPretest = data => data.type === recordEnum.TYPE_PRETEST;
+const isPretest = (data) => data.type === recordEnum.TYPE_PRETEST;
 
 const getRecordDetail = (data) => {
   if (!shouldShowDetail(data)) {
@@ -41,7 +41,7 @@ const getRecordDetail = (data) => {
   });
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   items: state.records.items,
 });
 
@@ -64,14 +64,13 @@ export default class ScratchpadRecordsRowContainer extends React.PureComponent {
     const { data } = this.props;
     const submitAt = parseMongoId(data._id).timestamp * 1000;
     return (
-      <tr onClick={ev => this.handleRowClick(ev, data._id)}>
+      <tr onClick={(ev) => this.handleRowClick(ev, data._id)}>
         <td className={`col--detail record-status--border ${recordEnum.STATUS_CODES[data.status]}`}>
           <span className={`icon record-status--icon ${recordEnum.STATUS_CODES[data.status]}`}></span>
           <span className="icol icol--pretest">
             {isPretest(data)
               ? <span className={`flag record-status--background ${recordEnum.STATUS_CODES[data.status]}`}>{i18n('Pretest')}</span>
-              : ''
-            }
+              : ''}
           </span>
           {getRecordDetail(data)}
         </td>

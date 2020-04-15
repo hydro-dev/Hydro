@@ -24,7 +24,7 @@ export default function touch(mtime) {
       return;
     }
     touchFile(file)
-      .catch(err => this.emit('error', err))
+      .catch((err) => this.emit('error', err))
       .then(() => {
         this.push(file);
         callback();

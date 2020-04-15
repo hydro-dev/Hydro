@@ -23,7 +23,7 @@ panes: [{
 function buildNestedPane([a, ...panes]) {
   const elements = [
     a,
-    ...panes.filter(p => p.props.visible),
+    ...panes.filter((p) => p.props.visible),
   ];
   if (elements.length === 1) {
     return a;
@@ -43,11 +43,11 @@ function buildNestedPane([a, ...panes]) {
     ));
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   ui: state.ui,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   changeUiSize: _.debounce((uiElement, size) => {
     dispatch({
       type: 'SCRATCHPAD_UI_CHANGE_SIZE',
@@ -73,7 +73,7 @@ export default class ScratchpadContainer extends React.PureComponent {
         minSize={250}
         split="vertical"
         primary="second"
-        onChange={size => this.handleChangeSize('main', size)}
+        onChange={(size) => this.handleChangeSize('main', size)}
       >
         <Dom className="scratchpad__problem" childDom={$('.problem-content').get(0)} />
         {buildNestedPane([
@@ -83,12 +83,12 @@ export default class ScratchpadContainer extends React.PureComponent {
           </SplitPaneFillOverlay>,
           {
             props: this.props.ui.pretest,
-            onChange: size => this.handleChangeSize('pretest', size),
+            onChange: (size) => this.handleChangeSize('pretest', size),
             element: <ScratchpadPretest key="pretest" />,
           },
           {
             props: this.props.ui.records,
-            onChange: size => this.handleChangeSize('records', size),
+            onChange: (size) => this.handleChangeSize('records', size),
             element: <ScratchpadRecords key="records" />,
           },
         ])}

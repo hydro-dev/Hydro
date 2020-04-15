@@ -1,3 +1,4 @@
+/* eslint-disable react/static-property-placement */
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -13,14 +14,14 @@ import Toolbar, {
   ToolbarSplitComponent as ToolbarSplit,
 } from './ToolbarComponent';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   pretestVisible: state.ui.pretest.visible,
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
   editorLang: state.editor.lang,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   togglePanel(uiElement) {
     dispatch({
       type: 'SCRATCHPAD_UI_TOGGLE_VISIBILITY',
@@ -37,8 +38,8 @@ const mapDispatchToProps = dispatch => ({
     const state = context.store.getState();
     const { pretest } = state;
     const testCases = pretest.tabs;
-    const inputs = testCases.map(tabId => pretest.data[tabId].input);
-    const outputs = testCases.map(tabId => pretest.data[tabId].output);
+    const inputs = testCases.map((tabId) => pretest.data[tabId].input);
+    const outputs = testCases.map((tabId) => pretest.data[tabId].output);
     const req = request.post(Context.postPretestUrl, {
       lang: state.editor.lang,
       code: state.editor.code,
@@ -103,7 +104,7 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
             className="select"
             disabled={this.props.isPosting}
             value={this.props.editorLang}
-            onChange={ev => this.props.setEditorLanguage(ev.target.value)}
+            onChange={(ev) => this.props.setEditorLanguage(ev.target.value)}
           >
             {_.map(languageEnum.LANG_TEXTS, (val, key) => (
               <option value={key} key={key}>{val}</option>

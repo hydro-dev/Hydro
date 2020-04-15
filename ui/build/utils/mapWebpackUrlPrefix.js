@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 export default function mapWebpackUrlPrefix(mapList) {
   const rules = mapList.map((mappingRule) => {
-    const regex = mappingRule.prefix.split('/').map(s => _.escapeRegExp(s)).join('[\\/\\\\]');
+    const regex = mappingRule.prefix.split('/').map((s) => _.escapeRegExp(s)).join('[\\/\\\\]');
     return {
       from: new RegExp(`^${regex}`, mappingRule.flag),
       to: mappingRule.replace,

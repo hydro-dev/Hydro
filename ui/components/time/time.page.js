@@ -1,11 +1,10 @@
-import timeagoFactory from 'timeago.js';
+import * as timeago from 'timeago.js';
 
 import { AutoloadPage } from 'vj/misc/PageLoader';
 
 import i18n from 'vj/utils/i18n';
 
-const timeago = timeagoFactory();
-timeago.setLocale(i18n('timeago_locale'));
+timeago.register(i18n('timeago_locale'));
 
 function runRelativeTime($container) {
   $container.find('span.time.relative[data-timestamp]').get().forEach((element) => {
@@ -27,14 +26,14 @@ function cancelRelativeTime($container) {
       return;
     }
     $element.removeAttr('data-has-timeago');
-    timeagoFactory.cancel(element);
+    timeago.cancel(element);
   });
 }
 
 const relativeTimePage = new AutoloadPage('relativeTimePage', () => {
   runRelativeTime($('body'));
-  $(document).on('vjContentNew', e => runRelativeTime($(e.target)));
-  $(document).on('vjContentRemove', e => cancelRelativeTime($(e.target)));
+  $(document).on('vjContentNew', (e) => runRelativeTime($(e.target)));
+  $(document).on('vjContentRemove', (e) => cancelRelativeTime($(e.target)));
 });
 
 export default relativeTimePage;

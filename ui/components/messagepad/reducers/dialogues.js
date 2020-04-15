@@ -6,12 +6,12 @@ export default function reducer(state = {}, action) {
     const { messages, udict } = action.payload;
     return _.keyBy(
       _.filter(
-        _.map(messages, m => ({
+        _.map(messages, (m) => ({
           sendee_udoc: udict[m.sendee_uid],
           sender_udoc: udict[m.sender_uid],
           ...m,
         })),
-        m => m.sendee_udoc && m.sender_udoc,
+        (m) => m.sendee_udoc && m.sender_udoc,
       ),
       '_id',
     );

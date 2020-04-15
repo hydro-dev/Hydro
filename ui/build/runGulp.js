@@ -21,7 +21,7 @@ export default async function ({ watch, production }) {
       log(chalk.green('Finished: %s'), chalk.reset(name));
       taskList[uid] = false;
 
-      if (Object.values(taskList).filter(b => b).length === 0) {
+      if (Object.values(taskList).filter((b) => b).length === 0) {
         if (watch) {
           gulpTasks.watch();
         }

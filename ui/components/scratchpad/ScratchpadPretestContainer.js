@@ -10,13 +10,13 @@ import Panel from './PanelComponent';
 import PanelButton from './PanelButtonComponent';
 import ScratchpadPretestTabPane from './ScratchpadPretestTabPaneContainer';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   current: state.pretest.current,
   tabs: state.pretest.tabs,
   meta: state.pretest.meta,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   handleClickAdd() {
     dispatch({
       type: 'SCRATCHPAD_PRETEST_ADD_DATA',
@@ -60,7 +60,7 @@ export default class ScratchpadPretestContainer extends React.PureComponent {
         <Tabs
           className="scratchpad__panel-tab flex-col flex-fill"
           activeKey={this.props.current}
-          onChange={tabId => this.props.handleSwitchData(tabId)}
+          onChange={(tabId) => this.props.handleSwitchData(tabId)}
           animation="slide-horizontal"
           renderTabBar={() => (
             <ScrollableInkTabBar
@@ -89,7 +89,7 @@ export default class ScratchpadPretestContainer extends React.PureComponent {
           )}
           renderTabContent={() => <TabContent />}
         >
-          {this.props.tabs.map(tabId => (
+          {this.props.tabs.map((tabId) => (
             <TabPane tab={this.props.meta[tabId].title} key={tabId}>
               <ScratchpadPretestTabPane id={tabId} />
             </TabPane>

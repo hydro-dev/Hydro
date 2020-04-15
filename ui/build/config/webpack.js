@@ -37,8 +37,17 @@ export default function (env = {}) {
     return {
       loader: 'babel-loader',
       options: {
-        ...require(root('package.json')).babelForProject,
+                ...require(root('package.json')).babelForProject, // eslint-disable-line
         cacheDirectory,
+      },
+    };
+  }
+
+  function cssLoader() {
+    return {
+      loader: 'css-loader',
+      options: {
+        importLoaders: 1,
       },
     };
   }
@@ -64,9 +73,7 @@ export default function (env = {}) {
   function extractCssLoader() {
     return {
       loader: ExtractCssPlugin.loader,
-      options: {
-        publicPath: '/public/path/to/',
-      },
+      options: { publicPath: '/' },
     };
   }
 
@@ -127,12 +134,12 @@ export default function (env = {}) {
         },
         {
           test: /\.styl$/,
-          use: [extractCssLoader(), 'css-loader?importLoaders=1', postcssLoader(), 'stylus-loader']
+          use: [extractCssLoader(), cssLoader(), postcssLoader(), 'stylus-loader']
           ,
         },
         {
           test: /\.css$/,
-          use: [extractCssLoader(), 'css-loader?importLoaders=1', postcssLoader()]
+          use: [extractCssLoader(), cssLoader(), postcssLoader()]
           ,
         },
       ],
@@ -143,6 +150,8 @@ export default function (env = {}) {
       },
     },
     plugins: [
+      new webpack.ProgressPlugin(),
+
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery',
@@ -179,7 +188,7 @@ export default function (env = {}) {
           default: {
             preferPathResolver: 'webpack',
             use: [
-              require('rupture')(),
+              require('rupture')(), // eslint-disable-line global-require
             ],
             import: [
               '~vj/common/common.inc.styl',
@@ -215,7 +224,7 @@ export default function (env = {}) {
       new webpack.LoaderOptionsPlugin({
         options: {
           context: root(),
-          customInterpolateName: (url, name, options) => beautifyOutputUrl(url),
+          customInterpolateName: (url) => beautifyOutputUrl(url),
         },
       }),
 

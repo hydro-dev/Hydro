@@ -6,7 +6,7 @@ import Icon from 'vj/components/react/IconComponent';
 
 import request from 'vj/utils/request';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   activeId: state.activeId,
   isPosting: state.activeId !== null
     ? state.isPosting[state.activeId]
@@ -16,7 +16,7 @@ const mapStateToProps = state => ({
     : '',
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   handleChange(id, value) {
     if (id === null) {
       return;
@@ -119,8 +119,8 @@ export default class MessagePadInputContainer extends React.PureComponent {
             ref="input"
             disabled={this.props.isPosting}
             value={this.props.inputValue}
-            onKeyDown={ev => this.handleKeyDown(ev)}
-            onChange={ev => this.props.handleChange(this.props.activeId, ev.target.value)}
+            onKeyDown={(ev) => this.handleKeyDown(ev)}
+            onChange={(ev) => this.props.handleChange(this.props.activeId, ev.target.value)}
           />
         </div>
         <button

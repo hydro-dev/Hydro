@@ -27,7 +27,7 @@ export default class Calendar {
         <div class="calendar__body-container"></div>
       </div>
     `);
-    this.events = events.map(ev => ({
+    this.events = events.map((ev) => ({
       ...ev,
       beginAt: moment(ev.beginAt),
       endAt: moment(ev.endAt),
@@ -258,11 +258,11 @@ export default class Calendar {
 
     // layout banners
     const layout = bannersByWeek
-      .map(banners => _
+      .map((banners) => _
         .sortBy(banners, [
-          banner => banner.beginAt.valueOf(),
-          banner => (banner.beginTrunc ? 0 : 1), // truncated events first
-          banner => -banner.endAt.valueOf(), // long events first
+          (banner) => banner.beginAt.valueOf(),
+          (banner) => (banner.beginTrunc ? 0 : 1), // truncated events first
+          (banner) => -banner.endAt.valueOf(), // long events first
         ]))
       .map((banners) => {
         const dayBitmap = _
@@ -274,12 +274,12 @@ export default class Calendar {
           // find available space
           const vIndexMax = _.max(_
             .range(beginDay, endDay + 1)
-            .map(day => dayBitmap[day].length));
+            .map((day) => dayBitmap[day].length));
           let vIndex = 0;
           for (; vIndex < vIndexMax; ++vIndex) {
             if (_.every(_
               .range(beginDay, endDay + 1)
-              .map(day => !dayBitmap[day][vIndex]) // eslint-disable-line no-loop-func
+              .map((day) => !dayBitmap[day][vIndex]) // eslint-disable-line no-loop-func
             )) { // eslint-disable-line function-paren-newline
               break;
             }
@@ -290,7 +290,7 @@ export default class Calendar {
           }
         });
         // merge adjacent cells and arrange banners by vertical index
-        const vMaxLength = _.max(_.range(0, 7).map(day => dayBitmap[day].length));
+        const vMaxLength = _.max(_.range(0, 7).map((day) => dayBitmap[day].length));
         const weekBanners = _
           .fill(new Array(vMaxLength), 1)
           .map(() => []);

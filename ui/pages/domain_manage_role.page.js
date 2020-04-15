@@ -29,7 +29,7 @@ const page = new NamedPage('domain_manage_role', () => {
   function ensureAndGetSelectedRoles() {
     const roles = _.map(
       $('.domain-roles tbody [type="checkbox"]:checked'),
-      ch => $(ch).closest('tr').attr('data-role'),
+      (ch) => $(ch).closest('tr').attr('data-role'),
     );
     if (roles.length === 0) {
       Notification.error(i18n('Please select at least one role to perform this operation.'));

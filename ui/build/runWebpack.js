@@ -6,7 +6,6 @@ import webpackConfig from './config/webpack';
 
 export default function ({ watch, production }) {
   const compiler = webpack(webpackConfig({ watch, production }));
-  compiler.apply(new webpack.ProgressPlugin());
 
   function compilerCallback(err, stats) {
     if (err) {

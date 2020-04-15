@@ -9,7 +9,7 @@ import MessagePadDialogueList from './MessagePadDialogueListContainer';
 import MessagePadDialogueContent from './MessagePadDialogueContentContainer';
 import MessagePadInput from './MessagePadInputContainer';
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   loadDialogues() {
     dispatch({
       type: 'DIALOGUES_LOAD_DIALOGUES',

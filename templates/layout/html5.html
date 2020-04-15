@@ -22,7 +22,6 @@
   <meta name="msapplication-TileImage" content="{{ static_url('mstile-144x144.png') }}">
   <meta name="theme-color" content="#56758f">
 
-  <link rel="stylesheet" media="all" href="{{ static_url('vendors.css') }}">
   <link rel="stylesheet" media="all" href="{{ static_url('vj4.css') }}">
   <title>{{ handler.render_title(page_title) }}</title>
   <script>
@@ -39,7 +38,6 @@
   <script type="text/javascript" src="{{ static_url('shim.js') }}"></script>
   <![endif]-->
   <script type="text/javascript" src="{{ static_url('manifest.js') }}"></script>
-  <script type="text/javascript" src="{{ static_url('vendors.js') }}"></script>
   <script type="text/javascript" src="{{ static_url('locale/{0}.js'.format(handler.user.lang)) }}"></script>
   <script type="text/javascript" src="{{ static_url('vj4.js') }}"></script>
 </body>

@@ -15,7 +15,7 @@ export default class StaticManifestPlugin {
         .map((asset) => {
           const { name } = asset;
           // Skip files listed in ignore
-          if (_.some(this.ignore, ignorePattern => name.indexOf(ignorePattern) > -1)) {
+          if (_.some(this.ignore, (ignorePattern) => name.indexOf(ignorePattern) > -1)) {
             return null;
           }
           // Skip calculating hash for names like ?xxxx

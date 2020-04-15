@@ -1,7 +1,7 @@
 // Modified from jquery-pjax to support multiple fragments and jQuery 3.0
 // https://github.com/defunkt/jquery-pjax/blob/master/jquery.pjax.js
 
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 import Notification from 'vj/components/notification';
 import NProgress from 'vj/components/nprogress';

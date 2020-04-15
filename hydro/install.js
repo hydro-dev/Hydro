@@ -52,7 +52,6 @@ async function run() {
     await coll_user.createIndex('unameLower', { unique: true });
     await coll_user.createIndex('mailLower', { sparse: true });
     await coll_role.insertMany(builtin.BUILTIN_ROLES);
-    await coll_user.insertMany(builtin.BUILTIN_USERS);
     await coll_blacklist.createIndex('expireAt', { expireAfterSeconds: 0 });
     await coll_token.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true });
     await coll_token.createIndex('expireAt', { expireAfterSeconds: 0 });

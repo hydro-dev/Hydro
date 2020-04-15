@@ -5,12 +5,12 @@ import 'jquery-scroll-lock';
 
 import ListItem from './DialogueListItemComponent';
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   activeId: state.activeId,
   dialogues: state.dialogues,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   handleClick(id) {
     dispatch({
       type: 'DIALOGUES_SWITCH_TO',
@@ -28,14 +28,14 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
   render() {
     const orderedDialogues = _.orderBy(
       _.values(this.props.dialogues),
-      dialogue => (dialogue.isPlaceholder
+      (dialogue) => (dialogue.isPlaceholder
         ? Number.POSITIVE_INFINITY
         : _.maxBy(dialogue.reply, 'at').at),
       'desc',
     );
     return (
       <ol className="messagepad__list" ref="list">
-        {_.map(orderedDialogues, dialogue => (
+        {_.map(orderedDialogues, (dialogue) => (
           <ListItem
             key={dialogue._id}
             userName={

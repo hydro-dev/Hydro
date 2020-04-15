@@ -4,17 +4,17 @@ import MonacoEditor from 'react-monaco-editor';
 
 import * as languageEnum from 'vj/constant/language';
 
-const getOptions = lang => ({
+const getOptions = (lang) => ({
   lineNumbers: true,
   mode: languageEnum.LANG_MONACO_MODES[lang],
 });
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   code: state.editor.code,
   lang: state.editor.lang,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   handleUpdateCode: (code) => {
     dispatch({
       type: 'SCRATCHPAD_EDITOR_UPDATE_CODE',
@@ -33,7 +33,7 @@ export default class ScratchpadEditorContainer extends React.PureComponent {
         value={this.props.code}
         options={getOptions(this.props.lang)}
         ref="editor"
-        onChange={code => this.props.handleUpdateCode(code)}
+        onChange={(code) => this.props.handleUpdateCode(code)}
       />
     );
   }

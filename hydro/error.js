@@ -6,6 +6,14 @@ class UserFacingError extends Error {
         this.params = [];
     }
 }
+class SystemError extends Error {
+    constructor(type) {
+        super(type);
+        this.code = 500;
+        // this.stack = '';
+        this.params = [];
+    }
+}
 class BadRequestError extends UserFacingError {
     constructor(type) {
         super(type);
@@ -154,7 +162,8 @@ module.exports = {
     ValidationError, ProblemNotFoundError, TrainingNotFoundError,
     ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError,
     AlreadyVotedError, ContestNotAttendedError, ContestNotLiveError,
-    ContestScoreboardHiddenError, ContestAlreadyAttendedError
+    ContestScoreboardHiddenError, ContestAlreadyAttendedError, UserFacingError,
+    SystemError
 };
 
 /*

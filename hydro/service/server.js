@@ -1,6 +1,7 @@
 const
     path = require('path'),
     { ObjectID } = require('bson'),
+    { MongoError } = require('mongodb'),
     Koa = require('koa'),
     morgan = require('koa-morgan'),
     Body = require('koa-body'),
@@ -14,7 +15,7 @@ const
     token = require('../model/token'),
     opcount = require('../model/opcount'),
     { UserNotFoundError, BlacklistedError, PermissionError,
-        NotFoundError } = require('../error');
+        NotFoundError, UserFacingError } = require('../error');
 
 const options = require('../options');
 let http = options.listen.https ? require('https') : require('http');
@@ -60,6 +61,7 @@ class Handler {
             url_prefix: '/'
         };
         this._handler = {};
+        this.session = {};
     }
     renderHTML(name, context) {
         console.time(name);
@@ -130,7 +132,7 @@ class Handler {
             await this.renderBody();
         } catch (error) {
             if (this.preferJson) this.response.body = { error };
-            else await this.render('bsod.html', { error });
+            else await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error });
         }
         await this.putResponse();
         await this.saveCookie();
@@ -186,9 +188,9 @@ class Handler {
     async onerror(error) {
         console.error(error.message, error.params);
         console.error(error.stack);
-        this.response.template = 'error.html';
+        this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
         this.response.body = { error };
-        await this.___cleanup();
+        await this.___cleanup().catch(() => { });
     }
 }
 function Route(route, handler) {

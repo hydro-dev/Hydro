@@ -1,6 +1,6 @@
 // load all page stylesheets
 const pageStyleReq = require.context('../', true, /\.page\.styl$/i);
-pageStyleReq.keys().map(key => pageStyleReq(key).default);
+pageStyleReq.keys().map((key) => pageStyleReq(key).default);
 
 export class Page {
   constructor(name, autoload, afterLoading, beforeLoading) {
@@ -60,12 +60,12 @@ export class PageLoader {
   }
 
   getAutoloadPages() {
-    const pages = this.pageInstances.filter(page => page && page.autoload);
+    const pages = this.pageInstances.filter((page) => page && page.autoload);
     return pages;
   }
 
   getNamedPage(pageName) {
-    const pages = this.pageInstances.filter(page => page && page.isNameMatch(pageName));
+    const pages = this.pageInstances.filter((page) => page && page.isNameMatch(pageName));
     if (pages.length > 0) {
       return pages[0];
     }
