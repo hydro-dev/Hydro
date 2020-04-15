@@ -8,11 +8,11 @@
   </div>
   <div class="medium-3 columns">
   {% if vnode['doc_type'] == vj4.model.document.TYPE_PROBLEM %}
-    {% with pdoc=vnode, owner_udoc=udict[vnode['owner_uid']], owner_dudoc=dudict[vnode['owner_uid']] if dudict %}
+    {% with pdoc=vnode, owner_udoc=udict[vnode['owner']] %}
     {% include "partials/problem_sidebar.html" %}
     {% endwith %}
   {% elif vnode['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-    {% with tdoc=vnode, owner_udoc=udict[vnode['owner_uid']], owner_dudoc=dudict[vnode['owner_uid']] if dudict %}
+    {% with tdoc=vnode, owner_udoc=udict[vnode['owner']] %}
     {% include "partials/contest_sidebar.html" %}
     {% endwith %}
   {% elif vnode['doc_type'] == vj4.model.document.TYPE_DISCUSSION_NODE %}

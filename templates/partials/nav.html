@@ -23,9 +23,6 @@
     {% if handler.hasPerm(perm.PERM_VIEW_CONTEST) %}
       {{ nav_item('/c', 'contest_main', 'contest') }}
     {% endif %}
-    {% if handler.hasPerm(perm.PERM_VIEW_HOMEWORK) %}
-      {{ nav_item('/h', 'homework_main', 'homework') }}
-    {% endif %}
     {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) or handler.hasPerm(perm.PERM_EDIT_PERM) %}
       {{ nav_item('/d', 'domain_manage', 'domain_manage') }}
     {% endif %}

@@ -7,8 +7,8 @@ async function get(_id) {
     if (doc) return doc.value;
     return null;
 }
-async function update(_id, update, config) {
-    await coll.findOneAndUpdate({ _id }, update, config);
+async function update(_id, operation, config) {
+    await coll.findOneAndUpdate({ _id }, operation, config);
     return get(_id);
 }
 /**

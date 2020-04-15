@@ -68,7 +68,7 @@
       <tbody>
         {% for role in roles %}
         {% for rudoc in rudocs[role] %}
-        {% set is_disabled=(rudoc['uid'] == handler.domain['owner_uid']) %}
+        {% set is_disabled=(rudoc['uid'] == handler.domain['owner']) %}
         <tr data-uid="{{ rudoc['uid'] }}">
           <td class="col--checkbox">
             <label class="compact checkbox">

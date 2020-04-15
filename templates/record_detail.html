@@ -56,7 +56,7 @@
       <div class="section__body typo">
         <dl class="large horizontal">
           <dt>{{ _('Submit By') }}</dt>
-          <dd>{{ user.render_inline(udoc, dudoc, modbadge=false) }}</dd>
+          <dd>{{ user.render_inline(udoc, modbadge=false) }}</dd>
         {% if pdoc %}
           <dt>{{ _('Problem') }}</dt>
           <dd>
@@ -64,18 +64,11 @@
           </dd>
         {% endif %}
         {% if tdoc %}
-        {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
           <dt>{{ _('Contest') }}</dt>
           <dd>
             <a href="/c/{{ tdoc._id }}">{{ tdoc['title'] }}</a>
           </dd>
-        {% else %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
-          <dt>{{ _('Homework') }}</dt>
-          <dd>
-            <a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a>
-          </dd>
-        {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
-        {% endif %}{# tdoc #}
+        {% endif %}
         {% if pdoc and (user._id == pdoc.owner or handler.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
           <dt>{{ _('Problem Data') }}</dt>
           <dd><a href="/p/{{ pdoc.pid }}/data"><span class="icon icon-download"></span> {{ _('Download') }}</a></dd>

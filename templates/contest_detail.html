@@ -9,19 +9,19 @@
     <div class="section">
       <div class="section__body typo">
         {{ tdoc['content']|markdown|safe }}
-      {% if model.contest.is_ongoing(tdoc) %}
+      {% if model.contest.isOngoing(tdoc) %}
         <blockquote class="warn">
           <p>{{ _('We will check code similarity after this contest.') }}</p>
         </blockquote>
       {% endif %}
       </div>
     </div>
-  {% if model.contest.is_ongoing(tdoc) or model.contest.is_done(tdoc) %}
+  {% if model.contest.isOngoing(tdoc) or model.contest.isDone(tdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if attended or model.contest.is_done(tdoc) %}
+    {% if attended or model.contest.isDone(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>

@@ -69,7 +69,7 @@ class ContestDetailHandler extends ContestHandler {
     }
 
     async postAttend() {
-        if (contest.is_done(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
+        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
         await contest.attend(this.tdoc._id, this.user._id);
         this.back();
     }
@@ -86,6 +86,17 @@ class ContestScoreboardHandler extends ContestDetailHandler {
         this.response.body = {
             tdoc, rows, path, udict,
         };
+    }
+}
+class ContestScoreboardDownloadHandler extends ContestDetailHandler {
+    async get({ tid, ext }) {
+        const getContent = {
+            csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
+            html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
+        };
+        if (!getContent[ext]) throw new ValidationError('ext');
+        const [, rows] = await this.getScoreboard(tid, true);
+        this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
     }
 }
 class ContestEditHandler extends ContestDetailHandler {
@@ -150,9 +161,9 @@ class ContestProblemHandler extends ContestDetailHandler {
         ]);
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
         this.response.template = 'problem_detail.html';
-        if (contest.is_done(this.tdoc)) {
+        if (contest.isDone(this.tdoc)) {
             if (!this.attended) throw new ContestNotAttendedError(this.tdoc._id);
-            if (!contest.is_ongoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
+            if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
         }
         console.log(this.tdoc.pids, this.pdoc._id);
         if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc._id.toString())) {
@@ -260,6 +271,7 @@ Route('/c', ContestListHandler);
 Route('/c/:tid', ContestDetailHandler);
 Route('/c/:tid/edit', ContestEditHandler);
 Route('/c/:tid/scoreboard', ContestScoreboardHandler);
+Route('/c/:tid/export/:ext', ContestScoreboardDownloadHandler);
 Route('/c/:tid/p/:pid', ContestProblemHandler);
 Route('/c/:tid/p/:pid/submit', ContestProblemSubmitHandler);
 Route('/contest/create', ContestCreateHandler);

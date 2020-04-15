@@ -21,15 +21,15 @@
       </div>
     {% endif %}
     {% for node in tdoc['dag'] %}
-      <div class="training__section {% if nsdict[node['_id']]['is_done'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %} {% if nsdict[node['_id']]['is_progress'] or nsdict[node['_id']]['is_open'] %}expanded{% else %}collapsed{% endif %}">
+      <div class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %} {% if nsdict[node['_id']]['is_progress'] or nsdict[node['_id']]['is_open'] %}expanded{% else %}collapsed{% endif %}">
         <div class="section__header clearfix">
           <div class="float-left">
             <h1 class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'] }}</h1>
           </div>
           <div class="float-right">
-            <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['is_done'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}">
-              <span class="icon training-section-status--icon {% if nsdict[node['_id']]['is_done'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}"></span>
-            {% if nsdict[node['_id']]['is_done'] %}
+            <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}">
+              <span class="icon training-section-status--icon {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}"></span>
+            {% if nsdict[node['_id']]['isDone'] %}
               {{ _('Completed') }}
             {% elif nsdict[node['_id']]['is_progress'] %}
               {{ _('In Progress') }}
@@ -196,7 +196,7 @@
           {% endif %}
           <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc['enroll']|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>
-          <dd>{{ user.render_inline(owner_udoc, owner_dudoc, badge=false) }}</dd>
+          <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
         </dl>
       </div>
     </div>

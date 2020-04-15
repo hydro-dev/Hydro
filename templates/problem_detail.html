@@ -30,11 +30,11 @@
         {% endif %}
         {% if tdoc %}
         {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-        {% if model.contest.is_done(tdoc) %}
+        {% if model.contest.isDone(tdoc) %}
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
-        {% endif %}{# handler.is_done(tdoc) #}
+        {% endif %}{# handler.isDone(tdoc) #}
         {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
         {% endif %}{# tdoc #}
           {{ pdoc['content']|markdown|safe }}
@@ -44,7 +44,6 @@
   </div>
   <div class="medium-3 columns">
     {% set owner_udoc = udoc %}
-    {% set owner_dudoc = dudoc %}
     {% include "partials/problem_sidebar.html" %}
   </div>
 </div>

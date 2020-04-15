@@ -7,7 +7,7 @@
 {% endif %}
   <div>
     <ol class="menu">
-    {% if model.contest.is_ongoing(tdoc) %}
+    {% if model.contest.isOngoing(tdoc) %}
     {% if page_name == 'contest_detail_problem' %}
       <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
@@ -23,7 +23,7 @@
       <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="/c/{{ tdoc._id }}/p/{{ pdoc._id }}/submit">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif model.contest.is_done(tdoc) %}
+    {% elif model.contest.isDone(tdoc) %}
       <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>

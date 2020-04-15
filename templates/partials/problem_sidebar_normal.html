@@ -152,9 +152,9 @@
       <dt>{{ _('Be Copied') }}</dt>
       <dd>{{ pdoc['num_be_copied'] }}</dd>
     {% endif %}
-    {% if pdoc['owner_uid'] != 0 %}
+    {% if pdoc['owner'] != 0 %}
       <dt>{{ _('Uploaded By') }}</dt>
-      <dd>{{ user.render_inline(owner_udoc, owner_dudoc, badge=false) }}</dd>
+      <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
     {% endif %}
     </dl>
   </div>
@@ -175,12 +175,6 @@
     <p>{{ _('In following contests') }}: </p>
     {% for tdoc in ctdocs %}
     <p><a href="/c/{{ tdoc._id }}">{{ tdoc['title'] }}</a></p>
-    {% endfor %}
-  {% endif %}
-  {% if htdocs %}
-    <p>{{ _('In following homework') }}: </p>
-    {% for tdoc in htdocs %}
-    <p><a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a></p>
     {% endfor %}
   {% endif %}
   </div>

@@ -37,7 +37,7 @@ export default function (env = {}) {
     return {
       loader: 'babel-loader',
       options: {
-                ...require(root('package.json')).babelForProject, // eslint-disable-line
+        ...require(root('package.json')).babelForProject, // eslint-disable-line
         cacheDirectory,
       },
     };
@@ -165,11 +165,6 @@ export default function (env = {}) {
       // don't include momentjs locale files
       new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
 
-      new MonacoWebpackPlugin({
-        // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go'],
-      }),
-
       new ExtractCssPlugin({
         filename: 'vj4.css?[contenthash:10]',
         allChunks: true,
@@ -205,9 +200,6 @@ export default function (env = {}) {
       }),
 
       env.production
-        ? new UglifyJsPlugin({ sourceMap: true })
-        : function () { },
-      env.production
         ? new OptimizeCssAssetsPlugin()
         : function () { },
       env.production
@@ -226,6 +218,11 @@ export default function (env = {}) {
           context: root(),
           customInterpolateName: (url) => beautifyOutputUrl(url),
         },
+      }),
+
+      new MonacoWebpackPlugin({
+        // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
+        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go'],
       }),
 
       // Finally, output asset hashes

@@ -115,6 +115,13 @@ class Handler {
         this.response.redirect = this.request.headers.referer || '/';
     }
 
+    binary(data, name) {
+        this.response.body = data;
+        this.response.template = null;
+        this.response.type = 'application/octet-stream';
+        this.response.disposition = `attachment; filename="${name}"`;
+    }
+
     async ___prepare() {
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
@@ -170,6 +177,7 @@ class Handler {
     }
 
     async putResponse() {
+        if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
         if (this.response.redirect && !this.preferJson) {
             this.ctx.response.type = 'application/octet-stream';
             this.ctx.response.status = 302;

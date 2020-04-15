@@ -1,15 +1,7 @@
 {% if tdoc %}
-  {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
-    {% include "partials/problem_sidebar_contest.html" %}
-    {% set owner_udoc=udoc %}
-    {% set owner_dudoc=dudoc %}
-    {% include "partials/contest_sidebar.html" %}
-  {% else %}
-    {% include "partials/problem_sidebar_homework.html" %}
-    {% set owner_udoc=udoc %}
-    {% set owner_dudoc=dudoc %}
-    {% include "partials/homework_sidebar.html" %}
-  {% endif %}
+  {% include "partials/problem_sidebar_contest.html" %}
+  {% set owner_udoc = udoc %}
+  {% include "partials/contest_sidebar.html" %}
 {% else %}
   {% include "partials/problem_sidebar_normal.html" %}
 {% endif %}

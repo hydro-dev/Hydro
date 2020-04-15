@@ -22,7 +22,7 @@
         <span class="icon icon-award"></span> {{ _('View Contest') }}
       </a></li>
     {% endif %}
-    {% if not attended and not model.contest.is_done(tdoc) %}
+    {% if not attended and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
     {% if handler.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <form action="/c/{{ tdoc._id }}" method="POST">
@@ -73,7 +73,7 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.status_text(tdoc)) }}</dd>
+      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.statusText(tdoc)) }}</dd>
       <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
       <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tdoc.beginAt) }}</dd>

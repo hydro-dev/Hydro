@@ -61,7 +61,7 @@
             <span data-tooltip="{{ _('This is a built-in domain that every user is in.') }}">{{ ddoc['name'] }} ({{ ddoc['_id'] }})</span>
           </td>
           <td class="col--role">
-            {{ dudict.get(ddoc['_id'], {})['role']|default(vj4.model.builtin.ROLE_DEFAULT) }}
+            {{ udict.get(ddoc['_id'], {})['role']|default(model.builtin.ROLE_DEFAULT) }}
           </td>
           <td class="col--action">
             <a class="typo-a" href="{{ reverse_url('domain_main', domain_id=ddoc['_id']) }}">{{ _('Visit') }}</a>
@@ -81,7 +81,7 @@
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})
           </td>
           <td class="col--role">
-            {{ dudict.get(ddoc['_id'], {})['role']|default(vj4.model.builtin.ROLE_DEFAULT) }}
+            {{ udict.get(ddoc['_id'], {})['role']|default(model.builtin.ROLE_DEFAULT) }}
           </td>
           <td class="col--action">
             <a class="typo-a" href="{{ reverse_url('domain_main', domain_id=ddoc['_id']) }}">{{ _('Visit') }}</a>

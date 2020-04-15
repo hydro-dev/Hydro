@@ -30,7 +30,7 @@
                   </a>
                 </li>
                 <li>
-                  {{ user.render_inline(udict[ddoc['owner_uid']], dudoc=dudoc if dudoc else dudict[ddoc['owner_uid']], badge=false) }}
+                  {{ user.render_inline(udict[ddoc['owner']], badge=false) }}
                   @
                   {{ datetime_span(ddoc['update_at'] or ddoc['_id'].generationTime) }}
                 </li>
