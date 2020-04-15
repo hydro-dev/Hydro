@@ -49,7 +49,7 @@ const request = {
     } else {
       // {foo: 'bar'}
       postData = $.param({
-        csrf_token: UiContext.csrf_token,
+        csrfToken: UiContext.csrfToken,
         ...dataOrForm,
       }, true);
     }

@@ -71,7 +71,7 @@ export default class MessagePadInputContainer extends React.PureComponent {
     store: PropTypes.object,
   };
 
-  componentWillUpdate(nextProps) {
+  UNSAFE_componentWillUpdate(nextProps) { // eslint-disable-line camelcase
     this.focusInput = (
       nextProps.activeId !== this.props.activeId
       || this.props.isPosting !== nextProps.isPosting && nextProps.isPosting === false

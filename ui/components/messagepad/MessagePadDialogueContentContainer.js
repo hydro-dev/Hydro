@@ -22,7 +22,7 @@ export default class MessagePadDialogueContentContainer extends React.PureCompon
     $(this.refs.list).scrollLock({ strict: true });
   }
 
-  componentWillUpdate(nextProps) {
+  UNSAFE_componentWillUpdate(nextProps) { // eslint-disable-line camelcase
     if (nextProps.activeId !== this.props.activeId) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = false;
