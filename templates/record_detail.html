@@ -33,7 +33,7 @@
         <ol class="menu">
           <li class="menu__item">
             <form method="post" action="/r/{{ rdoc._id }}/rejudge">
-              <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
               <button type="submit" class="menu__link">
                 <span class="icon icon-refresh"></span> {{ _('Rejudge') }}
               </button>
@@ -42,7 +42,7 @@
           <li class="menu__item">
             <form method="post" action="/judge/end">
               <input type="hidden" name="rid" value="{{ rdoc._id }}">
-              <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
               <input type="hidden" name="score" value="0">
               <input type="hidden" name="message" value="{{ _('score canceled') }}">
               <button type="submit" class="menu__link">

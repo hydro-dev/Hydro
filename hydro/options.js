@@ -1,9 +1,8 @@
-const
-    fs = require('fs'),
-    os = require('os'),
-    path = require('path'),
-    yaml = require('js-yaml'),
-    { defaultsDeep } = require('lodash');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const yaml = require('js-yaml');
+const { defaultsDeep } = require('lodash');
 
 let options = {
     db: {
@@ -11,16 +10,16 @@ let options = {
         host: '127.0.0.1',
         port: 27017,
         username: '',
-        password: ''
+        password: '',
     },
     template: {
-        path: path.join(__dirname, '..', 'templates')
+        path: path.join(__dirname, '..', 'templates'),
     },
     listen: {
         host: '127.0.0.1',
         port: 8888,
         domain: '',
-        https: false
+        https: false,
     },
     smtp: {
         from: '',
@@ -28,7 +27,7 @@ let options = {
         port: 465,
         user: '',
         pass: '',
-        secure: false
+        secure: false,
     },
     session: {
         keys: ['Hydro'],
@@ -36,21 +35,21 @@ let options = {
         domain: '127.0.0.1',
         saved_expire_seconds: 3600 * 24,
         unsaved_expire_seconds: 600,
-        registration_token_expire_seconds: 600
+        registration_token_expire_seconds: 600,
     },
     constants: {
         PROBLEM_PER_PAGE: 100,
         RECORD_PER_PAGE: 100,
         SOLUTION_PER_PAGE: 20,
-        CONTEST_PER_PAGE: 20
-    }
+        CONTEST_PER_PAGE: 20,
+    },
 };
 
 try {
     let f = path.resolve(process.cwd(), 'config.yaml');
     if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.yaml');
     if (!fs.existsSync(f)) f = path.resolve('/config/config.yaml');
-    let t = yaml.safeLoad(fs.readFileSync(f));
+    const t = yaml.safeLoad(fs.readFileSync(f));
     options = defaultsDeep(t, options);
 } catch (e) {
     console.error('Cannot load config');

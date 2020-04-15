@@ -1,35 +1,28 @@
-const
-    { OpcountExceededError } = require('../error'),
-    db = require('../service/db.js'),
-    coll = db.collection('opcount');
+const { OpcountExceededError } = require('../error');
+const db = require('../service/db.js');
+
+const coll = db.collection('opcount');
 
 module.exports = {
     /**
-     * @param {string} op 
-     * @param {string} ident 
-     * @param {number} period_secs 
-     * @param {number} max_operations 
+     * @param {string} op
+     * @param {string} ident
+     * @param {number} period_secs
+     * @param {number} max_operations
      */
-    async inc(op, ident, period_secs, max_operations) {
-        let cur_time = new Date().getTime();
-        let begin_at = new Date(cur_time - cur_time % (period_secs * 1000));
-        let expire_at = new Date(begin_at.getTime() + period_secs * 1000);
+    async inc(op, ident, periodSecs, maxOperations) {
+        const curTime = new Date().getTime();
+        const beginAt = new Date(curTime - (curTime % (periodSecs * 1000)));
+        const expireAt = new Date(beginAt.getTime() + periodSecs * 1000);
         try {
             await coll.findOneAndUpdate({
-                ident, begin_at, expire_at,
-                op: { $not: { $gte: max_operations } }
+                ident,
+                beginAt,
+                expireAt,
+                op: { $not: { $gte: maxOperations } },
             }, { $inc: { op: 1 } }, { upsert: true });
         } catch (e) {
-            throw new OpcountExceededError(op, period_secs, max_operations);
+            throw new OpcountExceededError(op, periodSecs, maxOperations);
         }
-    }
+    },
 };
-/*
-@argmethod.wrap
-async def ensure_indexes():
-  coll = db.coll('opcount')
-  await coll.create_index([('ident', 1),
-                           ('begin_at', 1),
-                           ('expire_at', 1)], unique=True)
-  await coll.create_index('expire_at', expireAfterSeconds=0)
-*/

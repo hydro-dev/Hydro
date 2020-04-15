@@ -1,9 +1,9 @@
-const
-    db = require('../service/db.js'),
-    coll = db.collection('blacklist');
+const db = require('../service/db.js');
+
+const coll = db.collection('blacklist');
 
 async function add(ip) {
-    let expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
+    const expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
     return coll.findOneAndUpdate({ _id: ip }, { $set: { expireAt } }, { upsert: true });
 }
 function get(ip) {

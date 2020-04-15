@@ -10,7 +10,7 @@
 <p>{{ _('Image Markdown') }}: <pre>![{{ _('Description') }}](vijos:/{{ reverse_url('fs_get', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM, secret=fdoc['metadata']['secret']) }})</pre></p>
 {% endif %}
 <form method="post" enctype="multipart/form-data">
-<input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+<input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
 <p>
 {{ _('New file') }}:
 <input type="text" name="desc" placeholder="{{ _('Description') }}">

@@ -1,6 +1,6 @@
-const
-    db = require('../service/db.js'),
-    coll = db.collection('token');
+const db = require('../service/db.js');
+
+const coll = db.collection('token');
 
 module.exports = {
     TYPE_SESSION: 0,
@@ -14,15 +14,16 @@ module.exports = {
      * @returns {Array} token ID, token data
      */
     async add(tokenType, expireSeconds, data) {
-        let now = new Date();
-        let str = String.random(32);
-        let res = await coll.insertOne(Object.assign({}, data, {
+        const now = new Date();
+        const str = String.random(32);
+        const res = await coll.insertOne({
+            ...data,
             _id: str,
             tokenType,
             createAt: now,
             updateAt: now,
-            expireAt: new Date(now.getTime() + expireSeconds * 1000)
-        }));
+            expireAt: new Date(now.getTime() + expireSeconds * 1000),
+        });
         return [str, res.ops];
     },
 
@@ -45,12 +46,14 @@ module.exports = {
      * @returns {object} The token document, or null.
      */
     async update(tokenId, tokenType, expireSeconds, data) {
-        let now = new Date();
-        let res = await coll.findOneAndUpdate({ _id: tokenId, tokenType }, {
-            $set: Object.assign({
+        const now = new Date();
+        const res = await coll.findOneAndUpdate({ _id: tokenId, tokenType }, {
+            $set: {
                 updateAt: now,
-                expireAt: new Date(now.getTime() + expireSeconds * 1000)
-            }, data, { tokenType })
+                expireAt: new Date(now.getTime() + expireSeconds * 1000),
+                ...data,
+                tokenType,
+            },
         });
         return res.value;
     },
@@ -62,10 +65,10 @@ module.exports = {
      * @returns {boolean} true if deleted, or false.
      */
     async delete(tokenId, tokenType) {
-        let result = await coll.deleteOne({ _id: tokenId, tokenType });
+        const result = await coll.deleteOne({ _id: tokenId, tokenType });
         return !!result.deletedCount;
     },
-    async getMostRecentSessionByUid(uid) {
-        return await coll.findOne({ uid, token_type: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
-    }
+    getMostRecentSessionByUid(uid) {
+        return coll.findOne({ uid, token_type: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
+    },
 };

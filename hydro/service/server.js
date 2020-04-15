@@ -1,41 +1,42 @@
-const
-    path = require('path'),
-    { ObjectID } = require('bson'),
-    { MongoError } = require('mongodb'),
-    Koa = require('koa'),
-    morgan = require('koa-morgan'),
-    Body = require('koa-body'),
-    Router = require('koa-router'),
-    cache = require('koa-static-cache'),
-    sockjs = require('sockjs'),
-    validator = require('../lib/validator'),
-    template = require('../lib/template'),
-    user = require('../model/user'),
-    blacklist = require('../model/blacklist'),
-    token = require('../model/token'),
-    opcount = require('../model/opcount'),
-    { UserNotFoundError, BlacklistedError, PermissionError,
-        NotFoundError, UserFacingError } = require('../error');
-
+const path = require('path');
+const { ObjectID } = require('bson');
+const Koa = require('koa');
+const morgan = require('koa-morgan');
+const Body = require('koa-body');
+const Router = require('koa-router');
+const cache = require('koa-static-cache');
+const sockjs = require('sockjs');
+const http = require('http');
+const https = require('https');
 const options = require('../options');
-let http = options.listen.https ? require('https') : require('http');
-let app = new Koa();
-let server = http.createServer(app.callback());
+const validator = require('../lib/validator');
+const template = require('../lib/template');
+const user = require('../model/user');
+const blacklist = require('../model/blacklist');
+const token = require('../model/token');
+const opcount = require('../model/opcount');
+const {
+    UserNotFoundError, BlacklistedError, PermissionError,
+    NotFoundError, UserFacingError,
+} = require('../error');
+
+const app = new Koa();
+const server = (options.listen.https ? https : http).createServer(app.callback());
 app.keys = options.session.keys;
 app.use(cache(path.join(process.cwd(), '.uibuild'), {
-    maxAge: 365 * 24 * 60 * 60
+    maxAge: 365 * 24 * 60 * 60,
 }));
 app.use(Body({
     multipart: true,
     formidable: {
-        maxFileSize: 256 * 1024 * 1024
-    }
+        maxFileSize: 256 * 1024 * 1024,
+    },
 }));
-let router = new Router();
+const router = new Router();
 
 class Handler {
     /**
-     * @param {import('koa').Context} ctx 
+     * @param {import('koa').Context} ctx
      */
     constructor(ctx) {
         this.ctx = ctx;
@@ -46,7 +47,7 @@ class Handler {
             body: ctx.request.body,
             files: ctx.request.files,
             query: ctx.query,
-            path: ctx.path
+            path: ctx.path,
         };
         this.response = {
             body: '',
@@ -54,23 +55,24 @@ class Handler {
             status: null,
             template: null,
             redirect: null,
-            attachment: name => ctx.attachment(name)
+            attachment: (name) => ctx.attachment(name),
         };
         this.UIContext = {
             cdn_prefix: '/',
-            url_prefix: '/'
+            url_prefix: '/',
         };
         this._handler = {};
         this.session = {};
     }
+
     renderHTML(name, context) {
         console.time(name);
-        this.hasPerm = perm => this.user.hasPerm(perm);
+        this.hasPerm = (perm) => this.user.hasPerm(perm);
         return new Promise((resolve, reject) => {
             template.render(name, Object.assign(context, {
                 handler: this,
-                _: str => str ? str.toString().translate(this.user.language) : '',
-                user: this.user
+                _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+                user: this.user,
             }), (error, res) => {
                 console.timeEnd(name);
                 if (error) reject(error);
@@ -78,35 +80,41 @@ class Handler {
             });
         });
     }
+
     async render(name, context) {
         this.response.body = await this.renderHTML(name, context);
         this.response.type = 'text/html';
     }
-    render_title(str) {
+
+    renderTitle(str) { // eslint-disable-line class-methods-use-this
         return str;
     }
-    checkPerm(perm) {
-        for (let i in arguments) {
-            if (arguments[i] instanceof Array) {
+
+    checkPerm(...args) {
+        for (const i in args) {
+            if (args[i] instanceof Array) {
                 let p = false;
-                for (let j in arguments)
-                    if (this.user.hasPerm(arguments[i][j])) {
+                for (const j in args) {
+                    if (this.user.hasPerm(args[i][j])) {
                         p = true;
                         break;
                     }
-                if (!p) throw new PermissionError([arguments[i]]);
-            } else {
-                if (this.user.hasPerm(arguments[i])) continue;
-                else throw new PermissionError([[arguments[i]]]);
+                }
+                if (!p) throw new PermissionError([args[i]]);
+            } else if (!this.user.hasPerm(args[i])) {
+                throw new PermissionError([[args[i]]]);
             }
         }
     }
-    async limitRate(op, period_secs, max_operations) {
-        await opcount.inc(op, this.request.ip, period_secs, max_operations);
+
+    async limitRate(op, periodSecs, maxOperations) {
+        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
+
     back() {
         this.response.redirect = this.request.headers.referer || '/';
     }
+
     async ___prepare() {
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
@@ -114,19 +122,25 @@ class Handler {
         this._handler.tokenType = token.TYPE_SESSION;
         if (this._handler.save) this._handler.expireSeconds = options.session.saved_expire_seconds;
         else this._handler.expireSeconds = options.session.unsaved_expire_seconds;
-        this.session = this._handler.sid ?
-            await token.update(this._handler.sid, this._handler.tokenType, this._handler.expireSeconds, {
-                update_ip: this.request.ip,
-                update_ua: this.request.headers['user-agent'] || ''
-            }) : { uid: 1 };
+        this.session = this._handler.sid
+            ? await token.update(
+                this._handler.sid,
+                this._handler.tokenType,
+                this._handler.expireSeconds,
+                {
+                    update_ip: this.request.ip,
+                    update_ua: this.request.headers['user-agent'] || '',
+                },
+            ) : { uid: 1 };
         if (!this.session) this.session = { uid: 1 };
-        let bdoc = await blacklist.get(this.request.ip);
+        const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
-        this.csrf_token = (await token.add(token.TYPE_CSRF_TOKEN, 600, { path: this.request.path }))[0];
-        this.preferJson = (this.request.headers['accept'] || '').includes('application/json');
+        [this.csrfToken] = await token.add(token.TYPE_CSRF_TOKEN, 600, { path: this.request.path });
+        this.preferJson = (this.request.headers.accept || '').includes('application/json');
     }
+
     async ___cleanup() {
         try {
             await this.renderBody();
@@ -137,20 +151,24 @@ class Handler {
         await this.putResponse();
         await this.saveCookie();
     }
+
     async renderBody() {
         if (!(this.response.body || this.response.template)) {
             this.response.body = { error: new NotFoundError() };
             this.response.template = 'error.html';
         }
-        if (!this.preferJson)
+        if (!this.preferJson) {
             if (this.response.body || this.response.template) {
                 if (this.request.query.noTemplate || this.preferJson) return;
-                if (this.request.query.template || this.response.template) {
+                const templateName = this.request.query.template || this.response.template;
+                if (templateName) {
                     this.response.body = this.response.body || {};
-                    await this.render(this.request.query.template || this.response.template, this.response.body);
+                    await this.render(templateName, this.response.body);
                 }
             }
+        }
     }
+
     async putResponse() {
         if (this.response.redirect && !this.preferJson) {
             this.ctx.response.type = 'application/octet-stream';
@@ -164,27 +182,40 @@ class Handler {
             if (this.response.type) this.ctx.response.type = this.response.type;
         }
     }
+
     async saveCookie() {
-        if (this.session.sid)
-            await token.update(this.session.sid, this._handler.tokenType, this._handler.expireSeconds, {
-                updateIp: this.request.ip,
-                updateUa: this.request.headers['user-agent'] || ''
-            });
-        else
-            [this.session.sid] = await token.add(this._handler.tokenType, this._handler.expireSeconds, {
-                createIp: this.request.ip,
-                createUa: this.request.headers['user-agent'] || '',
-                updateIp: this.request.ip,
-                updateUa: this.request.headers['user-agent'] || '',
-                ...this.session
-            });
-        let cookie = { secure: options.session.secure };
+        if (this.session.sid) {
+            await token.update(
+                this.session.sid,
+                this._handler.tokenType,
+                this._handler.expireSeconds,
+                {
+                    updateIp: this.request.ip,
+                    updateUa: this.request.headers['user-agent'] || '',
+                },
+            );
+        } else {
+            [this.session.sid] = await token.add(
+                this._handler.tokenType,
+                this._handler.expireSeconds,
+                {
+                    createIp: this.request.ip,
+                    createUa: this.request.headers['user-agent'] || '',
+                    updateIp: this.request.ip,
+                    updateUa: this.request.headers['user-agent'] || '',
+                    ...this.session,
+                },
+            );
+        }
+        const cookie = { secure: options.session.secure };
         if (this._handler.save) {
-            cookie.expires = this.session.expireAt, cookie.maxAge = this._handler.expireSeconds;
+            cookie.expires = this.session.expireAt;
+            cookie.maxAge = this._handler.expireSeconds;
             this.request.cookies.set('save', 'true', cookie);
         }
         this.ctx.cookies.set('sid', this.session.sid, cookie);
     }
+
     async onerror(error) {
         console.error(error.message, error.params);
         console.error(error.stack);
@@ -193,12 +224,12 @@ class Handler {
         await this.___cleanup().catch(() => { });
     }
 }
-function Route(route, handler) {
+function Route(route, RouteHandler) {
     router.all(route, async (ctx) => {
-        let h = new handler(ctx);
+        const h = new RouteHandler(ctx);
         try {
-            let method = ctx.method.toLowerCase();
-            let args = Object.assign({}, ctx.params, ctx.query, ctx.request.body);
+            const method = ctx.method.toLowerCase();
+            const args = { ...ctx.params, ...ctx.query, ...ctx.request.body };
 
             if (args.content) validator.checkContent(args.content);
             if (args.title) validator.checkContent(args.title);
@@ -207,7 +238,7 @@ function Route(route, handler) {
             if (args.rid) args.rid = new ObjectID(args.rid);
             if (args.tid) args.tid = new ObjectID(args.tid);
             if (args.duration) args.duration = parseFloat(args.duration);
-            if (args.pids) args.pids = args.pids.split(',').map(i => i.trim());
+            if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
 
             if (h.___prepare) await h.___prepare(args);
             if (h.__prepare) await h.__prepare(args);
@@ -219,9 +250,10 @@ function Route(route, handler) {
             if (h[`_${method}`]) await h[`_${method}`](args);
             if (h[method]) await h[method](args);
 
-            if (method == 'post' && ctx.request.body.operation) {
-                if (h[`${method}_${ctx.request.body.operation}`])
+            if (method === 'post' && ctx.request.body.operation) {
+                if (h[`${method}_${ctx.request.body.operation}`]) {
                     await h[`${method}_${ctx.request.body.operation}`](args);
+                }
             }
 
             if (h.cleanup) await h.cleanup(args);
@@ -236,34 +268,35 @@ function Route(route, handler) {
 
 class ConnectionHandler {
     /**
-     * @param {import('sockjs').Connection} conn 
+     * @param {import('sockjs').Connection} conn
      */
     constructor(conn) {
-        let that = this;
+        const that = this;
         this.conn = conn;
         this.request = {
             cookies: {
                 get(name) {
                     return that.request.cookies[name];
                 },
-                set() { }
+                set() { },
             },
             params: {},
-            headers: conn.headers
+            headers: conn.headers,
         };
         this._handler = {};
-        let p = (conn.url.split('?')[1] || '').split('&');
-        for (let i in p) p[i] = p[i].split('=');
-        for (let i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
+        const p = (conn.url.split('?')[1] || '').split('&');
+        for (const i in p) p[i] = p[i].split('=');
+        for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
+
     renderHTML(name, context) {
         console.time(name);
-        this.hasPerm = perm => this.user.hasPerm(perm);
+        this.hasPerm = (perm) => this.user.hasPerm(perm);
         return new Promise((resolve, reject) => {
             template.render(name, Object.assign(context, {
                 handler: this,
-                _: str => str ? str.toString().translate(this.user.language) : '',
-                user: this.user
+                _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+                user: this.user,
             }), (error, res) => {
                 console.timeEnd(name);
                 if (error) reject(error);
@@ -271,38 +304,43 @@ class ConnectionHandler {
             });
         });
     }
+
     send(data) {
         this.conn.write(JSON.stringify(data));
     }
+
     close(code, reason) {
         this.conn.close(code, reason);
     }
+
     async ___prepare() {
         await new Promise((resolve, reject) => {
-            this.conn.once('data', msg => {
-                for (let i of msg.split(';')) {
-                    i = i.trim().split('=');
-                    this.request.cookies[i[0]] = i[1];
+            this.conn.once('data', (msg) => {
+                for (const i of msg.split(';')) {
+                    const [k, v] = i.trim().split('=');
+                    this.request.cookies[k] = v;
                 }
                 resolve();
             });
             setTimeout(reject, 5000);
         });
         this._handler.sid = this.request.cookies.get('sid');
-        this.session = this._handler.sid ? await token.get(this._handler.sid, token.TYPE_SESSION) : { uid: 1 };
+        this.session = this._handler.sid
+            ? await token.get(this._handler.sid, token.TYPE_SESSION)
+            : { uid: 1 };
         if (!this.session) this.session = { uid: 1 };
-        let bdoc = await blacklist.get(this.request.ip);
+        const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
 }
-function Connection(prefix, handler) {
+function Connection(prefix, RouteConnHandler) {
     const sock = sockjs.createServer({ prefix });
-    sock.on('connection', async conn => {
-        let h = new handler(conn);
+    sock.on('connection', async (conn) => {
+        const h = new RouteConnHandler(conn);
         try {
-            let args = Object.assign({}, h.request.params);
+            const args = { ...h.request.params };
 
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
             if (args.page) args.page = parseInt(args.page);
@@ -313,9 +351,11 @@ function Connection(prefix, handler) {
             if (h.__prepare) await h.__prepare(args);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
-            if (h.message) conn.on('data', data => {
-                h.message(JSON.parse(data));
-            });
+            if (h.message) {
+                conn.on('data', (data) => {
+                    h.message(JSON.parse(data));
+                });
+            }
             conn.on('close', async () => {
                 if (h.cleanup) await h.cleanup(args);
                 if (h._cleanup) await h._cleanup(args);

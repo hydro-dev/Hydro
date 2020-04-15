@@ -1,4 +1,4 @@
-let permissions = {
+const permissions = {
     PERM_NONE: '0',
     PERM_ALL: '-',
     PERM_LOGGEDIN: '~',
@@ -41,32 +41,30 @@ let permissions = {
     PERM_VIEW_TRAINING: 'a',
     PERM_CREATE_TRAINING: 'b',
     PERM_EDIT_TRAINING: 'c',
-    PERM_JUDGE: 'd'
+    PERM_JUDGE: 'd',
 };
-permissions.PERM_BASIC =
-    permissions.PERM_VIEW +
-    permissions.PERM_VIEW_PROBLEM +
-    permissions.PERM_VIEW_PROBLEM_SOLUTION +
-    permissions.PERM_VIEW_DISCUSSION +
-    permissions.PERM_VIEW_CONTEST +
-    permissions.PERM_VIEW_CONTEST_SCOREBOARD +
-    permissions.PERM_REGISTER_USER;
-permissions.PERM_DEFAULT =
-    permissions.PERM_VIEW +
-    permissions.PERM_VIEW_PROBLEM +
-    permissions.PERM_SUBMIT_PROBLEM +
-    permissions.PERM_VIEW_PROBLEM_SOLUTION +
-    permissions.PERM_CREATE_PROBLEM_SOLUTION +
-    permissions.PERM_VOTE_PROBLEM_SOLUTION +
-    permissions.PERM_REPLY_PROBLEM_SOLUTION +
-    permissions.PERM_VIEW_DISCUSSION +
-    permissions.PERM_CREATE_DISCUSSION +
-    permissions.PERM_REPLY_DISCUSSION +
-    permissions.PERM_VIEW_CONTEST +
-    permissions.PERM_VIEW_CONTEST_SCOREBOARD +
-    permissions.PERM_ATTEND_CONTEST +
-    permissions.PERM_VIEW_TRAINING +
-    permissions.PERM_CREATE_TRAINING +
-    permissions.PERM_LOGGEDIN;
+permissions.PERM_BASIC = permissions.PERM_VIEW
+    + permissions.PERM_VIEW_PROBLEM
+    + permissions.PERM_VIEW_PROBLEM_SOLUTION
+    + permissions.PERM_VIEW_DISCUSSION
+    + permissions.PERM_VIEW_CONTEST
+    + permissions.PERM_VIEW_CONTEST_SCOREBOARD
+    + permissions.PERM_REGISTER_USER;
+permissions.PERM_DEFAULT = permissions.PERM_VIEW
+    + permissions.PERM_VIEW_PROBLEM
+    + permissions.PERM_SUBMIT_PROBLEM
+    + permissions.PERM_VIEW_PROBLEM_SOLUTION
+    + permissions.PERM_CREATE_PROBLEM_SOLUTION
+    + permissions.PERM_VOTE_PROBLEM_SOLUTION
+    + permissions.PERM_REPLY_PROBLEM_SOLUTION
+    + permissions.PERM_VIEW_DISCUSSION
+    + permissions.PERM_CREATE_DISCUSSION
+    + permissions.PERM_REPLY_DISCUSSION
+    + permissions.PERM_VIEW_CONTEST
+    + permissions.PERM_VIEW_CONTEST_SCOREBOARD
+    + permissions.PERM_ATTEND_CONTEST
+    + permissions.PERM_VIEW_TRAINING
+    + permissions.PERM_CREATE_TRAINING
+    + permissions.PERM_LOGGEDIN;
 permissions.PERM_ADMIN = permissions.PERM_ALL;
 module.exports = permissions;

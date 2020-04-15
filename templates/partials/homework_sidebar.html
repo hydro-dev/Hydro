@@ -27,7 +27,7 @@
     {% if handler.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <form action="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <button class="menu__link" type="submit">
             <span class="icon icon-add"></span> {{ _('Claim Homework') }}
           </button>

@@ -4,12 +4,14 @@ module.exports = {
     TEXT: 'OI',
     check: () => { },
     stat: (tdoc, journal) => {
-        let detail = {}, score = 0;
-        for (let j in journal)
+        const detail = {};
+        let score = 0;
+        for (const j in journal) {
             if (tdoc.pids.includes(j.pid)) {
                 detail[j.pid] = j;
                 score += j.score;
             }
+        }
         return { score, detail };
     },
     showScoreboard(tdoc, now) {
@@ -18,43 +20,44 @@ module.exports = {
     showRecord(tdoc, now) {
         return now > tdoc.endAt;
     },
-    scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, pdict) {
-        let columns = [
+    scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
+        const columns = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
-            { type: 'total_score', value: _('Total Score') }
+            { type: 'total_score', value: _('Total Score') },
         ];
-        for (let i in tdoc.pids)
-            if (is_export)
+        for (const i in tdoc.pids) {
+            if (isExport) {
                 columns.push({
                     type: 'problem_score',
-                    value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title)
+                    value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
                 });
-            else
+            } else {
                 columns.push({
                     type: 'problem_detail',
                     value: '#{0}'.format(i + 1),
-                    raw: pdict[tdoc.pids[i]]
+                    raw: pdict[tdoc.pids[i]],
                 });
-        let rows = [columns];
-        for (let [rank, tsdoc] of ranked_tsdocs) {
-            let tsddict = {};
-            if (tsdoc.journal)
-                for (let item of tsdoc.journal)
-                    tsddict[item.pid] = item;
-            let row = [];
+            }
+        }
+        const rows = [columns];
+        for (const [rank, tsdoc] of rankedTsdocs) {
+            const tsddict = {};
+            if (tsdoc.journal) { for (const item of tsdoc.journal) tsddict[item.pid] = item; }
+            const row = [];
             row.push({ type: 'string', value: rank });
             row.push({ type: 'user', value: udict[tsdoc.uid].uname, raw: udict[tsdoc.uid] });
             row.push({ type: 'string', value: tsdoc.score || 0 });
-            for (let pid of tdoc.pids)
+            for (const pid of tdoc.pids) {
                 row.push({
                     type: 'record',
                     value: (tsddict[pid] || {}).score || '-',
-                    raw: (tsddict[pid] || {}).rid || null
+                    raw: (tsddict[pid] || {}).rid || null,
                 });
+            }
             rows.push(row);
         }
         return rows;
     },
-    rank: tdocs => ranked(tdocs, (a, b) => a.score == b.score)
+    rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
 };

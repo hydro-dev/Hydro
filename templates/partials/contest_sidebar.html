@@ -27,7 +27,7 @@
     {% if handler.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <form action="/c/{{ tdoc._id }}" method="POST">
           <input type="hidden" name="operation" value="attend">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <button class="menu__link" type="submit">
             <span class="icon icon-add"></span> {{ _('Attend Contest') }}
           </button>

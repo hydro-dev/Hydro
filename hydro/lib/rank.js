@@ -1,11 +1,11 @@
-module.exports = function* ranked(diter, equ = (a, b) => a == b) {
-    let last_doc = null;
-    let r = 0, count = 0;
-    for (let doc of diter) {
+module.exports = function* ranked(diter, equ = (a, b) => a === b) {
+    let last = null;
+    let r = 0;
+    let count = 0;
+    for (const doc of diter) {
         count++;
-        if (count == 1 || !equ(last_doc, doc))
-            r = count;
-        last_doc = doc;
+        if (count === 1 || !equ(last, doc)) r = count;
+        last = doc;
         yield [r, doc];
     }
 };

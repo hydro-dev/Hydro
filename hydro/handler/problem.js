@@ -1,23 +1,26 @@
-const
-    fs = require('fs'),
-    paginate = require('../lib/paginate'),
-    validator = require('../lib/validator'),
-    problem = require('../model/problem'),
-    record = require('../model/record'),
-    user = require('../model/user'),
-    solution = require('../model/solution'),
-    system = require('../model/system'),
-    { Route, Handler } = require('../service/server'),
-    gridfs = require('../service/gridfs'),
-    queue = require('../service/queue'),
-    { NoProblemError, ProblemDataNotFoundError, BadRequestError,
-        SolutionNotFoundError } = require('../error'),
-    { constants } = require('../options'),
-    { PERM_VIEW_PROBLEM, PERM_VIEW_PROBLEM_HIDDEN, PERM_SUBMIT_PROBLEM,
-        PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
-        PERM_JUDGE, PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
-        PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
-        PERM_REPLY_PROBLEM_SOLUTION } = require('../permission');
+const fs = require('fs');
+const paginate = require('../lib/paginate');
+const validator = require('../lib/validator');
+const problem = require('../model/problem');
+const record = require('../model/record');
+const user = require('../model/user');
+const solution = require('../model/solution');
+const system = require('../model/system');
+const { Route, Handler } = require('../service/server');
+const gridfs = require('../service/gridfs');
+const queue = require('../service/queue');
+const {
+    NoProblemError, ProblemDataNotFoundError, BadRequestError,
+    SolutionNotFoundError,
+} = require('../error');
+const { constants } = require('../options');
+const {
+    PERM_VIEW_PROBLEM, PERM_VIEW_PROBLEM_HIDDEN, PERM_SUBMIT_PROBLEM,
+    PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
+    PERM_JUDGE, PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
+    PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
+    PERM_REPLY_PROBLEM_SOLUTION,
+} = require('../permission');
 
 queue.assert('judge');
 
@@ -25,27 +28,30 @@ class ProblemHandler extends Handler {
     async _prepare() {
         this.checkPerm(PERM_VIEW_PROBLEM);
     }
+
     async get({ page = 1, category = null }) {
         this.response.template = 'problem_main.html';
-        let q = {};
+        const q = {};
         if (category) q.category = category;
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        let pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
+        const pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
         this.response.body = {
             path: [
                 ['Hydro', '/'],
-                ['problem_main', null]
+                ['problem_main', null],
             ],
-            page, pdocs, category: ''
+            page,
+            pdocs,
+            category: '',
         };
     }
 }
 
 class ProblemRandomHandler extends ProblemHandler {
     async get() {
-        let q = {};
+        const q = {};
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        let pid = await problem.random(q);
+        const pid = await problem.random(q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
     }
@@ -57,19 +63,20 @@ class ProblemDetailHandler extends ProblemHandler {
         this.uid = this.user._id;
         this.pid = pid;
         if (pid) this.pdoc = await problem.get(pid, this.uid);
-        if (this.pdoc.hidden && this.pdoc.owner != this.uid) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+        if (this.pdoc.hidden && this.pdoc.owner !== this.uid) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
-            title: (this.pdoc || {}).title || ''
+            title: (this.pdoc || {}).title || '',
         };
     }
+
     async get() {
         this.response.body.path = [
             ['Hydro', '/'],
             ['problem_main', '/p'],
-            [this.pdoc.title, null, true]
+            [this.pdoc.title, null, true],
         ];
     }
 }
@@ -78,26 +85,31 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
     async prepare() {
         this.checkPerm(PERM_SUBMIT_PROBLEM);
     }
+
     async get() {
         this.response.template = 'problem_submit.html';
-        let rdocs = await record.getUserInProblemMulti(this.uid, this.pdoc._id).sort({ _id: -1 }).limit(10).toArray();
+        const rdocs = await record.getUserInProblemMulti(this.uid, this.pdoc._id)
+            .sort({ _id: -1 })
+            .limit(10)
+            .toArray();
         this.response.body = {
             path: [
                 ['Hydro', '/'],
                 ['problem_main', '/p'],
                 [this.pdoc.title, `/p/${this.pid}`, true],
-                ['problem_submit', null]
+                ['problem_submit', null],
             ],
             pdoc: this.pdoc,
             udoc: this.udoc,
             rdocs,
-            title: this.pdoc.title
+            title: this.pdoc.title,
         };
     }
+
     async post() {
-        let { lang, code } = this.request.body;
-        let rid = await record.add({
-            uid: this.uid, lang, code, pid: this.pdoc._id
+        const { lang, code } = this.request.body;
+        const rid = await record.add({
+            uid: this.uid, lang, code, pid: this.pdoc._id,
         });
         await queue.push('judge', rid);
         this.user.nSubmit++;
@@ -108,7 +120,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
 
 class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
-        if (this.pdoc.owner != this.uid) this.checkPerm(PERM_EDIT_PROBLEM);
+        if (this.pdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM);
     }
 }
 
@@ -119,9 +131,10 @@ class ProblemSettingsHandler extends ProblemManageHandler {
             ['Hydro', '/'],
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pid}`, true],
-            ['problem_settings', null]
+            ['problem_settings', null],
         ];
     }
+
     async post() {
         // TODO(masnn)
         this.back();
@@ -135,43 +148,45 @@ class ProblemEditHandler extends ProblemManageHandler {
             ['Hydro', '/'],
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.request.params.pid}`, true],
-            ['problem_edit', null]
+            ['problem_edit', null],
         ];
         this.response.body.page_name = 'problem_edit';
     }
+
     async post({ title, content }) {
-        let pid = validator.checkPid(this.request.body.pid);
-        let pdoc = await problem.get(this.params.pid);
+        const pid = validator.checkPid(this.request.body.pid);
+        const pdoc = await problem.get(this.params.pid);
         await problem.edit(pdoc._id, { title, content, pid });
         this.response.redirect = `/p/${pid}`;
     }
 }
 
 class ProblemDataUploadHandler extends ProblemManageHandler {
-    async prepare(){
+    async prepare() {
         this.response.template = 'problem_upload.html';
     }
+
     async get() {
-        if (this.pdoc.data && typeof this.pdoc.data == 'object') {
-            let files = await gridfs.find({ _id: this.pdoc.data }).toArray();
+        if (this.pdoc.data && typeof this.pdoc.data === 'object') {
+            const files = await gridfs.find({ _id: this.pdoc.data }).toArray();
             this.md5 = files[0].md5;
         }
         this.response.body.md5 = this.md5;
     }
+
     async post() {
         if (!this.request.files.file) throw new BadRequestError();
         const r = fs.createReadStream(this.request.files.file.path);
-        let f = gridfs.openUploadStream('data.zip');
+        const f = gridfs.openUploadStream('data.zip');
         await new Promise((resolve, reject) => {
             r.pipe(f);
             f.once('finish', resolve);
             f.once('error', reject);
         });
-        if (this.pdoc.data && typeof this.pdoc.data == 'object')
-            gridfs.delete(this.pdoc.data);
+        if (this.pdoc.data && typeof this.pdoc.data === 'object') { gridfs.delete(this.pdoc.data); }
         this.pdoc = await problem.edit(this.pdoc._id, { data: f.id });
-        if (this.pdoc.data && typeof this.pdoc.data == 'object') {
-            let files = await gridfs.find({ _id: this.pdoc.data }).toArray();
+        if (this.pdoc.data && typeof this.pdoc.data === 'object') {
+            const files = await gridfs.find({ _id: this.pdoc.data }).toArray();
             this.md5 = files[0].md5;
         }
         this.response.body.md5 = this.md5;
@@ -180,9 +195,9 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
 
 class ProblemDataDownloadHandler extends ProblemDetailHandler {
     async get({ pid }) {
-        if (this.uid != this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
+        if (this.uid !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
-        else if (typeof this.pdoc.data == 'string') this.ctx.setRedirect = this.pdoc.data.split('from:')[1];
+        else if (typeof this.pdoc.data === 'string') [, this.ctx.setRedirect] = this.pdoc.data.split('from:');
         this.response.attachment(`${this.pdoc.title}.zip`);
         this.response.body = gridfs.openDownloadStream(this.pdoc.data);
     }
@@ -192,70 +207,81 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     async get({ page = 1 }) {
         this.response.template = 'problem_solution.html';
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
-        let [psdocs, pcount, pscount] = await paginate(solution.getMulti(this.pdoc._id), page, constants.SOLUTION_PER_PAGE);
-        let uids = [this.pdoc.owner], docids = [];
-        for (let psdoc of psdocs) {
+        const [psdocs, pcount, pscount] = await paginate(
+            solution.getMulti(this.pdoc._id),
+            page, constants.SOLUTION_PER_PAGE,
+        );
+        const uids = [this.pdoc.owner]; const
+            docids = [];
+        for (const psdoc of psdocs) {
             docids.push(psdoc._id);
             uids.push(psdoc.owner);
-            if (psdoc.reply.length)
-                for (let psrdoc of psdoc.reply)
-                    uids.push(psrdoc.owner);
+            if (psdoc.reply.length) { for (const psrdoc of psdoc.reply) uids.push(psrdoc.owner); }
         }
-        let udict = await user.getList(uids);
-        let pssdict = solution.getListStatus(docids, this.uid);
-        let path = [
+        const udict = await user.getList(uids);
+        const pssdict = solution.getListStatus(docids, this.uid);
+        const path = [
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
-            ['problem_solution', null]
+            ['problem_solution', null],
         ];
         this.response.body = {
-            path, psdocs, page, pcount, pscount, udict, pssdict
+            path, psdocs, page, pcount, pscount, udict, pssdict,
         };
     }
+
     async post({ psid }) {
         if (psid) this.psdoc = await solution.get(psid);
     }
-    async post_submit({ content }) {
+
+    async postSubmit({ content }) {
         this.checkPerm(PERM_CREATE_PROBLEM_SOLUTION);
         await solution.add(this.pdoc._id, this.uid, content);
         this.back();
     }
-    async post_edit_solution({ content }) {
-        if (this.psdoc.owner != this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
+
+    async postEditSolution({ content }) {
+        if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
         this.psdoc = await solution.edit(this.psdoc._id, content);
         this.ctx.body.psdoc = this.psdoc;
         this.back();
     }
-    async post_delete_solution() {
-        if (this.psdoc.owner != this.uid) this.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
+
+    async postDeleteSolution() {
+        if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
         await solution.del(this.psdoc._id);
         this.back();
     }
-    async post_reply({ psid, content }) {
+
+    async postReply({ psid, content }) {
         this.checkPerm(PERM_REPLY_PROBLEM_SOLUTION);
-        let psdoc = await solution.get(psid);
+        const psdoc = await solution.get(psid);
         await solution.reply(psdoc._id, this.uid, content);
     }
-    async post_edit_reply({ content, psid, psrid }) {
-        let [psdoc, psrdoc] = await solution.getReply(psid, psrid);
-        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
-        if (psrdoc.owner != this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+
+    async postEditReply({ content, psid, psrid }) {
+        const [psdoc, psrdoc] = await solution.getReply(psid, psrid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
+        if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         await solution.editReply(psid, psrid, content);
     }
-    async post_delete_reply({ psid, psrid }) {
-        let [psdoc, psrdoc] = await solution.getReply(psid, psrid);
-        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
-        if (psrdoc.owner != this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+
+    async postDeleteReply({ psid, psrid }) {
+        const [psdoc, psrdoc] = await solution.getReply(psid, psrid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
+        if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         await solution.delReply(psid, psrid);
         this.back();
     }
-    async post_upvote() {
-        let [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, 1);
+
+    async postUpvote() {
+        const [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, 1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
         if (!this.preferJson) this.back();
     }
-    async post_downvote() {
-        let [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, -1);
+
+    async postDownvote() {
+        const [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, -1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
         if (!this.preferJson) this.back();
     }
@@ -264,7 +290,7 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
 class ProblemSolutionRawHandler extends ProblemDetailHandler {
     async get({ psid }) {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
-        let psdoc = await solution.get(psid);
+        const psdoc = await solution.get(psid);
         this.response.type = 'text/markdown';
         this.response.body = psdoc.content;
     }
@@ -273,7 +299,7 @@ class ProblemSolutionRawHandler extends ProblemDetailHandler {
 class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
     async get({ psid }) {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
-        let [psdoc, psrdoc] = await solution.getReply(psid);
+        const [psdoc, psrdoc] = await solution.getReply(psid);
         if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
         this.response.type = 'text/markdown';
         this.response.body = psrdoc.content;
@@ -288,14 +314,20 @@ class ProblemCreateHandler extends Handler {
             path: [
                 ['Hydro', '/'],
                 ['problem_main', '/p'],
-                ['problem_create', null]
-            ], page_name: 'problem_create'
+                ['problem_create', null],
+            ],
+            page_name: 'problem_create',
         };
     }
-    async post({ title, pid, content, hidden }) {
+
+    async post({
+        title, pid, content, hidden,
+    }) {
         validator.checkPid(pid);
         pid = pid || await system.incPidCounter();
-        await problem.add({ title, content, owner: this.user._id, pid, hidden });
+        await problem.add({
+            title, content, owner: this.user._id, pid, hidden,
+        });
         this.response.body = { pid };
         this.response.redirect = `/p/${pid}/settings`;
     }
@@ -322,7 +354,7 @@ class ProblemPretestHandler(base.Handler):
   @base.requirePerm(builtin.PERM_SUBMIT_PROBLEM)
   @base.route_argument
   @base.post_argument
-  @base.require_csrf_token
+  @base.require_csrfToken
   @base.sanitize
   @base.limitRate('add_record', 60, 100)
   async def post(self, *, pid: document.convert_doc_id, lang: str, code: str,
@@ -379,7 +411,7 @@ class ProblemPretestConnection(record_handler.RecordVisibilityMixin, base.Connec
   @base.requirePriv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
-  @base.require_csrf_token
+  @base.require_csrfToken
   @base.sanitize
   async def post(self, *, pid: document.convert_doc_id, title: str, content: str):
     pdoc = await problem.get(self.domainId, pid)

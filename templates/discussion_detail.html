@@ -40,7 +40,7 @@
       {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
         <li><form class="form--inline" method="post">
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <button class="star{% if dsdoc['star'] %} activated{% endif %}" type="submit">
             <span class="starred--hide"><span class="icon icon-star--outline"></span> {{ _('Star Topic') }}</span>
             <span class="starred--show"><span class="icon icon-star"></span> {{ _('Unstar Topic') }}</span>

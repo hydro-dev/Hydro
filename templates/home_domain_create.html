@@ -21,7 +21,7 @@
       {% include "partials/domain_edit_form.html" %}
     {% endwith %}
       <div class="row"><div class="columns">
-        <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <button type="submit" class="rounded primary button">
           {{ _('Create') }}
         </button>

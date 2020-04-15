@@ -1,18 +1,20 @@
-const
-    user = require('./user'),
-    problem = require('./problem'),
-    { ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
-        ContestNotAttendedError, ProblemNotFoundError, ContestScoreboardHiddenError } = require('../error'),
-    { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission'),
-    validator = require('../lib/validator'),
-    db = require('../service/db'),
-    coll = db.collection('contest'),
-    coll_status = db.collection('contest.status');
+const user = require('./user');
+const problem = require('./problem');
+const {
+    ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
+    ContestNotAttendedError, ProblemNotFoundError, ContestScoreboardHiddenError,
+} = require('../error');
+const { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
+const validator = require('../lib/validator');
+const db = require('../service/db');
+
+const coll = db.collection('contest');
+const collStatus = db.collection('contest.status');
 
 const RULES = {
     homework: require('../module/contest/homework'),
     oi: require('../module/contest/oi'),
-    acm: require('../module/contest/acm')
+    acm: require('../module/contest/acm'),
 };
 
 /**
@@ -21,13 +23,13 @@ const RULES = {
  */
 
 /**
- * @param {string} title 
- * @param {string} content 
- * @param {number} owner 
- * @param {string} rule 
- * @param {Date} beginAt 
- * @param {Date} endAt 
- * @param {ObjectID[]} pids 
+ * @param {string} title
+ * @param {string} content
+ * @param {number} owner
+ * @param {string} rule
+ * @param {Date} beginAt
+ * @param {Date} endAt
+ * @param {ObjectID[]} pids
  * @param {object} data
  * @returns {ObjectID} tid
  */
@@ -37,112 +39,120 @@ async function add(title, content, owner, rule,
     validator.checkContent(content);
     if (!this.RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
-    Object.assign(data, { content, owner, title, rule, beginAt, endAt, pids, attend: 0 });
+    Object.assign(data, {
+        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
+    });
     this.RULES[rule].check(data);
-    let res = await coll.insertOne(data);
+    const res = await coll.insertOne(data);
     return res.insertedId;
 }
 /**
- * @param {ObjectID} tid 
- * @param {object} $set 
+ * @param {ObjectID} tid
+ * @param {object} $set
  * @returns {Tdoc} tdoc after modification
  */
 async function edit(tid, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkIntro($set.content);
-    if ($set.rule)
-        if (!this.RULES[$set.rule]) throw new ValidationError('rule');
-    if ($set.beginAt && $set.endAt)
-        if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
-    let tdoc = await coll.findOne({ tid });
+    if ($set.rule) { if (!this.RULES[$set.rule]) throw new ValidationError('rule'); }
+    if ($set.beginAt && $set.endAt) if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
+    const tdoc = await coll.findOne({ tid });
     if (!tdoc) throw new ContestNotFoundError(tid);
     this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
     await coll.findOneAndUpdate({ tid }, { $set });
     return tdoc;
 }
 /**
- * @param {ObjectID} tid 
+ * @param {ObjectID} tid
  * @returns {Tdoc}
  */
 async function get(tid) {
-    let tdoc = await coll.findOne({ _id: tid });
+    const tdoc = await coll.findOne({ _id: tid });
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
 async function updateStatus(tid, uid, rid, pid, accept, score) {
-    let tdoc = await get(tid);
-    let tsdoc = await coll_status.findOneAndUpdate({ tid: tdoc._id, uid }, {
-        $push: { journal: { rid, pid, accept, score } },
-        $inc: { rev: 1 }
+    const tdoc = await get(tid);
+    const tsdoc = await collStatus.findOneAndUpdate({ tid: tdoc._id, uid }, {
+        $push: {
+            journal: {
+                rid, pid, accept, score,
+            },
+        },
+        $inc: { rev: 1 },
     }, { upsert: true });
     if (!tsdoc.value.attend) throw new ContestNotAttendedError(tid, uid);
 }
 async function getListStatus(uid, tids) {
-    let r = {};
-    for (let tid of tids) r[tid] = await this.getStatus(tid, uid);
+    const r = {};
+    for (const tid of tids) r[tid] = await this.getStatus(tid, uid); // eslint-disable-line no-await-in-loop
     return r;
 }
 async function attend(tid, uid) {
     try {
-        await coll_status.insertOne({ tid, uid, attend: 1 });
+        await collStatus.insertOne({ tid, uid, attend: 1 });
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
     await coll.findOneAndUpdate({ _id: tid }, { $inc: { attend: 1 } });
 }
 function getMultiStatus(query) {
-    return coll_status.find(query);
+    return collStatus.find(query);
 }
 function is_new(tdoc, days = 1) {
-    let now = new Date().getTime();
-    let readyAt = tdoc.beginAt.getTime();
+    const now = new Date().getTime();
+    const readyAt = tdoc.beginAt.getTime();
     return (now < readyAt - days * 24 * 3600 * 1000);
 }
 function is_upcoming(tdoc, days = 1) {
-    let now = new Date().getTime();
-    let readyAt = tdoc.beginAt.getTime();
+    const now = new Date().getTime();
+    const readyAt = tdoc.beginAt.getTime();
     return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt);
 }
 function is_not_started(tdoc) {
     return (new Date()) < tdoc.beginAt;
 }
 function is_ongoing(tdoc) {
-    let now = new Date();
+    const now = new Date();
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 function is_done(tdoc) {
     return tdoc.endAt <= new Date();
 }
 
-const ContestHandlerMixin = c => class extends c {
+const ContestHandlerMixin = (c) => class extends c {
     canViewHiddenScoreboard() {
         return this.user.hasPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     }
+
     canShowRecord(tdoc, allowPermOverride = true) {
         if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
         return false;
     }
+
     canShowScoreboard(tdoc, allowPermOverride = true) {
         if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard(tdoc)) return true;
         return false;
     }
+
     async getScoreboard(tid, isExport = false) {
-        let tdoc = await get(tid);
+        const tdoc = await get(tid);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        let tsdocs = await getMultiStatus(tid).sort(RULES[tdoc.rule].statusSort).toArray();
-        let uids = [];
-        for (let tsdoc of tsdocs) uids.push(tsdoc.uid);
-        let [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc['pids'])]);
-        let ranked_tsdocs = RULES[tdoc.rule].rank(tsdocs);
-        let rows = RULES[tdoc.rule].scoreboard(isExport, str => str ? str.toString().translate(this.user.language) : '', tdoc, ranked_tsdocs, udict, pdict);
+        const tsdocs = await getMultiStatus(tid).sort(RULES[tdoc.rule].statusSort).toArray();
+        const uids = [];
+        for (const tsdoc of tsdocs) uids.push(tsdoc.uid);
+        const [udict, pdict] = await Promise.all([user.getList(uids), problem.getList(tdoc.pids)]);
+        const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
+        const rows = RULES[tdoc.rule].scoreboard(isExport, (str) => (str ? str.toString().translate(this.user.language) : ''), tdoc, rankedTsdocs, udict, pdict);
         return [tdoc, rows, udict];
     }
-    async verifyProblems(pids) {
-        let r = [];
-        for (let pid of pids) {
-            let res = await problem.get(pid);
+
+    async verifyProblems(pids) { // eslint-disable-line class-methods-use-this
+        const r = [];
+        for (const pid of pids) {
+            const res = await problem.get(pid); // eslint-disable-line no-await-in-loop
             if (res) r.push(res._id);
             else throw new ProblemNotFoundError(pid);
         }
@@ -151,26 +161,37 @@ const ContestHandlerMixin = c => class extends c {
 };
 
 module.exports = {
-    RULES, ContestHandlerMixin, add, getListStatus, attend, edit, get, updateStatus,
-    count: query => coll.find(query).count(),
-    getMulti: query => coll.find(query),
+    RULES,
+    ContestHandlerMixin,
+    add,
+    getListStatus,
+    attend,
+    edit,
+    get,
+    updateStatus,
+    count: (query) => coll.find(query).count(),
+    getMulti: (query) => coll.find(query),
     getStatus: (tid, uid) => coll_status.findOne({ tid, uid }),
     setStatus: (tid, uid, $set) => coll_status.findOneAndUpdate({ tid, uid }, { $set }),
-    is_new, is_upcoming, is_not_started, is_ongoing, is_done,
-    status_text: tdoc =>
+    is_new,
+    is_upcoming,
+    is_not_started,
+    is_ongoing,
+    is_done,
+    status_text: (tdoc) => (
         is_new(tdoc)
             ? 'New'
             : is_upcoming(tdoc)
                 ? 'Ready (☆▽☆)'
                 : is_ongoing(tdoc)
                     ? 'Live...'
-                    : 'Done',
-    get_status: tdoc =>
+                    : 'Done'),
+    get_status: (tdoc) => (
         is_not_started(tdoc)
             ? 'not_started'
             : is_ongoing(tdoc)
                 ? 'ongoing'
-                : 'finished',
+                : 'finished'),
 };
 
 /*
@@ -334,7 +355,6 @@ def _parse_pids(pids_str):
 
 def _format_pids(pids_list):
   return ','.join([str(pid) for pid in pids_list])
-
 
 
 class ContestStatusMixin(object):

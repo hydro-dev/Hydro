@@ -52,7 +52,7 @@
              }) }}
           {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
           </div></div>
         </form>

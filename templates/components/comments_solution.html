@@ -54,7 +54,7 @@
             <input type="button" class="rounded button nojs--hide" name="dczcomments__box__cancel" value="{{ _('Cancel') }} (Esc)">
           </div>
           <input type="hidden" name="operation" value="{{ comment_post_op }}">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         </form>
       </div>
       <div class="nojs--hide">
@@ -91,13 +91,13 @@
           <form method="post">
             <input type="hidden" name="operation" value="upvote">
             <input type="hidden" name="psid" value="{{ doc._id }}">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button type="submit" class="vote-button upvote{% if pssdict[doc._id].vote == 1 %} active{% endif %}" data-tooltip="{{ _('Upvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Upvote') }}"><span class="icon icon-vote--up"></span></button>
           </form>
           <form method="post">
             <input type="hidden" name="operation" value="downvote">
             <input type="hidden" name="psid" value="{{ doc._id }}">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button type="submit" class="vote-button downvote{% if pssdict[doc._id].vote == -1 %} active{% endif %}" data-tooltip="{{ _('Downvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Downvote') }}"><span class="icon icon-vote--down"></span></button>
           </form>
         </div>

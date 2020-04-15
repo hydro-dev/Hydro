@@ -13,7 +13,7 @@
       </div>
       <div class="section__body typo">
         <form method="post">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         {% if join_settings['method'] == vj4.constant.domain.JOIN_METHOD_CODE %}
           {{ form.form_text(columns=None, label='Invitation Code', name='code', required=true, help_text='You need to enter the invitation code to join the domain.', value=code, autofocus=True) }}
         {% endif %}

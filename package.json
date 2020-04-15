@@ -13,7 +13,7 @@
         "koa": "^2.11.0",
         "koa-body": "^4.1.1",
         "koa-morgan": "^1.0.1",
-        "koa-router": "^7.4.0",
+        "koa-router": "^8.0.8",
         "koa-static-cache": "^5.1.2",
         "lodash": "^4.17.15",
         "markdown-it": "^10.0.0",
@@ -24,7 +24,9 @@
         "sockjs": "^0.3.20"
     },
     "devDependencies": {
-        "eslint": "^6.6.0"
+        "eslint": "^6.8.0",
+        "eslint-config-airbnb-base": "^14.1.0",
+        "eslint-plugin-import": "^2.20.2"
     },
     "scripts": {
         "build": "webpack --config webpack.config.js",

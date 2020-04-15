@@ -7,7 +7,7 @@
         <form method="post">
           {% include "partials/discussion_edit_form.html" %}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button name="operation" value="update" type="submit" class="rounded primary button">
               {{ _('Update') }} (Ctrl+Enter)
             </button>

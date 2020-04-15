@@ -8,7 +8,7 @@
         <p>{{ _('MD5: {0}').format(md5 or _('(None)')) }}</p>
     {% endif %}
     <p>{{ _('New dataset') }}:
-        <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <input type="file" name="file">
         <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
     </p>

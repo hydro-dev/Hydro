@@ -1,32 +1,31 @@
 require('./utils');
-const
-    Mongo = require('mongodb'),
-    { defaults } = require('lodash'),
-    builtin = require('./model/builtin'),
-    pwhash = require('./lib/pwhash'),
-    options = require('./options'),
-    { udoc } = require('./interface');
+const Mongo = require('mongodb');
+const { defaults } = require('lodash');
+const builtin = require('./model/builtin');
+const pwhash = require('./lib/pwhash');
+const options = require('./options');
+const { udoc } = require('./interface');
 
 async function run() {
     let mongourl = 'mongodb://';
-    if (options.db.username) mongourl += options.db.username + ':' + options.db.password + '@';
+    if (options.db.username) mongourl += `${options.db.username}:${options.db.password}@`;
     mongourl += `${options.db.host}:${options.db.port}/${options.db.name}`;
-    let Database = await Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
-    let db = Database.db(options.db.name);
-    let coll_user = db.collection('user');
-    let coll_role = db.collection('role');
-    let coll_blacklist = db.collection('blacklist');
-    let coll_token = db.collection('token');
+    const Database = await Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
+    const db = Database.db(options.db.name);
+    const collUser = db.collection('user');
+    const collRole = db.collection('role');
+    const collBlacklist = db.collection('blacklist');
+    const collToken = db.collection('token');
     async function createUser() {
-        let salt = pwhash.salt();
-        await coll_user.insertMany([
+        const salt = pwhash.salt();
+        await collUser.insertMany([
             defaults({
                 _id: 0,
                 uname: 'Hydro',
                 unameLower: 'hydro',
                 mail: 'hydro@hydro',
                 mailLower: 'hydro@hydro',
-                role: 'guest'
+                role: 'guest',
             }, udoc),
             defaults({
                 _id: 1,
@@ -34,7 +33,7 @@ async function run() {
                 mailLower: 'guest@hydro',
                 uname: 'Guest',
                 unameLower: 'guest',
-                role: 'guest'
+                role: 'guest',
             }, udoc),
             defaults({
                 _id: -1,
@@ -45,22 +44,22 @@ async function run() {
                 hash: pwhash.hash('rootroot', salt),
                 salt,
                 gravatar: 'root@hydro',
-                role: 'admin'
-            }, udoc)
+                role: 'admin',
+            }, udoc),
         ]);
     }
-    await coll_user.createIndex('unameLower', { unique: true });
-    await coll_user.createIndex('mailLower', { sparse: true });
-    await coll_role.insertMany(builtin.BUILTIN_ROLES);
-    await coll_blacklist.createIndex('expireAt', { expireAfterSeconds: 0 });
-    await coll_token.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true });
-    await coll_token.createIndex('expireAt', { expireAfterSeconds: 0 });
+    await collUser.createIndex('unameLower', { unique: true });
+    await collUser.createIndex('mailLower', { sparse: true });
+    await collRole.insertMany(builtin.BUILTIN_ROLES);
+    await collBlacklist.createIndex('expireAt', { expireAfterSeconds: 0 });
+    await collToken.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true });
+    await collToken.createIndex('expireAt', { expireAfterSeconds: 0 });
     await createUser();
     console.log('Installed');
     process.exit(0);
 }
 
-run().catch(e => {
+run().catch((e) => {
     console.error(e);
     process.exit(1);
 });

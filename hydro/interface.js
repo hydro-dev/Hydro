@@ -16,7 +16,7 @@ exports.udoc = {
     regip: '0.0.0.0',
     gravatar: '',
     loginat: new Date(),
-    loginip: '0.0.0.0'
+    loginip: '0.0.0.0',
 };
 /*
 export interface Pdoc {

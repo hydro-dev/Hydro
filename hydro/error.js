@@ -2,7 +2,7 @@ class UserFacingError extends Error {
     constructor(type) {
         super(type);
         this.code = 500;
-        //this.stack = '';
+        // this.stack = '';
         this.params = [];
     }
 }
@@ -75,9 +75,9 @@ class VerifyPasswordError extends ForbiddenError {
     }
 }
 class OpcountExceededError extends ForbiddenError {
-    constructor(op, period_secs, max_operations) {
+    constructor(op, periodSecs, maxOperations) {
         super('OpcountExceededError');
-        this.params = [op, period_secs, max_operations];
+        this.params = [op, periodSecs, maxOperations];
     }
 }
 
@@ -155,15 +155,31 @@ class ProblemDataNotFoundError extends NotFoundError {
     }
 }
 module.exports = {
-    BadRequestError, ForbiddenError, NotFoundError,
-    LoginError, UserAlreadyExistError, InvalidTokenError,
-    UserNotFoundError, VerifyPasswordError, ProblemDataNotFoundError,
-    OpcountExceededError, PermissionError, NoProblemError,
-    ValidationError, ProblemNotFoundError, TrainingNotFoundError,
-    ContestNotFoundError, RecordNotFoundError, SolutionNotFoundError,
-    AlreadyVotedError, ContestNotAttendedError, ContestNotLiveError,
-    ContestScoreboardHiddenError, ContestAlreadyAttendedError, UserFacingError,
-    SystemError
+    BadRequestError,
+    ForbiddenError,
+    NotFoundError,
+    LoginError,
+    UserAlreadyExistError,
+    InvalidTokenError,
+    UserNotFoundError,
+    VerifyPasswordError,
+    ProblemDataNotFoundError,
+    OpcountExceededError,
+    PermissionError,
+    NoProblemError,
+    ValidationError,
+    ProblemNotFoundError,
+    TrainingNotFoundError,
+    ContestNotFoundError,
+    RecordNotFoundError,
+    SolutionNotFoundError,
+    AlreadyVotedError,
+    ContestNotAttendedError,
+    ContestNotLiveError,
+    ContestScoreboardHiddenError,
+    ContestAlreadyAttendedError,
+    UserFacingError,
+    SystemError,
 };
 
 /*
@@ -199,7 +215,6 @@ class UserFacingError(Error):
   @property
   def message(self):
     return 'An error has occurred.'
-
 
 
 class BlacklistedError(ForbiddenError):
@@ -238,7 +253,6 @@ class CsrfTokenError(ForbiddenError):
 
 class InvalidOperationError(ForbiddenError):
   pass
-
 
 
 class InvalidTokenDigestError(ForbiddenError):

@@ -9,5 +9,5 @@ module.exports = {
     system: require('./system'),
     token: require('./token'),
     training: require('./training'),
-    user: require('./user')
+    user: require('./user'),
 };

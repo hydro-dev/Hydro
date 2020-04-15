@@ -42,7 +42,7 @@
                value:pdoc['tag']|join(', ')
              }) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}
             </button>

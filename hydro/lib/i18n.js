@@ -1,37 +1,40 @@
-const
-    fs = require('fs'),
-    yaml = require('js-yaml');
+const fs = require('fs');
+const yaml = require('js-yaml');
 
-let locales = {};
+const locales = {};
 
-String.prototype.format = function (args) {
-    var result = this;
-    if (arguments.length > 0) {
-        if (arguments.length == 1 && typeof (args) == 'object') {
-            for (var key in args)
-                if (args[key] != undefined) {
-                    let reg = new RegExp('(\\{' + key + '\\})', 'g');
+String.prototype.format = function formatStr(...args) {
+    let result = this;
+    if (args.length > 0) {
+        if (args.length === 1 && typeof (args[0]) === 'object') {
+            for (const key in args) {
+                if (args[key] !== undefined) {
+                    const reg = new RegExp(`(\\{${key}\\})`, 'g');
                     result = result.replace(reg, args[key]);
                 }
-        } else for (var i = 0; i < arguments.length; i++)
-            if (arguments[i] != undefined) {
-                let reg = new RegExp('(\\{)' + i + '(\\})', 'g');
-                result = result.replace(reg, arguments[i]);
             }
+        } else {
+            for (let i = 0; i < args.length; i++) {
+                if (args[i] !== undefined) {
+                    const reg = new RegExp(`(\\{)${i}(\\})`, 'g');
+                    result = result.replace(reg, args[i]);
+                }
+            }
+        }
     }
     return result;
 };
-String.prototype.rawformat = function (object) {
-    let res = this.split('{@}');
+String.prototype.rawformat = function rawFormat(object) {
+    const res = this.split('{@}');
     return [res[0], object, res[1]];
 };
-String.prototype.translate = function (language = 'zh_CN') {
+String.prototype.translate = function translate(language = 'zh_CN') {
     if (locales[language]) return locales[language][this] || this;
-    else return this;
+    return this;
 };
 
 module.exports = function load(file, language) {
     if (!locales[language]) locales[language] = {};
-    let content = fs.readFileSync(file).toString();
+    const content = fs.readFileSync(file).toString();
     Object.assign(locales[language], yaml.safeLoad(content));
 };

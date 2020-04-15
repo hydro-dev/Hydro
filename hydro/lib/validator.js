@@ -1,37 +1,44 @@
-const
-    { ValidationError } = require('../error'),
-    RE_UID = /^-?\d+$/i,
-    RE_PID = /^([a-zA-Z]+[a-zA-Z0-9]*)|$/i,
-    RE_UNAME = /[^\s\u3000](.{,254}[^\s\u3000])?$/i,
-    RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;
+const { ValidationError } = require('../error');
 
-const
-    isTitle = s => s && s.length < 64,
-    checkTitle = s => { if (!isTitle(s)) throw new ValidationError('title'); else return s; },
-    isUid = s => RE_UID.test(s),
-    checkUid = s => { if (!isUid(s)) throw new ValidationError('uid'); else return s; },
-    isUname = s => RE_UNAME.test(s),
-    checkUname = s => { if (!isUname(s)) throw new ValidationError('uname'); else return s; },
-    isPassword = s => s.length >= 5,
-    checkPassword = s => { if (!isPassword(s)) throw new ValidationError('password'); else return s; },
-    isEmail = s => RE_MAIL.test(s),
-    checkEmail = s => { if (!isEmail(s)) throw new ValidationError('mail'); else return s; },
-    isContent = s => s && s.length < 65536,
-    checkContent = s => { if (!isContent(s)) throw new ValidationError('content'); else return s; },
-    isName = s => s && s.length < 256,
-    checkName = s => { if (!isName(s)) throw new ValidationError('name'); else return s; },
-    isPid = s => RE_PID.test(s.toString()),
-    checkPid = s => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };
+const RE_UID = /^-?\d+$/i;
+const RE_PID = /^([a-zA-Z]+[a-zA-Z0-9]*)|$/i;
+const RE_UNAME = /[^\s\u3000](.{,254}[^\s\u3000])?$/i;
+const RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;
+
+const isTitle = (s) => s && s.length < 64;
+const checkTitle = (s) => { if (!isTitle(s)) throw new ValidationError('title'); else return s; };
+const isUid = (s) => RE_UID.test(s);
+const checkUid = (s) => { if (!isUid(s)) throw new ValidationError('uid'); else return s; };
+const isUname = (s) => RE_UNAME.test(s);
+const checkUname = (s) => { if (!isUname(s)) throw new ValidationError('uname'); else return s; };
+const isPassword = (s) => s.length >= 5;
+const checkPassword = (s) => { if (!isPassword(s)) throw new ValidationError('password'); else return s; };
+const isEmail = (s) => RE_MAIL.test(s);
+const checkEmail = (s) => { if (!isEmail(s)) throw new ValidationError('mail'); else return s; };
+const isContent = (s) => s && s.length < 65536;
+const checkContent = (s) => { if (!isContent(s)) throw new ValidationError('content'); else return s; };
+const isName = (s) => s && s.length < 256;
+const checkName = (s) => { if (!isName(s)) throw new ValidationError('name'); else return s; };
+const isPid = (s) => RE_PID.test(s.toString());
+const checkPid = (s) => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };
 
 module.exports = {
-    isTitle, checkTitle,
-    isUid, checkUid,
-    isUname, checkUname,
-    isPassword, checkPassword,
-    isEmail, checkEmail,
-    isContent, checkContent,
-    isName, checkName,
-    isPid, checkPid
+    isTitle,
+    checkTitle,
+    isUid,
+    checkUid,
+    isUname,
+    checkUname,
+    isPassword,
+    checkPassword,
+    isEmail,
+    checkEmail,
+    isContent,
+    checkContent,
+    isName,
+    checkName,
+    isPid,
+    checkPid,
 };
 /*
 ID_RE = re.compile(r'[^\\/\s\u3000]([^\\/\n\r]*[^\\/\s\u3000])?')

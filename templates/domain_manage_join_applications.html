@@ -50,7 +50,7 @@
         name='invitation_code',
         help_text='The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.',
         value=join_settings['code']|default('')) }}
-      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
       <button class="rounded primary button" role="submit">
         {{ _('Update Settings') }}
       </button>

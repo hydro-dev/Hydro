@@ -1,20 +1,21 @@
 const perm = require('../permission');
+
 const BUILTIN_ROLES = [
     { _id: 'guest', perm: perm.PERM_BASIC },
     { _id: 'default', perm: perm.PERM_DEFAULT },
-    { _id: 'admin', perm: perm.PERM_ADMIN }
+    { _id: 'admin', perm: perm.PERM_ADMIN },
 ];
 const CATEGORIES = {
-    '动态规划': [
+    动态规划: [
         'LCS',
         'LIS',
         '背包',
         '单调性DP',
         '环形DP',
         '树形DP',
-        '状态压缩DP'
+        '状态压缩DP',
     ],
-    '搜索': [
+    搜索: [
         '枚举',
         '搜索与剪枝',
         '启发式搜索',
@@ -22,9 +23,9 @@ const CATEGORIES = {
         '双向搜索',
         '折半搜索',
         '记忆化搜索',
-        '模拟退火'
+        '模拟退火',
     ],
-    '计算几何': [
+    计算几何: [
         '半平面交',
         '凸包',
         '几何图形的交与并',
@@ -37,19 +38,19 @@ const CATEGORIES = {
         '平面图的对偶图',
         '三角剖分',
         '梯形剖分',
-        '几何知识'
+        '几何知识',
     ],
-    '贪心': [],
-    '树结构': [
+    贪心: [],
+    树结构: [
         '最近公共祖先',
         '生成树',
         'DFS序列',
         '树上倍增',
         '树的分治',
         '树链剖分',
-        'Link-Cut-Tree'
+        'Link-Cut-Tree',
     ],
-    '图结构': [
+    图结构: [
         '平面图',
         '二分图',
         '二分图匹配',
@@ -60,9 +61,9 @@ const CATEGORIES = {
         '强连通分量',
         '割点割边',
         '欧拉回路',
-        '2-SAT'
+        '2-SAT',
     ],
-    '数论': [
+    数论: [
         '素数判定',
         '欧几里得算法',
         '不定方程',
@@ -73,10 +74,10 @@ const CATEGORIES = {
         '大整数质因数分解',
         '勾股方程',
         '积性函数',
-        'Fibonacci数列'
+        'Fibonacci数列',
     ],
-    '模拟': [],
-    '数据结构': [
+    模拟: [],
+    数据结构: [
         '栈',
         '队列',
         '链表',
@@ -93,41 +94,41 @@ const CATEGORIES = {
         'k-d树',
         '块状链表',
         'Hashing',
-        '函数式编程'
+        '函数式编程',
     ],
-    '博弈论': [],
-    '字符串': [
+    博弈论: [],
+    字符串: [
         'KMP',
         '后缀数据结构',
         'Trie树',
         'AC自动机',
         'Manacher',
         '表达式处理',
-        '最小表示法'
+        '最小表示法',
     ],
-    '组合数学': [
+    组合数学: [
         '生成函数',
         '容斥原理',
         '康托展开',
         'Catalan数列',
         'Stirling数',
         '差分',
-        'Polya定理'
+        'Polya定理',
     ],
-    '线性代数': [
+    线性代数: [
         '矩阵乘法',
         '高斯消元',
-        '线性规划'
+        '线性规划',
     ],
-    '高精度': [
-        'FFT'
+    高精度: [
+        'FFT',
     ],
-    '递推': [],
-    '概率论': [
-        '随机化'
+    递推: [],
+    概率论: [
+        '随机化',
     ],
-    'NPC': [],
-    '其他': [
+    NPC: [],
+    其他: [
         '二分查找',
         '三分查找',
         '双指针扫描',
@@ -137,15 +138,15 @@ const CATEGORIES = {
         '快速幂',
         '数学',
         '排序',
-        '构造'
-    ]
+        '构造',
+    ],
 };
 const FOOTER_EXTRA_HTMLS = [];
 const VIEW_LANGS = [
-    { code: 'zh-CN', name: 'zh-CN' }
+    { code: 'zh-CN', name: 'zh-CN' },
 ];
 const LANGS = {
-    cc: 'cpp'
+    cc: 'cpp',
 };
 const LANG_TEXTS = {
     c: 'C',
@@ -192,7 +193,7 @@ const STATUS = {
     STATUS_JUDGING: 20,
     STATUS_COMPILING: 21,
     STATUS_FETCHED: 22,
-    STATUS_IGNORED: 30
+    STATUS_IGNORED: 30,
 };
 const STATUS_TEXTS = {
     [STATUS.STATUS_WAITING]: 'Waiting',
@@ -226,9 +227,17 @@ const STATUS_CODES = {
     20: 'progress',
     21: 'progress',
     22: 'progress',
-    30: 'ignored'
+    30: 'ignored',
 };
 module.exports = {
-    BUILTIN_ROLES, CATEGORIES, VIEW_LANGS, FOOTER_EXTRA_HTMLS, LANGS,
-    LANG_TEXTS, LANG_HIGHLIGHT_ID, STATUS, STATUS_TEXTS, STATUS_CODES
+    BUILTIN_ROLES,
+    CATEGORIES,
+    VIEW_LANGS,
+    FOOTER_EXTRA_HTMLS,
+    LANGS,
+    LANG_TEXTS,
+    LANG_HIGHLIGHT_ID,
+    STATUS,
+    STATUS_TEXTS,
+    STATUS_CODES,
 };

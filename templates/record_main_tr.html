@@ -5,7 +5,7 @@
   <td class="col--problem col--problem-name">
   {% if handler.hasPerm(perm.PERM_REJUDGE) %}
     <form class="form--inline" method="post" action="/r/{{ rdoc._id }}/rejudge">
-      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
       <button type="submit" class="link text-maroon lighter">
         <span class="icon icon-refresh"></span>
         {{ _('Rejudge') }}

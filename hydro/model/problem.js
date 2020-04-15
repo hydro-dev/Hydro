@@ -1,10 +1,10 @@
-const
-    { ObjectID } = require('bson'),
-    { ProblemNotFoundError } = require('../error'),
-    validator = require('../lib/validator'),
-    db = require('../service/db.js'),
-    coll = db.collection('problem'),
-    coll_status = db.collection('problem.status');
+const { ObjectID } = require('bson');
+const { ProblemNotFoundError } = require('../error');
+const validator = require('../lib/validator');
+const db = require('../service/db.js');
+
+const coll = db.collection('problem');
+const collStatus = db.collection('problem.status');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
@@ -13,14 +13,14 @@ const
  */
 
 /**
- * @param {string} title 
- * @param {string} content 
- * @param {number} owner 
- * @param {number} pid 
- * @param {import('bson').ObjectID} data 
- * @param {string[]} category 
- * @param {string[]} tag 
- * @param {boolean} hidden 
+ * @param {string} title
+ * @param {string} content
+ * @param {number} owner
+ * @param {number} pid
+ * @param {import('bson').ObjectID} data
+ * @param {string[]} category
+ * @param {string[]} tag
+ * @param {boolean} hidden
  */
 async function add({
     title,
@@ -30,7 +30,7 @@ async function add({
     data = null,
     category = [],
     tag = [],
-    hidden = false
+    hidden = false,
 }) {
     validator.checkTitle(title);
     validator.checkContent(content);
@@ -44,7 +44,7 @@ async function add({
         tag,
         hidden,
         nSubmit: 0,
-        nAccept: 0
+        nAccept: 0,
     });
     return pid;
 }
@@ -55,13 +55,13 @@ async function add({
  */
 async function get(pid, uid = null) {
     let query = {};
-    if (pid.generationTime || pid.length == 24) query = { _id: new ObjectID(pid) };
+    if (pid.generationTime || pid.length === 24) query = { _id: new ObjectID(pid) };
     else query = { pid: parseInt(pid) || pid };
-    let pdoc = await coll.findOne(query);
+    const pdoc = await coll.findOne(query);
     if (!pdoc) throw new ProblemNotFoundError(pid);
     if (uid) {
         query.uid = uid;
-        pdoc.psdoc = await coll_status.findOne(query);
+        pdoc.psdoc = await collStatus.findOne(query);
     }
     return pdoc;
 }
@@ -71,7 +71,7 @@ async function get(pid, uid = null) {
  */
 async function getById(_id) {
     _id = new ObjectID(_id);
-    let pdoc = await coll.findOne({ _id });
+    const pdoc = await coll.findOne({ _id });
     if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
@@ -81,7 +81,8 @@ async function getById(_id) {
  * @returns {Pdoc[]}
  */
 function getMany(query, sort, page, limit) {
-    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit).toArray();
+    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
+        .toArray();
 }
 /**
  * @param {object} query
@@ -99,28 +100,24 @@ async function edit(_id, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
     await coll.findOneAndUpdate({ _id }, { $set });
-    let pdoc = await getById(_id);
+    const pdoc = await getById(_id);
     if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
-/**
- * @param {object} query 
- * @returns {number}
- */
-async function count(query) {
-    return await coll.find(query).count();
+function count(query) {
+    return coll.find(query).count();
 }
 async function random(query) {
-    let pdocs = coll.find(query);
-    let pcount = await pdocs.count();
+    const pdocs = coll.find(query);
+    const pcount = await pdocs.count();
     if (pcount) {
-        let pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
+        const pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
         return pdoc.pid;
-    } else return null;
+    } return null;
 }
 async function getList(pids) {
-    let r = {};
-    for (let pid of pids) r[pid] = await get(pid);
+    const r = {};
+    for (const pid of pids) r[pid] = await get(pid); // eslint-disable-line no-await-in-loop
     return r;
 }
 
@@ -133,5 +130,5 @@ module.exports = {
     random,
     getById,
     getMulti,
-    getList
+    getList,
 };

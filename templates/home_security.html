@@ -13,7 +13,7 @@
           {{ form.form_text(type='text', label='Current Email', columns=10, name='current_email', value=handler.user['mail'], disabled=true) }}
           {{ form.form_text(type='text', label='New Email', columns=10, name='mail', required=true) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="hidden" name="operation" value="change_mail">
             <input type="submit" class="rounded primary button" value="{{ _('Change Email') }}">
           </div></div>
@@ -32,7 +32,7 @@
           {{ form.form_text(type='password', label='New Password', columns=10, name='new_password', required=true) }}
           {{ form.form_text(type='password', label='Repeat Password', columns=10, name='verify_password', required=true) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="hidden" name="operation" value="change_password">
             <input type="submit" class="rounded primary button" value="{{ _('Change Password') }}">
           </div></div>
@@ -72,7 +72,7 @@
                   <input type="hidden" name="operation" value="delete_token">
                   <input type="hidden" name="token_type" value="{{ session['token_type'] }}">
                   <input type="hidden" name="token_digest" value="{{ session['token_digest'] }}">
-                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
                   <input type="submit" value="{{ _('Logout This Session') }}" class="rounded button">
                 </form>
               </div>
@@ -85,7 +85,7 @@
       <div class="section__body">
         <form method="post">
           <input type="hidden" name="operation" value="delete_all_tokens">
-          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <input type="submit" value="{{ _('Logout All Sessions') }}" class="primary rounded button">
         </form>
         <div class="typo">
