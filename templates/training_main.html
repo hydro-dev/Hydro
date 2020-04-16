@@ -1,3 +1,4 @@
+{% set page_name = "training_main" %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
@@ -6,7 +7,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('All Training Plans') }}</h1>
       </div>
-    {% if not tdocs %}
+    {% if not tdocs.length %}
       {{ nothing.render('Sorry, there is no training plan.') }}
     {% else %}
       <ol class="section__list all primary training__list">
@@ -15,24 +16,24 @@
           <div class="media">
             <div class="media__left middle">
               <div class="training__participants numbox">
-                <div class="numbox__num large">{{ tdoc['enroll']|default(0) }}</div>
+                <div class="numbox__num large">{{ tdoc.enroll|default(0) }}</div>
                 <div class="numbox__text">{{ _('Enrolled') }}</div>
               </div>
             </div>
             <div class="media__body middle">
-              <h1 class="training__title"><a href="{{ reverse_url('training_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+              <h1 class="training__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
               <div class="training__intro typo">
                 <p>{{ tdoc['content'] }}</p>
               </div>
               <ul class="supplementary list training__progress">
                 <li>
-                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(handler.get_pids(tdoc)|length) }}
+                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc)|length) }}
                 </li>
                 <li>
-                {% if tsdict[tdoc['doc_id']]['enroll'] %}
-                  {% if not tsdict[tdoc['doc_id']]['done'] %}
+                {% if tsdict[tdoc._id]['enroll'] %}
+                  {% if not tsdict[tdoc._id]['done'] %}
                   <span class="icon training-status--icon progress"></span>
-                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc['doc_id']]['done_pids']|length / handler.get_pids(tdoc)|length)|round|int }}%</span>
+                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc._id]['done_pids']|length / model.training.getPids(tdoc)|length)|round|int }}%</span>
                   {% else %}
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>
@@ -59,15 +60,15 @@
       </div>
       <div class="section__body">
         <ol class="my secondary training__list">
-        {% for tsdoc in tsdict.values() %}
+        {% for tsdoc in tsdict %}
         {% if tsdoc['enroll'] %}
           <li class="training__item"><div class="media">
             <div class="media__left">
               <span class="icon training-status--icon {% if tsdoc['done'] %}done{% else %}progress{% endif %}"></span>
             </div>
             <div class="media__body">
-              <h1 class="training__title"><a href="{{ reverse_url('training_detail', tid=tsdoc['doc_id']) }}" data-emoji-enabled>{{ tdict[tsdoc['doc_id']]['title'] }}</a></h1>
-              <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ (100 * tsdoc['done_pids']|length / handler.get_pids(tdict[tsdoc['doc_id']])|length)|round|int }}%;"></div></div> {{ _('Complete') }} {{ (100 * tsdoc['done_pids']|length / handler.get_pids(tdict[tsdoc['doc_id']])|length)|round|int }}%</div>
+              <h1 class="training__title"><a href="/t/{{ tsdoc.tid }}" data-emoji-enabled>{{ tdict[tsdoc['tid']]['title'] }}</a></h1>
+              <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ (100 * tsdoc['donePids']|length / model.training.getPids(tdict[tsdoc['tid']])|length)|round|int }}%;"></div></div> {{ _('Complete') }} {{ (100 * tsdoc['done_pids']|length / handler.get_pids(tdict[tsdoc['doc_id']])|length)|round|int }}%</div>
             </div>
           </div></li>
         {% endif %}
@@ -83,7 +84,7 @@
       </div>
       <ol class="menu">
         <li class="menu__item">
-          <a href="{{ reverse_url('training_create') }}" class="menu__link"><span class="icon icon-add"></span> {{ _('New Training Plan') }}</a>
+          <a href="/training/create" class="menu__link"><span class="icon icon-add"></span> {{ _('New Training Plan') }}</a>
         </li>
       </ol>
       <div class="section__body">

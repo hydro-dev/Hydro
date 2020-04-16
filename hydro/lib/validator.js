@@ -21,6 +21,10 @@ const isName = (s) => s && s.length < 256;
 const checkName = (s) => { if (!isName(s)) throw new ValidationError('name'); else return s; };
 const isPid = (s) => RE_PID.test(s.toString());
 const checkPid = (s) => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };
+const isIntro = () => true;
+const checkIntro = (s) => { if (!isIntro(s)) throw new ValidationError('intro'); else return s; };
+const isDescription = () => true;
+const checkDescription = (s) => { if (!isDescription(s)) throw new ValidationError('description'); else return s; };
 
 module.exports = {
     isTitle,
@@ -39,6 +43,10 @@ module.exports = {
     checkName,
     isPid,
     checkPid,
+    isIntro,
+    checkIntro,
+    isDescription,
+    checkDescription,
 };
 /*
 ID_RE = re.compile(r'[^\\/\s\u3000]([^\\/\n\r]*[^\\/\s\u3000])?')

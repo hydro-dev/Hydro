@@ -34,6 +34,7 @@ async function run() {
     require('./handler/judge');
     require('./handler/user');
     require('./handler/contest');
+    require('./handler/training');
     server.start();
 }
 process.on('restart', async () => {

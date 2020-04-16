@@ -259,9 +259,9 @@ function Route(route, RouteHandler) {
             if (h[method]) await h[method](args);
 
             if (method === 'post' && ctx.request.body.operation) {
-                if (h[`${method}_${ctx.request.body.operation}`]) {
-                    await h[`${method}_${ctx.request.body.operation}`](args);
-                }
+                const operation = `_${ctx.request.body.operation}`
+                    .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
+                if (h[`${method}${operation}`]) await h[`${method}${operation}`](args);
             }
 
             if (h.cleanup) await h.cleanup(args);

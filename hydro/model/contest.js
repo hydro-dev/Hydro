@@ -211,7 +211,7 @@ async def recalc_status(domainId: str, doc_type: int, cid: objeccid.Objeccid):
   tdoc = await document.get(domainId, doc_type, cid)
   async with document.get_multi_status(domainId=domainId,
                                        doc_type=doc_type,
-                                       doc_id=tdoc['doc_id']) as tsdocs:
+                                       doc_id=tdoc._id) as tsdocs:
     async for tsdoc in tsdocs:
       if 'journal' not in tsdoc or not tsdoc['journal']:
         continue

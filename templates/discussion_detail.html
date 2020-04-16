@@ -82,7 +82,7 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    {% with udoc = udict[ddoc['owner']] %}
+    {% set udoc = udict[ddoc['owner']] %}
     <div class="section side">
       <div class="profile__bg user-profile-bg--{{ vj4.model.adaptor.setting.UserSetting(udoc).get_setting('background_img') }}"></div>
       <div class="section__body">
@@ -119,13 +119,10 @@
           </div>
         </div>
       </div>
-      {% endwith %}
     </div>
-    {% if vnode['doc_type'] == vj4.model.document.TYPE_PROBLEM %}
-      {% with pdoc=vnode, owner_udoc=udict[vnode['owner']] %}
-      {% include "partials/problem_sidebar.html" %}
-      {% endwith %}
-    {% endif %}
+    {% set pdoc=vnode %}
+    {% set owner_udoc=udict[vnode['owner']] %}
+    {% include "partials/problem_sidebar.html" %}
   </div>
 </div>
 {% endblock %}

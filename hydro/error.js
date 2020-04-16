@@ -118,6 +118,12 @@ class ContestScoreboardHiddenError extends ForbiddenError {
         this.params = [tid];
     }
 }
+class TrainingAlreadyEnrollError extends ForbiddenError {
+    constructor(tid, uid) {
+        super("You've already enrolled this training.");
+        this.params = [tid, uid];
+    }
+}
 class ProblemNotFoundError extends NotFoundError {
     constructor(pid) {
         super('ProblemNotFoundError');
@@ -180,6 +186,7 @@ module.exports = {
     ContestAlreadyAttendedError,
     UserFacingError,
     SystemError,
+    TrainingAlreadyEnrollError,
 };
 
 /*
@@ -335,12 +342,6 @@ class TrainingRequirementNotSatisfiedError(ForbiddenError):
   @property
   def message(self):
     return 'Training requirement is not satisfied.'
-
-
-class TrainingAlreadyEnrollError(ForbiddenError):
-  @property
-  def message(self):
-    return "You've already enrolled this training."
 
 
 class UsageExceededError(ForbiddenError):

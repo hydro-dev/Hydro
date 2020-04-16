@@ -168,13 +168,13 @@
   {% if tdocs %}
     <p>{{ _('In following training plans') }}: </p>
     {% for tdoc in tdocs %}
-    <p><a href="{{ reverse_url('training_detail', tid=tdoc['doc_id']) }}">{{ tdoc['title'] }}</a></p>
+    <p><a href="{{ reverse_url('training_detail', tid=tdoc._id) }}">{{ tdoc.title }}</a></p>
     {% endfor %}
   {% endif %}
   {% if ctdocs %}
     <p>{{ _('In following contests') }}: </p>
     {% for tdoc in ctdocs %}
-    <p><a href="/c/{{ tdoc._id }}">{{ tdoc['title'] }}</a></p>
+    <p><a href="/c/{{ tdoc._id }}">{{ tdoc.title }}</a></p>
     {% endfor %}
   {% endif %}
   </div>

@@ -4,7 +4,7 @@
 {% if page_name != 'contest_detail' %}
   <a class="contest-sidebar__bg" href="/c/{{ tdoc._id }}">
     <div class="section__body">
-      <h1>{{ tdoc['title'] }}</h1>
+      <h1>{{ tdoc.title }}</h1>
       <div class="contest-sidebar__status">
       {% if attended %}
         <span class="icon icon-check"></span> {{ _('Attended') }}

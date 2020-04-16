@@ -51,7 +51,9 @@ class RecordDetailHandler extends Handler {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(rid);
         if (rdoc.hidden) this.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-        if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM_READ_RECORD_CODE)) rdoc.code = null;
+        if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM_READ_RECORD_CODE)) {
+            rdoc.code = null;
+        }
         this.response.body = {
             path: [
                 ['Hydro', '/'],

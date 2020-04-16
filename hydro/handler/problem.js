@@ -300,7 +300,7 @@ class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
     async get({ psid }) {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
         const [psdoc, psrdoc] = await solution.getReply(psid);
-        if ((!psdoc) || psdoc.pid != this.pdoc._id) throw new SolutionNotFoundError(psid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
         this.response.type = 'text/markdown';
         this.response.body = psrdoc.content;
     }

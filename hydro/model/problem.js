@@ -56,7 +56,7 @@ async function add({
 async function get(pid, uid = null) {
     let query = {};
     if (pid.generationTime || pid.length === 24) query = { _id: new ObjectID(pid) };
-    else query = { pid: parseInt(pid) || pid };
+    else query = { pid };
     const pdoc = await coll.findOne(query);
     if (!pdoc) throw new ProblemNotFoundError(pid);
     if (uid) {
@@ -92,6 +92,13 @@ function getMulti(query) {
     return coll.find(query);
 }
 /**
+ * @param {object} query
+ * @returns {Cursor}
+ */
+function getMultiStatus(query) {
+    return collStatus.find(query);
+}
+/**
  * @param {ObjectID} _id
  * @param {object} query
  * @returns {Pdoc}
@@ -120,6 +127,12 @@ async function getList(pids) {
     for (const pid of pids) r[pid] = await get(pid); // eslint-disable-line no-await-in-loop
     return r;
 }
+async function getListStatus(uid, pids) {
+    const psdocs = await getMultiStatus({ uid, pid: { $in: Array.from(new Set(pids)) } }).toArray();
+    const r = {};
+    for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
+    return r;
+}
 
 module.exports = {
     add,
@@ -131,4 +144,6 @@ module.exports = {
     getById,
     getMulti,
     getList,
+    getListStatus,
+    getMultiStatus,
 };

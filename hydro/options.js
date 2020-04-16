@@ -42,6 +42,7 @@ let options = {
         RECORD_PER_PAGE: 100,
         SOLUTION_PER_PAGE: 20,
         CONTEST_PER_PAGE: 20,
+        TRAINING_PER_PAGE: 10,
     },
 };
 

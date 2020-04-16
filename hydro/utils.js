@@ -36,3 +36,22 @@ Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
         .replace('%M', this.getMinutes())
         .replace('%S', this.getSeconds());
 };
+
+Set.isSuperset = function isSuperset(set, subset) {
+    for (const elem of subset) {
+        if (!set.has(elem)) return false;
+    }
+    return true;
+};
+Set.union = function union(setA, setB) {
+    const _union = new Set(setA);
+    for (const elem of setB) _union.add(elem);
+    return _union;
+};
+Set.intersection = function intersection(setA, setB) {
+    const _intersection = new Set();
+    for (const elem of setB) {
+        if (setA.has(elem)) _intersection.add(elem);
+    }
+    return _intersection;
+};

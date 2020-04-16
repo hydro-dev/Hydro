@@ -1,3 +1,4 @@
+{% set page_name = "training_detail" %}
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
@@ -13,7 +14,7 @@
       </div>
     </div>
     <div class="section">
-    {% if not tsdoc['enroll'] %}
+    {% if not tsdoc.enroll %}
       <div class="section__body">
         <blockquote class="typo warn">
           <p>{{ _('page.training_detail.invalid_when_not_enrolled') }}</p>
@@ -21,19 +22,19 @@
       </div>
     {% endif %}
     {% for node in tdoc['dag'] %}
-      <div class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %} {% if nsdict[node['_id']]['is_progress'] or nsdict[node['_id']]['is_open'] %}expanded{% else %}collapsed{% endif %}">
+      <div class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %} {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
         <div class="section__header clearfix">
           <div class="float-left">
             <h1 class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'] }}</h1>
           </div>
           <div class="float-right">
-            <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}">
-              <span class="icon training-section-status--icon {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['is_progress'] %}progress{% elif nsdict[node['_id']]['is_open'] %}open{% else %}invalid{% endif %}"></span>
+            <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}">
+              <span class="icon training-section-status--icon {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}"></span>
             {% if nsdict[node['_id']]['isDone'] %}
               {{ _('Completed') }}
-            {% elif nsdict[node['_id']]['is_progress'] %}
+            {% elif nsdict[node['_id']]['isProgress'] %}
               {{ _('In Progress') }}
-            {% elif nsdict[node['_id']]['is_open'] %}
+            {% elif nsdict[node['_id']]['isOpen'] %}
               {{ _('Open') }}
             {% else %}
               {{ _('Invalid') }}
@@ -59,7 +60,7 @@
           </ul>
         </div>
         <div class="training__section__detail">
-        {% if nsdict[node['_id']]['is_invalid'] %}
+        {% if nsdict[node['_id']]['isInvalid'] %}
           <div class="section__body">
             <blockquote class="typo note">
               <p>{{ _('This section cannot be challenged at present, so please complete the following sections first') }}:</p>
@@ -73,7 +74,7 @@
         {% endif %}
         {% if node['content'] %}
           <div class="section__body typo">
-            {{ node['content']|markdown }}
+            {{ node['content']|markdown|safe }}
           </div>
         {% endif %}
           <div class="section__body no-padding training__problems">
@@ -101,7 +102,8 @@
               <tbody>
               {% for pid in node['pids'] %}
               {% if pid in pdict %}
-              {% with pdoc=pdict[pid], psdoc=psdict[pid] %}
+              {% set pdoc=pdict[pid] %}
+              {% set psdoc=psdict[pid] %}
                 <tr>
                 {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
                 {% if psdoc['rid'] %}
@@ -125,17 +127,15 @@
                     {{ problem.render_problem_title(
                       pdoc,
                       invalid=not tsdoc['enroll'],
-                      show_tags=false,
-                      rp=vj4.job.rp.get_rp_expect(pdoc) if (not psdoc or psdoc['status'] != status.STATUS_ACCEPTED) else none
+                      show_tags=false
                     ) }}
                   </td>
                   <td class="col--submit_n">{{ pdoc.nSubmit }}</td>
                   <td class="col--ac_rate">{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int if pdoc.nSubmit > 0 else _('?') }}</td>
                   <td class="col--difficulty">{{ pdoc['difficulty'] or _('(None)') }}</td>
                 </tr>
-              {% endwith %}
               {% else %}
-              {% with pdoc = {'domain_id': handler.domain_id, 'doc_id': pid, 'hidden': true, 'title': '*'} %}
+              {% set pdoc = {'_id': pid, 'hidden': true, 'title': '*'} %}
                 <tr>
                   <td class="col--status record-status--border">
                   </td>
@@ -146,7 +146,6 @@
                   <td class="col--ac_rate">*</td>
                   <td class="col--difficulty">*</td>
                 </tr>
-              {% endwith %}
               {% endif %}
               {% endfor %}
               </tbody>
@@ -175,8 +174,8 @@
             </form>
           </li>
         {% endif %}
-        {% if handler.own(tdoc, perm.PERM_EDIT_TRAINING_SELF) or handler.hasPerm(perm.PERM_EDIT_TRAINING) %}
-          <li class="menu__item"><a class="menu__link" href="{{ reverse_url('training_edit', tid=tdoc['doc_id']) }}">
+        {% if tdoc.owner == user._id or handler.hasPerm(perm.PERM_EDIT_TRAINING) %}
+          <li class="menu__item"><a class="menu__link" href="/t/{{ tdoc._id }}/edit">
             <span class="icon icon-edit"></span>  {{ _('Edit') }}
           </a></li>
         {% endif %}
@@ -192,7 +191,7 @@
           <dt>{{ _('Status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
         {% endif %}
           {% if tsdoc['enroll'] %}
-          <dt>{{ _('Progress') }}</dt><dd>{{ _('Completed') }} {{ (100 * tsdoc['done_pids']|length / pids|length)|round|int }}%</dd>
+          <dt>{{ _('Progress') }}</dt><dd>{{ _('Completed') }} {{ (100 * tsdoc['donePids']|length / pids|length)|round|int }}%</dd>
           {% endif %}
           <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc['enroll']|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>

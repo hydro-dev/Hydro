@@ -9,7 +9,7 @@
         <div>
           <h2 class="status_title">{{ _(title) }}</h2>
         </div>
-        <h1>{{ tdoc['title'] }}</h1>
+        <h1>{{ tdoc.title }}</h1>
         <ul class="info">
           <li>
             <span class="icon icon-award"></span>
@@ -88,7 +88,7 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="/c/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+                <h1 class="contest__title"><a href="/c/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>

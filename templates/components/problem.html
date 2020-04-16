@@ -8,7 +8,7 @@
   {%- endif %}
   >
   {%- endif %}
-    {% if pdoc['_id']|string|length < 10 %}P{{ pdoc['_id'] }} {% endif %}{{ pdoc['title'] }}
+    {{ pdoc['pid'] }} {{ pdoc['title'] }}
   {%- if not invalid %}
   </a>
   {%- endif %}
