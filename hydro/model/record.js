@@ -52,7 +52,7 @@ function reset(rid) {
         status: STATUS_WAITING,
         time: 0,
         memory: 0,
-        cases: [],
+        testCases: [],
         judgeTexts: [],
         compilerTexts: [],
         judgeAt: null,

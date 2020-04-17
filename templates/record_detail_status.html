@@ -17,7 +17,7 @@
     <pre class="judge-text">{{ rdoc.judgeTexts|join('\n') }}</pre>
   </div>
 {% endif %}
-{% if rdoc.cases.length %}
+{% if rdoc.testCases.length %}
   <div class="section__body no-padding">
     <table class="data-table record_detail__table">
       <colgroup>
@@ -35,7 +35,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for rcdoc in rdoc.cases %}
+      {% for rcdoc in rdoc.testCases %}
         <tr>
           <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
             #{{ loop.index }}

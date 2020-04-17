@@ -142,12 +142,12 @@ class ProblemSettingsHandler extends ProblemManageHandler {
 }
 
 class ProblemEditHandler extends ProblemManageHandler {
-    async get() {
+    async get({ pid }) {
         this.response.template = 'problem_edit.html';
         this.response.body.path = [
             ['Hydro', '/'],
             ['problem_main', '/p'],
-            [this.pdoc.title, `/p/${this.request.params.pid}`, true],
+            [this.pdoc.title, `/p/${pid}`, true],
             ['problem_edit', null],
         ];
         this.response.body.page_name = 'problem_edit';
@@ -177,14 +177,7 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
     async post() {
         if (!this.request.files.file) throw new BadRequestError();
         const r = fs.createReadStream(this.request.files.file.path);
-        const f = gridfs.openUploadStream('data.zip');
-        await new Promise((resolve, reject) => {
-            r.pipe(f);
-            f.once('finish', resolve);
-            f.once('error', reject);
-        });
-        if (this.pdoc.data && typeof this.pdoc.data === 'object') { gridfs.delete(this.pdoc.data); }
-        this.pdoc = await problem.edit(this.pdoc._id, { data: f.id });
+        await problem.setTestdata(this.pdoc._id, r);
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
             const files = await gridfs.find({ _id: this.pdoc.data }).toArray();
             this.md5 = files[0].md5;

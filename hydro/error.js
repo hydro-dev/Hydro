@@ -32,14 +32,18 @@ class NotFoundError extends UserFacingError {
         this.code = 404;
     }
 }
-
+class RemoteOnlineJudgeError extends UserFacingError {
+    constructor(message) {
+        super('RemoteOnlineJudgeError');
+        this.params = [message];
+    }
+}
 class AlreadyVotedError extends BadRequestError {
     constructor(psid, uid) {
         super('You\'ve already voted.');
         this.params = [psid, uid];
     }
 }
-
 class LoginError extends ForbiddenError {
     constructor(uname) {
         super('LoginError');
@@ -160,6 +164,7 @@ class ProblemDataNotFoundError extends NotFoundError {
         this.params = [pid];
     }
 }
+
 module.exports = {
     BadRequestError,
     ForbiddenError,
@@ -187,6 +192,7 @@ module.exports = {
     UserFacingError,
     SystemError,
     TrainingAlreadyEnrollError,
+    RemoteOnlineJudgeError,
 };
 
 /*

@@ -13,8 +13,8 @@ async function next(body) {
     let rdoc = await record.get(body.rid);
     const $set = {};
     if (body.case) {
-        rdoc.cases.push(body.case);
-        $set.cases = rdoc.cases;
+        rdoc.testCases.push(body.case);
+        $set.testCases = rdoc.testCases;
     }
     if (body.judge_text) {
         rdoc.judgeTexts.push(body.judge_text);
@@ -35,8 +35,8 @@ async function end(body) {
     let rdoc = await record.get(body.rid);
     const $set = {};
     if (body.case) {
-        rdoc.cases.push(body.case);
-        $set.cases = rdoc.cases;
+        rdoc.testCases.push(body.case);
+        $set.testCases = rdoc.testCases;
     }
     if (body.judge_text) {
         rdoc.judgeTexts.push(body.judge_text);

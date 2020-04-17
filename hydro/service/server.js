@@ -115,6 +115,10 @@ class Handler {
         this.response.redirect = this.request.headers.referer || '/';
     }
 
+    translate(str) {
+        return str ? str.toString().translate(this.user.language) : '';
+    }
+
     binary(data, name) {
         this.response.body = data;
         this.response.template = null;

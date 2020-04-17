@@ -1,3 +1,4 @@
+{% set page_name = "problem_import" %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
@@ -6,19 +7,22 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            <div class="medium-8 columns">
+            <div class="medium-2 columns">
+              <label>
+                {{ _('Source type') }}
+                <input name="remoteType" placeholder="syzoj" class="textbox" autocomplete="off">
+              </label>
+            </div>
+            <div class="medium-6 columns">
               <label>
                 {{ _('Import from') }}
-                <input name="src" placeholder="{{ _('Source') }}" class="textbox" autocomplete="off">
+                <input name="url" placeholder="{{ _('Source') }}" class="textbox" autocomplete="off">
               </label>
             </div>
             <div class="medium-2 columns">
               <label>
                 {{ _('Settings') }}
-                <br>
-                <label class="checkbox">
-                <input name="src" placeholder="{{ _('ProblemID') }}" class="textbox" autocomplete="off">
-                </label>
+                <input name="pid" placeholder="{{ _('ProblemID') }}" class="textbox" autocomplete="off">
               </label>
             </div>
             <div class="medium-2 columns">
@@ -31,15 +35,9 @@
             </div>
           </div>
           <div class="row"><div class="columns">
-            <label>
-              {{ _('Source URL') }}
-              <textarea name="src" class="textbox" style="height: 300px"></textarea>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button type="submit" class="rounded primary button">
-              {{ _('Copy') }}
+              {{ _('Import') }}
             </button>
             <button type="button" class="rounded button" onclick="window.history.go(-1)">
               {{ _('Cancel') }}

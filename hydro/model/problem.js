@@ -1,4 +1,5 @@
 const { ObjectID } = require('bson');
+const gridfs = require('../service/gridfs');
 const { ProblemNotFoundError } = require('../error');
 const validator = require('../lib/validator');
 const db = require('../service/db.js');
@@ -34,7 +35,7 @@ async function add({
 }) {
     validator.checkTitle(title);
     validator.checkContent(content);
-    await coll.insertOne({
+    const res = await coll.insertOne({
         content,
         owner,
         pid,
@@ -46,7 +47,7 @@ async function add({
         nSubmit: 0,
         nAccept: 0,
     });
-    return pid;
+    return res.insertedId;
 }
 /**
  * @param {string|ObjectID} pid
@@ -133,6 +134,17 @@ async function getListStatus(uid, pids) {
     for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
     return r;
 }
+async function setTestdata(_id, readStream) {
+    const pdoc = await getById(_id);
+    const f = gridfs.openUploadStream('data.zip');
+    await new Promise((resolve, reject) => {
+        readStream.pipe(f);
+        f.once('finish', resolve);
+        f.once('error', reject);
+    });
+    if (pdoc.data && typeof pdoc.data === 'object') gridfs.delete(this.pdoc.data);
+    return await edit(_id, { data: f.id });
+}
 
 module.exports = {
     add,
@@ -146,4 +158,5 @@ module.exports = {
     getList,
     getListStatus,
     getMultiStatus,
+    setTestdata,
 };
