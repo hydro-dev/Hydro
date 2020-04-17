@@ -54,12 +54,14 @@ class RecordDetailHandler extends Handler {
         if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM_READ_RECORD_CODE)) {
             rdoc.code = null;
         }
+        const pdoc = await problem.getById(rdoc.pid);
         this.response.body = {
             path: [
                 ['Hydro', '/'],
                 ['record_detail', null],
             ],
             rdoc,
+            pdoc,
             show_status: true,
         };
     }

@@ -19,7 +19,7 @@ const {
     PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
     PERM_JUDGE, PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
     PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
-    PERM_REPLY_PROBLEM_SOLUTION,
+    PERM_REPLY_PROBLEM_SOLUTION, PERM_LOGGEDIN,
 } = require('../permission');
 
 queue.assert('judge');
@@ -32,9 +32,13 @@ class ProblemHandler extends Handler {
     async get({ page = 1, category = null }) {
         this.response.template = 'problem_main.html';
         const q = {};
+        let psdict = {};
         if (category) q.category = category;
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
+        if (this.user.hasPerm(PERM_LOGGEDIN)) {
+            psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
+        }
         this.response.body = {
             path: [
                 ['Hydro', '/'],
@@ -42,6 +46,7 @@ class ProblemHandler extends Handler {
             ],
             page,
             pdocs,
+            psdict,
             category: '',
         };
     }

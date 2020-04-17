@@ -1,13 +1,14 @@
 {% set no_path_section = true %}
+{% set page_name = "domain_main" %}
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
 {% block content %}
-{% if handler.domain['bulletin'] %}
+{% if system['bulletin'] %}
 <div class="row">
   <div class="large-12 columns">
     <div class="section">
       <div class="section__body typo">
-        {{ handler.domain['bulletin']|markdown }}
+        {{ system['bulletin']|markdown }}
       </div>
     </div>
   </div>
@@ -15,9 +16,7 @@
 {% endif %}
 <div class="row">
   <div class="large-9 columns">
-  {% if not tdocs %}
-    <!-- no contest -->
-  {% else %}
+  {% if tdocs.length %}
     <div class="section page--contest_main">
       <div class="section__header">
         <h1 class="section__title">{{ _('Contest') }}</h1>
@@ -28,15 +27,15 @@
           <div class="media">
             <div class="media__left medium">
               <div class="contest__date numbox">
-                <div class="numbox__num large">{{ datetime_span(tdoc['begin_at'], false, '%d') }}</div>
-                <div class="numbox__text">{{ datetime_span(tdoc['begin_at'], false, '%Y-%m') }}</div>
+                <div class="numbox__num large">{{ datetime_span(tdoc['beginAt'], false, '%d')|safe }}</div>
+                <div class="numbox__text">{{ datetime_span(tdoc['beginAt'], false, '%Y-%m')|safe }}</div>
               </div>
             </div>
             <div class="media__body medium">
               <h1 class="contest__title"><a href="/c/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
               <ul class="supplementary list">
                 <li>
-                  <a href="{{ reverse_url('contest_main') }}?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</a>
+                  <a href="/c?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
                 </li>
                 <li>
                   <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
@@ -57,14 +56,13 @@
       </ol>
     </div>
   {% endif %}
-  {% if not trdocs %}
-    <!-- no training -->
-  {% else %}
+  {% if trdocs.length %}
     <div class="section page--training_main">
       <div class="section__header">
         <h1 class="section__title">{{ _('Training') }}</h1>
       </div>
-      {% with tdocs=trdocs, tsdict=trsdict %}
+      {% set tdocs = trdocs %}
+      {% set tsdict = trsdict %}
       <ol class="section__list all primary training__list">
         {% for tdoc in tdocs %}
         <li class="section__list__item training__item">
@@ -76,19 +74,19 @@
               </div>
             </div>
             <div class="media__body middle">
-              <h1 class="training__title"><a href="{{ reverse_url('training_detail', tid=tdoc._id) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <h1 class="training__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
               <div class="training__intro typo">
                 <p>{{ tdoc['content'] }}</p>
               </div>
               <ul class="supplementary list training__progress">
                 <li>
-                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(training.get_pids(tdoc)|length) }}
+                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc)|length) }}
                 </li>
                 <li>
                 {% if tsdict[tdoc._id]['enroll'] %}
                   {% if not tsdict[tdoc._id]['done'] %}
                   <span class="icon training-status--icon progress"></span>
-                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc._id]['done_pids']|length / training.get_pids(tdoc)|length)|round|int }}%</span>
+                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc._id]['donePids']|length / model.training.getPids(tdoc)|length)|round|int }}%</span>
                   {% else %}
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>
@@ -103,12 +101,9 @@
         </li>
         {% endfor %}
       </ol>
-      {% endwith %}
     </div>
   {% endif %}
-  {% if not ddocs %}
-    <!-- no discussion -->
-  {% else %}
+  {% if ddocs.length %}
     <div class="section page--discussion_main">
       <div class="section__header">
         <h1 class="section__title">{{ _('Discussion') }}</h1>
@@ -119,9 +114,8 @@
   </div>
   <div class="large-3 columns">
   {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-    {% include 'discussion_nodes_widget.html' %}
+    {#{% include 'discussion_nodes_widget.html' %} // TODO(masnn) #}
   {% endif %}
-  {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}
     <div class="section side">
       <div class="section__header">
         <h1 class="section__title">{{ _('Recommended') }}</h1>
@@ -153,7 +147,6 @@
         </li>
       </ul></div>
     </div>
-  {% endif %}
   </div>
 </div>
 {% endblock %}

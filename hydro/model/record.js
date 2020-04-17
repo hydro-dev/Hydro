@@ -39,9 +39,12 @@ function getMany(query, sort, page, limit) {
     return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
 }
-async function update(rid, $set) {
+async function update(rid, $set, $push) {
     const _id = new ObjectID(rid);
-    await coll.findOneAndUpdate({ _id }, { $set });
+    const upd = {};
+    if ($set && Object.keys($set).length) upd.$set = $set;
+    if ($push && Object.keys($push).length) upd.$push = $push;
+    await coll.findOneAndUpdate({ _id }, upd);
     const rdoc = await coll.findOne({ _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;

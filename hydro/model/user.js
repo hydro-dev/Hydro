@@ -89,6 +89,11 @@ async function changePassword(uid, currentPassword, newPassword) {
         $set: { salt, hash: pwhash.hash(newPassword, salt) },
     });
 }
+async function inc(_id, field, n) {
+    await coll.findOneAndUpdate({ _id }, { $inc: { [field]: n } });
+    const udoc = await getById(_id);
+    return udoc;
+}
 async function create({
     uid, mail, uname, password, regip = '127.0.0.1', role = 'default',
 }) {
@@ -129,6 +134,7 @@ module.exports = {
     getById,
     getByUname,
     getMany,
+    inc,
     setById,
     setEmail,
     setPassword,

@@ -112,6 +112,12 @@ async function edit(_id, $set) {
     if (!pdoc) throw new ProblemNotFoundError(_id);
     return pdoc;
 }
+async function inc(_id, field, n) {
+    await coll.findOneAndUpdate({ _id }, { $inc: { [field]: n } });
+    const pdoc = await getById(_id);
+    if (!pdoc) throw new ProblemNotFoundError(_id);
+    return pdoc;
+}
 function count(query) {
     return coll.find(query).count();
 }
@@ -134,6 +140,14 @@ async function getListStatus(uid, pids) {
     for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
     return r;
 }
+async function updateStatus(pid, uid, rid, status) {
+    const res = await collStatus.findOneAndUpdate(
+        { pid, uid },
+        { $set: { rid, status } },
+        { upsert: true },
+    );
+    return res.value;
+}
 async function setTestdata(_id, readStream) {
     const pdoc = await getById(_id);
     const f = gridfs.openUploadStream('data.zip');
@@ -148,6 +162,7 @@ async function setTestdata(_id, readStream) {
 
 module.exports = {
     add,
+    inc,
     get,
     getMany,
     edit,
@@ -159,4 +174,5 @@ module.exports = {
     getListStatus,
     getMultiStatus,
     setTestdata,
+    updateStatus,
 };

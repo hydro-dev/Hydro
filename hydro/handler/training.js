@@ -103,7 +103,7 @@ class TrainingDetailHandler extends TrainingHandler {
         for (const pid in psdict) {
             const psdoc = psdict[pid];
             if (psdoc.status) {
-                if (psdoc.status === builtin.status.STATUS_ACCEPTED) donePids.add(pid);
+                if (psdoc.status === builtin.STATUS_ACCEPTED) donePids.add(pid);
                 else progPids.add(pid);
             }
         }

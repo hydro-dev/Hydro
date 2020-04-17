@@ -6,6 +6,18 @@ const db = require('../service/db.js');
 const coll = db.collection('traning');
 const collStatus = db.collection('training.status');
 
+function getStatus(tid, uid) {
+    return collStatus.findOne({ tid, uid });
+}
+function getMultiStatus(query) {
+    return collStatus.find(query);
+}
+async function getListStatus(uid, tids) {
+    const psdocs = await getMultiStatus({ uid, pid: { $in: Array.from(new Set(tids)) } }).toArray();
+    const r = {};
+    for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
+    return r;
+}
 async function enroll(tid, uid) {
     try {
         await collStatus.insertOne({ tid, uid, enroll: 1 });
@@ -93,8 +105,9 @@ module.exports = {
         return tdoc;
     },
     getMulti: (query) => coll.find(query),
-    getMultiStatus: (query) => collStatus.find(query),
-    getStatus: (tid, uid) => collStatus.findOne({ tid, uid }),
+    getMultiStatus,
+    getStatus,
     enroll,
     setStatus,
+    getListStatus,
 };

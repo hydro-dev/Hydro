@@ -1,6 +1,9 @@
 const { PERM_JUDGE } = require('../permission');
 const record = require('../model/record');
 const problem = require('../model/problem');
+const builtin = require('../model/builtin');
+const contest = require('../model/contest');
+const user = require('../model/user');
 const bus = require('../service/bus');
 const queue = require('../service/queue');
 const {
@@ -9,42 +12,66 @@ const {
 
 queue.assert('judge');
 
+async function _postJudge(rdoc) {
+    const accept = rdoc.status === builtin.STATUS_ACCEPTED;
+    bus.publish('record_change', rdoc);
+    const tasks = [];
+    if (rdoc.tid) {
+        tasks.push(
+            contest.updateStatus(rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
+        );
+    }
+    if (!rdoc.rejudged) {
+        if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
+            if (accept) {
+                tasks.push(
+                    problem.inc(rdoc.pid, 'nAccept', 1),
+                    user.inc(rdoc.uid, 'nAccept', 1),
+                );
+            }
+        }
+    }
+    await Promise.all(tasks);
+}
+
 async function next(body) {
     let rdoc = await record.get(body.rid);
     const $set = {};
+    const $push = {};
     if (body.case) {
         rdoc.testCases.push(body.case);
-        $set.testCases = rdoc.testCases;
+        $push.testCases = body.case;
     }
     if (body.judge_text) {
         rdoc.judgeTexts.push(body.judge_text);
-        $set.judgeTexts = rdoc.judgeTexts;
+        $push.judgeTexts = body.judge_text;
     }
     if (body.compiler_text) {
         rdoc.compilerTexts.push(body.compiler_text);
-        $set.compilerTexts = rdoc.compilerTexts;
+        $push.compilerTexts = body.compiler_text;
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
     if (body.time_ms) $set.time = body.time_ms;
     if (body.memory_kb) $set.memory = body.memory_kb;
-    rdoc = await record.update(body.rid, $set);
+    rdoc = await record.update(body.rid, $set, $push);
     bus.publish('record_change', rdoc);
 }
 async function end(body) {
     let rdoc = await record.get(body.rid);
     const $set = {};
+    const $push = {};
     if (body.case) {
         rdoc.testCases.push(body.case);
-        $set.testCases = rdoc.testCases;
+        $push.testCases = body.case;
     }
     if (body.judge_text) {
         rdoc.judgeTexts.push(body.judge_text);
-        $set.judgeTexts = rdoc.judgeTexts;
+        $push.judgeTexts = body.judge_text;
     }
     if (body.compiler_text) {
         rdoc.compilerTexts.push(body.compiler_text);
-        $set.compilerTexts = rdoc.compilerTexts;
+        $push.compilerTexts = body.compiler_text;
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
@@ -52,8 +79,9 @@ async function end(body) {
     if (body.memory_kb) $set.memory = body.memory_kb;
     $set.judgeAt = new Date();
     $set.judger = body.judger;
-    rdoc = await record.update(body.rid, $set);
-    bus.publish('record_change', rdoc);
+    rdoc = await record.update(body.rid, $set, $push);
+    await _postJudge(rdoc);
+    rdoc = await record.update(body.rid, $set, $push);
 }
 
 class JudgeHandler extends Handler {
@@ -87,6 +115,7 @@ class JudgeHandler extends Handler {
     }
 
     async postEnd() {
+        this.request.body.judger = this.user._id;
         await end(this.request.body);
         this.response.body = {};
     }

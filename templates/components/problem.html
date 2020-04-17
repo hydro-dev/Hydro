@@ -1,10 +1,10 @@
 {% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
   {%- if not invalid %}
   <a
-  {%- if tdoc is none %}
-    href="/p/{{ pdoc.pid }}"
-  {%- else %}
+  {%- if tdoc %}
     href="/c/{{ tdoc._id }}/p/{{ pdoc._id }}"
+  {%- else %}
+    href="/p/{{ pdoc.pid }}"
   {%- endif %}
   >
   {%- endif %}
