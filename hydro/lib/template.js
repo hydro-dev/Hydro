@@ -16,6 +16,7 @@ class Nunjucks extends nunjucks.Environment {
         this.addFilter('json', (self) => JSON.stringify(self), false);
         this.addFilter('assign', (self, data) => Object.assign(self, data));
         this.addFilter('markdown', (self) => markdown.render(self));
+        this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
         this.addFilter('gravatar_url', misc.gravatar_url);
         this.addFilter('format_size', misc.format_size);
         this.addGlobal('typeof', (o) => typeof o);

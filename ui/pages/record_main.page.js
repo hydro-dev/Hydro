@@ -11,7 +11,7 @@ const page = new NamedPage('record_main', async () => {
   sock.onopen = () => {
     sock.send(document.cookie);
     setTimeout(() => {
-      sock.send(JSON.stringify({ rdocs: Context.rids }));
+      sock.send(JSON.stringify({ rids: Context.rids }));
     }, 300);
   };
   sock.onmessage = (message) => {

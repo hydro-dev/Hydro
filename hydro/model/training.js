@@ -13,9 +13,9 @@ function getMultiStatus(query) {
     return collStatus.find(query);
 }
 async function getListStatus(uid, tids) {
-    const psdocs = await getMultiStatus({ uid, pid: { $in: Array.from(new Set(tids)) } }).toArray();
+    const tsdocs = await getMultiStatus({ uid, tid: { $in: Array.from(new Set(tids)) } }).toArray();
     const r = {};
-    for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
+    for (const tsdoc of tsdocs) r[tsdoc.pid] = tsdoc;
     return r;
 }
 async function enroll(tid, uid) {
@@ -103,6 +103,12 @@ module.exports = {
         const tdoc = await coll.findOne({ _id: tid });
         if (!tdoc) throw new TrainingNotFoundError(tid);
         return tdoc;
+    },
+    async getList(tids) {
+        const tdocs = await this.getMulti({ _id: { $in: Array.from(new Set(tids)) } }).toArray();
+        const r = {};
+        for (const tdoc of tdocs) r[tdoc._id] = tdoc;
+        return r;
     },
     getMulti: (query) => coll.find(query),
     getMultiStatus,

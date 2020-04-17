@@ -1,4 +1,5 @@
 const db = require('../service/db.js');
+const { ValidationError } = require('../error');
 
 const coll = db.collection('token');
 
@@ -33,8 +34,10 @@ module.exports = {
      * @param {number} tokenType type of the token.
      * @returns {object} The token document, or null.
      */
-    get(tokenId, tokenType) {
-        return coll.findOne({ _id: tokenId, tokenType });
+    async get(tokenId, tokenType) {
+        const res = await coll.findOne({ _id: tokenId, tokenType });
+        if (!res) throw new ValidationError('token');
+        return res;
     },
 
     /**

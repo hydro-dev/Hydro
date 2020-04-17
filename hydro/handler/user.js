@@ -32,8 +32,7 @@ class UserLoginHandler extends Handler {
     }
 }
 class UserLogoutHandler extends Handler {
-    constructor(ctx) {
-        super(ctx);
+    async prepare() {
         this.checkPerm(PERM_LOGGEDIN);
     }
 
@@ -47,8 +46,7 @@ class UserLogoutHandler extends Handler {
     }
 }
 class UserRegisterHandler extends Handler {
-    constructor(ctx) {
-        super(ctx);
+    async prepare() {
         this.checkPerm(PERM_REGISTER_USER);
     }
 
@@ -76,8 +74,7 @@ class UserRegisterHandler extends Handler {
     }
 }
 class UserRegisterWithCodeHandler extends Handler {
-    constructor(ctx) {
-        super(ctx);
+    async prepare() {
         this.checkPerm(PERM_REGISTER_USER);
     }
 
@@ -153,11 +150,11 @@ class UserDetailHandler extends Handler {
     }
 
     async get({ uid }) {
-        const isSelfProfile = this.ctx.state.user._id === uid;
+        const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(uid);
         if (!udoc) throw new UserNotFoundError(uid);
         const sdoc = await token.getMostRecentSessionByUid(uid);
-        this.ctx.body = { isSelfProfile, udoc, sdoc };
+        this.response.body = { isSelfProfile, udoc, sdoc };
     }
 }
 class UserSearchHandler extends Handler {
@@ -176,7 +173,7 @@ class UserSearchHandler extends Handler {
                 udocs[i].gravatar_url = misc.gravatar_url[udocs[i].gravatar];
             }
         }
-        this.ctx.body = { udocs };
+        this.response.body = { udocs };
     }
 }
 

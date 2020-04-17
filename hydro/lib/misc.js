@@ -4,6 +4,7 @@ exports.gravatar_url = function gravatarUrl(email, size) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size}`;
 };
 exports.datetime_span = function datetimeSpan(dt, relative = true, format = '%Y-%m-%d %H:%M:%S') {
+    if (!dt) return 'DATETIME_SPAN_ERROR';
     if (dt.generationTime) dt = new Date(dt.generationTime * 1000);
     else if (typeof dt === 'number' || typeof dt === 'string') dt = new Date(dt);
     return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(

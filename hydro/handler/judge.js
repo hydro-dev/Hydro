@@ -92,10 +92,11 @@ class JudgeHandler extends Handler {
     async get({ check = false }) {
         this.response.body = {};
         if (check) return;
-        const rid = await queue.get('judge', false);
-        if (rid) {
-            const rdoc = await record.get(rid);
-            const pdoc = await problem.getById(rdoc.pid);
+        const tasks = [];
+        let rid = await queue.get('judge', false);
+        while (rid) {
+            const rdoc = await record.get(rid); // eslint-disable-line no-await-in-loop
+            const pdoc = await problem.getById(rdoc.pid); // eslint-disable-line no-await-in-loop
             const task = {
                 event: 'judge',
                 rid,
@@ -105,7 +106,8 @@ class JudgeHandler extends Handler {
                 lang: rdoc.lang,
                 code: rdoc.code,
             };
-            this.response.body = { task };
+            tasks.push(task);
+            rid = await queue.get('judge', false); // eslint-disable-line no-await-in-loop
         }
     }
 
