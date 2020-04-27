@@ -46,12 +46,14 @@ class DiscussionHandler extends Handler {
                 const pdoc = await problem.getById(docId);
                 if (!pdoc) throw new DiscussionNodeNotFoundError(type, docId);
                 if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-                this.title = pdoc.title;
+                this.vnode = pdoc;
             } else if (type === 'contest') {
                 const tdoc = await contest.get(docId);
                 if (!tdoc) throw new DiscussionNodeNotFoundError(type, docId);
-                this.title = tdoc.title;
+                this.vnode = tdoc;
             } else throw new DiscussionNodeNotFoundError(type, docId);
+            this.vnode.parentType = type;
+            this.vnode.parentId = docId;
         }
     }
 }
@@ -62,7 +64,7 @@ class DiscussionMainHandler extends DiscussionHandler {
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, page,
+            ddocs, dpcount, udict, page, page_name: 'discussion_main', vnode: {},
         };
     }
 }
@@ -77,11 +79,17 @@ class DiscussionNodeHandler extends DiscussionHandler {
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
         const path = [
             ['discussion_main', '/discuss'],
-            [this.title, null, true],
+            [this.vnode.title, null, true],
         ];
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, path, page,
+            ddocs,
+            dpcount,
+            udict,
+            path,
+            page,
+            vnode: this.vnode,
+            page_name: 'discussion_node',
         };
     }
 }
@@ -95,11 +103,11 @@ class DiscussionCreateHandler extends DiscussionHandler {
     async get({ type, docId }) {
         const path = [
             ['discussion_main', '/discuss'],
-            [this.title, `/discuss/${type}/${docId}`, true],
+            [this.vnode.title, `/discuss/${type}/${docId}`, true],
             ['discussion_create', null],
         ];
         this.response.template = 'discussion_create.html';
-        this.response.body = { path, title: this.title };
+        this.response.body = { path, vnode: this.vnode };
     }
 
     async post({
@@ -139,7 +147,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const udict = await user.getList(uids);
         const path = [
             ['discussion_main', '/discuss'],
-            [this.title, '/discuss/{type}', true],
+            [this.vnode.title, '/discuss/{type}', true],
             [this.ddoc.title, null, true],
         ];
         this.response.template = 'discussion_detail.html';

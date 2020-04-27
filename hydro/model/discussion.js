@@ -41,7 +41,7 @@ function count(query) {
 }
 
 function getMulti(query) {
-    return coll.find(query).sort([{ updateAt: -1 }, { _id: -1 }]);
+    return coll.find(query).sort('updateAt', -1);
 }
 
 async function addReply(did, owner, content, ip) {

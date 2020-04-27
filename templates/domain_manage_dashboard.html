@@ -1,10 +1,11 @@
+{% set page_name = "domain_manage_dashboard" %}
 {% import "components/user.html" as user %}
-{% extends "domain_base.html" %}
+{% extends "manage_base.html" %}
 {% block domain_content %}
-{% if handler.domain['bulletin'] %}
+{% if system.bio %}
 <div class="section">
   <div class="section__body typo">
-    {{ handler.domain['bulletin']|markdown }}
+    {{ system.bio|markdown|safe }}
   </div>
 </div>
 {% endif %}
@@ -14,8 +15,8 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-    <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ handler.domain['gravatar']|gravatar_url }}" width="32" height="32"></dd>
-    <dt>{{ _('Name') }}</dt><dd>{{ handler.domain['name'] }}</dd>
+    <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ system.gravatar|gravatar_url }}" width="32" height="32"></dd>
+    <dt>{{ _('Name') }}</dt><dd>{{ system.uname }}</dd>
     </dl>
   </div>
 </div>

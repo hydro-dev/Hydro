@@ -2,8 +2,8 @@ const perm = require('../permission');
 
 const BUILTIN_ROLES = [
     { _id: 'guest', perm: perm.PERM_BASIC },
-    { _id: 'default', perm: perm.PERM_DEFAULT },
-    { _id: 'admin', perm: perm.PERM_ADMIN },
+    { _id: 'default', perm: perm.PERM_DEFAULT, count: 0 },
+    { _id: 'admin', perm: perm.PERM_ADMIN, count: 0 },
 ];
 const CATEGORIES = {
     动态规划: [

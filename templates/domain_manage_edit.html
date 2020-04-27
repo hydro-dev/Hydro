@@ -1,11 +1,31 @@
-{% extends "domain_base.html" %}
+{% set page_name = "domain_manage_edit" %}
+{% import "components/form.html" as form with context %}
+{% extends "manage_base.html" %}
 {% block domain_content %}
 <div class="section">
   <div class="section__body">
     <form method="post">
-    {% with ddoc=handler.domain %}
-      {% include "partials/domain_edit_form.html" %}
-    {% endwith %}
+      {{ form.form_text({
+           label:'Name',
+           name:'uname',
+           value:system.uname,
+           autofocus:true,
+           required:true
+         }) }}
+      {{ form.form_text({
+           label:'Gravatar Email',
+           help_text:'Will be used as the system icon.',
+           name:'gravatar',
+           value:system.gravatar
+         }) }}
+      {{ form.form_textarea({
+           columns:12,
+           label:'Bulletin',
+           name:'bio',
+           value:system.bio,
+           markdown:true,
+           required:false
+         }) }}
       <div class="row"><div class="columns">
         <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <button type="submit" class="rounded primary button">

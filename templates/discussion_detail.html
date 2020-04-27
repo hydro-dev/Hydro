@@ -7,10 +7,10 @@
       <div class="section__body">
         <ul class="supplementary list">
           <li>
-            <a class="discussion-node-tag" href="{{ vj4.handler.discussion.node_url(handler, 'discussion_node', vj4.model.adaptor.discussion.node_id(ddoc)) }}">
-            {% if ddoc['parent_doc_type'] == vj4.model.document.TYPE_DISCUSSION_NODE %}
+            <a class="discussion-node-tag" href="/discuss/{{ ddoc.parentType }}/{{ ddoc.parentId }}">
+            {% if ddoc.parentType == 'node' %}
               <span class="v-center icon icon-tag"></span>
-            {% elif ddoc['parent_doc_type'] == vj4.model.document.TYPE_CONTEST %}
+            {% elif ddoc.parentType == 'contest' %}
               <span class="v-center icon icon-award"></span>
             {% else %}
               <span class="v-center icon icon-flag"></span>
@@ -19,19 +19,19 @@
             </a>
           </li>
           <li>
-            {{ user.render_inline(udict[ddoc['owner']]) }}
+            {{ user.render_inline(udict[ddoc.owner]) }}
             @
-            {{ datetime_span(ddoc['_id'].generationTime) }}
+            {{ datetime_span(ddoc['_id'].generationTime)|safe }}
           </li>
         </ul>
-        <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_detail_raw', did=ddoc['_id']) }}">
-          {{ ddoc['content']|markdown }}
+        <div class="typo topic__content" data-emoji-enabled data-raw-url="/discuss/{{ ddoc._id }}/raw">
+          {{ ddoc['content']|markdown|safe }}
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_SELF) or handler.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
+      {% if ddoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
         <li>
-          <a href="{{ reverse_url('discussion_edit', did=ddoc['doc_id']) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
+          <a href="/discuss/{{ ddoc._id }}/edit"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
       {% endif %}
         <li>
@@ -48,7 +48,7 @@
         </form></li>
       {% endif %}
         <li>
-          <a href="{{ reverse_url('about') }}#contact"><span class="icon icon-warning"></span> {{ _('Report') }}</a>
+          <a href="/wiki/about#contact"><span class="icon icon-warning"></span> {{ _('Report') }}</a>
         </li>
       </ul>
     </div>
@@ -64,15 +64,11 @@
           comment_ref = 'drid',
           reply_ref = 'drrid',
           comment_post_perm = perm.PERM_REPLY_DISCUSSION,
-          comment_edit_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_EDIT_DISCUSSION_REPLY,
-          comment_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
-          comment_delete_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_DELETE_DISCUSSION_REPLY,
-          comment_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
+          comment_edit_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
+          comment_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_post_perm = perm.PERM_REPLY_DISCUSSION,
-          reply_edit_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_EDIT_DISCUSSION_REPLY,
-          reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
-          reply_delete_perm = perm.PERM_NONE if handler.own(ddoc, perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION) else perm.PERM_DELETE_DISCUSSION_REPLY,
-          reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF
+          reply_edit_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
+          reply_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}

@@ -3,11 +3,12 @@ const user = require('../model/user');
 const builtin = require('../model/builtin');
 const { Route, Handler } = require('../service/server');
 const { PERM_ADMIN } = require('../permission');
-const { RoleAlreadyExistError } = require('../error');
+const { RoleAlreadyExistError, ValidationError } = require('../error');
 
 class ManageHandler extends Handler {
     async prepare() {
         this.checkPerm(PERM_ADMIN);
+        this.system = await user.getById(0);
     }
 }
 
@@ -20,20 +21,21 @@ class ManageMainHandler extends ManageHandler {
 class ManageDashboardHandler extends ManageHandler {
     async get() {
         this.response.template = 'domain_manage_dashboard.html';
+        this.response.body = { system: this.system };
     }
 }
 
 class ManageEditHandler extends ManageHandler {
     async get() {
         this.response.template = 'domain_manage_edit.html';
+        this.response.body = { system: this.system };
     }
 
-    async post({ name, gravatar, bulletin }) {
-        await Promise.all([
-            system.set('name', name),
-            system.set('gravatar', gravatar),
-            system.set('bulletin', bulletin),
-        ]);
+    async post({ uname, gravatar, bio }) {
+        const unameLower = uname.trim().toLowerCase();
+        await user.setById(0, {
+            uname, unameLower, gravatar, bio,
+        });
         this.back();
     }
 }
@@ -92,14 +94,19 @@ class ManageRoleHandler extends ManageHandler {
     }
 
     async postAdd({ role }) {
-        const roles = await user.getRoles();
-        if (roles.includes(role)) throw new RoleAlreadyExistError(role);
-        await user.setRole(role, builtin.PERM_DEFAULT);
+        const r = await user.getRole(role);
+        if (r) throw new RoleAlreadyExistError(role);
+        await user.addRole(role, builtin.PERM_DEFAULT);
         this.back();
     }
 
-    async postDelete({ role }) {
-        await user.deleteRoles(role);
+    async postDelete({ roles }) {
+        for (const role of roles) {
+            if (['admin', 'default', 'guest'].includes(role)) {
+                throw new ValidationError('role');
+            }
+        }
+        await user.deleteRoles(roles);
         this.back();
     }
 }

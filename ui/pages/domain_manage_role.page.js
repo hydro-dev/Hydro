@@ -73,7 +73,7 @@ const page = new NamedPage('domain_manage_role', () => {
     try {
       await request.post('', {
         operation: 'delete',
-        role: selectedRoles,
+        roles: selectedRoles,
       });
       Notification.success(i18n('Selected roles have been deleted.'));
       await delay(2000);

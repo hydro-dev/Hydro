@@ -1,5 +1,5 @@
 const Mongo = require('mongodb');
-const bus = require('../service/bus');
+const bus = require('./bus');
 const options = require('../options');
 
 let mongourl = 'mongodb://';

@@ -113,6 +113,7 @@ class Handler {
 
     back(body) {
         if (body) this.response.body = body;
+        else if (this.preferJson) this.response.body = {};
         this.response.redirect = this.request.headers.referer || '/';
     }
 
@@ -165,17 +166,19 @@ class Handler {
     }
 
     async renderBody() {
-        if (!(this.response.body || this.response.template)) {
-            this.response.body = { error: new NotFoundError() };
-            this.response.template = 'error.html';
-        }
-        if (!this.preferJson) {
-            if (this.response.body || this.response.template) {
-                if (this.request.query.noTemplate || this.preferJson) return;
-                const templateName = this.request.query.template || this.response.template;
-                if (templateName) {
-                    this.response.body = this.response.body || {};
-                    await this.render(templateName, this.response.body);
+        if (!this.response.redirect) {
+            if (!(this.response.body || this.response.template)) {
+                this.response.body = { error: new NotFoundError() };
+                this.response.template = 'error.html';
+            }
+            if (!this.preferJson) {
+                if (this.response.body || this.response.template) {
+                    if (this.request.query.noTemplate || this.preferJson) return;
+                    const templateName = this.request.query.template || this.response.template;
+                    if (templateName) {
+                        this.response.body = this.response.body || {};
+                        await this.render(templateName, this.response.body);
+                    }
                 }
             }
         }
@@ -192,7 +195,11 @@ class Handler {
                 this.ctx.response.body = this.response.body;
                 this.ctx.response.status = this.response.status || 200;
             }
-            if (this.response.type) this.ctx.response.type = this.response.type;
+            this.ctx.response.type = this.preferJson
+                ? 'application/json'
+                : this.response.type
+                    ? this.response.type
+                    : this.ctx.response.type;
         }
     }
 
@@ -233,7 +240,7 @@ class Handler {
         console.error(error.message, error.params);
         console.error(error.stack);
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-        this.response.body = { error };
+        this.response.body = { error: { message: error.message, params: error.params, stack: error.stack } };
         await this.___cleanup().catch(() => { });
     }
 }
@@ -247,6 +254,8 @@ function Route(route, RouteHandler) {
             const method = ctx.method.toLowerCase();
             const args = { ...ctx.params, ...ctx.query, ...ctx.request.body };
 
+            if (h.___prepare) await h.___prepare(args);
+
             for (const l of check) {
                 if (args[l]) {
                     args[l] = new ObjectID(args[l]);
@@ -256,11 +265,17 @@ function Route(route, RouteHandler) {
             if (args.content) validator.checkContent(args.content);
             if (args.title) validator.checkContent(args.title);
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
+            if (args.password) validator.checkPassword(args.password);
+            if (args.mail) validator.checkEmail(args.mail);
+            if (args.uname) validator.checkUname(args.uname);
             if (args.page) args.page = parseInt(args.page);
             if (args.duration) args.duration = parseFloat(args.duration);
             if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
+            if (args.role) validator.checkRole(args.role);
+            if (args.roles) {
+                for (const i of args.roles) validator.checkRole(i);
+            }
 
-            if (h.___prepare) await h.___prepare(args);
             if (h.__prepare) await h.__prepare(args);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);

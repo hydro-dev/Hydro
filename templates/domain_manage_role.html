@@ -1,4 +1,5 @@
-{% extends "domain_base.html" %}
+{% set page_name = "domain_manage_role" %}
+{% extends "manage_base.html" %}
 {% block domain_content %}
 <div style="display: none" class="dialog__body--create-role">
   <div>
@@ -42,12 +43,26 @@
             </label>
           </th>
           <th class="col--id">{{ _('Role') }}</th>
-          <th class="col--description">{{ _('Description') }}</th>
           <th class="col--users">{{ _('Users') }}</th>
         </tr>
       </thead>
       <tbody>
-      {% for role, rd in vj4.model.builtin.BUILTIN_ROLE_DESCRIPTORS.items() %}
+      {% for role in roles %}
+      {% if role._id not in ['default', 'guest', 'admin'] %}
+        <tr data-role="{{ role._id }}">
+          <td class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" data-checkbox-group="role" data-checkbox-range>
+            </label>
+          </td>
+          <td class="col--id">
+            {{ _('User-defined role') }}: {{ role._id }}
+          </td>
+          <td class="col--users">
+            {{ role.count }}
+          </td>
+        </tr>
+      {% else %}
         <tr>
           <td class="col--checkbox">
             <label class="compact checkbox">
@@ -55,32 +70,10 @@
             </label>
           </td>
           <td class="col--id">
-            {{ role }}
-          </td>
-          <td class="col--description">
-            {{ _('Built-in') }}: {{ _(rd.description) }}
+            {{ _('Built-in') }}: {{ role._id }}
           </td>
           <td class="col--users">
-            {{ rucounts.get(role, '--') }}
-          </td>
-        </tr>
-      {% endfor %}
-      {% for role in roles %}
-      {% if role not in vj4.model.builtin.BUILTIN_ROLE_DESCRIPTORS %}
-        <tr data-role="{{ role }}">
-          <td class="col--checkbox">
-            <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="role" data-checkbox-range>
-            </label>
-          </td>
-          <td class="col--id">
-            {{ role }}
-          </td>
-          <td class="col--description">
-            {{ _('User-defined role') }}
-          </td>
-          <td class="col--users">
-            {{ rucounts[role] }}
+            {{ role.count|default('--') }}
           </td>
         </tr>
       {% endif %}

@@ -18,13 +18,13 @@
       {{ nav_item('/t', 'training_main', 'training') }}
     {% endif %}
     {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-      {{ nav_item('/d', 'discussion_main', 'discussion') }}
+      {{ nav_item('/discuss', 'discussion_main', 'discussion') }}
     {% endif %}
     {% if handler.hasPerm(perm.PERM_VIEW_CONTEST) %}
       {{ nav_item('/c', 'contest_main', 'contest') }}
     {% endif %}
     {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) or handler.hasPerm(perm.PERM_EDIT_PERM) %}
-      {{ nav_item('/d', 'domain_manage', 'domain_manage') }}
+      {{ nav_item('/manage', 'domain_manage', 'domain_manage') }}
     {% endif %}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">

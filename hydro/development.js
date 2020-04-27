@@ -34,6 +34,8 @@ async function run() {
     require('./handler/user');
     require('./handler/contest');
     require('./handler/training');
+    require('./handler/discussion');
+    require('./handler/manage');
     require('./handler/import');
     server.start();
 }

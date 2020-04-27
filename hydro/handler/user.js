@@ -4,7 +4,6 @@ const token = require('../model/token');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
 const misc = require('../lib/misc');
-const validator = require('../lib/validator');
 const options = require('../options');
 const { PERM_REGISTER_USER, PERM_LOGGEDIN } = require('../permission');
 const {
@@ -55,7 +54,6 @@ class UserRegisterHandler extends Handler {
     }
 
     async post({ mail }) {
-        validator.checkEmail(mail);
         if (await user.getByEmail(mail, true)) throw new UserAlreadyExistError(mail);
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
@@ -112,7 +110,6 @@ class UserLostPassHandler extends Handler {
     }
 
     async post({ mail }) {
-        validator.checkEmail(mail);
         const udoc = await user.getByEmail(mail);
         if (!udoc) throw new UserNotFoundError(mail);
         const tid = await token.add(

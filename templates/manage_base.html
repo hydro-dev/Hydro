@@ -12,27 +12,20 @@
             <span class="icon icon-info"></span> {{ _('Properties') }}
           </div>
           <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_manage_dashboard') }}
-          {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) %}
-            {{ sidemenu.render_item(null, 'domain_manage_edit') }}
-            {{ sidemenu.render_item(null, 'domain_manage_join_applications') }}
-            {{ sidemenu.render_item(null, 'domain_manage_discussion') }}
-          {% endif %}
-            <!-- Ranking Settings -->
+            {{ sidemenu.render_item(null, 'domain_manage_dashboard', '/manage/dashboard') }}
+            {{ sidemenu.render_item(null, 'domain_manage_edit', '/manage/edit') }}
           </ol>
         </li>
-      {% if handler.hasPerm(perm.PERM_EDIT_PERM) %}
         <li class="menu__item">
           <div class="menu__link expandable">
             <span class="icon icon-user"></span> {{ _('Access Control') }}
           </div>
           <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_manage_role') }}
-            {{ sidemenu.render_item(null, 'domain_manage_user') }}
-            {{ sidemenu.render_item(null, 'domain_manage_permission') }}
+            {{ sidemenu.render_item(null, 'domain_manage_role', '/manage/role') }}
+            {{ sidemenu.render_item(null, 'domain_manage_user', '/manage/user') }}
+            {{ sidemenu.render_item(null, 'domain_manage_permission', '/manage/permission') }}
           </ol>
         </li>
-      {% endif %}
       </ol>
     </div>
   </div></div>

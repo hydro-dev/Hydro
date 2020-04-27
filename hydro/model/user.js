@@ -1,7 +1,6 @@
 const system = require('./system');
 const { UserNotFoundError, UserAlreadyExistError } = require('../error');
 const pwhash = require('../lib/pwhash');
-const validator = require('../lib/validator');
 const db = require('../service/db');
 
 const coll = db.collection('user');
@@ -33,6 +32,7 @@ class USER {
         return pwhash.check(password, this.salt, this.hash);
     }
 }
+
 async function getById(_id) {
     const udoc = await coll.findOne({ _id });
     if (!udoc) throw new UserNotFoundError(_id);
@@ -40,11 +40,13 @@ async function getById(_id) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
+
 async function getList(uids) {
     const r = {};
     for (const uid of uids) r[uid] = await getById(uid); // eslint-disable-line no-await-in-loop
     return r;
 }
+
 async function getByUname(uname) {
     const unameLower = uname.trim().toLowerCase();
     const udoc = await coll.findOne({ unameLower });
@@ -53,6 +55,7 @@ async function getByUname(uname) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
+
 async function getByEmail(mail, ignoreMissing = false) {
     const mailLower = mail.trim().toLowerCase();
     const udoc = await coll.findOne({ mailLower });
@@ -64,22 +67,23 @@ async function getByEmail(mail, ignoreMissing = false) {
     udoc.perm = role.perm;
     return new USER(udoc);
 }
+
 function setPassword(uid, password) {
-    validator.checkPassword(password);
     const salt = pwhash.salt();
     return coll.findOneAndUpdate({ _id: uid }, {
         $set: { salt, hash: pwhash.hash(password, salt) },
     });
 }
+
 function setById(uid, args) {
-    coll.findOneAndUpdate({ _id: uid }, { $set: args });
+    return coll.findOneAndUpdate({ _id: uid }, { $set: args });
 }
+
 function setEmail(uid, mail) {
-    validator.checkEmail(mail);
     return setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
 }
+
 async function changePassword(uid, currentPassword, newPassword) {
-    validator.checkPassword(newPassword);
     const udoc = await getById(uid);
     udoc.checkPassword(currentPassword);
     const salt = pwhash.salt();
@@ -89,46 +93,69 @@ async function changePassword(uid, currentPassword, newPassword) {
         $set: { salt, hash: pwhash.hash(newPassword, salt) },
     });
 }
+
 async function inc(_id, field, n) {
     await coll.findOneAndUpdate({ _id }, { $inc: { [field]: n } });
     const udoc = await getById(_id);
     return udoc;
 }
+
 async function create({
     uid, mail, uname, password, regip = '127.0.0.1', role = 'default',
 }) {
-    validator.checkUname(uname);
-    validator.checkPassword(password);
-    validator.checkEmail(mail);
     const salt = pwhash.salt();
     if (!uid) uid = system.inc('user');
     try {
-        await coll.insertOne({
-            _id: uid,
-            mail,
-            mailLower: mail.trim().toLowerCase(),
-            uname,
-            unameLower: uname.trim().toLowerCase(),
-            password: pwhash.hash(password, salt),
-            salt,
-            regat: new Date(),
-            regip,
-            loginat: new Date(),
-            loginip: regip,
-            role,
-            gravatar: mail,
-        });
+        await Promise.all([
+            coll.insertOne({
+                _id: uid,
+                mail,
+                mailLower: mail.trim().toLowerCase(),
+                uname,
+                unameLower: uname.trim().toLowerCase(),
+                password: pwhash.hash(password, salt),
+                salt,
+                regat: new Date(),
+                regip,
+                loginat: new Date(),
+                loginip: regip,
+                role,
+                gravatar: mail,
+            }),
+            collRole.updateOne({ _id: role }, { $inc: { count: 1 } })
+        ]);
     } catch (e) {
         throw new UserAlreadyExistError([uid, uname, mail]);
     }
 }
 
-function getMany(params) {
+function getMulti(params) {
     return coll.find(params);
+}
+
+async function setRole(uid, role) {
+    const udoc = await getById(uid);
+    return await Promise.all([
+        coll.findOneAndUpdate({ _id: uid }, { role }),
+        collRole.updateOne({ _id: udoc.role }, { $inc: { count: -1 } }),
+        collRole.updateOne({ _id: role }, { $inc: { count: 1 } }),
+    ]);
 }
 
 function getRoles() {
     return collRole.find().toArray();
+}
+
+function getRole(name) {
+    return collRole.findOne({ _id: name });
+}
+
+function addRole(name, perm) {
+    return collRole.insertOne({ _id: name, perm, count: 0 });
+}
+
+function deleteRoles(roles) {
+    return collRole.deleteMany({ _id: { $in: roles } });
 }
 
 module.exports = {
@@ -137,11 +164,15 @@ module.exports = {
     getByEmail,
     getById,
     getByUname,
-    getMany,
+    getMulti,
     inc,
     setById,
     setEmail,
     setPassword,
+    setRole,
+    getRole,
     getList,
     getRoles,
+    addRole,
+    deleteRoles,
 };

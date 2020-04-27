@@ -1,9 +1,1 @@
-{% import "components/form.html" as form with context %}
-{% if page_name == 'domain_manage_edit' %}
-  {{ form.form_text(label='ID', name='id', value=ddoc['_id'], disabled=true) }}
-{% elif page_name == 'home_domain_create' %}
-  {{ form.form_text(label='ID', name='id', autofocus=true, required=true) }}
-{% endif %}
-  {{ form.form_text(label='Name', name='name', value=ddoc['name']|default(''), autofocus=(page_name == 'domain_manage_edit'), required=true) }}
-  {{ form.form_text(label='Gravatar Email', help_text='Will be used as the domain icon.', name='gravatar', value=ddoc['gravatar']|default('')) }}
-  {{ form.form_textarea(columns=12, label='Bulletin', name='bulletin', value=ddoc['bulletin']|default(''),  markdown=true, required=false) }}
+
