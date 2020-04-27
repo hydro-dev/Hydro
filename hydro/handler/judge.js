@@ -96,16 +96,29 @@ class JudgeHandler extends Handler {
         let rid = await queue.get('judge', false);
         while (rid) {
             const rdoc = await record.get(rid); // eslint-disable-line no-await-in-loop
-            const pdoc = await problem.getById(rdoc.pid); // eslint-disable-line no-await-in-loop
-            const task = {
-                event: 'judge',
-                rid,
-                type: 0,
-                pid: rdoc.pid,
-                data: pdoc.data,
-                lang: rdoc.lang,
-                code: rdoc.code,
-            };
+            let task;
+            if (!rdoc.input) {
+                // eslint-disable-next-line no-await-in-loop
+                const pdoc = await problem.getById(rdoc.pid);
+                task = {
+                    event: 'judge',
+                    rid,
+                    type: 0,
+                    pid: rdoc.pid,
+                    data: pdoc.data,
+                    lang: rdoc.lang,
+                    code: rdoc.code,
+                };
+            } else {
+                task = {
+                    event: 'pretest',
+                    rid,
+                    type: 0,
+                    input: rdoc.input,
+                    lang: rdoc.lang,
+                    code: rdoc.code,
+                };
+            }
             tasks.push(task);
             rid = await queue.get('judge', false); // eslint-disable-line no-await-in-loop
         }
@@ -134,16 +147,29 @@ class JudgeConnectionHandler extends ConnectionHandler {
             this.processing = null;
             const rid = await queue.get('judge');
             const rdoc = await record.get(rid);
-            const pdoc = await problem.getById(rdoc.pid);
-            const task = {
-                event: 'judge',
-                rid,
-                type: 0,
-                pid: rdoc.pid,
-                data: pdoc.data,
-                lang: rdoc.lang,
-                code: rdoc.code,
-            };
+            let task;
+            if (!rdoc.input) {
+                // eslint-disable-next-line no-await-in-loop
+                const pdoc = await problem.getById(rdoc.pid);
+                task = {
+                    event: 'judge',
+                    rid,
+                    type: 0,
+                    pid: rdoc.pid,
+                    data: pdoc.data,
+                    lang: rdoc.lang,
+                    code: rdoc.code,
+                };
+            } else {
+                task = {
+                    event: 'pretest',
+                    rid,
+                    type: 0,
+                    input: rdoc.input,
+                    lang: rdoc.lang,
+                    code: rdoc.code,
+                };
+            }
             this.send({ task });
             this.processing = task.rid;
         }

@@ -17,7 +17,7 @@ const token = require('../model/token');
 const opcount = require('../model/opcount');
 const {
     UserNotFoundError, BlacklistedError, PermissionError,
-    NotFoundError, UserFacingError,
+    NotFoundError, UserFacingError, ValidationError,
 } = require('../error');
 
 const app = new Koa();
@@ -111,7 +111,8 @@ class Handler {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
-    back() {
+    back(body) {
+        if (body) this.response.body = body;
         this.response.redirect = this.request.headers.referer || '/';
     }
 
@@ -236,6 +237,9 @@ class Handler {
         await this.___cleanup().catch(() => { });
     }
 }
+
+const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid'];
+
 function Route(route, RouteHandler) {
     router.all(route, async (ctx) => {
         const h = new RouteHandler(ctx);
@@ -243,12 +247,16 @@ function Route(route, RouteHandler) {
             const method = ctx.method.toLowerCase();
             const args = { ...ctx.params, ...ctx.query, ...ctx.request.body };
 
+            for (const l of check) {
+                if (args[l]) {
+                    args[l] = new ObjectID(args[l]);
+                    if (!args[l]) throw new ValidationError(l);
+                }
+            }
             if (args.content) validator.checkContent(args.content);
             if (args.title) validator.checkContent(args.title);
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
             if (args.page) args.page = parseInt(args.page);
-            if (args.rid) args.rid = new ObjectID(args.rid);
-            if (args.tid) args.tid = new ObjectID(args.tid);
             if (args.duration) args.duration = parseFloat(args.duration);
             if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
 

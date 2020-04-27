@@ -8,7 +8,7 @@ const { ValidationError, RemoteOnlineJudgeError } = require('../error');
 
 class ProblemImportHandler extends Handler {
     async syzoj(url) {
-        const RE_SYZOJ = /https?:\/\/([a-zA-Z0-9\.]+)\/problem\/([0-9]+)\/?/i;
+        const RE_SYZOJ = /https?:\/\/([a-zA-Z0-9.]+)\/problem\/([0-9]+)\/?/i;
         assert(url.match(RE_SYZOJ), new ValidationError('url'));
         if (!url.endsWith('/')) url += '/';
         const [, host, pid] = RE_SYZOJ.exec(url);

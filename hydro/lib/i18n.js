@@ -1,7 +1,4 @@
-const fs = require('fs');
-const yaml = require('js-yaml');
-
-const locales = {};
+const locales = require('../../.build/locales.json');
 
 String.prototype.format = function formatStr(...args) {
     let result = this;
@@ -33,8 +30,4 @@ String.prototype.translate = function translate(language = 'zh_CN') {
     return this;
 };
 
-module.exports = function load(file, language) {
-    if (!locales[language]) locales[language] = {};
-    const content = fs.readFileSync(file).toString();
-    Object.assign(locales[language], yaml.safeLoad(content));
-};
+module.exports = locales;

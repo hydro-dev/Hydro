@@ -91,7 +91,7 @@ class UserRegisterWithCodeHandler extends Handler {
         const { mail } = await token.get(code, token.TYPE_REGISTRATION);
         if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
-        const uid = await system.incUserCounter();
+        const uid = await system.inc('user');
         await user.create({
             uid, uname, password, mail, regip: this.request.ip,
         });

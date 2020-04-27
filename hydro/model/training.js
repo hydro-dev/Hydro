@@ -9,15 +9,18 @@ const collStatus = db.collection('training.status');
 function getStatus(tid, uid) {
     return collStatus.findOne({ tid, uid });
 }
+
 function getMultiStatus(query) {
     return collStatus.find(query);
 }
+
 async function getListStatus(uid, tids) {
     const tsdocs = await getMultiStatus({ uid, tid: { $in: Array.from(new Set(tids)) } }).toArray();
     const r = {};
     for (const tsdoc of tsdocs) r[tsdoc.pid] = tsdoc;
     return r;
 }
+
 async function enroll(tid, uid) {
     try {
         await collStatus.insertOne({ tid, uid, enroll: 1 });
@@ -26,6 +29,7 @@ async function enroll(tid, uid) {
     }
     await coll.findOneAndUpdate({ _id: tid }, { $inc: { enroll: 1 } });
 }
+
 async function setStatus(tid, uid, $set) {
     await collStatus.findOneAndUpdate({ tid, uid }, { $set });
     return await collStatus.findOne({ tid, uid });

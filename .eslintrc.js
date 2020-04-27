@@ -24,6 +24,7 @@ module.exports = {
         "radix": "off",
         "guard-for-in": "off",
         "no-param-reassign": "off",
-        "global-require": "off"
+        "global-require": "off",
+        "no-nested-ternary": "off",
     },
 };

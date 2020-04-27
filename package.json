@@ -29,9 +29,9 @@
         "eslint-plugin-import": "^2.20.2"
     },
     "scripts": {
-        "build": "webpack --config webpack.config.js",
+        "build": "node build/index.js",
         "pack": "pkg .",
-        "lint": "eslint judger --fix"
+        "lint": "eslint hydro --fix"
     },
     "pkg": {
         "scripts": [

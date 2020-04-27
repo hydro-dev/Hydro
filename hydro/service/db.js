@@ -1,4 +1,5 @@
 const Mongo = require('mongodb');
+const bus = require('../service/bus');
 const options = require('../options');
 
 let mongourl = 'mongodb://';
@@ -12,7 +13,7 @@ Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology:
     .then((Database) => {
         db = Database.db(options.db.name);
         db.Db = Database;
-        global.bus.emit('connected');
+        bus.publish('system_database_connected', null);
     });
 
 module.exports = {

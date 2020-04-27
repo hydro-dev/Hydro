@@ -1,9 +1,9 @@
 node_modules/
 config.yaml
+.build/
 .uibuild/
 __*
 ui/misc/.iconfont
 ui/static/locale
-.webpackStats.json
 .cache
-dist/
+.webpackStats.json

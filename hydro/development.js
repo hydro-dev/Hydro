@@ -8,25 +8,24 @@ process.stdin.on('data', async (input) => {
         console.warn(e);
     }
 });
-const path = require('path');
-const EventEmitter = require('events');
-const i18n = require('./lib/i18n');
 
-i18n(path.resolve(__dirname, '..', 'locales', 'zh_CN.yaml'), 'zh_CN');
-i18n(path.resolve(__dirname, '..', 'locales', 'zh_TW.yaml'), 'zh_TW');
-i18n(path.resolve(__dirname, '..', 'locales', 'en.yaml'), 'en');
+require('./lib/i18n');
+require('./utils');
 
-global.bus = new EventEmitter();
+const bus = require('./service/bus');
+
 async function run() {
-    require('./utils');
-    require('./service/db');
     await new Promise((resolve) => {
-        global.bus.once('connected', () => {
+        const h = () => {
             console.log('Database connected');
+            bus.unsubscribe(['system_database_connected'], h);
             resolve();
-        });
+        };
+        bus.subscribe(['system_database_connected'], h);
+        require('./service/db');
     });
     require('./service/gridfs');
+    require('./service/queue');
     const server = require('./service/server');
     require('./handler/home');
     require('./handler/problem');
@@ -38,14 +37,6 @@ async function run() {
     require('./handler/import');
     server.start();
 }
-process.on('restart', async () => {
-    console.log('Signal detected, restarting...');
-    await global.Hydro.stop();
-    await global.Hydro.destory();
-    delete global.Hydro;
-    delete require.cache;
-    run();
-});
 run().catch((e) => {
     console.error(e);
     process.exit(1);

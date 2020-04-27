@@ -19,16 +19,19 @@ async function add(pid, owner, content) {
     });
     return res.insertedId;
 }
+
 async function get(psid) {
     psid = new ObjectID(psid);
     const psdoc = await coll.findOne({ _id: psid });
     if (!psdoc) throw new SolutionNotFoundError();
     return psdoc;
 }
+
 function getMany(query, sort, page, limit) {
     return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
 }
+
 async function edit(_id, content) {
     validator.checkContent(content);
     await coll.findOneAndUpdate({ _id }, { $set: { content } });
@@ -36,15 +39,19 @@ async function edit(_id, content) {
     if (!psdoc) throw new SolutionNotFoundError(_id);
     return psdoc;
 }
+
 function del(psid) {
     return coll.deleteOne({ _id: psid });
 }
+
 function count(query) {
     return coll.find(query).count();
 }
+
 function getMulti(pid) {
     return coll.find({ pid }).sort({ vote: -1 });
 }
+
 function reply(psid, owner, content) {
     validator.checkContent(content);
     return coll.findOneAndUpdate(
@@ -52,18 +59,20 @@ function reply(psid, owner, content) {
         { $push: { reply: { content, owner, _id: new ObjectID() } } },
     );
 }
+
 async function getReply(psid, psrid) {
     const psdoc = await coll.findOne({ _id: psid, reply: { $elemMatch: { _id: psrid } } });
     if (!psdoc) return [null, null];
     for (const psrdoc of psdoc) if (psrdoc._id === psrid) return [psdoc, psrdoc];
     return [psdoc, null];
 }
+
 async function editReply(psid, psrid, content) {
     validator.checkContent(content);
     psid = new ObjectID(psid);
     psrid = new ObjectID(psrid);
     const psdoc = await coll.findOne({ _id: psid, reply: { $elemMatch: { _id: psrid } } });
-    const { reply } = psdoc;
+    const { reply } = psdoc; // eslint-disable-line no-shadow
     for (const i in reply) {
         if (reply[i]._id === psrid) {
             reply[i].content = content;
@@ -72,9 +81,11 @@ async function editReply(psid, psrid, content) {
     }
     return await coll.findOneAndUpdate({ _id: psdoc._id }, { $set: { reply } });
 }
+
 function delReply(psid, psrid) {
     return coll.findOneAndUpdate({ _id: psid }, { $pull: { reply: { _id: psrid } } });
 }
+
 async function vote(psid, uid, value) {
     let pssdoc = await collStatus.findOne({ psid, uid });
     if (pssdoc) await collStatus.deleteOne({ psid, uid });
@@ -85,12 +96,14 @@ async function vote(psid, uid, value) {
     const psdoc = await coll.findOne({ _id: psid });
     return [psdoc, pssdoc];
 }
+
 async function getListStatus(list, uid) {
     const result = {};
     const res = await collStatus.find({ uid, psid: { $in: list } }).toArray();
     for (const i of res) result[i.psid] = i;
     return result;
 }
+
 module.exports = {
     count,
     add,

@@ -1,0 +1,259 @@
+const paginate = require('../lib/paginate');
+const problem = require('../model/problem');
+const contest = require('../model/contest');
+const user = require('../model/user');
+const discussion = require('../model/discussion');
+const {
+    Route, Handler,
+} = require('../service/server');
+const {
+    DiscussionNodeNotFoundError, DiscussionNotFoundError, DocumentNotFoundError,
+} = require('../error');
+const { constants } = require('../options');
+const {
+    PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
+    PERM_VIEW_PROBLEM_HIDDEN, PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY,
+    PERM_HIGHLIGHT_DISCUSSION, PERM_LOGGEDIN, PERM_CREATE_DISCUSSION,
+    PERM_REPLY_DISCUSSION,
+} = require('../permission');
+
+class DiscussionHandler extends Handler {
+    async _prepare({
+        type, docId, did, drid, drrid,
+    }) {
+        this.checkPerm(PERM_VIEW_DISCUSSION);
+        if (did) {
+            this.ddoc = await discussion.get(did);
+            if (!this.ddoc) throw new DiscussionNotFoundError(did);
+            type = this.ddoc.type;
+            docId = this.ddoc.parent;
+            if (drid) {
+                this.drdoc = await discussion.getReply(drid, did);
+                if (!this.drdoc) throw new DiscussionNotFoundError(drid);
+                if (this.drdoc.parent !== this.ddoc._id) throw new DocumentNotFoundError(drid);
+                if (drrid) {
+                    [, this.drrdoc] = await discussion.getTailReply(drid, drrid);
+                    if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
+                    if (this.drrdoc.parent !== this.drdoc._id) throw new DocumentNotFoundError(drid);
+                }
+            }
+        }
+        // TODO(twd2): do more visibility check eg. contest
+        // TODO(twd2): exclude problem/contest discussions?
+        // TODO(iceboy): continuation based pagination.
+        if (type && docId) {
+            if (type === 'problem') {
+                const pdoc = await problem.getById(docId);
+                if (!pdoc) throw new DiscussionNodeNotFoundError(type, docId);
+                if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+                this.title = pdoc.title;
+            } else if (type === 'contest') {
+                const tdoc = await contest.get(docId);
+                if (!tdoc) throw new DiscussionNodeNotFoundError(type, docId);
+                this.title = tdoc.title;
+            } else throw new DiscussionNodeNotFoundError(type, docId);
+        }
+    }
+}
+
+class DiscussionMainHandler extends DiscussionHandler {
+    async get({ page = 1 }) {
+        const [ddocs, dpcount] = await paginate(discussion.getMulti(), page, constants.DISCUSSION_PER_PAGE);
+        const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        this.response.template = 'discussion_main_or_node.html';
+        this.response.body = {
+            ddocs, dpcount, udict, page,
+        };
+    }
+}
+
+class DiscussionNodeHandler extends DiscussionHandler {
+    async get({ type, docId, page = 1 }) {
+        const [ddocs, dpcount] = await paginate(
+            discussion.getMulti({ type, docId }),
+            page,
+            constants.DISCUSSION_PER_PAGE,
+        );
+        const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        const path = [
+            ['discussion_main', '/discuss'],
+            [this.title, null, true],
+        ];
+        this.response.template = 'discussion_main_or_node.html';
+        this.response.body = {
+            ddocs, dpcount, udict, path, page,
+        };
+    }
+}
+
+class DiscussionCreateHandler extends DiscussionHandler {
+    async prepare() {
+        this.checkPerm(PERM_LOGGEDIN);
+        this.checkPerm(PERM_CREATE_DISCUSSION);
+    }
+
+    async get({ type, docId }) {
+        const path = [
+            ['discussion_main', '/discuss'],
+            [this.title, `/discuss/${type}/${docId}`, true],
+            ['discussion_create', null],
+        ];
+        this.response.template = 'discussion_create.html';
+        this.response.body = { path, title: this.title };
+    }
+
+    async post({
+        type, docId, title, content, highlight,
+    }) {
+        this.limitRate('add_discussion', 3600, 30);
+        const flags = {};
+        if (highlight) {
+            this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
+            flags.highlight = true;
+        }
+        const did = await discussion.add(type, docId, this.user._id, title, content, this.request.ip, flags);
+        this.response.body = { did };
+        this.response.redirect = `/discuss/${did}`;
+    }
+}
+
+class DiscussionDetailHandler extends DiscussionHandler {
+    async get({ did, page = 1 }) {
+        const dsdoc = this.user.hasPerm(PERM_LOGGEDIN)
+            ? await discussion.getStatus(did, this.user._id)
+            : null;
+        const [drdocs, pcount, drcount] = await paginate(
+            discussion.getMultiReply(did),
+            page,
+            constants.REPLY_PER_PAGE,
+        );
+        const uids = drdocs.map((drdoc) => drdoc.owner);
+        uids.push(this.ddoc.owner);
+        for (const drdoc of drdocs) {
+            if (drdoc.reply) {
+                for (const drrdoc of drdocs) {
+                    uids.push(drrdoc.owner);
+                }
+            }
+        }
+        const udict = await user.getList(uids);
+        const path = [
+            ['discussion_main', '/discuss'],
+            [this.title, '/discuss/{type}', true],
+            [this.ddoc.title, null, true],
+        ];
+        this.response.template = 'discussion_detail.html';
+        this.response.body = {
+            path, ddoc: this.ddoc, dsdoc, drdocs, page, pcount, drcount, udict,
+        };
+    }
+
+    async postReply({ did, content }) {
+        this.checkPerm(PERM_LOGGEDIN);
+        this.checkPerm(PERM_REPLY_DISCUSSION);
+        this.limitRate('add_discussion', 3600, 30);
+        await discussion.addReply(did, this.user._id, content, this.request.ip);
+        this.back();
+    }
+
+    async postTailReply({ drid, content }) {
+        this.checkPerm(PERM_LOGGEDIN);
+        this.checkPerm(PERM_REPLY_DISCUSSION);
+        this.limitRate('add_discussion', 3600, 30);
+        await discussion.addTailReply(drid, this.user._id, content, this.request.ip);
+        this.back();
+    }
+
+    async postEditReply({ drid, content }) {
+        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION_REPLY);
+        await discussion.editReply(drid, content);
+        this.back();
+    }
+
+    async postDeleteReply({ drid }) {
+        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
+        await discussion.deleteReply(drid);
+        this.back();
+    }
+
+    async postEditTailReply({ drid, drrid, content }) {
+        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION_REPLY);
+        await discussion.editTailReply(drid, drrid, content);
+        this.back();
+    }
+
+    async postDeleteTailReply({ drid, drrid }) {
+        if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
+        await discussion.deleteTailReply(drid, drrid);
+        this.back();
+    }
+
+    async postStar({ did, star }) {
+        await discussion.setStar(did, this.user._id, true);
+        this.response.body = { star };
+        this.response.direct = this.request.path;
+    }
+
+    async postUnstar({ did, star }) {
+        await discussion.setStar(did, this.user._id, false);
+        this.response.body = { star };
+        this.response.direct = this.request.path;
+    }
+}
+
+class DiscussionDetailRawHandler extends DiscussionHandler {
+    async get() {
+        this.response.type = 'text/markdown';
+        this.response.body = this.ddoc.content;
+    }
+}
+
+class DiscussionReplyRawHandler extends DiscussionHandler {
+    async get() {
+        this.response.type = 'text/markdown';
+        this.response.body = this.drdoc.content;
+    }
+}
+
+
+class DiscussionTailReplyRawHandler extends DiscussionHandler {
+    async get() {
+        this.response.type = 'text/markdown';
+        this.response.body = this.drrdoc.content;
+    }
+}
+
+class DiscussionEditHandler extends DiscussionHandler {
+    async get() {
+        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
+        this.response.template = 'discussion_edit.html';
+        this.response.body = { ddoc: this.ddoc };
+    }
+
+    async post({
+        did, title, content, highlight, operation,
+    }) {
+        if (operation) return;
+        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
+        if (highlight && !this.ddoc.highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
+        await discussion.edit(did, title, content, highlight);
+        this.response.body = { did };
+        this.response.redirect = `/discuss/${did}`;
+    }
+
+    async postDelete({ did }) {
+        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION);
+        await discussion.delete(did);
+        this.response.body = { type: this.ddoc.type, parent: this.ddoc.parent };
+        this.response.redirect = `/discuss/${this.ddoc.type}/${this.ddoc.parent}`;
+    }
+}
+
+Route('/discuss', DiscussionMainHandler);
+Route('/discuss/:did', DiscussionDetailHandler);
+Route('/discuss/:did/edit', DiscussionEditHandler);
+Route('/discuss/:did/raw', DiscussionDetailRawHandler);
+Route('/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
+Route('/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
+Route('/discuss/:type/:docId', DiscussionNodeHandler);
+Route('/discuss/:type/:docId/create', DiscussionCreateHandler);

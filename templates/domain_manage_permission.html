@@ -36,7 +36,7 @@
         {% for role in roles %}
           <td class="col--p">
             <label class="compact checkbox">
-              <input name="{{ role }}" data-checkbox-group="{{ role }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if bitand(handler.domain['roles'][role], perm.key) == perm.key %} checked{% endif %}>
+              <input name="{{ role }}" data-checkbox-group="{{ role }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if roles[role].includes(perm.key) or roles[role] == '-' %} checked{% endif %}>
             </label>
           </td>
         {% endfor %}

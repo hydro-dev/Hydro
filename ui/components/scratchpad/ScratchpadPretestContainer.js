@@ -17,22 +17,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  handleClickAdd() {
-    dispatch({
-      type: 'SCRATCHPAD_PRETEST_ADD_DATA',
-    });
-  },
-  handleClickRemove() {
-    dispatch({
-      type: 'SCRATCHPAD_PRETEST_REMOVE_DATA',
-    });
-  },
-  handleSwitchData(id) {
-    dispatch({
-      type: 'SCRATCHPAD_PRETEST_SWITCH_TO_DATA',
-      payload: id,
-    });
-  },
   handleClickClose() {
     dispatch({
       type: 'SCRATCHPAD_UI_SET_VISIBILITY',
@@ -66,18 +50,6 @@ export default class ScratchpadPretestContainer extends React.PureComponent {
             <ScrollableInkTabBar
               extraContent={(
                 <span>
-                  <PanelButton
-                    data-tooltip={i18n('Add new data')}
-                    onClick={() => this.props.handleClickAdd()}
-                  >
-                    {i18n('Add')}
-                  </PanelButton>
-                  <PanelButton
-                    data-tooltip={i18n('Remove this data')}
-                    onClick={() => this.props.handleClickRemove()}
-                  >
-                    {i18n('Remove')}
-                  </PanelButton>
                   <PanelButton
                     onClick={() => this.props.handleClickClose()}
                   >

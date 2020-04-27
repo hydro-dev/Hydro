@@ -58,4 +58,5 @@ try {
 } catch (e) {
     console.error('Cannot load config');
 }
+
 module.exports = options;

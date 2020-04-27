@@ -83,7 +83,7 @@ async function changePassword(uid, currentPassword, newPassword) {
     const udoc = await getById(uid);
     udoc.checkPassword(currentPassword);
     const salt = pwhash.salt();
-    return await coll.findOneAndUpdate({
+    return await coll.findOneAndUpdate({ // eslint-disable-line no-return-await
         _id: udoc._id,
     }, {
         $set: { salt, hash: pwhash.hash(newPassword, salt) },
@@ -101,7 +101,7 @@ async function create({
     validator.checkPassword(password);
     validator.checkEmail(mail);
     const salt = pwhash.salt();
-    if (!uid) uid = system.incUserCounter();
+    if (!uid) uid = system.inc('user');
     try {
         await coll.insertOne({
             _id: uid,
@@ -127,6 +127,10 @@ function getMany(params) {
     return coll.find(params);
 }
 
+function getRoles() {
+    return collRole.find().toArray();
+}
+
 module.exports = {
     changePassword,
     create,
@@ -139,4 +143,5 @@ module.exports = {
     setEmail,
     setPassword,
     getList,
+    getRoles,
 };

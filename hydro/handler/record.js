@@ -96,6 +96,7 @@ class RecordConnectionHandler extends ConnectionHandler {
     async onRecordChange(data) {
         const rdoc = data.value;
         if (rdoc.tid && rdoc.tid.toString() !== this.tid) return;
+        // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([user.getById(rdoc.uid), problem.getById(rdoc.pid)]);
         if (pdoc.hidden && !this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });

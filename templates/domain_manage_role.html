@@ -9,7 +9,12 @@
       <blockquote class="note">
         <p>{{ _('Role name can only contains numbers, letters and underscores.') }}</p>
       </blockquote>
-      {{ form.form_text(columns=None, label='Name', name='role', autofocus=True) }}
+      {{ form.form_text({
+           columns:None,
+           label:'Name',
+           name:'role',
+           autofocus:true
+         }) }}
     </div></div>
   </div>
 </div>

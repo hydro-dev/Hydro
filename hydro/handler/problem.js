@@ -6,7 +6,10 @@ const record = require('../model/record');
 const user = require('../model/user');
 const solution = require('../model/solution');
 const system = require('../model/system');
-const { Route, Handler } = require('../service/server');
+const bus = require('../service/bus');
+const {
+    Route, Connection, Handler, ConnectionHandler,
+} = require('../service/server');
 const gridfs = require('../service/gridfs');
 const queue = require('../service/queue');
 const {
@@ -120,6 +123,48 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         this.user.nSubmit++;
         this.response.body = { rid };
         this.response.redirect = `/r/${rid}`;
+    }
+}
+
+class ProblemPretestHandler extends ProblemDetailHandler {
+    async post({ lang, code, input }) {
+        this.limitRate('add_record', 60, 100);
+        const rid = await record.add({
+            uid: this.uid, lang, code, pid: this.pdoc._id, input,
+        });
+        await queue.push('judge', rid);
+        this.response.body = { rid };
+    }
+}
+
+class ProblemPretestConnectionHandler extends ConnectionHandler {
+    async prepare({ pid }) {
+        this.pid = pid.toString();
+        bus.subscribe(['record_change'], this.onRecordChange);
+    }
+
+    async onRecordChange(data) {
+        const rdoc = data.value;
+        if (rdoc.uid !== this.user._id || rdoc.pid.toString() !== this.pid) return;
+        if (rdoc.tid) return;
+        this.send({ rdoc });
+    }
+
+    async cleanup() {
+        bus.unsubscribe(['record_change'], this.onRecordChange);
+    }
+}
+
+class ProblemStatisticsHandler extends ProblemDetailHandler {
+    async get() {
+        const udoc = await user.getById(this.pdoc.owner);
+        const path = [
+            ['problem_main', '/p'],
+            [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
+            ['problem_statistics', null],
+        ];
+        this.response.template = 'problem_statistics.html';
+        this.response.body = { pdoc: this.pdoc, udoc, path };
     }
 }
 
@@ -322,7 +367,7 @@ class ProblemCreateHandler extends Handler {
         title, pid, content, hidden,
     }) {
         validator.checkPid(pid);
-        pid = pid || await system.incPidCounter();
+        pid = pid || await system.inc('pid');
         await problem.add({
             title, content, owner: this.user._id, pid, hidden,
         });
@@ -335,7 +380,9 @@ Route('/p', ProblemHandler);
 Route('/problem/random', ProblemRandomHandler);
 Route('/p/:pid', ProblemDetailHandler);
 Route('/p/:pid/submit', ProblemSubmitHandler);
+Route('/p/:pid/pretest', ProblemPretestHandler);
 Route('/p/:pid/settings', ProblemSettingsHandler);
+Route('/p/:pid/statistics', ProblemStatisticsHandler);
 Route('/p/:pid/edit', ProblemEditHandler);
 Route('/p/:pid/upload', ProblemDataUploadHandler);
 Route('/p/:pid/data', ProblemDataDownloadHandler);
@@ -343,99 +390,4 @@ Route('/p/:pid/solution', ProblemSolutionHandler);
 Route('/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
 Route('/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
 Route('/problem/create', ProblemCreateHandler);
-
-
-/*
-
-@app.route('/p/{pid}/pretest', 'problem_pretest')
-class ProblemPretestHandler(base.Handler):
-  @base.requirePerm(builtin.PERM_SUBMIT_PROBLEM)
-  @base.route_argument
-  @base.post_argument
-  @base.require_csrfToken
-  @base.sanitize
-  @base.limitRate('add_record', 60, 100)
-  async def post(self, *, pid: document.convert_doc_id, lang: str, code: str,
-                 data_input: str, data_output: str):
-    pdoc = await problem.get(self.domainId, pid)
-    # don't need to check hidden status
-    # create zip file, TODO(twd2): check file size
-    post = await self.request.post()
-    content = list(zip(post.getall('data_input'), post.getall('data_output')))
-    output_buffer = io.BytesIO()
-    zip_file = zipfile.ZipFile(output_buffer, 'a', zipfile.ZIP_DEFLATED)
-    config_content = str(len(content)) + '\n'
-    for i, (data_input, data_output) in enumerate(content):
-      input_file = 'input{0}.txt'.format(i)
-      output_file = 'output{0}.txt'.format(i)
-      config_content += '{0}|{1}|1|10|262144\n'.format(input_file, output_file)
-      zip_file.writestr('Input/{0}'.format(input_file), data_input)
-      zip_file.writestr('Output/{0}'.format(output_file), data_output)
-    zip_file.writestr('Config.ini', config_content)
-    # mark all files as created in Windows :p
-    for zfile in zip_file.filelist:
-      zfile.create_system = 0
-    zip_file.close()
-    fid = await fs.add_data('application/zip', output_buffer.getvalue())
-    output_buffer.close()
-    rid = await record.add(self.domainId, pdoc['_id'], constant.record.TYPE_PRETEST,
-                           self.user['_id'], lang, code, fid)
-    self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
-
-
-@app.connection_route('/p/{pid}/pretest-conn', 'problem_pretest-conn')
-class ProblemPretestConnection(record_handler.RecordVisibilityMixin, base.Connection):
-  async def on_open(self):
-    await super(ProblemPretestConnection, self).on_open()
-    self.pid = document.convert_doc_id(self.request.match_info['pid'])
-    bus.subscribe(self.on_record_change, ['record_change'])
-
-  async def on_record_change(self, e):
-    rdoc = e['value']
-    if rdoc['uid'] != self.user['_id'] or \
-       rdoc['domainId'] != self.domainId or rdoc['pid'] != self.pid:
-      return
-    # check permission for visibility: contest
-    if rdoc['tid']:
-      show_status, tdoc = await self.rdoc_contest_visible(rdoc)
-      if not show_status:
-        return
-    self.send(rdoc=rdoc)
-
-  async def on_close(self):
-    bus.unsubscribe(self.on_record_change)
-
-
-  @base.requirePriv(builtin.PRIV_USER_PROFILE)
-  @base.route_argument
-  @base.post_argument
-  @base.require_csrfToken
-  @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, title: str, content: str):
-    pdoc = await problem.get(self.domainId, pid)
-    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
-      self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    await problem.edit(self.domainId, pdoc['_id'], title=title, content=content)
-    self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
-
-
-@app.route('/p/{pid}/statistics', 'problem_statistics')
-class ProblemStatisticsHandler(base.Handler):
-  @base.route_argument
-  @base.sanitize
-  async def get(self, *, pid: document.convert_doc_id):
-    # TODO(twd2)
-    uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
-    pdoc = await problem.get(self.domainId, pid, uid)
-    if pdoc.get('hidden', False):
-      self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
-    udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
-                                       domain.get_user(self.domainId, pdoc['owner_uid']))
-    path_components = self.build_path(
-        (self.translate('problem_main'), self.reverse_url('problem_main')),
-        (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['_id'])),
-        (self.translate('problem_statistics'), None))
-    self.render('problem_statistics.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
-                page_title=pdoc['title'], path_components=path_components)
-
-*/
+Connection('/p/:pid/pretest-conn', ProblemPretestConnectionHandler);
