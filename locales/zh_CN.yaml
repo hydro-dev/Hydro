@@ -4,7 +4,7 @@
 API: API
 about: 关于
 About: 关于
-About Vijos: 关于 Vijos
+About Hydro: 关于 Hydro
 Accepted: 已通过
 Accepted Ratio: 通过率
 Active Sessions: 活动会话
@@ -21,9 +21,9 @@ Bio Visibility: 个人简介可见性
 Blog: 博客
 Boom!: 炸了！
 Browser: 浏览器
-? By signing up a Vijos universal account, you can submit code and join discussions in all online
+? By signing up a Hydro universal account, you can submit code and join discussions in all online
   judging services provided by us.
-: 注册一个 Vijos 通用账户，您就可以在我们提供的所有在线评测服务上提交代码、参与讨论。
+: 注册一个 Hydro 通用账户，您就可以在我们提供的所有在线评测服务上提交代码、参与讨论。
 CLOSE: 关闭
 Cancel: 取消
 Ok: 确定
@@ -76,11 +76,11 @@ Forgot password or username?: 忘记密码或者用户名？
 Gender: 性别
 Gender Visibility: 性别可见性
 Gravatar Email: Gravatar Email 地址
-'Hello! You can click following link to sign up your Vijos account:': 您好！您可以点击以下链接来注册您的 Vijos 账户：
-'Hello, {0}! You can click following link to reset the password of your Vijos account:': 您好，{0}！您可以点击以下链接来重置您
-  Vijos 账户的密码：
-'Hello, {0}! You can click following link to active your new email of your Vijos account:': 您好，{0}！您可以点击以下链接来激活您
-  Vijos 账户的新电子邮件地址：
+'Hello! You can click following link to sign up your Hydro account:': 您好！您可以点击以下链接来注册您的 Hydro 账户：
+'Hello, {0}! You can click following link to reset the password of your Hydro account:': 您好，{0}！您可以点击以下链接来重置您
+  Hydro 账户的密码：
+'Hello, {0}! You can click following link to active your new email of your Hydro account:': 您好，{0}！您可以点击以下链接来激活您
+  Hydro 账户的新电子邮件地址：
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
 Help: 帮助
 Hide all tags: 隐藏所有标签
@@ -204,7 +204,7 @@ Uploaded By: 上传者
 Upload Problem: 上传题目
 User: 用户
 Username: 用户名
-Using your Vijos universal account: 使用您的 Vijos 通用账户
+Using your Hydro universal account: 使用您的 Hydro 通用账户
 View Problem: 查看题目
 View or create discussion: 查看与发表讨论
 View or submit solution: 查看与发表题解
