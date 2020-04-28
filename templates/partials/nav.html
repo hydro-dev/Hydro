@@ -23,7 +23,7 @@
     {% if handler.hasPerm(perm.PERM_VIEW_CONTEST) %}
       {{ nav_item('/c', 'contest_main', 'contest') }}
     {% endif %}
-    {% if handler.hasPerm(perm.PERM_EDIT_DESCRIPTION) or handler.hasPerm(perm.PERM_EDIT_PERM) %}
+    {% if handler.hasPerm(perm.PERM_MANAGE) %}
       {{ nav_item('/manage', 'domain_manage', 'domain_manage') }}
     {% endif %}
     </ol>

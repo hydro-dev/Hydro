@@ -1,9 +1,10 @@
+{% set page_name = "domain_manage_permission" %}
 {% extends "manage_base.html" %}
 {% block domain_content %}
 <form method="post">
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('{0}: Permissions').format(handler.domain['name']) }}</h1>
+    <h1 class="section__title">{{ _('{0}: Permissions').format(system.uname) }}</h1>
   </div>
   <div class="section__body no-padding domain-users">
     <table class="data-table">
@@ -17,11 +18,11 @@
         <tr>
           <th class="col--description">{{ _('Permissions') }}</th>
         {% for role in roles %}
-          <th class="col--p"><span data-tooltip="{{ role }}">{{ role }}</span></th>
+          <th class="col--p"><span data-tooltip="{{ role }}">{{ role._id }}</span></th>
         {% endfor %}
         </tr>
       </thead>
-    {% for family, perms in perm.PERMS_BY_FAMILY.items() %}
+    {% for family, perms in perm.PERMS_BY_FAMILY %}
       <tbody>
         <tr>
           <td class="col--family" colspan="{{ (roles|length)+1 }}">
@@ -36,7 +37,7 @@
         {% for role in roles %}
           <td class="col--p">
             <label class="compact checkbox">
-              <input name="{{ role }}" data-checkbox-group="{{ role }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if roles[role].includes(perm.key) or roles[role] == '-' %} checked{% endif %}>
+              <input name="{{ role._id }}" data-checkbox-group="{{ role._id }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if role.perm.includes(perm.key) %} checked{% endif %}{% if role._id == 'root' %} disabled{% endif %}>
             </label>
           </td>
         {% endfor %}

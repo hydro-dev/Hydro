@@ -1,3 +1,4 @@
+{% set page_name = "domain_manage_user" %}
 {% extends "manage_base.html" %}
 {% block domain_content %}
 <div style="display: none" class="dialog__body--add-user">
@@ -15,7 +16,12 @@
       <div class="medium-6 columns">
         <label>
           {{ _('Role') }}
-          {{ form.select([('', _('Select a role'))] + roles_with_text, 'role') }}
+          {{ form.select({
+               label:_('Select a role'),
+               options:rolesSelect,
+               name:'role',
+               value:'default'
+             }) }}
         </label>
       </div>
     </div>
@@ -30,7 +36,11 @@
       <div class="medium-12 columns">
         <label>
           {{ _('Set Roles for selected users') }}
-          {{ form.select([('', _('Select a role'))] + roles_with_text, 'role') }}
+          {{ form.select({
+               label:_('Select a role'),
+               options:rolesSelect,
+               name:'role'
+             }) }}
         </label>
       </div>
     </div>
@@ -38,7 +48,7 @@
 </div>
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('{0}: Users').format(handler.domain['name']) }}</h1>
+    <h1 class="section__title">{{ _('{0}: Users').format(system.uname) }}</h1>
     <div class="section__tools">
       <button class="primary rounded button" name="add_user">{{ _('Add User to Domain') }}</button>
     </div>
@@ -68,24 +78,30 @@
       <tbody>
         {% for role in roles %}
         {% for rudoc in rudocs[role] %}
-        {% set is_disabled=(rudoc['uid'] == handler.domain['owner']) %}
-        <tr data-uid="{{ rudoc['uid'] }}">
+        {% set is_disabled=(rudoc._id == handler.user._id) %}
+        <tr data-uid="{{ rudoc._id }}">
           <td class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" data-checkbox-group="user" {% if is_disabled %}disabled{% else %}data-checkbox-range{% endif %}>
             </label>
           </td>
           <td class="col--uid">
-            {{ rudoc['uid'] }}
+            {{ rudoc._id }}
           </td>
           <td class="col--user">
-            {{ user.render_inline(udict[rudoc['uid']], badge=false) }}
+            {{ user.render_inline(udict[rudoc._id], badge=false) }}
           </td>
           <td class="col--name-alias">
-            {{ rudoc['display_name']|default('') }}
+            {{ rudoc.displayName|default('') }}
           </td>
           <td class="col--role">
-            {{ form.select(roles_with_text, 'role', value=rudoc['role'], extra_class='compact', disabled=is_disabled) }}
+            {{ form.select({
+                 options:rolesSelect,
+                 name:'role',
+                 value:rudoc['role'],
+                 extra_class:'compact',
+                 disabled:is_disabled
+               }) }}
           </td>
         </tr>
         {% endfor %}

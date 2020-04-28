@@ -30,6 +30,7 @@ class UserLoginHandler extends Handler {
         this.response.redirect = referer.endsWith('/login') ? '/' : referer;
     }
 }
+
 class UserLogoutHandler extends Handler {
     async prepare() {
         this.checkPerm(PERM_LOGGEDIN);
@@ -44,6 +45,7 @@ class UserLogoutHandler extends Handler {
         this.response.body = {};
     }
 }
+
 class UserRegisterHandler extends Handler {
     async prepare() {
         this.checkPerm(PERM_REGISTER_USER);
@@ -71,6 +73,7 @@ class UserRegisterHandler extends Handler {
         }
     }
 }
+
 class UserRegisterWithCodeHandler extends Handler {
     async prepare() {
         this.checkPerm(PERM_REGISTER_USER);
@@ -99,6 +102,7 @@ class UserRegisterWithCodeHandler extends Handler {
         this.response.redirect = '/';
     }
 }
+
 class UserLostPassHandler extends Handler {
     constructor(ctx) {
         if (!options.smtp.user) throw new SystemError('Cannot send mail');
@@ -123,6 +127,7 @@ class UserLostPassHandler extends Handler {
         this.response.template = 'user_lostpass_mail_sent.html';
     }
 }
+
 class UserLostPassWithCodeHandler extends Handler {
     async get({ code }) {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
@@ -140,6 +145,7 @@ class UserLostPassWithCodeHandler extends Handler {
         this.response.redirect = '/';
     }
 }
+
 class UserDetailHandler extends Handler {
     constructor(ctx) {
         super(ctx);
@@ -154,6 +160,7 @@ class UserDetailHandler extends Handler {
         this.response.body = { isSelfProfile, udoc, sdoc };
     }
 }
+
 class UserSearchHandler extends Handler {
     async get({ q, exactMatch = false }) {
         let udocs;
@@ -161,7 +168,7 @@ class UserSearchHandler extends Handler {
         else udocs = await user.getPrefixList(q, 20);
         try {
             const udoc = await user.getById(parseInt(q));
-            if (udoc) udocs.insert(0, udoc);
+            if (udoc) udocs.push(udoc);
         } catch (e) {
             /* Ignore */
         }
@@ -170,7 +177,7 @@ class UserSearchHandler extends Handler {
                 udocs[i].gravatar_url = misc.gravatar_url[udocs[i].gravatar];
             }
         }
-        this.response.body = { udocs };
+        this.response.body = udocs;
     }
 }
 
@@ -180,5 +187,5 @@ Route('/register/:code', UserRegisterWithCodeHandler);
 Route('/logout', UserLogoutHandler);
 Route('/lostpass', UserLostPassHandler);
 Route('/lostpass/:code', UserLostPassWithCodeHandler);
-Route('/user/:uid', UserDetailHandler);
 Route('/user/search', UserSearchHandler);
+Route('/user/:uid', UserDetailHandler);

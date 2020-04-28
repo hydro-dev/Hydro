@@ -44,7 +44,7 @@ async function run() {
                 hash: pwhash.hash('rootroot', salt),
                 salt,
                 gravatar: 'root@hydro',
-                role: 'admin',
+                role: 'root',
             }, udoc),
         ]);
     }

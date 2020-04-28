@@ -1,5 +1,6 @@
 const system = require('./system');
 const { UserNotFoundError, UserAlreadyExistError } = require('../error');
+const perm = require('../permission');
 const pwhash = require('../lib/pwhash');
 const db = require('../service/db');
 
@@ -25,7 +26,7 @@ class USER {
     }
 
     hasPerm(perm) {
-        return this.perm === '-' || (this.perm || '').includes(perm);
+        return this.perm.includes(perm);
     }
 
     checkPassword(password) {
@@ -122,7 +123,7 @@ async function create({
                 role,
                 gravatar: mail,
             }),
-            collRole.updateOne({ _id: role }, { $inc: { count: 1 } })
+            collRole.updateOne({ _id: role }, { $inc: { count: 1 } }),
         ]);
     } catch (e) {
         throw new UserAlreadyExistError([uid, uname, mail]);
@@ -131,6 +132,13 @@ async function create({
 
 function getMulti(params) {
     return coll.find(params);
+}
+
+async function getPrefixList(prefix, limit = 50) {
+    prefix = prefix.toLowerCase();
+    const $regex = new RegExp(`\\A\\Q${prefix.replace(/\\E/gmi, /\\E\\E\\Q/gmi)}\\E`, 'gmi');
+    const udocs = await coll.find({ unameLower: { $regex } }).limit(limit).toArray();
+    return udocs;
 }
 
 async function setRole(uid, role) {
@@ -143,7 +151,7 @@ async function setRole(uid, role) {
 }
 
 function getRoles() {
-    return collRole.find().toArray();
+    return collRole.find().sort('_id', 1).toArray();
 }
 
 function getRole(name) {
@@ -155,7 +163,14 @@ function addRole(name, perm) {
 }
 
 function deleteRoles(roles) {
-    return collRole.deleteMany({ _id: { $in: roles } });
+    return Promise.all([
+        coll.updateMany({ role: { $in: roles } }, { $set: { role: 'default' } }),
+        collRole.deleteMany({ _id: { $in: roles } }),
+    ]);
+}
+
+function init() {
+    return collRole.update({ _id: 'root' }, { $set: { perm: perm.PERM_ALL } });
 }
 
 module.exports = {
@@ -169,10 +184,12 @@ module.exports = {
     setById,
     setEmail,
     setPassword,
+    getPrefixList,
     setRole,
     getRole,
     getList,
     getRoles,
     addRole,
     deleteRoles,
+    init,
 };

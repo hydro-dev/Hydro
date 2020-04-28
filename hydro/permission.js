@@ -1,12 +1,8 @@
-const permissions = {
-    PERM_NONE: '0',
-    PERM_ALL: '-',
-    PERM_LOGGEDIN: '~',
-    PERM_REGISTER_USER: '+',
-    PERM_VIEW: '1',
-    PERM_EDIT_PERM: '2',
+const perm = {
+    PERM_MANAGE: '#',
+    PERM_LOGGEDIN: '0',
+    PERM_REGISTER_USER: '1',
     PERM_MOD_BADGE: '3',
-    PERM_EDIT_DESCRIPTION: '4',
     PERM_CREATE_PROBLEM: '5',
     PERM_EDIT_PROBLEM: '6',
     PERM_VIEW_PROBLEM: '7',
@@ -43,28 +39,79 @@ const permissions = {
     PERM_EDIT_TRAINING: 'c',
     PERM_JUDGE: 'd',
 };
-permissions.PERM_BASIC = permissions.PERM_VIEW
-    + permissions.PERM_VIEW_PROBLEM
-    + permissions.PERM_VIEW_PROBLEM_SOLUTION
-    + permissions.PERM_VIEW_DISCUSSION
-    + permissions.PERM_VIEW_CONTEST
-    + permissions.PERM_VIEW_CONTEST_SCOREBOARD
-    + permissions.PERM_REGISTER_USER;
-permissions.PERM_DEFAULT = permissions.PERM_VIEW
-    + permissions.PERM_VIEW_PROBLEM
-    + permissions.PERM_SUBMIT_PROBLEM
-    + permissions.PERM_VIEW_PROBLEM_SOLUTION
-    + permissions.PERM_CREATE_PROBLEM_SOLUTION
-    + permissions.PERM_VOTE_PROBLEM_SOLUTION
-    + permissions.PERM_REPLY_PROBLEM_SOLUTION
-    + permissions.PERM_VIEW_DISCUSSION
-    + permissions.PERM_CREATE_DISCUSSION
-    + permissions.PERM_REPLY_DISCUSSION
-    + permissions.PERM_VIEW_CONTEST
-    + permissions.PERM_VIEW_CONTEST_SCOREBOARD
-    + permissions.PERM_ATTEND_CONTEST
-    + permissions.PERM_VIEW_TRAINING
-    + permissions.PERM_CREATE_TRAINING
-    + permissions.PERM_LOGGEDIN;
-permissions.PERM_ADMIN = permissions.PERM_ALL;
-module.exports = permissions;
+
+let PERM_ALL = '';
+for (const p in perm) PERM_ALL += perm[p];
+perm.PERM_ALL = PERM_ALL;
+
+const Permission = (family, key, desc) => ({ family, key, desc });
+
+const PERMS = [
+    Permission('perm_general', perm.PERM_REGISTER_USER, 'Register new account'),
+    Permission('perm_general', perm.PERM_MANAGE, 'Manage the system'),
+    Permission('perm_general', perm.PERM_MOD_BADGE, 'Show MOD badge'),
+    Permission('perm_problem', perm.PERM_CREATE_PROBLEM, 'Create problems'),
+    Permission('perm_problem', perm.PERM_EDIT_PROBLEM, 'Edit problems'),
+    Permission('perm_problem', perm.PERM_VIEW_PROBLEM, 'View problems'),
+    Permission('perm_problem', perm.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
+    Permission('perm_problem', perm.PERM_SUBMIT_PROBLEM, 'Submit problem'),
+    Permission('perm_problem', perm.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
+    Permission('perm_record', perm.PERM_READ_RECORD_CODE, 'Read record codes'),
+    Permission('perm_record', perm.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
+    Permission('perm_record', perm.PERM_REJUDGE, 'Rejudge records'),
+    Permission('perm_problem_solution', perm.PERM_VIEW_PROBLEM_SOLUTION, 'View problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_CREATE_PROBLEM_SOLUTION, 'Create problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_VOTE_PROBLEM_SOLUTION, 'Vote problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_EDIT_PROBLEM_SOLUTION, 'Edit problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_DELETE_PROBLEM_SOLUTION, 'Delete problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_REPLY_PROBLEM_SOLUTION, 'Reply problem solutions'),
+    Permission('perm_problem_solution', perm.PERM_EDIT_PROBLEM_SOLUTION_REPLY, 'Edit problem solution replies'),
+    Permission('perm_problem_solution', perm.PERM_DELETE_PROBLEM_SOLUTION_REPLY, 'Delete problem solution replies'),
+    Permission('perm_discussion', perm.PERM_VIEW_DISCUSSION, 'View discussions'),
+    Permission('perm_discussion', perm.PERM_CREATE_DISCUSSION, 'Create discussions'),
+    Permission('perm_discussion', perm.PERM_HIGHLIGHT_DISCUSSION, 'Highlight discussions'),
+    Permission('perm_discussion', perm.PERM_EDIT_DISCUSSION, 'Edit discussions'),
+    Permission('perm_discussion', perm.PERM_DELETE_DISCUSSION, 'Delete discussions'),
+    Permission('perm_discussion', perm.PERM_REPLY_DISCUSSION, 'Reply discussions'),
+    Permission('perm_discussion', perm.PERM_EDIT_DISCUSSION_REPLY, 'Edit discussion replies'),
+    Permission('perm_discussion', perm.PERM_DELETE_DISCUSSION_REPLY, 'Delete discussion replies'),
+    Permission('perm_contest', perm.PERM_VIEW_CONTEST, 'View contests'),
+    Permission('perm_contest', perm.PERM_VIEW_CONTEST_SCOREBOARD, 'View contest scoreboard'),
+    Permission('perm_contest', perm.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, 'View hidden contest submission status and scoreboard'),
+    Permission('perm_contest', perm.PERM_CREATE_CONTEST, 'Create contests'),
+    Permission('perm_contest', perm.PERM_ATTEND_CONTEST, 'Attend contests'),
+    Permission('perm_contest', perm.PERM_EDIT_CONTEST, 'Edit any contests'),
+    Permission('perm_training', perm.PERM_VIEW_TRAINING, 'View training plans'),
+    Permission('perm_training', perm.PERM_CREATE_TRAINING, 'Create training plans'),
+    Permission('perm_training', perm.PERM_EDIT_TRAINING, 'Edit training plans'),
+];
+
+const PERMS_BY_FAMILY = {};
+for (const p of PERMS) {
+    if (!PERMS_BY_FAMILY[p.family]) PERMS_BY_FAMILY[p.family] = [p];
+    else PERMS_BY_FAMILY[p.family].push(p);
+}
+perm.PERMS_BY_FAMILY = PERMS_BY_FAMILY;
+
+perm.PERM_BASIC = perm.PERM_VIEW_PROBLEM
+    + perm.PERM_VIEW_PROBLEM_SOLUTION
+    + perm.PERM_VIEW_DISCUSSION
+    + perm.PERM_VIEW_TRAINING
+    + perm.PERM_VIEW_CONTEST
+    + perm.PERM_VIEW_CONTEST_SCOREBOARD
+    + perm.PERM_REGISTER_USER;
+
+perm.PERM_DEFAULT = perm.PERM_BASIC
+    + perm.PERM_SUBMIT_PROBLEM
+    + perm.PERM_CREATE_PROBLEM_SOLUTION
+    + perm.PERM_VOTE_PROBLEM_SOLUTION
+    + perm.PERM_REPLY_PROBLEM_SOLUTION
+    + perm.PERM_CREATE_DISCUSSION
+    + perm.PERM_REPLY_DISCUSSION
+    + perm.PERM_ATTEND_CONTEST
+    + perm.PERM_CREATE_TRAINING
+    + perm.PERM_LOGGEDIN;
+
+perm.PERM_ADMIN = perm.PERM_ALL;
+
+module.exports = perm;

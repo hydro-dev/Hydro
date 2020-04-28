@@ -1,13 +1,11 @@
-const system = require('../model/system');
 const user = require('../model/user');
-const builtin = require('../model/builtin');
 const { Route, Handler } = require('../service/server');
-const { PERM_ADMIN } = require('../permission');
+const { PERM_MANAGE } = require('../permission');
 const { RoleAlreadyExistError, ValidationError } = require('../error');
 
 class ManageHandler extends Handler {
     async prepare() {
-        this.checkPerm(PERM_ADMIN);
+        this.checkPerm(PERM_MANAGE);
         this.system = await user.getById(0);
     }
 }
@@ -43,20 +41,22 @@ class ManageEditHandler extends ManageHandler {
 class ManageUserHandler extends ManageHandler {
     async get() {
         const uids = [];
-        const [rudocs, udocs, roles] = await Promise.all([
-            system.get(),
-            user.getMulti({ role: { $neq: 'default' } }).toArray(),
+        const rudocs = {};
+        const [udocs, roles, system] = await Promise.all([
+            user.getMulti({ role: { $ne: 'default' } }).toArray(),
             user.getRoles(),
+            user.getById(0),
         ]);
+        for (const role of roles) rudocs[role._id] = [];
         for (const udoc of udocs) {
             uids.push(udoc._id);
             rudocs[udoc.role].push(udoc);
         }
-        const roles_with_text = roles.map((role) => [role, role]);
+        const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(uids);
         this.response.template = 'domain_manage_user.html';
         this.response.body = {
-            roles, roles_with_text, rudocs, udict,
+            roles, rolesSelect, rudocs, udict, system,
         };
     }
 
@@ -68,9 +68,12 @@ class ManageUserHandler extends ManageHandler {
 
 class ManagePermissionHandler extends ManageHandler {
     async get() {
-        const roles = await user.getRoles();
+        const [roles, system] = await Promise.all([
+            user.getRoles(),
+            user.getById(0),
+        ]);
         this.response.template = 'domain_manage_permission.html';
-        this.response.body = { roles };
+        this.response.body = { roles, system };
     }
 
     async post({ roles }) {
@@ -88,21 +91,27 @@ class ManagePermissionHandler extends ManageHandler {
 
 class ManageRoleHandler extends ManageHandler {
     async get() {
-        const roles = await user.getRoles();
+        const [roles, system] = await Promise.all([
+            user.getRoles(),
+            user.getById(0),
+        ]);
         this.response.template = 'domain_manage_role.html';
-        this.response.body = { roles };
+        this.response.body = { roles, system };
     }
 
     async postAdd({ role }) {
-        const r = await user.getRole(role);
+        const [r, u] = await Promise.all([
+            user.getRole(role),
+            user.getRole('default'),
+        ]);
         if (r) throw new RoleAlreadyExistError(role);
-        await user.addRole(role, builtin.PERM_DEFAULT);
+        await user.addRole(role, u.perm);
         this.back();
     }
 
     async postDelete({ roles }) {
         for (const role of roles) {
-            if (['admin', 'default', 'guest'].includes(role)) {
+            if (['root', 'default', 'guest'].includes(role)) {
                 throw new ValidationError('role');
             }
         }
