@@ -20,4 +20,4 @@ async function post(url, data, options) {
     return res;
 }
 
-module.exports = { get, post };
+global.Hydro['lib.axios'] = module.exports = { get, post };

@@ -240,7 +240,9 @@ class Handler {
         console.error(error.message, error.params);
         console.error(error.stack);
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-        this.response.body = { error: { message: error.message, params: error.params, stack: error.stack } };
+        this.response.body = {
+            error: { message: error.message, params: error.params, stack: error.stack },
+        };
         await this.___cleanup().catch(() => { });
     }
 }

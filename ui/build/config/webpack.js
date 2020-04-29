@@ -7,7 +7,6 @@ import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import UglifyJsPlugin from 'uglifyjs-webpack-plugin';
 import StaticManifestPlugin from '../plugins/webpackStaticManifestPlugin';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import root from '../utils/root';

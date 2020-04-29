@@ -1,4 +1,4 @@
-module.exports = function* ranked(diter, equ = (a, b) => a === b) {
+function* ranked(diter, equ = (a, b) => a === b) {
     let last = null;
     let r = 0;
     let count = 0;
@@ -8,4 +8,6 @@ module.exports = function* ranked(diter, equ = (a, b) => a === b) {
         last = doc;
         yield [r, doc];
     }
-};
+}
+
+global.Hydro['lib.rank'] = module.exports = ranked;

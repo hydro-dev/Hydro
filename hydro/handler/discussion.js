@@ -257,11 +257,25 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 }
 
-Route('/discuss', DiscussionMainHandler);
-Route('/discuss/:did', DiscussionDetailHandler);
-Route('/discuss/:did/edit', DiscussionEditHandler);
-Route('/discuss/:did/raw', DiscussionDetailRawHandler);
-Route('/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
-Route('/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
-Route('/discuss/:type/:docId', DiscussionNodeHandler);
-Route('/discuss/:type/:docId/create', DiscussionCreateHandler);
+function apply() {
+    Route('/discuss', module.exports.DiscussionMainHandler);
+    Route('/discuss/:did', module.exports.DiscussionDetailHandler);
+    Route('/discuss/:did/edit', module.exports.DiscussionEditHandler);
+    Route('/discuss/:did/raw', module.exports.DiscussionDetailRawHandler);
+    Route('/discuss/:did/:drid/raw', module.exports.DiscussionReplyRawHandler);
+    Route('/discuss/:did/:drid/:drrid/raw', module.exports.DiscussionTailReplyRawHandler);
+    Route('/discuss/:type/:docId', module.exports.DiscussionNodeHandler);
+    Route('/discuss/:type/:docId/create', module.exports.DiscussionCreateHandler);
+}
+
+module.exports = {
+    DiscussionMainHandler,
+    DiscussionDetailHandler,
+    DiscussionEditHandler,
+    DiscussionDetailRawHandler,
+    DiscussionReplyRawHandler,
+    DiscussionTailReplyRawHandler,
+    DiscussionNodeHandler,
+    DiscussionCreateHandler,
+    apply,
+};

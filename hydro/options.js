@@ -13,7 +13,7 @@ let options = {
         password: '',
     },
     template: {
-        path: path.join(__dirname, '..', 'templates'),
+        path: path.join(process.cwd(), 'templates'),
     },
     listen: {
         host: '127.0.0.1',

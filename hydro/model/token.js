@@ -7,6 +7,8 @@ module.exports = {
     TYPE_SESSION: 0,
     TYPE_CSRF_TOKEN: 1,
     TYPE_REGISTER: 2,
+    TYPE_CHANGEMAIL: 3,
+
     /**
      * Add a token.
      * @param {number} tokenType type of the token.
@@ -71,7 +73,13 @@ module.exports = {
         const result = await coll.deleteOne({ _id: tokenId, tokenType });
         return !!result.deletedCount;
     },
+    deleteByUid(uid) {
+        return coll.deleteMany({ uid });
+    },
     getMostRecentSessionByUid(uid) {
         return coll.findOne({ uid, token_type: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
+    },
+    getSessionListByUid(uid) {
+        return coll.find({ uid, token_type: this.TYPE_SESSION }).sort('updateAt', -1).toArray();
     },
 };

@@ -9,53 +9,53 @@
     <div class="section__body">
     {% for setting in family_settings %}
     {% if setting.ui == 'text' or setting.ui == 'password' %}
-      {{ form.form_text(
-        type=setting.ui,
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key))
-      }}
+      {{ form.form_text({
+           type:setting.ui,
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+          value:handler.user[setting.key] or setting.value
+         }) }}
     {% elif setting.ui == 'select' %}
-      {{ form.form_select(
-        options=setting.range.items(),
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key))
-      }}
+      {{ form.form_select({
+           options:setting.range,
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+           value:handler.user[setting.key] or setting.value
+         }) }}
     {% elif setting.ui == 'radio' %}
-      {{ form.form_radio(
-        options=setting.range.items(),
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key))
-      }}
+      {{ form.form_radio({
+           options:setting.range,
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+           value:handler.user[setting.key] or setting.value
+         }) }}
     {% elif setting.ui == 'image_radio' %}
-      {{ form.form_image_radio(
-        options=setting.range.items(),
-        image_class=setting.image_class,
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key))
-      }}
+      {{ form.form_image_radio({
+           options:setting.range,
+           image_class:setting.image_class,
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+           value:handler.user[setting.key] or setting.value
+         }) }}
     {% elif setting.ui == 'textarea' %}
-      {{ form.form_textarea(
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key))
-      }}
+      {{ form.form_textarea({
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+           value:handler.user[setting.key] or setting.value
+         }) }}
     {% elif setting.ui == 'markdown' %}
-      {{ form.form_textarea(
-        label=setting.name,
-        help_text=setting.desc,
-        name=setting.key,
-        value=handler.get_setting(setting.key),
-        markdown=true)
-      }}
+      {{ form.form_textarea({
+           label:setting.name,
+           help_text:setting.desc,
+           name:setting.key,
+           value:handler.user[setting.key] or setting.value,
+           markdown:true
+         }) }}
     {% endif %}
     {% endfor %}
     </div>

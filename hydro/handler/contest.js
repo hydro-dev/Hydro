@@ -267,11 +267,25 @@ class ContestCreateHandler extends ContestHandler {
     }
 }
 
-Route('/c', ContestListHandler);
-Route('/c/:tid', ContestDetailHandler);
-Route('/c/:tid/edit', ContestEditHandler);
-Route('/c/:tid/scoreboard', ContestScoreboardHandler);
-Route('/c/:tid/export/:ext', ContestScoreboardDownloadHandler);
-Route('/c/:tid/p/:pid', ContestProblemHandler);
-Route('/c/:tid/p/:pid/submit', ContestProblemSubmitHandler);
-Route('/contest/create', ContestCreateHandler);
+function apply() {
+    Route('/c', module.exports.ContestListHandler);
+    Route('/c/:tid', module.exports.ContestDetailHandler);
+    Route('/c/:tid/edit', module.exports.ContestEditHandler);
+    Route('/c/:tid/scoreboard', module.exports.ContestScoreboardHandler);
+    Route('/c/:tid/export/:ext', module.exports.ContestScoreboardDownloadHandler);
+    Route('/c/:tid/p/:pid', module.exports.ContestProblemHandler);
+    Route('/c/:tid/p/:pid/submit', module.exports.ContestProblemSubmitHandler);
+    Route('/contest/create', module.exports.ContestCreateHandler);
+}
+
+module.exports = {
+    ContestListHandler,
+    ContestDetailHandler,
+    ContestEditHandler,
+    ContestScoreboardHandler,
+    ContestScoreboardDownloadHandler,
+    ContestProblemHandler,
+    ContestProblemSubmitHandler,
+    ContestCreateHandler,
+    apply,
+};

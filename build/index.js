@@ -4,8 +4,6 @@ try {
     fs.rmdirSync(root('.build'));
 } catch (e) { }
 fs.mkdirSync(root('.build'));
-let progress = (name) => ((prog) => {
-    console.log(name, prog);
-});
-require('./locales')('locales', progress);
-require('./webpack')('webpack', progress);
+require('./locales')();
+require('./buildModule')();
+require('./webpack')();

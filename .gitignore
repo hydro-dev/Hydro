@@ -7,3 +7,5 @@ ui/misc/.iconfont
 ui/static/locale
 .cache
 .webpackStats.json
+module/**
+!.gitkeep

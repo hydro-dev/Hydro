@@ -225,7 +225,7 @@ class DiscussionNotFoundError extends NotFoundError {
     }
 }
 
-module.exports = {
+global.Hydro.error = module.exports = {
     BadRequestError,
     BlacklistedError,
     ForbiddenError,

@@ -11,11 +11,7 @@ const db = require('../service/db');
 const coll = db.collection('contest');
 const collStatus = db.collection('contest.status');
 
-const RULES = {
-    homework: require('../module/contest/homework'),
-    oi: require('../module/contest/oi'),
-    acm: require('../module/contest/acm'),
-};
+const RULES = {};
 
 /**
  * @typedef {import('bson').ObjectID} ObjectID
@@ -196,6 +192,8 @@ module.exports = {
                 ? 'ongoing'
                 : 'finished'),
 };
+
+global.Hydro['model.contest'] = module.exports;
 
 /*
 

@@ -1,11 +1,24 @@
-const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const root = require('./root');
-const build = async (next) => {
-    const modules = fs.readdirSync(root('hydro', 'module'));
+const build = async () => {
+    function hackNodeModuleFormidable() {
+        const tasks = ['incoming_form', 'file', 'json_parser', 'querystring_parser'];
+        for (let task of tasks) {
+            let file = fs.readFileSync(root(`node_modules/formidable/lib/${task}.js`)).toString();
+            if (file.startsWith('if (global.GENTLY) require = GENTLY.hijack(require);')) {
+                file = file.split('\n');
+                file[0] = '';
+                file = file.join('\n');
+                fs.writeFileSync(root(`node_modules/formidable/lib/${task}.js`), file);
+            }
+        }
+    }
+    hackNodeModuleFormidable();
+
     const config = {
-        mode: 'production',
+        mode: 'development',
         entry: {
             development: root('hydro/development.js'),
             install: root('hydro/install.js'),
@@ -16,25 +29,24 @@ const build = async (next) => {
             path: root('.build')
         },
         target: 'node',
-        module: {}
+        module: {},
+        plugins: [
+            new webpack.ProgressPlugin(),
+            new FriendlyErrorsPlugin(),
+        ]
     };
-    for (let i of modules) {
-        if (fs.statSync(path.resolve(__dirname, 'hydro', 'module', i)).isDirectory()) {
-            config.entry[root(`.build/module/${i}`)] = root(`./hydro/module/${i}/index.js`);
-        } else {
-            config.entry[root(`.build/module/${i}`)] = root(`./hydro/module/${i}`);
-        }
-    }
     const compiler = webpack(config);
-    function compilerCallback(err, stats) {
-        if (err) {
-            console.error(err.stack || err);
-            if (err.details) console.error(err.details);
-            process.exit(1);
-        }
-    }
-    if (!watch && stats.hasErrors()) process.exitCode = 1;
-    compiler.run(compilerCallback);
-    next({ total: 100 });
+    await new Promise((resolve, reject) => {
+        compiler.run((err, stats) => {
+            if (err) {
+                console.error(err.stack || err);
+                if (err.details) console.error(err.details);
+                reject(1);
+            }
+            if (stats.hasErrors()) process.exitCode = 1;
+            resolve();
+        });
+    })
 }
+
 module.exports = build;

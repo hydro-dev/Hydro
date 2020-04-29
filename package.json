@@ -31,7 +31,7 @@
     "scripts": {
         "build": "node build/index.js",
         "pack": "pkg .",
-        "lint": "eslint hydro --fix"
+        "lint": "eslint hydro module --fix"
     },
     "pkg": {
         "scripts": [
