@@ -157,7 +157,7 @@ async function setTestdata(_id, readStream) {
         f.once('error', reject);
     });
     if (pdoc.data && typeof pdoc.data === 'object') gridfs.delete(this.pdoc.data);
-    return await edit(_id, { data: f.id });
+    return await edit(_id, { data: f.id }); // eslint-disable-line no-return-await
 }
 
 module.exports = {

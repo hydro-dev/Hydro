@@ -183,5 +183,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 }
 
-Route('/judge', JudgeHandler);
-Connection('/judge/conn', JudgeConnectionHandler);
+async function apply() {
+    Route('/judge', module.exports.JudgeHandler);
+    Connection('/judge/conn', module.exports.JudgeConnectionHandler);
+}
+
+global.Hydro.handler.judge = module.exports = {
+    JudgeHandler, JudgeConnectionHandler, apply,
+};

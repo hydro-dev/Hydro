@@ -237,7 +237,17 @@ class TrainingEditHandler extends TrainingHandler {
     }
 }
 
-Route('/t', TrainingMainHandler);
-Route('/t/:tid', TrainingDetailHandler);
-Route('/t/:tid/edit', TrainingEditHandler);
-Route('/training/create', TrainingCreateHandler);
+async function apply() {
+    Route('/t', module.exports.TrainingMainHandler);
+    Route('/t/:tid', module.exports.TrainingDetailHandler);
+    Route('/t/:tid/edit', module.exports.TrainingEditHandler);
+    Route('/training/create', module.exports.TrainingCreateHandler);
+}
+
+global.Hydro.handler.training = module.exports = {
+    TrainingMainHandler,
+    TrainingDetailHandler,
+    TrainingEditHandler,
+    TrainingCreateHandler,
+    apply,
+};

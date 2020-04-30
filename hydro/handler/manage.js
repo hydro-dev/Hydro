@@ -120,9 +120,21 @@ class ManageRoleHandler extends ManageHandler {
     }
 }
 
-Route('/manage', ManageMainHandler);
-Route('/manage/dashboard', ManageDashboardHandler);
-Route('/manage/edit', ManageEditHandler);
-Route('/manage/user', ManageUserHandler);
-Route('/manage/permission', ManagePermissionHandler);
-Route('/manage/role', ManageRoleHandler);
+async function apply() {
+    Route('/manage', module.exports.ManageMainHandler);
+    Route('/manage/dashboard', module.exports.ManageDashboardHandler);
+    Route('/manage/edit', module.exports.ManageEditHandler);
+    Route('/manage/user', module.exports.ManageUserHandler);
+    Route('/manage/permission', module.exports.ManagePermissionHandler);
+    Route('/manage/role', module.exports.ManageRoleHandler);
+}
+
+global.Hydro.handler.manage = module.exports = {
+    ManageMainHandler,
+    ManageDashboardHandler,
+    ManageEditHandler,
+    ManageUserHandler,
+    ManagePermissionHandler,
+    ManageRoleHandler,
+    apply,
+};

@@ -181,11 +181,25 @@ class UserSearchHandler extends Handler {
     }
 }
 
-Route('/login', UserLoginHandler);
-Route('/register', UserRegisterHandler);
-Route('/register/:code', UserRegisterWithCodeHandler);
-Route('/logout', UserLogoutHandler);
-Route('/lostpass', UserLostPassHandler);
-Route('/lostpass/:code', UserLostPassWithCodeHandler);
-Route('/user/search', UserSearchHandler);
-Route('/user/:uid', UserDetailHandler);
+async function apply() {
+    Route('/login', module.exports.UserLoginHandler);
+    Route('/register', module.exports.UserRegisterHandler);
+    Route('/register/:code', module.exports.UserRegisterWithCodeHandler);
+    Route('/logout', module.exports.UserLogoutHandler);
+    Route('/lostpass', module.exports.UserLostPassHandler);
+    Route('/lostpass/:code', module.exports.UserLostPassWithCodeHandler);
+    Route('/user/search', module.exports.UserSearchHandler);
+    Route('/user/:uid', module.exports.UserDetailHandler);
+}
+
+global.Hydro.handler.user = module.exports = {
+    UserLoginHandler,
+    UserRegisterHandler,
+    UserRegisterWithCodeHandler,
+    UserLogoutHandler,
+    UserLostPassHandler,
+    UserLostPassWithCodeHandler,
+    UserSearchHandler,
+    UserDetailHandler,
+    apply,
+};

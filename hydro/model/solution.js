@@ -28,13 +28,14 @@ async function get(psid) {
 }
 
 function getMany(query, sort, page, limit) {
-    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
+    return coll.find(query).sort(sort)
+        .skip((page - 1) * limit).limit(limit)
         .toArray();
 }
 
 async function edit(_id, content) {
     validator.checkContent(content);
-    await coll.findOneAndUpdate({ _id }, { $set: { content } });
+    await coll.updateOne({ _id }, { $set: { content } });
     const psdoc = await get(_id);
     if (!psdoc) throw new SolutionNotFoundError(_id);
     return psdoc;
@@ -79,7 +80,8 @@ async function editReply(psid, psrid, content) {
             break;
         }
     }
-    return await coll.findOneAndUpdate({ _id: psdoc._id }, { $set: { reply } });
+    // eslint-disable-next-line no-return-await
+    return await coll.updateOne({ _id: psdoc._id }, { $set: { reply } });
 }
 
 function delReply(psid, psrid) {
@@ -91,7 +93,7 @@ async function vote(psid, uid, value) {
     if (pssdoc) await collStatus.deleteOne({ psid, uid });
     await collStatus.insertOne({ psid, uid, vote: value });
     if (pssdoc) value += -pssdoc.vote;
-    await coll.findOneAndUpdate({ _id: psid }, { $inc: { vote: value } });
+    await coll.updateOne({ _id: psid }, { $inc: { vote: value } });
     pssdoc = await collStatus.findOne({ psid, uid });
     const psdoc = await coll.findOne({ _id: psid });
     return [psdoc, pssdoc];

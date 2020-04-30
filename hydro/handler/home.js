@@ -171,11 +171,16 @@ class UserChangemailWithCodeHandler extends Handler {
     }
 }
 
-Route('/', HomeHandler);
-Route('/home/security', HomeSecurityHandler);
-Route('/home/changeMail/:code', UserChangemailWithCodeHandler);
-Route('/home/settings/:category', HomeSettingsHandler);
+async function apply() {
+    Route('/', module.exports.HomeHandler);
+    Route('/home/security', module.exports.HomeSecurityHandler);
+    Route('/home/changeMail/:code', module.exports.UserChangemailWithCodeHandler);
+    Route('/home/settings/:category', module.exports.HomeSettingsHandler);
+}
 
+global.Hydro.handler.home = module.exports = {
+    HomeHandler, HomeSecurityHandler, HomeSettingsHandler, UserChangemailWithCodeHandler, apply,
+};
 /*
 @app.route('/home/messages', 'home_messages', global_route=True)
 class HomeMessagesHandler(base.OperationHandler):

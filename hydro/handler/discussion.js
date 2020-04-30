@@ -34,7 +34,9 @@ class DiscussionHandler extends Handler {
                 if (drrid) {
                     [, this.drrdoc] = await discussion.getTailReply(drid, drrid);
                     if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
-                    if (this.drrdoc.parent !== this.drdoc._id) throw new DocumentNotFoundError(drid);
+                    if (this.drrdoc.parent !== this.drdoc._id) {
+                        throw new DocumentNotFoundError(drid);
+                    }
                 }
             }
         }
@@ -60,7 +62,11 @@ class DiscussionHandler extends Handler {
 
 class DiscussionMainHandler extends DiscussionHandler {
     async get({ page = 1 }) {
-        const [ddocs, dpcount] = await paginate(discussion.getMulti(), page, constants.DISCUSSION_PER_PAGE);
+        const [ddocs, dpcount] = await paginate(
+            discussion.getMulti(),
+            page,
+            constants.DISCUSSION_PER_PAGE,
+        );
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
@@ -114,12 +120,11 @@ class DiscussionCreateHandler extends DiscussionHandler {
         type, docId, title, content, highlight,
     }) {
         this.limitRate('add_discussion', 3600, 30);
-        const flags = {};
-        if (highlight) {
-            this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
-            flags.highlight = true;
-        }
-        const did = await discussion.add(type, docId, this.user._id, title, content, this.request.ip, flags);
+        if (highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
+        const did = await discussion.add(
+            type, docId, this.user._id,
+            title, content, this.request.ip, highlight,
+        );
         this.response.body = { did };
         this.response.redirect = `/discuss/${did}`;
     }
@@ -257,7 +262,7 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 }
 
-function apply() {
+async function apply() {
     Route('/discuss', module.exports.DiscussionMainHandler);
     Route('/discuss/:did', module.exports.DiscussionDetailHandler);
     Route('/discuss/:did/edit', module.exports.DiscussionEditHandler);
@@ -268,7 +273,7 @@ function apply() {
     Route('/discuss/:type/:docId/create', module.exports.DiscussionCreateHandler);
 }
 
-module.exports = {
+global.Hydro.handler.discussion = module.exports = {
     DiscussionMainHandler,
     DiscussionDetailHandler,
     DiscussionEditHandler,

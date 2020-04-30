@@ -17,7 +17,7 @@ const token = require('../model/token');
 const opcount = require('../model/opcount');
 const {
     UserNotFoundError, BlacklistedError, PermissionError,
-    NotFoundError, UserFacingError, ValidationError,
+    UserFacingError, ValidationError,
 } = require('../error');
 
 const app = new Koa();
@@ -166,19 +166,13 @@ class Handler {
     }
 
     async renderBody() {
-        if (!this.response.redirect) {
-            if (!(this.response.body || this.response.template)) {
-                this.response.body = { error: new NotFoundError() };
-                this.response.template = 'error.html';
-            }
-            if (!this.preferJson) {
-                if (this.response.body || this.response.template) {
-                    if (this.request.query.noTemplate || this.preferJson) return;
-                    const templateName = this.request.query.template || this.response.template;
-                    if (templateName) {
-                        this.response.body = this.response.body || {};
-                        await this.render(templateName, this.response.body);
-                    }
+        if (!this.response.redirect && !this.preferJson) {
+            if (this.response.body || this.response.template) {
+                if (this.request.query.noTemplate || this.preferJson) return;
+                const templateName = this.request.query.template || this.response.template;
+                if (templateName) {
+                    this.response.body = this.response.body || {};
+                    await this.render(templateName, this.response.body);
                 }
             }
         }

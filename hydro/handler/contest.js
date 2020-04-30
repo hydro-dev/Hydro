@@ -267,7 +267,7 @@ class ContestCreateHandler extends ContestHandler {
     }
 }
 
-function apply() {
+async function apply() {
     Route('/c', module.exports.ContestListHandler);
     Route('/c/:tid', module.exports.ContestDetailHandler);
     Route('/c/:tid/edit', module.exports.ContestEditHandler);
@@ -278,7 +278,7 @@ function apply() {
     Route('/contest/create', module.exports.ContestCreateHandler);
 }
 
-module.exports = {
+global.Hydro.handler.contest = module.exports = {
     ContestListHandler,
     ContestDetailHandler,
     ContestEditHandler,

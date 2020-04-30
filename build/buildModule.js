@@ -1,7 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const fs = require('fs');
 const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const root = require('./root');
+
 const exist = (name) => {
     try {
         fs.statSync(root(name));
@@ -9,24 +11,24 @@ const exist = (name) => {
         return false;
     }
     return true;
-}
-const build = async () => {
+};
+const build = async (type) => {
     const modules = fs.readdirSync(root('module'));
     const config = {
-        mode: 'production',
+        mode: type,
         entry: {},
         output: {
             filename: 'module/[name].js',
-            path: root('.build')
+            path: root('.build'),
         },
         target: 'node',
         module: {},
         plugins: [
             new webpack.ProgressPlugin(),
             new FriendlyErrorsPlugin(),
-        ]
+        ],
     };
-    for (let i of modules) {
+    for (const i of modules) {
         if (!i.startsWith('.')) {
             if (exist(`module/${i}/model.js`)) {
                 config.entry[`${i}/model`] = root(`module/${i}/model.js`);
@@ -47,7 +49,7 @@ const build = async () => {
             if (stats.hasErrors()) process.exitCode = 1;
             resolve();
         });
-    })
-}
+    });
+};
 
 module.exports = build;

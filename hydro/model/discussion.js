@@ -65,7 +65,7 @@ function editReply(drid, content) {
 async function delReply(drid) {
     const drdoc = await getReply(drid);
     if (!drdoc) throw new DocumentNotFoundError(drid);
-    return await Promise.all([
+    return await Promise.all([ // eslint-disable-line no-return-await
         collReply.deleteOne({ _id: drid }),
         coll.updateOne({ _id: drdoc.did }, { $inc: { nReply: -1 } }),
     ]);
@@ -112,6 +112,7 @@ async function editTailReply(drid, drrid, content) {
             break;
         }
     }
+    // eslint-disable-next-line no-return-await
     return await collReply.findOneAndUpdate({ _id: drdoc._id }, { $set: { reply } });
 }
 

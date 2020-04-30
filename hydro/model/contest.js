@@ -51,7 +51,11 @@ async function edit(tid, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkIntro($set.content);
     if ($set.rule) { if (!this.RULES[$set.rule]) throw new ValidationError('rule'); }
-    if ($set.beginAt && $set.endAt) if ($set.beginAt >= $set.endAt) throw new ValidationError('beginAt', 'endAt');
+    if ($set.beginAt && $set.endAt) {
+        if ($set.beginAt >= $set.endAt) {
+            throw new ValidationError('beginAt', 'endAt');
+        }
+    }
     const tdoc = await coll.findOne({ tid });
     if (!tdoc) throw new ContestNotFoundError(tid);
     this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
@@ -84,7 +88,8 @@ function getStatus(tid, uid) {
 }
 async function getListStatus(uid, tids) {
     const r = {};
-    for (const tid of tids) r[tid] = await getStatus(tid, uid); // eslint-disable-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop
+    for (const tid of tids) r[tid] = await getStatus(tid, uid);
     return r;
 }
 async function attend(tid, uid) {

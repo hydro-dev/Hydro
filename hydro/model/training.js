@@ -27,12 +27,12 @@ async function enroll(tid, uid) {
     } catch (e) {
         throw new TrainingAlreadyEnrollError(tid, uid);
     }
-    await coll.findOneAndUpdate({ _id: tid }, { $inc: { enroll: 1 } });
+    await coll.updateOne({ _id: tid }, { $inc: { enroll: 1 } });
 }
 
 async function setStatus(tid, uid, $set) {
-    await collStatus.findOneAndUpdate({ tid, uid }, { $set });
-    return await collStatus.findOne({ tid, uid });
+    await collStatus.updateOne({ tid, uid }, { $set });
+    return await collStatus.findOne({ tid, uid }); // eslint-disable-line no-return-await
 }
 
 module.exports = {

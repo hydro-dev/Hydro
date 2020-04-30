@@ -9,7 +9,10 @@ process.stdin.on('data', async (input) => {
     }
 });
 
-global.Hydro = {};
+global.Hydro = {
+    handler: {},
+    template: {}
+};
 
 require('./lib/i18n');
 require('./utils');
@@ -31,21 +34,18 @@ async function run() {
     require('./service/gridfs');
     require('./service/queue');
     const server = require('./service/server');
-    const HandlerHome = require('./handler/home');
-    const HandlerProblem = require('./handler/problem');
-    const HandlerRecord = require('./handler/record');
-    const HandlerJudge = require('./handler/judge');
-    const HandlerUser = require('./handler/user');
-    const HandlerContest = require('./handler/contest');
-    const HandlerTraining = require('./handler/training');
-    const HandlerDiscussion = require('./handler/discussion');
-    const HandlerManage = require('./handler/manage');
-    const HandlerImport = require('./handler/import');
+    const builtinHandler = [
+        'home', 'problem', 'record', 'judge', 'user',
+        'contest', 'training', 'discussion', 'manage', 'import',
+    ];
+    for (const i of builtinHandler) require(`./handler/${i}`);
     await loader.model();
     await loader.handler();
-    HandlerContest.apply();
-    HandlerDiscussion.apply();
-    HandlerImport.apply();
+    for (const i in global.Hydro.handler) {
+        await global.Hydro.handler[i].apply();
+    }
+    const notfound = require(`./handler/notfound`);
+    await notfound.apply();
     server.start();
 }
 run().catch((e) => {

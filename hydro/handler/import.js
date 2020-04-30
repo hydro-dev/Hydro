@@ -1,4 +1,3 @@
-
 const problem = require('../model/problem');
 const { Route, Handler } = require('../service/server');
 const { PERM_CREATE_PROBLEM } = require('../permission');
@@ -23,8 +22,10 @@ class ProblemImportHandler extends Handler {
     async post({
         url, pid, hidden, remoteType,
     }) {
-        if (remoteType !== 'syzoj') throw new ValidationError('remoteType');
-        const [pdoc, testdata] = await this.syzoj(url);
+        if (typeof this[`from_${remoteType}`] !== 'function') {
+            throw new ValidationError('remoteType');
+        }
+        const [pdoc, testdata] = await this[`from_${remoteType}`](url);
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
         const _id = await problem.add(pdoc);
@@ -39,6 +40,6 @@ async function apply() {
     Route('/problem/import', module.exports.ProblemImportHandler);
 }
 
-global.Hydro['handler.import'] = module.exports = {
+global.Hydro.handler.import = module.exports = {
     ProblemImportHandler, apply,
 };

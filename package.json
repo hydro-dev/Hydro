@@ -26,12 +26,16 @@
     "devDependencies": {
         "eslint": "^6.8.0",
         "eslint-config-airbnb-base": "^14.1.0",
-        "eslint-plugin-import": "^2.20.2"
+        "eslint-plugin-import": "^2.20.2",
+        "friendly-errors-webpack-plugin": "^1.7.0",
+        "webpack": "^4.42.1"
     },
     "scripts": {
         "build": "node build/index.js",
+        "build:development": "node build/development.js",
+        "build:production": "node build/production.js",
         "pack": "pkg .",
-        "lint": "eslint hydro module --fix"
+        "lint": "eslint build hydro module --fix"
     },
     "pkg": {
         "scripts": [

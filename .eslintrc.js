@@ -26,5 +26,6 @@ module.exports = {
         "no-param-reassign": "off",
         "global-require": "off",
         "no-nested-ternary": "off",
+        "no-multi-assign": "off",
     },
 };

@@ -14,8 +14,7 @@ jobs:
         node_version: '13.x'
     - run: |
         yarn
-        yarn add webpack webpack-cli -D
-        yarn build
+        yarn build:production
     - uses: actions/upload-artifact@v1
       with:
         name: hydro
@@ -23,8 +22,7 @@ jobs:
     - run: |
         cd ui
         yarn
-        yarn add webpack webpack-cli -D
-        yarn build
+        yarn build:production
         cd ..
     - uses: actions/upload-artifact@v1
       with:

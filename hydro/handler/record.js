@@ -34,18 +34,16 @@ class RecordListHandler extends Handler {
         for (const pdoc of plist) {
             pdict[pdoc._id] = pdoc;
         }
+        const path = [
+            ['Hydro', '/'],
+            ['record_main', null],
+        ];
         this.response.body = {
-            path: [
-                ['Hydro', '/'],
-                ['record_main', null],
-            ],
-            page,
-            rdocs,
-            pdict,
-            udict,
+            path, page, rdocs, pdict, udict,
         };
     }
 }
+
 class RecordDetailHandler extends Handler {
     async get({ rid }) {
         this.response.template = 'record_detail.html';
@@ -66,6 +64,7 @@ class RecordDetailHandler extends Handler {
         };
     }
 }
+
 class RecordRejudgeHandler extends Handler {
     async post({ rid }) {
         this.checkPerm(PERM_REJUDGE);
@@ -77,6 +76,7 @@ class RecordRejudgeHandler extends Handler {
         this.back();
     }
 }
+
 class RecordConnectionHandler extends ConnectionHandler {
     async prepare() {
         bus.subscribe(['record_change'], this.onRecordChange);
@@ -102,6 +102,7 @@ class RecordConnectionHandler extends ConnectionHandler {
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
+
 class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(ConnectionHandler) {
     async prepare({ rid }) {
         const rdoc = await record.get(rid);
@@ -131,8 +132,19 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     }
 }
 
-Route('/r', RecordListHandler);
-Route('/r/:rid', RecordDetailHandler);
-Route('/r/:rid/rejudge', RecordRejudgeHandler);
-Connection('/record-conn', RecordConnectionHandler);
-Connection('/record-detail-conn', RecordDetailConnectionHandler);
+async function apply() {
+    Route('/r', module.exports.RecordListHandler);
+    Route('/r/:rid', module.exports.RecordDetailHandler);
+    Route('/r/:rid/rejudge', module.exports.RecordRejudgeHandler);
+    Connection('/record-conn', module.exports.RecordConnectionHandler);
+    Connection('/record-detail-conn', module.exports.RecordDetailConnectionHandler);
+}
+
+global.Hydro.handler.record = module.exports = {
+    RecordListHandler,
+    RecordDetailHandler,
+    RecordRejudgeHandler,
+    RecordConnectionHandler,
+    RecordDetailConnectionHandler,
+    apply,
+};
