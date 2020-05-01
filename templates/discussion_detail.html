@@ -1,5 +1,6 @@
+{% set page_name = "discussion_detail" %}
 {% extends "layout/basic.html" %}
-{% import "components/comments.html" as comments with context %}
+{% import "components/comments_discussion.html" as comments with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
@@ -68,7 +69,7 @@
           comment_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_post_perm = perm.PERM_REPLY_DISCUSSION,
           reply_edit_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
-          reply_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
+          reply_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}
@@ -80,7 +81,7 @@
   <div class="medium-3 columns">
     {% set udoc = udict[ddoc['owner']] %}
     <div class="section side">
-      <div class="profile__bg user-profile-bg--{{ vj4.model.adaptor.setting.UserSetting(udoc).get_setting('background_img') }}"></div>
+      <div class="profile__bg user-profile-bg--1"></div>
       <div class="section__body">
         <div class="media sidebar-user-profile">
           <div class="media__left">

@@ -50,7 +50,7 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('{0}: Users').format(system.uname) }}</h1>
     <div class="section__tools">
-      <button class="primary rounded button" name="add_user">{{ _('Add User to Domain') }}</button>
+      <button class="primary rounded button" name="add_user">{{ _('Add User') }}</button>
     </div>
   </div>
   {{ noscript_note.render() }}
@@ -71,13 +71,12 @@
           </th>
           <th class="col--uid">{{ _('User ID') }}</th>
           <th class="col--user">{{ _('Username') }}</th>
-          <th class="col--user">{{ _('Display Name') }}</th>
           <th class="col--role">{{ _('Role') }}</th>
         </tr>
       </thead>
       <tbody>
         {% for role in roles %}
-        {% for rudoc in rudocs[role] %}
+        {% for rudoc in rudocs[role._id] %}
         {% set is_disabled=(rudoc._id == handler.user._id) %}
         <tr data-uid="{{ rudoc._id }}">
           <td class="col--checkbox">
@@ -91,14 +90,11 @@
           <td class="col--user">
             {{ user.render_inline(udict[rudoc._id], badge=false) }}
           </td>
-          <td class="col--name-alias">
-            {{ rudoc.displayName|default('') }}
-          </td>
           <td class="col--role">
             {{ form.select({
                  options:rolesSelect,
                  name:'role',
-                 value:rudoc['role'],
+                 value:rudoc.role,
                  extra_class:'compact',
                  disabled:is_disabled
                }) }}
@@ -110,7 +106,7 @@
     </table>
   </div>
   <div class="section__body">
-    <button class="rounded button" name="remove_selected">{{ _('Remove Selected User from Domain') }}</button>
+    <button class="rounded button" name="remove_selected">{{ _('Remove Selected User') }}</button>
     <button class="rounded button" name="set_roles">{{ _('Set Roles for Selected User') }}</button>
   </div>
 </div>

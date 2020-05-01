@@ -25,7 +25,6 @@ class UserLoginHandler extends Handler {
         udoc.password = '';
         this.session.uid = udoc._id;
         this.session.rememberme = rememberme;
-        this.response.body = {};
         const referer = this.request.headers.referer || '/';
         this.response.redirect = referer.endsWith('/login') ? '/' : referer;
     }
@@ -42,7 +41,6 @@ class UserLogoutHandler extends Handler {
 
     async post() {
         this.session = { uid: 1 };
-        this.response.body = {};
     }
 }
 
@@ -66,7 +64,6 @@ class UserRegisterHandler extends Handler {
         if (options.smtp.user) {
             const m = await this.renderHTML('user_register_mail', { url: `/register/${t}` });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
-            this.response.body = {};
             this.response.template = 'user_register_mail_sent.html';
         } else {
             this.response.redirect = `/register/${t[0]}`;
@@ -98,7 +95,6 @@ class UserRegisterWithCodeHandler extends Handler {
         });
         await token.delete(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
-        this.response.body = {};
         this.response.redirect = '/';
     }
 }
@@ -123,7 +119,6 @@ class UserLostPassHandler extends Handler {
         );
         const m = await this.renderHTML('user_lostpass_mail', { url: `/lostpass/${tid}`, uname: udoc.uname });
         await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);
-        this.response.body = {};
         this.response.template = 'user_lostpass_mail_sent.html';
     }
 }
@@ -174,7 +169,7 @@ class UserSearchHandler extends Handler {
         }
         for (const i in udocs) {
             if (udocs[i].gravatar) {
-                udocs[i].gravatar_url = misc.gravatar_url[udocs[i].gravatar];
+                udocs[i].gravatar_url = misc.gravatar_url(udocs[i].gravatar);
             }
         }
         this.response.body = udocs;

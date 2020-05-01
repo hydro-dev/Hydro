@@ -72,7 +72,7 @@
     {{ form_attr('select', args) }}
   >
   {% for k, v in args.options %}
-    <option value="{{ k }}"{% if value == k %} selected{% endif %}>
+    <option value="{{ k }}"{% if args.value == k %} selected{% endif %}>
       {{ _(v) }}
     </option>
   {% endfor %}

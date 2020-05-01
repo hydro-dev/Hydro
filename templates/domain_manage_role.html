@@ -48,35 +48,20 @@
       </thead>
       <tbody>
       {% for role in roles %}
-      {% if role._id not in ['default', 'guest', 'root'] %}
-        <tr data-role="{{ role._id }}">
+        {% set isBuiltin = role._id not in ['default', 'guest', 'root'] %}
+        <tr{% if isBuiltin %} data-role="{{ role._id }}"{% endif %}>
           <td class="col--checkbox">
             <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="role" data-checkbox-range>
+              <input type="checkbox" data-checkbox-group="role" {{ "data-checkbox-range" if isBuiltin else "disabled" }}>
             </label>
           </td>
           <td class="col--id">
-            {{ _('User-defined role') }}: {{ role._id }}
-          </td>
-          <td class="col--users">
-            {{ role.count }}
-          </td>
-        </tr>
-      {% else %}
-        <tr>
-          <td class="col--checkbox">
-            <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="role" disabled>
-            </label>
-          </td>
-          <td class="col--id">
-            {{ _('Built-in') }}: {{ role._id }}
+            {{ _('Built-in') if isBuiltin else _('User-defined role') }}: {{ role._id }}
           </td>
           <td class="col--users">
             {{ role.count|default('--') }}
           </td>
         </tr>
-      {% endif %}
       {% endfor %}
       </tbody>
     </table>

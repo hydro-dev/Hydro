@@ -13,6 +13,10 @@ export interface Udoc {
     nSubmit: number
     nLike: number
     perm: string
+    viewLang: string
+    codeLang: string
+    codeTemplate: string
+    gravatar: string
     hasPerm: Function
     checkPassword: Function
 }

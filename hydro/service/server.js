@@ -113,7 +113,6 @@ class Handler {
 
     back(body) {
         if (body) this.response.body = body;
-        else if (this.preferJson) this.response.body = {};
         this.response.redirect = this.request.headers.referer || '/';
     }
 
@@ -129,6 +128,7 @@ class Handler {
     }
 
     async ___prepare() {
+        this.response.body = {};
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
         this._handler.save = this.request.cookies.get('save');
@@ -241,7 +241,7 @@ class Handler {
     }
 }
 
-const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid'];
+const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid', 'docId'];
 
 function Route(route, RouteHandler) {
     router.all(route, async (ctx) => {

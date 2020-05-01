@@ -387,8 +387,7 @@ User ID: 使用者 ID
 Role: 角色
 Select a role: 選擇一個角色
 Add User: 新增使用者
-Add User to Domain: 新增使用者到域
-Remove Selected User from Domain: 將所選使用者移出域
+Remove Selected User: 將所選使用者移出
 Set Roles for Selected User: 設定所選使用者的角色
 Create Role: 創建角色
 Role name can only contains numbers, letters and underscores.: 角色名稱只能包含數字、字母和下劃線。
@@ -497,8 +496,8 @@ no_translation_warn: <blockquote class="warn">這部分內容正在翻譯。</bl
 Set Role: 設定角色
 Set Roles for selected users: 為所選使用者設定角色
 Please select at least one user to perform this operation.: 請選擇至少一個使用者來進行操作。
-Confirm removing the selected users from this domain?: 您確定將所選使用者從此域中移除嗎？
-Their account will not be deleted and they will be with the default role when visiting this domain.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問此域。
+Confirm removing the selected users?: 您確定將所選使用者移除嗎？
+Their account will not be deleted and they will be with the default role.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問。
 Selected users have been removed from the domain.: 所選使用者已從此域中移除。
 Role has been updated to {0} for selected users.: 所選使用者角色已更新為 {0}。
 Role has been updated to {0}.: 角色已更新為 {0}。

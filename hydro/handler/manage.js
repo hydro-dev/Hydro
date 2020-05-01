@@ -34,7 +34,7 @@ class ManageEditHandler extends ManageHandler {
         await user.setById(0, {
             uname, unameLower, gravatar, bio,
         });
-        this.back();
+        this.response.redirect = '/manage/dashboard';
     }
 }
 
@@ -43,7 +43,7 @@ class ManageUserHandler extends ManageHandler {
         const uids = [];
         const rudocs = {};
         const [udocs, roles, system] = await Promise.all([
-            user.getMulti({ role: { $ne: 'default' } }).toArray(),
+            user.getMulti({ role: { $nin: ['default', 'guest'] } }).toArray(),
             user.getRoles(),
             user.getById(0),
         ]);
@@ -61,7 +61,7 @@ class ManageUserHandler extends ManageHandler {
     }
 
     async postSetUser({ uid, role }) {
-        await user.setById(uid, { role });
+        await user.setRole(uid, role);
         this.back();
     }
 }

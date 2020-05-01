@@ -11,7 +11,7 @@ process.stdin.on('data', async (input) => {
 
 global.Hydro = {
     handler: {},
-    template: {}
+    template: {},
 };
 
 require('./lib/i18n');
@@ -44,7 +44,7 @@ async function run() {
     for (const i in global.Hydro.handler) {
         await global.Hydro.handler[i].apply();
     }
-    const notfound = require(`./handler/notfound`);
+    const notfound = require('./handler/notfound');
     await notfound.apply();
     server.start();
 }

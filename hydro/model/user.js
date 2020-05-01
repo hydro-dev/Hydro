@@ -15,12 +15,13 @@ class USER {
         this.salt = user.salt;
         this.hash = user.hash;
         this.perm = user.perm;
-        this.lang = user.language || 'zh_CN';
+        this.viewLang = user.language || 'zh_CN';
         this.codeLang = user.codeLang || 'c';
         this.codeTemplate = user.codeTemplate || '';
         this.regat = user.regat;
         this.loginat = user.loginat;
         this.bio = user.bio || '';
+        this.gravatar = user.gravatar || '';
         this.nAccept = user.nAccept || 0;
         this.nSubmit = user.nSubmit || 0;
     }
@@ -144,7 +145,7 @@ async function getPrefixList(prefix, limit = 50) {
 async function setRole(uid, role) {
     const udoc = await getById(uid);
     return await Promise.all([
-        coll.findOneAndUpdate({ _id: uid }, { role }),
+        coll.findOneAndUpdate({ _id: uid }, { $set: { role } }),
         collRole.updateOne({ _id: udoc.role }, { $inc: { count: -1 } }),
         collRole.updateOne({ _id: role }, { $inc: { count: 1 } }),
     ]);

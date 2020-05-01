@@ -15,6 +15,7 @@ exports.udoc = {
     regat: new Date(),
     regip: '0.0.0.0',
     gravatar: '',
+    viewLang: 'zh_CN',
     loginat: new Date(),
     loginip: '0.0.0.0',
 };

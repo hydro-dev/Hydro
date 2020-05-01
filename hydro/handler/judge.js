@@ -90,7 +90,6 @@ class JudgeHandler extends Handler {
     }
 
     async get({ check = false }) {
-        this.response.body = {};
         if (check) return;
         const tasks = [];
         let rid = await queue.get('judge', false);
@@ -122,17 +121,16 @@ class JudgeHandler extends Handler {
             tasks.push(task);
             rid = await queue.get('judge', false); // eslint-disable-line no-await-in-loop
         }
+        this.response.body = { tasks };
     }
 
     async postNext() {
         await next(this.request.body);
-        this.response.body = {};
     }
 
     async postEnd() {
         this.request.body.judger = this.user._id;
         await end(this.request.body);
-        this.response.body = {};
     }
 }
 class JudgeConnectionHandler extends ConnectionHandler {

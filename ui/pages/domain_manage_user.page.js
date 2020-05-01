@@ -60,7 +60,7 @@ const page = new NamedPage('domain_manage_user', () => {
     const role = addUserDialog.$dom.find('[name="role"]').val();
     try {
       await request.post('', {
-        operation: 'add_user',
+        operation: 'set_user',
         uid: user._id,
         role,
       });
@@ -90,8 +90,8 @@ const page = new NamedPage('domain_manage_user', () => {
     const action = await new ConfirmDialog({
       $body: tpl`
         <div class="typo">
-          <p>${i18n('Confirm removing the selected users from this domain?')}</p>
-          <p>${i18n('Their account will not be deleted and they will be with the default role when visiting this domain.')}</p>
+          <p>${i18n('Confirm removing the selected users?')}</p>
+          <p>${i18n('Their account will not be deleted and they will be with the default role.')}</p>
         </div>`,
     }).open();
     if (action !== 'yes') {

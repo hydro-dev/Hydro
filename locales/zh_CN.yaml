@@ -401,8 +401,7 @@ Continue: 继续
 Role: 角色
 Select a role: 选择一个角色
 Add User: 添加用户
-Add User to Domain: 添加用户到域
-Remove Selected User from Domain: 将所选用户移出域
+Remove Selected User: 将所选用户移出
 Set Roles for Selected User: 设置所选用户的角色
 Create Role: 创建角色
 Role name can only contains numbers, letters and underscores.: 角色名称只能包含数字、字母和下划线。
@@ -511,8 +510,8 @@ You can create your own training plans and share with others.: 您可以创建�
 Set Role: 设置角色
 Set Roles for selected users: 为所选用户设置角色
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
-Confirm removing the selected users from this domain?: 您确定将所选用户从此域中移除吗？
-Their account will not be deleted and they will be with the default role when visiting this domain.: 他们的账号不会被删除，并且之后将以 default 角色访问此域。
+Confirm removing the selected users?: 您确定将所选用户移除吗？
+Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
 Role has been updated to {0} for selected users.: 所选用户角色已更新为 {0}。
 Role has been updated to {0}.: 角色已更新为 {0}。

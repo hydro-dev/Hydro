@@ -225,6 +225,13 @@ class DiscussionNotFoundError extends NotFoundError {
     }
 }
 
+class MessageNotFoundError extends NotFoundError {
+    constructor(mid) {
+        super('Message {0} not found.');
+        this.params = [mid];
+    }
+}
+
 global.Hydro.error = module.exports = {
     BadRequestError,
     BlacklistedError,
@@ -258,6 +265,7 @@ global.Hydro.error = module.exports = {
     DocumentNotFoundError,
     DiscussionNotFoundError,
     RoleAlreadyExistError,
+    MessageNotFoundError,
 };
 
 /*
@@ -312,12 +320,6 @@ class DiscussionNodeAlreadyExistError(ForbiddenError):
   @property
   def message(self):
     return 'Discussion node {1} already exists.'
-
-
-class MessageNotFoundError(NotFoundError):
-  @property
-  def message(self):
-    return 'Message {0} not found.'
 
 
 class TrainingRequirementNotSatisfiedError(ForbiddenError):

@@ -25,8 +25,8 @@ class DiscussionHandler extends Handler {
         if (did) {
             this.ddoc = await discussion.get(did);
             if (!this.ddoc) throw new DiscussionNotFoundError(did);
-            type = this.ddoc.type;
-            docId = this.ddoc.parent;
+            type = this.ddoc.parentType;
+            docId = this.ddoc.parentId;
             if (drid) {
                 this.drdoc = await discussion.getReply(drid, did);
                 if (!this.drdoc) throw new DiscussionNotFoundError(drid);

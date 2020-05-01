@@ -1,4 +1,5 @@
 const { ObjectID } = require('bson');
+const problem = require('./problem');
 const { DocumentNotFoundError } = require('../error');
 const db = require('../service/db.js');
 
@@ -6,8 +7,8 @@ const coll = db.collection('discussion');
 const collReply = db.collection('discussion.reply');
 const collStatus = db.collection('discussion.status');
 
-function add(parentType, parentId, owner, title, content, ip = null, highlight = false) {
-    return coll.insertOne({
+async function add(parentType, parentId, owner, title, content, ip = null, highlight = false) {
+    let res = await coll.insertOne({
         owner,
         title,
         content,
@@ -18,6 +19,7 @@ function add(parentType, parentId, owner, title, content, ip = null, highlight =
         nReply: 0,
         updateAt: new Date(),
     });
+    return res.insertedId;
 }
 
 function get(did) {
@@ -128,6 +130,26 @@ function getStatus(did, uid) {
     return collStatus.findOne({ did, uid });
 }
 
+async function getVnode(ddoc, handler) {
+    if (ddoc.parentType === 'problem') {
+        const pdoc = await problem.getById(ddoc.parentId);
+        if (!pdoc) return null;
+        if (pdoc.hidden && handler) handler.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+        return { ...pdoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+    } if (ddoc.parentType === 'contest') {
+        const tdoc = await contest.get(ddoc.parentId);
+        return { ...tdoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+    } return null;
+}
+
+async function getListVnodes(ddocs, handler) {
+    const res = {};
+    for (const ddoc of ddocs) {
+        res[ddoc._id] = await getVnode(ddoc, handler);
+    }
+    return res;
+}
+
 module.exports = {
     add,
     get,
@@ -147,4 +169,6 @@ module.exports = {
     delTailReply,
     setStar,
     getStatus,
+    getVnode,
+    getListVnodes,
 };

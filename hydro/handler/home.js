@@ -1,13 +1,15 @@
 const {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError,
+    NotFoundError, MessageNotFoundError,
 } = require('../error');
 const options = require('../options');
+const bus = require('../service/bus');
 const { Route, Handler } = require('../service/server');
 const md5 = require('../lib/md5');
 const contest = require('../model/contest');
 const user = require('../model/user');
 const setting = require('../model/setting');
+const discussion = require('../model/discussion');
 const token = require('../model/token');
 const training = require('../model/training');
 const {
@@ -45,14 +47,13 @@ class HomeHandler extends Handler {
     }
 
     async discussion() {
-        // TODO(masnn)
-        // if (this.user.hasPerm(PERM_VIEW_DISCUSSION)) {
-        //     const ddocs = await discussion.getMulti()
-        //         .limit(DISCUSSIONS_ON_MAIN)
-        //         .toArray();
-        //     const vndict = await discussion.getListVnodes(map(discussion.node_id, ddocs));
-        //     return [ddocs, vndict];
-        // }
+        if (this.user.hasPerm(PERM_VIEW_DISCUSSION)) {
+            const ddocs = await discussion.getMulti()
+                .limit(DISCUSSIONS_ON_MAIN)
+                .toArray();
+            const vndict = await discussion.getListVnodes(ddocs, this);
+            return [ddocs, vndict];
+        }
         return [[], {}];
     }
 
@@ -164,10 +165,69 @@ class UserChangemailWithCodeHandler extends Handler {
         const udoc = await user.getByEmail(tdoc.mail);
         if (udoc) throw new UserAlreadyExistError(tdoc.mail);
         // TODO(twd2): Ensure mail is unique.
-        await user.set_mail(this.user._id, tdoc.mail);
+        await user.setEmail(this.user._id, tdoc.mail);
         await token.delete(code, token.TYPE_CHANGEMAIL);
-        this.response.body = {};
         this.response.redirect = '/home/security';
+    }
+}
+
+class HomeMessagesHandler extends Handler {
+    udoc(udict, key) { // eslint-disable-line class-methods-use-this
+        const udoc = udict[key];
+        if (!udoc) return;
+        const gravatar_url = misc.gravatar_url(udoc.gravatar);
+        if (udoc.gravatar) udict[key] = { ...udoc, gravatar_url, gravatar: '' };
+    }
+
+    async prepare() {
+        this.checkPerm(PERM_LOGGEDIN);
+    }
+
+    async get() {
+        // TODO(iceboy): projection, pagination.
+        const mdocs = await message.getMulti(this.user._id).sort('_id', -1).limit(50).toArray();
+        const udict = await user.getList([
+            ...mdocs.map((mdoc) => mdoc.from),
+            ...mdocs.map((mdoc) => mdoc.to),
+        ]);
+        // TODO(twd2): improve here:
+        for (const mdoc of mdocs) {
+            this.modify_udoc(udict, mdoc.from);
+            this.modify_udoc(udict, mdoc.to);
+        }
+        this.response.body = { messages: mdocs, udict };
+        this.response.template = 'home_message.html';
+    }
+
+    async postSendMessage({ uid, content }) {
+        const udoc = await user.getById(uid);
+        const mdoc = await message.add(this.user._id, udoc._id, content);
+        // TODO(twd2): improve here:
+        // projection
+        mdoc.from = this.user;
+        this.modify_udoc(mdoc, 'from');
+        mdoc.to = udoc;
+        this.modify_udoc(mdoc, 'to');
+        if (this.user._id !== uid) {
+            await bus.publish(`user_message-${uid}`, { type: 'new', data: mdoc });
+        }
+        this.back({ mdoc });
+    }
+
+    async postReplyMessage({ message_id, content }) {
+        const [mdoc, reply] = await message.addReply(message_id, this.user._id, content);
+        if (!mdoc) throw new MessageNotFoundError(message_id);
+        if (mdoc.from !== mdoc.to) {
+            const other = mdoc.from === this.user._id ? mdoc.from : mdoc.to;
+            await bus.publish(`user_message-${other}`, { type: 'reply', data: mdoc });
+        }
+        mdoc.reply = [reply];
+        this.back({ reply });
+    }
+
+    async postDeleteMessage({ message_id }) {
+        await message.delete(message_id, this.user._id);
+        this.back();
     }
 }
 
@@ -181,75 +241,8 @@ async function apply() {
 global.Hydro.handler.home = module.exports = {
     HomeHandler, HomeSecurityHandler, HomeSettingsHandler, UserChangemailWithCodeHandler, apply,
 };
+
 /*
-@app.route('/home/messages', 'home_messages', global_route=True)
-class HomeMessagesHandler(base.OperationHandler):
-  def modify_udoc(this, udict, key):
-    udoc = udict.get(key)
-    if not udoc:
-      return
-    gravatar_url = misc.gravatar_url(udoc.get('gravatar'))
-    if 'gravatar' in udoc and udoc['gravatar']:
-      udict[key] = {**udoc,
-                    'gravatar_url': gravatar_url,
-                    'gravatar': ''}
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  async def get(this):
-    # TODO(iceboy): projection, pagination.
-    mdocs = await message.get_multi(this.user['_id']).sort([('_id', -1)]).limit(50).to_list()
-    udict = await user.get_dict(
-        itertools.chain.from_iterable((mdoc['sender_uid'], mdoc['sendee_uid']) for mdoc in mdocs),
-        fields=user.PROJECTION_PUBLIC)
-    # TODO(twd2): improve here:
-    for mdoc in mdocs:
-      this.modify_udoc(udict, mdoc['sender_uid'])
-      this.modify_udoc(udict, mdoc['sendee_uid'])
-    this.json_or_render('home_messages.html', messages=mdocs, udict=udict)
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
-  @base.sanitize
-  async def post_send_message(this, *, uid: int, content: str):
-    udoc = await user.get_by_uid(uid, user.PROJECTION_PUBLIC)
-    if not udoc:
-      raise error.UserNotFoundError(uid)
-    mdoc = await message.add(this.user['_id'], udoc['_id'], content)
-    # TODO(twd2): improve here:
-    # projection
-    sender_udoc = await user.get_by_uid(this.user['_id'], user.PROJECTION_PUBLIC)
-    mdoc['sender_udoc'] = sender_udoc
-    this.modify_udoc(mdoc, 'sender_udoc')
-    mdoc['sendee_udoc'] = udoc
-    this.modify_udoc(mdoc, 'sendee_udoc')
-    if this.user['_id'] != uid:
-      await bus.publish('message_received-' + str(uid), {'type': 'new', 'data': mdoc})
-    this.json_or_redirect(this.url, mdoc=mdoc)
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
-  @base.sanitize
-  async def post_reply_message(this, *, message_id: objectid.ObjectId, content: str):
-    mdoc, reply = await message.add_reply(message_id, this.user['_id'], content)
-    if not mdoc:
-      return error.MessageNotFoundError(message_id)
-    if mdoc['sender_uid'] != mdoc['sendee_uid']:
-      if mdoc['sender_uid'] == this.user['_id']:
-        other_uid = mdoc['sendee_uid']
-      else:
-        other_uid = mdoc['sender_uid']
-      mdoc['reply'] = [reply]
-      await bus.publish('message_received-' + str(other_uid), {'type': 'reply', 'data': mdoc})
-    this.json_or_redirect(this.url, reply=reply)
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
-  @base.sanitize
-  async def post_delete_message(this, *, message_id: objectid.ObjectId):
-    await message.delete(message_id, this.user['_id'])
-    this.back();
-
-
 @app.connection_route('/home/messages-conn', 'home_messages-conn', global_route=True)
 class HomeMessagesConnection(base.Connection):
   @base.require_priv(builtin.PRIV_USER_PROFILE)

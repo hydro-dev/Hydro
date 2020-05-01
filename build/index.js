@@ -2,7 +2,7 @@ const fs = require('fs');
 const root = require('./root');
 
 async function build(type) {
-    if (!['development', 'production'].includes(type)) throw new Error('Unknown type: ' + type);
+    if (!['development', 'production'].includes(type)) throw new Error(`Unknown type: ${type}`);
     try {
         fs.rmdirSync(root('.build'));
     } catch (e) { }

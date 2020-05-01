@@ -3,7 +3,7 @@ const { NotFoundError } = require('../error');
 
 class NotFoundHandler extends Handler {
     async prepare() {
-        throw new NotFoundError();
+        throw new NotFoundError(); // eslint-disable-line class-methods-use-this
     }
 }
 

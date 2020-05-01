@@ -1,8 +1,9 @@
 const md5 = require('./md5');
 
-exports.gravatar_url = function gravatarUrl(email, size) {
+exports.gravatar_url = function gravatarUrl(email, size = 32) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size}`;
 };
+
 exports.datetime_span = function datetimeSpan(dt, relative = true, format = '%Y-%m-%d %H:%M:%S') {
     if (!dt) return 'DATETIME_SPAN_ERROR';
     if (dt.generationTime) dt = new Date(dt.generationTime * 1000);
@@ -13,6 +14,7 @@ exports.datetime_span = function datetimeSpan(dt, relative = true, format = '%Y-
         dt.format(format),
     );
 };
+
 exports.paginate = function* paginate(page, numPages) {
     const radius = 2; let first; let
         last;
@@ -33,6 +35,7 @@ exports.paginate = function* paginate(page, numPages) {
     if (page < numPages) yield ['next', page + 1];
     yield ['last', numPages];
 };
+
 exports.format_size = function formatSize(size, base = 1) {
     size *= base;
     const unit = 1024;
