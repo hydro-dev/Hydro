@@ -26,8 +26,8 @@ class USER {
         this.nSubmit = user.nSubmit || 0;
     }
 
-    hasPerm(perm) {
-        return this.perm.includes(perm);
+    hasPerm(p) {
+        return this.perm.includes(p);
     }
 
     checkPassword(password) {
@@ -144,7 +144,7 @@ async function getPrefixList(prefix, limit = 50) {
 
 async function setRole(uid, role) {
     const udoc = await getById(uid);
-    return await Promise.all([
+    return await Promise.all([ // eslint-disable-line no-return-await
         coll.findOneAndUpdate({ _id: uid }, { $set: { role } }),
         collRole.updateOne({ _id: udoc.role }, { $inc: { count: -1 } }),
         collRole.updateOne({ _id: role }, { $inc: { count: 1 } }),
@@ -159,8 +159,8 @@ function getRole(name) {
     return collRole.findOne({ _id: name });
 }
 
-function addRole(name, perm) {
-    return collRole.insertOne({ _id: name, perm, count: 0 });
+function addRole(name, permission) {
+    return collRole.insertOne({ _id: name, perm: permission, count: 0 });
 }
 
 function deleteRoles(roles) {
@@ -170,8 +170,12 @@ function deleteRoles(roles) {
     ]);
 }
 
-function init() {
-    return collRole.update({ _id: 'root' }, { $set: { perm: perm.PERM_ALL } });
+function index() {
+    return Promise.all([
+        collRole.updateOne({ _id: 'root' }, { $set: { perm: perm.PERM_ALL } }),
+        coll.createIndex('unameLower', { unique: true }),
+        coll.createIndex('mailLower', { sparse: true }),
+    ]);
 }
 
 module.exports = {
@@ -192,5 +196,5 @@ module.exports = {
     getRoles,
     addRole,
     deleteRoles,
-    init,
+    index,
 };

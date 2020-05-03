@@ -56,11 +56,11 @@ export default class MessagePadDialogueContentContainer extends React.PureCompon
     return _.map(this.props.item.reply, (reply, idx) => (
       <Message
         key={idx}
-        isSelf={reply.sender_uid === UserContext.uid}
+        isSelf={reply.from === UserContext.uid}
         faceUrl={
-          reply.sender_uid === this.props.item.sender_uid
-            ? this.props.item.sender_udoc.gravatar_url
-            : this.props.item.sendee_udoc.gravatar_url
+          reply.from === this.props.item.from
+            ? this.props.item.from_udoc.gravatar_url
+            : this.props.item.to_udoc.gravatar_url
         }
       >
         <div>{reply.content}</div>

@@ -65,20 +65,16 @@ class Handler {
         this.session = {};
     }
 
-    renderHTML(name, context) {
+    async renderHTML(name, context) {
         console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
-        return new Promise((resolve, reject) => {
-            template.render(name, Object.assign(context, {
-                handler: this,
-                _: (str) => (str ? str.toString().translate(this.user.language) : ''),
-                user: this.user,
-            }), (error, res) => {
-                console.timeEnd(name);
-                if (error) reject(error);
-                else resolve(res);
-            });
-        });
+        const res = await template.render(name, Object.assign(context, {
+            handler: this,
+            _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+            user: this.user,
+        }));
+        console.timeEnd(name);
+        return res;
     }
 
     async render(name, context) {
@@ -320,20 +316,16 @@ class ConnectionHandler {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
-    renderHTML(name, context) {
+    async renderHTML(name, context) {
         console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
-        return new Promise((resolve, reject) => {
-            template.render(name, Object.assign(context, {
-                handler: this,
-                _: (str) => (str ? str.toString().translate(this.user.language) : ''),
-                user: this.user,
-            }), (error, res) => {
-                console.timeEnd(name);
-                if (error) reject(error);
-                else resolve(res);
-            });
-        });
+        const res = await template.render(name, Object.assign(context, {
+            handler: this,
+            _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+            user: this.user,
+        }));
+        console.timeEnd(name);
+        return res;
     }
 
     send(data) {
@@ -401,14 +393,14 @@ function Connection(prefix, RouteConnHandler) {
     sock.installHandlers(server);
 }
 
-exports.Handler = Handler;
-exports.ConnectionHandler = ConnectionHandler;
-exports.Route = Route;
-exports.Connection = Connection;
-exports.start = function start() {
+function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('*', Handler);
     server.listen(options.listen.port);
     console.log('Server listening at: %s', options.listen.port);
+}
+
+global.Hydro.service.server = module.exports = {
+    Handler, ConnectionHandler, Route, Connection, start,
 };

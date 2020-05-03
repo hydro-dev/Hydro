@@ -1,6 +1,6 @@
 const md5 = require('./md5');
 
-exports.gravatar_url = function gravatarUrl(email, size = 32) {
+exports.gravatar = function gravatar(email, size = 32) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size}`;
 };
 

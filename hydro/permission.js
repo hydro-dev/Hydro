@@ -114,4 +114,4 @@ perm.PERM_DEFAULT = perm.PERM_BASIC
 
 perm.PERM_ADMIN = perm.PERM_ALL;
 
-module.exports = perm;
+global.Hydro.permission = module.exports = perm;

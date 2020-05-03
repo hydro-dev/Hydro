@@ -26,7 +26,7 @@
               {% else %}
                 <span class="v-center icon icon-flag"></span>
               {% endif %}
-                {{ vndict[ddoc.parentId].title|default(_('(missing)')) }}
+                {{ vndict[ddoc._id].title|default(_('(missing)')) }}
               </a>
             </li>
             <li>

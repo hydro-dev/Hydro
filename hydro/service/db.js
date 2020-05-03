@@ -16,6 +16,6 @@ Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology:
         bus.publish('system_database_connected', null);
     });
 
-module.exports = {
+global.Hydro.service.db = module.exports = {
     collection: (c) => db.collection(c),
 };

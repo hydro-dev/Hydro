@@ -6,7 +6,7 @@
 ) %}
 <span class="user-profile-link">
 {% if avatar %}
-  <img class="small user-profile-avatar v-center" src="{{ udoc['gravatar']|default('')|gravatar_url }}" width="20" height="20">
+  <img class="small user-profile-avatar v-center" src="{{ gravatar(udoc['gravatar']|default('')) }}" width="20" height="20">
 {% endif %}
   <a class="user-profile-name" href="/u/{{ udoc['_id']|default(0) }}">
     {{ udoc['uname'] }}

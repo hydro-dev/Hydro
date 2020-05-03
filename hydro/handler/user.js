@@ -169,7 +169,7 @@ class UserSearchHandler extends Handler {
         }
         for (const i in udocs) {
             if (udocs[i].gravatar) {
-                udocs[i].gravatar_url = misc.gravatar_url(udocs[i].gravatar);
+                udocs[i].gravatar_url = misc.gravatar(udocs[i].gravatar);
             }
         }
         this.response.body = udocs;

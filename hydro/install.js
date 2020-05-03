@@ -10,7 +10,10 @@ async function run() {
     let mongourl = 'mongodb://';
     if (options.db.username) mongourl += `${options.db.username}:${options.db.password}@`;
     mongourl += `${options.db.host}:${options.db.port}/${options.db.name}`;
-    const Database = await Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
+    const Database = await Mongo.MongoClient.connect(
+        mongourl,
+        { useNewUrlParser: true, useUnifiedTopology: true },
+    );
     const db = Database.db(options.db.name);
     const collUser = db.collection('user');
     const collRole = db.collection('role');
@@ -48,8 +51,6 @@ async function run() {
             }, udoc),
         ]);
     }
-    await collUser.createIndex('unameLower', { unique: true });
-    await collUser.createIndex('mailLower', { sparse: true });
     await collRole.insertMany(builtin.BUILTIN_ROLES);
     await collBlacklist.createIndex('expireAt', { expireAfterSeconds: 0 });
     await collToken.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true });

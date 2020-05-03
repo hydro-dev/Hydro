@@ -1,5 +1,7 @@
 const { ObjectID } = require('bson');
 const problem = require('./problem');
+const contest = require('./contest');
+const { PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { DocumentNotFoundError } = require('../error');
 const db = require('../service/db.js');
 
@@ -8,7 +10,7 @@ const collReply = db.collection('discussion.reply');
 const collStatus = db.collection('discussion.status');
 
 async function add(parentType, parentId, owner, title, content, ip = null, highlight = false) {
-    let res = await coll.insertOne({
+    const res = await coll.insertOne({
         owner,
         title,
         content,
@@ -145,7 +147,8 @@ async function getVnode(ddoc, handler) {
 async function getListVnodes(ddocs, handler) {
     const res = {};
     for (const ddoc of ddocs) {
-        res[ddoc._id] = await getVnode(ddoc, handler);
+        // FIXME no-await-in-loop
+        res[ddoc._id] = await getVnode(ddoc, handler); // eslint-disable-line no-await-in-loop
     }
     return res;
 }

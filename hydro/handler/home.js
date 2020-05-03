@@ -4,9 +4,13 @@ const {
 } = require('../error');
 const options = require('../options');
 const bus = require('../service/bus');
-const { Route, Handler } = require('../service/server');
+const {
+    Route, Connection, Handler, ConnectionHandler,
+} = require('../service/server');
+const misc = require('../lib/misc');
 const md5 = require('../lib/md5');
 const contest = require('../model/contest');
+const message = require('../model/message');
 const user = require('../model/user');
 const setting = require('../model/setting');
 const discussion = require('../model/discussion');
@@ -114,6 +118,7 @@ class HomeSecurityHandler extends Handler {
         const sessions = await token.getSessionListByUid(this.user._id);
         for (const session in sessions) {
             if (tokenDigest === md5(session._id)) {
+                // eslint-disable-next-line no-await-in-loop
                 await token.delete(session._id, token.TYPE_SESSION);
                 return this.back();
             }
@@ -175,7 +180,7 @@ class HomeMessagesHandler extends Handler {
     udoc(udict, key) { // eslint-disable-line class-methods-use-this
         const udoc = udict[key];
         if (!udoc) return;
-        const gravatar_url = misc.gravatar_url(udoc.gravatar);
+        const gravatar_url = misc.gravatar(udoc.gravatar);
         if (udoc.gravatar) udict[key] = { ...udoc, gravatar_url, gravatar: '' };
     }
 
@@ -192,11 +197,11 @@ class HomeMessagesHandler extends Handler {
         ]);
         // TODO(twd2): improve here:
         for (const mdoc of mdocs) {
-            this.modify_udoc(udict, mdoc.from);
-            this.modify_udoc(udict, mdoc.to);
+            this.udoc(udict, mdoc.from);
+            this.udoc(udict, mdoc.to);
         }
         this.response.body = { messages: mdocs, udict };
-        this.response.template = 'home_message.html';
+        this.response.template = 'home_messages.html';
     }
 
     async postSendMessage({ uid, content }) {
@@ -204,10 +209,10 @@ class HomeMessagesHandler extends Handler {
         const mdoc = await message.add(this.user._id, udoc._id, content);
         // TODO(twd2): improve here:
         // projection
-        mdoc.from = this.user;
-        this.modify_udoc(mdoc, 'from');
-        mdoc.to = udoc;
-        this.modify_udoc(mdoc, 'to');
+        mdoc.from_udoc = this.user;
+        this.udoc(mdoc, 'from');
+        mdoc.to_udoc = udoc;
+        this.udoc(mdoc, 'to');
         if (this.user._id !== uid) {
             await bus.publish(`user_message-${uid}`, { type: 'new', data: mdoc });
         }
@@ -231,32 +236,40 @@ class HomeMessagesHandler extends Handler {
     }
 }
 
+class HomeMessagesConnectionHandler extends ConnectionHandler {
+    async prepare() {
+        bus.subscribe([`message_received-${this.user._id}`], this.onMessageReceived);
+    }
+
+    async onMessageReceived(e) {
+        this.send(...e.value);
+    }
+
+    async clearup() {
+        bus.unsubscribe(this.onMessageReceived);
+    }
+}
+
 async function apply() {
     Route('/', module.exports.HomeHandler);
     Route('/home/security', module.exports.HomeSecurityHandler);
     Route('/home/changeMail/:code', module.exports.UserChangemailWithCodeHandler);
     Route('/home/settings/:category', module.exports.HomeSettingsHandler);
+    Route('/home/messages', module.exports.HomeMessagesHandler);
+    Connection('/home/messages-conn', module.exports.HomeMessagesConnectionHandler);
 }
 
 global.Hydro.handler.home = module.exports = {
-    HomeHandler, HomeSecurityHandler, HomeSettingsHandler, UserChangemailWithCodeHandler, apply,
+    HomeHandler,
+    HomeSecurityHandler,
+    HomeSettingsHandler,
+    UserChangemailWithCodeHandler,
+    HomeMessagesHandler,
+    HomeMessagesConnectionHandler,
+    apply,
 };
 
 /*
-@app.connection_route('/home/messages-conn', 'home_messages-conn', global_route=True)
-class HomeMessagesConnection(base.Connection):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  async def on_open(this):
-    await super(HomeMessagesConnection, this).on_open()
-    bus.subscribe(this.on_message_received, ['message_received-' + str(this.user['_id'])])
-
-  async def on_message_received(this, e):
-    this.send(**e['value'])
-
-  async def on_close(this):
-    bus.unsubscribe(this.on_message_received)
-
-
 @app.route('/home/file', 'home_file', global_route=True)
 class HomeFileHandler(base.OperationHandler):
   def file_url(this, fdoc):

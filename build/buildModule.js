@@ -1,8 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const fs = require('fs');
 const webpack = require('webpack');
+const yaml = require('js-yaml');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const root = require('./root');
+const template = require('./template');
 
 const exist = (name) => {
     try {
@@ -50,6 +52,24 @@ const build = async (type) => {
             resolve();
         });
     });
+    for (const i of modules) {
+        if (!i.startsWith('.')) {
+            if (exist(`module/${i}/locale`)) {
+                const locales = fs.readdirSync(root(`module/${i}/locale`));
+                const lang = {};
+                for (const j of locales) {
+                    const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
+                    lang[i.split('.')[0]] = yaml.safeLoad(content);
+                }
+                const file = root(`.build/module/${i}/locale.json`);
+                fs.writeFileSync(file, JSON.stringify(lang));
+            }
+            if (exist(`module/${i}/template`)) {
+                const file = root(`.build/module/${i}/template.yaml`);
+                fs.writeFileSync(file, yaml.safeDump(template(`module/${i}/template`)));
+            }
+        }
+    }
 };
 
 module.exports = build;

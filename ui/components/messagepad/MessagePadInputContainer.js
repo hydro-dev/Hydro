@@ -97,7 +97,7 @@ export default class MessagePadInputContainer extends React.PureComponent {
     if (state.dialogues[this.props.activeId].isPlaceholder) {
       this.props.postSend(
         this.props.activeId,
-        state.dialogues[this.props.activeId].sendee_uid,
+        state.dialogues[this.props.activeId].to,
         this.props.inputValue,
       );
     } else {

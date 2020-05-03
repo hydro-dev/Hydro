@@ -7,11 +7,11 @@ export default function reducer(state = {}, action) {
     return _.keyBy(
       _.filter(
         _.map(messages, (m) => ({
-          sendee_udoc: udict[m.sendee_uid],
-          sender_udoc: udict[m.sender_uid],
+          to_udoc: udict[m.to],
+          from_udoc: udict[m.from],
           ...m,
         })),
-        (m) => m.sendee_udoc && m.sender_udoc,
+        (m) => m.to_udoc && m.from_udoc,
       ),
       '_id',
     );
@@ -22,9 +22,9 @@ export default function reducer(state = {}, action) {
       ...state,
       [id]: {
         _id: id,
-        sender_uid: UserContext.uid,
-        sendee_uid: user._id,
-        sendee_udoc: { ...user },
+        from: UserContext.uid,
+        to: user._id,
+        to_udoc: { ...user },
         reply: [],
         isPlaceholder: true,
       },

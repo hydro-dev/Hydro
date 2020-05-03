@@ -78,10 +78,9 @@ export default function (env = {}) {
 
   const config = {
     bail: true,
-    mode: 'production',
+    mode: env.production ? 'production' : 'development',
     profile: true,
     context: root(),
-    devtool: env.production ? 'source-map' : false,
     entry: {
       vj4: './Entry.js',
     },

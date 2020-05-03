@@ -3,7 +3,7 @@
 <li class="dczcomments__reply{% if mode_create %} commentbox-container{% endif %}">
   <div class="media">
     <div class="media__left top">
-      <img src="{{ udoc['gravatar']|gravatar_url }}" width="50" height="50" class="medium user-profile-avatar">
+      <img src="{{ gravatar(udoc['gravatar']) }}" width="50" height="50" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
     {% if not mode_create %}
@@ -14,7 +14,7 @@
         </div>
         {{ reply_operations(doc, rdoc) }}
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_tail_reply_raw', did=doc['parent_doc_id'], drid=doc['doc_id'], drrid=rdoc['_id']) }}">
+      <div class="typo" data-emoji-enabled data-raw-url="/discuss/{{ doc.parentId }}/{{ doc._id }}/{{ rdoc._id }}/raw">
         {{ rdoc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
@@ -75,7 +75,7 @@
 <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
-      <img src="{{ udoc['gravatar']|gravatar_url }}" width="60" height="60" class="medium user-profile-avatar">
+      <img src="{{ gravatar(udoc.gravatar) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
       <div class="hasjs--hide">
@@ -107,7 +107,7 @@
   <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
-      <img src="{{ udoc['gravatar']|gravatar_url }}" width="60" height="60" class="medium user-profile-avatar">
+      <img src="{{ gravatar(udoc['gravatar']) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
       <div class="clearfix">
@@ -133,7 +133,7 @@
         {% endif %}
         </div>
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ reverse_url('discussion_reply_raw', did=doc['parent_doc_id'], drid=doc['doc_id']) }}">
+      <div class="typo" data-emoji-enabled data-raw-url="/discuss/{{ doc.parentId }}/{{ doc._id }}/raw">
         {{ doc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>

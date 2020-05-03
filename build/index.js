@@ -1,18 +1,15 @@
 const fs = require('fs');
 const root = require('./root');
+const ignoreFailure = require('./ignoreFailure');
 
 async function build(type) {
     if (!['development', 'production'].includes(type)) throw new Error(`Unknown type: ${type}`);
-    try {
-        fs.rmdirSync(root('.build'));
-    } catch (e) { }
-    fs.mkdirSync(root('.build'));
-    await Promise.all([
-        require('./locales')(type),
-        require('./buildModule')(type),
-        require('./buildTemplate')(type),
-        require('./webpack')(type),
-    ]);
+    ignoreFailure(fs.mkdirSync, root('.cache'));
+    ignoreFailure(fs.mkdirSync, root('.build'));
+    await require('./locales')(type);
+    await require('./buildModule')(type);
+    await require('./buildTemplate')(type);
+    await require('./webpack')(type);
 }
 
 module.exports = build;

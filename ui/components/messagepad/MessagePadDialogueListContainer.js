@@ -39,9 +39,9 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
           <ListItem
             key={dialogue._id}
             userName={
-              dialogue.sender_uid === UserContext.uid
-                ? dialogue.sendee_udoc.uname
-                : dialogue.sender_udoc.uname
+              dialogue.from === UserContext.uid
+                ? dialogue.to_udoc.uname
+                : dialogue.from_udoc.uname
             }
             summary={
               dialogue.isPlaceholder
@@ -49,9 +49,9 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
                 : _.last(dialogue.reply).content
             }
             faceUrl={
-              dialogue.sender_uid === UserContext.uid
-                ? dialogue.sendee_udoc.gravatar_url
-                : dialogue.sender_udoc.gravatar_url
+              dialogue.from === UserContext.uid
+                ? dialogue.to_udoc.gravatar_url
+                : dialogue.from_udoc.gravatar_url
             }
             active={dialogue._id === this.props.activeId}
             onClick={() => this.props.handleClick(dialogue._id)}

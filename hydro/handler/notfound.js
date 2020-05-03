@@ -2,8 +2,8 @@ const { Route, Handler } = require('../service/server');
 const { NotFoundError } = require('../error');
 
 class NotFoundHandler extends Handler {
-    async prepare() {
-        throw new NotFoundError(); // eslint-disable-line class-methods-use-this
+    async prepare() { // eslint-disable-line class-methods-use-this
+        throw new NotFoundError();
     }
 }
 

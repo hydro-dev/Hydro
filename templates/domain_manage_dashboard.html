@@ -15,7 +15,7 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-    <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ system.gravatar|gravatar_url }}" width="32" height="32"></dd>
+    <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ gravatar(system.gravatar) }}" width="32" height="32"></dd>
     <dt>{{ _('Name') }}</dt><dd>{{ system.uname }}</dd>
     </dl>
   </div>

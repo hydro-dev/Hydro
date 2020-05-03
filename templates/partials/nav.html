@@ -10,22 +10,15 @@
   <div class="row"><div class="columns clearfix">
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item"><a href="/" class="nav__logo">&nbsp;</a></li>
-      {{ nav_item('/', 'domain_main', 'domain_main') }}
-    {% if handler.hasPerm(perm.PERM_VIEW_PROBLEM) %}
-      {{ nav_item('/p', 'problem_main', 'problem') }}
-    {% endif %}
-    {% if handler.hasPerm(perm.PERM_VIEW_TRAINING) %}
-      {{ nav_item('/t', 'training_main', 'training') }}
-    {% endif %}
-    {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-      {{ nav_item('/discuss', 'discussion_main', 'discussion') }}
-    {% endif %}
-    {% if handler.hasPerm(perm.PERM_VIEW_CONTEST) %}
-      {{ nav_item('/c', 'contest_main', 'contest') }}
-    {% endif %}
-    {% if handler.hasPerm(perm.PERM_MANAGE) %}
-      {{ nav_item('/manage', 'domain_manage', 'domain_manage') }}
-    {% endif %}
+      {% for item in Context.nav %}
+        {% if item.perm %}
+          {% if handler.hasPerm(item.perm) %}
+            {{ nav_item(item.path, item.name, item.prefix) }}
+          {% endif %}
+        {% else %}
+          {{ nav_item(item.path, item.name, item.prefix) }}
+        {% endif %}
+      {% endfor %}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">
     {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
