@@ -29,7 +29,6 @@ class ProblemImportHandler extends Handler {
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
         const _id = await problem.add(pdoc);
-        console.log(_id);
         await problem.setTestdata(_id, testdata);
         this.response.body = { pid: pid || _id };
         this.response.redirect = `/p/${pid || _id}/settings`;

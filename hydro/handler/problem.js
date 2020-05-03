@@ -32,25 +32,26 @@ class ProblemHandler extends Handler {
         this.checkPerm(PERM_VIEW_PROBLEM);
     }
 
-    async get({ page = 1, category = null }) {
+    async get({ page = 1, category = '' }) {
         this.response.template = 'problem_main.html';
         const q = {};
         let psdict = {};
         if (category) q.category = category;
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        const pdocs = await problem.getMany(q, { pid: 1 }, page, constants.PROBLEM_PER_PAGE);
+        const [pdocs, pcount] = await paginate(
+            problem.getMulti(q).sort({ pid: 1 }),
+            page,
+            constants.PROBLEM_PER_PAGE,
+        );
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
             psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
         }
+        const path = [
+            ['Hydro', '/'],
+            ['problem_main', null],
+        ];
         this.response.body = {
-            path: [
-                ['Hydro', '/'],
-                ['problem_main', null],
-            ],
-            page,
-            pdocs,
-            psdict,
-            category: '',
+            path, page, pcount, pdocs, psdict, category,
         };
     }
 }

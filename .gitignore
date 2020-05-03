@@ -2,10 +2,9 @@ node_modules/
 config.yaml
 .build/
 .uibuild/
+.cache/
 __*
 ui/misc/.iconfont
 ui/static/locale
-.cache
 .webpackStats.json
-module/**
 !.gitkeep

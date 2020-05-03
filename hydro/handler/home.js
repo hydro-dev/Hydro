@@ -80,11 +80,12 @@ class HomeSecurityHandler extends Handler {
 
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
+        // TODO(masnn): UA & IP
         const sessions = await token.getSessionListByUid(this.user._id);
         const parsed = sessions.map((session) => ({
             ...session,
-            updateUa: useragent.parse(session.updateUa || session.createUa || ''),
-            updateGeoip: geoip.ip2geo(session.updateIp || session.createIp, this.user.viewLang),
+            // updateUa: useragent.parse(session.updateUa || session.createUa || ''),
+            // updateGeoip: geoip.ip2geo(session.updateIp || session.createIp, this.user.viewLang),
             _id: md5(session._id),
             isCurrent: session._id === this.session._id,
         }));
@@ -116,7 +117,7 @@ class HomeSecurityHandler extends Handler {
 
     async postDeleteToken({ tokenDigest }) {
         const sessions = await token.getSessionListByUid(this.user._id);
-        for (const session in sessions) {
+        for (const session of sessions) {
             if (tokenDigest === md5(session._id)) {
                 // eslint-disable-next-line no-await-in-loop
                 await token.delete(session._id, token.TYPE_SESSION);
@@ -128,7 +129,7 @@ class HomeSecurityHandler extends Handler {
 
     async postDeleteAllTokens() {
         await token.deleteByUid(this.user._id);
-        this.back();
+        this.response.redirect = '/login';
     }
 }
 

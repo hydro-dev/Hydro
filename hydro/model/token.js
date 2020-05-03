@@ -77,9 +77,9 @@ module.exports = {
         return coll.deleteMany({ uid });
     },
     getMostRecentSessionByUid(uid) {
-        return coll.findOne({ uid, token_type: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
+        return coll.findOne({ uid, tokenType: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
     },
     getSessionListByUid(uid) {
-        return coll.find({ uid, token_type: this.TYPE_SESSION }).sort('updateAt', -1).toArray();
+        return coll.find({ uid, tokenType: this.TYPE_SESSION }).sort('updateAt', -1).toArray();
     },
 };

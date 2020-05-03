@@ -128,13 +128,12 @@ class Handler {
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
         this._handler.save = this.request.cookies.get('save');
-        this._handler.tokenType = token.TYPE_SESSION;
         if (this._handler.save) this._handler.expireSeconds = options.session.saved_expire_seconds;
         else this._handler.expireSeconds = options.session.unsaved_expire_seconds;
         this.session = this._handler.sid
             ? await token.update(
                 this._handler.sid,
-                this._handler.tokenType,
+                token.TYPE_SESSION,
                 this._handler.expireSeconds,
                 {
                     update_ip: this.request.ip,
@@ -194,19 +193,16 @@ class Handler {
     }
 
     async saveCookie() {
-        if (this.session.sid) {
+        if (this.session._id) {
             await token.update(
-                this.session.sid,
-                this._handler.tokenType,
+                this.session._id,
+                token.TYPE_SESSION,
                 this._handler.expireSeconds,
-                {
-                    updateIp: this.request.ip,
-                    updateUa: this.request.headers['user-agent'] || '',
-                },
+                this.session,
             );
         } else {
-            [this.session.sid] = await token.add(
-                this._handler.tokenType,
+            [this.session._id] = await token.add(
+                token.TYPE_SESSION,
                 this._handler.expireSeconds,
                 {
                     createIp: this.request.ip,
@@ -221,9 +217,9 @@ class Handler {
         if (this._handler.save) {
             cookie.expires = this.session.expireAt;
             cookie.maxAge = this._handler.expireSeconds;
-            this.request.cookies.set('save', 'true', cookie);
+            this.ctx.cookies.set('save', 'true', cookie);
         }
-        this.ctx.cookies.set('sid', this.session.sid, cookie);
+        this.ctx.cookies.set('sid', this.session._id, cookie);
     }
 
     async onerror(error) {

@@ -107,7 +107,7 @@
               <div class="media__right medium">
                 <form method="post">
                   <input type="hidden" name="operation" value="delete_token">
-                  <input type="hidden" name="token_digest" value="{{ session._id }}">
+                  <input type="hidden" name="tokenDigest" value="{{ session._id }}">
                   <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
                   <input type="submit" value="{{ _('Logout This Session') }}" class="rounded button">
                 </form>

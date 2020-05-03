@@ -38,6 +38,7 @@ module.exports = {
             gravatar: misc.gravatar,
             model,
             Context: global.Hydro.ui,
+            isIE: (str) => str.includes('MSIE') || str.includes('rv:11.0'),
         });
         return new Promise((resolve, reject) => {
             env.render(name, state, (err, res) => {
