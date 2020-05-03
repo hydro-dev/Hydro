@@ -1,0 +1,48 @@
+{% set page_name = "paste_create" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          <div class="row">
+            <div class="medium-7 columns">
+              <label>
+                {{ _('Title') }}
+                <input name="title" value="{{ doc.title }}" class="textbox" autofocus>
+              </label>
+            </div>
+            <div class="medium-3 columns">
+              <label>
+                {{ _('Language') }}
+                <br>
+                <label>
+                  <input name="language" value="{{ doc.language }}" class="textbox">
+                </label>
+              </label>
+            </div>
+            <div class="medium-2 columns">
+              <label>
+                <br>
+                <label class="checkbox">
+                  <input type="checkbox" name="private" value="on">{{ _('Private') }}
+                </label>
+              </label>
+            </div>
+          </div>
+          <div class="row"><div class="columns">
+            <label>
+              {{ _('Content') }}
+              <textarea name="content" class="textbox" style="height: 500px">{{ doc.content }}</textarea>
+            </label>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include 'components/md_hint.html' %}
+  </div>
+</div>
+{% endblock %}
