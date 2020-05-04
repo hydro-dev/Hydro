@@ -1,0 +1,93 @@
+data-heading-extract-to: '#menu-item-wiki_help'
+section:
+- id: compiler
+  title: Compilers' Version and Parameters
+  content: |
+    <p>Hydro使用<a href="https://github.com/hydro-dev/HydroJudger">HydroJudger</a>进行评测，以docker镜像的形式安装至评测机。所使用的编译器均为创建镜像时<a href="https://wiki.debian.org/DebianTesting">debian testing</a>分支的最新版。编译参数如下：</p>
+    <blockquote><ul>
+      <li>Free Pascal <pre>fpc -O2 -o/out/foo /in/foo.pas</pre></li>
+      <li>C <pre>gcc -O2 -Wall -std=c99 -o /out/foo /in/foo.c -lm</pre></li>
+      <li>C++ <pre>g++ -O2 -Wall -std=c++11 -o /out/foo /in/foo.cc -lm</pre></li>
+      <li>Java <pre>javac Main.java</pre></li>
+      <li>Python <pre>python foo.py</pre></li>
+      <li>Python 3 <pre>python3 foo.py</pre></li>
+      <li>PHP <pre>php foo.php</pre></li>
+      <li>Rust <pre>rustc -O -o /out/foo /in/foo.rs</pre></li>
+      <li>Haskell <pre>ghc -O -outputdir /tmp -o /out/foo /in/foo.hs</pre></li>
+    </ul></blockquote>
+- id: limits
+  title: Limitations
+  content: |
+    <p>Hydro 评测机使用进程的CPU时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p>
+    <p>Hydro 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。内存空间默认限定为256MiB，题目中特别指明的，限定为题目中评测点所指定的内存空间。</p>
+- id: io
+  title: IO
+  content: <p>若无特殊说明，Hydro 使用标准输入输出（控制台输入输出，屏幕输入输出，STD I/O）。</p>
+- id: status
+  title: Judge Status
+  content: |
+    <ul>
+    <li><span class="record-status--text pending">Waiting</span> 评测：评测请求正在等待被评测机抓取</li>
+    <li><span class="record-status--text progress">Fetched</span> 评测：评测请求已被评测机抓取，正在准备开始评测</li>
+    <li><span class="record-status--text progress">Compiling</span> 评测：正在编译中</li>
+    <li><span class="record-status--text progress">Judging</span> 评测：编译成功，正在评测中</li>
+    <li><span class="record-status--text pass">Accepted</span> 通过：程序输出完全正确</li>
+    <li><span class="record-status--text fail">Wrong Answer</span> 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）</li>
+    <li><span class="record-status--text fail">Time Exceeded</span> 不通过：程序运行时间超过了题目限制</li>
+    <li><span class="record-status--text fail">Memory Exceeded</span> 不通过：程序运行内存空间超过了题目限制</li>
+    <li><span class="record-status--text fail">Runtime Error</span> 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）</li>
+    <li><span class="record-status--text fail">Compile Error</span> 不通过：编译失败</li>
+    <li><span class="record-status--text fail">System Error</span> 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）</li>
+    <li><span class="record-status--text ignored">Canceled</span> 其他：评测被取消</li>
+    <li><span class="record-status--text fail">Unknown Error</span> 其他：未知错误</li>
+    <li><span class="record-status--text ignored">Ignored</span> 其他：被忽略</li>
+    </ul><blockquote class="note">有“成绩取消”字样则说明管理员手动标记此记录为取消，可能违反了服务条款，比如代码被发现与其他用户的代码十分相似。</blockquote>
+- id: ce
+  title: Compile Error
+  content: |
+    <p>可能有以下情况：</p>
+    <blockquote><ul>
+    <li>1. 递交时选错了编程语言</li>
+    <li>2. Java 的主类名没有使用 "Main"</li>
+    <li>3. 对于 C/C++：见下</li>
+    <li>4. 一般性的编译错误</li>
+    </ul></blockquote>
+    <blockquote class="warn">
+      <p>对 C/C++ 选手的特别提醒：</p>
+      <ul>
+      <li>1. __int64 在 GNU C++ 中应写成 long long 类型</li>
+      <li>2. main() 返回值必须定义为 int ，而不是 void</li>
+      <li>3. for 语句中的指标变量 i 将会在如"for (int i = 0...) {...}"语句之后变为无效</li>
+      <li>4. itoa 不是一个通用 ANSI 函数（标准 C/C++ 中无此函数）</li>
+      <li>5. printf 中使用 %lf 格式是不正确的</li>
+      </ul>
+    </blockquote>
+- id: training
+  title: Training
+  content: <p>我们精心挑选了一些题目组成了训练计划。单击导航栏的“训练”即可进入！</p>
+- id: contest
+  title: Contest
+  content: |
+    <p>按照赛制不同，有不同的递交、排名规则。
+    <p>OI 赛制所有题目均以最后一次递交为准，特别地，请避免编译错误。</p>
+    <p>OI 赛制排名规则为：总分高的排在前面，总分相等则排名相同。</p>
+    <p>ACM/ICPC 赛制所有题目递交后立即评测，以是否通过为准。</p>
+    <p>ACM/ICPC 赛制排名规则为：通过题目数多的排在前面，通过题目数相同的做题耗时（含罚时）少的排在前。</p>
+    <p>时间与空间限制以题目说明为准，默认限制参见<a href="#limits">{{ _('Limitations') }}</a>。</p>
+- id: acratio
+  title: Accepted Ratio
+  content: <p>通过率的影响极其恶劣，现在 Hydro 不提供也不承认通过率。</p>
+- id: rp
+  title: RP
+  content: |
+    <p>Hydro RP 分为固定 RP 与浮动 RP ，固定 RP 可由活动、比赛等的奖励获得，浮动 RP 由一般性通过题目获得。</p>
+    <p>浮动 RP 是一个动态的数值，每个用户在每道题上获得的 RP 都不一样，并且未来也不固定（即浮动之意）。</p>
+    <blockquote class="note">每道题的浮动 RP 由该题通过总人数与该用户通过此题的名次计算得来。</blockquote>
+- id: upload
+  title: Dataset Format
+  content: TODO
+- id: lostpass
+  title: Forgot Password and/or Username
+  content: |
+    <p>如果您无法登录，请仔细想想，是不是用户名记错了。比如，自己原本想要注册的用户名已经被注册，所以使用了一个带有前和/或后缀的用户名。</p>
+    <p>如果您确信您的账号被盗或者忘记了账号和/或密码，请及时<a href="/lostpass">{{ _('Reset Password or Find Username') }}</a>。</p> 

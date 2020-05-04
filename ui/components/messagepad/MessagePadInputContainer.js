@@ -117,6 +117,7 @@ export default class MessagePadInputContainer extends React.PureComponent {
         <div className="messagepad__textarea-container">
           <textarea
             ref="input"
+            data-markdown
             disabled={this.props.isPosting}
             value={this.props.inputValue}
             onKeyDown={(ev) => this.handleKeyDown(ev)}

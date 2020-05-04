@@ -1,4 +1,6 @@
+/* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-await-in-loop */
 const fs = require('fs');
 const webpack = require('webpack');
 const yaml = require('js-yaml');
@@ -59,12 +61,17 @@ const build = async (type) => {
                 const lang = {};
                 for (const j of locales) {
                     const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
-                    lang[i.split('.')[0]] = yaml.safeLoad(content);
+                    lang[j.split('.')[0]] = yaml.safeLoad(content);
                 }
                 const file = root(`.build/module/${i}/locale.json`);
                 fs.writeFileSync(file, JSON.stringify(lang));
             }
-            if (exist(`module/${i}/template`)) {
+            if (exist(`module/${i}/template.build.js`)) {
+                const builder = require(root(`module/${i}/template.build.js`));
+                const [templates, exclude] = await builder.prebuild();
+                const file = root(`.build/module/${i}/template.yaml`);
+                fs.writeFileSync(file, yaml.safeDump(template(templates, exclude)));
+            } else if (exist(`module/${i}/template`)) {
                 const file = root(`.build/module/${i}/template.yaml`);
                 fs.writeFileSync(file, yaml.safeDump(template(`module/${i}/template`)));
             }

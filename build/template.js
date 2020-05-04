@@ -15,13 +15,18 @@ function getFiles(folder) {
     return files;
 }
 
-const build = (dir, exclude = []) => {
-    const files = getFiles(dir);
-    const templates = {};
-    for (const i of files) {
-        let template = fs.readFileSync(root(`${dir}/${i}`)).toString();
+const build = (dirOrObject, exclude = []) => {
+    let templates = {};
+    if (typeof dirOrObject === 'string') {
+        const files = getFiles(dirOrObject);
+        for (const i of files) {
+            const template = fs.readFileSync(root(`${dirOrObject}/${i}`)).toString();
+            templates[i] = template;
+        }
+    } else templates = dirOrObject;
+    for (const i in templates) {
         if (!exclude.includes(i)) {
-            template = template
+            templates[i] = templates[i]
                 .trim()
                 .replace(/ *\n */gmi, ' ')
                 .replace(/, /gmi, ',')
@@ -35,7 +40,6 @@ const build = (dir, exclude = []) => {
                 .replace(/ }}/gmi, '}}')
                 .trim();
         }
-        templates[i] = template;
     }
     return templates;
 };

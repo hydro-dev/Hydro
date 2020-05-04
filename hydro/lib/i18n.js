@@ -28,7 +28,9 @@ String.prototype.rawformat = function rawFormat(object) {
 };
 
 String.prototype.translate = function translate(language = 'zh_CN') {
-    if (locales[language]) return locales[language][this] || this;
+    if (locales[language]) {
+        if (locales[language][this] !== undefined) return locales[language][this];
+    }
     return this;
 };
 

@@ -68,9 +68,13 @@ class DiscussionMainHandler extends DiscussionHandler {
             constants.DISCUSSION_PER_PAGE,
         );
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        const path = [
+            ['Hydro', '/'],
+            ['discussion_main', null],
+        ];
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, page, page_name: 'discussion_main', vnode: {},
+            ddocs, dpcount, udict, page, page_name: 'discussion_main', vnode: {}, path,
         };
     }
 }

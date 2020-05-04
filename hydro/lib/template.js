@@ -7,7 +7,7 @@ const misc = require('./misc');
 
 function Loader() { }
 Loader.prototype.getSource = function getSource(name) {
-    if (!global.Hydro.template[name]) throw new Error();
+    if (!global.Hydro.template[name]) throw new Error(`Cannot get template ${name}`);
     return {
         src: global.Hydro.template[name],
         path: name,

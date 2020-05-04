@@ -1,7 +1,15 @@
 {% macro render() %}
+{% if not isIE(handler.request.headers['user-agent']) %}
 <noscript><div class="section__body no-padding">
   <blockquote class="warn">
     <p>{{ _('This page needs JavaScript to work.') }}</p>
   </blockquote>
 </div></noscript>
+{% else %}
+<div class="section__body no-padding">
+  <blockquote class="warn">
+    <p>{{ _('This page needs JavaScript to work.') }}</p>
+  </blockquote>
+</div>
+{% endif %}
 {% endmacro %}

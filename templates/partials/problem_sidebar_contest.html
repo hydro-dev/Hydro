@@ -31,7 +31,7 @@
     {% if pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
-        <span class="icon icon-edit"></span>  {{ _('Edit') }}
+        <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="/p/{{ pdoc.pid }}/settings">
         <span class="icon icon-wrench"></span> {{ _('Settings') }}

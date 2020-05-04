@@ -35,13 +35,13 @@ async function handler() {
 }
 
 async function locale() {
-    if (exist('.build/locale.js')) {
-        global.Hydro.lib.i18n(superRequire('.build/locale.js'));
+    if (exist('.build/locale.json')) {
+        global.Hydro.lib.i18n(superRequire('.build/locale.json'));
         console.log('Locale init: builtin');
     }
     for (const i of installed) {
-        if (exist(`.build/module/${i}/locale.js`)) {
-            global.Hydro.lib.i18n(superRequire(`.build/module/${i}/locale.js`));
+        if (exist(`.build/module/${i}/locale.json`)) {
+            global.Hydro.lib.i18n(superRequire(`.build/module/${i}/locale.json`));
             console.log(`Locale init: ${i}`);
         }
     }
@@ -54,7 +54,7 @@ async function template() {
         console.log('Template init: builtin');
     }
     for (const i of installed) {
-        if (exist(`.build/module/${i}/locale.js`)) {
+        if (exist(`.build/module/${i}/template.yaml`)) {
             const file = fs.readFileSync(root(`.build/module/${i}/template.yaml`)).toString();
             Object.assign(global.Hydro.template, yaml.safeLoad(file));
             console.log(`Template init: ${i}`);

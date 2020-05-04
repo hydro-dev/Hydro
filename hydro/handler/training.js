@@ -80,9 +80,13 @@ class TrainingMainHandler extends TrainingHandler {
             if (enrolledTids.size) tdict = await training.getList(Array.from(enrolledTids));
         }
         for (const tdoc in tdocs) tdict[tdoc._id] = tdoc;
+        const path = [
+            ['Hydro', '/'],
+            ['training_main', null],
+        ];
         this.response.template = 'training_main.html';
         this.response.body = {
-            tdocs, page, tpcount, qs, tsdict, tdict,
+            tdocs, page, tpcount, qs, tsdict, tdict, path,
         };
     }
 }
@@ -154,8 +158,13 @@ class TrainingCreateHandler extends TrainingHandler {
     }
 
     async get() {
+        const path = [
+            ['Hydro', '/'],
+            ['problem_main', '/t'],
+            ['problem_create', null],
+        ];
         this.response.template = 'training_edit.html';
-        this.response.body = { page_name: 'training_create' };
+        this.response.body = { page_name: 'training_create', path };
     }
 
     async post({
