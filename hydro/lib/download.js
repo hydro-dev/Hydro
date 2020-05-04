@@ -20,4 +20,4 @@ async function download(url, path, retry = 3) {
     return r;
 }
 
-global.Hydro['lib.download'] = module.exports = download;
+global.Hydro.lib.download = module.exports = download;

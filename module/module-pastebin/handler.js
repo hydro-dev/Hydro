@@ -6,7 +6,12 @@ const { nav } = global.Hydro.lib;
 class PasteShowHandler extends Handler {
     async get({ docId }) {
         const doc = await pastebin.get(docId);
-        this.response.body = { doc };
+        const path = [
+            ['Hydro', '/'],
+            ['paste_show', null],
+            [doc.title, null, true],
+        ];
+        this.response.body = { path, doc };
         this.response.template = 'paste_show.html';
     }
 }
@@ -17,6 +22,11 @@ class PasteCreateHandler extends Handler {
     }
 
     async get() {
+        const path = [
+            ['Hydro', '/'],
+            ['paste_create', null],
+        ];
+        this.response.body = { path };
         this.response.template = 'paste_create.html';
     }
 
