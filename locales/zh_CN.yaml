@@ -307,14 +307,14 @@ Create Domain: 创建域
 Properties: 属性
 Access Control: 访问控制
 domain_main: 首页
-domain_manage: 管理域
-domain_manage_dashboard: 概况
-domain_manage_discussion: 讨论节点
-domain_manage_edit: 编辑域资料
-domain_manage_join_applications: 加域申请
-domain_manage_role: 管理角色
-domain_manage_user: 管理用户
-domain_manage_permission: 管理权限
+manage: 管理域
+manage_dashboard: 概况
+manage_discussion: 讨论节点
+manage_edit: 编辑域资料
+manage_join_applications: 加域申请
+manage_role: 管理角色
+manage_user: 管理用户
+manage_permission: 管理权限
 domain_join: 加入域
 'Join {0}': '加入 {0}'
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。

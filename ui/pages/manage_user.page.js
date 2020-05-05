@@ -10,7 +10,7 @@ import tpl from 'vj/utils/tpl';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 
-const page = new NamedPage('domain_manage_user', () => {
+const page = new NamedPage('manage_user', () => {
   const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));
   const addUserDialog = new ActionDialog({
     $body: $('.dialog__body--add-user > div'),

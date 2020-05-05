@@ -2,7 +2,7 @@
 {% block content %}
 <div class="row" data-sticky-parent>
   <div class="medium-9 columns">
-  {% block domain_content %}{% endblock %}
+  {% block manage_content %}{% endblock %}
   </div>
   <div class="medium-3 columns"><div data-sticky="large">
     <div class="section side">
@@ -12,8 +12,9 @@
             <span class="icon icon-info"></span> {{ _('Properties') }}
           </div>
           <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_manage_dashboard', '/manage/dashboard') }}
-            {{ sidemenu.render_item(null, 'domain_manage_edit', '/manage/edit') }}
+            {{ sidemenu.render_item(null, 'manage_dashboard', '/manage/dashboard') }}
+            {{ sidemenu.render_item(null, 'manage_edit', '/manage/edit') }}
+            {{ sidemenu.render_item(null, 'manage_module', '/manage/module') }}
           </ol>
         </li>
         <li class="menu__item">
@@ -21,9 +22,9 @@
             <span class="icon icon-user"></span> {{ _('Access Control') }}
           </div>
           <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_manage_role', '/manage/role') }}
-            {{ sidemenu.render_item(null, 'domain_manage_user', '/manage/user') }}
-            {{ sidemenu.render_item(null, 'domain_manage_permission', '/manage/permission') }}
+            {{ sidemenu.render_item(null, 'manage_role', '/manage/role') }}
+            {{ sidemenu.render_item(null, 'manage_user', '/manage/user') }}
+            {{ sidemenu.render_item(null, 'manage_permission', '/manage/permission') }}
           </ol>
         </li>
       </ol>

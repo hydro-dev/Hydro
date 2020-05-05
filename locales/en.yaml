@@ -49,14 +49,14 @@ user_lostpass: Lost Password
 user_register: Register
 home_domain_create: Create Domain
 domain_main: Main
-domain_manage: Domain Manage
-domain_manage_dashboard: Dashboard
-domain_manage_discussion: Discussion Nodes
-domain_manage_edit: Edit Info
-domain_manage_join_applications: Join Applications
-domain_manage_role: Domain Role
-domain_manage_user: Domain User
-domain_manage_permission: Domain Permission
+manage: System Manage
+manage_dashboard: Dashboard
+manage_discussion: Discussion Nodes
+manage_edit: Edit Info
+manage_join_applications: Join Applications
+manage_role: System Role
+manage_user: System User
+manage_permission: System Permission
 timeago_locale: en
 perm_general: General
 perm_problem: Problems

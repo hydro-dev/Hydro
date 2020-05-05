@@ -1,0 +1,21 @@
+.page--manage_module
+  .col--id
+    width: 70px
+    line-height: 1
+
+  .col--desc
+    width: rem(160px)
+    border-left: 1px solid $table-border-color
+
+  .col--size
+    width: 35px
+
+  .col--version
+    width: 40px
+
+  .col--action
+    width: rem(75px)
+
+  +mobile()
+    .col--desc, .col--version
+      display: none

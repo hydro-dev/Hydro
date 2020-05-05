@@ -10,20 +10,20 @@ function root(name) {
     return path.resolve(process.cwd(), name);
 }
 
-const installed = [];
+const active = [];
 
 async function preload() {
     const files = fs.readdirSync(root('.build/module'));
     for (const file of files) {
         if (file.endsWith('.hydro-module')) {
             const f = fs.readFileSync(root(`.build/module/${file}`));
-            installed.push({ ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] });
+            active.push({ ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] });
         }
     }
 }
 
 async function handler() {
-    for (const i of installed) {
+    for (const i of active) {
         if (i.handler) {
             console.time(`Handler init: ${i.id}`);
             const module = {}; // eslint-disable-line no-unused-vars
@@ -35,7 +35,7 @@ async function handler() {
 }
 
 async function locale() {
-    for (const i of installed) {
+    for (const i of active) {
         if (i.locale) {
             global.Hydro.lib.i18n(i.locale);
             console.log(`Locale init: ${i.id}`);
@@ -44,7 +44,7 @@ async function locale() {
 }
 
 async function template() {
-    for (const i of installed) {
+    for (const i of active) {
         if (i.template) {
             Object.assign(global.Hydro.template, i.template);
             console.log(`Template init: ${i.id}`);
@@ -53,7 +53,7 @@ async function template() {
 }
 
 async function model() {
-    for (const i of installed) {
+    for (const i of active) {
         if (i.model) {
             console.time(`Model init: ${i.id}`);
             const module = {};
@@ -125,4 +125,4 @@ async function load() {
     server.start();
 }
 
-module.exports = load;
+module.exports = { load, active };

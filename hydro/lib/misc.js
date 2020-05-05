@@ -36,7 +36,7 @@ exports.paginate = function* paginate(page, numPages) {
     yield ['last', numPages];
 };
 
-exports.format_size = function formatSize(size, base = 1) {
+exports.size = function formatSize(size, base = 1) {
     size *= base;
     const unit = 1024;
     const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];

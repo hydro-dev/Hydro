@@ -1,6 +1,8 @@
 const user = require('../model/user');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
+const hpm = require('../lib/hpm');
+const loader = require('../loader');
 const { RoleAlreadyExistError, ValidationError } = require('../error');
 
 class ManageHandler extends Handler {
@@ -18,14 +20,14 @@ class ManageMainHandler extends ManageHandler {
 
 class ManageDashboardHandler extends ManageHandler {
     async get() {
-        this.response.template = 'domain_manage_dashboard.html';
+        this.response.template = 'manage_dashboard.html';
         this.response.body = { system: this.system };
     }
 }
 
 class ManageEditHandler extends ManageHandler {
     async get() {
-        this.response.template = 'domain_manage_edit.html';
+        this.response.template = 'manage_edit.html';
         this.response.body = { system: this.system };
     }
 
@@ -54,7 +56,7 @@ class ManageUserHandler extends ManageHandler {
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(uids);
-        this.response.template = 'domain_manage_user.html';
+        this.response.template = 'manage_user.html';
         this.response.body = {
             roles, rolesSelect, rudocs, udict, system,
         };
@@ -72,7 +74,7 @@ class ManagePermissionHandler extends ManageHandler {
             user.getRoles(),
             user.getById(0),
         ]);
-        this.response.template = 'domain_manage_permission.html';
+        this.response.template = 'manage_permission.html';
         this.response.body = { roles, system };
     }
 
@@ -95,7 +97,7 @@ class ManageRoleHandler extends ManageHandler {
             user.getRoles(),
             user.getById(0),
         ]);
-        this.response.template = 'domain_manage_role.html';
+        this.response.template = 'manage_role.html';
         this.response.body = { roles, system };
     }
 
@@ -120,6 +122,20 @@ class ManageRoleHandler extends ManageHandler {
     }
 }
 
+class ManageModuleHandler extends ManageHandler {
+    async get() {
+        const installed = await hpm.getInstalled();
+        const active = loader.active.map((module) => module.id);
+        this.response.body = { installed, active };
+        this.response.template = 'manage_module.html';
+    }
+
+    async postDelete({ id }) {
+        await hpm.del(id);
+        this.back();
+    }
+}
+
 async function apply() {
     Route('/manage', module.exports.ManageMainHandler);
     Route('/manage/dashboard', module.exports.ManageDashboardHandler);
@@ -127,6 +143,7 @@ async function apply() {
     Route('/manage/user', module.exports.ManageUserHandler);
     Route('/manage/permission', module.exports.ManagePermissionHandler);
     Route('/manage/role', module.exports.ManageRoleHandler);
+    Route('/manage/module', module.exports.ManageModuleHandler);
 }
 
 global.Hydro.handler.manage = module.exports = {
@@ -136,5 +153,6 @@ global.Hydro.handler.manage = module.exports = {
     ManageUserHandler,
     ManagePermissionHandler,
     ManageRoleHandler,
+    ManageModuleHandler,
     apply,
 };

@@ -9,7 +9,7 @@ process.stdin.on('data', async (input) => {
     }
 });
 
-require('./loader')().catch((e) => {
+require('./loader').load().catch((e) => {
     console.error(e);
     process.exit(1);
 });

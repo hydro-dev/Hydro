@@ -1,0 +1,53 @@
+{% set page_name = "manage_module" %}
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Installed Modules') }}</h1>
+    <div class="section__tools">
+      <a class="primary rounded button" href="/manage/module/add" target="_blank"><span class="icon icon-add"></span> {{ _('Add module') }}</a>
+      <a class="tool-button" href="/wiki/help#module"><span class="icon icon-help"></span> {{ _("What's module?") }}</a>
+    </div>
+  </div>
+  <div class="section__body no-padding">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--id">
+        <col class="col--desc">
+        <col class="col--size">
+        <col class="col--version">
+        <col class="col--action">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--id">{{ _('ID') }}</th>
+          <th class="col--desc">{{ _('Description') }}</th>
+          <th class="col--size">{{ _('Size') }}</th>
+          <th class="col--version">{{ _('Version') }}</th>
+          <th class="col--action">{{ _('Action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for module in installed %}
+        <tr>
+          <td class="col--id">{{ module.id }}{{ _('(Active)') if active.includes(module.id) else '' }}</td>
+          <td class="col--desc">{{ module.description|default(_('None')) }}</td>
+          <td class="col--size">{{ size(module.size) if module.size else '?' }}</td>
+          <td class="col--version">{{ module.version|default('?') }}</td>
+          <td class="col--action">
+            <a class="typo-a" href="/manage/module/download/{{ module.id }}">{{ _('Download') }}</a>
+            <form method="post">
+              <input type="hidden" name="operation" value="delete">
+              <input type="hidden" name="id" value="{{ module.id }}">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              <input type="submit" class="typo-a" value="{{ _('Delete') }}">
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

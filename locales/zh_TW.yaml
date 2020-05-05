@@ -301,13 +301,13 @@ Create Domain: 創建域
 Properties: 屬性
 Access Control: 訪問控制
 domain_main: 首頁
-domain_manage: 管理域
-domain_manage_dashboard: 概況
-domain_manage_edit: 編輯域資料
-domain_manage_join_applications: 加域申請
-domain_manage_role: 管理角色
-domain_manage_user: 管理使用者
-domain_manage_permission: 管理許可權
+manage: 管理域
+manage_dashboard: 概況
+manage_edit: 編輯域資料
+manage_join_applications: 加域申請
+manage_role: 管理角色
+manage_user: 管理使用者
+manage_permission: 管理許可權
 Update Permission: 更新許可權
 Roles: 角色
 Your role: 您的角色
