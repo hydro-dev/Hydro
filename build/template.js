@@ -38,6 +38,10 @@ const build = (dirOrObject, exclude = []) => {
                 .replace(/> {{/gmi, '>{{')
                 .replace(/{{ /gmi, '{{')
                 .replace(/ }}/gmi, '}}')
+                .replace(/%} </gmi, '%}<')
+                .replace(/> {%/gmi, '>{%')
+                .replace(/= /gmi, '=')
+                .replace(/ =/gmi, '=')
                 .trim();
         }
     }

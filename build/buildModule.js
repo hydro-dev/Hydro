@@ -2,6 +2,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-await-in-loop */
 const fs = require('fs');
+const zlib = require('zlib');
 const webpack = require('webpack');
 const yaml = require('js-yaml');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
@@ -54,6 +55,35 @@ const build = async (type) => {
             resolve();
         });
     });
+    for (const i of modules) {
+        if (!i.startsWith('.')) {
+            const current = {};
+            if (exist(`module/${i}/locale`)) {
+                const locales = fs.readdirSync(root(`module/${i}/locale`));
+                const lang = {};
+                for (const j of locales) {
+                    const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
+                    lang[j.split('.')[0]] = yaml.safeLoad(content);
+                }
+                current.locale = lang;
+            }
+            if (exist(`module/${i}/template.build.js`)) {
+                const builder = require(root(`module/${i}/template.build.js`));
+                const [templates, exclude] = await builder.prebuild();
+                current.template = template(templates, exclude);
+            } else if (exist(`module/${i}/template`)) {
+                current.template = template(`module/${i}/template`);
+            }
+            if (exist(`module/${i}/model.js`)) {
+                current.model = fs.readFileSync(root(`.build/module/${i}/model.js`)).toString();
+            }
+            if (exist(`module/${i}/handler.js`)) {
+                current.handler = fs.readFileSync(root(`.build/module/${i}/handler.js`)).toString();
+            }
+            const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: 3 });
+            fs.writeFileSync(root(`.build/module/${i}.hydro-module`), data);
+        }
+    }
     for (const i of modules) {
         if (!i.startsWith('.')) {
             if (exist(`module/${i}/locale`)) {

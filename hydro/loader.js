@@ -1,73 +1,66 @@
 /* eslint-disable import/no-dynamic-require */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-eval */
 const fs = require('fs');
+const zlib = require('zlib');
 const path = require('path');
 const yaml = require('js-yaml');
 
 function root(name) {
     return path.resolve(process.cwd(), name);
 }
-const installed = fs.readdirSync(root('.build/module'));
-function exist(name) {
-    try {
-        fs.statSync(root(name));
-    } catch (e) {
-        return false;
+
+const installed = [];
+
+async function preload() {
+    const files = fs.readdirSync(root('.build/module'));
+    for (const file of files) {
+        if (file.endsWith('.hydro-module')) {
+            const f = fs.readFileSync(root(`.build/module/${file}`));
+            installed.push({ ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] });
+        }
     }
-    return true;
 }
-const superRequire = (name) => {
-    let m;
-    try {
-        m = require(root(name));
-    } catch (e) {
-        m = __non_webpack_require__(root(name)); // eslint-disable-line no-undef
-    }
-    return m;
-};
 
 async function handler() {
     for (const i of installed) {
-        if (exist(`.build/module/${i}/handler.js`)) {
-            superRequire(`.build/module/${i}/handler.js`);
-            console.log(`Handler init: ${i}`);
+        if (i.handler) {
+            console.time(`Handler init: ${i.id}`);
+            const module = {}; // eslint-disable-line no-unused-vars
+            const exports = {}; // eslint-disable-line no-unused-vars
+            eval(i.handler);
+            console.timeEnd(`Handler init: ${i.id}`);
         }
     }
 }
 
 async function locale() {
-    if (exist('.build/locale.json')) {
-        global.Hydro.lib.i18n(superRequire('.build/locale.json'));
-        console.log('Locale init: builtin');
-    }
     for (const i of installed) {
-        if (exist(`.build/module/${i}/locale.json`)) {
-            global.Hydro.lib.i18n(superRequire(`.build/module/${i}/locale.json`));
-            console.log(`Locale init: ${i}`);
+        if (i.locale) {
+            global.Hydro.lib.i18n(i.locale);
+            console.log(`Locale init: ${i.id}`);
         }
     }
 }
 
 async function template() {
-    if (exist('.build/template.yaml')) {
-        const file = fs.readFileSync(root('.build/template.yaml')).toString();
-        Object.assign(global.Hydro.template, yaml.safeLoad(file));
-        console.log('Template init: builtin');
-    }
     for (const i of installed) {
-        if (exist(`.build/module/${i}/template.yaml`)) {
-            const file = fs.readFileSync(root(`.build/module/${i}/template.yaml`)).toString();
-            Object.assign(global.Hydro.template, yaml.safeLoad(file));
-            console.log(`Template init: ${i}`);
+        if (i.template) {
+            Object.assign(global.Hydro.template, i.template);
+            console.log(`Template init: ${i.id}`);
         }
     }
 }
 
 async function model() {
     for (const i of installed) {
-        if (exist(`.build/module/${i}/model.js`)) {
-            const m = superRequire(`.build/module/${i}/model.js`);
-            if (m.index) await m.index(); // eslint-disable-line no-await-in-loop
-            console.log(`Model init: ${i}`);
+        if (i.model) {
+            console.time(`Model init: ${i.id}`);
+            const module = {};
+            const exports = {}; // eslint-disable-line no-unused-vars
+            eval(i.handler);
+            if ((module.exports || {}).index) await module.exports.index();
+            console.timeEnd(`Model init: ${i.id}`);
         }
     }
 }
@@ -81,6 +74,7 @@ async function load() {
         template: {},
         ui: {},
     };
+    await preload();
     await template();
     require('./lib/i18n');
     require('./utils');
@@ -114,7 +108,7 @@ async function load() {
     ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
-        if (m.index) await m.index(); // eslint-disable-line no-await-in-loop
+        if (m.index) await m.index();
     }
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
@@ -124,7 +118,7 @@ async function load() {
     await model();
     await handler();
     for (const i in global.Hydro.handler) {
-        await global.Hydro.handler[i].apply(); // eslint-disable-line no-await-in-loop
+        await global.Hydro.handler[i].apply();
     }
     const notfound = require('./handler/notfound');
     await notfound.apply();
