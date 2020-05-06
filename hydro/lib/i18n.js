@@ -1,4 +1,4 @@
-const locales = require('../../.build/locales.json');
+const locales = {};
 
 String.prototype.format = function formatStr(...args) {
     let result = this;

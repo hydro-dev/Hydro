@@ -1,0 +1,27 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row" data-sticky-parent>
+  <div class="medium-9 columns">
+    {% for content in contents %}
+      <div class="section" data-heading-extract-to="#menu-item-{{ page_name }}">
+        <div class="section__header">
+          <h1 class="section__title" id="{{ content.id }}" data-heading>{{ _(content.title) }}</h1>
+        </div>
+        <div class="section__body typo">
+          {{ _('no_translation_warn')|safe }}
+          {{ content.content|markdown(false)|safe }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="medium-3 columns"><div data-sticky="large">
+    <div class="section side">
+      <ol class="menu">
+        {{ sidemenu.render_item('info', 'wiki_about', '/wiki/about') }}
+        {{ sidemenu.render_item('help', 'wiki_help', '/wiki/help') }}
+        {{ sidemenu.render_item('help', 'wiki_development', '/wiki/development') }}
+      </ol>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

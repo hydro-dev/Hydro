@@ -1,8 +1,10 @@
 node_modules/
 config.yaml
 .build/
+*.build
 .uibuild/
 .cache/
+*.cache
 __*
 ui/misc/.iconfont
 ui/static/locale

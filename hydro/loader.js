@@ -15,7 +15,7 @@ const active = [];
 async function preload() {
     const files = fs.readdirSync(root('.build/module'));
     for (const file of files) {
-        if (file.endsWith('.hydro-module')) {
+        if (file.endsWith('.hydro')) {
             const f = fs.readFileSync(root(`.build/module/${file}`));
             active.push({ ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] });
         }

@@ -23,7 +23,7 @@ async function build(type) {
     builtin.locale = lang;
     builtin.template = template('templates', exclude);
     const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: 3 });
-    fs.writeFileSync(root('.build/module/builtin.hydro-module'), data);
+    fs.writeFileSync(root('.build/module/builtin.hydro'), data);
     await require('./buildModule')(type);
     await require('./webpack')(type);
 }

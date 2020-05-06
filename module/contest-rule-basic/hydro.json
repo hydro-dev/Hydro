@@ -1,4 +1,5 @@
 {
     "name": "contest-rule-basic",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "Provide contest rules: ACM/ICPC and OI."
 }

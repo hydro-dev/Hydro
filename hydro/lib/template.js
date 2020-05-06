@@ -19,7 +19,10 @@ class Nunjucks extends nunjucks.Environment {
         super(new Loader(), { autoescape: true, trimBlocks: true });
         this.addFilter('json', (self) => JSON.stringify(self), false);
         this.addFilter('assign', (self, data) => Object.assign(self, data));
-        this.addFilter('markdown', (self) => markdown.render(self));
+        this.addFilter('markdown', (self, safe = true) => {
+            if (safe) return markdown.safe.render(self);
+            return markdown.unsafe.render(self);
+        });
         this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     }
 }

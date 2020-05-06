@@ -31,7 +31,7 @@
       {% for module in installed %}
         <tr>
           <td class="col--id">{{ module.id }}{{ _('(Active)') if active.includes(module.id) else '' }}</td>
-          <td class="col--desc">{{ module.description|default(_('None')) }}</td>
+          <td class="col--desc">{{ _(module.description|default(_('None'))) }}</td>
           <td class="col--size">{{ size(module.size) if module.size else '?' }}</td>
           <td class="col--version">{{ module.version|default('?') }}</td>
           <td class="col--action">

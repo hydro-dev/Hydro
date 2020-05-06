@@ -15,7 +15,7 @@ async function getInstalled() {
     const files = fs.readdirSync(root('.build/module'));
     const installed = [];
     for (const file of files) {
-        if (file.endsWith('.hydro-module')) {
+        if (file.endsWith('.hydro')) {
             const f = fs.readFileSync(root(`.build/module/${file}`));
             const s = fs.statSync(root(`.build/module/${file}`));
             installed.push({
@@ -29,11 +29,11 @@ async function getInstalled() {
 }
 
 async function del(id) {
-    fs.unlinkSync(root(`.build/module/${id}.hydro-module`));
+    fs.unlinkSync(root(`.build/module/${id}.hydro`));
 }
 
 async function install(id, url) {
-    await download(url, root(`module/${id}.hydro-module`));
+    await download(url, root(`module/${id}.hydro`));
 }
 
 module.exports = { getInstalled, del, install };

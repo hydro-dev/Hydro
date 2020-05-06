@@ -44,6 +44,12 @@ const build = async (type) => {
         }
     }
     const compiler = webpack(config);
+    for (const i of modules) {
+        if (exist(`module/${i}/build.js`)) {
+            const builder = require(root(`module/${i}/build.js`));
+            if (builder.prebuild) await builder.prebuild();
+        }
+    }
     await new Promise((resolve, reject) => {
         compiler.run((err, stats) => {
             if (err) {
@@ -67,11 +73,7 @@ const build = async (type) => {
                 }
                 current.locale = lang;
             }
-            if (exist(`module/${i}/template.build.js`)) {
-                const builder = require(root(`module/${i}/template.build.js`));
-                const [templates, exclude] = await builder.prebuild();
-                current.template = template(templates, exclude);
-            } else if (exist(`module/${i}/template`)) {
+            if (exist(`module/${i}/template`)) {
                 current.template = template(`module/${i}/template`);
             }
             if (exist(`module/${i}/model.js`)) {
@@ -80,31 +82,12 @@ const build = async (type) => {
             if (exist(`module/${i}/handler.js`)) {
                 current.handler = fs.readFileSync(root(`.build/module/${i}/handler.js`)).toString();
             }
+            const m = require(root(`module/${i}/hydro.json`));
+            current.description = m.description || '';
+            current.requirements = m.requirements || [];
+            current.version = m.version || 'unknown';
             const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: 3 });
-            fs.writeFileSync(root(`.build/module/${i}.hydro-module`), data);
-        }
-    }
-    for (const i of modules) {
-        if (!i.startsWith('.')) {
-            if (exist(`module/${i}/locale`)) {
-                const locales = fs.readdirSync(root(`module/${i}/locale`));
-                const lang = {};
-                for (const j of locales) {
-                    const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
-                    lang[j.split('.')[0]] = yaml.safeLoad(content);
-                }
-                const file = root(`.build/module/${i}/locale.json`);
-                fs.writeFileSync(file, JSON.stringify(lang));
-            }
-            if (exist(`module/${i}/template.build.js`)) {
-                const builder = require(root(`module/${i}/template.build.js`));
-                const [templates, exclude] = await builder.prebuild();
-                const file = root(`.build/module/${i}/template.yaml`);
-                fs.writeFileSync(file, yaml.safeDump(template(templates, exclude)));
-            } else if (exist(`module/${i}/template`)) {
-                const file = root(`.build/module/${i}/template.yaml`);
-                fs.writeFileSync(file, yaml.safeDump(template(`module/${i}/template`)));
-            }
+            fs.writeFileSync(root(`.build/module/${i}.hydro`), data);
         }
     }
 };
