@@ -28,21 +28,6 @@ jobs:
       with:
         name: .uibuild
         path: .uibuild
-    - run: |
-        yarn add pkg -D
-        yarn run pack
-    - uses: actions/upload-artifact@v1
-      with:
-        name: Hydro_linux_amd64
-        path: hydro-linux
-    - uses: actions/upload-artifact@v1
-      with:
-        name: Hydro_macos_amd64
-        path: hydro-macos
-    - uses: actions/upload-artifact@v1
-      with:
-        name: Hydro_win_amd64.exe
-        path: hydro-win.exe
     - uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: hydrooj/hydro:alpine

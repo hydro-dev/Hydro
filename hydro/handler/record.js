@@ -8,7 +8,6 @@ const record = require('../model/record');
 const contest = require('../model/contest');
 const user = require('../model/user');
 const bus = require('../service/bus');
-const queue = require('../service/queue');
 const {
     Route, Handler, Connection, ConnectionHandler,
 } = require('../service/server');
@@ -69,10 +68,7 @@ class RecordRejudgeHandler extends Handler {
     async post({ rid }) {
         this.checkPerm(PERM_REJUDGE);
         const rdoc = await record.get(rid);
-        if (rdoc) {
-            await record.reset(rid);
-            await queue.push('judge', rid);
-        }
+        if (rdoc) await record.rejudge(rid);
         this.back();
     }
 }

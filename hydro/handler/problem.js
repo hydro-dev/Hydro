@@ -11,7 +11,6 @@ const {
     Route, Connection, Handler, ConnectionHandler,
 } = require('../service/server');
 const gridfs = require('../service/gridfs');
-const queue = require('../service/queue');
 const {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
@@ -24,8 +23,6 @@ const {
     PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
     PERM_REPLY_PROBLEM_SOLUTION, PERM_LOGGEDIN,
 } = require('../permission');
-
-queue.assert('judge');
 
 class ProblemHandler extends Handler {
     async _prepare() {
@@ -122,7 +119,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         const rid = await record.add({
             uid: this.uid, lang, code, pid: this.pdoc._id,
         });
-        await queue.push('judge', rid);
+        await record.judge(rid);
         this.user.nSubmit++;
         this.response.body = { rid };
         this.response.redirect = `/r/${rid}`;
@@ -135,7 +132,7 @@ class ProblemPretestHandler extends ProblemDetailHandler {
         const rid = await record.add({
             uid: this.uid, lang, code, pid: this.pdoc._id, input,
         });
-        await queue.push('judge', rid);
+        await record.judge(rid);
         this.response.body = { rid };
     }
 }

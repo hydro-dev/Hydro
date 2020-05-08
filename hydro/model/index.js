@@ -10,4 +10,7 @@ module.exports = {
     token: require('./token'),
     training: require('./training'),
     user: require('./user'),
+    task: require('./task'),
+    message: require('./message'),
+    setting: require('./setting'),
 };

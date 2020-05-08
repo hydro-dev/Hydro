@@ -1,7 +1,9 @@
 const _ = require('lodash');
 const { ObjectID } = require('bson');
-const { RecordNotFoundError } = require('../error');
 const { STATUS_WAITING } = require('./builtin').STATUS;
+const task = require('./task');
+const problem = require('./problem');
+const { RecordNotFoundError } = require('../error');
 const db = require('../service/db.js');
 
 const coll = db.collection('record');
@@ -75,6 +77,35 @@ function getUserInProblemMulti(uid, pid) {
     return coll.find({ owner: uid, pid });
 }
 
+async function judge(rid) {
+    const rdoc = await get(rid);
+    const pdoc = await problem.getById(rdoc.pid);
+    await task.add({
+        event: 'judge',
+        rid,
+        type: 0,
+        pid: rdoc.pid,
+        data: pdoc.data,
+        lang: rdoc.lang,
+        code: rdoc.code,
+    });
+}
+
+async function rejudge(rid) {
+    await reset(rid);
+    const rdoc = await get(rid);
+    const pdoc = await problem.getById(rdoc.pid);
+    await task.add({
+        event: 'judge',
+        rid,
+        type: 0,
+        pid: rdoc.pid,
+        data: pdoc.data,
+        lang: rdoc.lang,
+        code: rdoc.code,
+    });
+}
+
 module.exports = {
     add,
     get,
@@ -84,4 +115,6 @@ module.exports = {
     reset,
     getList,
     getUserInProblemMulti,
+    judge,
+    rejudge,
 };

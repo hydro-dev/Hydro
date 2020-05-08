@@ -47,6 +47,6 @@ async function apply() {
     nav('/paste/create', 'pastebin', 'pastebin', PERM_LOGGEDIN);
 }
 
-global.Hydro.handler.paste = module.exports = {
+global.Hydro.handler.pastebin = module.exports = {
     PasteCreateHandler, PasteShowHandler, apply,
 };

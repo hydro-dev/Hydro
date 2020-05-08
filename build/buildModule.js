@@ -35,11 +35,14 @@ const build = async (type) => {
     };
     for (const i of modules) {
         if (!i.startsWith('.')) {
-            if (exist(`module/${i}/model.js`)) {
-                config.entry[`${i}/model`] = root(`module/${i}/model.js`);
-            }
-            if (exist(`module/${i}/handler.js`)) {
-                config.entry[`${i}/handler`] = root(`module/${i}/handler.js`);
+            const prepare = ['model', 'lib', 'handler', 'service'];
+            for (const j of prepare) {
+                if (exist(`module/${i}/${j}.js`)) {
+                    const file = fs.readFileSync(root(`module/${i}/${j}.js`));
+                    if (file.includes('require')) {
+                        config.entry[`${i}/${j}`] = root(`module/${i}/${j}.js`);
+                    }
+                }
             }
         }
     }
@@ -64,6 +67,17 @@ const build = async (type) => {
     for (const i of modules) {
         if (!i.startsWith('.')) {
             const current = {};
+            const prepare = ['model', 'lib', 'handler', 'service'];
+            for (const j of prepare) {
+                if (exist(`module/${i}/${j}.js`)) {
+                    const file = fs.readFileSync(root(`module/${i}/${j}.js`));
+                    if (file.includes('require')) {
+                        current[j] = fs.readFileSync(root(`.build/module/${i}/${j}.js`)).toString();
+                    } else {
+                        current[j] = fs.readFileSync(root(`module/${i}/${j}.js`)).toString();
+                    }
+                }
+            }
             if (exist(`module/${i}/locale`)) {
                 const locales = fs.readdirSync(root(`module/${i}/locale`));
                 const lang = {};
@@ -75,12 +89,6 @@ const build = async (type) => {
             }
             if (exist(`module/${i}/template`)) {
                 current.template = template(`module/${i}/template`);
-            }
-            if (exist(`module/${i}/model.js`)) {
-                current.model = fs.readFileSync(root(`.build/module/${i}/model.js`)).toString();
-            }
-            if (exist(`module/${i}/handler.js`)) {
-                current.handler = fs.readFileSync(root(`.build/module/${i}/handler.js`)).toString();
             }
             const m = require(root(`module/${i}/hydro.json`));
             current.description = m.description || '';

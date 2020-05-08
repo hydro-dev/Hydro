@@ -4,13 +4,11 @@ const problem = require('../model/problem');
 const builtin = require('../model/builtin');
 const contest = require('../model/contest');
 const user = require('../model/user');
+const task = require('../model/task');
 const bus = require('../service/bus');
-const queue = require('../service/queue');
 const {
     Route, Handler, Connection, ConnectionHandler,
 } = require('../service/server');
-
-queue.assert('judge');
 
 async function _postJudge(rdoc) {
     const accept = rdoc.status === builtin.STATUS_ACCEPTED;
@@ -57,6 +55,7 @@ async function next(body) {
     rdoc = await record.update(body.rid, $set, $push);
     bus.publish('record_change', rdoc);
 }
+
 async function end(body) {
     let rdoc = await record.get(body.rid);
     const $set = {};
@@ -92,34 +91,10 @@ class JudgeHandler extends Handler {
     async get({ check = false }) {
         if (check) return;
         const tasks = [];
-        let rid = await queue.get('judge', false);
-        while (rid) {
-            const rdoc = await record.get(rid); // eslint-disable-line no-await-in-loop
-            let task;
-            if (!rdoc.input) {
-                // eslint-disable-next-line no-await-in-loop
-                const pdoc = await problem.getById(rdoc.pid);
-                task = {
-                    event: 'judge',
-                    rid,
-                    type: 0,
-                    pid: rdoc.pid,
-                    data: pdoc.data,
-                    lang: rdoc.lang,
-                    code: rdoc.code,
-                };
-            } else {
-                task = {
-                    event: 'pretest',
-                    rid,
-                    type: 0,
-                    input: rdoc.input,
-                    lang: rdoc.lang,
-                    code: rdoc.code,
-                };
-            }
-            tasks.push(task);
-            rid = await queue.get('judge', false); // eslint-disable-line no-await-in-loop
+        let t = await task.getFirst({ type: 'judge' });
+        while (t) {
+            tasks.push(t);
+            t = await task.getFirst({ type: 'judge' }); // eslint-disable-line no-await-in-loop
         }
         this.response.body = { tasks };
     }
@@ -133,6 +108,7 @@ class JudgeHandler extends Handler {
         await end(this.request.body);
     }
 }
+
 class JudgeConnectionHandler extends ConnectionHandler {
     async prepare() {
         this.checkPerm(PERM_JUDGE);
@@ -143,40 +119,16 @@ class JudgeConnectionHandler extends ConnectionHandler {
         else if (msg.key === 'end') {
             await end({ judger: this.user._id, ...msg });
             this.processing = null;
-            const rid = await queue.get('judge');
-            const rdoc = await record.get(rid);
-            let task;
-            if (!rdoc.input) {
-                // eslint-disable-next-line no-await-in-loop
-                const pdoc = await problem.getById(rdoc.pid);
-                task = {
-                    event: 'judge',
-                    rid,
-                    type: 0,
-                    pid: rdoc.pid,
-                    data: pdoc.data,
-                    lang: rdoc.lang,
-                    code: rdoc.code,
-                };
-            } else {
-                task = {
-                    event: 'pretest',
-                    rid,
-                    type: 0,
-                    input: rdoc.input,
-                    lang: rdoc.lang,
-                    code: rdoc.code,
-                };
-            }
-            this.send({ task });
-            this.processing = task.rid;
+            const t = await task.getFirst({ type: 'judge' });
+            this.send({ task: t });
+            this.processing = t;
         }
     }
 
     async cleanup() {
         if (this.processing) {
             await record.reset(this.processing);
-            queue.push('judge', this.processing);
+            task.add(this.processing);
         }
     }
 }
@@ -187,5 +139,5 @@ async function apply() {
 }
 
 global.Hydro.handler.judge = module.exports = {
-    JudgeHandler, JudgeConnectionHandler, apply,
+    JudgeHandler, JudgeConnectionHandler, apply, next, end,
 };

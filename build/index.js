@@ -8,6 +8,7 @@ const ignoreFailure = require('./ignoreFailure');
 async function build(type) {
     if (!['development', 'production'].includes(type)) throw new Error(`Unknown type: ${type}`);
     ignoreFailure(fs.mkdirSync, root('.build'));
+    ignoreFailure(fs.mkdirSync, root('.build/module'));
     const langs = fs.readdirSync(root('locales'));
     const lang = {};
     for (const i of langs) {

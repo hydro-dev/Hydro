@@ -26,8 +26,8 @@ async function handler() {
     for (const i of active) {
         if (i.handler) {
             console.time(`Handler init: ${i.id}`);
-            const module = {}; // eslint-disable-line no-unused-vars
-            const exports = {}; // eslint-disable-line no-unused-vars
+            const exports = {};
+            const module = { exports }; // eslint-disable-line no-unused-vars
             eval(i.handler);
             console.timeEnd(`Handler init: ${i.id}`);
         }
@@ -56,11 +56,24 @@ async function model() {
     for (const i of active) {
         if (i.model) {
             console.time(`Model init: ${i.id}`);
-            const module = {};
             const exports = {}; // eslint-disable-line no-unused-vars
-            eval(i.handler);
+            const module = { exports };
+            eval(i.model);
             if ((module.exports || {}).index) await module.exports.index();
             console.timeEnd(`Model init: ${i.id}`);
+        }
+    }
+}
+
+async function service() {
+    for (const i of active) {
+        if (i.service) {
+            console.time(`Service init: ${i.id}`);
+            const exports = {}; // eslint-disable-line no-unused-vars
+            const module = { exports };
+            eval(i.service);
+            if ((module.exports || {}).init) await module.exports.init();
+            console.timeEnd(`Service init: ${i.id}`);
         }
     }
 }
@@ -99,8 +112,8 @@ async function load() {
     for (const i of builtinLib) require(`./lib/${i}`);
     await locale();
     require('./service/gridfs');
-    require('./service/queue');
     const server = require('./service/server');
+    await service();
     const builtinModel = [
         'blacklist', 'builtin', 'contest', 'discussion', 'message',
         'opcount', 'problem', 'record', 'setting', 'solution',
@@ -122,6 +135,9 @@ async function load() {
     }
     const notfound = require('./handler/notfound');
     await notfound.apply();
+    for (const i in global.Hydro.service) {
+        if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
+    }
     server.start();
 }
 
