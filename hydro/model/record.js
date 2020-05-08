@@ -81,9 +81,8 @@ async function judge(rid) {
     const rdoc = await get(rid);
     const pdoc = await problem.getById(rdoc.pid);
     await task.add({
-        event: 'judge',
+        type: 'judge',
         rid,
-        type: 0,
         pid: rdoc.pid,
         data: pdoc.data,
         lang: rdoc.lang,
@@ -96,9 +95,8 @@ async function rejudge(rid) {
     const rdoc = await get(rid);
     const pdoc = await problem.getById(rdoc.pid);
     await task.add({
-        event: 'judge',
+        type: 'judge',
         rid,
-        type: 0,
         pid: rdoc.pid,
         data: pdoc.data,
         lang: rdoc.lang,

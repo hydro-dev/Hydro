@@ -2,12 +2,21 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const fs = require('fs');
+const os = require('os');
 const zlib = require('zlib');
 const path = require('path');
 const yaml = require('js-yaml');
 
 function root(name) {
     return path.resolve(process.cwd(), name);
+}
+function ensureDir(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+    } else if (!fs.statSync(dir).isDirectory()) {
+        fs.unlinkSync(dir);
+        fs.mkdirSync(dir);
+    }
 }
 
 const active = [];
@@ -16,8 +25,25 @@ async function preload() {
     const files = fs.readdirSync(root('.build/module'));
     for (const file of files) {
         if (file.endsWith('.hydro')) {
-            const f = fs.readFileSync(root(`.build/module/${file}`));
-            active.push({ ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] });
+            try {
+                const f = fs.readFileSync(root(`.build/module/${file}`));
+                const m = { ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] };
+                if (m.os) {
+                    if (!m.os.includes(os.platform())) throw new Error('Unsupported OS');
+                }
+                if (m.file) {
+                    m.files = {};
+                    ensureDir(path.resolve(os.tmpdir(), 'hydro', file));
+                    for (const n in m.file) {
+                        const e = path.resolve(os.tmpdir(), 'hydro', file, n);
+                        fs.writeFileSync(e, Buffer.from(m.file[n], 'base64'), { mode: 755 });
+                        m.files[n] = e;
+                    }
+                }
+                active.push(m);
+            } catch (e) {
+                console.error(`Module Load Fail: ${file}`);
+            }
         }
     }
 }
@@ -25,11 +51,16 @@ async function preload() {
 async function handler() {
     for (const i of active) {
         if (i.handler) {
-            console.time(`Handler init: ${i.id}`);
-            const exports = {};
-            const module = { exports }; // eslint-disable-line no-unused-vars
-            eval(i.handler);
-            console.timeEnd(`Handler init: ${i.id}`);
+            try {
+                console.time(`Handler init: ${i.id}`);
+                const exports = {};
+                // eslint-disable-next-line no-unused-vars
+                const module = { exports, file: i.files || {} };
+                eval(i.handler);
+                console.timeEnd(`Handler init: ${i.id}`);
+            } catch (e) {
+                console.error(`Handler Load Fail: ${i.id}`);
+            }
         }
     }
 }
@@ -37,8 +68,12 @@ async function handler() {
 async function locale() {
     for (const i of active) {
         if (i.locale) {
-            global.Hydro.lib.i18n(i.locale);
-            console.log(`Locale init: ${i.id}`);
+            try {
+                global.Hydro.lib.i18n(i.locale);
+                console.log(`Locale init: ${i.id}`);
+            } catch (e) {
+                console.error(`Locale Load Fail: ${i.id}`);
+            }
         }
     }
 }
@@ -46,8 +81,12 @@ async function locale() {
 async function template() {
     for (const i of active) {
         if (i.template) {
-            Object.assign(global.Hydro.template, i.template);
-            console.log(`Template init: ${i.id}`);
+            try {
+                Object.assign(global.Hydro.template, i.template);
+                console.log(`Template init: ${i.id}`);
+            } catch (e) {
+                console.error(`Template Load Fail: ${i.id}`);
+            }
         }
     }
 }
@@ -55,12 +94,33 @@ async function template() {
 async function model() {
     for (const i of active) {
         if (i.model) {
-            console.time(`Model init: ${i.id}`);
-            const exports = {}; // eslint-disable-line no-unused-vars
-            const module = { exports };
-            eval(i.model);
-            if ((module.exports || {}).index) await module.exports.index();
-            console.timeEnd(`Model init: ${i.id}`);
+            try {
+                console.time(`Model init: ${i.id}`);
+                const exports = {};
+                const module = { exports, file: i.files || {} };
+                eval(i.model);
+                if ((module.exports || {}).index) await module.exports.index();
+                console.timeEnd(`Model init: ${i.id}`);
+            } catch (e) {
+                console.error(`Model Load Fail: ${i.id}`);
+            }
+        }
+    }
+}
+
+async function lib() {
+    for (const i of active) {
+        if (i.lib) {
+            try {
+                console.time(`Lib init: ${i.id}`);
+                const exports = {};
+                // eslint-disable-next-line no-unused-vars
+                const module = { exports, file: i.files || {} };
+                eval(i.lib);
+                console.timeEnd(`Lib init: ${i.id}`);
+            } catch (e) {
+                console.error(`Lib Load Fail: ${i.id}`);
+            }
         }
     }
 }
@@ -68,17 +128,22 @@ async function model() {
 async function service() {
     for (const i of active) {
         if (i.service) {
-            console.time(`Service init: ${i.id}`);
-            const exports = {}; // eslint-disable-line no-unused-vars
-            const module = { exports };
-            eval(i.service);
-            if ((module.exports || {}).init) await module.exports.init();
-            console.timeEnd(`Service init: ${i.id}`);
+            try {
+                console.time(`Service init: ${i.id}`);
+                const exports = {}; // eslint-disable-line no-unused-vars
+                const module = { exports };
+                eval(i.service);
+                if ((module.exports || {}).init) await module.exports.init();
+                console.timeEnd(`Service init: ${i.id}`);
+            } catch (e) {
+                console.error(`Service Load Fail: ${i.id}`);
+            }
         }
     }
 }
 
 async function load() {
+    ensureDir(path.resolve(os.tmpdir(), 'hydro'));
     global.Hydro = {
         handler: {},
         service: {},
@@ -110,6 +175,7 @@ async function load() {
         'template', 'validator', 'nav',
     ];
     for (const i of builtinLib) require(`./lib/${i}`);
+    await lib();
     await locale();
     require('./service/gridfs');
     const server = require('./service/server');

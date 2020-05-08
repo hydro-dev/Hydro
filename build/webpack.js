@@ -34,7 +34,9 @@ const build = async (type) => {
         module: {},
         plugins: [
             new webpack.ProgressPlugin(),
-            new FriendlyErrorsPlugin(),
+            new FriendlyErrorsPlugin({
+                clearConsole: false,
+            }),
         ],
     };
     const compiler = webpack(config);

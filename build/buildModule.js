@@ -30,7 +30,9 @@ const build = async (type) => {
         module: {},
         plugins: [
             new webpack.ProgressPlugin(),
-            new FriendlyErrorsPlugin(),
+            new FriendlyErrorsPlugin({
+                clearConsole: false,
+            }),
         ],
     };
     for (const i of modules) {
@@ -90,11 +92,19 @@ const build = async (type) => {
             if (exist(`module/${i}/template`)) {
                 current.template = template(`module/${i}/template`);
             }
+            if (exist(`module/${i}/file`)) {
+                const files = fs.readdirSync(root(`module/${i}/file`));
+                current.file = {};
+                for (const file of files) {
+                    current.file[file] = fs.readFileSync(root(`module/${i}/file/${file}`)).toString('base64');
+                }
+            }
             const m = require(root(`module/${i}/hydro.json`));
             current.description = m.description || '';
             current.requirements = m.requirements || [];
             current.version = m.version || 'unknown';
-            const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: 3 });
+            if (m.os) current.os = m.os;
+            const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: -1 });
             fs.writeFileSync(root(`.build/module/${i}.hydro`), data);
         }
     }
