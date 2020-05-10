@@ -1,5 +1,6 @@
 node_modules/
 config.yaml
+config.json
 .build/
 *.build
 .uibuild/

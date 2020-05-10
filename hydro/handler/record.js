@@ -1,4 +1,3 @@
-const { constants } = require('../options');
 const {
     PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD,
     PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN,
@@ -6,6 +5,7 @@ const {
 const problem = require('../model/problem');
 const record = require('../model/record');
 const contest = require('../model/contest');
+const system = require('../model/system');
 const user = require('../model/user');
 const bus = require('../service/bus');
 const {
@@ -16,7 +16,7 @@ class RecordListHandler extends Handler {
     async get({ page = 1 }) {
         this.response.template = 'record_main.html';
         const q = {};
-        const rdocs = await record.getMany(q, { _id: -1 }, page, constants.RECORD_PER_PAGE);
+        const rdocs = await record.getMany(q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
         const pdict = {};
         const udict = {};
         const ulist = [];

@@ -3,11 +3,20 @@ const { ValidationError } = require('../error');
 
 const coll = db.collection('token');
 
+function index() {
+    return Promise.all([
+        coll.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true }),
+        coll.createIndex('expireAt', { expireAfterSeconds: 0 }),
+    ]);
+}
+
 module.exports = {
     TYPE_SESSION: 0,
     TYPE_CSRF_TOKEN: 1,
     TYPE_REGISTER: 2,
     TYPE_CHANGEMAIL: 3,
+
+    index,
 
     /**
      * Add a token.

@@ -12,7 +12,7 @@ async function update(_id, operation, config) {
     return get(_id);
 }
 async function set(_id, value) {
-    await coll.findOneAndUpdate({ _id }, { value }, { upsert: true });
+    await coll.findOneAndUpdate({ _id }, { $set: { value } }, { upsert: true });
     return get(_id);
 }
 /**

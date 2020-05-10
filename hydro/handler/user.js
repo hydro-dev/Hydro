@@ -4,7 +4,6 @@ const token = require('../model/token');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
 const misc = require('../lib/misc');
-const options = require('../options');
 const { PERM_REGISTER_USER, PERM_LOGGEDIN } = require('../permission');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
@@ -58,10 +57,10 @@ class UserRegisterHandler extends Handler {
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
-            options.registration_token_expire_seconds,
+            await system.get('registration_token_expire_seconds'),
             { mail },
         );
-        if (options.smtp.user) {
+        if (await system.get('smtp.user')) {
             const m = await this.renderHTML('user_register_mail', { url: `/register/${t}` });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';
@@ -100,21 +99,18 @@ class UserRegisterWithCodeHandler extends Handler {
 }
 
 class UserLostPassHandler extends Handler {
-    constructor(ctx) {
-        if (!options.smtp.user) throw new SystemError('Cannot send mail');
-        super(ctx);
-    }
-
     async get() {
+        if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
         this.response.template = 'user_lostpass.html';
     }
 
     async post({ mail }) {
+        if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail(mail);
         if (!udoc) throw new UserNotFoundError(mail);
         const tid = await token.add(
             token.TYPE_LOSTPASS,
-            options.lostpass_token_expire_seconds,
+            await system.get('lostpass_token_expire_seconds'),
             { uid: udoc._id },
         );
         const m = await this.renderHTML('user_lostpass_mail', { url: `/lostpass/${tid}`, uname: udoc.uname });
@@ -142,16 +138,12 @@ class UserLostPassWithCodeHandler extends Handler {
 }
 
 class UserDetailHandler extends Handler {
-    constructor(ctx) {
-        super(ctx);
-        this.response.template = 'user_detail.html';
-    }
-
     async get({ uid }) {
         const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(uid);
         if (!udoc) throw new UserNotFoundError(uid);
         const sdoc = await token.getMostRecentSessionByUid(uid);
+        this.response.template = 'user_detail.html';
         this.response.body = { isSelfProfile, udoc, sdoc };
     }
 }

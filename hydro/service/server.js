@@ -8,10 +8,10 @@ const cache = require('koa-static-cache');
 const sockjs = require('sockjs');
 const http = require('http');
 const https = require('https');
-const options = require('../options');
 const validator = require('../lib/validator');
 const template = require('../lib/template');
 const user = require('../model/user');
+const system = require('../model/system');
 const blacklist = require('../model/blacklist');
 const token = require('../model/token');
 const opcount = require('../model/opcount');
@@ -21,18 +21,23 @@ const {
 } = require('../error');
 
 const app = new Koa();
-const server = (options.listen.https ? https : http).createServer(app.callback());
-app.keys = options.session.keys;
-app.use(cache(path.join(process.cwd(), '.uibuild'), {
-    maxAge: 365 * 24 * 60 * 60,
-}));
-app.use(Body({
-    multipart: true,
-    formidable: {
-        maxFileSize: 256 * 1024 * 1024,
-    },
-}));
+let server;
 const router = new Router();
+
+async function prepare() {
+    const useHttps = await system.get('listen.https');
+    server = (useHttps ? https : http).createServer(app.callback());
+    app.keys = await system.get('session.keys');
+    app.use(cache(path.join(process.cwd(), '.uibuild'), {
+        maxAge: 365 * 24 * 60 * 60,
+    }));
+    app.use(Body({
+        multipart: true,
+        formidable: {
+            maxFileSize: 256 * 1024 * 1024,
+        },
+    }));
+}
 
 class Handler {
     /**
@@ -128,8 +133,8 @@ class Handler {
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
         this._handler.save = this.request.cookies.get('save');
-        if (this._handler.save) this._handler.expireSeconds = options.session.saved_expire_seconds;
-        else this._handler.expireSeconds = options.session.unsaved_expire_seconds;
+        if (this._handler.save) this._handler.expireSeconds = await system.get('session.saved_expire_seconds');
+        else this._handler.expireSeconds = await system.get('session.unsaved_expire_seconds');
         this.session = this._handler.sid
             ? await token.update(
                 this._handler.sid,
@@ -213,7 +218,7 @@ class Handler {
                 },
             );
         }
-        const cookie = { secure: options.session.secure };
+        const cookie = { secure: await system.get('session.secure') };
         if (this._handler.save) {
             cookie.expires = this.session.expireAt;
             cookie.maxAge = this._handler.expireSeconds;
@@ -354,6 +359,7 @@ class ConnectionHandler {
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
 }
+
 function Connection(prefix, RouteConnHandler) {
     const sock = sockjs.createServer({ prefix });
     sock.on('connection', async (conn) => {
@@ -389,14 +395,14 @@ function Connection(prefix, RouteConnHandler) {
     sock.installHandlers(server);
 }
 
-function start() {
+async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('*', Handler);
-    server.listen(options.listen.port);
-    console.log('Server listening at: %s', options.listen.port);
+    server.listen(await system.get('listen.port'));
+    console.log('Server listening at: %s', await system.get('listen.port'));
 }
 
 global.Hydro.service.server = module.exports = {
-    Handler, ConnectionHandler, Route, Connection, start,
+    Handler, ConnectionHandler, Route, Connection, prepare, start,
 };

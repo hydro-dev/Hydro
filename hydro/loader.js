@@ -142,6 +142,41 @@ async function service() {
     }
 }
 
+async function install() {
+    await Promise.all([lib(), locale(), template()]);
+    require('./service/setup');
+}
+
+async function installDb() {
+    const system = require('./model/system');
+    const def = {
+        PROBLEM_PER_PAGE: 100,
+        RECORD_PER_PAGE: 100,
+        SOLUTION_PER_PAGE: 20,
+        CONTEST_PER_PAGE: 20,
+        TRAINING_PER_PAGE: 10,
+        DISCUSSION_PER_PAGE: 50,
+        REPLY_PER_PAGE: 50,
+        CONTESTS_ON_MAIN: 5,
+        TRAININGS_ON_MAIN: 5,
+        DISCUSSIONS_ON_MAIN: 20,
+        'db.ver': 1,
+        'listen.https': false,
+        'listen.port': 8888,
+        'session.keys': ['Hydro'],
+        'session.secure': false,
+        'session.saved_expire_seconds': 3600 * 24,
+        'session.unsaved_expire_seconds': 600,
+        changemail_token_expire_seconds: 3600 * 24,
+        registration_token_expire_seconds: 600,
+    };
+    const tasks = [];
+    for (const key in def) {
+        tasks.push(system.set(key, def[key]));
+    }
+    await Promise.all(tasks);
+}
+
 async function load() {
     ensureDir(path.resolve(os.tmpdir(), 'hydro'));
     global.Hydro = {
@@ -153,12 +188,16 @@ async function load() {
         ui: {},
     };
     await preload();
-    await template();
     require('./lib/i18n');
     require('./utils');
     require('./error');
     require('./permission');
-    require('./options');
+    try {
+        require('./options');
+    } catch (e) {
+        await install();
+        return;
+    }
     const bus = require('./service/bus');
     await new Promise((resolve) => {
         const h = () => {
@@ -175,20 +214,23 @@ async function load() {
         'template', 'validator', 'nav',
     ];
     for (const i of builtinLib) require(`./lib/${i}`);
-    await lib();
-    await locale();
+    await Promise.all([lib(), locale(), template()]);
     require('./service/gridfs');
     const server = require('./service/server');
+    await server.prepare();
     await service();
     const builtinModel = [
         'blacklist', 'builtin', 'contest', 'discussion', 'message',
         'opcount', 'problem', 'record', 'setting', 'solution',
-        'system', 'token', 'training', 'user',
+        'token', 'training', 'user',
     ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
         if (m.index) await m.index();
     }
+    const system = require('./model/system');
+    const dbVer = await system.get('db.ver');
+    if (dbVer !== 1) await installDb();
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
         'contest', 'training', 'discussion', 'manage', 'import',
@@ -204,7 +246,7 @@ async function load() {
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
     }
-    server.start();
+    await server.start();
 }
 
 module.exports = { load, active };

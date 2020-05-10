@@ -4,12 +4,12 @@ const {
     PERM_LOGGEDIN, PERM_VIEW_TRAINING, PERM_VIEW_PROBLEM_HIDDEN,
     PERM_CREATE_TRAINING, PERM_EDIT_TRAINING,
 } = require('../permission');
-const { constants } = require('../options');
 const paginate = require('../lib/paginate');
 const problem = require('../model/problem');
 const builtin = require('../model/builtin');
 const training = require('../model/training');
 const user = require('../model/user');
+const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 
 async function _parseDagJson(dag) {
@@ -60,7 +60,7 @@ class TrainingMainHandler extends TrainingHandler {
         const [tdocs, tpcount] = await paginate(
             training.getMulti().sort('_id', 1),
             page,
-            constants.TRAINING_PER_PAGE,
+            await system.get('TRAINING_PER_PAGE'),
         );
         const tids = new Set();
         for (const tdoc of tdocs) tids.add(tdoc._id);

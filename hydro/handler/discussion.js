@@ -1,6 +1,7 @@
 const paginate = require('../lib/paginate');
 const problem = require('../model/problem');
 const contest = require('../model/contest');
+const system = require('../model/system');
 const user = require('../model/user');
 const discussion = require('../model/discussion');
 const {
@@ -9,7 +10,6 @@ const {
 const {
     DiscussionNodeNotFoundError, DiscussionNotFoundError, DocumentNotFoundError,
 } = require('../error');
-const { constants } = require('../options');
 const {
     PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
     PERM_VIEW_PROBLEM_HIDDEN, PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY,
@@ -65,7 +65,7 @@ class DiscussionMainHandler extends DiscussionHandler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(),
             page,
-            constants.DISCUSSION_PER_PAGE,
+            await system.get('DISCUSSION_PER_PAGE'),
         );
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
         const path = [
@@ -84,7 +84,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti({ type, docId }),
             page,
-            constants.DISCUSSION_PER_PAGE,
+            await system.get('DISCUSSION_PER_PAGE'),
         );
         const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
         const path = [
@@ -142,7 +142,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const [drdocs, pcount, drcount] = await paginate(
             discussion.getMultiReply(did),
             page,
-            constants.REPLY_PER_PAGE,
+            await system.get('REPLY_PER_PAGE'),
         );
         const uids = drdocs.map((drdoc) => drdoc.owner);
         uids.push(this.ddoc.owner);

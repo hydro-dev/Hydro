@@ -2,7 +2,6 @@ const {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError, MessageNotFoundError,
 } = require('../error');
-const options = require('../options');
 const bus = require('../service/bus');
 const {
     Route, Connection, Handler, ConnectionHandler,
@@ -11,6 +10,7 @@ const misc = require('../lib/misc');
 const md5 = require('../lib/md5');
 const contest = require('../model/contest');
 const message = require('../model/message');
+const system = require('../model/system');
 const user = require('../model/user');
 const setting = require('../model/setting');
 const discussion = require('../model/discussion');
@@ -20,13 +20,12 @@ const {
     PERM_VIEW_TRAINING, PERM_VIEW_CONTEST, PERM_VIEW_DISCUSSION,
     PERM_LOGGEDIN,
 } = require('../permission');
-const { CONTESTS_ON_MAIN, TRAININGS_ON_MAIN, DISCUSSIONS_ON_MAIN } = require('../options').constants;
 
 class HomeHandler extends Handler {
     async contest() {
         if (this.user.hasPerm(PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti()
-                .limit(CONTESTS_ON_MAIN)
+                .limit(await system.get('CONTESTS_ON_MAIN'))
                 .toArray();
             const tsdict = await contest.getListStatus(
                 this.user._id, tdocs.map((tdoc) => tdoc._id),
@@ -40,7 +39,7 @@ class HomeHandler extends Handler {
         if (this.user.hasPerm(PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti()
                 .sort('_id', 1)
-                .limit(TRAININGS_ON_MAIN)
+                .limit(await system.get('TRAININGS_ON_MAIN'))
                 .toArray();
             const tsdict = await training.getListStatus(
                 this.user._id, tdocs.map((tdoc) => tdoc._id),
@@ -53,7 +52,7 @@ class HomeHandler extends Handler {
     async discussion() {
         if (this.user.hasPerm(PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti()
-                .limit(DISCUSSIONS_ON_MAIN)
+                .limit(await system.get('DISCUSSIONS_ON_MAIN'))
                 .toArray();
             const vndict = await discussion.getListVnodes(ddocs, this);
             return [ddocs, vndict];
@@ -106,7 +105,7 @@ class HomeSecurityHandler extends Handler {
         if (udoc) throw new UserAlreadyExistError(mail);
         const [rid] = await token.add(
             token.TYPE_CHANGEMAIL,
-            options.changemail_token_expire_seconds,
+            await system.get('changemail_token_expire_seconds'),
             { uid: this.udoc._id, mail },
         );
         await mail.sendMail(mail, 'Change Email', 'user_changemail_mail.html', {

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html data-page="setup" data-layout="immersive" class="layout--immersive page--setup nojs">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="msapplication-TileColor" content="#579e9a">
+  <meta name="theme-color" content="#56758f">
+  <link rel="stylesheet" media="all" href="{{ static_url('vj4.css') }}">
+  <title>{{ _('Setup') }}</title>
+  <script>
+    var _htmlNode = document.documentElement;
+    _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
+  </script>
+</head>
+<body>
+<div class="slideout-panel" id="panel">
+  <div class="main">
+    <div class="row"><div class="columns">
+    <div class="immersive--content immersive--center">
+  <h1>{{ _('Setup') }}</h1>
+  <div class="text-center">
+    {{ _('Done. Please restart the program.') }}
+  </div>
+    </div>
+    </div></div>
+  </div>
+</div>
+  <script type="text/javascript" src="{{ static_url('vj4.js') }}"></script>
+</body>
+</html>

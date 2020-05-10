@@ -15,7 +15,6 @@ const {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
 } = require('../error');
-const { constants } = require('../options');
 const {
     PERM_VIEW_PROBLEM, PERM_VIEW_PROBLEM_HIDDEN, PERM_SUBMIT_PROBLEM,
     PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
@@ -38,7 +37,7 @@ class ProblemHandler extends Handler {
         const [pdocs, pcount] = await paginate(
             problem.getMulti(q).sort({ pid: 1 }),
             page,
-            constants.PROBLEM_PER_PAGE,
+            await system.get('PROBLEM_PER_PAGE'),
         );
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
             psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
@@ -252,7 +251,8 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
         const [psdocs, pcount, pscount] = await paginate(
             solution.getMulti(this.pdoc._id),
-            page, constants.SOLUTION_PER_PAGE,
+            page,
+            await system.get('SOLUTION_PER_PAGE'),
         );
         const uids = [this.pdoc.owner]; const
             docids = [];

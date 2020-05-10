@@ -51,14 +51,10 @@ let options = {
     },
 };
 
-try {
-    let f = path.resolve(process.cwd(), 'config.yaml');
-    if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.yaml');
-    if (!fs.existsSync(f)) f = path.resolve('/config/config.yaml');
-    const t = yaml.safeLoad(fs.readFileSync(f));
-    options = defaultsDeep(t, options);
-} catch (e) {
-    console.error('Cannot load config');
-}
+let f = path.resolve(process.cwd(), 'config.json');
+if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.json');
+if (!fs.existsSync(f)) f = path.resolve('/config/config.json');
+const t = JSON.parse(fs.readFileSync(f));
+options = defaultsDeep(t, options);
 
 module.exports = options;

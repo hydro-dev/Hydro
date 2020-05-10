@@ -3,12 +3,12 @@ const {
     ContestNotAttendedError,
 } = require('../error');
 const { PERM_CREATE_CONTEST, PERM_EDIT_CONTEST } = require('../permission');
-const { constants } = require('../options');
 const paginate = require('../lib/paginate');
 const contest = require('../model/contest');
 const problem = require('../model/problem');
 const record = require('../model/record');
 const user = require('../model/user');
+const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 
 const ContestHandler = contest.ContestHandlerMixin(Handler);
@@ -27,7 +27,7 @@ class ContestListHandler extends ContestHandler {
             qs = 'rule={0}'.format(rule);
         }
         // eslint-disable-next-line prefer-const
-        [tdocs, tpcount] = await paginate(tdocs, page, constants.CONTEST_PER_PAGE);
+        [tdocs, tpcount] = await paginate(tdocs, page, await system.get('CONTEST_PER_PAGE'));
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc._id);
         const tsdict = await contest.getListStatus(this.user._id, tids);
@@ -51,12 +51,14 @@ class ContestDetailHandler extends ContestHandler {
             attended;
         if (tsdoc) {
             attended = tsdoc.attend === 1;
-            for (const pdetail of tsdoc.journal || []) { psdict[pdetail.pid] = pdetail; }
+            for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
             if (this.canShowRecord(this.tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
                 rdict = await record.getList(q);
-            } else { for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid }; }
+            } else {
+                for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
+            }
         } else attended = false;
         const udict = await user.getList([this.tdoc.owner]);
         const path = [

@@ -23,8 +23,6 @@ const build = async (type) => {
         mode: type,
         entry: {
             development: root('hydro/development.js'),
-            install: root('hydro/install.js'),
-            uninstall: root('hydro/uninstall.js'),
         },
         output: {
             filename: '[name].js',

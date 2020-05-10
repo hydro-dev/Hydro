@@ -18,4 +18,5 @@ Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology:
 
 global.Hydro.service.db = module.exports = {
     collection: (c) => db.collection(c),
+    dropDatabase: () => db.dropDatabase(),
 };
