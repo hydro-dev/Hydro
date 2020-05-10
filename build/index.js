@@ -2,9 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const yaml = require('js-yaml');
-const root = require('./root');
+const { root, ignoreFailure, rmdir } = require('./utils');
 const template = require('./template');
-const ignoreFailure = require('./ignoreFailure');
 
 function getFiles(folder) {
     const res = [];
@@ -51,6 +50,11 @@ async function build(type) {
     fs.writeFileSync(root('.build/module/builtin.hydro'), data);
     await require('./buildModule')(type);
     await require('./webpack')(type);
+    const t = fs.readdirSync(root('.build/module'));
+    for (const f of t) {
+        if (fs.statSync(root(`.build/module/${f}`)).isDirectory()) rmdir(root(`.build/module/${f}`));
+    }
+    fs.unlinkSync(root('.build/builtin.json'));
 }
 
 module.exports = build;

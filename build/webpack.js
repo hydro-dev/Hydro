@@ -2,7 +2,7 @@
 const fs = require('fs');
 const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
-const root = require('./root');
+const { root } = require('./utils');
 
 const build = async (type) => {
     function hackNodeModuleFormidable() {

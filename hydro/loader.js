@@ -21,6 +21,7 @@ function ensureDir(dir) {
 
 const active = [];
 try {
+    // eslint-disable-next-line import/no-unresolved
     const f = require('../.build/builtin.json');
     const m = { ...yaml.safeLoad(zlib.gunzipSync(f.data)), id: 'builtin' };
     active.push(m);
@@ -201,7 +202,11 @@ async function load() {
         handler: {},
         service: {},
         model: {},
+        script: {},
         lib: {},
+        nodeModules: {
+            mongodb: require('mongodb'),
+        },
         template: {},
         ui: {},
     };

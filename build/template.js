@@ -1,5 +1,5 @@
 const fs = require('fs');
-const root = require('./root');
+const { root } = require('./utils');
 
 function getFiles(folder) {
     const files = [];

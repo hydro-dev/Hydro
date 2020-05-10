@@ -5,9 +5,14 @@ import runGulp from './runGulp';
 import runWebpack from './runWebpack';
 
 async function main() {
+  const dir = process.cwd();
+  process.chdir(root());
   await runGulp(argv);
-  runWebpack(argv);
+  await runWebpack(argv);
+  process.chdir(dir);
 }
 
-process.chdir(root());
-main();
+module.exports = main;
+
+if (!module.parent) main();
+

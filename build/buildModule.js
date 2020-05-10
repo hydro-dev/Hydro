@@ -6,17 +6,11 @@ const zlib = require('zlib');
 const webpack = require('webpack');
 const yaml = require('js-yaml');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
-const root = require('./root');
+const { root, exist } = require('./utils');
 const template = require('./template');
 
-const exist = (name) => {
-    try {
-        fs.statSync(root(name));
-    } catch (e) {
-        return false;
-    }
-    return true;
-};
+const prepare = ['model', 'lib', 'handler', 'service', 'script'];
+
 const build = async (type) => {
     const modules = fs.readdirSync(root('module'));
     const failed = [];
@@ -43,7 +37,6 @@ const build = async (type) => {
                     const builder = require(root(`module/${i}/build.js`));
                     if (builder.prebuild) await builder.prebuild();
                 }
-                const prepare = ['model', 'lib', 'handler', 'service'];
                 for (const j of prepare) {
                     if (exist(`module/${i}/${j}.js`)) {
                         const file = fs.readFileSync(root(`module/${i}/${j}.js`));
@@ -75,7 +68,6 @@ const build = async (type) => {
         if (!i.startsWith('.') && !failed.includes(i)) {
             try {
                 const current = {};
-                const prepare = ['model', 'lib', 'handler', 'service'];
                 for (const j of prepare) {
                     if (exist(`module/${i}/${j}.js`)) {
                         const file = fs.readFileSync(root(`module/${i}/${j}.js`));
