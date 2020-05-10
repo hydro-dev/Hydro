@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = (name) => path.resolve(__dirname, name);
 
-exports.prebuild = () => {
+exports.prebuild = async () => {
     const pages = fs.readdirSync(root('raw'));
     const res = {};
     for (const page of pages) {

@@ -19,6 +19,7 @@ const exist = (name) => {
 };
 const build = async (type) => {
     const modules = fs.readdirSync(root('module'));
+    const failed = [];
     const config = {
         mode: type,
         entry: {},
@@ -37,24 +38,28 @@ const build = async (type) => {
     };
     for (const i of modules) {
         if (!i.startsWith('.')) {
-            const prepare = ['model', 'lib', 'handler', 'service'];
-            for (const j of prepare) {
-                if (exist(`module/${i}/${j}.js`)) {
-                    const file = fs.readFileSync(root(`module/${i}/${j}.js`));
-                    if (file.includes('require')) {
-                        config.entry[`${i}/${j}`] = root(`module/${i}/${j}.js`);
+            try {
+                if (exist(`module/${i}/build.js`)) {
+                    const builder = require(root(`module/${i}/build.js`));
+                    if (builder.prebuild) await builder.prebuild();
+                }
+                const prepare = ['model', 'lib', 'handler', 'service'];
+                for (const j of prepare) {
+                    if (exist(`module/${i}/${j}.js`)) {
+                        const file = fs.readFileSync(root(`module/${i}/${j}.js`));
+                        if (file.includes('require')) {
+                            config.entry[`${i}/${j}`] = root(`module/${i}/${j}.js`);
+                        }
                     }
                 }
+            } catch (e) {
+                console.error(`Module build fail: ${i}`);
+                console.error(e);
+                failed.push(i);
             }
         }
     }
     const compiler = webpack(config);
-    for (const i of modules) {
-        if (exist(`module/${i}/build.js`)) {
-            const builder = require(root(`module/${i}/build.js`));
-            if (builder.prebuild) await builder.prebuild();
-        }
-    }
     await new Promise((resolve, reject) => {
         compiler.run((err, stats) => {
             if (err) {
@@ -67,45 +72,50 @@ const build = async (type) => {
         });
     });
     for (const i of modules) {
-        if (!i.startsWith('.')) {
-            const current = {};
-            const prepare = ['model', 'lib', 'handler', 'service'];
-            for (const j of prepare) {
-                if (exist(`module/${i}/${j}.js`)) {
-                    const file = fs.readFileSync(root(`module/${i}/${j}.js`));
-                    if (file.includes('require')) {
-                        current[j] = fs.readFileSync(root(`.build/module/${i}/${j}.js`)).toString();
-                    } else {
-                        current[j] = fs.readFileSync(root(`module/${i}/${j}.js`)).toString();
+        if (!i.startsWith('.') && !failed.includes(i)) {
+            try {
+                const current = {};
+                const prepare = ['model', 'lib', 'handler', 'service'];
+                for (const j of prepare) {
+                    if (exist(`module/${i}/${j}.js`)) {
+                        const file = fs.readFileSync(root(`module/${i}/${j}.js`));
+                        if (file.includes('require')) {
+                            current[j] = fs.readFileSync(root(`.build/module/${i}/${j}.js`)).toString();
+                        } else {
+                            current[j] = fs.readFileSync(root(`module/${i}/${j}.js`)).toString();
+                        }
                     }
                 }
-            }
-            if (exist(`module/${i}/locale`)) {
-                const locales = fs.readdirSync(root(`module/${i}/locale`));
-                const lang = {};
-                for (const j of locales) {
-                    const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
-                    lang[j.split('.')[0]] = yaml.safeLoad(content);
+                if (exist(`module/${i}/locale`)) {
+                    const locales = fs.readdirSync(root(`module/${i}/locale`));
+                    const lang = {};
+                    for (const j of locales) {
+                        const content = fs.readFileSync(root(`module/${i}/locale/${j}`)).toString();
+                        lang[j.split('.')[0]] = yaml.safeLoad(content);
+                    }
+                    current.locale = lang;
                 }
-                current.locale = lang;
-            }
-            if (exist(`module/${i}/template`)) {
-                current.template = template(`module/${i}/template`);
-            }
-            if (exist(`module/${i}/file`)) {
-                const files = fs.readdirSync(root(`module/${i}/file`));
-                current.file = {};
-                for (const file of files) {
-                    current.file[file] = fs.readFileSync(root(`module/${i}/file/${file}`)).toString('base64');
+                if (exist(`module/${i}/template`)) {
+                    current.template = template(`module/${i}/template`);
                 }
+                if (exist(`module/${i}/file`)) {
+                    const files = fs.readdirSync(root(`module/${i}/file`));
+                    current.file = {};
+                    for (const file of files) {
+                        current.file[file] = fs.readFileSync(root(`module/${i}/file/${file}`)).toString('base64');
+                    }
+                }
+                const m = require(root(`module/${i}/hydro.json`));
+                current.description = m.description || '';
+                current.requirements = m.requirements || [];
+                current.version = m.version || 'unknown';
+                if (m.os) current.os = m.os;
+                const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: -1 });
+                fs.writeFileSync(root(`.build/module/${i}.hydro`), data);
+            } catch (e) {
+                console.error(`Module build fail: ${i}`);
+                console.error(e);
             }
-            const m = require(root(`module/${i}/hydro.json`));
-            current.description = m.description || '';
-            current.requirements = m.requirements || [];
-            current.version = m.version || 'unknown';
-            if (m.os) current.os = m.os;
-            const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: -1 });
-            fs.writeFileSync(root(`.build/module/${i}.hydro`), data);
         }
     }
 };
