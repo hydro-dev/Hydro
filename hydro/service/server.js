@@ -1,4 +1,5 @@
 const path = require('path');
+const os = require('os');
 const { ObjectID } = require('bson');
 const Koa = require('koa');
 const morgan = require('koa-morgan');
@@ -28,7 +29,7 @@ async function prepare() {
     const useHttps = await system.get('listen.https');
     server = (useHttps ? https : http).createServer(app.callback());
     app.keys = await system.get('session.keys');
-    app.use(cache(path.join(process.cwd(), '.uibuild'), {
+    app.use(cache(path.join(os.tmpdir(), 'hydro', 'builtin'), {
         maxAge: 365 * 24 * 60 * 60,
     }));
     app.use(Body({
@@ -395,6 +396,10 @@ function Connection(prefix, RouteConnHandler) {
     sock.installHandlers(server);
 }
 
+function Middleware(middleware) {
+    app.use(middleware);
+}
+
 async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
@@ -404,5 +409,5 @@ async function start() {
 }
 
 global.Hydro.service.server = module.exports = {
-    Handler, ConnectionHandler, Route, Connection, prepare, start,
+    Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
 };

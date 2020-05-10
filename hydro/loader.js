@@ -20,6 +20,13 @@ function ensureDir(dir) {
 }
 
 const active = [];
+try {
+    const f = require('../.build/builtin.json');
+    const m = { ...yaml.safeLoad(zlib.gunzipSync(f.data)), id: 'builtin' };
+    active.push(m);
+} catch (e) {
+    /* Ignore */
+}
 
 async function preload() {
     const files = fs.readdirSync(root('.build/module'));
@@ -28,22 +35,33 @@ async function preload() {
             try {
                 const f = fs.readFileSync(root(`.build/module/${file}`));
                 const m = { ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] };
-                if (m.os) {
-                    if (!m.os.includes(os.platform())) throw new Error('Unsupported OS');
-                }
-                if (m.file) {
-                    m.files = {};
-                    ensureDir(path.resolve(os.tmpdir(), 'hydro', file));
-                    for (const n in m.file) {
-                        const e = path.resolve(os.tmpdir(), 'hydro', file, n);
-                        fs.writeFileSync(e, Buffer.from(m.file[n], 'base64'), { mode: 755 });
-                        m.files[n] = e;
-                    }
-                }
                 active.push(m);
             } catch (e) {
                 console.error(`Module Load Fail: ${file}`);
             }
+        }
+    }
+    for (const i of active) {
+        try {
+            if (i.os) {
+                if (!i.os.includes(os.platform())) throw new Error('Unsupported OS');
+            }
+            if (i.file) {
+                i.files = {};
+                ensureDir(path.resolve(os.tmpdir(), 'hydro', i.id));
+                for (const n in i.file) {
+                    if (i.file[n] === null) {
+                        ensureDir(path.resolve(os.tmpdir(), 'hydro', i.id, n));
+                    } else {
+                        const e = path.resolve(os.tmpdir(), 'hydro', i.id, n);
+                        fs.writeFileSync(e, Buffer.from(i.file[n], 'base64'), { mode: 755 });
+                        i.files[n] = e;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`Module Load Fail: ${i.id}`);
+            console.error(e);
         }
     }
 }

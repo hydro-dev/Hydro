@@ -14,32 +14,7 @@ Hydro 的界面基于 Vijos 二次开发。
 #### 直接部署：
 
 安装mongodb （省略）  
-编辑 `config.yaml` ：
-
-```yaml
-db:
-    host: 127.0.0.1
-    port: 27017
-    name: hydro
-    username: hydro
-    password: db.drop();
-listen:
-    host: 127.0.0.1
-    port: 8888
-session:
-    domain: '*'
-```
-
-运行：
-
-```sh
-yarn
-cd ui
-yarn
-yarn build:production
-cd ..
-node hydro/development.js
-```
+下载Github Actions自动编译的 development.js 直接运行即可。
 
 ## 鸣谢
 

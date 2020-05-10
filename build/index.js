@@ -1,9 +1,22 @@
 const fs = require('fs');
+const path = require('path');
 const zlib = require('zlib');
 const yaml = require('js-yaml');
 const root = require('./root');
 const template = require('./template');
 const ignoreFailure = require('./ignoreFailure');
+
+function getFiles(folder) {
+    const res = [];
+    const files = fs.readdirSync(root(folder));
+    for (const filename of files) {
+        res.push(filename);
+        if (fs.statSync(root(path.join(folder, filename))).isDirectory()) {
+            res.push(...(getFiles(path.join(folder, filename)).map((i) => path.join(filename, i))));
+        }
+    }
+    return res;
+}
 
 async function build(type) {
     if (!['development', 'production'].includes(type)) throw new Error(`Unknown type: ${type}`);
@@ -20,10 +33,21 @@ async function build(type) {
         'partials/problem_default.md',
         'bsod.html',
     ];
-    const builtin = {};
-    builtin.locale = lang;
-    builtin.template = template('templates', exclude);
+    const builtin = {
+        locale: lang,
+        template: template('templates', exclude),
+        file: {},
+    };
+    const files = getFiles('.uibuild');
+    for (const f of files) {
+        if (fs.statSync(root(`.uibuild/${f}`)).isDirectory()) {
+            builtin.file[f] = null;
+        } else {
+            builtin.file[f] = fs.readFileSync(root(`.uibuild/${f}`)).toString('base64');
+        }
+    }
     const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: 3 });
+    fs.writeFileSync(root('.build/builtin.json'), JSON.stringify({ data: data.toString('base64') }));
     fs.writeFileSync(root('.build/module/builtin.hydro'), data);
     await require('./buildModule')(type);
     await require('./webpack')(type);

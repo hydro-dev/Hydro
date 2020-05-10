@@ -8,6 +8,15 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+    - run: |
+        cd ui
+        yarn
+        yarn build:production
+        cd ..
+    - uses: actions/upload-artifact@v1
+      with:
+        name: .uibuild
+        path: .uibuild
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
       with:
@@ -19,15 +28,6 @@ jobs:
       with:
         name: hydro
         path: .build
-    - run: |
-        cd ui
-        yarn
-        yarn build:production
-        cd ..
-    - uses: actions/upload-artifact@v1
-      with:
-        name: .uibuild
-        path: .uibuild
     - uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: hydrooj/hydro:alpine
