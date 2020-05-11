@@ -21,10 +21,20 @@ function del(_id) {
 
 async function getFirst(query) {
     const res = await coll.find(query).sort('_id', 1).limit(1).toArray();
-    await coll.deleteOne({ _id: res[0]._id });
-    return res[0];
+    if (res) {
+        await coll.deleteOne({ _id: res[0]._id });
+        return res[0];
+    }
+    return null;
+}
+
+async function consume(query, cb) {
+    setInterval(async () => {
+        const res = await getFirst(query);
+        if (res) cb(res);
+    }, 100);
 }
 
 module.exports = {
-    add, get, del, count, getFirst,
+    add, get, del, count, getFirst, consume,
 };

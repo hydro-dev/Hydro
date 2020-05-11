@@ -1,10 +1,7 @@
 const MarkdownIt = require('markdown-it');
 const katex = require('markdown-it-katex');
 const Prism = require('prismjs');
-const loadLanguages = require('prismjs/components/');
-
-// FIXME doesnt work in webpack
-loadLanguages(['js', 'javascript', 'go', 'c', 'pascal', 'hs', 'java', 'cs', 'cpp', 'py', 'ruby']);
+require('prismjs/components/index');
 
 class Markdown extends MarkdownIt {
     constructor(safe) {

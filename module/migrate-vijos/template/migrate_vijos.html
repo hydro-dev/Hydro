@@ -1,0 +1,61 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          <div class="row">
+            {{ form.form_text({
+                 columns:8,
+                 label:'Source Database Host',
+                 name:'host',
+                 value:'127.0.0.1',
+                 autofocus:true,
+                 row:false
+               }) }}
+            {{ form.form_text({
+                 columns:4,
+                 label:'Source Database Port',
+                 name:'post',
+                 value:'27017',
+                 row:false
+               }) }}
+          </div><div class="row">
+            {{ form.form_text({
+                 columns:4,
+                 label:'Source Database Name',
+                 name:'name',
+                 value:'vijos',
+                 row:false
+               }) }}
+            {{ form.form_text({
+                 columns:4,
+                 label:'Source Database Username',
+                 name:'username',
+                 placeholder:'Leave empty if none.',
+                 row:false
+               }) }}
+            {{ form.form_text({
+                 columns:4,
+                 label:'Source Database Password',
+                 name:'password',
+                 placeholder:'Leave empty if none.',
+                 row:false
+               }) }}
+          </div>
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+            <button type="submit" class="rounded primary button">
+              {{ _('Migrate') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include 'components/md_hint.html' %}
+  </div>
+</div>
+{% endblock %}

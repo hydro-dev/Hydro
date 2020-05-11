@@ -13,8 +13,8 @@ function parseSolution(doc) {
 }
 
 async function problem(src, report) {
-    const count = await src.collection('document').find({ doc_type: 10 }).count();
-    report({ progress: 1, message: `Found ${count} problems.` });
+    let count = await src.collection('document').find({ doc_type: 10 }).count();
+    await report({ progress: 1, message: `Found ${count} problems.` });
     for (let i = 0; i <= Math.floor(count / 50); i++) {
         const docs = await src.collection('document').find({ doc_type: 10 })
             .skip(i * 50).limit(50)
@@ -36,12 +36,27 @@ async function problem(src, report) {
         }
         await dst.collection('problem').insertMany(problems);
     }
+    count = await src.collection('document.status').find({ doc_type: 10 }).count();
+    for (let i = 0; i <= Math.floor(count / 50); i++) {
+        const docs = await src.collection('document.status').find({ doc_type: 10 })
+            .skip(i * 50).limit(50)
+            .toArray();
+        const problems = [];
+        for (const doc of docs) {
+            problems.push({
+                pid: doc.pid,
+                rid: doc.rid,
+            });
+        }
+        await dst.collection('problem.status').insertMany(problems);
+    }
+    await report({ progress: 1, message: `Found ${count} problems.` });
 }
 
 async function contest(src, report) {
     const RULES = ['', 'oi', 'acm'];
     const count = await src.collection('document').find({ doc_type: 30 }).count();
-    report({ progress: 1, message: `Found ${count} contests.` });
+    await report({ progress: 1, message: `Found ${count} contests.` });
     for (let i = 0; i <= Math.floor(count / 50); i++) {
         const docs = await src.collection('document').find({ doc_type: 30 })
             .skip(i * 50).limit(50)
@@ -74,12 +89,12 @@ async function migrateVijos({
         useNewUrlParser: true, useUnifiedTopology: true,
     });
     const src = Database.db(name);
-    report({ progress: 0, message: 'Database connected.' });
-    dst.collection('system').insertOne({
+    await report({ progress: 0, message: 'Database connected.' });
+    await dst.collection('system').insertOne({
         _id: 'user',
         value: (await src.collection('system').findOne({ _id: 'user_counter' })).value,
     });
-    report({ progress: 1, message: 'Collection:system done.' });
+    await report({ progress: 1, message: 'Collection:system done.' });
     await problem(src, report);
     await contest(src, report);
 }

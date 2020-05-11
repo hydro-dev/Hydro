@@ -1,4 +1,3 @@
-// Webpack Required
 const fs = require('fs');
 const path = require('path');
 const child = require('child_process');
@@ -157,7 +156,7 @@ async function postInit() {
             await judger[this.config.type || 'default'].judge(this);
         }
     }
-    task.consume((t) => {
+    task.consume({ type: 'judge' }, (t) => {
         (new JudgeTask(t)).handle();
     });
 }

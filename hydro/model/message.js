@@ -53,6 +53,12 @@ async function addReply(_id, from, content) {
     return await coll.findOne({ _id }); // eslint-disable-line no-return-await
 }
 
+async function send(from, to, content) {
+    const sdoc = await coll.findOne({ $or: [{ from, to }, { from: to, to: from }] });
+    await addReply(sdoc._id, from, content);
+    return sdoc._id;
+}
+
 function index() {
     return Promise.all([
         coll.createIndex({ to: 1, _id: -1 }),
@@ -68,5 +74,6 @@ global.Hydro.model.message = module.exports = {
     getMany,
     getMulti,
     addReply,
+    send,
     index,
 };

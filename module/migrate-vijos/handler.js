@@ -1,7 +1,6 @@
-const {
-    Route, Connection, Handler, ConnectionHandler,
-} = global.Hydro.service.server;
+const { Route, Handler } = global.Hydro.service.server;
 const { PERM_MANAGE } = global.Hydro.permission;
+const { message } = global.Hydro.model;
 const migrate = global.Hydro.script.migrateVijos;
 
 class MigrateVijosHandler extends Handler {
@@ -17,25 +16,21 @@ class MigrateVijosHandler extends Handler {
         this.response.body = { path };
         this.response.template = 'migrate_vijos.html';
     }
-}
 
-class MigrateVijosConnectionHandler extends ConnectionHandler {
-    async prepare() {
-        this.checkPerm(PERM_MANAGE);
-    }
-
-    async message(msg) {
-        if (msg.key === 'start') {
-            migrate(msg, (data) => { this.send(data); });
-        }
+    async post({
+        host, port, name, username, password,
+    }) {
+        migrate({
+            host, port, name, username, password,
+        }, (data) => message.send(0, 0, data));
+        this.response.redirect = '/manage/log';
     }
 }
 
 async function apply() {
     Route('/migrate/vijos', module.exports.MigrateVijosHandler);
-    Connection('/migrate/vijos-conn', module.exports.MigrateVijosConnectionHandler);
 }
 
 global.Hydro.handler.pastebin = module.exports = {
-    MigrateVijosHandler, MigrateVijosConnectionHandler, apply,
+    MigrateVijosHandler, apply,
 };
