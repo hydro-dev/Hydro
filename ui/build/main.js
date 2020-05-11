@@ -13,6 +13,3 @@ async function main() {
 }
 
 module.exports = main;
-
-if (!module.parent) main();
-

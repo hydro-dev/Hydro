@@ -1,3 +1,4 @@
 /* eslint-disable */
 require('@babel/register');
-require('./main.js');
+const main = require('./main.js');
+if (!module.parent) main();
