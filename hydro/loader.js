@@ -1,4 +1,3 @@
-/* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const fs = require('fs');
@@ -21,20 +20,35 @@ function ensureDir(dir) {
 
 const active = [];
 try {
+    // Let webpack pack builtin module together.
     // eslint-disable-next-line import/no-unresolved
     const f = require('../.build/builtin.json');
     const m = { ...yaml.safeLoad(zlib.gunzipSync(f.data)), id: 'builtin' };
     active.push(m);
 } catch (e) {
-    /* Ignore */
+    // Builtin module is in the module directory
+}
+
+const moduleRoots = [
+    root('.build/module'),
+    root('module'),
+    root(path.resolve(os.homedir(), '.hydro', 'module')),
+    root('.'),
+];
+let moduleRoot;
+for (const i of moduleRoots) {
+    if (fs.existsSync(i) && fs.statSync(i).isDirectory()) {
+        moduleRoot = i;
+        break;
+    }
 }
 
 async function preload() {
-    const files = fs.readdirSync(root('.build/module'));
+    const files = fs.readdirSync(moduleRoot);
     for (const file of files) {
         if (file.endsWith('.hydro')) {
             try {
-                const f = fs.readFileSync(root(`.build/module/${file}`));
+                const f = fs.readFileSync(root(`${moduleRoot}/${file}`));
                 const m = { ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] };
                 active.push(m);
             } catch (e) {
@@ -61,6 +75,8 @@ async function preload() {
                 }
             }
         } catch (e) {
+            i.fail = true;
+            fail.push(i.id);
             console.error(`Module Load Fail: ${i.id}`);
             console.error(e);
         }
@@ -69,7 +85,7 @@ async function preload() {
 
 async function handler() {
     for (const i of active) {
-        if (i.handler) {
+        if (i.handler && !i.fail) {
             try {
                 console.time(`Handler init: ${i.id}`);
                 const exports = {};
@@ -78,6 +94,8 @@ async function handler() {
                 eval(i.handler);
                 console.timeEnd(`Handler init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Handler Load Fail: ${i.id}`);
             }
         }
@@ -86,11 +104,13 @@ async function handler() {
 
 async function locale() {
     for (const i of active) {
-        if (i.locale) {
+        if (i.locale && !i.fail) {
             try {
                 global.Hydro.lib.i18n(i.locale);
                 console.log(`Locale init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Locale Load Fail: ${i.id}`);
             }
         }
@@ -99,11 +119,13 @@ async function locale() {
 
 async function template() {
     for (const i of active) {
-        if (i.template) {
+        if (i.template && !i.fail) {
             try {
                 Object.assign(global.Hydro.template, i.template);
                 console.log(`Template init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Template Load Fail: ${i.id}`);
             }
         }
@@ -112,7 +134,7 @@ async function template() {
 
 async function model() {
     for (const i of active) {
-        if (i.model) {
+        if (i.model && !i.fail) {
             try {
                 console.time(`Model init: ${i.id}`);
                 const exports = {};
@@ -121,6 +143,8 @@ async function model() {
                 if ((module.exports || {}).index) await module.exports.index();
                 console.timeEnd(`Model init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Model Load Fail: ${i.id}`);
             }
         }
@@ -129,7 +153,7 @@ async function model() {
 
 async function lib() {
     for (const i of active) {
-        if (i.lib) {
+        if (i.lib && !i.fail) {
             try {
                 console.time(`Lib init: ${i.id}`);
                 const exports = {};
@@ -138,6 +162,8 @@ async function lib() {
                 eval(i.lib);
                 console.timeEnd(`Lib init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Lib Load Fail: ${i.id}`);
             }
         }
@@ -146,7 +172,7 @@ async function lib() {
 
 async function service() {
     for (const i of active) {
-        if (i.service) {
+        if (i.service && !i.fail) {
             try {
                 console.time(`Service init: ${i.id}`);
                 const exports = {}; // eslint-disable-line no-unused-vars
@@ -155,6 +181,8 @@ async function service() {
                 if ((module.exports || {}).init) await module.exports.init();
                 console.timeEnd(`Service init: ${i.id}`);
             } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
                 console.error(`Service Load Fail: ${i.id}`);
             }
         }

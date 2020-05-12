@@ -3,9 +3,11 @@ const path = require('path');
 const child = require('child_process');
 
 async function postInit() {
+    const config = require('./HydroJudger/judger/config');
+    // eslint-disable-next-line import/no-unresolved
+    config.LANGS = require('./__langs.json');
     const { mkdirp, rmdir, compilerText } = require('./HydroJudger/judger/utils');
     const log = require('./HydroJudger/judger/log');
-    const { CACHE_DIR, TEMP_DIR } = require('./HydroJudger/judger/config');
     const tmpfs = require('./HydroJudger/judger/tmpfs');
     const { FormatError, CompileError, SystemError } = require('./HydroJudger/judger/error');
     const { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } = require('./HydroJudger/judger/status');
@@ -17,7 +19,7 @@ async function postInit() {
     const { judge } = global.Hydro.handler;
 
     async function problemData(pid, savePath) {
-        const tmpFilePath = path.resolve(CACHE_DIR, `download_${pid}`);
+        const tmpFilePath = path.resolve(config.CACHE_DIR, `download_${pid}`);
         const res = await problem.getData(pid);
         const w = await fs.createWriteStream(tmpFilePath);
         res.data.pipe(w);
@@ -38,7 +40,7 @@ async function postInit() {
     }
 
     async function cacheOpen(pid, version) {
-        const filePath = path.join(CACHE_DIR, pid);
+        const filePath = path.join(config.CACHE_DIR, pid);
         if (fs.existsSync(filePath)) {
             let ver;
             try {
@@ -112,7 +114,7 @@ async function postInit() {
                 this.data = this.request.data;
                 this.next = getNext(this);
                 this.end = getEnd(this.rid);
-                this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.rid);
+                this.tmpdir = path.resolve(config.TEMP_DIR, 'tmp', this.rid);
                 this.clean = [];
                 mkdirp(this.tmpdir);
                 tmpfs.mount(this.tmpdir, '64m');
@@ -138,6 +140,7 @@ async function postInit() {
                     });
                 }
             }
+            // eslint-disable-next-line no-await-in-loop
             for (const clean of this.clean) await clean().catch();
             tmpfs.umount(this.tmpdir);
             await rmdir(this.tmpdir);

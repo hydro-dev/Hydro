@@ -1,7 +1,6 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const yaml = require('js-yaml');
 const { defaultsDeep } = require('lodash');
 
 let options = {
