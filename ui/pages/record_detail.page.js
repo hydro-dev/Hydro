@@ -6,9 +6,6 @@ const page = new NamedPage('record_detail', async () => {
 
   const sock = new SockJs(Context.socketUrl);
   const dd = new DiffDOM();
-  sock.onopen = () => {
-    sock.send(document.cookie);
-  };
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
     const newStatus = $(msg.status_html);

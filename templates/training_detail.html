@@ -10,7 +10,7 @@
         {{ tdoc['content'] }}
       </div>
       <div class="section__body typo">
-        {{ tdoc['desc']|default('')|markdown }}
+        {{ tdoc['desc']|default('')|markdown|safe }}
       </div>
     </div>
     <div class="section">
@@ -22,7 +22,7 @@
       </div>
     {% endif %}
     {% for node in tdoc['dag'] %}
-      <div class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %} {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
+      <div class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}  {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
         <div class="section__header clearfix">
           <div class="float-left">
             <h1 class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'] }}</h1>

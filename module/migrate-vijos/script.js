@@ -2,6 +2,7 @@
 const Mongo = global.Hydro.nodeModules.mongodb;
 const { ObjectID } = global.Hydro.nodeModules.bson;
 const dst = global.Hydro.service.db;
+const { problem } = global.Hydro.model.problem;
 
 function parseSolution(doc) {
     return {
@@ -12,72 +13,75 @@ function parseSolution(doc) {
     };
 }
 
-async function problem(src, report) {
-    let count = await src.collection('document').find({ doc_type: 10 }).count();
-    await report({ progress: 1, message: `Found ${count} problems.` });
-    for (let i = 0; i <= Math.floor(count / 50); i++) {
-        const docs = await src.collection('document').find({ doc_type: 10 })
-            .skip(i * 50).limit(50)
-            .toArray();
-        const problems = [];
-        for (const doc of docs) {
-            problems.push({
-                _id: doc._id,
-                pid: doc.doc_id || new ObjectID(),
-                title: doc.title,
-                content: doc.content,
-                owner: doc.owner_uid,
-                data: doc.data,
-                category: doc.category,
-                tag: doc.tag,
-                nSubmit: doc.num_submit,
-                nAccept: doc.num_accept,
-            });
+const tasks = {
+    async problem(src, report) {
+        let count = await src.collection('document').find({ doc_type: 10 }).count();
+        await report({ progress: 1, message: `Found ${count} problems.` });
+        for (let i = 0; i <= Math.floor(count / 50); i++) {
+            const docs = await src.collection('document').find({ doc_type: 10 })
+                .skip(i * 50).limit(50)
+                .toArray();
+            const problems = [];
+            for (const doc of docs) {
+                problems.push({
+                    _id: doc._id,
+                    pid: doc.doc_id || new ObjectID(),
+                    title: doc.title,
+                    content: doc.content,
+                    owner: doc.owner_uid,
+                    data: doc.data,
+                    category: doc.category,
+                    tag: doc.tag,
+                    nSubmit: doc.num_submit,
+                    nAccept: doc.num_accept,
+                });
+            }
+            await dst.collection('problem').insertMany(problems);
         }
-        await dst.collection('problem').insertMany(problems);
-    }
-    count = await src.collection('document.status').find({ doc_type: 10 }).count();
-    for (let i = 0; i <= Math.floor(count / 50); i++) {
-        const docs = await src.collection('document.status').find({ doc_type: 10 })
-            .skip(i * 50).limit(50)
-            .toArray();
-        const problems = [];
-        for (const doc of docs) {
-            problems.push({
-                pid: doc.pid,
-                rid: doc.rid,
-            });
+        count = await src.collection('document.status').find({ doc_type: 10 }).count();
+        for (let i = 0; i <= Math.floor(count / 50); i++) {
+            const docs = await src.collection('document.status').find({ doc_type: 10 })
+                .skip(i * 50).limit(50)
+                .toArray();
+            const problems = [];
+            for (const doc of docs) {
+                problems.push({
+                    pid: await problem.get(doc.pid),
+                    rid: doc.rid,
+                    uid: doc.uid,
+                    status: doc.status,
+                });
+            }
+            await dst.collection('problem.status').insertMany(problems);
         }
-        await dst.collection('problem.status').insertMany(problems);
-    }
-    await report({ progress: 1, message: `Found ${count} problems.` });
-}
-
-async function contest(src, report) {
-    const RULES = ['', 'oi', 'acm'];
-    const count = await src.collection('document').find({ doc_type: 30 }).count();
-    await report({ progress: 1, message: `Found ${count} contests.` });
-    for (let i = 0; i <= Math.floor(count / 50); i++) {
-        const docs = await src.collection('document').find({ doc_type: 30 })
-            .skip(i * 50).limit(50)
-            .toArray();
-        const contests = [];
-        for (const doc of docs) {
-            contests.push({
-                _id: doc._id,
-                title: doc.title,
-                content: doc.content,
-                owner: doc.owner_uid,
-                rule: RULES[doc.rule],
-                beginAt: doc.begin_at,
-                endAt: doc.end_at,
-                pids: doc.pids,
-                attend: doc.attend,
-            });
+        await report({ progress: 1, message: `Found ${count} problems.` });
+    },
+    async contest(src, report) {
+        const RULES = ['', 'oi', 'acm'];
+        const count = await src.collection('document').find({ doc_type: 30 }).count();
+        await report({ progress: 1, message: `Found ${count} contests.` });
+        for (let i = 0; i <= Math.floor(count / 50); i++) {
+            const docs = await src.collection('document').find({ doc_type: 30 })
+                .skip(i * 50).limit(50)
+                .toArray();
+            const contests = [];
+            for (const doc of docs) {
+                contests.push({
+                    _id: doc._id,
+                    title: doc.title,
+                    content: doc.content,
+                    owner: doc.owner_uid,
+                    rule: RULES[doc.rule],
+                    beginAt: doc.begin_at,
+                    endAt: doc.end_at,
+                    pids: doc.pids,
+                    attend: doc.attend,
+                });
+            }
+            await dst.collection('contest').insertMany(contests);
         }
-        await dst.collection('contests').insertMany(contests);
-    }
-}
+    },
+};
 
 async function migrateVijos({
     host, port, name, username, password,
@@ -95,8 +99,8 @@ async function migrateVijos({
         value: (await src.collection('system').findOne({ _id: 'user_counter' })).value,
     });
     await report({ progress: 1, message: 'Collection:system done.' });
-    await problem(src, report);
-    await contest(src, report);
+    await tasks.problem(src, report);
+    await tasks.contest(src, report);
 }
 
 global.Hydro.script.migrateVijos = module.exports = migrateVijos;

@@ -37,7 +37,6 @@ async function setStatus(tid, uid, $set) {
 
 module.exports = {
     getPids(tdoc) {
-        console.log(tdoc.dag);
         const pids = new Set();
         for (const node of tdoc.dag) {
             for (const pid of node.pids) pids.add(pid);

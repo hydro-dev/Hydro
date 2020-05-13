@@ -303,19 +303,11 @@ class ConnectionHandler {
      * @param {import('sockjs').Connection} conn
      */
     constructor(conn) {
-        const that = this;
         this.conn = conn;
         this.request = {
-            cookies: {
-                get(name) {
-                    return that.request.cookies[name];
-                },
-                set() { },
-            },
             params: {},
             headers: conn.headers,
         };
-        this._handler = {};
         const p = (conn.url.split('?')[1] || '').split('&');
         for (const i in p) p[i] = p[i].split('=');
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
@@ -342,21 +334,14 @@ class ConnectionHandler {
     }
 
     async ___prepare() {
-        await new Promise((resolve, reject) => {
-            this.conn.once('data', (msg) => {
-                for (const i of msg.split(';')) {
-                    const [k, v] = i.trim().split('=');
-                    this.request.cookies[k] = v;
-                }
-                resolve();
-            });
-            setTimeout(reject, 5000);
-        });
-        this._handler.sid = this.request.cookies.get('sid');
-        this.session = this._handler.sid
-            ? await token.get(this._handler.sid, token.TYPE_SESSION)
-            : { uid: 1 };
-        if (!this.session) this.session = { uid: 1 };
+        try {
+            this.session = {
+                uid: await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN),
+            };
+            await token.delete(this.request.params.token, token.TYPE_CSRF_TOKEN);
+        } catch (e) {
+            this.session = { uid: 1 };
+        }
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(this.session.uid);

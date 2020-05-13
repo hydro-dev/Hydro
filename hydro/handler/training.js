@@ -73,8 +73,8 @@ class TrainingMainHandler extends TrainingHandler {
                 $or: [{ _id: { $in: Array.from(tids) } }, { enroll: 1 }],
             }).toArray();
             for (const tsdoc of tsdocs) {
-                tsdict[tsdoc._id] = tsdoc;
-                enrolledTids.add(tsdoc._id);
+                tsdict[tsdoc.tid] = tsdoc;
+                enrolledTids.add(tsdoc.tid);
             }
             for (const tid of tids) enrolledTids.delete(tid);
             if (enrolledTids.size) tdict = await training.getList(Array.from(enrolledTids));
@@ -117,7 +117,7 @@ class TrainingDetailHandler extends TrainingHandler {
         for (const node of tdoc.dag) {
             ndict[node._id] = node;
             const totalCount = node.pids.length;
-            const doneCount = Set.union(new Set(node.pids), new Set(donePids));
+            const doneCount = Set.union(new Set(node.pids), new Set(donePids)).size;
             const nsdoc = {
                 progress: totalCount ? parseInt(100 * (doneCount / totalCount)) : 100,
                 isDone: training.isDone(node, doneNids, donePids),
@@ -172,8 +172,6 @@ class TrainingCreateHandler extends TrainingHandler {
     }) {
         dag = await _parseDagJson(dag);
         const pids = training.getPids({ dag });
-        console.log(pids);
-        console.log(pids.length, pids.size);
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti({
             $or: [{ _id: { $in: pids } }, { pid: { $in: pids } }],

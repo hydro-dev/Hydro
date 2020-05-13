@@ -3,7 +3,7 @@
 {% block content %}
 <script>
   var Context = {
-    'socketUrl': "/record-conn",
+    'socketUrl': "/record-conn?token={{ handler.csrfToken }}",
     'rids': [
         {% for rdoc in rdocs %}"{{ rdoc._id.toString() }}",{% endfor %}
     ]

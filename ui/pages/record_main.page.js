@@ -9,10 +9,7 @@ const page = new NamedPage('record_main', async () => {
   const dd = new DiffDOM();
 
   sock.onopen = () => {
-    sock.send(document.cookie);
-    setTimeout(() => {
-      sock.send(JSON.stringify({ rids: Context.rids }));
-    }, 300);
+    sock.send(JSON.stringify({ rids: Context.rids }));
   };
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
