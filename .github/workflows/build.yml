@@ -22,8 +22,12 @@ jobs:
         yarn build:production
     - uses: actions/upload-artifact@v1
       with:
-        name: hydro
-        path: .build
+        name: development.js
+        path: .build/development.js
+    - uses: actions/upload-artifact@v1
+      with:
+        name: module
+        path: .build/module
     - uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: hydrooj/hydro:alpine

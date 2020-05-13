@@ -21,7 +21,7 @@ function del(_id) {
 
 async function getFirst(query) {
     const res = await coll.find(query).sort('_id', 1).limit(1).toArray();
-    if (res) {
+    if (res.length) {
         await coll.deleteOne({ _id: res[0]._id });
         return res[0];
     }
@@ -35,6 +35,6 @@ async function consume(query, cb) {
     }, 100);
 }
 
-module.exports = {
+global.Hydro.model.task = module.exports = {
     add, get, del, count, getFirst, consume,
 };

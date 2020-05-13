@@ -1,3 +1,4 @@
+/* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const fs = require('fs');
@@ -19,6 +20,7 @@ function ensureDir(dir) {
 }
 
 const active = [];
+const fail = [];
 try {
     // Let webpack pack builtin module together.
     // eslint-disable-next-line import/no-unresolved
@@ -59,7 +61,7 @@ async function preload() {
     for (const i of active) {
         try {
             if (i.os) {
-                if (!i.os.includes(os.platform())) throw new Error('Unsupported OS');
+                if (!i.os.includes(os.platform().toLowerCase())) throw new Error('Unsupported OS');
             }
             if (i.file) {
                 i.files = {};
@@ -87,6 +89,7 @@ async function handler() {
     for (const i of active) {
         if (i.handler && !i.fail) {
             try {
+                console.log(`Handler init: ${i.id}`);
                 console.time(`Handler init: ${i.id}`);
                 const exports = {};
                 // eslint-disable-next-line no-unused-vars
@@ -136,6 +139,7 @@ async function model() {
     for (const i of active) {
         if (i.model && !i.fail) {
             try {
+                console.log(`Model init: ${i.id}`);
                 console.time(`Model init: ${i.id}`);
                 const exports = {};
                 const module = { exports, file: i.files || {} };
@@ -155,6 +159,7 @@ async function lib() {
     for (const i of active) {
         if (i.lib && !i.fail) {
             try {
+                console.log(`Lib init: ${i.id}`);
                 console.time(`Lib init: ${i.id}`);
                 const exports = {};
                 // eslint-disable-next-line no-unused-vars
@@ -184,44 +189,15 @@ async function service() {
                 i.fail = true;
                 fail.push(i.id);
                 console.error(`Service Load Fail: ${i.id}`);
+                console.error(e);
             }
         }
     }
 }
 
 async function install() {
-    await Promise.all([lib(), locale(), template()]);
-    require('./service/setup');
-}
-
-async function installDb() {
-    const system = require('./model/system');
-    const def = {
-        PROBLEM_PER_PAGE: 100,
-        RECORD_PER_PAGE: 100,
-        SOLUTION_PER_PAGE: 20,
-        CONTEST_PER_PAGE: 20,
-        TRAINING_PER_PAGE: 10,
-        DISCUSSION_PER_PAGE: 50,
-        REPLY_PER_PAGE: 50,
-        CONTESTS_ON_MAIN: 5,
-        TRAININGS_ON_MAIN: 5,
-        DISCUSSIONS_ON_MAIN: 20,
-        'db.ver': 1,
-        'listen.https': false,
-        'listen.port': 8888,
-        'session.keys': ['Hydro'],
-        'session.secure': false,
-        'session.saved_expire_seconds': 3600 * 24,
-        'session.unsaved_expire_seconds': 600,
-        changemail_token_expire_seconds: 3600 * 24,
-        registration_token_expire_seconds: 600,
-    };
-    const tasks = [];
-    for (const key in def) {
-        tasks.push(system.set(key, def[key]));
-    }
-    await Promise.all(tasks);
+    const setup = require('./service/setup');
+    await setup.setup();
 }
 
 async function load() {
@@ -243,11 +219,12 @@ async function load() {
     require('./utils');
     require('./error');
     require('./permission');
+    await Promise.all([locale(), template()]);
     try {
         require('./options');
     } catch (e) {
         await install();
-        return;
+        require('./options');
     }
     const bus = require('./service/bus');
     await new Promise((resolve) => {
@@ -265,7 +242,7 @@ async function load() {
         'template', 'validator', 'nav',
     ];
     for (const i of builtinLib) require(`./lib/${i}`);
-    await Promise.all([lib(), locale(), template()]);
+    await lib();
     require('./service/gridfs');
     const server = require('./service/server');
     await server.prepare();
@@ -281,7 +258,10 @@ async function load() {
     }
     const system = require('./model/system');
     const dbVer = await system.get('db.ver');
-    if (dbVer !== 1) await installDb();
+    if (dbVer !== 1) {
+        const ins = require('./script/install');
+        await ins.run();
+    }
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
         'contest', 'training', 'discussion', 'manage', 'import',
@@ -300,4 +280,4 @@ async function load() {
     await server.start();
 }
 
-module.exports = { load, active };
+module.exports = { load, active, fail };

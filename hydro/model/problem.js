@@ -160,7 +160,13 @@ async function setTestdata(_id, readStream) {
     return await edit(_id, { data: f.id }); // eslint-disable-line no-return-await
 }
 
-module.exports = {
+async function getData(pid) {
+    const pdoc = await get(pid);
+    if (!pdoc.data) return null;
+    return gridfs.openDownloadStream(pdoc.data);
+}
+
+global.Hydro.model.problem = module.exports = {
     add,
     inc,
     get,
@@ -175,4 +181,5 @@ module.exports = {
     getMultiStatus,
     setTestdata,
     updateStatus,
+    getData,
 };

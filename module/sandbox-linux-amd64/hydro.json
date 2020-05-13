@@ -1,6 +1,8 @@
 {
     "name": "sandbox-linux",
     "version": "1.0.0",
-    "os": "Linux",
+    "os": [
+        "linux"
+    ],
     "description": "Sandbox service for linux"
 }

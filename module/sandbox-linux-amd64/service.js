@@ -2,7 +2,7 @@ const os = require('os');
 const path = require('path');
 const child = require('child_process');
 
-const p = child.spawn(path.resolve(os.tmpdir(), 'hydro', 'sandbox-linux-amd64', 'executorserver', ['-silent']));
+const p = child.spawn(path.resolve(os.tmpdir(), 'hydro', 'sandbox-linux-amd64', 'executorserver'), ['-silent']);
 if (!p.stdout) throw new Error('Cannot start executorserver');
 else {
     p.stdout.on('data', (data) => {

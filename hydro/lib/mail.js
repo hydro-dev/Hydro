@@ -1,21 +1,5 @@
 const nodemailer = require('nodemailer');
-const options = require('../options');
 const { SendMailError } = require('../error');
-
-let transporter = null;
-try {
-    transporter = nodemailer.createTransport({
-        host: options.VJ_SMTP_HOST,
-        port: options.VJ_DB_PORT,
-        secure: options.VJ_SMTP_SECURE,
-        auth: {
-            user: options.VJ_SMTP_USER,
-            pass: options.VJ_SMTP_PASSWORD,
-        },
-    });
-} catch (e) {
-    console.error(e);
-}
 
 module.exports = {
     /**
@@ -27,9 +11,21 @@ module.exports = {
     async sendMail(to, subject, text, html) {
         let t;
         try {
+            const system = require('../model/system');
+            const [host, port, secure, user, pass, from] = await Promise.all([
+                system.get('smtp.host'),
+                system.get('smtp.port'),
+                system.get('smtp.secure'),
+                system.get('smtp.user'),
+                system.get('smtp.pass'),
+                system.get('smtp.from'),
+            ]);
+            const transporter = nodemailer.createTransport({
+                host, port, secure, auth: { user, pass },
+            });
             t = await new Promise((resolve, reject) => {
                 transporter.sendMail({
-                    from: options.VJ_SMTP_FROM,
+                    from,
                     to,
                     subject,
                     text,

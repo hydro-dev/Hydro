@@ -269,7 +269,7 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
             ['problem_solution', null],
         ];
         this.response.body = {
-            path, psdocs, page, pcount, pscount, udict, pssdict,
+            path, psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
         };
     }
 

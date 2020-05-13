@@ -249,27 +249,30 @@ function Route(route, RouteHandler) {
             const args = { ...ctx.params, ...ctx.query, ...ctx.request.body };
 
             if (h.___prepare) await h.___prepare(args);
-
-            for (const l of check) {
-                if (args[l]) {
-                    args[l] = new ObjectID(args[l]);
-                    if (!args[l]) throw new ValidationError(l);
+            try {
+                for (const l of check) {
+                    if (args[l]) {
+                        args[l] = new ObjectID(args[l]);
+                        if (!args[l]) throw new ValidationError(l);
+                    }
                 }
+                if (args.content) validator.checkContent(args.content);
+                if (args.title) validator.checkContent(args.title);
+                if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
+                if (args.password) validator.checkPassword(args.password);
+                if (args.mail) validator.checkEmail(args.mail);
+                if (args.uname) validator.checkUname(args.uname);
+                if (args.page) args.page = parseInt(args.page);
+                if (args.duration) args.duration = parseFloat(args.duration);
+                if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
+                if (args.role) validator.checkRole(args.role);
+                if (args.roles) {
+                    for (const i of args.roles) validator.checkRole(i);
+                }
+            } catch (e) {
+                if (e instanceof ValidationError) throw e;
+                throw new ValidationError('Argument check failed');
             }
-            if (args.content) validator.checkContent(args.content);
-            if (args.title) validator.checkContent(args.title);
-            if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
-            if (args.password) validator.checkPassword(args.password);
-            if (args.mail) validator.checkEmail(args.mail);
-            if (args.uname) validator.checkUname(args.uname);
-            if (args.page) args.page = parseInt(args.page);
-            if (args.duration) args.duration = parseFloat(args.duration);
-            if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
-            if (args.role) validator.checkRole(args.role);
-            if (args.roles) {
-                for (const i of args.roles) validator.checkRole(i);
-            }
-
             if (h.__prepare) await h.__prepare(args);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);

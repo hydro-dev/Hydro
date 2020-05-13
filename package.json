@@ -1,6 +1,6 @@
 {
     "name": "hydro",
-    "version": "0.0.0",
+    "version": "1.0.0-preview",
     "main": "hydro/development.js",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
