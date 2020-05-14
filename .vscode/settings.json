@@ -4,5 +4,6 @@
     "files.encoding": "utf8",
     "files.eol": "\n",
     "editor.detectIndentation": false,
-    "editor.formatOnSave": false
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
 }
