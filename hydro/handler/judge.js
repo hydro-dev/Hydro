@@ -19,14 +19,12 @@ async function _postJudge(rdoc) {
             contest.updateStatus(rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
         );
     }
-    if (!rdoc.rejudged) {
-        if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
-            if (accept) {
-                tasks.push(
-                    problem.inc(rdoc.pid, 'nAccept', 1),
-                    user.inc(rdoc.uid, 'nAccept', 1),
-                );
-            }
+    if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
+        if (accept && !rdoc.rejudged) {
+            tasks.push(
+                problem.inc(rdoc.pid, 'nAccept', 1),
+                user.inc(rdoc.uid, 'nAccept', 1),
+            );
         }
     }
     await Promise.all(tasks);

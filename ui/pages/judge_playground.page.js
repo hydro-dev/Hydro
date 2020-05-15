@@ -5,7 +5,7 @@ import * as recordEnum from 'vj/constant/record';
 const page = new NamedPage('judge_playground', async () => {
   const { default: SockJs } = await import('sockjs-client');
 
-  const sock = new SockJs(`/judge/consume-conn?token=${ UIContext.csrfToken }`);
+  const sock = new SockJs(`/judge/consume-conn?token=${UiContext.csrfToken}`);
   sock.onopen = () => {
     const div = $('<div class="section visible">').appendTo('#messages');
     $('<div class="section__header"><h1 class="section__title">Connection opened.</h1></div>')

@@ -1,8 +1,9 @@
 const { ObjectID } = require('bson');
-const gridfs = require('../service/gridfs');
+const { STATUS_ACCEPTED } = require('./builtin').STATUS;
 const { ProblemNotFoundError } = require('../error');
 const validator = require('../lib/validator');
 const db = require('../service/db.js');
+const gridfs = require('../service/gridfs');
 
 const coll = db.collection('problem');
 const collStatus = db.collection('problem.status');
@@ -141,12 +142,16 @@ async function getListStatus(uid, pids) {
     return r;
 }
 async function updateStatus(pid, uid, rid, status) {
-    const res = await collStatus.findOneAndUpdate(
+    const cur = collStatus.findOne({ pid, uid });
+    if (cur && status !== STATUS_ACCEPTED) {
+        if (cur.status !== STATUS_ACCEPTED) return false;
+    }
+    await collStatus.updateOne(
         { pid, uid },
         { $set: { rid, status } },
         { upsert: true },
     );
-    return res.value;
+    return true;
 }
 async function setTestdata(_id, readStream) {
     const pdoc = await getById(_id);

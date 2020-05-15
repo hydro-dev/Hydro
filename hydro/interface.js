@@ -19,20 +19,22 @@ exports.udoc = {
     loginat: new Date(),
     loginip: '0.0.0.0',
 };
+
+exports.pdoc = {
+    _id: new ObjectID(),
+    pid: 'P1000',
+    owner: 0,
+    title: 'No Title',
+    content: 'No Content',
+    nSubmit: 0,
+    nAccept: 0,
+    tag: [],
+    category: [],
+    data: null,
+    hidden: false,
+};
+
 /*
-export interface Pdoc {
-    _id: ObjectID
-    pid: string
-    owner: number
-    title: string
-    content: string
-    nSubmit: number
-    nAccept: number
-    tag: string[]
-    category: string[],
-    data: ObjectID | null
-    hidden: boolean
-}
 export interface TestCase {
     time: number,
     memory: number,
