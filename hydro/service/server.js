@@ -151,7 +151,10 @@ class Handler {
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
-        [this.csrfToken] = await token.add(token.TYPE_CSRF_TOKEN, 600, { path: this.request.path });
+        [this.csrfToken] = await token.add(token.TYPE_CSRF_TOKEN, 600, {
+            path: this.request.path,
+            uid: this.session.uid,
+        });
         this.preferJson = (this.request.headers.accept || '').includes('application/json');
     }
 
@@ -321,7 +324,6 @@ class ConnectionHandler {
             _: (str) => (str ? str.toString().translate(this.user.language) : ''),
             user: this.user,
         }));
-        console.timeEnd(name);
         return res;
     }
 
@@ -335,9 +337,7 @@ class ConnectionHandler {
 
     async ___prepare() {
         try {
-            this.session = {
-                uid: await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN),
-            };
+            this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN);
             await token.delete(this.request.params.token, token.TYPE_CSRF_TOKEN);
         } catch (e) {
             this.session = { uid: 1 };

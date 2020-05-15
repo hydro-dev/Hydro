@@ -18,9 +18,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   handleChange(id, value) {
-    if (id === null) {
-      return;
-    }
+    if (id === null) return;
     dispatch({
       type: 'DIALOGUES_INPUT_CHANGED',
       payload: value,
@@ -30,11 +28,9 @@ const mapDispatchToProps = (dispatch) => ({
     });
   },
   postSend(placeholderId, uid, value) {
-    if (placeholderId === null) {
-      return;
-    }
+    if (placeholderId === null) return;
     const req = request.post('', {
-      operation: 'send_message',
+      operation: 'send',
       uid,
       content: value,
     });
@@ -46,20 +42,19 @@ const mapDispatchToProps = (dispatch) => ({
       },
     });
   },
-  postReply(id, value) {
-    if (id === null) {
-      return;
-    }
+  postReply(_id, uid, value) {
+    if (_id === null) return;
     const req = request.post('', {
-      operation: 'reply_message',
-      message_id: id,
+      operation: 'send',
+      type: 'single',
+      uid,
       content: value,
     });
     dispatch({
       type: 'DIALOGUES_POST_REPLY',
       payload: req,
       meta: {
-        dialogueId: id,
+        dialogueId: _id,
       },
     });
   },
@@ -103,6 +98,7 @@ export default class MessagePadInputContainer extends React.PureComponent {
     } else {
       this.props.postReply(
         this.props.activeId,
+        state.dialogues[this.props.activeId].to,
         this.props.inputValue,
       );
     }

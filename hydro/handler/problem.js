@@ -118,8 +118,10 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         const rid = await record.add({
             uid: this.uid, lang, code, pid: this.pdoc._id,
         });
-        await record.judge(rid);
-        this.user.nSubmit++;
+        await Promise.all([
+            record.judge(rid),
+            user.inc(this.user._id, 'nSubmit'),
+        ]);
         this.response.body = { rid };
         this.response.redirect = `/r/${rid}`;
     }

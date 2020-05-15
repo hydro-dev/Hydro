@@ -1,6 +1,6 @@
 const {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError, MessageNotFoundError,
+    NotFoundError,
 } = require('../error');
 const bus = require('../service/bus');
 const {
@@ -200,38 +200,34 @@ class HomeMessagesHandler extends Handler {
             this.udoc(udict, mdoc.from);
             this.udoc(udict, mdoc.to);
         }
-        this.response.body = { messages: mdocs, udict };
+        const path = [
+            ['Hydro', '/'],
+            ['home_messages', null],
+        ];
+        this.response.body = { messages: mdocs, udict, path };
         this.response.template = 'home_messages.html';
     }
 
-    async postSendMessage({ uid, content }) {
+    async postSend({ uid, content, type = 'full' }) {
         const udoc = await user.getById(uid);
-        const mdoc = await message.add(this.user._id, udoc._id, content);
+        let mdoc = await message.send(this.user._id, uid, content);
+        if (type === 'single') {
+            mdoc = mdoc.reply[mdoc.reply.length - 1];
+        }
         // TODO(twd2): improve here:
         // projection
         mdoc.from_udoc = this.user;
-        this.udoc(mdoc, 'from');
         mdoc.to_udoc = udoc;
+        this.udoc(mdoc, 'from');
         this.udoc(mdoc, 'to');
         if (this.user._id !== uid) {
             await bus.publish(`user_message-${uid}`, { type: 'new', data: mdoc });
         }
-        this.back({ mdoc });
+        this.back(type === 'full' ? { mdoc } : { reply: mdoc });
     }
 
-    async postReplyMessage({ message_id, content }) {
-        const [mdoc, reply] = await message.addReply(message_id, this.user._id, content);
-        if (!mdoc) throw new MessageNotFoundError(message_id);
-        if (mdoc.from !== mdoc.to) {
-            const other = mdoc.from === this.user._id ? mdoc.from : mdoc.to;
-            await bus.publish(`user_message-${other}`, { type: 'reply', data: mdoc });
-        }
-        mdoc.reply = [reply];
-        this.back({ reply });
-    }
-
-    async postDeleteMessage({ message_id }) {
-        await message.delete(message_id, this.user._id);
+    async postDeleteMessage({ messageId }) {
+        await message.delete(messageId, this.user._id);
         this.back();
     }
 }

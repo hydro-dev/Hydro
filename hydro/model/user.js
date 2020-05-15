@@ -96,9 +96,10 @@ async function changePassword(uid, currentPassword, newPassword) {
     });
 }
 
-async function inc(_id, field, n) {
-    await coll.findOneAndUpdate({ _id }, { $inc: { [field]: n } });
-    const udoc = await getById(_id);
+async function inc(_id, field, n = 1) {
+    const udoc = await coll.findOne({ _id });
+    udoc[field] = udoc[field] + n || n;
+    await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
     return udoc;
 }
 

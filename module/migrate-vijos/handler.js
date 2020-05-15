@@ -22,7 +22,7 @@ class MigrateVijosHandler extends Handler {
     }) {
         migrate({
             host, port, name, username, password,
-        }, (data) => message.send(0, 0, data));
+        }, (data) => message.send(1, 1, data));
         this.response.redirect = '/manage/log';
     }
 }

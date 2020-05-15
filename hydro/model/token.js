@@ -63,9 +63,9 @@ module.exports = {
         const now = new Date();
         const res = await coll.findOneAndUpdate({ _id: tokenId, tokenType }, {
             $set: {
+                ...data,
                 updateAt: now,
                 expireAt: new Date(now.getTime() + expireSeconds * 1000),
-                ...data,
                 tokenType,
             },
         });

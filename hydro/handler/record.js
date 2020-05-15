@@ -17,22 +17,10 @@ class RecordListHandler extends Handler {
         this.response.template = 'record_main.html';
         const q = {};
         const rdocs = await record.getMany(q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
-        const pdict = {};
-        const udict = {};
-        const ulist = [];
-        const plist = [];
-        for (const rdoc of rdocs) {
-            ulist[rdoc.uid] = user.getById(rdoc.uid);
-            plist[rdoc.pid] = problem.get(rdoc.pid, this.user._id);
-        }
-        await Promise.all(ulist);
-        await Promise.all(plist);
-        for (const udoc of ulist) {
-            udict[udoc._id] = udoc;
-        }
-        for (const pdoc of plist) {
-            pdict[pdoc._id] = pdoc;
-        }
+        const [udict, pdict] = await Promise.all([
+            user.getList(rdocs.map((rdoc) => rdoc.uid)),
+            problem.getList(rdocs.map((rdoc) => rdoc.pid)),
+        ]);
         const path = [
             ['Hydro', '/'],
             ['record_main', null],

@@ -22,7 +22,7 @@ export default function reducer(state = {}, action) {
       ...state,
       [id]: {
         _id: id,
-        from: UserContext.uid,
+        from: UserContext._id,
         to: user._id,
         to_udoc: { ...user },
         reply: [],

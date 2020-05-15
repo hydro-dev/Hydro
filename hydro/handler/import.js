@@ -22,10 +22,10 @@ class ProblemImportHandler extends Handler {
     async post({
         url, pid, hidden, remoteType,
     }) {
-        if (typeof this[`from_${remoteType}`] !== 'function') {
+        if (typeof global.Hydro.lib[`import.${remoteType}`] !== 'function') {
             throw new ValidationError('remoteType');
         }
-        const [pdoc, testdata] = await this[`from_${remoteType}`](url);
+        const [pdoc, testdata] = await global.Hydro.lib[`import.${remoteType}`](url, this);
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
         const _id = await problem.add(pdoc);

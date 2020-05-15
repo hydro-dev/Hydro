@@ -39,7 +39,7 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
           <ListItem
             key={dialogue._id}
             userName={
-              dialogue.from === UserContext.uid
+              dialogue.from === UserContext._id
                 ? dialogue.to_udoc.uname
                 : dialogue.from_udoc.uname
             }
@@ -49,7 +49,7 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
                 : _.last(dialogue.reply).content
             }
             faceUrl={
-              dialogue.from === UserContext.uid
+              dialogue.from === UserContext._id
                 ? dialogue.to_udoc.gravatar_url
                 : dialogue.from_udoc.gravatar_url
             }
