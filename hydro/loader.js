@@ -209,6 +209,8 @@ async function load() {
         script: {},
         lib: {},
         nodeModules: {
+            bson: require('bson'),
+            'js-yaml': require('js-yaml'),
             mongodb: require('mongodb'),
         },
         template: {},

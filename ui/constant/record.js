@@ -17,9 +17,6 @@ export const STATUS_COMPILING = 21;
 export const STATUS_FETCHED = 22;
 export const STATUS_IGNORED = 30;
 
-export const TYPE_SUBMISSION = 0;
-export const TYPE_PRETEST = 1;
-
 export const STATUS_TEXTS = {
   [STATUS_WAITING]: 'Waiting',
   [STATUS_ACCEPTED]: 'Accepted',
@@ -90,9 +87,3 @@ export const STATUS_SCRATCHPAD_SHORT_TEXTS = {
   [STATUS_RUNTIME_ERROR]: 'RTE',
 };
 attachObjectMeta(STATUS_SCRATCHPAD_SHORT_TEXTS, 'exportToPython', false);
-
-export const TYPE_TEXTS = {
-  [TYPE_SUBMISSION]: 'Submission',
-  [TYPE_PRETEST]: 'Pretest',
-};
-attachObjectMeta(TYPE_TEXTS, 'intKey', true);
