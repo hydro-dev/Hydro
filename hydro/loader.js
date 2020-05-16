@@ -195,6 +195,25 @@ async function service() {
     }
 }
 
+async function script() {
+    for (const i of active) {
+        if (i.script && !i.fail) {
+            try {
+                console.time(`Script init: ${i.id}`);
+                const exports = {};
+                const module = { exports }; // eslint-disable-line no-unused-vars
+                eval(i.script);
+                console.timeEnd(`Script init: ${i.id}`);
+            } catch (e) {
+                i.fail = true;
+                fail.push(i.id);
+                console.error(`Script Load Fail: ${i.id}`);
+                console.error(e);
+            }
+        }
+    }
+}
+
 async function install() {
     const setup = require('./service/setup');
     await setup.setup();
@@ -279,6 +298,7 @@ async function load() {
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
     }
+    await script();
     await server.start();
 }
 

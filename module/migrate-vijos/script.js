@@ -1,7 +1,16 @@
 /* eslint-disable no-await-in-loop */
-const { mongodb, bson } = global.Hydro.nodeModules;
+const { mongodb } = global.Hydro.nodeModules;
 const dst = global.Hydro.service.db;
-const { problem } = global.Hydro.model.problem;
+const { problem } = global.Hydro.model;
+
+const map = {};
+
+const pid = (id) => {
+    if (map[id.toString()]) return map[id.toString()];
+    if (id.generationTime) return id;
+    id = id.toString();
+    return id;
+};
 
 const tasks = {
     user: async (docs) => docs.map((doc) => ({
@@ -26,27 +35,39 @@ const tasks = {
         gender: doc.gender,
         qq: doc.qq,
     })),
-    problem: async (docs) => docs.map((doc) => ({
-        _id: doc._id,
-        pid: doc.pname || doc.doc_id.toString() || new bson.ObjectID(),
-        title: doc.title,
-        content: doc.content,
-        owner: doc.owner_uid,
-        data: doc.data,
-        category: doc.category,
-        tag: doc.tag,
-        nSubmit: doc.num_submit,
-        nAccept: doc.num_accept,
-    })),
+    problem: async (docs) => {
+        const problems = [];
+        for (const doc of docs) {
+            if (doc.pname) map[doc.doc_id.toString()] = doc.pname;
+            problems.push({
+                _id: doc._id,
+                pid: doc.pname || pid(doc.doc_id),
+                title: doc.title,
+                content: doc.content,
+                owner: doc.owner_uid,
+                data: doc.data,
+                category: doc.category,
+                tag: doc.tag,
+                nSubmit: doc.num_submit,
+                nAccept: doc.num_accept,
+                hidden: doc.hidden || false,
+            });
+        }
+        return problems;
+    },
     'problem.status': async (docs) => {
         const problems = [];
         for (const doc of docs) {
-            problems.push({
-                pid: await problem.get(doc.pid),
-                rid: doc.rid,
-                uid: doc.uid,
-                status: doc.status,
-            });
+            try {
+                problems.push({
+                    pid: await problem.get(pid(doc.doc_id)),
+                    rid: doc.rid,
+                    uid: doc.uid,
+                    status: doc.status,
+                });
+            } catch (e) {
+                // Ignore
+            }
         }
         return problems;
     },
@@ -58,7 +79,7 @@ const tasks = {
                 content: r.content,
                 _id: r._id,
             }));
-            const pdoc = await problem.get(doc.parent_doc_id.toString());
+            const pdoc = await problem.get(pid(doc.parent_doc_id));
             solutions.push({
                 _id: doc._id,
                 owner: doc.owner_uid,
@@ -102,12 +123,16 @@ const tasks = {
         parentId: doc.parent_doc_id,
     })),
     contest: async (docs) => {
-        const RULES = ['oi', 'acm', 'homework'];
+        const RULES = {
+            2: 'oi',
+            3: 'acm',
+            11: 'homework',
+        };
         const contests = [];
         for (const doc of docs) {
             const pids = [];
-            for (const pid of doc.pids) {
-                const pdoc = await problem.get(pid.toString());
+            for (const p of doc.pids) {
+                const pdoc = await problem.get(pid(p));
                 pids.push(pdoc._id);
             }
             contests.push({
@@ -130,8 +155,8 @@ const tasks = {
             const dag = [];
             for (const t of doc.dag) {
                 const pids = [];
-                for (const pid of t.pids) {
-                    const pdoc = await problem.get(pid.toString());
+                for (const p of t.pids) {
+                    const pdoc = await problem.get(pid(p));
                     pids.push(pdoc._id);
                 }
                 dag.push({
@@ -153,6 +178,8 @@ const tasks = {
         }
         return trainings;
     },
+    'fs.files': async (docs) => docs,
+    'fs.chunks': async (docs) => docs,
 };
 
 const cursor = {
@@ -164,6 +191,8 @@ const cursor = {
     'discussion.reply': (s) => s.collection('document').find({ doc_type: 22 }),
     contest: (s) => s.collection('document').find({ doc_type: 30 }),
     training: (s) => s.collection('document').find({ doc_type: 40 }),
+    'fs.files': (s) => s.collection('fs.files').find(),
+    'fs.chunks': (s) => s.collection('fs.chunks').find(),
 };
 
 async function task(name, src, report) {
@@ -172,8 +201,9 @@ async function task(name, src, report) {
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
-        await dst.collection(name).insertMany(await tasks[name](docs));
-        await report({ progress: Math.round(100 * (i / total)) });
+        const t = await tasks[name](docs);
+        if (t.length) await dst.collection(name).insertMany(t);
+        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
 }
 
@@ -188,14 +218,27 @@ async function migrateVijos({
     });
     const src = Database.db(name);
     await report({ progress: 0, message: 'Database connected.' });
-    await dst.collection('system').insertOne({
-        _id: 'user',
-        value: (await src.collection('system').findOne({ _id: 'user_counter' })).value,
-    });
+    await dst.collection('system').updateOne(
+        { _id: 'user' },
+        {
+            $set: {
+                value: (await src.collection('system').findOne({ _id: 'user_counter' })).value,
+            },
+        },
+        { upsert: true },
+    );
     await report({ progress: 1, message: 'Collection:system done.' });
+    await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
+    const d = [
+        'problem', 'problem.status', 'solution', 'discussion',
+        'discussion.reply', 'contest', 'training', 'fs.files', 'fs.chunks',
+    ];
+    for (const i of d) {
+        await dst.collection(i).deleteMany();
+    }
     const t = [
         'user', 'problem', 'problem.status', 'solution', 'discussion',
-        'discussion.reply', 'contest', 'training',
+        'discussion.reply', 'contest', 'training', 'fs.files', 'fs.chunks',
     ];
     for (const i of t) await task(i, src, report);
 }

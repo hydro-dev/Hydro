@@ -8,6 +8,7 @@ const db = require('../service/db.js');
 const coll = db.collection('discussion');
 const collReply = db.collection('discussion.reply');
 const collStatus = db.collection('discussion.status');
+const collNode = db.collection('discussion.node');
 
 async function add(parentType, parentId, owner, title, content, ip = null, highlight = false) {
     const res = await coll.insertOne({
@@ -132,6 +133,10 @@ function getStatus(did, uid) {
     return collStatus.findOne({ did, uid });
 }
 
+function getNode(_id) {
+    return collNode.findOne({ _id });
+}
+
 async function getVnode(ddoc, handler) {
     if (ddoc.parentType === 'problem') {
         const pdoc = await problem.getById(ddoc.parentId);
@@ -141,7 +146,11 @@ async function getVnode(ddoc, handler) {
     } if (ddoc.parentType === 'contest') {
         const tdoc = await contest.get(ddoc.parentId);
         return { ...tdoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
-    } return null;
+    } if (ddoc.parentType === 'node') {
+        const ndoc = await getNode(ddoc.parentId);
+        return { ...ndoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+    }
+    return null;
 }
 
 async function getListVnodes(ddocs, handler) {
