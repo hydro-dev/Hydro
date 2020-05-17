@@ -34,7 +34,7 @@ class ProblemHandler extends Handler {
         let psdict = {};
         if (category) q.category = category;
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        const [pdocs, pcount] = await paginate(
+        const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(q).sort({ pid: 1 }),
             page,
             await system.get('PROBLEM_PER_PAGE'),
@@ -47,7 +47,7 @@ class ProblemHandler extends Handler {
             ['problem_main', null],
         ];
         this.response.body = {
-            path, page, pcount, pdocs, psdict, category,
+            path, page, pcount, ppcount, pdocs, psdict, category,
         };
     }
 }

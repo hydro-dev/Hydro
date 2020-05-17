@@ -1,3 +1,5 @@
+const { ObjectID } = require('bson');
+
 exports.udoc = {
     _id: 0,
     mail: '',
@@ -44,7 +46,7 @@ export interface TestCase {
 export interface Rdoc {
     _id: ObjectID,
     pid: ObjectID,
-    owner: number,
+    uid: number,
     lang: string,
     code: string,
     score: number,
