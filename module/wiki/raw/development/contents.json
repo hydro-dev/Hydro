@@ -2,5 +2,7 @@
     "basic",
     "module",
     "handler",
-    "service"
+    "service",
+    "file",
+    "template"
 ]

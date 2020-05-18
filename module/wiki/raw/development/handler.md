@@ -33,7 +33,7 @@ async function apply() {
     Route('/route/:username', module.exports.CustomHandler);
 }
 
-module.exports = { CustomHandler, apply };
+global.Hydro.handler.custom = module.exports = { CustomHandler, apply };
 ```
 
 在路由中定义所有的函数应均为异步函数，支持的函数如下：
@@ -71,12 +71,14 @@ args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参
 再执行 prepare(args) （如果存在）  
 检查请求类型：
 
+```
 为 GET ？  
-  -> 执行 get(args)
+  -> 执行 get(args)  
 为 POST ?  
-  -> 执行 post(args)
-  -> 含有 operation 字段？
-       -> 执行 post[Operation]
+  -> 执行 post(args)  
+  -> 含有 operation 字段？  
+       -> 执行 post[Operation]  
+```
 
 执行 cleanup()  
 执行 _cleanup()  
@@ -86,3 +88,9 @@ args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参
 * 在表单提交时的 operation 字段使用下划线，函数名使用驼峰命名。  
 
 如 `<input type="hidden" name="operation" value="confirm_delete">` 对应 `postConfirmDelete` 函数。
+
+应当提供 `apply` 函数，并与定义的 Handler 一同挂载到 `global.Hydro.handler[模块名]` 位置。  
+`apply` 函数将在初始化阶段被调用。  
+
+<blockquote class="note">请在 apply 函数中从 module.exports 引用，因为它们可能需要被其他模块修改。</blockquote>
+
