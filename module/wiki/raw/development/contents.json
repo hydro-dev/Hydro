@@ -1,4 +1,6 @@
 [
     "basic",
-    "module"
+    "module",
+    "handler",
+    "service"
 ]
