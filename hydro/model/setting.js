@@ -24,10 +24,10 @@ const PREFERENCE_SETTINGS = [
 
 const ACCOUNT_SETTINGS = [
     Setting('setting_info', 'gravatar', null,
-        null, null, 'Gravatar Email',
+        null, 'text', 'Gravatar Email',
         'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.'),
     Setting('setting_info', 'qq', null,
-        null, null, 'QQ'),
+        null, 'text', 'QQ'),
     Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE,
         null, 'select', 'Gender'),
     Setting('setting_info', 'bio', null,
@@ -43,6 +43,15 @@ const SETTINGS_BY_KEY = {};
 
 for (const setting in SETTINGS) SETTINGS_BY_KEY[setting.key] = setting;
 
-module.exports = {
-    PREFERENCE_SETTINGS, ACCOUNT_SETTINGS, SETTINGS, SETTINGS_BY_KEY,
+const SYSTEM_SETTINGS = [
+    Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
+    Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password'),
+    Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
+    Setting('setting_smtp', 'smtp.port', null, null, 'text', 'SMTP Server Port'),
+    Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
+    Setting('setting_smtp', 'smtp.secure', null, null, 'checkbox', 'SSL'),
+];
+
+global.Hydro.model.setting = module.exports = {
+    Setting, PREFERENCE_SETTINGS, ACCOUNT_SETTINGS, SETTINGS, SETTINGS_BY_KEY, SYSTEM_SETTINGS,
 };

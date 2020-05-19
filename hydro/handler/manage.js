@@ -1,4 +1,6 @@
 const user = require('../model/user');
+const system = require('../model/system');
+const setting = require('../model/setting');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
 const hpm = require('../lib/hpm');
@@ -136,6 +138,27 @@ class ManageModuleHandler extends ManageHandler {
     }
 }
 
+class ManageSettingHandler extends ManageHandler {
+    async get() {
+        this.response.template = 'manage_settings.html';
+        const current = {};
+        const settings = setting.SYSTEM_SETTINGS;
+        for (const s of settings) {
+            current[s.key] = await system.get(s.key);
+        }
+        this.response.body = {
+            current, settings,
+        };
+    }
+
+    async post(args) {
+        for (const key in args) {
+            await system.set(key, args[key]);
+        }
+        this.back();
+    }
+}
+
 async function apply() {
     Route('/manage', module.exports.ManageMainHandler);
     Route('/manage/dashboard', module.exports.ManageDashboardHandler);
@@ -144,6 +167,7 @@ async function apply() {
     Route('/manage/permission', module.exports.ManagePermissionHandler);
     Route('/manage/role', module.exports.ManageRoleHandler);
     Route('/manage/module', module.exports.ManageModuleHandler);
+    Route('/manage/setting', module.exports.ManageSettingHandler);
 }
 
 global.Hydro.handler.manage = module.exports = {
@@ -154,5 +178,6 @@ global.Hydro.handler.manage = module.exports = {
     ManagePermissionHandler,
     ManageRoleHandler,
     ManageModuleHandler,
+    ManageSettingHandler,
     apply,
 };

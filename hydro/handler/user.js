@@ -39,7 +39,7 @@ class UserLogoutHandler extends Handler {
     }
 
     async post() {
-        this.session = { uid: 1 };
+        this.session.uid = 1;
     }
 }
 
@@ -61,7 +61,7 @@ class UserRegisterHandler extends Handler {
             { mail },
         );
         if (await system.get('smtp.user')) {
-            const m = await this.renderHTML('user_register_mail', { url: `/register/${t}` });
+            const m = await this.renderHTML('user_register_mail', { url: `/register/${t[0]}` });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';
         } else {

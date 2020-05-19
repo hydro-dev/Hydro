@@ -139,18 +139,15 @@ class HomeSettingsHandler extends Handler {
 
     async get({ category }) {
         this.response.template = 'home_settings.html';
+        this.response.body = {
+            category,
+            page_name: `home_${category}`,
+            current: this.user,
+        };
         if (category === 'preference') {
-            this.response.body = {
-                category,
-                page_name: `home_${category}`,
-                settings: setting.PREFERENCE_SETTINGS,
-            };
+            this.response.body.settings = setting.PREFERENCE_SETTINGS;
         } else if (category === 'account') {
-            this.response.body = {
-                category,
-                page_name: `home_${category}`,
-                settings: setting.ACCOUNT_SETTINGS,
-            };
+            this.response.body.settings = setting.ACCOUNT_SETTINGS;
         } else throw new NotFoundError();
     }
 

@@ -21,12 +21,16 @@ function ensureDir(dir) {
 
 const active = [];
 const fail = [];
+
 try {
     // Let webpack pack builtin module together.
     // eslint-disable-next-line import/no-unresolved
-    const f = require('../.build/builtin.json');
-    const m = { ...yaml.safeLoad(zlib.gunzipSync(f.data)), id: 'builtin' };
-    active.push(m);
+    const f = require('../.build/module.json');
+    for (const filename in f) {
+        const m = { ...yaml.safeLoad(zlib.gunzipSync(f[filename])), filename };
+        active.push(m);
+        console.log(filename);
+    }
 } catch (e) {
     // Builtin module is in the module directory
 }

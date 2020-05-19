@@ -57,6 +57,7 @@ const tasks = {
                 nSubmit: doc.num_submit,
                 nAccept: doc.num_accept,
                 hidden: doc.hidden || false,
+                difficulty: doc.difficulty_admin,
             });
         }
         return problems;

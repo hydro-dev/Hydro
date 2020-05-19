@@ -45,8 +45,7 @@ async function build(type) {
             builtin.file[f] = fs.readFileSync(root(`.uibuild/${f}`)).toString('base64');
         }
     }
-    const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: 3 });
-    fs.writeFileSync(root('.build/builtin.json'), JSON.stringify({ data: data.toString('base64') }));
+    const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: -1 });
     fs.writeFileSync(root('.build/module/builtin.hydro'), data);
     await require('./buildModule')(type);
     await require('./webpack')(type);
@@ -54,7 +53,22 @@ async function build(type) {
     for (const f of t) {
         if (fs.statSync(root(`.build/module/${f}`)).isDirectory()) rmdir(root(`.build/module/${f}`));
     }
-    fs.unlinkSync(root('.build/builtin.json'));
+    const modules = [
+        'builtin', 'contest-rule-homework', 'judger', 'migrate-vijos', 'module-pastebin',
+        'problem-import-syzoj', 'wiki',
+    ];
+    const j = {};
+    for (const m of modules) {
+        try {
+            const d = fs.readFileSync(root(`.build/module/${m}.hydro`));
+            j[m] = d.toString('base64');
+        } catch (e) {
+            console.error(`Module pack failed: ${m}`);
+        }
+    }
+    fs.writeFileSync(root('.build/module.json'), JSON.stringify(j));
+    await require('./webpack')(type, '-full');
+    // fs.unlinkSync(root('.build/module.json'));
 }
 
 module.exports = build;
