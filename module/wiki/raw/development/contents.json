@@ -1,8 +1,11 @@
 [
     "basic",
     "module",
+    "hydro",
     "handler",
     "service",
+    "lib",
     "file",
+    "locale",
     "template"
 ]
