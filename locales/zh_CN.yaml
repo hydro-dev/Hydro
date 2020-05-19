@@ -315,6 +315,7 @@ manage_join_applications: 加域申请
 manage_role: 管理角色
 manage_user: 管理用户
 manage_permission: 管理权限
+manage_module: 管理模块
 domain_join: 加入域
 'Join {0}': '加入 {0}'
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
@@ -772,10 +773,6 @@ home_domain_account: 当前域的设置
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 Display name {1} you want to set is used by others.: 您想要设置的显示名 {1} 已经被其他人使用了。
 Numeric PID: 数字题号
-Only {0} problems can be copied in one request, got {1}.: 一次请求只能复制 {0} 个题目，但是您输入了 {1} 个。
-Problem is successfully copied.: 题目复制完成。
-problem_copy: 复制题目
-Copy Problem: 复制题目
 Be Copied: 被复制
 Copy from: 复制自
 Problem ID List: 题目 ID 列表
@@ -784,7 +781,6 @@ Destination Domain: 目标域
 Domain ID: 域 ID
 Test data comes from: 测试数据来自
 Current dataset comes from: 当前数据集来自
-Copy Problem To: 将题目复制到
 What's this?: 这是什么？
 About test data: 关于测试数据
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。

@@ -27,7 +27,7 @@
 {%- if pdoc['tag']|length > 0 %}
   <ul class="problem__tags">
   {%- for tag in pdoc['tag'] %}
-    <li class="problem__tag"><a class="problem__tag-link" href="/p?category={{ tag }}">{{ tag }}</a></li>
+    <li class="problem__tag"><a class="problem__tag-link" href="/p/category/{{ tag }}">{{ tag }}</a></li>
   {%- endfor %}
   </ul>
 {%- else %}

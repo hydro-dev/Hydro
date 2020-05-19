@@ -33,6 +33,7 @@ async function build(type) {
         'bsod.html',
     ];
     const builtin = {
+        id: 'builtin',
         locale: lang,
         template: template('templates', exclude),
         file: {},

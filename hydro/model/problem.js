@@ -123,11 +123,11 @@ function count(query) {
     return coll.find(query).count();
 }
 async function random(query) {
-    const pdocs = coll.find(query);
-    const pcount = await pdocs.count();
+    const cursor = coll.find(query);
+    const pcount = await cursor.count();
     if (pcount) {
-        const pdoc = await pdocs.skip(Math.floor(Math.random() * pcount)).limit(1).toArray()[0];
-        return pdoc.pid;
+        const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
+        return pdoc[0].pid;
     } return null;
 }
 async function getList(pids) {

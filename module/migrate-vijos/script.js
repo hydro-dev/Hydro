@@ -20,6 +20,7 @@ const tasks = {
         salt: doc.salt,
         hash: doc.hash.split('|')[1],
         hashType: doc.hash.split('|')[0] === 'vj4' ? 'hydro' : doc.hash.split('|')[0],
+        role: doc.priv === -1 ? 'root' : 'default',
         gravatar: doc.gravatar,
         email: doc.mail,
         emailLower: doc.mail_lower,

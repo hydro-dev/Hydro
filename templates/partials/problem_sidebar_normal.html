@@ -64,12 +64,6 @@
         <span class="icon icon-comment--text"></span> {{ _('Solutions') }}
       </a></li>
     {% endif %}
-    {% if page_name == 'problem_detail' and handler.hasPerm(perm.PERM_LOGGEDIN) %}
-      <li class="menu__seperator"></li>
-      <li class="menu__item"><a class="menu__link" name="problem-sidebar__copy-to" href="javascript:;">
-        <span class="icon icon-copy"></span> {{ _('Copy Problem') }}
-      </a></li>
-    {% endif %}
     {% if user._id == pdoc.owner or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
@@ -113,13 +107,9 @@
         {% if pdoc['category'] %}
           <span class="hasjs--hide" name="problem-sidebar__categories">
           {% for category in pdoc['category'] %}
-            <a href="/p?category={{ category }}">{{ category }}</a>
+            <a href="/p/category/{{ category }}">{{ category }}</a>
             {% if loop.index < pdoc['category']|length %}
-              {% if category in vj4.model.builtin.PROBLEM_CATEGORIES %}
-                {{ _('problem-category-delim') }}
-              {% else %}
-                {{ _('problem-subcategory-delim') }}
-              {% endif %}
+              {{ _('problem-subcategory-delim') }}
             {% endif %}
           {% endfor %}
           </span>
@@ -146,10 +136,6 @@
       <dd>{{ pdoc.nAccept }}</dd>
       <dt>{{ _('Accepted Ratio') }}</dt>
       <dd>{% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
-    {% if pdoc['num_be_copied'] %}
-      <dt>{{ _('Be Copied') }}</dt>
-      <dd>{{ pdoc['num_be_copied'] }}</dd>
-    {% endif %}
       <dt>{{ _('Uploaded By') }}</dt>
       <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
     </dl>

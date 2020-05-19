@@ -32,7 +32,7 @@ class ProblemHandler extends Handler {
         this.response.template = 'problem_main.html';
         const q = {};
         let psdict = {};
-        if (category) q.category = category;
+        if (category) q.$or = [{ category }, { tag: category }];
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(q).sort({ pid: 1 }),
@@ -50,6 +50,55 @@ class ProblemHandler extends Handler {
             path, page, pcount, ppcount, pdocs, psdict, category,
         };
     }
+
+    async cleanup() {
+        if (this.response.template === 'problem_main.html' && this.preferJson) {
+            const {
+                path, page, pcount, ppcount, pdocs, psdict, category,
+            } = this.response.body;
+            this.response.body = {
+                title: this.renderTitle(category),
+                fragments: (await Promise.all([
+                    this.renderHTML('partials/problem_list.html', {
+                        page, ppcount, pcount, pdocs, psdict,
+                    }),
+                    this.renderHTML('partials/problem_stat.html', { pcount }),
+                    this.renderHTML('partials/problem_lucky.html', { category }),
+                    this.renderHTML('partials/path.html', { path }),
+                ])).map((i) => ({ html: i })),
+                raw: {
+                    path, page, pcount, ppcount, pdocs, psdict, category,
+                },
+            };
+        }
+    }
+}
+
+class ProblemCategoryHandler extends ProblemHandler {
+    async get({ page = 1, category }) {
+        this.response.template = 'problem_main.html';
+        const q = {
+            $or: [{ category }, { tag: category }],
+        };
+        let psdict = {};
+        if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        const [pdocs, ppcount, pcount] = await paginate(
+            problem.getMulti(q).sort({ pid: 1 }),
+            page,
+            await system.get('PROBLEM_PER_PAGE'),
+        );
+        if (this.user.hasPerm(PERM_LOGGEDIN)) {
+            psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
+        }
+        const path = [
+            ['Hydro', '/'],
+            ['problem_main', '/p'],
+            [category, null, true],
+        ];
+        this.response.body = {
+            path, page, pcount, ppcount, pdocs, psdict, category,
+        };
+    }
 }
 
 class ProblemRandomHandler extends ProblemHandler {
@@ -59,6 +108,7 @@ class ProblemRandomHandler extends ProblemHandler {
         const pid = await problem.random(q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
+        this.response.redirect = `/p/${pid}`;
     }
 }
 
@@ -380,6 +430,7 @@ class ProblemCreateHandler extends Handler {
 
 async function apply() {
     Route('/p', module.exports.ProblemHandler);
+    Route('/p/category/:category', module.exports.ProblemCategoryHandler);
     Route('/problem/random', module.exports.ProblemRandomHandler);
     Route('/p/:pid', module.exports.ProblemDetailHandler);
     Route('/p/:pid/submit', module.exports.ProblemSubmitHandler);
@@ -398,6 +449,7 @@ async function apply() {
 
 global.Hydro.handler.problem = module.exports = {
     ProblemHandler,
+    ProblemCategoryHandler,
     ProblemRandomHandler,
     ProblemDetailHandler,
     ProblemSubmitHandler,

@@ -22,15 +22,25 @@ class ManageMainHandler extends ManageHandler {
 
 class ManageDashboardHandler extends ManageHandler {
     async get() {
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_dashboard', null],
+        ];
         this.response.template = 'manage_dashboard.html';
-        this.response.body = { system: this.system };
+        this.response.body = { system: this.system, path };
     }
 }
 
 class ManageEditHandler extends ManageHandler {
     async get() {
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_edit', null],
+        ];
         this.response.template = 'manage_edit.html';
-        this.response.body = { system: this.system };
+        this.response.body = { system: this.system, path };
     }
 
     async post({ uname, gravatar, bio }) {
@@ -46,7 +56,7 @@ class ManageUserHandler extends ManageHandler {
     async get() {
         const uids = [];
         const rudocs = {};
-        const [udocs, roles, system] = await Promise.all([
+        const [udocs, roles, sys] = await Promise.all([
             user.getMulti({ role: { $nin: ['default', 'guest'] } }).toArray(),
             user.getRoles(),
             user.getById(0),
@@ -58,9 +68,14 @@ class ManageUserHandler extends ManageHandler {
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(uids);
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_user', null],
+        ];
         this.response.template = 'manage_user.html';
         this.response.body = {
-            roles, rolesSelect, rudocs, udict, system,
+            roles, rolesSelect, rudocs, udict, system: sys, path,
         };
     }
 
@@ -72,12 +87,17 @@ class ManageUserHandler extends ManageHandler {
 
 class ManagePermissionHandler extends ManageHandler {
     async get() {
-        const [roles, system] = await Promise.all([
+        const [roles, sys] = await Promise.all([
             user.getRoles(),
             user.getById(0),
         ]);
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_permission', null],
+        ];
         this.response.template = 'manage_permission.html';
-        this.response.body = { roles, system };
+        this.response.body = { roles, system: sys, path };
     }
 
     async post({ roles }) {
@@ -95,12 +115,17 @@ class ManagePermissionHandler extends ManageHandler {
 
 class ManageRoleHandler extends ManageHandler {
     async get() {
-        const [roles, system] = await Promise.all([
+        const [roles, sys] = await Promise.all([
             user.getRoles(),
             user.getById(0),
         ]);
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_role', null],
+        ];
         this.response.template = 'manage_role.html';
-        this.response.body = { roles, system };
+        this.response.body = { roles, system: sys, path };
     }
 
     async postAdd({ role }) {
@@ -127,9 +152,18 @@ class ManageRoleHandler extends ManageHandler {
 class ManageModuleHandler extends ManageHandler {
     async get() {
         const installed = await hpm.getInstalled();
-        const active = loader.active.map((module) => module.id);
-        this.response.body = { installed, active };
+        const path = [
+            ['Hydro', '/'],
+            ['manage', '/manage'],
+            ['manage_module', null],
+        ];
+        this.response.body = { installed, active: loader.active, path };
         this.response.template = 'manage_module.html';
+    }
+
+    async postInstall({ url, id }) {
+        await hpm.install(url, id);
+        this.back();
     }
 
     async postDelete({ id }) {

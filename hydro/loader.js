@@ -7,9 +7,6 @@ const zlib = require('zlib');
 const path = require('path');
 const yaml = require('js-yaml');
 
-function root(name) {
-    return path.resolve(process.cwd(), name);
-}
 function ensureDir(dir) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
@@ -19,6 +16,7 @@ function ensureDir(dir) {
     }
 }
 
+let pending = [];
 const active = [];
 const fail = [];
 
@@ -27,42 +25,16 @@ try {
     // eslint-disable-next-line import/no-unresolved
     const f = require('../.build/module.json');
     for (const filename in f) {
-        const m = { ...yaml.safeLoad(zlib.gunzipSync(f[filename])), filename };
-        active.push(m);
+        const m = { ...yaml.safeLoad(zlib.gunzipSync(f[filename])), filename, isBuiltin: true };
+        pending.push(m);
         console.log(filename);
     }
 } catch (e) {
     // Builtin module is in the module directory
 }
 
-const moduleRoots = [
-    root('.build/module'),
-    root('module'),
-    root(path.resolve(os.homedir(), '.hydro', 'module')),
-    root('.'),
-];
-let moduleRoot;
-for (const i of moduleRoots) {
-    if (fs.existsSync(i) && fs.statSync(i).isDirectory()) {
-        moduleRoot = i;
-        break;
-    }
-}
-
 async function preload() {
-    const files = fs.readdirSync(moduleRoot);
-    for (const file of files) {
-        if (file.endsWith('.hydro')) {
-            try {
-                const f = fs.readFileSync(root(`${moduleRoot}/${file}`));
-                const m = { ...yaml.safeLoad(zlib.gunzipSync(f)), id: file.split('.')[0] };
-                active.push(m);
-            } catch (e) {
-                console.error(`Module Load Fail: ${file}`);
-            }
-        }
-    }
-    for (const i of active) {
+    for (const i of pending) {
         try {
             if (i.os) {
                 if (!i.os.includes(os.platform().toLowerCase())) throw new Error('Unsupported OS');
@@ -90,14 +62,11 @@ async function preload() {
 }
 
 async function handler() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.handler && !i.fail) {
             try {
                 console.log(`Handler init: ${i.id}`);
                 console.time(`Handler init: ${i.id}`);
-                const exports = {};
-                // eslint-disable-next-line no-unused-vars
-                const module = { exports, file: i.files || {} };
                 eval(i.handler);
                 console.timeEnd(`Handler init: ${i.id}`);
             } catch (e) {
@@ -110,7 +79,7 @@ async function handler() {
 }
 
 async function locale() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.locale && !i.fail) {
             try {
                 global.Hydro.lib.i18n(i.locale);
@@ -125,7 +94,7 @@ async function locale() {
 }
 
 async function template() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.template && !i.fail) {
             try {
                 Object.assign(global.Hydro.template, i.template);
@@ -140,15 +109,13 @@ async function template() {
 }
 
 async function model() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.model && !i.fail) {
             try {
                 console.log(`Model init: ${i.id}`);
                 console.time(`Model init: ${i.id}`);
-                const exports = {};
-                const module = { exports, file: i.files || {} };
-                eval(i.model);
-                if ((module.exports || {}).index) await module.exports.index();
+                const m = eval(i.model);
+                if ((m || {}).index) await m.index();
                 console.timeEnd(`Model init: ${i.id}`);
             } catch (e) {
                 i.fail = true;
@@ -160,14 +127,11 @@ async function model() {
 }
 
 async function lib() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.lib && !i.fail) {
             try {
                 console.log(`Lib init: ${i.id}`);
                 console.time(`Lib init: ${i.id}`);
-                const exports = {};
-                // eslint-disable-next-line no-unused-vars
-                const module = { exports, file: i.files || {} };
                 eval(i.lib);
                 console.timeEnd(`Lib init: ${i.id}`);
             } catch (e) {
@@ -180,14 +144,12 @@ async function lib() {
 }
 
 async function service() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.service && !i.fail) {
             try {
                 console.time(`Service init: ${i.id}`);
-                const exports = {}; // eslint-disable-line no-unused-vars
-                const module = { exports };
-                eval(i.service);
-                if ((module.exports || {}).init) await module.exports.init();
+                const m = eval(i.service);
+                if ((m || {}).init) await m.init();
                 console.timeEnd(`Service init: ${i.id}`);
             } catch (e) {
                 i.fail = true;
@@ -200,12 +162,10 @@ async function service() {
 }
 
 async function script() {
-    for (const i of active) {
+    for (const i of pending) {
         if (i.script && !i.fail) {
             try {
                 console.time(`Script init: ${i.id}`);
-                const exports = {};
-                const module = { exports }; // eslint-disable-line no-unused-vars
                 eval(i.script);
                 console.timeEnd(`Script init: ${i.id}`);
             } catch (e) {
@@ -215,6 +175,7 @@ async function script() {
                 console.error(e);
             }
         }
+        if (!i.fail) active.push(i.name);
     }
 }
 
@@ -239,6 +200,7 @@ async function load() {
         template: {},
         ui: {},
     };
+    pending.push(...await require('./lib/hpm').getInstalled());
     await preload();
     require('./lib/i18n');
     require('./utils');
@@ -303,7 +265,10 @@ async function load() {
         if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
     }
     await script();
+    pending = [];
     await server.start();
 }
 
-module.exports = { load, active, fail };
+module.exports = {
+    load, pending, active, fail,
+};

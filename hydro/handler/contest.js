@@ -12,6 +12,7 @@ const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 
 const ContestHandler = contest.ContestHandlerMixin(Handler);
+
 class ContestListHandler extends ContestHandler {
     async get({ rule = 0, page = 1 }) {
         this.response.template = 'contest_main.html';
@@ -31,11 +32,16 @@ class ContestListHandler extends ContestHandler {
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc._id);
         const tsdict = await contest.getListStatus(this.user._id, tids);
+        const path = [
+            ['Hydro', '/'],
+            ['contest_main', null],
+        ];
         this.response.body = {
-            page, tpcount, qs, rule, tdocs, tsdict,
+            page, tpcount, qs, rule, tdocs, tsdict, path,
         };
     }
 }
+
 class ContestDetailHandler extends ContestHandler {
     async _prepare({ tid }) {
         this.tdoc = await contest.get(tid);
@@ -62,6 +68,7 @@ class ContestDetailHandler extends ContestHandler {
         } else attended = false;
         const udict = await user.getList([this.tdoc.owner]);
         const path = [
+            ['Hydro', '/'],
             ['contest_main', '/c'],
             [this.tdoc.title, null, true],
         ];
@@ -76,10 +83,12 @@ class ContestDetailHandler extends ContestHandler {
         this.back();
     }
 }
+
 class ContestScoreboardHandler extends ContestDetailHandler {
     async get({ tid }) {
         const [tdoc, rows, udict] = await this.getScoreboard(tid);
         const path = [
+            ['Hydro', '/'],
             ['contest_main', '/c'],
             [tdoc.title, `/c/${tid}`, true],
             ['contest_scoreboard', null],
@@ -90,6 +99,7 @@ class ContestScoreboardHandler extends ContestDetailHandler {
         };
     }
 }
+
 class ContestScoreboardDownloadHandler extends ContestDetailHandler {
     async get({ tid, ext }) {
         const getContent = {
@@ -101,6 +111,7 @@ class ContestScoreboardDownloadHandler extends ContestDetailHandler {
         this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
     }
 }
+
 class ContestEditHandler extends ContestDetailHandler {
     async prepare({ tid }) {
         const tdoc = await contest.get(tid);
@@ -113,6 +124,7 @@ class ContestEditHandler extends ContestDetailHandler {
         for (const i in contest.RULES) { rules[i] = contest.RULES[i].TEXT; }
         const duration = (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / 3600 / 1000;
         const path = [
+            ['Hydro', '/'],
             ['contest_main', '/c'],
             [this.tdoc.title, `/c/${this.tdoc._id}`, true],
             ['contest_edit', null],
@@ -151,6 +163,7 @@ class ContestEditHandler extends ContestDetailHandler {
         else this.response.redirect = `/c/${this.tdoc._id}`;
     }
 }
+
 class ContestProblemHandler extends ContestDetailHandler {
     async prepare({ tid, pid }) {
         [this.tdoc, this.pdoc] = await Promise.all([
@@ -175,6 +188,7 @@ class ContestProblemHandler extends ContestDetailHandler {
 
     async get({ tid }) {
         const path = [
+            ['Hydro', '/'],
             ['contest_main', '/c'],
             [this.tdoc.title, `/c/${tid}`, true],
             [this.pdoc.title, null, true],
@@ -189,6 +203,7 @@ class ContestProblemHandler extends ContestDetailHandler {
         };
     }
 }
+
 class ContestProblemSubmitHandler extends ContestProblemHandler {
     async get({ tid, pid }) {
         let rdocs = [];
@@ -198,6 +213,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         }
         this.response.template = 'problem_submit.html';
         const path = [
+            ['Hydro', '/'],
             ['contest_main', '/c'],
             [this.tdoc.title, `/c/${tid}`, true],
             [this.pdoc.title, `/c/${tid}/p/${pid}`, true],
@@ -229,6 +245,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         }
     }
 }
+
 class ContestCreateHandler extends ContestHandler {
     async prepare() {
         this.checkPerm(PERM_CREATE_CONTEST);
@@ -242,8 +259,14 @@ class ContestCreateHandler extends ContestHandler {
         let ts = now.getTime();
         ts = ts - (ts % (15 * 60 * 1000)) + 15 * 60 * 1000;
         const dt = new Date(ts);
+        const path = [
+            ['Hydro', '/'],
+            ['contest_main', '/c'],
+            ['contest_create', null],
+        ];
         this.response.body = {
             rules,
+            path,
             page_name: 'contest_create',
             date_text: `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`,
             time_text: `${dt.getHours()}:${dt.getMinutes()}`,

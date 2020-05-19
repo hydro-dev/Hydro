@@ -242,7 +242,7 @@ class Handler {
     }
 }
 
-const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid', 'docId'];
+const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid', 'docId', 'mongoId'];
 
 function Route(route, RouteHandler) {
     router.all(route, async (ctx) => {
