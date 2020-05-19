@@ -47,6 +47,10 @@ export class AutoloadPage extends Page {
   }
 }
 
+window.Hydro = {
+  NamedPage, AutoloadPage,
+};
+
 export class PageLoader {
   constructor() {
     const pageReq = require.context('../', true, /\.page\.js$/i);
@@ -57,6 +61,7 @@ export class PageLoader {
       }
       return page;
     });
+    window.Hydro.pageInstances = this.pageInstances;
   }
 
   getAutoloadPages() {

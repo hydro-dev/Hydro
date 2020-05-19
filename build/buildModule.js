@@ -39,10 +39,7 @@ const build = async (type) => {
                 }
                 for (const j of prepare) {
                     if (exist(`module/${i}/${j}.js`)) {
-                        const file = fs.readFileSync(root(`module/${i}/${j}.js`));
-                        if (file.includes('require')) {
-                            config.entry[`${i}/${j}`] = root(`module/${i}/${j}.js`);
-                        }
+                        config.entry[`${i}/${j}`] = root(`module/${i}/${j}.js`);
                     }
                 }
             } catch (e) {
@@ -70,12 +67,7 @@ const build = async (type) => {
                 const current = {};
                 for (const j of prepare) {
                     if (exist(`module/${i}/${j}.js`)) {
-                        const file = fs.readFileSync(root(`module/${i}/${j}.js`));
-                        if (file.includes('require')) {
-                            current[j] = fs.readFileSync(root(`.build/module/${i}/${j}.js`)).toString();
-                        } else {
-                            current[j] = fs.readFileSync(root(`module/${i}/${j}.js`)).toString();
-                        }
+                        current[j] = fs.readFileSync(root(`.build/module/${i}/${j}.js`)).toString();
                     }
                 }
                 if (exist(`module/${i}/locale`)) {
@@ -101,6 +93,7 @@ const build = async (type) => {
                 current.description = m.description || '';
                 current.requirements = m.requirements || [];
                 current.version = m.version || 'unknown';
+                current.id = m.id;
                 if (m.os) current.os = m.os;
                 const data = zlib.gzipSync(Buffer.from(yaml.safeDump(current)), { level: -1 });
                 fs.writeFileSync(root(`.build/module/${i}.hydro`), data);

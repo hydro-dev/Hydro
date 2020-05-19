@@ -33,6 +33,7 @@ async function build(type) {
         'bsod.html',
     ];
     const builtin = {
+        id: 'builtin',
         locale: lang,
         template: template('templates', exclude),
         file: {},
@@ -45,7 +46,7 @@ async function build(type) {
             builtin.file[f] = fs.readFileSync(root(`.uibuild/${f}`)).toString('base64');
         }
     }
-    const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: 3 });
+    const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: -1 });
     fs.writeFileSync(root('.build/builtin.json'), JSON.stringify({ data: data.toString('base64') }));
     fs.writeFileSync(root('.build/module/builtin.hydro'), data);
     await require('./buildModule')(type);

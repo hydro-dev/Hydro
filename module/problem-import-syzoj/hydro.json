@@ -1,5 +1,5 @@
 {
-    "name": "problem-import-syzoj",
+    "id": "problem-import-syzoj",
     "version": "1.0.0",
     "description": "Import problem from syzoj."
 }

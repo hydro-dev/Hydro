@@ -50,7 +50,7 @@ async function load() {
     ...buildSequence(includedPages, 'after'),
     ...buildSequence([currentPage], 'after'),
   ];
-    // eslint-disable-next-line no-restricted-syntax
+  // eslint-disable-next-line no-restricted-syntax
   for (const { page, func, type } of loadSequence) {
     if (typeof func !== 'function') {
       if (process.env.NODE_ENV !== 'production') {

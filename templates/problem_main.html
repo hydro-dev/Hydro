@@ -5,7 +5,7 @@
 {% block content %}
     <script>
         var Context = {
-            getProblemUrlWithCategory: "/p?category={{category}}",
+            getProblemUrlWithCategory: "/p/category/{category}",
             getProblemUrlWithoutCategory: "/p",
             currentCategory: "{{category}}"
         };
@@ -28,13 +28,13 @@
                         {% for category, sub_categories in model.builtin.CATEGORIES %}
                             <li class="group-list__item">
                                 <h2 class="section__title">
-                                    <a href="/p?category={{ category|urlencode }}">{{ category }}</a>
+                                    <a href="/p/category/{{ category|urlencode }}">{{ category }}</a>
                                 </h2>
                                 {% if sub_categories | length > 0 %}
                                     <ol class="chip-list">
                                         {% for sub_category in sub_categories %}
                                             <li class="chip-list__item">
-                                                <a class="typo-a" href="/p?category={{ category|urlencode + ',' + sub_category|urlencode }}">{{ sub_category }}</a>
+                                                <a class="typo-a" href="/p/category/{{ category|urlencode + ',' + sub_category|urlencode }}">{{ sub_category }}</a>
                                             </li>
                                         {% endfor %}
                                     </ol>
