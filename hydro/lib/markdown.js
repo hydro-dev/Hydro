@@ -21,7 +21,8 @@ class Markdown extends MarkdownIt {
         this.use(katex);
     }
 }
-module.exports = {
+
+global.Hydro.lib.markdown = module.exports = {
     unsafe: new Markdown(false),
     safe: new Markdown(true),
 };

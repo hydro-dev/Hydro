@@ -2,7 +2,7 @@ const { defaults } = require('lodash');
 const db = require('../service/db');
 const builtin = require('../model/builtin');
 const system = require('../model/system');
-const pwhash = require('../lib/pwhash');
+const pwhash = require('../lib/hash.hydro');
 const { udoc } = require('../interface');
 
 const collUser = db.collection('user');
@@ -42,7 +42,7 @@ async function run() {
     }
     await Promise.all(tasks);
     try {
-        const salt = pwhash.salt();
+        const salt = String.random();
         await collUser.insertMany([
             defaults({
                 _id: 0,
@@ -79,4 +79,4 @@ async function run() {
     await collRole.insertMany(builtin.BUILTIN_ROLES);
 }
 
-module.exports = { run };
+global.Hydro.script.install = module.exports = { run };

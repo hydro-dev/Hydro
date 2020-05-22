@@ -5,4 +5,4 @@ async function run() {
     console.log('Dropped');
 }
 
-module.exports = { run };
+global.Hydro.script.uninstall = module.exports = { run };

@@ -35,7 +35,7 @@ async function setStatus(tid, uid, $set) {
     return await collStatus.findOne({ tid, uid }); // eslint-disable-line no-return-await
 }
 
-module.exports = {
+global.Hydro.model.training = module.exports = {
     getPids(tdoc) {
         const pids = new Set();
         for (const node of tdoc.dag) {

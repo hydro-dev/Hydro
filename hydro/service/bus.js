@@ -1,7 +1,8 @@
 const { EventEmitter } = require('events');
 
 const bus = new EventEmitter();
-module.exports = {
+
+global.Hydro.service.bus = module.exports = {
     subscribe(events, handler) {
         for (const event of events) bus.on(event, handler);
     },

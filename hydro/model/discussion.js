@@ -142,15 +142,19 @@ async function getVnode(ddoc, handler) {
         const pdoc = await problem.getById(ddoc.parentId);
         if (!pdoc) return null;
         if (pdoc.hidden && handler) handler.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-        return { ...pdoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+        return { ...pdoc, type: ddoc.parentType, id: ddoc.parentId };
     } if (ddoc.parentType === 'contest') {
         const tdoc = await contest.get(ddoc.parentId);
-        return { ...tdoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
     } if (ddoc.parentType === 'node') {
         const ndoc = await getNode(ddoc.parentId);
-        return { ...ndoc, parentType: ddoc.parentType, parentId: ddoc.parentId };
+        return { ...ndoc, type: ddoc.parentType, id: ddoc.parentId };
     }
-    return null;
+    return {
+        title: 'Missing Node',
+        type: 'Unknown',
+        id: new ObjectID(),
+    };
 }
 
 async function getListVnodes(ddocs, handler) {
@@ -162,7 +166,7 @@ async function getListVnodes(ddocs, handler) {
     return res;
 }
 
-module.exports = {
+global.Hydro.model.discussion = module.exports = {
     add,
     get,
     edit,

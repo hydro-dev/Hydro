@@ -57,6 +57,8 @@ manage_join_applications: Join Applications
 manage_role: System Role
 manage_user: System User
 manage_permission: System Permission
+manage_module: Module Management
+manage_setting: System Settings
 timeago_locale: en
 perm_general: General
 perm_problem: Problems

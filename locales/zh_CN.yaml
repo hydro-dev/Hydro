@@ -316,6 +316,7 @@ manage_role: 管理角色
 manage_user: 管理用户
 manage_permission: 管理权限
 manage_module: 管理模块
+manage_setting: 系统设置
 domain_join: 加入域
 'Join {0}': '加入 {0}'
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。

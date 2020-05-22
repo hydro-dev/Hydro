@@ -8,7 +8,7 @@
       <div class="section__body">
         <ul class="supplementary list">
           <li>
-            <a class="discussion-node-tag" href="/discuss/{{ ddoc.parentType }}/{{ ddoc.parentId }}">
+            <a class="discussion-node-tag" href="/discuss/{{ vnode.type }}/{{ vnode.id }}">
             {% if ddoc.parentType == 'node' %}
               <span class="v-center icon icon-tag"></span>
             {% elif ddoc.parentType == 'contest' %}
@@ -22,7 +22,7 @@
           <li>
             {{ user.render_inline(udict[ddoc.owner]) }}
             @
-            {{ datetime_span(ddoc['_id'].generationTime)|safe }}
+            {{ datetimeSpan(ddoc._id)|safe }}
           </li>
         </ul>
         <div class="typo topic__content" data-emoji-enabled data-raw-url="/discuss/{{ ddoc._id }}/raw">

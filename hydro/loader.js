@@ -25,12 +25,15 @@ try {
     // eslint-disable-next-line import/no-unresolved
     const f = require('../.build/module.json');
     for (const filename in f) {
-        const m = { ...yaml.safeLoad(zlib.gunzipSync(f[filename])), filename, isBuiltin: true };
+        const m = {
+            ...yaml.safeLoad(zlib.gunzipSync(Buffer.from(f[filename], 'base64'))),
+            filename,
+            isBuiltin: true,
+        };
         pending.push(m);
-        console.log(filename);
     }
 } catch (e) {
-    // Builtin module is in the module directory
+    console.log(e);
 }
 
 async function preload() {
@@ -225,7 +228,7 @@ async function load() {
     });
     const builtinLib = [
         'axios', 'download', 'i18n', 'mail', 'markdown',
-        'md5', 'misc', 'paginate', 'pwhash', 'rank',
+        'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
         'template', 'validator', 'nav',
     ];
     for (const i of builtinLib) require(`./lib/${i}`);

@@ -106,7 +106,7 @@ async function getListStatus(list, uid) {
     return result;
 }
 
-module.exports = {
+global.Hydro.model.solution = module.exports = {
     count,
     add,
     get,

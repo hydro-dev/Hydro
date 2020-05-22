@@ -1,6 +1,6 @@
 {% import "components/user.html" as user with context %}
 {% macro render_time(tdoc_time) %}
-{{ datetime_span(tdoc_time, false, '%Y-%m-%d %H:%M')|safe }}
+{{ datetimeSpan(tdoc_time, false, '%Y-%m-%d %H:%M')|safe }}
 {% endmacro %}
 
 {% macro render_duration(tdoc) %}

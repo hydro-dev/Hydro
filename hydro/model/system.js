@@ -22,7 +22,8 @@ async function set(_id, value) {
 function inc(field) {
     return update(field, { $inc: { value: 1 } }, { upsert: true });
 }
-module.exports = {
+
+global.Hydro.model.system = module.exports = {
     get,
     update,
     inc,

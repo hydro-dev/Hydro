@@ -26,5 +26,5 @@
   <td class="col--time">{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time }}ms</td>
   <td class="col--memory">{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</td>
   <td class="col--lang">{{ model.builtin.LANG_TEXTS[rdoc['lang']] }}</td>
-  <td class="col--submit-at">{{ datetime_span(rdoc['_id'])|safe }}</td>
+  <td class="col--submit-at">{{ datetimeSpan(rdoc['_id'])|safe }}</td>
 </tr>

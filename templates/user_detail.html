@@ -17,10 +17,10 @@
                 <small>({{ _('UID') }}: {{ udoc['_id'] }})</small>
               </h1>
               <p>
-                {{ _('Registered at') }} {{ datetime_span(udoc['regat'])|safe }},
-                {{ _('last login at') }} {{ datetime_span(udoc['loginat'])|safe }},
+                {{ _('Registered at') }} {{ datetimeSpan(udoc['regat'])|safe }},
+                {{ _('last login at') }} {{ datetimeSpan(udoc['loginat'])|safe }},
               {% if sdoc %}
-                {{ _('last active at') }} {{ datetime_span(sdoc['updateAt'])|safe }}.
+                {{ _('last active at') }} {{ datetimeSpan(sdoc['updateAt'])|safe }}.
               {% else %}
                 {{ _('currently offline') }}.
               {% endif %}

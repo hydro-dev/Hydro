@@ -47,9 +47,17 @@ const SYSTEM_SETTINGS = [
     Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
     Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password'),
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
-    Setting('setting_smtp', 'smtp.port', null, null, 'text', 'SMTP Server Port'),
+    Setting('setting_smtp', 'smtp.port', null, 465, 'text', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
-    Setting('setting_smtp', 'smtp.secure', null, null, 'checkbox', 'SSL'),
+    Setting('setting_smtp', 'smtp.secure', null, false, 'checkbox', 'SSL'),
+    Setting('setting_server', 'listen.port', null, 8888, 'text', 'Server Port', ''),
+    Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'text', 'Problems per Page'),
+    Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'text', 'Contests per Page'),
+    Setting('setting_constant', 'DISCUSSION_PER_PAGE', null, 50, 'text', 'Discussion per Page'),
+    Setting('setting_constant', 'RECORD_PER_PAGE', null, 100, 'text', 'Record per Page'),
+    Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'text', 'Solutions per Page'),
+    Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'text', 'Training per Page'),
+    Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'text', 'Reply per Page'),
 ];
 
 global.Hydro.model.setting = module.exports = {

@@ -1,10 +1,6 @@
 const crypto = require('crypto');
 
-module.exports = {
-    _b64encode: (str) => Buffer.from(str).toString('base64'),
-    _b64decode: (str) => Buffer.from(str, 'base64').toString(),
-    _md5: (str) => crypto.createHash('md5').update(str).digest('hex'),
-    _sha1: (str) => crypto.createHash('sha1').update(str).digest('hex'),
+global.Hydro.lib['hash.hydro'] = module.exports = {
     /**
      * @param {string} password
      * @param {string} salt
@@ -20,8 +16,5 @@ module.exports = {
     hash(password, salt) {
         const res = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256');
         return res.toString('Hex');
-    },
-    salt() {
-        return String.random();
     },
 };

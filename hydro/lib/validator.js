@@ -29,7 +29,7 @@ const checkIntro = (s) => { if (!isIntro(s)) throw new ValidationError('intro');
 const isDescription = () => true;
 const checkDescription = (s) => { if (!isDescription(s)) throw new ValidationError('description'); else return s; };
 
-module.exports = {
+global.Hydro.lib.validator = module.exports = {
     isTitle,
     checkTitle,
     isUid,

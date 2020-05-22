@@ -1,7 +1,7 @@
 const system = require('./system');
 const { UserNotFoundError, UserAlreadyExistError } = require('../error');
 const perm = require('../permission');
-const pwhash = require('../lib/pwhash');
+const pwhash = require('../lib/hash.hydro');
 const db = require('../service/db');
 
 const coll = db.collection('user');
@@ -12,8 +12,8 @@ class USER {
         this._id = user._id;
         this.mail = user.mail;
         this.uname = user.uname;
-        this.salt = user.salt;
-        this.hash = user.hash;
+        this.salt = () => user.salt;
+        this.hash = () => user.hash;
         this.perm = user.perm;
         this.viewLang = user.language || 'zh_CN';
         this.codeLang = user.codeLang || 'c';
@@ -31,7 +31,9 @@ class USER {
     }
 
     checkPassword(password) {
-        return pwhash.check(password, this.salt, this.hash);
+        const h = global.Hydro.lib[`hash.${this.hashType}`];
+        if (!h) throw new Error('Unknown hash method');
+        return h.check(password, this.salt(), this.hash());
     }
 }
 
@@ -71,9 +73,9 @@ async function getByEmail(mail, ignoreMissing = false) {
 }
 
 function setPassword(uid, password) {
-    const salt = pwhash.salt();
+    const salt = String.random();
     return coll.findOneAndUpdate({ _id: uid }, {
-        $set: { salt, hash: pwhash.hash(password, salt) },
+        $set: { salt, hash: pwhash.hash(password, salt), hashType: 'hydro' },
     });
 }
 
@@ -88,11 +90,11 @@ function setEmail(uid, mail) {
 async function changePassword(uid, currentPassword, newPassword) {
     const udoc = await getById(uid);
     udoc.checkPassword(currentPassword);
-    const salt = pwhash.salt();
+    const salt = String.random();
     return await coll.findOneAndUpdate({ // eslint-disable-line no-return-await
         _id: udoc._id,
     }, {
-        $set: { salt, hash: pwhash.hash(newPassword, salt) },
+        $set: { salt, hash: pwhash.hash(newPassword, salt), hashType: 'hydro' },
     });
 }
 
@@ -106,7 +108,7 @@ async function inc(_id, field, n = 1) {
 async function create({
     uid, mail, uname, password, regip = '127.0.0.1', role = 'default',
 }) {
-    const salt = pwhash.salt();
+    const salt = String.random();
     if (!uid) uid = system.inc('user');
     try {
         await Promise.all([
@@ -118,6 +120,7 @@ async function create({
                 unameLower: uname.trim().toLowerCase(),
                 password: pwhash.hash(password, salt),
                 salt,
+                hashType: 'hydro',
                 regat: new Date(),
                 regip,
                 loginat: new Date(),
@@ -179,7 +182,7 @@ function index() {
     ]);
 }
 
-module.exports = {
+global.Hydro.model.user = module.exports = {
     changePassword,
     create,
     getByEmail,

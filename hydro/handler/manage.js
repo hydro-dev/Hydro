@@ -186,9 +186,17 @@ class ManageSettingHandler extends ManageHandler {
     }
 
     async post(args) {
+        const tasks = [];
         for (const key in args) {
-            await system.set(key, args[key]);
+            if (typeof args[key] === 'object') {
+                const subtasks = [];
+                for (const sub in args[key]) {
+                    subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                }
+                tasks.push(Promise.all(subtasks));
+            } else tasks.push(system.set(key, args[key]));
         }
+        await Promise.all(tasks);
         this.back();
     }
 }

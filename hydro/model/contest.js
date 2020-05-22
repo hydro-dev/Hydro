@@ -342,7 +342,7 @@ const ContestHandlerMixin = (c) => class extends c {
     }
 };
 
-global.Hydro['model.contest'] = module.exports = {
+global.Hydro.model.contest = module.exports = {
     RULES,
     ContestHandlerMixin,
     add,

@@ -94,7 +94,7 @@
                 <span class="sessionlist__icon icon icon-platform--{{ session.updateUa.icon }}"></span>
               </div>
               <div class="media__body medium typo">
-                <p>{{ _('Last Update At') }}: {{ datetime_span(session.updateAt)|safe }}</p>
+                <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
                 <p>{{ _('Location') }}: {{ _(session.updateGeoip) }} ({{ session.updateIp }})</p>
                 <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
                 <p>{{ _('Browser') }}: {{ session.updateUa.browser }}</p>

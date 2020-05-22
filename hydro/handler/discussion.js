@@ -43,20 +43,9 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
-        if (type && docId) {
-            if (type === 'problem') {
-                const pdoc = await problem.getById(docId);
-                if (!pdoc) throw new DiscussionNodeNotFoundError(type, docId);
-                if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
-                this.vnode = pdoc;
-            } else if (type === 'contest') {
-                const tdoc = await contest.get(docId);
-                if (!tdoc) throw new DiscussionNodeNotFoundError(type, docId);
-                this.vnode = tdoc;
-            } else throw new DiscussionNodeNotFoundError(type, docId);
-            this.vnode.parentType = type;
-            this.vnode.parentId = docId;
-        }
+        this.vnode = await discussion.getVnode({ parentType: type, parentId: docId }, this);
+        this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
+        this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
     }
 }
 

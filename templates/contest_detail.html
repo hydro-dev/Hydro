@@ -51,7 +51,7 @@
               {% else %}
                 <td class="col--status record-status--border"><a href="/r/{{ rdoc._id }}">{{ _('Submitted') }}</a></td>
               {% endif %}
-                <td class="col--submit-at">{{ datetime_span(rdoc._id)|safe }}</td>
+                <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
               {% else %}
                 <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
                 <td class="col--submit-at">-</td>

@@ -229,7 +229,8 @@ const STATUS_CODES = {
     22: 'progress',
     30: 'ignored',
 };
-module.exports = {
+
+global.Hydro.model.builtin = module.exports = {
     BUILTIN_ROLES,
     CATEGORIES,
     VIEW_LANGS,

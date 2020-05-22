@@ -104,7 +104,7 @@ async function rejudge(rid) {
     });
 }
 
-module.exports = {
+global.Hydro.model.record = module.exports = {
     add,
     get,
     getMany,

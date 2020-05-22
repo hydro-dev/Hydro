@@ -126,4 +126,5 @@ function rstr2hex(input) {
     }
     return output;
 }
-module.exports = (s) => rstr2hex(rstrMD5(unescape(encodeURIComponent(s))));
+
+global.Hydro.lib.md5 = module.exports = (s) => rstr2hex(rstrMD5(unescape(encodeURIComponent(s))));

@@ -10,7 +10,7 @@
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
           {{ user.render_inline(udoc, avatar=false) }}
-          @ {{ datetime_span(rdoc['_id'])|safe }}
+          @ {{ datetimeSpan(rdoc['_id'])|safe }}
         </div>
         {{ reply_operations(doc, rdoc) }}
       </div>
@@ -113,7 +113,7 @@
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
           {{ user.render_inline(udoc, avatar=false) }}
-          @ {{ datetime_span(doc['_id'])|safe }}
+          @ {{ datetimeSpan(doc['_id'])|safe }}
         </div>
         <div class="dczcomments__operations nojs--hide">
         {% if handler.hasPerm(reply_post_perm) %}

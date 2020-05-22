@@ -19,6 +19,6 @@ function index() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
-module.exports = {
+global.Hydro.model.blacklist = module.exports = {
     add, get, del, index,
 };
