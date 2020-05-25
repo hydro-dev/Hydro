@@ -240,7 +240,7 @@ async function load() {
     const builtinModel = [
         'blacklist', 'builtin', 'contest', 'discussion', 'message',
         'opcount', 'problem', 'record', 'setting', 'solution',
-        'token', 'training', 'user',
+        'token', 'training', 'user', 'file',
     ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
@@ -255,6 +255,7 @@ async function load() {
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
         'contest', 'training', 'discussion', 'manage', 'import',
+        'fs',
     ];
     for (const i of builtinHandler) require(`./handler/${i}`);
     await model();

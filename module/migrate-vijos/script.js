@@ -252,6 +252,13 @@ const tasks = {
     },
     'fs.files': async (docs) => docs,
     'fs.chunks': async (docs) => docs,
+    file: async (docs) => docs.map((doc) => ({
+        _id: doc._id,
+        count: doc.metadata.link,
+        secret: doc.metadata.secret,
+        size: doc.length,
+        md5: doc.md5,
+    })),
 };
 
 const cursor = {
@@ -268,6 +275,7 @@ const cursor = {
     record: (s) => s.collection('record').find(),
     'fs.files': (s) => s.collection('fs.files').find(),
     'fs.chunks': (s) => s.collection('fs.chunks').find(),
+    file: (s) => s.collection('fs.files').find(),
 };
 
 async function task(name, src, report) {
@@ -314,7 +322,7 @@ async function migrateVijos({
     }
     const d = [
         'problem', 'problem.status', 'solution', 'discussion', 'discussion.reply',
-        'contest', 'training', 'training.status', 'record',
+        'contest', 'training', 'training.status', 'record', 'file',
     ];
     for (const i of d) {
         await dst.collection(i).deleteMany();
@@ -322,6 +330,7 @@ async function migrateVijos({
     const t = [
         'user', 'problem', 'problem.status', 'solution', 'discussion',
         'discussion.reply', 'contest', 'training', 'training.status', 'record',
+        'file',
     ];
     for (const i of t) await task(i, src, report);
 }

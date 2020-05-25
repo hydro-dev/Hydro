@@ -1,6 +1,7 @@
 const fs = require('fs');
 const paginate = require('../lib/paginate');
 const validator = require('../lib/validator');
+const file = require('../model/file');
 const problem = require('../model/problem');
 const record = require('../model/record');
 const user = require('../model/user');
@@ -10,7 +11,6 @@ const bus = require('../service/bus');
 const {
     Route, Connection, Handler, ConnectionHandler,
 } = require('../service/server');
-const gridfs = require('../service/gridfs');
 const {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
@@ -269,8 +269,8 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
 
     async get() {
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
-            const files = await gridfs.find({ _id: this.pdoc.data }).toArray();
-            this.md5 = files[0].md5;
+            const f = await file.getMeta(this.pdoc.data);
+            this.md5 = f.md5;
         }
         this.response.body.md5 = this.md5;
     }
@@ -280,8 +280,8 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
         const r = fs.createReadStream(this.request.files.file.path);
         await problem.setTestdata(this.pdoc._id, r);
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
-            const files = await gridfs.find({ _id: this.pdoc.data }).toArray();
-            this.md5 = files[0].md5;
+            const f = await file.getMeta(this.pdoc.data);
+            this.md5 = f.md5;
         }
         this.response.body.md5 = this.md5;
     }
@@ -291,9 +291,8 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
     async get({ pid }) {
         if (this.uid !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
-        else if (typeof this.pdoc.data === 'string') [, this.ctx.setRedirect] = this.pdoc.data.split('from:');
-        this.response.attachment(`${this.pdoc.title}.zip`);
-        this.response.body = gridfs.openDownloadStream(this.pdoc.data);
+        else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
+        this.response.redirect = file.url(this.pdoc.data, this.pdoc.title);
     }
 }
 
@@ -306,12 +305,14 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
             page,
             await system.get('SOLUTION_PER_PAGE'),
         );
-        const uids = [this.pdoc.owner]; const
-            docids = [];
+        const uids = [this.pdoc.owner];
+        const docids = [];
         for (const psdoc of psdocs) {
             docids.push(psdoc._id);
             uids.push(psdoc.owner);
-            if (psdoc.reply.length) { for (const psrdoc of psdoc.reply) uids.push(psrdoc.owner); }
+            if (psdoc.reply.length) {
+                for (const psrdoc of psdoc.reply) uids.push(psrdoc.owner);
+            }
         }
         const udict = await user.getList(uids);
         const pssdict = solution.getListStatus(docids, this.uid);

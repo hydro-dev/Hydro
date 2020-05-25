@@ -1,9 +1,9 @@
 const { ObjectID } = require('bson');
 const { STATUS_ACCEPTED } = require('./builtin').STATUS;
+const file = require('./file');
 const { ProblemNotFoundError } = require('../error');
 const validator = require('../lib/validator');
-const db = require('../service/db.js');
-const gridfs = require('../service/gridfs');
+const db = require('../service/db');
 
 const coll = db.collection('problem');
 const collStatus = db.collection('problem.status');
@@ -155,20 +155,15 @@ async function updateStatus(pid, uid, rid, status) {
 }
 async function setTestdata(_id, readStream) {
     const pdoc = await getById(_id);
-    const f = gridfs.openUploadStream('data.zip');
-    await new Promise((resolve, reject) => {
-        readStream.pipe(f);
-        f.once('finish', resolve);
-        f.once('error', reject);
-    });
-    if (pdoc.data && typeof pdoc.data === 'object') gridfs.delete(this.pdoc.data);
-    return await edit(_id, { data: f.id }); // eslint-disable-line no-return-await
+    const id = await file.add(readStream, 'data.zip');
+    if (pdoc.data && typeof pdoc.data === 'object') file.dec(this.pdoc.data);
+    return await edit(_id, { data: id }); // eslint-disable-line no-return-await
 }
 
 async function getData(pid) {
     const pdoc = await get(pid);
     if (!pdoc.data) return null;
-    return gridfs.openDownloadStream(pdoc.data);
+    return file.get(pdoc.data);
 }
 
 global.Hydro.model.problem = module.exports = {
