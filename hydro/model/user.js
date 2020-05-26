@@ -31,7 +31,7 @@ class USER {
     }
 
     checkPassword(password) {
-        const h = global.Hydro.lib[`hash.${this.hashType}`];
+        const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
         if (!h) throw new Error('Unknown hash method');
         return h.check(password, this.salt(), this.hash());
     }

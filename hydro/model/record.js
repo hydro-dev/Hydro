@@ -4,7 +4,7 @@ const { STATUS_WAITING } = require('./builtin').STATUS;
 const task = require('./task');
 const problem = require('./problem');
 const { RecordNotFoundError } = require('../error');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 const coll = db.collection('record');
 

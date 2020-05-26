@@ -1,5 +1,5 @@
 const { OpcountExceededError } = require('../error');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 const coll = db.collection('opcount');
 

@@ -5,6 +5,10 @@ const hash = require('../lib/hash.hydro');
 
 const coll = db.collection('file');
 
+function _timestamp() {
+    return Math.floor(Number(new Date()) / 1000000);
+}
+
 async function add(stream, filename, meta = {}) {
     const file = await coll.insertOne(meta);
     const w = fs.openUploadStreamWithId(file.insertedId, filename);
@@ -43,11 +47,11 @@ async function dec(_id) {
 async function get(_id, secret = null) {
     const file = await coll.findOne({ _id });
     if (typeof secret !== 'undefined') {
-        const timestamp = Math.floor(Number(new Date())).toString();
-        if (!(
-            hash.check(file.secret, timestamp, secret)
-            || hash.check(file.secret, timestamp - 1, secret))) {
-            throw new ForbiddenError();
+        const timestamp = _timestamp();
+        if (!hash.check(file.secret, timestamp.toString(), secret)) {
+            if (!hash.check(file.secret, timestamp.toString() - 1, secret)) {
+                throw new ForbiddenError();
+            }
         }
     }
     return fs.openDownloadStream(_id);
@@ -59,11 +63,11 @@ function getMeta(_id) {
 
 async function url(_id, name) {
     const file = await coll.findOne({ _id });
-    const secret = hash.hash(file.secret, Math.floor(Number(new Date())).toString());
-    if (name) return `/fs/${_id}/${secret}?name=${Buffer.from(name).toString('base64')}`;
+    const secret = hash.hash(file.secret, _timestamp().toString());
+    if (name) return `/fs/${_id}/${Buffer.from(name).toString('base64')}/${secret}`;
     return `/fs/${_id}/${secret}`;
 }
 
-global.Hydro.model.blacklist = module.exports = {
+global.Hydro.model.file = module.exports = {
     add, get, del, inc, dec, getMeta, url,
 };

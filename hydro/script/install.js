@@ -1,6 +1,7 @@
 const { defaults } = require('lodash');
 const db = require('../service/db');
 const builtin = require('../model/builtin');
+const discussion = require('../model/discussion');
 const system = require('../model/system');
 const pwhash = require('../lib/hash.hydro');
 const { udoc } = require('../interface');
@@ -36,7 +37,7 @@ async function run() {
         changemail_token_expire_seconds: 3600 * 24,
         registration_token_expire_seconds: 600,
     };
-    const tasks = [];
+    let tasks = [];
     for (const key in def) {
         tasks.push(system.set(key, def[key]));
     }
@@ -77,6 +78,14 @@ async function run() {
     }
     await collRole.deleteMany({ _id: { $in: builtin.BUILTIN_ROLES.map((role) => role._id) } });
     await collRole.insertMany(builtin.BUILTIN_ROLES);
+    tasks = [];
+    for (const category in builtin.DEFAULT_NODES) {
+        const nodes = builtin.DEFAULT_NODES[category];
+        for (const node of nodes) {
+            tasks.push(discussion.addNode(node.name, category));
+        }
+    }
+    await Promise.all(tasks);
 }
 
 global.Hydro.script.install = module.exports = { run };

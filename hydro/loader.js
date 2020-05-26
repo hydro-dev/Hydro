@@ -33,7 +33,7 @@ try {
         pending.push(m);
     }
 } catch (e) {
-    console.log(e);
+    // Ignore Missing
 }
 
 async function preload() {

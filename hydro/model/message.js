@@ -21,8 +21,8 @@ async function send(from, to, content) {
         $setOnInsert: {
             from: Math.min(from, to),
             to: Math.max(from, to),
-            fromUnread: false,
-            toUnread: true,
+            fromUnread: from > to,
+            toUnread: from < to,
         },
     }, { upsert: true });
     return await coll.findOne({ // eslint-disable-line no-return-await

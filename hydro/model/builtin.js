@@ -5,6 +5,66 @@ const BUILTIN_ROLES = [
     { _id: 'default', perm: perm.PERM_DEFAULT, count: 0 },
     { _id: 'root', perm: perm.PERM_ALL, count: 0 },
 ];
+
+const DEFAULT_NODES = {
+    探索: [
+        { pic: 'qa', name: '问答' },
+        { pic: 'share', name: '分享' },
+        { pic: 'solution', name: '题解' },
+    ],
+    Vijos: [
+        { pic: 'vijos', name: 'Vijos' },
+        { pic: null, name: '团队' },
+        { pic: null, name: '月赛' },
+        { pic: 'advice', name: '建议' },
+    ],
+    数据结构: [
+        { pic: null, name: '散列表' },
+        { pic: null, name: '搜索树' },
+        { pic: null, name: '栈和队列' },
+        { pic: null, name: '图' },
+        { pic: null, name: '堆' },
+    ],
+    算法: [
+        { pic: null, name: '数论' },
+        { pic: null, name: '几何' },
+        { pic: null, name: '图论' },
+        { pic: null, name: '网络流' },
+        { pic: null, name: '动态规划' },
+        { pic: null, name: '背包' },
+        { pic: null, name: '排序' },
+        { pic: null, name: '搜索' },
+        { pic: null, name: '并查集' },
+        { pic: null, name: '贪心' },
+        { pic: null, name: '博弈论' },
+    ],
+    在线题库: [
+        { pic: null, name: 'CodeForces' },
+        { pic: null, name: 'TopCoder' },
+        { pic: null, name: 'POJ' },
+        { pic: null, name: 'BZOJ' },
+        { pic: null, name: 'USACO' },
+        { pic: null, name: 'RQNOJ' },
+        { pic: null, name: 'UOJ' },
+        { pic: null, name: 'LOJ' },
+        { pic: null, name: '洛谷' },
+    ],
+    泛: [
+        { pic: null, name: '数学' },
+        { pic: null, name: '编程' },
+        { pic: null, name: '数据库' },
+        { pic: null, name: 'C' },
+        { pic: null, name: 'C++' },
+        { pic: null, name: 'Pascal' },
+        { pic: null, name: 'Java' },
+        { pic: null, name: 'PHP' },
+        { pic: null, name: 'Python' },
+        { pic: null, name: '游戏' },
+        { pic: null, name: '保送' },
+        { pic: null, name: 'ACM' },
+    ],
+};
+
 const CATEGORIES = {
     动态规划: [
         'LCS',
@@ -232,6 +292,7 @@ const STATUS_CODES = {
 
 global.Hydro.model.builtin = module.exports = {
     BUILTIN_ROLES,
+    DEFAULT_NODES,
     CATEGORIES,
     VIEW_LANGS,
     FOOTER_EXTRA_HTMLS,

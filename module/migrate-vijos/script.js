@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 const { mongodb } = global.Hydro.nodeModules;
 const dst = global.Hydro.service.db;
-const { problem } = global.Hydro.model;
+const { problem, discussion } = global.Hydro.model;
 
 const map = {};
 
@@ -112,8 +112,8 @@ const tasks = {
                 nReply: doc.num_replies,
                 ip: doc.ip,
                 updateAt: doc.update_at,
-                parentType: TYPE[doc.parentType],
-                parentId: doc.parentId,
+                parentType: TYPE[doc.parent_doc_type],
+                parentId: doc.parent_doc_id,
             });
         }
         return discussions;
@@ -123,8 +123,23 @@ const tasks = {
         owner: doc.owner_uid,
         ip: doc.ip,
         content: doc.content,
-        parentId: doc.parent_doc_id,
+        did: doc.parent_doc_id,
     })),
+    'discussion.node': async (docs) => {
+        const t = [];
+        for (const doc of docs) {
+            if (doc.domain_id === 'system') {
+                for (const r of doc.content) {
+                    const category = r[0];
+                    for (const n of r[1]) {
+                        t.push(discussion.addNode(n.name, category));
+                    }
+                }
+            }
+        }
+        await Promise.all(t);
+        return [];
+    },
     contest: async (docs) => {
         const RULES = {
             2: 'oi',
@@ -268,6 +283,7 @@ const cursor = {
     solution: (s) => s.collection('document').find({ doc_type: 11 }),
     discussion: (s) => s.collection('document').find({ doc_type: 21 }),
     'discussion.reply': (s) => s.collection('document').find({ doc_type: 22 }),
+    'discussion.node': (s) => s.collection('document').find({ doc_type: 20 }),
     contest: (s) => s.collection('document').find({ doc_type: 30 }),
     'contest.status': (s) => s.collection('document.status').find({ doc_type: 30 }),
     training: (s) => s.collection('document').find({ doc_type: 40 }),
@@ -322,15 +338,15 @@ async function migrateVijos({
     }
     const d = [
         'problem', 'problem.status', 'solution', 'discussion', 'discussion.reply',
-        'contest', 'training', 'training.status', 'record', 'file',
+        'discussion.node', 'contest', 'training', 'training.status', 'record', 'file',
     ];
     for (const i of d) {
         await dst.collection(i).deleteMany();
     }
     const t = [
         'user', 'problem', 'problem.status', 'solution', 'discussion',
-        'discussion.reply', 'contest', 'training', 'training.status', 'record',
-        'file',
+        'discussion.reply', 'discussion.node', 'contest', 'training', 'training.status',
+        'record', 'file',
     ];
     for (const i of t) await task(i, src, report);
 }

@@ -3,7 +3,7 @@ const problem = require('./problem');
 const contest = require('./contest');
 const { PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { DocumentNotFoundError } = require('../error');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 const coll = db.collection('discussion');
 const collReply = db.collection('discussion.reply');
@@ -133,6 +133,10 @@ function getStatus(did, uid) {
     return collStatus.findOne({ did, uid });
 }
 
+function addNode(_id, category) {
+    return collNode.insertOne({ _id, category });
+}
+
 function getNode(_id) {
     return collNode.findOne({ _id });
 }
@@ -148,7 +152,7 @@ async function getVnode(ddoc, handler) {
         return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
     } if (ddoc.parentType === 'node') {
         const ndoc = await getNode(ddoc.parentId);
-        return { ...ndoc, type: ddoc.parentType, id: ddoc.parentId };
+        return { title: ndoc._id, type: ddoc.parentType, id: ddoc.parentId };
     }
     return {
         title: 'Missing Node',
@@ -185,6 +189,7 @@ global.Hydro.model.discussion = module.exports = {
     delTailReply,
     setStar,
     getStatus,
+    addNode,
     getVnode,
     getListVnodes,
 };

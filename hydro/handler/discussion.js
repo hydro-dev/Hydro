@@ -1,6 +1,4 @@
 const paginate = require('../lib/paginate');
-const problem = require('../model/problem');
-const contest = require('../model/contest');
 const system = require('../model/system');
 const user = require('../model/user');
 const discussion = require('../model/discussion');
@@ -8,20 +6,20 @@ const {
     Route, Handler,
 } = require('../service/server');
 const {
-    DiscussionNodeNotFoundError, DiscussionNotFoundError, DocumentNotFoundError,
+    DiscussionNotFoundError, DocumentNotFoundError,
 } = require('../error');
 const {
     PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
-    PERM_VIEW_PROBLEM_HIDDEN, PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY,
-    PERM_HIGHLIGHT_DISCUSSION, PERM_LOGGEDIN, PERM_CREATE_DISCUSSION,
-    PERM_REPLY_DISCUSSION,
+    PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY, PERM_HIGHLIGHT_DISCUSSION,
+    PERM_LOGGEDIN, PERM_CREATE_DISCUSSION, PERM_REPLY_DISCUSSION,
 } = require('../permission');
 
 class DiscussionHandler extends Handler {
     async _prepare({
-        type, docId, did, drid, drrid,
+        type = 'node', docId, name, did, drid, drrid,
     }) {
         this.checkPerm(PERM_VIEW_DISCUSSION);
+        docId = docId || name;
         if (did) {
             this.ddoc = await discussion.get(did);
             if (!this.ddoc) throw new DiscussionNotFoundError(did);
@@ -44,8 +42,11 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
         this.vnode = await discussion.getVnode({ parentType: type, parentId: docId }, this);
-        this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
-        this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
+        if (this.ddoc) {
+            this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
+            this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
+        }
+        console.log(this.vnode);
     }
 }
 
@@ -69,7 +70,10 @@ class DiscussionMainHandler extends DiscussionHandler {
 }
 
 class DiscussionNodeHandler extends DiscussionHandler {
-    async get({ type, docId, page = 1 }) {
+    async get({
+        type = 'node', docId, name, page = 1,
+    }) {
+        docId = docId || name;
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti({ type, docId }),
             page,
@@ -100,7 +104,8 @@ class DiscussionCreateHandler extends DiscussionHandler {
         this.checkPerm(PERM_CREATE_DISCUSSION);
     }
 
-    async get({ type, docId }) {
+    async get({ type = 'node', docId, name }) {
+        docId = docId || name;
         const path = [
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
@@ -112,8 +117,9 @@ class DiscussionCreateHandler extends DiscussionHandler {
     }
 
     async post({
-        type, docId, title, content, highlight,
+        type = 'node', docId, name, title, content, highlight,
     }) {
+        docId = docId || name;
         this.limitRate('add_discussion', 3600, 30);
         if (highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
         const did = await discussion.add(
@@ -153,7 +159,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         ];
         this.response.template = 'discussion_detail.html';
         this.response.body = {
-            path, ddoc: this.ddoc, dsdoc, drdocs, page, pcount, drcount, udict,
+            path, ddoc: this.ddoc, dsdoc, drdocs, page, pcount, drcount, udict, vnode: this.vnode,
         };
     }
 
@@ -272,6 +278,8 @@ async function apply() {
     Route('/discuss/:did/raw', module.exports.DiscussionDetailRawHandler);
     Route('/discuss/:did/:drid/raw', module.exports.DiscussionReplyRawHandler);
     Route('/discuss/:did/:drid/:drrid/raw', module.exports.DiscussionTailReplyRawHandler);
+    Route('/discuss/node/:name', module.exports.DiscussionNodeHandler);
+    Route('/discuss/node/:name/create', module.exports.DiscussionCreateHandler);
     Route('/discuss/:type/:docId', module.exports.DiscussionNodeHandler);
     Route('/discuss/:type/:docId/create', module.exports.DiscussionCreateHandler);
 }

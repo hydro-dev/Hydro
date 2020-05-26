@@ -1,4 +1,4 @@
-const db = require('../service/db.js');
+const db = require('../service/db');
 const { ValidationError } = require('../error');
 
 const coll = db.collection('token');

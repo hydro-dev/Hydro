@@ -1,7 +1,7 @@
 const { ObjectID } = require('bson');
 const { SolutionNotFoundError } = require('../error');
 const validator = require('../lib/validator');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 const coll = db.collection('solution');
 const collStatus = db.collection('solution.status');

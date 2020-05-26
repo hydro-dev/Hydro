@@ -117,9 +117,11 @@
         </div>
       </div>
     </div>
-    {% set pdoc=vnode %}
-    {% set owner_udoc=udict[vnode['owner']] %}
-    {% include "partials/problem_sidebar.html" %}
+    {% if vnode.type == 'problem' %}
+      {% set pdoc = vnode %}
+      {% set owner_udoc = udict[vnode['owner']] %}
+      {% include "partials/problem_sidebar.html" %}
+    {% endif %}
   </div>
 </div>
 {% endblock %}

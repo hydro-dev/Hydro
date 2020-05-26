@@ -13,4 +13,5 @@ module.exports = {
     task: require('./task'),
     message: require('./message'),
     setting: require('./setting'),
+    file: require('./file'),
 };

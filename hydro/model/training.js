@@ -1,7 +1,7 @@
 const assert = require('assert');
 const validator = require('../lib/validator');
 const { ValidationError, TrainingNotFoundError, TrainingAlreadyEnrollError } = require('../error');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 const coll = db.collection('traning');
 const collStatus = db.collection('training.status');
