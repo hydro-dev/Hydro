@@ -15,10 +15,10 @@ function del(ip) {
     return coll.deleteOne({ _id: ip });
 }
 
-function index() {
+function ensureIndexes() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
 global.Hydro.model.blacklist = module.exports = {
-    add, get, del, index,
+    add, get, del, ensureIndexes,
 };

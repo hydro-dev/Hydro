@@ -55,7 +55,7 @@ function getMulti(uid) {
     return coll.find({ $or: [{ from: uid }, { to: uid }] });
 }
 
-function index() {
+function ensureIndexes() {
     return Promise.all([
         coll.createIndex({ to: 1, _id: -1 }),
         coll.createIndex({ from: 1, _id: -1 }),
@@ -69,5 +69,5 @@ global.Hydro.model.message = module.exports = {
     getMany,
     getMulti,
     send,
-    index,
+    ensureIndexes,
 };

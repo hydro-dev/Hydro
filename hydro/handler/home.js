@@ -22,49 +22,49 @@ const {
 } = require('../permission');
 
 class HomeHandler extends Handler {
-    async contest() {
+    async contest(domainId) {
         if (this.user.hasPerm(PERM_VIEW_CONTEST)) {
-            const tdocs = await contest.getMulti()
+            const tdocs = await contest.getMulti(domainId)
                 .limit(await system.get('CONTESTS_ON_MAIN'))
                 .toArray();
             const tsdict = await contest.getListStatus(
-                this.user._id, tdocs.map((tdoc) => tdoc._id),
+                domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
             return [tdocs, tsdict];
         }
         return [[], {}];
     }
 
-    async training() {
+    async training(domainId) {
         if (this.user.hasPerm(PERM_VIEW_TRAINING)) {
-            const tdocs = await training.getMulti()
+            const tdocs = await training.getMulti(domainId)
                 .sort('_id', 1)
                 .limit(await system.get('TRAININGS_ON_MAIN'))
                 .toArray();
             const tsdict = await training.getListStatus(
-                this.user._id, tdocs.map((tdoc) => tdoc._id),
+                domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
             return [tdocs, tsdict];
         }
         return [[], {}];
     }
 
-    async discussion() {
+    async discussion(domainId) {
         if (this.user.hasPerm(PERM_VIEW_DISCUSSION)) {
-            const ddocs = await discussion.getMulti()
+            const ddocs = await discussion.getMulti(domainId)
                 .limit(await system.get('DISCUSSIONS_ON_MAIN'))
                 .toArray();
-            const vndict = await discussion.getListVnodes(ddocs, this);
+            const vndict = await discussion.getListVnodes(domainId, ddocs, this);
             return [ddocs, vndict];
         }
         return [[], {}];
     }
 
-    async get() {
+    async get({ domainId }) {
         const [[tdocs, tsdict], [trdocs, trsdict], [ddocs, vndict]] = await Promise.all([
-            this.contest(), this.training(), this.discussion(),
+            this.contest(domainId), this.training(domainId), this.discussion(domainId),
         ]);
-        const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         this.response.template = 'main.html';
         this.response.body = {
             tdocs, tsdict, trdocs, trsdict, ddocs, vndict, udict,
@@ -153,7 +153,7 @@ class HomeSettingsHandler extends Handler {
 
     async post(args) {
         // FIXME validation
-        await user.setById(this.user._id, args);
+        await user.setById(domainId, this.user._id, args);
         this.back();
     }
 }
@@ -206,7 +206,7 @@ class HomeMessagesHandler extends Handler {
     }
 
     async postSend({ uid, content, type = 'full' }) {
-        const udoc = await user.getById(uid);
+        const udoc = await user.getById('system', uid);
         let mdoc = await message.send(this.user._id, uid, content);
         if (type === 'single') {
             mdoc = mdoc.reply[mdoc.reply.length - 1];

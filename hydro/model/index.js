@@ -2,6 +2,7 @@ module.exports = {
     blacklist: require('./blacklist'),
     builtin: require('./builtin'),
     contest: require('./contest'),
+    document: require('./document'),
     opcount: require('./opcount'),
     problem: require('./problem'),
     record: require('./record'),

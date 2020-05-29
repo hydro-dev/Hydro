@@ -10,7 +10,7 @@
     <ol class="menu">
     {% if page_name == 'discussion_node' or page_name == 'discussion_detail' %}
     {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
-      <li class="menu__item"><a class="menu__link highlight" href="/discuss/problem/{{ pdoc._id }}/create">
+      <li class="menu__item"><a class="menu__link highlight" href="/discuss/problem/{{ pdoc.docId }}/create">
         <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
       </a></li>
     {% else %}
@@ -55,7 +55,7 @@
       <li class="menu__seperator"></li>
     {% endif %}
     {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-      <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="/discuss/problem/{{ pdoc._id }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="/discuss/problem/{{ pdoc.docId }}">
         <span class="icon icon-comment--text"></span> {{ _('Discussions') }}
       </a></li>
     {% endif %}
@@ -84,7 +84,7 @@
   <div class="section__body typo">
     <dl class="large horizontal">
       <dt>{{ _('ID') }}</dt>
-      <dd>{{ pdoc['pid'] }}</dd>
+      <dd>{{ pdoc.docId }}</dd>
     {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
     {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('Submission') }}</dt>
@@ -125,11 +125,11 @@
         {{ problem.render_problem_tags(pdoc, true) }}
       </dd>
       <dt>{{ _('# Submissions') }}</dt>
-      <dd><a href="/r?pid={{ pdoc['_id'] }}">{{ pdoc.nSubmit }}</a></dd>
+      <dd><a href="/r?pid={{ pdoc.docId }}">{{ pdoc.nSubmit }}</a></dd>
       {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
       {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('# My Submissions') }}</dt>
-      <dd><a href="/r?pid={{ pdoc['_id'] }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
+      <dd><a href="/r?pid={{ pdoc.docId }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
       {% endif %}
       {% endif %}
       <dt>{{ _('Accepted') }}</dt>
@@ -150,13 +150,13 @@
   {% if tdocs %}
     <p>{{ _('In following training plans') }}: </p>
     {% for tdoc in tdocs %}
-    <p><a href="/t/{{ tdoc._id }}">{{ tdoc.title }}</a></p>
+    <p><a href="/t/{{ tdoc.docId }}">{{ tdoc.title }}</a></p>
     {% endfor %}
   {% endif %}
   {% if ctdocs %}
     <p>{{ _('In following contests') }}: </p>
     {% for tdoc in ctdocs %}
-    <p><a href="/c/{{ tdoc._id }}">{{ tdoc.title }}</a></p>
+    <p><a href="/c/{{ tdoc.docId }}">{{ tdoc.title }}</a></p>
     {% endfor %}
   {% endif %}
   </div>

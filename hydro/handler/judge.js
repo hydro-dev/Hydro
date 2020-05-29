@@ -16,14 +16,14 @@ async function _postJudge(rdoc) {
     const tasks = [];
     if (rdoc.tid) {
         tasks.push(
-            contest.updateStatus(rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
+            contest.updateStatus(rdoc.domainId, rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
         );
     }
-    if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
+    if (await problem.updateStatus(rdoc.rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
         if (accept && !rdoc.rejudged) {
             tasks.push(
-                problem.inc(rdoc.pid, 'nAccept', 1),
-                user.inc(rdoc.uid, 'nAccept', 1),
+                problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1),
+                user.inc(rdoc.domainId, rdoc.uid, 'nAccept', 1),
             );
         }
     }
@@ -31,7 +31,7 @@ async function _postJudge(rdoc) {
 }
 
 async function next(body) {
-    let rdoc = await record.get(body.rid);
+    let rdoc = await record.get(body.domainId, body.rid);
     const $set = {};
     const $push = {};
     if (body.case) {
@@ -50,12 +50,12 @@ async function next(body) {
     if (body.score) $set.score = body.score;
     if (body.time_ms) $set.time = body.time_ms;
     if (body.memory_kb) $set.memory = body.memory_kb;
-    rdoc = await record.update(body.rid, $set, $push);
+    rdoc = await record.update(body.domainId, body.rid, $set, $push);
     bus.publish('record_change', rdoc);
 }
 
 async function end(body) {
-    let rdoc = await record.get(body.rid);
+    let rdoc = await record.get(body.domainId, body.rid);
     const $set = {};
     const $push = {};
     if (body.case) {
@@ -76,9 +76,9 @@ async function end(body) {
     if (body.memory_kb) $set.memory = body.memory_kb;
     $set.judgeAt = new Date();
     $set.judger = body.judger;
-    rdoc = await record.update(body.rid, $set, $push);
+    rdoc = await record.update(body.domainId, body.rid, $set, $push);
     await _postJudge(rdoc);
-    rdoc = await record.update(body.rid, $set, $push);
+    rdoc = await record.update(body.domainId, body.rid, $set, $push);
 }
 
 class JudgeHandler extends Handler {

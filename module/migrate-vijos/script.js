@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 const { mongodb } = global.Hydro.nodeModules;
 const dst = global.Hydro.service.db;
-const { problem, discussion } = global.Hydro.model;
 
 const map = {};
 
@@ -13,14 +12,14 @@ const pid = (id) => {
 };
 
 const tasks = {
-    user: async (docs) => docs.map((doc) => ({
+    user: async (doc) => ({
         _id: doc._id,
         uname: doc.uname,
         unameLower: doc.uname_lower,
         salt: doc.salt,
         hash: doc.hash.split('|')[1],
         hashType: doc.hash.split('|')[0] === 'vj4' ? 'hydro' : doc.hash.split('|')[0],
-        role: doc.priv === -1 ? 'root' : 'default',
+        priv: doc.priv === -1 ? 1 : 0,
         gravatar: doc.gravatar,
         email: doc.mail,
         emailLower: doc.mail_lower,
@@ -35,264 +34,208 @@ const tasks = {
         bio: doc.bio,
         gender: doc.gender,
         qq: doc.qq,
-    })),
-    problem: async (docs) => {
-        const problems = [];
-        for (const doc of docs) {
-            if (typeof doc.doc_id === 'number') {
-                map[doc.doc_id] = doc._id;
-                if (doc.pname) map[doc.pname] = doc._id;
-            } else {
-                map[doc.doc_id] = doc.doc_id;
-                if (doc.pname) map[doc.pname] = doc.doc_id;
-            }
-            problems.push({
-                _id: doc._id,
-                pid: doc.pname || pid(doc.doc_id),
-                title: doc.title,
-                content: doc.content,
-                owner: doc.owner_uid,
-                data: doc.data,
-                category: doc.category,
-                tag: doc.tag,
-                nSubmit: doc.num_submit,
-                nAccept: doc.num_accept,
-                hidden: doc.hidden || false,
-                difficulty: doc.difficulty_admin,
-            });
-        }
-        return problems;
-    },
-    'problem.status': async (docs) => {
-        const problems = [];
-        for (const doc of docs) {
-            problems.push({
-                pid: pid(doc.doc_id),
-                rid: doc.rid,
-                uid: doc.uid,
-                status: doc.status,
-            });
-        }
-        return problems;
-    },
-    solution: async (docs) => {
-        const solutions = [];
-        for (const doc of docs) {
-            const reply = doc.reply.map((r) => ({
-                owner: r.owner_uid,
-                content: r.content,
-                _id: r._id,
-            }));
-            solutions.push({
-                _id: doc._id,
-                owner: doc.owner_uid,
-                content: doc.content,
-                vote: doc.vote,
-                reply,
-                pid: pid(doc.parent_doc_id),
-            });
-        }
-        return solutions;
-    },
-    discussion: async (docs) => {
-        const TYPE = {
-            10: 'problem',
-            20: 'node',
-            30: 'contest',
-        };
-        const discussions = [];
-        for (const doc of docs) {
-            discussions.push({
-                _id: doc._id,
-                title: doc.title,
-                content: doc.content,
-                owner: doc.owner_uid,
-                views: doc.views,
-                highlight: doc.highlight,
-                nReply: doc.num_replies,
-                ip: doc.ip,
-                updateAt: doc.update_at,
-                parentType: TYPE[doc.parent_doc_type],
-                parentId: doc.parent_doc_id,
-            });
-        }
-        return discussions;
-    },
-    'discussion.reply': async (docs) => docs.map((doc) => ({
-        _id: doc._id,
-        owner: doc.owner_uid,
-        ip: doc.ip,
-        content: doc.content,
-        did: doc.parent_doc_id,
-    })),
-    'discussion.node': async (docs) => {
-        const t = [];
-        for (const doc of docs) {
-            if (doc.domain_id === 'system') {
-                for (const r of doc.content) {
-                    const category = r[0];
-                    for (const n of r[1]) {
-                        t.push(discussion.addNode(n.name, category));
+    }),
+    document: async (doc) => {
+        const res = {};
+        const mapper = {
+            _id: '_id',
+            doc_id: 'docId',
+            doc_type: 'docType',
+            num_submit: 'nSubmit',
+            num_accept: 'nAccept',
+            difficulty_admin: 'difficulty',
+            pname: 'pid',
+            title: 'title',
+            content: 'content',
+            owner_uid: 'owner',
+            category: 'category',
+            hidden: 'hidden',
+            data: 'data',
+            tag: 'tag',
+            vote: 'vote',
+            reply: 'reply',
+            parent_doc_id: 'parentId',
+            parent_doc_type: 'parentType',
+            views: 'views',
+            highlight: 'highlight',
+            ip: 'ip',
+            domain_id: 'domainId',
+            update_at: 'updateAt',
+            begin_at: 'beginAt',
+            end_at: 'endAt',
+            rule: {
+                field: 'rule',
+                processer: (rule) => {
+                    const rules = {
+                        2: 'oi',
+                        3: 'acm',
+                        11: 'homework',
+                    };
+                    return rules[rule];
+                },
+            },
+            pids: {
+                field: 'pids',
+                processer: (pids) => pids.map((p) => pid(p)),
+            },
+            attend: 'attend',
+            desc: 'description',
+            enroll: 'enroll',
+            dag: {
+                field: 'dag',
+                processer: (dag) => {
+                    const r = [];
+                    for (const t of dag) {
+                        r.push({
+                            _id: t._id,
+                            title: t.title,
+                            requireNids: t.require_nids,
+                            pids: t.pids.map((id) => pid(id)),
+                        });
                     }
-                }
-            }
-        }
-        await Promise.all(t);
-        return [];
-    },
-    contest: async (docs) => {
-        const RULES = {
-            2: 'oi',
-            3: 'acm',
-            11: 'homework',
+                    return r;
+                },
+            },
         };
-        const contests = [];
-        for (const doc of docs) {
-            contests.push({
-                _id: doc._id,
-                title: doc.title,
-                content: doc.content,
-                owner: doc.owner_uid,
-                rule: RULES[doc.rule],
-                beginAt: doc.begin_at,
-                endAt: doc.end_at,
-                pids: doc.pids.map((id) => pid(id)),
-                attend: doc.attend,
-            });
-        }
-        return contests;
-    },
-    'contest.status': async (docs) => {
-        const contests = [];
-        for (const doc of docs) {
-            const journal = [];
-            const detail = [];
-            for (const i of doc.journal || []) {
-                const pdoc = await problem.get(pid(i.pid));
-                journal.push({ ...i, id: pdoc._id });
+        for (const key in doc) {
+            if (typeof mapper[key] === 'string') {
+                res[mapper[key]] = doc[key];
+            } else if (typeof mapper[key] === 'object') {
+                res[mapper[key].field] = mapper[key].processer(doc[key]);
+            } else {
+                console.log('Unknown key:', key);
             }
-            for (const i of doc.detail || []) {
-                const pdoc = await problem.get(pid(i.pid));
-                detail.push({ ...i, id: pdoc._id });
+        }
+        return res;
+    },
+    'document.status': async (doc) => {
+        const res = {};
+        const mapper = {
+            _id: '_id',
+            doc_id: 'docId',
+            doc_type: 'docType',
+            uid: 'uid',
+            domain_id: 'domainId',
+            num_accept: 'nAccept',
+            num_submit: 'nSubmit',
+            rp: 'rp',
+            status: 'status',
+            accept: 'accept',
+            vote: 'vote',
+            star: 'star',
+            enroll: 'enroll',
+            rid: 'rid',
+            rev: 'rev',
+            attend: 'attend',
+            journal: {
+                field: 'journal',
+                processer: (journal) => {
+                    const r = [];
+                    for (const i of journal) {
+                        r.push({ ...i, pid: pid(i.pid) });
+                    }
+                    return r;
+                },
+            },
+            detail: {
+                field: 'detail',
+                processer: (detail) => {
+                    const r = [];
+                    for (const i of detail) {
+                        r.push({ ...i, pid: pid(i.pid) });
+                    }
+                    return r;
+                },
+            },
+            score: 'score',
+            time: 'time',
+            done: 'done',
+            done_nids: 'doneNids',
+            done_pids: {
+                field: 'donePids',
+                processer: (pids) => pids.map((id) => pid(id)),
+            },
+        };
+        for (const key in doc) {
+            if (typeof mapper[key] === 'string') {
+                res[mapper[key]] = doc[key];
+            } else if (typeof mapper[key] === 'object') {
+                res[mapper[key].field] = mapper[key].processer(doc[key]);
+            } else {
+                console.log('Unknown key:', key);
             }
-            contests.push({
-                _id: doc._id,
-                tid: doc.doc_id,
-                uid: doc.uid,
-                attend: doc.attend,
-                rev: doc.rev,
-                journal,
-                detail,
-                score: doc.score,
-                accept: doc.accept || 0,
-                time: doc.time || 0,
+        }
+        return res;
+    },
+    record: async (doc) => {
+        const testCases = [];
+        for (const c of doc.cases) {
+            testCases.push({
+                status: c.status,
+                score: c.score,
+                time: c.time,
+                memory: c.memory,
+                judge_text: c.judge_text,
             });
         }
-        return contests;
+        return {
+            _id: doc._id,
+            status: doc.status,
+            score: doc.score,
+            time: doc.time_ms,
+            memory: doc.memory_kb,
+            code: doc.code,
+            lang: doc.lang,
+            uid: doc.uid,
+            pid: pid(doc.pid),
+            tid: doc.tid,
+            domainId: doc.domain_id,
+            judger: doc.judge_uid,
+            judgeAt: doc.judge_at,
+            judgeTexts: doc.judge_texts,
+            compileTexts: doc.compile_texts,
+            rejudged: doc.rejudged,
+            testCases,
+        };
     },
-    training: async (docs) => {
-        const trainings = [];
-        for (const doc of docs) {
-            const dag = [];
-            for (const t of doc.dag) {
-                dag.push({
-                    _id: t._id,
-                    title: t.title,
-                    requireNids: t.require_nids,
-                    pids: t.pids.map((id) => pid(id)),
-                });
-            }
-            trainings.push({
-                _id: doc._id,
-                title: doc.title,
-                content: doc.content,
-                description: doc.desc,
-                enroll: doc.enroll,
-                owner: doc.owner_uid,
-                dag,
-            });
-        }
-        return trainings;
-    },
-    'training.status': async (docs) => {
-        const trainings = [];
-        for (const doc of docs) {
-            trainings.push({
-                _id: doc._id,
-                pid: pid(doc.doc_id),
-                rid: doc.rid,
-                uid: doc.uid,
-                done: doc.done,
-                enroll: doc.enroll,
-                tid: doc.doc_id,
-                doneNids: doc.done_nids,
-                donePids: doc.done_pids.map((id) => pid(id)),
-            });
-        }
-        return trainings;
-    },
-    record: async (docs) => {
-        const records = [];
-        for (const doc of docs) {
-            const testCases = [];
-            for (const c of doc.cases) {
-                testCases.push({
-                    status: c.status,
-                    score: c.score,
-                    time: c.time,
-                    memory: c.memory,
-                    judge_text: c.judge_text,
-                });
-            }
-            records.push({
-                _id: doc._id,
-                status: doc.status,
-                score: doc.score,
-                time: doc.time_ms,
-                memory: doc.memory_kn,
-                code: doc.code,
-                lang: doc.lang,
-                uid: doc.uid,
-                pid: pid(doc.pid),
-                tid: doc.tid,
-                judger: doc.judge_uid,
-                judgeAt: doc.judge_at,
-                judgeTexts: doc.judge_texts,
-                compileTexts: doc.compile_texts,
-                rejudged: doc.rejudged,
-                testCases,
-            });
-        }
-        return records;
-    },
-    'fs.files': async (docs) => docs,
-    'fs.chunks': async (docs) => docs,
-    file: async (docs) => docs.map((doc) => ({
+    'fs.files': async (doc) => doc,
+    'fs.chunks': async (doc) => doc,
+    file: async (doc) => ({
         _id: doc._id,
         count: doc.metadata.link,
         secret: doc.metadata.secret,
         size: doc.length,
         md5: doc.md5,
-    })),
+    }),
 };
 
 const cursor = {
     user: (s) => s.collection('user').find(),
-    problem: (s) => s.collection('document').find({ doc_type: 10 }),
-    'problem.status': (s) => s.collection('document.status').find({ doc_type: 10 }),
-    solution: (s) => s.collection('document').find({ doc_type: 11 }),
-    discussion: (s) => s.collection('document').find({ doc_type: 21 }),
-    'discussion.reply': (s) => s.collection('document').find({ doc_type: 22 }),
-    'discussion.node': (s) => s.collection('document').find({ doc_type: 20 }),
-    contest: (s) => s.collection('document').find({ doc_type: 30 }),
-    'contest.status': (s) => s.collection('document.status').find({ doc_type: 30 }),
-    training: (s) => s.collection('document').find({ doc_type: 40 }),
-    'training.status': (s) => s.collection('document.status').find({ doc_type: 40 }),
+    document: (s) => s.collection('document').find(),
+    'document.status': (s) => s.collection('document.status').find(),
     record: (s) => s.collection('record').find(),
     'fs.files': (s) => s.collection('fs.files').find(),
     'fs.chunks': (s) => s.collection('fs.chunks').find(),
     file: (s) => s.collection('fs.files').find(),
 };
+
+async function fixPid(report) {
+    const count = await dst.collection('document').find({ docType: 10 }).count();
+    await report({ progress: 1, message: `Fix pid: ${count}` });
+    const total = Math.floor(count / 50);
+    for (let i = 0; i <= total; i++) {
+        const docs = await dst.collection('document')
+            .find({ docType: 10 }).skip(i * 50).limit(50)
+            .toArray();
+        for (const doc of docs) {
+            dst.collection('document').updateOne(
+                { _id: doc._id },
+                { $set: { pid: doc.pid || doc.docId.toString() } },
+            );
+        }
+        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
+    }
+}
 
 async function task(name, src, report) {
     const count = await cursor[name](src).count();
@@ -300,10 +243,12 @@ async function task(name, src, report) {
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
-        const t = await tasks[name](docs);
-        if (t.length) await dst.collection(name).insertMany(t);
+        const res = [];
+        for (const doc of docs) res.push(tasks[name](doc));
+        if (res.length) await dst.collection(name).insertMany(await Promise.all(res));
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
+    await fixPid(report);
 }
 
 async function migrateVijos({
@@ -336,19 +281,8 @@ async function migrateVijos({
         }
         await dst.collection('system').insertOne({ _id: 'migrateVijosFs', value: true });
     }
-    const d = [
-        'problem', 'problem.status', 'solution', 'discussion', 'discussion.reply',
-        'discussion.node', 'contest', 'training', 'training.status', 'record', 'file',
-    ];
-    for (const i of d) {
-        await dst.collection(i).deleteMany();
-    }
-    const t = [
-        'user', 'problem', 'problem.status', 'solution', 'discussion',
-        'discussion.reply', 'discussion.node', 'contest', 'training', 'training.status',
-        'record', 'file',
-    ];
-    for (const i of t) await task(i, src, report);
+    const d = ['user', 'document', 'document.status', 'record', 'file'];
+    for (const i of d) await task(i, src, report);
 }
 
 global.Hydro.script.migrateVijos = module.exports = { run: migrateVijos };

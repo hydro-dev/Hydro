@@ -32,9 +32,9 @@
     </div>
     <div class="media__right middle">
       <div class="section__body">
-        <a href="/c/{{ tdoc._id }}" class="detail-button">{{ _('View Details') }}</a>
+        <a href="/c/{{ tdoc.docId }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
-        {% if tsdict[tdoc._id].attend %}
+        {% if tsdict[tdoc.docId].attend %}
           <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
         {% else %}
           <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
@@ -88,7 +88,7 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="/c/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <h1 class="contest__title"><a href="/c/{{ tdoc.docId }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
@@ -99,7 +99,7 @@
                   <li>
                     <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
                   </li>
-                {% if tsdict[tdoc._id]['attend'] == 1 %}
+                {% if tsdict[tdoc.docId]['attend'] == 1 %}
                   <li class="contest__info-attended">
                     <span class="icon icon-check"></span> {{ _('Attended') }}
                   </li>

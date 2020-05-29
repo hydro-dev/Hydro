@@ -1,12 +1,10 @@
 const { ObjectID } = require('bson');
 const { STATUS_ACCEPTED } = require('./builtin').STATUS;
 const file = require('./file');
+const document = require('./document');
+const domain = require('./domain');
 const { ProblemNotFoundError } = require('../error');
 const validator = require('../lib/validator');
-const db = require('../service/db');
-
-const coll = db.collection('problem');
-const collStatus = db.collection('problem.status');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
@@ -15,6 +13,7 @@ const collStatus = db.collection('problem.status');
  */
 
 /**
+ * @param {string} domainId
  * @param {string} title
  * @param {string} content
  * @param {number} owner
@@ -24,10 +23,7 @@ const collStatus = db.collection('problem.status');
  * @param {string[]} tag
  * @param {boolean} hidden
  */
-async function add({
-    title,
-    content,
-    owner,
+async function add(domainId, title, content, owner, {
     pid = null,
     data = null,
     category = [],
@@ -36,134 +32,118 @@ async function add({
 }) {
     validator.checkTitle(title);
     validator.checkContent(content);
-    const res = await coll.insertOne({
-        content,
-        owner,
-        pid,
-        title,
-        data,
-        category,
-        tag,
-        hidden,
-        nSubmit: 0,
-        nAccept: 0,
+    const d = await domain.inc(domainId, 'pidCounter', 1);
+    if (!pid) pid = d.pidCounter.toString();
+    return await document.add(domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null, {
+        pid, title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
     });
-    return res.insertedId;
 }
+
 /**
- * @param {string|ObjectID} pid
+ * @param {string} domainId
+ * @param {string|number} pid
  * @param {number} uid
  * @returns {Pdoc}
  */
-async function get(pid, uid = null) {
-    let query = {};
-    if (pid.generationTime || pid.length === 24) query = { _id: new ObjectID(pid) };
-    else query = { pid };
-    const pdoc = await coll.findOne(query);
+async function get(domainId, pid, uid = null) {
+    const pdoc = await document.get(domainId, document.TYPE_PROBLEM, pid);
     if (!pdoc) throw new ProblemNotFoundError(pid);
     if (uid) {
-        query.uid = uid;
-        pdoc.psdoc = await collStatus.findOne(query);
+        pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }
     return pdoc;
 }
+
 /**
- * @param {ObjectID} pid
- * @returns {Pdoc}
- */
-async function getById(_id) {
-    _id = new ObjectID(_id);
-    const pdoc = await coll.findOne({ _id });
-    if (!pdoc) throw new ProblemNotFoundError(_id);
-    return pdoc;
-}
-/**
- * @param {string|ObjectID} pid
- * @param {number} uid
+ * @param {string} domainId
+ * @param {object} query
+ * @param {object} sort
+ * @param {number} page
+ * @param {number} limit
  * @returns {Pdoc[]}
  */
-function getMany(query, sort, page, limit) {
-    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
+function getMany(domainId, query, sort, page, limit) {
+    return document.getMulti(domainId, query).sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
 }
+
 /**
+ * @param {string} domainId
  * @param {object} query
  * @returns {Cursor}
  */
-function getMulti(query) {
-    return coll.find(query);
+function getMulti(domainId, query) {
+    return document.getMulti(domainId, document.TYPE_PROBLEM, query);
 }
+
 /**
+ * @param {string} domainId
  * @param {object} query
  * @returns {Cursor}
  */
-function getMultiStatus(query) {
-    return collStatus.find(query);
+function getMultiStatus(domainId, query) {
+    return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
 }
+
 /**
+ * @param {string} domainId
  * @param {ObjectID} _id
  * @param {object} query
  * @returns {Pdoc}
  */
-async function edit(_id, $set) {
+function edit(domainId, _id, $set) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkContent($set.content);
-    await coll.findOneAndUpdate({ _id }, { $set });
-    const pdoc = await getById(_id);
-    if (!pdoc) throw new ProblemNotFoundError(_id);
-    return pdoc;
+    return document.set(domainId, document.TYPE_CONTEST, _id, $set);
 }
-async function inc(_id, field, n) {
-    await coll.findOneAndUpdate({ _id }, { $inc: { [field]: n } });
-    const pdoc = await getById(_id);
-    if (!pdoc) throw new ProblemNotFoundError(_id);
-    return pdoc;
+
+function inc(domainId, _id, field, n) {
+    return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
-function count(query) {
-    return coll.find(query).count();
+
+function count(domainId, query) {
+    return document.count(domainId, query);
 }
-async function random(query) {
-    const cursor = coll.find(query);
+
+async function random(domainId, query) {
+    const cursor = document.getMulti(domainId, query);
     const pcount = await cursor.count();
     if (pcount) {
         const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
         return pdoc[0].pid;
     } return null;
 }
-async function getList(pids) {
+
+async function getList(domainId, pids) {
     const r = {};
-    for (const pid of pids) r[pid] = await get(pid); // eslint-disable-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop
+    for (const pid of pids) r[pid] = await get(domainId, pid);
     return r;
-}
-async function getListStatus(uid, pids) {
-    const psdocs = await getMultiStatus({ uid, pid: { $in: Array.from(new Set(pids)) } }).toArray();
-    const r = {};
-    for (const psdoc of psdocs) r[psdoc.pid] = psdoc;
-    return r;
-}
-async function updateStatus(pid, uid, rid, status) {
-    const cur = collStatus.findOne({ pid, uid });
-    if (cur && status !== STATUS_ACCEPTED) {
-        if (cur.status !== STATUS_ACCEPTED) return false;
-    }
-    await collStatus.updateOne(
-        { pid, uid },
-        { $set: { rid, status } },
-        { upsert: true },
-    );
-    return true;
-}
-async function setTestdata(_id, readStream) {
-    const pdoc = await getById(_id);
-    const id = await file.add(readStream, 'data.zip');
-    if (pdoc.data && typeof pdoc.data === 'object') file.dec(this.pdoc.data);
-    return await edit(_id, { data: id }); // eslint-disable-line no-return-await
 }
 
-async function getData(pid) {
-    const pdoc = await get(pid);
-    if (!pdoc.data) return null;
-    return file.get(pdoc.data);
+async function getListStatus(domainId, uid, pids) {
+    const psdocs = await getMultiStatus(
+        domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
+    ).toArray();
+    const r = {};
+    for (const psdoc of psdocs) r[psdoc.docId] = psdoc;
+    return r;
+}
+
+async function updateStatus(domainId, pid, uid, rid, status) {
+    try {
+        await document.setIfNotStatus(domainId, document.TYPE_PROBLEM, pid, uid, 'status', status, STATUS_ACCEPTED, { rid });
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
+async function setTestdata(domainId, _id, readStream) {
+    const pdoc = await get(domainId, _id);
+    const id = await file.add(readStream, 'data.zip');
+    if (pdoc.data && typeof pdoc.data === 'object') file.dec(this.pdoc.data);
+    return await edit(domainId, _id, { data: id }); // eslint-disable-line no-return-await
 }
 
 global.Hydro.model.problem = module.exports = {
@@ -174,12 +154,10 @@ global.Hydro.model.problem = module.exports = {
     edit,
     count,
     random,
-    getById,
     getMulti,
     getList,
     getListStatus,
     getMultiStatus,
     setTestdata,
     updateStatus,
-    getData,
 };

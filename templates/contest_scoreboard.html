@@ -4,10 +4,10 @@
 <div class="row"><div class="medium-12 columns">
   <div class="section visible">
     <div class="section__header">
-      <a class="button" target="_blank" href="/c/{{ tdoc._id }}/export/html">
+      <a class="button" target="_blank" href="/c/{{ tdoc.docId }}/export/html">
         <span class="icon icon-download"></span> {{ _('Export as HTML') }}
       </a>
-      <a class="button" href="/c/{{ tdoc._id }}/export/csv">
+      <a class="button" href="/c/{{ tdoc.docId }}/export/csv">
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
     </div>
@@ -23,7 +23,7 @@
           {%- for column in rows[0] -%}
             <th class="col--{{ column['type'] }}">
             {% if column.type == 'problem_detail' %}
-              <a href="/c/{{ tdoc._id }}/p/{{ column.raw._id }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
+              <a href="/c/{{ tdoc.docId }}/p/{{ column.raw._id }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
             {% else %}
               {{ column.value }}
             {% endif %}

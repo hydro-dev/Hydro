@@ -15,8 +15,10 @@ class UserLoginHandler extends Handler {
         this.response.template = 'user_login.html';
     }
 
-    async post({ uname, password, rememberme = false }) {
-        const udoc = await user.getByUname(uname);
+    async post({
+        domainId, uname, password, rememberme = false,
+    }) {
+        const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new LoginError(uname);
         if (udoc) udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
@@ -120,10 +122,10 @@ class UserLostPassHandler extends Handler {
 }
 
 class UserLostPassWithCodeHandler extends Handler {
-    async get({ code }) {
+    async get({ domainId, code }) {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
-        const udoc = await user.getById(tdoc.uid);
+        const udoc = await user.getById(domainId, tdoc.uid);
         this.response.body = { uname: udoc.uname };
     }
 
@@ -138,9 +140,9 @@ class UserLostPassWithCodeHandler extends Handler {
 }
 
 class UserDetailHandler extends Handler {
-    async get({ uid }) {
+    async get({ domainId, uid }) {
         const isSelfProfile = this.user._id === uid;
-        const udoc = await user.getById(uid);
+        const udoc = await user.getById(domainId, uid);
         if (!udoc) throw new UserNotFoundError(uid);
         const sdoc = await token.getMostRecentSessionByUid(uid);
         this.response.template = 'user_detail.html';
@@ -149,12 +151,12 @@ class UserDetailHandler extends Handler {
 }
 
 class UserSearchHandler extends Handler {
-    async get({ q, exactMatch = false }) {
+    async get({ domainId, q, exactMatch = false }) {
         let udocs;
         if (exactMatch) udocs = [];
         else udocs = await user.getPrefixList(q, 20);
         try {
-            const udoc = await user.getById(parseInt(q));
+            const udoc = await user.getById(domainId, parseInt(q));
             if (udoc) udocs.push(udoc);
         } catch (e) {
             /* Ignore */

@@ -9,11 +9,13 @@ const db = require('../service/db');
 const coll = db.collection('record');
 
 /**
+ * @param {string} domainId
  * @param {import('../interface').Record} data
  */
-async function add(data) {
+async function add(domainId, data) {
     _.defaults(data, {
         status: STATUS_WAITING,
+        domainId,
         score: 0,
         time: 0,
         memory: 0,
@@ -27,32 +29,37 @@ async function add(data) {
     const res = await coll.insertOne(data);
     return res.insertedId;
 }
+
 /**
- * @param {string} rid
+ * @param {string} domainId
+ * @param {ObjectID} rid
  * @returns {import('../interface').Record}
  */
-async function get(rid) {
+async function get(domainId, rid) {
     const _id = new ObjectID(rid);
-    const rdoc = await coll.findOne({ _id });
+    const rdoc = await coll.findOne({ domainId, _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;
 }
-function getMany(query, sort, page, limit) {
-    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
+
+function getMany(domainId, query, sort, page, limit) {
+    return coll.find({ ...query, domainId }).sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
 }
-async function update(rid, $set, $push) {
+
+async function update(domainId, rid, $set, $push) {
     const _id = new ObjectID(rid);
     const upd = {};
     if ($set && Object.keys($set).length) upd.$set = $set;
     if ($push && Object.keys($push).length) upd.$push = $push;
-    await coll.findOneAndUpdate({ _id }, upd);
+    await coll.findOneAndUpdate({ domainId, _id }, upd);
     const rdoc = await coll.findOne({ _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;
 }
-function reset(rid) {
-    return update(rid, {
+
+function reset(domainId, rid) {
+    return update(domainId, rid, {
         score: 0,
         status: STATUS_WAITING,
         time: 0,
@@ -65,24 +72,29 @@ function reset(rid) {
         rejudged: true,
     });
 }
-function count(query) {
-    return coll.find(query).count();
-}
-async function getList(rids) {
-    const r = {};
-    for (const rid of rids) r[rid] = await get(rid); // eslint-disable-line no-await-in-loop
-    return r;
-}
-function getUserInProblemMulti(uid, pid) {
-    return coll.find({ owner: uid, pid });
+
+function count(domainId, query) {
+    return coll.find({ domainId, ...query }).count();
 }
 
-async function judge(rid) {
-    const rdoc = await get(rid);
-    const pdoc = await problem.getById(rdoc.pid);
+async function getList(domainId, rids) {
+    const r = {};
+    // eslint-disable-next-line no-await-in-loop
+    for (const rid of rids) r[rid] = await get(domainId, rid);
+    return r;
+}
+
+function getUserInProblemMulti(domainId, uid, pid) {
+    return coll.find({ domainId, owner: uid, pid });
+}
+
+async function judge(domainId, rid) {
+    const rdoc = await get(domainId, rid);
+    const pdoc = await problem.get(domainId, rdoc.pid);
     await task.add({
         type: 'judge',
         rid,
+        domainId,
         pid: rdoc.pid,
         data: pdoc.data,
         lang: rdoc.lang,
@@ -90,13 +102,14 @@ async function judge(rid) {
     });
 }
 
-async function rejudge(rid) {
-    await reset(rid);
-    const rdoc = await get(rid);
-    const pdoc = await problem.getById(rdoc.pid);
+async function rejudge(domainId, rid) {
+    await reset(domainId, rid);
+    const rdoc = await get(domainId, rid);
+    const pdoc = await problem.get(domainId, rdoc.pid);
     await task.add({
         type: 'judge',
         rid,
+        domainId,
         pid: rdoc.pid,
         data: pdoc.data,
         lang: rdoc.lang,

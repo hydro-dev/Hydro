@@ -238,13 +238,13 @@ async function load() {
     await server.prepare();
     await service();
     const builtinModel = [
-        'blacklist', 'builtin', 'contest', 'discussion', 'message',
+        'document', 'blacklist', 'builtin', 'contest', 'message',
         'opcount', 'problem', 'record', 'setting', 'solution',
-        'token', 'training', 'user', 'file',
+        'token', 'training', 'user', 'file', 'discussion',
     ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
-        if (m.index) await m.index();
+        if (m.ensureIndexes) await m.ensureIndexes();
     }
     const system = require('./model/system');
     const dbVer = await system.get('db.ver');
@@ -268,6 +268,10 @@ async function load() {
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
     }
+    const builtinScript = [
+        'install', 'uninstall',
+    ];
+    for (const i of builtinScript) require(`./script/${i}`);
     await script();
     pending = [];
     await server.start();

@@ -21,7 +21,7 @@
               </div>
             </div>
             <div class="media__body middle">
-              <h1 class="training__title"><a href="/t/{{ tdoc._id }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <h1 class="training__title"><a href="/t/{{ tdoc.docId }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
               <div class="training__intro typo">
                 <p>{{ tdoc['content'] }}</p>
               </div>
@@ -30,10 +30,10 @@
                   <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc)|length) }}
                 </li>
                 <li>
-                {% if tsdict[tdoc._id]['enroll'] %}
-                  {% if not tsdict[tdoc._id]['done'] %}
+                {% if tsdict[tdoc.docId]['enroll'] %}
+                  {% if not tsdict[tdoc.docId]['done'] %}
                   <span class="icon training-status--icon progress"></span>
-                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc._id]['done_pids']|length / model.training.getPids(tdoc)|length)|round|int }}%</span>
+                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc.docId]['done_pids']|length / model.training.getPids(tdoc)|length)|round|int }}%</span>
                   {% else %}
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>

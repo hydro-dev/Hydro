@@ -1,107 +1,80 @@
-const { ObjectID } = require('bson');
+const document = require('./document');
 const { SolutionNotFoundError } = require('../error');
-const validator = require('../lib/validator');
-const db = require('../service/db');
-
-const coll = db.collection('solution');
-const collStatus = db.collection('solution.status');
 
 /**
  * @param {string} pid
  * @param {number} owner
  * @param {string} content
  */
-async function add(pid, owner, content) {
-    validator.checkContent(content);
-    pid = new ObjectID(pid);
-    const res = await coll.insertOne({
-        content, owner, pid, reply: [], vote: 0,
-    });
-    return res.insertedId;
+function add(domainId, pid, owner, content) {
+    return document.add(
+        domainId, content, owner, document.TYPE_PROBLEM_SOLUTION,
+        null, document.TYPE_PROBLEM, pid, { reply: [], vote: 0 },
+    );
 }
 
-async function get(psid) {
-    psid = new ObjectID(psid);
-    const psdoc = await coll.findOne({ _id: psid });
+async function get(domainId, psid) {
+    const psdoc = await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
     if (!psdoc) throw new SolutionNotFoundError();
     return psdoc;
 }
 
-function getMany(query, sort, page, limit) {
-    return coll.find(query).sort(sort)
+function getMany(domainId, query, sort, page, limit) {
+    return document.getMulti(domainId, document.TYPE_PROBLEM_SOLUTION, query)
+        .sort(sort)
         .skip((page - 1) * limit).limit(limit)
         .toArray();
 }
 
-async function edit(_id, content) {
-    validator.checkContent(content);
-    await coll.updateOne({ _id }, { $set: { content } });
-    const psdoc = await get(_id);
-    if (!psdoc) throw new SolutionNotFoundError(_id);
-    return psdoc;
+function edit(domainId, psid, content) {
+    return document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { content });
 }
 
-function del(psid) {
-    return coll.deleteOne({ _id: psid });
+function del(domainId, psid) {
+    return document.deleteOne(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
 }
 
-function count(query) {
-    return coll.find(query).count();
+function count(domainId, query) {
+    return document.count(domainId, document.TYPE_PROBLEM_SOLUTION, query);
 }
 
-function getMulti(pid) {
-    return coll.find({ pid }).sort({ vote: -1 });
+function getMulti(domainId, pid) {
+    return document.getMulti(
+        domainId, document.TYPE_PROBLEM_SOLUTION,
+        { parentType: document.TYPE_PROBLEM, parentId: pid },
+    ).sort({ vote: -1 });
 }
 
-function reply(psid, owner, content) {
-    validator.checkContent(content);
-    return coll.findOneAndUpdate(
-        { _id: psid },
-        { $push: { reply: { content, owner, _id: new ObjectID() } } },
-    );
+function reply(domainId, psid, owner, content) {
+    return document.push(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'reply', content, owner);
 }
 
-async function getReply(psid, psrid) {
-    const psdoc = await coll.findOne({ _id: psid, reply: { $elemMatch: { _id: psrid } } });
-    if (!psdoc) return [null, null];
-    for (const psrdoc of psdoc) if (psrdoc._id === psrid) return [psdoc, psrdoc];
-    return [psdoc, null];
+function getReply(domainId, psid, psrid) {
+    return document.getSub(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'reply', psrid);
 }
 
-async function editReply(psid, psrid, content) {
-    validator.checkContent(content);
-    psid = new ObjectID(psid);
-    psrid = new ObjectID(psrid);
-    const psdoc = await coll.findOne({ _id: psid, reply: { $elemMatch: { _id: psrid } } });
-    const { reply } = psdoc; // eslint-disable-line no-shadow
-    for (const i in reply) {
-        if (reply[i]._id === psrid) {
-            reply[i].content = content;
-            break;
-        }
-    }
-    // eslint-disable-next-line no-return-await
-    return await coll.updateOne({ _id: psdoc._id }, { $set: { reply } });
+function editReply(domainId, psid, psrid, content) {
+    return document.setSub(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'reply', psrid, { content });
 }
 
-function delReply(psid, psrid) {
-    return coll.findOneAndUpdate({ _id: psid }, { $pull: { reply: { _id: psrid } } });
+function delReply(domainId, psid, psrid) {
+    return document.deleteSub(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'reply', psrid);
 }
 
-async function vote(psid, uid, value) {
-    let pssdoc = await collStatus.findOne({ psid, uid });
-    if (pssdoc) await collStatus.deleteOne({ psid, uid });
-    await collStatus.insertOne({ psid, uid, vote: value });
+async function vote(domainId, psid, uid, value) {
+    let pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
+    await document.setStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid, { vote: value });
     if (pssdoc) value += -pssdoc.vote;
-    await coll.updateOne({ _id: psid }, { $inc: { vote: value } });
-    pssdoc = await collStatus.findOne({ psid, uid });
-    const psdoc = await coll.findOne({ _id: psid });
+    const psdoc = await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', value);
+    pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
     return [psdoc, pssdoc];
 }
 
-async function getListStatus(list, uid) {
+async function getListStatus(domainId, list, uid) {
     const result = {};
-    const res = await collStatus.find({ uid, psid: { $in: list } }).toArray();
+    const res = await document.getMultiStatus(
+        domainId, document.TYPE_PROBLEM_SOLUTION, { uid, psid: { $in: list } },
+    ).toArray();
     for (const i of res) result[i.psid] = i;
     return result;
 }

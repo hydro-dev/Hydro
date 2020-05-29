@@ -2,12 +2,8 @@ const paginate = require('../lib/paginate');
 const system = require('../model/system');
 const user = require('../model/user');
 const discussion = require('../model/discussion');
-const {
-    Route, Handler,
-} = require('../service/server');
-const {
-    DiscussionNotFoundError, DocumentNotFoundError,
-} = require('../error');
+const { Route, Handler } = require('../service/server');
+const { DiscussionNotFoundError, DocumentNotFoundError } = require('../error');
 const {
     PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
     PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY, PERM_HIGHLIGHT_DISCUSSION,
@@ -16,21 +12,21 @@ const {
 
 class DiscussionHandler extends Handler {
     async _prepare({
-        type = 'node', docId, name, did, drid, drrid,
+        domainId, type = 'node', docId, name, did, drid, drrid,
     }) {
         this.checkPerm(PERM_VIEW_DISCUSSION);
         docId = docId || name;
         if (did) {
-            this.ddoc = await discussion.get(did);
+            this.ddoc = await discussion.get(domainId, did);
             if (!this.ddoc) throw new DiscussionNotFoundError(did);
             type = this.ddoc.parentType;
             docId = this.ddoc.parentId;
             if (drid) {
-                this.drdoc = await discussion.getReply(drid, did);
+                this.drdoc = await discussion.getReply(domainId, drid, did);
                 if (!this.drdoc) throw new DiscussionNotFoundError(drid);
                 if (this.drdoc.parent !== this.ddoc._id) throw new DocumentNotFoundError(drid);
                 if (drrid) {
-                    [, this.drrdoc] = await discussion.getTailReply(drid, drrid);
+                    [, this.drrdoc] = await discussion.getTailReply(domainId, drid, drrid);
                     if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
                     if (this.drrdoc.parent !== this.drdoc._id) {
                         throw new DocumentNotFoundError(drid);
@@ -41,23 +37,22 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
-        this.vnode = await discussion.getVnode({ parentType: type, parentId: docId }, this);
+        this.vnode = await discussion.getVnode(domainId, { parentType: type, parentId: docId }, this);
         if (this.ddoc) {
             this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
             this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
         }
-        console.log(this.vnode);
     }
 }
 
 class DiscussionMainHandler extends DiscussionHandler {
-    async get({ page = 1 }) {
+    async get({ domainId, page = 1 }) {
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti(),
+            discussion.getMulti(domainId),
             page,
             await system.get('DISCUSSION_PER_PAGE'),
         );
-        const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
             ['Hydro', '/'],
             ['discussion_main', null],
@@ -71,15 +66,15 @@ class DiscussionMainHandler extends DiscussionHandler {
 
 class DiscussionNodeHandler extends DiscussionHandler {
     async get({
-        type = 'node', docId, name, page = 1,
+        domainId, type = 'node', docId, name, page = 1,
     }) {
         docId = docId || name;
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti({ type, docId }),
+            discussion.getMulti(domainId, { parentType: type, parentId: docId }),
             page,
             await system.get('DISCUSSION_PER_PAGE'),
         );
-        const udict = await user.getList(ddocs.map((ddoc) => ddoc.owner));
+        const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
@@ -117,13 +112,13 @@ class DiscussionCreateHandler extends DiscussionHandler {
     }
 
     async post({
-        type = 'node', docId, name, title, content, highlight,
+        domainId, type = 'node', docId, name, title, content, highlight,
     }) {
         docId = docId || name;
         this.limitRate('add_discussion', 3600, 30);
         if (highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
         const did = await discussion.add(
-            type, docId, this.user._id,
+            domainId, type, docId, this.user._id,
             title, content, this.request.ip, highlight,
         );
         this.response.body = { did };
@@ -132,16 +127,16 @@ class DiscussionCreateHandler extends DiscussionHandler {
 }
 
 class DiscussionDetailHandler extends DiscussionHandler {
-    async get({ did, page = 1 }) {
+    async get({ domainId, did, page = 1 }) {
         const dsdoc = this.user.hasPerm(PERM_LOGGEDIN)
-            ? await discussion.getStatus(did, this.user._id)
+            ? await discussion.getStatus(domainId, did, this.user._id)
             : null;
         const [drdocs, pcount, drcount] = await paginate(
-            discussion.getMultiReply(did),
+            discussion.getMultiReply(domainId, did),
             page,
             await system.get('REPLY_PER_PAGE'),
         );
-        const uids = drdocs.map((drdoc) => drdoc.owner);
+        const uids = drdocs.map(domainId, (drdoc) => drdoc.owner);
         uids.push(this.ddoc.owner);
         for (const drdoc of drdocs) {
             if (drdoc.reply) {
@@ -150,7 +145,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
                 }
             }
         }
-        const udict = await user.getList(uids);
+        const udict = await user.getList(domainId, uids);
         const path = [
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
@@ -163,54 +158,56 @@ class DiscussionDetailHandler extends DiscussionHandler {
         };
     }
 
-    async postReply({ did, content }) {
+    async postReply({ domainId, did, content }) {
         this.checkPerm(PERM_LOGGEDIN);
         this.checkPerm(PERM_REPLY_DISCUSSION);
         this.limitRate('add_discussion', 3600, 30);
-        await discussion.addReply(did, this.user._id, content, this.request.ip);
+        await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
         this.back();
     }
 
-    async postTailReply({ drid, content }) {
+    async postTailReply({ domainId, drid, content }) {
         this.checkPerm(PERM_LOGGEDIN);
         this.checkPerm(PERM_REPLY_DISCUSSION);
         this.limitRate('add_discussion', 3600, 30);
-        await discussion.addTailReply(drid, this.user._id, content, this.request.ip);
+        await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
         this.back();
     }
 
-    async postEditReply({ drid, content }) {
+    async postEditReply({ domainId, drid, content }) {
         if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION_REPLY);
-        await discussion.editReply(drid, content);
+        await discussion.editReply(domainId, drid, content);
         this.back();
     }
 
-    async postDeleteReply({ drid }) {
+    async postDeleteReply({ domainId, drid }) {
         if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
-        await discussion.deleteReply(drid);
+        await discussion.deleteReply(domainId, drid);
         this.back();
     }
 
-    async postEditTailReply({ drid, drrid, content }) {
+    async postEditTailReply({
+        domainId, drid, drrid, content,
+    }) {
         if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION_REPLY);
-        await discussion.editTailReply(drid, drrid, content);
+        await discussion.editTailReply(domainId, drid, drrid, content);
         this.back();
     }
 
-    async postDeleteTailReply({ drid, drrid }) {
+    async postDeleteTailReply({ domainId, drid, drrid }) {
         if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
-        await discussion.deleteTailReply(drid, drrid);
+        await discussion.deleteTailReply(domainId, drid, drrid);
         this.back();
     }
 
-    async postStar({ did, star }) {
-        await discussion.setStar(did, this.user._id, true);
+    async postStar({ domainId, did, star }) {
+        await discussion.setStar(domainId, did, this.user._id, true);
         this.response.body = { star };
         this.response.direct = this.request.path;
     }
 
-    async postUnstar({ did, star }) {
-        await discussion.setStar(did, this.user._id, false);
+    async postUnstar({ domainId, did, star }) {
+        await discussion.setStar(domainId, did, this.user._id, false);
         this.response.body = { star };
         this.response.direct = this.request.path;
     }
@@ -245,7 +242,7 @@ class DiscussionEditHandler extends DiscussionHandler {
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
             [this.vnode.title, `/discuss/${this.ddoc.parentType}`, true],
-            [this.ddoc.title, `/discuss/${this.ddoc._id}`, true],
+            [this.ddoc.title, `/discuss/${this.ddoc.docId}`, true],
             ['discussion_edit', null],
         ];
         this.response.template = 'discussion_edit.html';
@@ -253,20 +250,20 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 
     async post({
-        did, title, content, highlight, operation,
+        domainId, did, title, content, highlight, operation,
     }) {
         if (operation) return;
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
         if (highlight && !this.ddoc.highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
-        await discussion.edit(did, title, content, highlight);
+        await discussion.edit(domainId, did, title, content, highlight);
         this.response.body = { did };
         this.response.redirect = `/discuss/${did}`;
     }
 
-    async postDelete({ did }) {
+    async postDelete({ domainId, did }) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION);
-        await discussion.delete(did);
-        this.response.body = { type: this.ddoc.type, parent: this.ddoc.parent };
+        await discussion.delete(domainId, did);
+        this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
         this.response.redirect = `/discuss/${this.ddoc.type}/${this.ddoc.parent}`;
     }
 }

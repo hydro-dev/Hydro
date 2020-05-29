@@ -20,7 +20,7 @@ class ProblemImportHandler extends Handler {
     }
 
     async post({
-        url, pid, hidden, remoteType,
+        domainId, url, pid, hidden, remoteType,
     }) {
         if (typeof global.Hydro.lib[`import.${remoteType}`] !== 'function') {
             throw new ValidationError('remoteType');
@@ -28,10 +28,10 @@ class ProblemImportHandler extends Handler {
         const [pdoc, testdata] = await global.Hydro.lib[`import.${remoteType}`](url, this);
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
-        const _id = await problem.add(pdoc);
-        await problem.setTestdata(_id, testdata);
-        this.response.body = { pid: pid || _id };
-        this.response.redirect = `/p/${pid || _id}/settings`;
+        const docId = await problem.add(domainId, pdoc.title, pdoc.content, this.user._id, pdoc);
+        await problem.setTestdata(docId, testdata);
+        this.response.body = { pid: pid || docId };
+        this.response.redirect = `/p/${pid || docId}/settings`;
     }
 }
 

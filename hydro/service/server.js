@@ -8,7 +8,6 @@ const Router = require('koa-router');
 const cache = require('koa-static-cache');
 const sockjs = require('sockjs');
 const http = require('http');
-const https = require('https');
 const validator = require('../lib/validator');
 const template = require('../lib/template');
 const user = require('../model/user');
@@ -26,8 +25,7 @@ let server;
 const router = new Router();
 
 async function prepare() {
-    const useHttps = await system.get('listen.https');
-    server = (useHttps ? https : http).createServer(app.callback());
+    server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
     app.use(cache(path.join(os.tmpdir(), 'hydro', 'builtin'), {
         maxAge: 365 * 24 * 60 * 60,
@@ -129,7 +127,7 @@ class Handler {
         this.response.disposition = `attachment; filename="${name}"`;
     }
 
-    async ___prepare() {
+    async ___prepare({ domainId }) {
         this.response.body = {};
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
@@ -149,7 +147,7 @@ class Handler {
         if (!this.session) this.session = { uid: 1 };
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
-        this.user = await user.getById(this.session.uid);
+        this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
         [this.csrfToken] = await token.add(token.TYPE_CSRF_TOKEN, 600, {
             path: this.request.path,
@@ -249,7 +247,10 @@ function Route(route, RouteHandler) {
         const h = new RouteHandler(ctx);
         try {
             const method = ctx.method.toLowerCase();
-            const args = { ...ctx.params, ...ctx.query, ...ctx.request.body };
+            // TODO(masnn) domainId
+            const args = {
+                ...ctx.params, ...ctx.query, ...ctx.request.body, domainId: 'system',
+            };
 
             if (h.___prepare) await h.___prepare(args);
             try {
@@ -258,6 +259,9 @@ function Route(route, RouteHandler) {
                         args[l] = new ObjectID(args[l]);
                         if (!args[l]) throw new ValidationError(l);
                     }
+                }
+                if (args.pid) {
+                    if (Number.isInteger(Number(args.pid))) args.pid = Number(args.pid);
                 }
                 if (args.content) validator.checkContent(args.content);
                 if (args.title) validator.checkContent(args.title);
@@ -335,7 +339,7 @@ class ConnectionHandler {
         this.conn.close(code, reason);
     }
 
-    async ___prepare() {
+    async ___prepare({ domainId }) {
         try {
             this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN);
             await token.delete(this.request.params.token, token.TYPE_CSRF_TOKEN);
@@ -344,7 +348,7 @@ class ConnectionHandler {
         }
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
-        this.user = await user.getById(this.session.uid);
+        this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
 }
@@ -354,7 +358,7 @@ function Connection(prefix, RouteConnHandler) {
     sock.on('connection', async (conn) => {
         const h = new RouteConnHandler(conn);
         try {
-            const args = { ...h.request.params };
+            const args = { ...h.request.params, domainId: 'system' };
 
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
             if (args.page) args.page = parseInt(args.page);

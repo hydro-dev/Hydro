@@ -1,38 +1,67 @@
 const assert = require('assert');
+const document = require('./document');
 const validator = require('../lib/validator');
 const { ValidationError, TrainingNotFoundError, TrainingAlreadyEnrollError } = require('../error');
-const db = require('../service/db');
 
-const coll = db.collection('traning');
-const collStatus = db.collection('training.status');
-
-function getStatus(tid, uid) {
-    return collStatus.findOne({ tid, uid });
+function getStatus(domainId, tid, uid) {
+    return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
 }
 
-function getMultiStatus(query) {
-    return collStatus.find(query);
+function getMultiStatus(domainId, query) {
+    return document.getMultiStatus(domainId, document.TYPE_TRAINING, query);
 }
 
-async function getListStatus(uid, tids) {
-    const tsdocs = await getMultiStatus({ uid, tid: { $in: Array.from(new Set(tids)) } }).toArray();
+async function getListStatus(domainId, uid, tids) {
+    const tsdocs = await getMultiStatus(
+        domainId, { uid, tid: { $in: Array.from(new Set(tids)) } },
+    ).toArray();
     const r = {};
     for (const tsdoc of tsdocs) r[tsdoc.pid] = tsdoc;
     return r;
 }
 
-async function enroll(tid, uid) {
+async function enroll(domainId, tid, uid) {
     try {
-        await collStatus.insertOne({ tid, uid, enroll: 1 });
+        await document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, { enroll: 1 });
     } catch (e) {
         throw new TrainingAlreadyEnrollError(tid, uid);
     }
-    await coll.updateOne({ _id: tid }, { $inc: { enroll: 1 } });
+    return await document.inc(domainId, document.TYPE_TRAINING, tid, 'enroll', 1);
 }
 
-async function setStatus(tid, uid, $set) {
-    await collStatus.updateOne({ tid, uid }, { $set });
-    return await collStatus.findOne({ tid, uid }); // eslint-disable-line no-return-await
+function setStatus(domainId, tid, uid, $set) {
+    return document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, $set);
+}
+
+function add(domainId, title, content, owner, dag = [], description = '') {
+    validator.checkTitle(title);
+    validator.checkIntro(content);
+    validator.checkDescription(description);
+    for (const node of dag) {
+        for (const nid of node.requireNids) {
+            if (nid >= node._id) throw new ValidationError('dag');
+        }
+    }
+    return document.add(domainId, content, owner, document.TYPE_TRAINING, null, null, null, {
+        dag,
+        title,
+        description,
+        enroll: 0,
+    });
+}
+
+function edit(domainId, tid, $set) {
+    if ($set.title) validator.checkTitle($set.title);
+    if ($set.content) validator.checkIntro($set.content);
+    if ($set.desc) validator.checkDescription($set.description);
+    if ($set.dag) {
+        for (const node of $set.dag) {
+            for (const nid of node.requireNids) {
+                assert(nid >= node._id, new ValidationError('dag'));
+            }
+        }
+    }
+    return document.set(domainId, document.TYPE_TRAINING, tid, $set);
 }
 
 global.Hydro.model.training = module.exports = {
@@ -66,54 +95,23 @@ global.Hydro.model.training = module.exports = {
     isInvalid(node, doneNids) {
         return (!Set.isSuperset(new Set(doneNids), new Set(node.requireNids)));
     },
-    async add(title, content, owner, dag = [], description = '') {
-        validator.checkTitle(title);
-        validator.checkIntro(content);
-        validator.checkDescription(description);
-        for (const node of dag) {
-            for (const nid of node.requireNids) {
-                if (nid >= node._id) throw new ValidationError('dag');
-            }
-        }
-        const res = await coll.insertOne({
-            content,
-            owner,
-            dag,
-            title,
-            description,
-            enroll: 0,
-        });
-        return res.insertedId;
-    },
-    count: (query) => coll.find(query).count(),
-    async edit(tid, $set) {
-        if ($set.title) validator.checkTitle($set.title);
-        if ($set.content) validator.checkIntro($set.content);
-        if ($set.desc) validator.checkDescription($set.description);
-        if ($set.dag) {
-            for (const node of $set.dag) {
-                for (const nid of node.requireNids) {
-                    assert(nid >= node._id, new ValidationError('dag'));
-                }
-            }
-        }
-        await coll.findOneAndUpdate({ _id: tid }, { $set });
-        const tdoc = await coll.findOne({ _id: tid });
+    add,
+    edit,
+    count: (domainId, query) => document.count(domainId, document.TYPE_TRAINING, query),
+    async get(domainId, tid) {
+        const tdoc = await document.get(domainId, document.TYPE_TRAINING, tid);
         if (!tdoc) throw new TrainingNotFoundError(tid);
         return tdoc;
     },
-    async get(tid) {
-        const tdoc = await coll.findOne({ _id: tid });
-        if (!tdoc) throw new TrainingNotFoundError(tid);
-        return tdoc;
-    },
-    async getList(tids) {
-        const tdocs = await this.getMulti({ _id: { $in: Array.from(new Set(tids)) } }).toArray();
+    async getList(domainId, tids) {
+        const tdocs = await this.getMulti(
+            domainId, { _id: { $in: Array.from(new Set(tids)) } },
+        ).toArray();
         const r = {};
-        for (const tdoc of tdocs) r[tdoc._id] = tdoc;
+        for (const tdoc of tdocs) r[tdoc.docId] = tdoc;
         return r;
     },
-    getMulti: (query) => coll.find(query),
+    getMulti: (domainId, query) => document.getMulti(domainId, document.TYPE_TRAINING, query),
     getMultiStatus,
     getStatus,
     enroll,

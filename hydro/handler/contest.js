@@ -14,24 +14,24 @@ const { Route, Handler } = require('../service/server');
 const ContestHandler = contest.ContestHandlerMixin(Handler);
 
 class ContestListHandler extends ContestHandler {
-    async get({ rule = 0, page = 1 }) {
+    async get({ domainId, rule = 0, page = 1 }) {
         this.response.template = 'contest_main.html';
         let tdocs;
         let qs;
         let tpcount;
         if (!rule) {
-            tdocs = contest.getMulti().sort({ beginAt: -1 });
+            tdocs = contest.getMulti(domainId).sort({ beginAt: -1 });
             qs = '';
         } else {
             if (!contest.CONTEST_RULES.includes(rule)) throw new ValidationError('rule');
-            tdocs = contest.getMulti({ rule }).sort({ beginAt: -1 });
+            tdocs = contest.getMulti(domainId, { rule }).sort({ beginAt: -1 });
             qs = 'rule={0}'.format(rule);
         }
         // eslint-disable-next-line prefer-const
         [tdocs, tpcount] = await paginate(tdocs, page, await system.get('CONTEST_PER_PAGE'));
         const tids = [];
-        for (const tdoc of tdocs) tids.push(tdoc._id);
-        const tsdict = await contest.getListStatus(this.user._id, tids);
+        for (const tdoc of tdocs) tids.push(tdoc.docId);
+        const tsdict = await contest.getListStatus(domainId, this.user._id, tids);
         const path = [
             ['Hydro', '/'],
             ['contest_main', null],
@@ -47,11 +47,11 @@ class ContestDetailHandler extends ContestHandler {
         this.tdoc = await contest.get(tid);
     }
 
-    async get({ page = 1 }) {
+    async get({ domainId, page = 1 }) {
         this.response.template = 'contest_detail.html';
         const [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(this.tdoc._id, this.user._id),
-            problem.getList(this.tdoc.pids),
+            contest.getStatus(domainId, this.tdoc.docId, this.user._id),
+            problem.getList(domainId, this.tdoc.pids),
         ]);
         const psdict = {}; let rdict = {}; let
             attended;
@@ -61,7 +61,7 @@ class ContestDetailHandler extends ContestHandler {
             if (this.canShowRecord(this.tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(q);
+                rdict = await record.getList(domainId, q);
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
@@ -77,16 +77,16 @@ class ContestDetailHandler extends ContestHandler {
         };
     }
 
-    async postAttend() {
-        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
-        await contest.attend(this.tdoc._id, this.user._id);
+    async postAttend({ domainId }) {
+        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        await contest.attend(domainId, this.tdoc.docId, this.user._id);
         this.back();
     }
 }
 
 class ContestScoreboardHandler extends ContestDetailHandler {
-    async get({ tid }) {
-        const [tdoc, rows, udict] = await this.getScoreboard(tid);
+    async get({ domainId, tid }) {
+        const [tdoc, rows, udict] = await this.getScoreboard(domainId, tid);
         const path = [
             ['Hydro', '/'],
             ['contest_main', '/c'],
@@ -101,32 +101,33 @@ class ContestScoreboardHandler extends ContestDetailHandler {
 }
 
 class ContestScoreboardDownloadHandler extends ContestDetailHandler {
-    async get({ tid, ext }) {
+    async get({ domainId, tid, ext }) {
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [, rows] = await this.getScoreboard(tid, true);
+        const [, rows] = await this.getScoreboard(domainId, tid, true);
         this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
     }
 }
 
 class ContestEditHandler extends ContestDetailHandler {
-    async prepare({ tid }) {
-        const tdoc = await contest.get(tid);
-        if (!tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_CONTEST);
+    async prepare() {
+        if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_CONTEST);
     }
 
     async get() {
         this.response.template = 'contest_edit.html';
         const rules = {};
-        for (const i in contest.RULES) { rules[i] = contest.RULES[i].TEXT; }
+        for (const i in contest.RULES) {
+            rules[i] = contest.RULES[i].TEXT;
+        }
         const duration = (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / 3600 / 1000;
         const path = [
             ['Hydro', '/'],
             ['contest_main', '/c'],
-            [this.tdoc.title, `/c/${this.tdoc._id}`, true],
+            [this.tdoc.title, `/c/${this.tdoc.docId}`, true],
             ['contest_edit', null],
         ];
         const dt = this.tdoc.beginAt;
@@ -143,7 +144,7 @@ class ContestEditHandler extends ContestDetailHandler {
     }
 
     async post({
-        beginAtDate, beginAtTime, duration, title, content, rule, pids,
+        domainId, beginAtDate, beginAtTime, duration, title, content, rule, pids,
     }) {
         let beginAt;
         try {
@@ -153,36 +154,35 @@ class ContestEditHandler extends ContestDetailHandler {
         }
         const endAt = new Date(beginAt + duration * 3600 * 1000);
         if (beginAt >= endAt) throw new ValidationError('duration');
-        pids = await this.verifyProblems(pids);
-        await contest.edit(this.tdoc._id, title, content, rule, beginAt, endAt, pids);
+        pids = await this.verifyProblems(domainId, pids);
+        await contest.edit(domainId, this.tdoc.docId, title, content, rule, beginAt, endAt, pids);
         if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
             || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
-            await contest.recalcStatus(this.tdoc._id);
+            await contest.recalcStatus(this.tdoc.docId);
         }
-        if (this.preferJson) this.response.body = { tid: this.tdoc._id };
-        else this.response.redirect = `/c/${this.tdoc._id}`;
+        if (this.preferJson) this.response.body = { tid: this.tdoc.docId };
+        else this.response.redirect = `/c/${this.tdoc.docId}`;
     }
 }
 
 class ContestProblemHandler extends ContestDetailHandler {
-    async prepare({ tid, pid }) {
+    async prepare({ domainId, tid, pid }) {
         [this.tdoc, this.pdoc] = await Promise.all([
-            contest.get(tid),
-            problem.get(pid, this.user._id),
+            contest.get(domainId, tid),
+            problem.get(domainId, pid, this.user._id),
         ]);
         [this.tsdoc, this.udoc] = await Promise.all([
-            contest.getStatus(this.tdoc._id, this.user._id),
-            user.getById(this.tdoc.owner),
+            contest.getStatus(domainId, this.tdoc.docId, this.user._id),
+            user.getById(domainId, this.tdoc.owner),
         ]);
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
         this.response.template = 'problem_detail.html';
         if (contest.isDone(this.tdoc)) {
-            if (!this.attended) throw new ContestNotAttendedError(this.tdoc._id);
-            if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc._id);
+            if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
+            if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
-        console.log(this.tdoc.pids, this.pdoc._id);
-        if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc._id.toString())) {
-            throw new ProblemNotFoundError(pid, this.tdoc._id);
+        if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
+            throw new ProblemNotFoundError(pid, this.tdoc.docId);
         }
     }
 
@@ -205,10 +205,10 @@ class ContestProblemHandler extends ContestDetailHandler {
 }
 
 class ContestProblemSubmitHandler extends ContestProblemHandler {
-    async get({ tid, pid }) {
+    async get({ domainId, tid, pid }) {
         let rdocs = [];
         if (this.canShowRecord(this.tdoc)) {
-            rdocs = await record.getUserInProblemMulti(this.user._id, this.pdoc._id, true)
+            rdocs = await record.getUserInProblemMulti(domainId, this.user._id, this.pdoc.docId, true)
                 .sort({ _id: -1 }).limit(10).toArray();
         }
         this.response.template = 'problem_submit.html';
@@ -230,12 +230,19 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         };
     }
 
-    async post({ tid, lang, code }) {
+    async post({
+        domainId, tid, lang, code,
+    }) {
         await this.limitRate('add_record', 60, 100);
-        const rid = await record.add({
-            pid: this.pdoc._id, uid: this.user._id, lang, code, tid: this.tdoc._id, hidden: true,
+        const rid = await record.add(domainId, {
+            pid: this.pdoc.docId,
+            uid: this.user._id,
+            tid: this.tdoc.docId,
+            lang,
+            code,
+            hidden: true,
         });
-        await contest.updateStatus(this.tdoc._id, this.user._id, rid, this.pdoc._id, false, 0);
+        await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId, false, 0);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = `/c/${tid}`;
@@ -275,7 +282,7 @@ class ContestCreateHandler extends ContestHandler {
     }
 
     async post({
-        title, content, rule, beginAtDate, beginAtTime, duration, pids,
+        domainId, title, content, rule, beginAtDate, beginAtTime, duration, pids,
     }) {
         let beginAt;
         try {
@@ -285,8 +292,8 @@ class ContestCreateHandler extends ContestHandler {
         }
         const endAt = new Date(beginAt.getTime() + duration * 3600 * 1000);
         if (beginAt >= endAt) throw new ValidationError('duration');
-        pids = await this.verifyProblems(pids);
-        const tid = await contest.add(title, content, this.user._id, rule, beginAt, endAt, pids);
+        pids = await this.verifyProblems(domainId, pids);
+        const tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids);
         this.response.body = { tid };
         this.response.redirect = `/c/${tid}`;
     }

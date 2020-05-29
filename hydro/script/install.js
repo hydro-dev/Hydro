@@ -3,11 +3,22 @@ const db = require('../service/db');
 const builtin = require('../model/builtin');
 const discussion = require('../model/discussion');
 const system = require('../model/system');
+const domain = require('../model/domain');
+const user = require('../model/user');
 const pwhash = require('../lib/hash.hydro');
 const { udoc } = require('../interface');
 
 const collUser = db.collection('user');
-const collRole = db.collection('role');
+
+const allowFail = async (func, ...args) => {
+    let res;
+    try {
+        res = await func(...args);
+    } catch (e) {
+        return null;
+    }
+    return res;
+};
 
 async function run() {
     const def = {
@@ -28,7 +39,6 @@ async function run() {
         'smtp.pass': '',
         'smtp.secure': false,
         'db.ver': 1,
-        'listen.https': false,
         'listen.port': 8888,
         'session.keys': ['Hydro'],
         'session.secure': false,
@@ -42,26 +52,30 @@ async function run() {
         tasks.push(system.set(key, def[key]));
     }
     await Promise.all(tasks);
-    try {
-        const salt = String.random();
-        await collUser.insertMany([
-            defaults({
+    const salt = String.random();
+    tasks = [
+        allowFail(domain.add, 'system', 1),
+        user.setRole('system', 0, 'guest'),
+        collUser.updateOne({ _id: 0 }, {
+            $set: defaults({
                 _id: 0,
                 uname: 'Hydro',
                 unameLower: 'hydro',
                 mail: 'hydro@hydro',
                 mailLower: 'hydro@hydro',
-                role: 'guest',
             }, udoc),
-            defaults({
+        }, { upsert: true }),
+        collUser.updateOne({ _id: 1 }, {
+            $set: defaults({
                 _id: 1,
                 mail: 'guest@hydro',
                 mailLower: 'guest@hydro',
                 uname: 'Guest',
                 unameLower: 'guest',
-                role: 'guest',
             }, udoc),
-            defaults({
+        }, { upsert: true }),
+        collUser.updateOne({ _id: -1 }, {
+            $set: defaults({
                 _id: -1,
                 mail: 'root@hydro',
                 mailLower: 'root@hydro',
@@ -70,15 +84,10 @@ async function run() {
                 hash: pwhash.hash('rootroot', salt),
                 salt,
                 gravatar: 'root@hydro',
-                role: 'root',
+                priv: 1,
             }, udoc),
-        ]);
-    } catch (e) {
-        // Ignore user already exist error
-    }
-    await collRole.deleteMany({ _id: { $in: builtin.BUILTIN_ROLES.map((role) => role._id) } });
-    await collRole.insertMany(builtin.BUILTIN_ROLES);
-    tasks = [];
+        }, { upsert: true }),
+    ];
     for (const category in builtin.DEFAULT_NODES) {
         const nodes = builtin.DEFAULT_NODES[category];
         for (const node of nodes) {

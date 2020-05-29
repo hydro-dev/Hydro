@@ -175,7 +175,7 @@
           </li>
         {% endif %}
         {% if tdoc.owner == user._id or handler.hasPerm(perm.PERM_EDIT_TRAINING) %}
-          <li class="menu__item"><a class="menu__link" href="/t/{{ tdoc._id }}/edit">
+          <li class="menu__item"><a class="menu__link" href="/t/{{ tdoc.docId }}/edit">
             <span class="icon icon-edit"></span>  {{ _('Edit') }}
           </a></li>
         {% endif %}

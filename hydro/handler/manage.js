@@ -8,9 +8,9 @@ const loader = require('../loader');
 const { RoleAlreadyExistError, ValidationError } = require('../error');
 
 class ManageHandler extends Handler {
-    async prepare() {
+    async prepare({ domainId }) {
         this.checkPerm(PERM_MANAGE);
-        this.system = await user.getById(0);
+        this.system = await user.getById(domainId, 0);
     }
 }
 
@@ -53,13 +53,13 @@ class ManageEditHandler extends ManageHandler {
 }
 
 class ManageUserHandler extends ManageHandler {
-    async get() {
+    async get({ domainId }) {
         const uids = [];
         const rudocs = {};
         const [udocs, roles, sys] = await Promise.all([
-            user.getMulti({ role: { $nin: ['default', 'guest'] } }).toArray(),
-            user.getRoles(),
-            user.getById(0),
+            user.getMulti(domainId, { role: { $nin: ['default', 'guest'] } }).toArray(),
+            user.getRoles(domainId),
+            user.getById(domainId, 0),
         ]);
         for (const role of roles) rudocs[role._id] = [];
         for (const udoc of udocs) {
@@ -67,7 +67,7 @@ class ManageUserHandler extends ManageHandler {
             rudocs[udoc.role].push(udoc);
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
-        const udict = await user.getList(uids);
+        const udict = await user.getList(domainId, uids);
         const path = [
             ['Hydro', '/'],
             ['manage', '/manage'],
@@ -86,10 +86,10 @@ class ManageUserHandler extends ManageHandler {
 }
 
 class ManagePermissionHandler extends ManageHandler {
-    async get() {
+    async get({ domainId }) {
         const [roles, sys] = await Promise.all([
-            user.getRoles(),
-            user.getById(0),
+            user.getRoles(domainId),
+            user.getById(domainId, 0),
         ]);
         const path = [
             ['Hydro', '/'],
@@ -114,10 +114,10 @@ class ManagePermissionHandler extends ManageHandler {
 }
 
 class ManageRoleHandler extends ManageHandler {
-    async get() {
+    async get({ domainId }) {
         const [roles, sys] = await Promise.all([
-            user.getRoles(),
-            user.getById(0),
+            user.getRoles(domainId),
+            user.getById(domainId, 0),
         ]);
         const path = [
             ['Hydro', '/'],

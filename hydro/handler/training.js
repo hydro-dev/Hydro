@@ -32,7 +32,7 @@ async function _parseDagJson(dag) {
                 // eslint-disable-next-line no-await-in-loop
                 const pdoc = await problem.get(node.pids[i]); // FIXME no-await-in-loop
                 assert(pdoc, `Problem not found: ${node.pids[i]}`);
-                node.pids[i] = pdoc._id;
+                node.pids[i] = pdoc.docId;
             }
             const newNode = {
                 _id: parseInt(node._id),
@@ -63,7 +63,7 @@ class TrainingMainHandler extends TrainingHandler {
             await system.get('TRAINING_PER_PAGE'),
         );
         const tids = new Set();
-        for (const tdoc of tdocs) tids.add(tdoc._id);
+        for (const tdoc of tdocs) tids.add(tdoc.docId);
         const tsdict = {};
         let tdict = {};
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
@@ -79,7 +79,7 @@ class TrainingMainHandler extends TrainingHandler {
             for (const tid of tids) enrolledTids.delete(tid);
             if (enrolledTids.size) tdict = await training.getList(Array.from(enrolledTids));
         }
-        for (const tdoc in tdocs) tdict[tdoc._id] = tdoc;
+        for (const tdoc in tdocs) tdict[tdoc.docId] = tdoc;
         const path = [
             ['Hydro', '/'],
             ['training_main', null],
@@ -92,16 +92,16 @@ class TrainingMainHandler extends TrainingHandler {
 }
 
 class TrainingDetailHandler extends TrainingHandler {
-    async get({ tid }) {
-        const tdoc = await training.get(tid);
+    async get({ domainId, tid }) {
+        const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
         // TODO(twd2): check status, eg. test, hidden problem, ...
         const f = this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN) ? {} : { hidden: false };
         const [udoc, pdict] = await Promise.all([
-            user.getById(tdoc.owner),
-            problem.getList(pids, f),
+            user.getById(domainId, tdoc.owner),
+            problem.getList(domainId, pids, f),
         ]);
-        const psdict = await problem.getListStatus(this.user._id, Object.keys(pdict));
+        const psdict = await problem.getListStatus(domainId, this.user._id, Object.keys(pdict));
         const donePids = new Set();
         const progPids = new Set();
         for (const pid in psdict) {
@@ -128,7 +128,7 @@ class TrainingDetailHandler extends TrainingHandler {
             if (nsdoc.isDone) doneNids.add(node._id);
             nsdict[node._id] = nsdoc;
         }
-        const tsdoc = await training.setStatus(tdoc._id, this.user._id, {
+        const tsdoc = await training.setStatus(domainId, tdoc.docId, this.user._id, {
             doneNids: Array.from(doneNids),
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
@@ -143,10 +143,10 @@ class TrainingDetailHandler extends TrainingHandler {
         };
     }
 
-    async postEnroll({ tid }) {
+    async postEnroll({ domainId, tid }) {
         this.checkPerm(PERM_LOGGEDIN);
-        const tdoc = await training.get(tid);
-        await training.enroll(tdoc._id, this.user._id);
+        const tdoc = await training.get(domainId, tid);
+        await training.enroll(domainId, tdoc.docId, this.user._id);
         this.back();
     }
 }
@@ -176,7 +176,7 @@ class TrainingCreateHandler extends TrainingHandler {
         const pdocs = await problem.getMulti({
             $or: [{ _id: { $in: pids } }, { pid: { $in: pids } }],
         }).sort('_id', 1).toArray();
-        const existPids = pdocs.map((pdoc) => pdoc._id);
+        const existPids = pdocs.map((pdoc) => pdoc.docId);
         const existPnames = pdocs.map((pdoc) => pdoc.pid);
         if (pids.length !== existPids.length) {
             for (const pid in pids) {
@@ -202,7 +202,7 @@ class TrainingEditHandler extends TrainingHandler {
         const dag = JSON.stringify(tdoc.dag, null, 2);
         const path = [
             ['training_main', '/t'],
-            [tdoc.title, `/t/${tdoc._id}`, true],
+            [tdoc.title, `/t/${tdoc.docId}`, true],
             ['training_edit', null],
         ];
         this.response.template = 'training_edit.html';
@@ -225,7 +225,7 @@ class TrainingEditHandler extends TrainingHandler {
                 { pid: { $in: pids } },
             ],
         }).sort('_id', 1).toArray();
-        const existPids = pdocs.map((pdoc) => pdoc._id);
+        const existPids = pdocs.map((pdoc) => pdoc.docId);
         const existPnames = pdocs.map((pdoc) => pdoc.pid);
         if (pids.length !== existPids.length) {
             for (const pid in pids) {

@@ -28,19 +28,21 @@ class ProblemHandler extends Handler {
         this.checkPerm(PERM_VIEW_PROBLEM);
     }
 
-    async get({ page = 1, category = '' }) {
+    async get({ domainId, page = 1, category = '' }) {
         this.response.template = 'problem_main.html';
         const q = {};
         let psdict = {};
         if (category) q.$or = [{ category }, { tag: category }];
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(q).sort({ pid: 1 }),
+            problem.getMulti(domainId, q).sort({ pid: 1 }),
             page,
             await system.get('PROBLEM_PER_PAGE'),
         );
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
-            psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
+            psdict = await problem.getListStatus(
+                domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
+            );
         }
         const path = [
             ['Hydro', '/'],
@@ -75,7 +77,7 @@ class ProblemHandler extends Handler {
 }
 
 class ProblemCategoryHandler extends ProblemHandler {
-    async get({ page = 1, category }) {
+    async get({ domainId, page = 1, category }) {
         this.response.template = 'problem_main.html';
         const q = {
             $or: [{ category }, { tag: category }],
@@ -83,12 +85,14 @@ class ProblemCategoryHandler extends ProblemHandler {
         let psdict = {};
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(q).sort({ pid: 1 }),
+            problem.getMulti(domainId, q).sort({ pid: 1 }),
             page,
             await system.get('PROBLEM_PER_PAGE'),
         );
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
-            psdict = await problem.getListStatus(this.user._id, pdocs.map((pdoc) => pdoc._id));
+            psdict = await problem.getListStatus(
+                domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
+            );
         }
         const path = [
             ['Hydro', '/'],
@@ -102,10 +106,10 @@ class ProblemCategoryHandler extends ProblemHandler {
 }
 
 class ProblemRandomHandler extends ProblemHandler {
-    async get() {
+    async get({ domainId }) {
         const q = {};
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        const pid = await problem.random(q);
+        const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
         this.response.redirect = `/p/${pid}`;
@@ -113,15 +117,17 @@ class ProblemRandomHandler extends ProblemHandler {
 }
 
 class ProblemDetailHandler extends ProblemHandler {
-    async _prepare({ pid }) {
+    async _prepare({ domainId, pid }) {
         this.response.template = 'problem_detail.html';
         this.uid = this.user._id;
         this.pid = pid;
-        if (pid) this.pdoc = await problem.get(pid, this.uid);
-        if (this.pdoc.hidden && this.pdoc.owner !== this.uid) {
-            this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+        if (pid) {
+            this.pdoc = await problem.get(domainId, pid, this.uid);
+            if (this.pdoc.hidden && this.pdoc.owner !== this.uid) {
+                this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+            }
+            if (this.pdoc) this.udoc = await user.getById(domainId, this.pdoc.owner);
         }
-        if (this.pdoc) this.udoc = await user.getById(this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
@@ -143,9 +149,9 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         this.checkPerm(PERM_SUBMIT_PROBLEM);
     }
 
-    async get() {
+    async get({ domainId }) {
         this.response.template = 'problem_submit.html';
-        const rdocs = await record.getUserInProblemMulti(this.uid, this.pdoc._id)
+        const rdocs = await record.getUserInProblemMulti(domainId, this.uid, this.pdoc.docId)
             .sort({ _id: -1 })
             .limit(10)
             .toArray();
@@ -163,13 +169,13 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         };
     }
 
-    async post() {
+    async post({ domainId }) {
         const { lang, code } = this.request.body;
-        const rid = await record.add({
-            uid: this.uid, lang, code, pid: this.pdoc._id,
+        const rid = await record.add(domainId, {
+            uid: this.uid, lang, code, pid: this.pdoc.docId,
         });
         await Promise.all([
-            record.judge(rid),
+            record.judge(domainId, rid),
             user.inc(this.user._id, 'nSubmit'),
         ]);
         this.response.body = { rid };
@@ -178,25 +184,32 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
 }
 
 class ProblemPretestHandler extends ProblemDetailHandler {
-    async post({ lang, code, input }) {
+    async post({
+        domainId, lang, code, input,
+    }) {
         this.limitRate('add_record', 60, 100);
-        const rid = await record.add({
-            uid: this.uid, lang, code, pid: this.pdoc._id, input,
+        const rid = await record.add(domainId, {
+            uid: this.uid, lang, code, pid: this.pdoc.docId, input,
         });
-        await record.judge(rid);
+        await record.judge(domainId, rid);
         this.response.body = { rid };
     }
 }
 
 class ProblemPretestConnectionHandler extends ConnectionHandler {
-    async prepare({ pid }) {
+    async prepare({ domainId, pid }) {
         this.pid = pid.toString();
+        this.domainId = domainId;
         bus.subscribe(['record_change'], this.onRecordChange);
     }
 
     async onRecordChange(data) {
         const rdoc = data.value;
-        if (rdoc.uid !== this.user._id || rdoc.pid.toString() !== this.pid) return;
+        if (
+            rdoc.uid !== this.user._id
+            || rdoc.pid.toString() !== this.pid
+            || rdoc.domainId !== this.domainId
+        ) return;
         if (rdoc.tid) return;
         this.send({ rdoc });
     }
@@ -207,8 +220,8 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
 }
 
 class ProblemStatisticsHandler extends ProblemDetailHandler {
-    async get() {
-        const udoc = await user.getById(this.pdoc.owner);
+    async get({ domainId }) {
+        const udoc = await user.getById(domainId, this.pdoc.owner);
         const path = [
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
@@ -254,10 +267,10 @@ class ProblemEditHandler extends ProblemManageHandler {
         this.response.body.page_name = 'problem_edit';
     }
 
-    async post({ title, content }) {
+    async post({ domainId, title, content }) {
         const pid = validator.checkPid(this.request.body.pid);
-        const pdoc = await problem.get(this.params.pid);
-        await problem.edit(pdoc._id, { title, content, pid });
+        const pdoc = await problem.get(domainId, this.params.pid);
+        await problem.edit(domainId, pdoc.docId, { title, content, pid });
         this.response.redirect = `/p/${pid}`;
     }
 }
@@ -275,10 +288,10 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
         this.response.body.md5 = this.md5;
     }
 
-    async post() {
+    async post({ domainId }) {
         if (!this.request.files.file) throw new BadRequestError();
         const r = fs.createReadStream(this.request.files.file.path);
-        await problem.setTestdata(this.pdoc._id, r);
+        await problem.setTestdata(domainId, this.pdoc.docId, r);
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
             const f = await file.getMeta(this.pdoc.data);
             this.md5 = f.md5;
@@ -297,25 +310,25 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
 }
 
 class ProblemSolutionHandler extends ProblemDetailHandler {
-    async get({ page = 1 }) {
+    async get({ domainId, page = 1 }) {
         this.response.template = 'problem_solution.html';
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
         const [psdocs, pcount, pscount] = await paginate(
-            solution.getMulti(this.pdoc._id),
+            solution.getMulti(domainId, this.pdoc.docId),
             page,
             await system.get('SOLUTION_PER_PAGE'),
         );
         const uids = [this.pdoc.owner];
         const docids = [];
         for (const psdoc of psdocs) {
-            docids.push(psdoc._id);
+            docids.push(psdoc.docId);
             uids.push(psdoc.owner);
             if (psdoc.reply.length) {
                 for (const psrdoc of psdoc.reply) uids.push(psrdoc.owner);
             }
         }
         const udict = await user.getList(uids);
-        const pssdict = solution.getListStatus(docids, this.uid);
+        const pssdict = solution.getListStatus(domainId, docids, this.uid);
         const path = [
             ['problem_main', '/p'],
             [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
@@ -326,77 +339,79 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         };
     }
 
-    async post({ psid }) {
-        if (psid) this.psdoc = await solution.get(psid);
+    async post({ domainId, psid }) {
+        if (psid) this.psdoc = await solution.get(domainId, psid);
     }
 
-    async postSubmit({ content }) {
+    async postSubmit({ domainId, content }) {
         this.checkPerm(PERM_CREATE_PROBLEM_SOLUTION);
-        await solution.add(this.pdoc._id, this.uid, content);
+        await solution.add(domainId, this.pdoc.docId, this.uid, content);
         this.back();
     }
 
-    async postEditSolution({ content }) {
+    async postEditSolution({ domainId, content }) {
         if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
-        this.psdoc = await solution.edit(this.psdoc._id, content);
+        this.psdoc = await solution.edit(domainId, this.psdoc.docId, content);
         this.ctx.body.psdoc = this.psdoc;
         this.back();
     }
 
-    async postDeleteSolution() {
+    async postDeleteSolution({ domainId }) {
         if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
-        await solution.del(this.psdoc._id);
+        await solution.del(domainId, this.psdoc.docId);
         this.back();
     }
 
-    async postReply({ psid, content }) {
+    async postReply({ domainId, psid, content }) {
         this.checkPerm(PERM_REPLY_PROBLEM_SOLUTION);
-        const psdoc = await solution.get(psid);
-        await solution.reply(psdoc._id, this.uid, content);
+        const psdoc = await solution.get(domainId, psid);
+        await solution.reply(domainId, psdoc.docId, this.uid, content);
     }
 
-    async postEditReply({ content, psid, psrid }) {
-        const [psdoc, psrdoc] = await solution.getReply(psid, psrid);
-        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
+    async postEditReply({
+        domainId, content, psid, psrid,
+    }) {
+        const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
         if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
-        await solution.editReply(psid, psrid, content);
+        await solution.editReply(domainId, psid, psrid, content);
     }
 
-    async postDeleteReply({ psid, psrid }) {
-        const [psdoc, psrdoc] = await solution.getReply(psid, psrid);
-        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
+    async postDeleteReply({ domainId, psid, psrid }) {
+        const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
         if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
-        await solution.delReply(psid, psrid);
+        await solution.delReply(domainId, psid, psrid);
         this.back();
     }
 
-    async postUpvote() {
-        const [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, 1);
+    async postUpvote({ domainId }) {
+        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.uid, 1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
-        if (!this.preferJson) this.back();
+        this.back();
     }
 
-    async postDownvote() {
-        const [psdoc, pssdoc] = await solution.vote(this.psdoc._id, this.uid, -1);
+    async postDownvote({ domainId }) {
+        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.uid, -1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
-        if (!this.preferJson) this.back();
+        this.back();
     }
 }
 
 class ProblemSolutionRawHandler extends ProblemDetailHandler {
-    async get({ psid }) {
+    async get({ domainId, psid }) {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
-        const psdoc = await solution.get(psid);
+        const psdoc = await solution.get(domainId, psid);
         this.response.type = 'text/markdown';
         this.response.body = psdoc.content;
     }
 }
 
 class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
-    async get({ psid }) {
+    async get({ domainId, psid }) {
         this.checkPerm(PERM_VIEW_PROBLEM_SOLUTION);
-        const [psdoc, psrdoc] = await solution.getReply(psid);
-        if ((!psdoc) || psdoc.pid !== this.pdoc._id) throw new SolutionNotFoundError(psid);
+        const [psdoc, psrdoc] = await solution.getReply(domainId, psid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
         this.response.type = 'text/markdown';
         this.response.body = psrdoc.content;
     }
@@ -417,12 +432,10 @@ class ProblemCreateHandler extends Handler {
     }
 
     async post({
-        title, pid, content, hidden,
+        domainId, title, pid, content, hidden,
     }) {
-        validator.checkPid(pid);
-        pid = pid || await system.inc('pid');
-        await problem.add({
-            title, content, owner: this.user._id, pid, hidden,
+        pid = await problem.add(domainId, title, content, this.user._id, {
+            pid, hidden,
         });
         this.response.body = { pid };
         this.response.redirect = `/p/${pid}/settings`;

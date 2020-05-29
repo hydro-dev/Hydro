@@ -1,157 +1,140 @@
 const { ObjectID } = require('bson');
 const problem = require('./problem');
+const document = require('./document');
 const contest = require('./contest');
 const { PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { DocumentNotFoundError } = require('../error');
-const db = require('../service/db');
 
-const coll = db.collection('discussion');
-const collReply = db.collection('discussion.reply');
-const collStatus = db.collection('discussion.status');
-const collNode = db.collection('discussion.node');
-
-async function add(parentType, parentId, owner, title, content, ip = null, highlight = false) {
-    const res = await coll.insertOne({
-        owner,
-        title,
-        content,
-        ip,
-        highlight,
-        parentType,
-        parentId,
-        nReply: 0,
-        updateAt: new Date(),
-    });
-    return res.insertedId;
+function add(domainId, parentType, parentId, owner, title, content, ip = null, highlight = false) {
+    return document.add(
+        domainId, content, owner, document.TYPE_DISCUSSION,
+        null, parentType, parentId,
+        {
+            title,
+            ip,
+            highlight,
+            nReply: 0,
+            updateAt: new Date(),
+        },
+    );
 }
 
-function get(did) {
-    return coll.findOne({ _id: did });
+function get(domainId, did) {
+    return document.get(domainId, document.TYPE_DISCUSSION, did);
 }
 
-function edit(did, title, content, highlight) {
-    return coll.findOneAndUpdate({ _id: did }, { $set: { title, content, highlight } });
+function edit(domainId, did, title, content, highlight) {
+    return document.set(domainId, document.TYPE_DISCUSSION, did, { title, content, highlight });
 }
 
-function del(did) {
+function del(domainId, did) {
+    // TODO(masnn) delete status
     return Promise.all([
-        coll.deleteOne({ _id: did }),
-        collReply.deleteMany({ did }),
-        collStatus.deleteMany({ did }),
+        document.deleteOne(domainId, document.TYPE_DISCUSSION, did),
+        document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
+            parentType: document.TYPE_DISCUSSION, parentId: did,
+        }),
     ]);
 }
 
-function count(query) {
-    return coll.find(query).count();
+function count(domainId, query) {
+    return document.count(domainId, document.TYPE_DISCUSSION, query);
 }
 
-function getMulti(query) {
-    return coll.find(query).sort('updateAt', -1);
+function getMulti(domainId, query) {
+    return document.getMulti(domainId, document.TYPE_DISCUSSION, query).sort('updateAt', -1);
 }
 
-async function addReply(did, owner, content, ip) {
+async function addReply(domainId, did, owner, content, ip) {
     const [drdoc] = await Promise.all([
-        collReply.insertOne({
-            owner, did, content, ip,
-        }),
-        coll.updateOne({ _id: did }, { $inc: { nReply: 1 }, $set: { updateAt: new Date() } }),
+        document.add(
+            domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
+            null, document.TYPE_DISCUSSION, did, { ip },
+        ),
+        document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: new Date() }),
     ]);
     return drdoc;
 }
 
-function getReply(drid) {
-    return collReply.findOne({ _id: drid });
+function getReply(domainId, drid) {
+    return document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
 }
 
-function editReply(drid, content) {
-    return collReply.updateOne({ _id: drid }, { $set: { content } });
+function editReply(domainId, drid, content) {
+    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content });
 }
 
-async function delReply(drid) {
-    const drdoc = await getReply(drid);
+async function delReply(domainId, drid) {
+    const drdoc = await getReply(domainId, drid);
     if (!drdoc) throw new DocumentNotFoundError(drid);
     return await Promise.all([ // eslint-disable-line no-return-await
-        collReply.deleteOne({ _id: drid }),
-        coll.updateOne({ _id: drdoc.did }, { $inc: { nReply: -1 } }),
+        document.deleteOne(domainId, document.TYPE_DISCUSSION_REPLY, drid),
+        document.inc(domainId, document.TYPE_DISCUSSION, drdoc.parentId, 'nReply', -1),
     ]);
 }
 
-function getMultiReply(did) {
-    return coll.find({ did }).sort('_id', -1);
+function getMultiReply(domainId, did) {
+    return document.getMulti(
+        domainId, document.TYPE_DISCUSSION_REPLY,
+        { parentType: document.TYPE_DISCUSSION, parentId: did },
+    ).sort('_id', -1);
 }
 
-function getListReply(did) {
-    return getMultiReply({ did }).toArray();
+function getListReply(domainId, did) {
+    return getMultiReply(domainId, did).toArray();
 }
 
-async function addTailReply(drid, owner, content, ip) {
-    let drdoc = await collReply.findOne({ _id: drid });
+async function addTailReply(domainId, drid, owner, content, ip) {
+    let drdoc = await document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
     const sid = new ObjectID();
-    await Promise.all([
-        collReply.updateOne({ _id: drid }, {
-            $push: {
-                reply: {
-                    _id: sid, content, owner, ip,
-                },
-            },
-        }),
-        coll.updateOne({ _id: drdoc.did }, { $set: { updateAt: new Date() } }),
+    [drdoc] = await Promise.all([
+        document.push(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', content, owner, { ip }),
+        document.set(domainId, document.TYPE_DISCUSSION, drdoc.parentId, { updateAt: new Date() }),
     ]);
-    drdoc = await collReply.findOne({ _id: drid });
     return [drdoc, sid];
 }
 
-async function getTailReply(drid, drrid) {
-    const drdoc = await collReply.findOne({ _id: drid, reply: { $elemMatch: { _id: drrid } } });
-    if (!drdoc) return [null, null];
-    for (const drrdoc of drdoc) if (drrdoc._id === drrid) return [drdoc, drrdoc];
-    return [drdoc, null];
+function getTailReply(domainId, drid, drrid) {
+    return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
-async function editTailReply(drid, drrid, content) {
-    const drdoc = await collReply.findOne({ _id: drid, reply: { $elemMatch: { _id: drrid } } });
-    const { reply } = drdoc;
-    for (const i in reply) {
-        if (reply[i]._id === drrid) {
-            reply[i].content = content;
-            break;
-        }
-    }
-    // eslint-disable-next-line no-return-await
-    return await collReply.findOneAndUpdate({ _id: drdoc._id }, { $set: { reply } });
+function editTailReply(domainId, drid, drrid, content) {
+    return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid, { content });
 }
 
-function delTailReply(drid, drrid) {
-    return coll.findOneAndUpdate({ _id: drid }, { $pull: { reply: { _id: drrid } } });
+function delTailReply(domainId, drid, drrid) {
+    return document.deleteSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
-function setStar(did, uid, star) {
-    return collStatus.findOneAndUpdate({ did, uid }, { $set: { star } }, { upsert: true });
+function setStar(domainId, did, uid, star) {
+    return document.setStatus(domainId, document.TYPE_DISCUSSION, did, uid, { star });
 }
 
-function getStatus(did, uid) {
-    return collStatus.findOne({ did, uid });
+function getStatus(domainId, did, uid) {
+    return document.getStatus(domainId, document.TYPE_DISCUSSION, did, uid);
 }
 
-function addNode(_id, category) {
-    return collNode.insertOne({ _id, category });
+function addNode(domainId, _id, category) {
+    return document.add(
+        domainId, _id, 1, document.TYPE_DISCUSSION_NODE, null, null, null, { category },
+    );
 }
 
-function getNode(_id) {
-    return collNode.findOne({ _id });
+function getNode(domainId, _id) {
+    return document.get(domainId, document.TYPE_DISCUSSION_NODE, _id);
 }
 
-async function getVnode(ddoc, handler) {
+async function getVnode(domainId, ddoc, handler) {
     if (ddoc.parentType === 'problem') {
-        const pdoc = await problem.getById(ddoc.parentId);
+        const pdoc = await problem.getById(domainId, ddoc.parentId);
         if (!pdoc) return null;
         if (pdoc.hidden && handler) handler.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         return { ...pdoc, type: ddoc.parentType, id: ddoc.parentId };
     } if (ddoc.parentType === 'contest') {
-        const tdoc = await contest.get(ddoc.parentId);
+        const tdoc = await contest.get(domainId, ddoc.parentId);
         return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
     } if (ddoc.parentType === 'node') {
-        const ndoc = await getNode(ddoc.parentId);
+        const ndoc = await getNode(domainId, ddoc.parentId);
         return { title: ndoc._id, type: ddoc.parentType, id: ddoc.parentId };
     }
     return {
@@ -161,11 +144,11 @@ async function getVnode(ddoc, handler) {
     };
 }
 
-async function getListVnodes(ddocs, handler) {
+async function getListVnodes(domainId, ddocs, handler) {
     const res = {};
     for (const ddoc of ddocs) {
         // FIXME no-await-in-loop
-        res[ddoc._id] = await getVnode(ddoc, handler); // eslint-disable-line no-await-in-loop
+        res[ddoc._id] = await getVnode(domainId, ddoc, handler); // eslint-disable-line no-await-in-loop
     }
     return res;
 }

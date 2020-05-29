@@ -1,10 +1,10 @@
 const perm = require('../permission');
 
-const BUILTIN_ROLES = [
-    { _id: 'guest', perm: perm.PERM_BASIC },
-    { _id: 'default', perm: perm.PERM_DEFAULT, count: 0 },
-    { _id: 'root', perm: perm.PERM_ALL, count: 0 },
-];
+const BUILTIN_ROLES = {
+    guest: { perm: perm.PERM_BASIC },
+    default: { perm: perm.PERM_DEFAULT },
+    admin: { perm: perm.PERM_ADMIN },
+};
 
 const DEFAULT_NODES = {
     探索: [

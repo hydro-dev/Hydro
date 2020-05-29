@@ -16,7 +16,6 @@ module.exports = {
     rules: {
         "indent": ["warn", 4],
         "no-plusplus": "off",
-        "no-underscore-dangle": "off",
         "no-console": "off",
         "no-extend-native": "off",
         "no-restricted-syntax": "off",
