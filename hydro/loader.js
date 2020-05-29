@@ -238,9 +238,10 @@ async function load() {
     await server.prepare();
     await service();
     const builtinModel = [
-        'document', 'blacklist', 'builtin', 'contest', 'message',
-        'opcount', 'problem', 'record', 'setting', 'solution',
-        'token', 'training', 'user', 'file', 'discussion',
+        'builtin', 'document', 'domain', 'blacklist', 'opcount',
+        'setting', 'token', 'user', 'problem', 'record',
+        'contest', 'message', 'solution', 'training', 'file',
+        'discussion',
     ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
@@ -250,7 +251,7 @@ async function load() {
     const dbVer = await system.get('db.ver');
     if (dbVer !== 1) {
         const ins = require('./script/install');
-        await ins.run();
+        await ins.run('Root', 'rootroot');
     }
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',

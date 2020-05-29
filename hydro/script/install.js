@@ -4,7 +4,6 @@ const builtin = require('../model/builtin');
 const discussion = require('../model/discussion');
 const system = require('../model/system');
 const domain = require('../model/domain');
-const user = require('../model/user');
 const pwhash = require('../lib/hash.hydro');
 const { udoc } = require('../interface');
 
@@ -20,7 +19,7 @@ const allowFail = async (func, ...args) => {
     return res;
 };
 
-async function run() {
+async function run(username, password) {
     const def = {
         PROBLEM_PER_PAGE: 100,
         RECORD_PER_PAGE: 100,
@@ -52,10 +51,8 @@ async function run() {
         tasks.push(system.set(key, def[key]));
     }
     await Promise.all(tasks);
-    const salt = String.random();
     tasks = [
-        allowFail(domain.add, 'system', 1),
-        user.setRole('system', 0, 'guest'),
+        allowFail(domain.add, 'system', 0),
         collUser.updateOne({ _id: 0 }, {
             $set: defaults({
                 _id: 0,
@@ -74,20 +71,25 @@ async function run() {
                 unameLower: 'guest',
             }, udoc),
         }, { upsert: true }),
-        collUser.updateOne({ _id: -1 }, {
-            $set: defaults({
-                _id: -1,
-                mail: 'root@hydro',
-                mailLower: 'root@hydro',
-                uname: 'Root',
-                unameLower: 'root',
-                hash: pwhash.hash('rootroot', salt),
-                salt,
-                gravatar: 'root@hydro',
-                priv: 1,
-            }, udoc),
-        }, { upsert: true }),
     ];
+    if (username && password) {
+        const salt = String.random();
+        tasks.push(
+            collUser.updateOne({ _id: -1 }, {
+                $set: defaults({
+                    _id: -1,
+                    mail: 'root@hydro',
+                    mailLower: 'root@hydro',
+                    uname: username,
+                    unameLower: username.trim().toLowerCase(),
+                    hash: pwhash.hash(password, salt),
+                    salt,
+                    gravatar: 'root@hydro',
+                    priv: 1,
+                }, udoc),
+            }, { upsert: true }),
+        );
+    }
     for (const category in builtin.DEFAULT_NODES) {
         const nodes = builtin.DEFAULT_NODES[category];
         for (const node of nodes) {

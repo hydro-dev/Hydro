@@ -43,8 +43,8 @@ class ContestListHandler extends ContestHandler {
 }
 
 class ContestDetailHandler extends ContestHandler {
-    async _prepare({ tid }) {
-        this.tdoc = await contest.get(tid);
+    async _prepare({ domainId, tid }) {
+        this.tdoc = await contest.get(domainId, tid);
     }
 
     async get({ domainId, page = 1 }) {
@@ -66,7 +66,7 @@ class ContestDetailHandler extends ContestHandler {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         } else attended = false;
-        const udict = await user.getList([this.tdoc.owner]);
+        const udict = await user.getList(domainId, [this.tdoc.owner]);
         const path = [
             ['Hydro', '/'],
             ['contest_main', '/c'],

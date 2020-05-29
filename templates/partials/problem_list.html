@@ -29,7 +29,7 @@
     </thead>
     <tbody>
     {% for pdoc in pdocs %}
-    {% set psdoc = psdict[pdoc['_id']] %}
+    {% set psdoc = psdict[pdoc['docId']] %}
       <tr>
       {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       {% if psdoc['rid'] %}

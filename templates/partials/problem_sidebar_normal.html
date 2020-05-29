@@ -129,7 +129,7 @@
       {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
       {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
       <dt>{{ _('# My Submissions') }}</dt>
-      <dd><a href="/r?pid={{ pdoc.docId }}&uid_or_name={{ handler.user['_id'] }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
+      <dd><a href="/r?pid={{ pdoc.docId }}&uid_or_name={{ handler.user._id }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
       {% endif %}
       {% endif %}
       <dt>{{ _('Accepted') }}</dt>

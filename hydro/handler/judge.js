@@ -19,7 +19,7 @@ async function _postJudge(rdoc) {
             contest.updateStatus(rdoc.domainId, rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
         );
     }
-    if (await problem.updateStatus(rdoc.rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
+    if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {
         if (accept && !rdoc.rejudged) {
             tasks.push(
                 problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1),

@@ -1,10 +1,8 @@
-const { ObjectID } = require('bson');
 const { STATUS_ACCEPTED } = require('./builtin').STATUS;
 const file = require('./file');
 const document = require('./document');
 const domain = require('./domain');
 const { ProblemNotFoundError } = require('../error');
-const validator = require('../lib/validator');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
@@ -30,8 +28,6 @@ async function add(domainId, title, content, owner, {
     tag = [],
     hidden = false,
 }) {
-    validator.checkTitle(title);
-    validator.checkContent(content);
     const d = await domain.inc(domainId, 'pidCounter', 1);
     if (!pid) pid = d.pidCounter.toString();
     return await document.add(domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null, {
@@ -46,7 +42,9 @@ async function add(domainId, title, content, owner, {
  * @returns {Pdoc}
  */
 async function get(domainId, pid, uid = null) {
-    const pdoc = await document.get(domainId, document.TYPE_PROBLEM, pid);
+    const pdoc = Number.isInteger(pid)
+        ? await document.get(domainId, document.TYPE_PROBLEM, pid)
+        : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
     if (!pdoc) throw new ProblemNotFoundError(pid);
     if (uid) {
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
@@ -92,8 +90,6 @@ function getMultiStatus(domainId, query) {
  * @returns {Pdoc}
  */
 function edit(domainId, _id, $set) {
-    if ($set.title) validator.checkTitle($set.title);
-    if ($set.content) validator.checkContent($set.content);
     return document.set(domainId, document.TYPE_CONTEST, _id, $set);
 }
 

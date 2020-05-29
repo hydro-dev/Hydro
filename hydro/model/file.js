@@ -44,7 +44,7 @@ async function dec(_id) {
     return file.count;
 }
 
-async function get(_id, secret = null) {
+async function get(_id, secret) {
     const file = await coll.findOne({ _id });
     if (typeof secret !== 'undefined') {
         const timestamp = _timestamp();

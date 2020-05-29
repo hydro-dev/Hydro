@@ -38,6 +38,10 @@ class USER {
 }
 
 async function getPerm(domainId, udoc) {
+    if (udoc._id === 1) { // Is Guest
+        const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, 'guest');
+        return p.content;
+    }
     if (udoc.priv === 1) {
         const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, 'admin');
         return p.content;

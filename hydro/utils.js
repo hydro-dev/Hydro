@@ -1,23 +1,11 @@
-const map = [
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-    'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D',
-    'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-    'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-    'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8',
-    '9', '0',
-];
+const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
 String.random = function random(digit) {
     let str = '';
-    for (let i = 1; i <= digit; i++) str += map[Math.floor(Math.random() * 62)];
+    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * 62)];
     return str;
 };
 
-/**
- * @param {Array} a
- * @param {Array} b
- */
 Array.isDiff = function isDiff(a, b) {
     if (a.length !== b.length) return true;
     a.sort();
@@ -43,15 +31,17 @@ Set.isSuperset = function isSuperset(set, subset) {
     }
     return true;
 };
-Set.union = function union(setA, setB) {
-    const _union = new Set(setA);
-    for (const elem of setB) _union.add(elem);
-    return _union;
+
+Set.union = function Union(setA, setB) {
+    const union = new Set(setA);
+    for (const elem of setB) union.add(elem);
+    return union;
 };
-Set.intersection = function intersection(setA, setB) {
-    const _intersection = new Set();
+
+Set.intersection = function Intersection(setA, setB) {
+    const intersection = new Set();
     for (const elem of setB) {
-        if (setA.has(elem)) _intersection.add(elem);
+        if (setA.has(elem)) intersection.add(elem);
     }
-    return _intersection;
+    return intersection;
 };

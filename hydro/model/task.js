@@ -3,6 +3,7 @@ const db = require('../service/db');
 const coll = db.collection('task');
 
 async function add(task) {
+    console.log(task);
     const res = await coll.insertOne(task);
     return res.insertedId;
 }

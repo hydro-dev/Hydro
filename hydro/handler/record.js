@@ -73,7 +73,7 @@ class RecordConnectionHandler extends ConnectionHandler {
 
     async message(msg) {
         for (const rid of msg.rids) {
-            const rdoc = await record.get(rid); // eslint-disable-line no-await-in-loop
+            const rdoc = await record.get(this.domainId, rid); // eslint-disable-line no-await-in-loop
             await this.onRecordChange({ value: rdoc }); // eslint-disable-line no-await-in-loop
         }
     }
@@ -88,7 +88,7 @@ class RecordConnectionHandler extends ConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.getById(this.domainId, rdoc.pid),
+            problem.get(this.domainId, rdoc.pid),
         ]);
         if (pdoc.hidden && !this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });

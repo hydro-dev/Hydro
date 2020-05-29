@@ -115,7 +115,7 @@
                   <td class="col--name col--problem-name">
                   {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
                     <form class="form--inline" action="/p" method="post">
-                      <input type="hidden" name="pid" value="{{ pdoc['_id'] }}">
+                      <input type="hidden" name="pid" value="{{ pdoc.docId }}">
                       <input type="hidden" name="operation" value="{% if not psdoc['star'] %}star{% else %}unstar{% endif %}">
                       <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
                       <button class="star{% if psdoc['star'] %} activated{% endif %}" type="submit">
