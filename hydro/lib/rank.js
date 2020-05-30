@@ -10,4 +10,4 @@ function* ranked(diter, equ = (a, b) => a === b) {
     }
 }
 
-global.Hydro['lib.rank'] = module.exports = ranked;
+global.Hydro.lib.rank = module.exports = ranked;

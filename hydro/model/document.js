@@ -18,7 +18,7 @@ const TYPE_FILE = 50;
 const TYPE_HOMEWORK = 60;
 
 async function add(
-    domainId, content, owner, docType, docId,
+    domainId, content, owner, docType, docId = null,
     parentType = null, parentId = null, args = {},
 ) {
     const _id = new ObjectID();
@@ -210,7 +210,7 @@ async function cappedIncStatus(
         {
             domainId, docType, docId, uid, [key]: { $not },
         },
-        { $inc: { key: value } },
+        { $inc: { [key]: value } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;

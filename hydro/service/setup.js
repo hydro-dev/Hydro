@@ -68,6 +68,7 @@ async function setup() {
                 const db = Database.db(name);
                 // Check Write Access
                 await db.collection('test').insertOne({ test: 'test' });
+                await db.collection('test').deleteOne({ test: 'test' });
                 fs.writeFileSync(path.resolve(process.cwd(), 'config.json'), JSON.stringify({
                     host, port, name, username, password,
                 }));

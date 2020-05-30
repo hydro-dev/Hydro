@@ -1,5 +1,5 @@
 const user = require('../model/user');
-const system = require('../model/system');
+const domain = require('../model/domain');
 const setting = require('../model/setting');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
@@ -10,7 +10,7 @@ const { RoleAlreadyExistError, ValidationError } = require('../error');
 class ManageHandler extends Handler {
     async prepare({ domainId }) {
         this.checkPerm(PERM_MANAGE);
-        this.system = await user.getById(domainId, 0);
+        this.domain = await domain.get(domainId);
     }
 }
 
@@ -28,7 +28,7 @@ class ManageDashboardHandler extends ManageHandler {
             ['manage_dashboard', null],
         ];
         this.response.template = 'manage_dashboard.html';
-        this.response.body = { system: this.system, path };
+        this.response.body = { domain: this.domain, path };
     }
 }
 
@@ -40,14 +40,13 @@ class ManageEditHandler extends ManageHandler {
             ['manage_edit', null],
         ];
         this.response.template = 'manage_edit.html';
-        this.response.body = { system: this.system, path };
+        this.response.body = { domain: this.domain, path };
     }
 
-    async post({ uname, gravatar, bio }) {
-        const unameLower = uname.trim().toLowerCase();
-        await user.setById(0, {
-            uname, unameLower, gravatar, bio,
-        });
+    async post({
+        domainId, name, gravatar, bulletin,
+    }) {
+        await domain.edit(domainId, { name, gravatar, bulletin });
         this.response.redirect = '/manage/dashboard';
     }
 }
@@ -56,10 +55,9 @@ class ManageUserHandler extends ManageHandler {
     async get({ domainId }) {
         const uids = [];
         const rudocs = {};
-        const [udocs, roles, sys] = await Promise.all([
+        const [udocs, roles] = await Promise.all([
             user.getMulti(domainId, { role: { $nin: ['default', 'guest'] } }).toArray(),
             user.getRoles(domainId),
-            user.getById(domainId, 0),
         ]);
         for (const role of roles) rudocs[role._id] = [];
         for (const udoc of udocs) {

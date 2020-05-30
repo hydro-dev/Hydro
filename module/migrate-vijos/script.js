@@ -173,9 +173,9 @@ const tasks = {
             testCases.push({
                 status: c.status,
                 score: c.score,
-                time: c.time,
-                memory: c.memory,
-                judge_text: c.judge_text,
+                time: c.time_ms || c.time,
+                memory: c.memory_kb || c.memory,
+                judge_text: (c.judge_text || '') + (c.message || ''),
             });
         }
         return {

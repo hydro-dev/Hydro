@@ -1,7 +1,5 @@
-const assert = require('assert');
 const document = require('./document');
-const validator = require('../lib/validator');
-const { ValidationError, TrainingNotFoundError, TrainingAlreadyEnrollError } = require('../error');
+const { TrainingNotFoundError, TrainingAlreadyEnrollError } = require('../error');
 
 function getStatus(domainId, tid, uid) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
@@ -34,14 +32,6 @@ function setStatus(domainId, tid, uid, $set) {
 }
 
 function add(domainId, title, content, owner, dag = [], description = '') {
-    validator.checkTitle(title);
-    validator.checkIntro(content);
-    validator.checkDescription(description);
-    for (const node of dag) {
-        for (const nid of node.requireNids) {
-            if (nid >= node._id) throw new ValidationError('dag');
-        }
-    }
     return document.add(domainId, content, owner, document.TYPE_TRAINING, null, null, null, {
         dag,
         title,
@@ -51,16 +41,6 @@ function add(domainId, title, content, owner, dag = [], description = '') {
 }
 
 function edit(domainId, tid, $set) {
-    if ($set.title) validator.checkTitle($set.title);
-    if ($set.content) validator.checkIntro($set.content);
-    if ($set.desc) validator.checkDescription($set.description);
-    if ($set.dag) {
-        for (const node of $set.dag) {
-            for (const nid of node.requireNids) {
-                assert(nid >= node._id, new ValidationError('dag'));
-            }
-        }
-    }
     return document.set(domainId, document.TYPE_TRAINING, tid, $set);
 }
 
@@ -101,6 +81,13 @@ global.Hydro.model.training = module.exports = {
     async get(domainId, tid) {
         const tdoc = await document.get(domainId, document.TYPE_TRAINING, tid);
         if (!tdoc) throw new TrainingNotFoundError(tid);
+        for (const i in tdoc.dag) {
+            for (const j in tdoc.dag[i].pids) {
+                if (Number.isSafeInteger(parseInt(tdoc.dag[i].pids[j]))) {
+                    tdoc.dag[i].pids[j] = parseInt(tdoc.dag[i].pids[j]);
+                }
+            }
+        }
         return tdoc;
     },
     async getList(domainId, tids) {

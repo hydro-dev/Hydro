@@ -119,6 +119,7 @@ const acm = {
         }
         return rows;
     },
+    rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
 };
 
 const oi = {
@@ -251,16 +252,17 @@ async function get(domainId, tid) {
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
-async function updateStatus(domainId, tid, uid, rid, pid, accept, score) {
+
+async function updateStatus(domainId, tid, uid, rid, pid, accept = false, score = 0) {
     await get(domainId, tid);
     const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, uid, 'journal', {
         rid, pid, accept, score,
     });
-    if (!tsdoc.value.attend) throw new ContestNotAttendedError(tid, uid);
+    if (!tsdoc.attend) throw new ContestNotAttendedError(tid, uid);
 }
 
 function getStatus(domainId, tid, uid) {
-    return document.getStatus(domainId, tid, uid);
+    return document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
 async function getListStatus(domainId, uid, tids) {
@@ -276,7 +278,7 @@ async function attend(domainId, tid, uid) {
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
-    await document.inc(domainId, document, document.TYPE_CONTEST, tid, 'attend', 1);
+    await document.inc(domainId, document.TYPE_CONTEST, tid, 'attend', 1);
     return {};
 }
 
@@ -330,7 +332,7 @@ const ContestHandlerMixin = (c) => class extends c {
         const uids = [];
         for (const tsdoc of tsdocs) uids.push(tsdoc.uid);
         const [udict, pdict] = await Promise.all([
-            user.getList(uids),
+            user.getList(domainId, uids),
             problem.getList(domainId, tdoc.pids),
         ]);
         const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
@@ -363,8 +365,8 @@ global.Hydro.model.contest = module.exports = {
     get,
     updateStatus,
     getStatus,
-    count: (query) => document.count({ ...query, docType: document.TYPE_CONTEST }),
-    getMulti: (query = {}) => document.getMulti({ ...query, docType: document.TYPE_CONTEST }),
+    count: (domainId, query) => document.count(domainId, document.TYPE_CONTEST, query),
+    getMulti: (domainId, query = {}) => document.getMulti(domainId, document.TYPE_CONTEST, query),
     setStatus,
     isNew,
     isUpcoming,

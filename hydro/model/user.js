@@ -47,7 +47,7 @@ async function getPerm(domainId, udoc) {
         return p.content;
     }
     const role = await document.getStatus(domainId, document.TYPE_DOMAIN_ROLE, 0, udoc._id);
-    const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, role || 'default');
+    const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, role.role || 'default');
     return p.content;
 }
 
@@ -159,8 +159,13 @@ function setRole(domainId, uid, role) {
     return document.setStatus(domainId, document.TYPE_DOMAIN_ROLE, 0, uid, { role });
 }
 
-function getRoles(domainId) {
-    return document.getMulti(domainId, document.TYPE_DOMAIN_ROLE).sort('_id', 1).toArray();
+async function getRoles(domainId) {
+    const docs = await document.getMulti(domainId, document.TYPE_DOMAIN_ROLE).sort('_id', 1).toArray();
+    const roles = [];
+    for (const doc of docs) {
+        roles.push({ _id: doc.docId, perm: doc.content });
+    }
+    return roles;
 }
 
 function getRole(domainId, name) {

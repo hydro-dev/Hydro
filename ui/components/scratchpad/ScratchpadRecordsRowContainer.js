@@ -75,7 +75,7 @@ export default class ScratchpadRecordsRowContainer extends React.PureComponent {
           {getRecordDetail(data)}
         </td>
         <td className="col--memory">
-          {shouldShowDetail(data) ? `${Math.ceil(data.memory_kb / 1000)} MB` : '-'}
+          {shouldShowDetail(data) ? `${Math.ceil(data.memory / 1000)} MB` : '-'}
         </td>
         <td className="col--time">
           {shouldShowDetail(data) ? `${(data.time_ms / 1000).toFixed(1)}s` : '-'}

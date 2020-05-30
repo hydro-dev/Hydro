@@ -53,8 +53,9 @@ class ContestDetailHandler extends ContestHandler {
             contest.getStatus(domainId, this.tdoc.docId, this.user._id),
             problem.getList(domainId, this.tdoc.pids),
         ]);
-        const psdict = {}; let rdict = {}; let
-            attended;
+        const psdict = {};
+        let rdict = {};
+        let attended;
         if (tsdoc) {
             attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
@@ -242,7 +243,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
             code,
             hidden: true,
         });
-        await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId, false, 0);
+        await Promise.all([
+            record.judge(domainId, rid),
+            contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
+        ]);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = `/c/${tid}`;

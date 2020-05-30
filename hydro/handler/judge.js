@@ -35,6 +35,8 @@ async function next(body) {
     const $set = {};
     const $push = {};
     if (body.case) {
+        body.case.memory = body.case.memory_kb;
+        body.case.time = body.case.time_ms;
         rdoc.testCases.push(body.case);
         $push.testCases = body.case;
     }
@@ -58,10 +60,6 @@ async function end(body) {
     let rdoc = await record.get(body.domainId, body.rid);
     const $set = {};
     const $push = {};
-    if (body.case) {
-        rdoc.testCases.push(body.case);
-        $push.testCases = body.case;
-    }
     if (body.judge_text) {
         rdoc.judgeTexts.push(body.judge_text);
         $push.judgeTexts = body.judge_text;

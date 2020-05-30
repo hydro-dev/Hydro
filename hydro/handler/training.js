@@ -12,7 +12,7 @@ const user = require('../model/user');
 const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 
-async function _parseDagJson(dag) {
+async function _parseDagJson(domainId, dag) {
     const parsed = [];
     try {
         dag = JSON.parse(dag);
@@ -30,7 +30,7 @@ async function _parseDagJson(dag) {
             }
             for (const i in node.pids) {
                 // eslint-disable-next-line no-await-in-loop
-                const pdoc = await problem.get(node.pids[i]); // FIXME no-await-in-loop
+                const pdoc = await problem.get(domainId, node.pids[i]); // FIXME no-await-in-loop
                 assert(pdoc, `Problem not found: ${node.pids[i]}`);
                 node.pids[i] = pdoc.docId;
             }
@@ -43,7 +43,7 @@ async function _parseDagJson(dag) {
             parsed.push(newNode);
         }
     } catch (e) {
-        throw new ValidationError('dag');
+        throw new ValidationError('dag', [e.message]);
     }
     return parsed;
 }
@@ -55,10 +55,10 @@ class TrainingHandler extends Handler {
 }
 
 class TrainingMainHandler extends TrainingHandler {
-    async get({ sort, page }) {
+    async get({ domainId, sort, page }) {
         const qs = sort ? 'sort={0}'.format(sort) : '';
         const [tdocs, tpcount] = await paginate(
-            training.getMulti().sort('_id', 1),
+            training.getMulti(domainId).sort('_id', 1),
             page,
             await system.get('TRAINING_PER_PAGE'),
         );
@@ -68,16 +68,18 @@ class TrainingMainHandler extends TrainingHandler {
         let tdict = {};
         if (this.user.hasPerm(PERM_LOGGEDIN)) {
             const enrolledTids = new Set();
-            const tsdocs = await training.getMultiStatus({
+            const tsdocs = await training.getMultiStatus(domainId, {
                 uid: this.user._id,
-                $or: [{ _id: { $in: Array.from(tids) } }, { enroll: 1 }],
+                $or: [{ docId: { $in: Array.from(tids) } }, { enroll: 1 }],
             }).toArray();
             for (const tsdoc of tsdocs) {
-                tsdict[tsdoc.tid] = tsdoc;
-                enrolledTids.add(tsdoc.tid);
+                tsdict[tsdoc.docId] = tsdoc;
+                enrolledTids.add(tsdoc.docId);
             }
             for (const tid of tids) enrolledTids.delete(tid);
-            if (enrolledTids.size) tdict = await training.getList(Array.from(enrolledTids));
+            if (enrolledTids.size) {
+                tdict = await training.getList(domainId, Array.from(enrolledTids));
+            }
         }
         for (const tdoc in tdocs) tdict[tdoc.docId] = tdoc;
         const path = [
@@ -101,14 +103,14 @@ class TrainingDetailHandler extends TrainingHandler {
             user.getById(domainId, tdoc.owner),
             problem.getList(domainId, pids, f),
         ]);
-        const psdict = await problem.getListStatus(domainId, this.user._id, Object.keys(pdict));
+        const psdict = await problem.getListStatus(domainId, this.user._id, pids);
         const donePids = new Set();
         const progPids = new Set();
         for (const pid in psdict) {
             const psdoc = psdict[pid];
             if (psdoc.status) {
-                if (psdoc.status === builtin.STATUS_ACCEPTED) donePids.add(pid);
-                else progPids.add(pid);
+                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) donePids.add(parseInt(pid));
+                else progPids.add(parseInt(pid));
             }
         }
         const nsdict = {};
@@ -117,7 +119,7 @@ class TrainingDetailHandler extends TrainingHandler {
         for (const node of tdoc.dag) {
             ndict[node._id] = node;
             const totalCount = node.pids.length;
-            const doneCount = Set.union(new Set(node.pids), new Set(donePids)).size;
+            const doneCount = Set.union(new Set(node.pids), donePids).size;
             const nsdoc = {
                 progress: totalCount ? parseInt(100 * (doneCount / totalCount)) : 100,
                 isDone: training.isDone(node, doneNids, donePids),
@@ -168,18 +170,18 @@ class TrainingCreateHandler extends TrainingHandler {
     }
 
     async post({
-        title, content, dag, description,
+        domainId, title, content, dag, description,
     }) {
-        dag = await _parseDagJson(dag);
+        dag = await _parseDagJson(domainId, dag);
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
-        const pdocs = await problem.getMulti({
-            $or: [{ _id: { $in: pids } }, { pid: { $in: pids } }],
+        const pdocs = await problem.getMulti(domainId, {
+            $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }],
         }).sort('_id', 1).toArray();
         const existPids = pdocs.map((pdoc) => pdoc.docId);
         const existPnames = pdocs.map((pdoc) => pdoc.pid);
         if (pids.length !== existPids.length) {
-            for (const pid in pids) {
+            for (const pid of pids) {
                 assert(
                     existPids.includes(pid) || existPnames.includes(pid),
                     new ProblemNotFoundError(pid),
@@ -189,15 +191,15 @@ class TrainingCreateHandler extends TrainingHandler {
         for (const pdoc in pdocs) {
             if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         }
-        const tid = await training.add(title, content, this.user._id, dag, description);
+        const tid = await training.add(domainId, title, content, this.user._id, dag, description);
         this.response.body = { tid };
         this.response.redirect = `/t/${tid}`;
     }
 }
 
 class TrainingEditHandler extends TrainingHandler {
-    async get({ tid }) {
-        const tdoc = await training.get(tid);
+    async get({ domainId, tid }) {
+        const tdoc = await training.get(domainId, tid);
         if (tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_TRAINING);
         const dag = JSON.stringify(tdoc.dag, null, 2);
         const path = [
@@ -212,16 +214,16 @@ class TrainingEditHandler extends TrainingHandler {
     }
 
     async post({
-        tid, title, content, dag, description,
+        domainId, tid, title, content, dag, description,
     }) {
-        const tdoc = await training.get(tid);
+        const tdoc = await training.get(domainId, tid);
         if (!this.user._id === tdoc.owner) this.checkPerm(PERM_EDIT_TRAINING);
-        dag = await _parseDagJson(dag);
+        dag = await _parseDagJson(domainId, dag);
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
-        const pdocs = await problem.getMulti({
+        const pdocs = await problem.getMulti(domainId, {
             $or: [
-                { _id: { $in: pids } },
+                { docId: { $in: pids } },
                 { pid: { $in: pids } },
             ],
         }).sort('_id', 1).toArray();
@@ -235,8 +237,10 @@ class TrainingEditHandler extends TrainingHandler {
                 );
             }
         }
-        for (const pdoc in pdocs) { if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN); }
-        await training.edit(tid, {
+        for (const pdoc in pdocs) {
+            if (pdoc.hidden) this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
+        }
+        await training.edit(domainId, tid, {
             title, content, dag, description,
         });
         this.response.body = { tid };
