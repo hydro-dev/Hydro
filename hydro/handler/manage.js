@@ -1,6 +1,7 @@
 const user = require('../model/user');
 const domain = require('../model/domain');
 const setting = require('../model/setting');
+const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
 const hpm = require('../lib/hpm');
@@ -53,6 +54,7 @@ class ManageEditHandler extends ManageHandler {
 
 class ManageUserHandler extends ManageHandler {
     async get({ domainId }) {
+        // FIXME(masnn) UPDATE CODE
         const uids = [];
         const rudocs = {};
         const [udocs, roles] = await Promise.all([
@@ -73,7 +75,7 @@ class ManageUserHandler extends ManageHandler {
         ];
         this.response.template = 'manage_user.html';
         this.response.body = {
-            roles, rolesSelect, rudocs, udict, system: sys, path,
+            roles, rolesSelect, rudocs, udict, path,
         };
     }
 

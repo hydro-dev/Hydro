@@ -1,3 +1,4 @@
+const builtin = require('./builtin');
 const document = require('./document');
 const system = require('./system');
 const { UserNotFoundError, UserAlreadyExistError } = require('../error');
@@ -40,15 +41,15 @@ class USER {
 async function getPerm(domainId, udoc) {
     if (udoc._id === 1) { // Is Guest
         const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, 'guest');
-        return p.content;
+        return p ? p.content : builtin.BUILTIN_ROLES.guest.perm;
     }
-    if (udoc.priv === 1) {
+    if (udoc.priv === 1) { // Is superadmin
         const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, 'admin');
-        return p.content;
+        return p ? p.content : builtin.BUILTIN_ROLES.admin.perm;
     }
     const role = await document.getStatus(domainId, document.TYPE_DOMAIN_ROLE, 0, udoc._id);
-    const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, role.role || 'default');
-    return p.content;
+    const p = await document.get(domainId, document.TYPE_DOMAIN_ROLE, (role || {}).role || 'default');
+    return p ? p.content : builtin.BUILTIN_ROLES.default.perm;
 }
 
 async function getById(domainId, _id) {

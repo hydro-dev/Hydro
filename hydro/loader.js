@@ -229,11 +229,12 @@ async function load() {
     const builtinLib = [
         'axios', 'download', 'i18n', 'mail', 'markdown',
         'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
-        'template', 'validator', 'nav',
+        'template', 'validator', 'nav', 'sysinfo',
     ];
     for (const i of builtinLib) require(`./lib/${i}`);
     await lib();
     require('./service/gridfs');
+    require('./service/monitor');
     const server = require('./service/server');
     await server.prepare();
     await service();
@@ -256,7 +257,7 @@ async function load() {
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
         'contest', 'training', 'discussion', 'manage', 'import',
-        'fs',
+        'fs', 'status',
     ];
     for (const i of builtinHandler) require(`./handler/${i}`);
     await model();

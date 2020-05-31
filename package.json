@@ -21,7 +21,8 @@
         "nodemailer": "^6.3.1",
         "nunjucks": "^3.2.1",
         "prismjs": "^1.20.0",
-        "sockjs": "^0.3.20"
+        "sockjs": "^0.3.20",
+        "systeminformation": "^4.26.5"
     },
     "devDependencies": {
         "eslint": "^6.8.0",
@@ -39,12 +40,10 @@
     },
     "pkg": {
         "scripts": [
-            "hydro/**.js"
+            ".build/development.js"
         ],
         "assets": [
-            ".uibuild/*",
-            "locales/*",
-            "templates/*"
+            ".build/*"
         ]
     }
 }

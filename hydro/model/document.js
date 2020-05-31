@@ -23,6 +23,7 @@ async function add(
 ) {
     const _id = new ObjectID();
     const doc = {
+        _id,
         content,
         owner,
         domainId,
@@ -53,8 +54,10 @@ async function set(domainId, docType, docId, args) {
 }
 
 function deleteOne(domainId, docType, docId) {
-    // TODO(twd2): delete status?
-    return coll.deleteOne({ domainId, docType, docId });
+    return Promise.all([
+        coll.deleteMany({ domainId, docType, docId }),
+        coll.deleteOne({ domainId, docType, docId }),
+    ]);
 }
 
 function deleteMulti(domainId, docType, args = {}) {
@@ -134,9 +137,7 @@ async function getSub(domainId, docType, docId, key, subId) {
     });
     if (!doc) return [null, null];
     for (const sdoc of doc[key] || []) {
-        if (sdoc._id === subId) {
-            return [doc, sdoc];
-        }
+        if (sdoc._id === subId) return [doc, sdoc];
     }
     return [doc, null];
 }

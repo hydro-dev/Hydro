@@ -43,7 +43,7 @@ function size(s, base = 1) {
     const unit = 1024;
     const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
     for (const unitName of unitNames) {
-        if (s < unit) return '{0} {1}'.format(Math.round(s), unitName);
+        if (s < unit) return '{0} {1}'.format(Math.round(s * 10) / 10, unitName);
         s /= unit;
     }
     return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);

@@ -56,6 +56,7 @@ const tasks = {
             reply: 'reply',
             parent_doc_id: 'parentId',
             parent_doc_type: 'parentType',
+            num_replies: 'nReply',
             views: 'views',
             highlight: 'highlight',
             ip: 'ip',
@@ -244,8 +245,21 @@ async function task(name, src, report) {
     for (let i = 0; i <= total; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
         const res = [];
-        for (const doc of docs) res.push(tasks[name](doc));
-        if (res.length) await dst.collection(name).insertMany(await Promise.all(res));
+        for (const doc of docs) {
+            const d = await tasks[name](doc);
+            if (d) {
+                if (d.docId && d.docType) {
+                    res.push(dst.collection(name).updateOne({
+                        docId: d.docId, docType: d.docType,
+                    }, { $set: d }, { upsert: true }));
+                } else if (d._id) {
+                    res.push(dst.collection(name).updateOne({
+                        _id: d._id,
+                    }, { $set: d }, { upsert: true }));
+                } else res.push(dst.collection(name).insertOne(d));
+            }
+        }
+        await Promise.all(res);
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
     await fixPid(report);

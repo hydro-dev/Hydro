@@ -21,6 +21,8 @@ const {
     PERM_LOGGEDIN,
 } = require('../permission');
 
+const { geoip, useragent } = global.Hydro.lib;
+
 class HomeHandler extends Handler {
     async contest(domainId) {
         if (this.user.hasPerm(PERM_VIEW_CONTEST)) {
@@ -81,13 +83,13 @@ class HomeSecurityHandler extends Handler {
         // TODO(iceboy): pagination? or limit session count for uid?
         // TODO(masnn): UA & IP
         const sessions = await token.getSessionListByUid(this.user._id);
-        const parsed = sessions.map((session) => ({
-            ...session,
-            // updateUa: useragent.parse(session.updateUa || session.createUa || ''),
-            // updateGeoip: geoip.ip2geo(session.updateIp || session.createIp, this.user.viewLang),
-            _id: md5(session._id),
-            isCurrent: session._id === this.session._id,
-        }));
+        const parsed = [];
+        for (const session of sessions) {
+            session.isCurrent = session._id === this.session._id;
+            session._id = md5(session._id);
+            if (useragent) session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
+            if (geoip) session.updateGeoip = geoip.lookup(session.updateIp || session.createIp);
+        }
         this.response.template = 'home_security.html';
         this.response.body = { sessions: parsed };
     }
@@ -153,7 +155,7 @@ class HomeSettingsHandler extends Handler {
 
     async post(args) {
         // FIXME validation
-        await user.setById(domainId, this.user._id, args);
+        await user.setById(args.domainId, this.user._id, args);
         this.back();
     }
 }
@@ -166,9 +168,10 @@ class UserChangemailWithCodeHandler extends Handler {
         }
         const udoc = await user.getByEmail(tdoc.mail);
         if (udoc) throw new UserAlreadyExistError(tdoc.mail);
-        // TODO(twd2): Ensure mail is unique.
-        await user.setEmail(this.user._id, tdoc.mail);
-        await token.delete(code, token.TYPE_CHANGEMAIL);
+        await Promise.all([
+            user.setEmail(this.user._id, tdoc.mail),
+            token.delete(code, token.TYPE_CHANGEMAIL),
+        ]);
         this.response.redirect = '/home/security';
     }
 }
@@ -211,8 +214,7 @@ class HomeMessagesHandler extends Handler {
         if (type === 'single') {
             mdoc = mdoc.reply[mdoc.reply.length - 1];
         }
-        // TODO(twd2): improve here:
-        // projection
+        // TODO(twd2): improve here: projection
         mdoc.from_udoc = this.user;
         mdoc.to_udoc = udoc;
         this.udoc(mdoc, 'from');
