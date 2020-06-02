@@ -12,10 +12,15 @@ const {
     Route, Handler, Connection, ConnectionHandler,
 } = require('../service/server');
 
-class RecordListHandler extends Handler {
-    async get({ domainId, page = 1 }) {
+const RecordHandler = contest.ContestHandlerMixin(Handler);
+
+class RecordListHandler extends RecordHandler {
+    async get({
+        domainId, page = 1, tid, uname_or_uid,
+    }) {
         this.response.template = 'record_main.html';
-        const q = {};
+        const q = { tid };
+        if (uname_or_uid) q.$or = [{ unameLower: uname_or_uid.toLowerCase() }, { _id: parseInt(uname_or_uid) }];
         const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
@@ -31,11 +36,14 @@ class RecordListHandler extends Handler {
     }
 }
 
-class RecordDetailHandler extends Handler {
+class RecordDetailHandler extends RecordHandler {
     async get({ domainId, rid }) {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
-        if (rdoc.hidden) this.checkPerm(PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        if (rdoc.tid) {
+            const tdoc = await contest.get(domainId, rdoc.tid, rdoc.ttype);
+            if (!this.canShowRecord(tdoc, true)) throw new PermissionError(rid);
+        }
         if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM_READ_RECORD_CODE)) {
             rdoc.code = null;
         }
@@ -128,6 +136,9 @@ async function apply() {
     Route('/r', module.exports.RecordListHandler);
     Route('/r/:rid', module.exports.RecordDetailHandler);
     Route('/r/:rid/rejudge', module.exports.RecordRejudgeHandler);
+    Route('/record', module.exports.RecordListHandler);
+    Route('/record/:rid', module.exports.RecordDetailHandler);
+    Route('/record/:rid/rejudge', module.exports.RecordRejudgeHandler);
     Connection('/record-conn', module.exports.RecordConnectionHandler);
     Connection('/record-detail-conn', module.exports.RecordDetailConnectionHandler);
 }

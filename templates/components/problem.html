@@ -1,8 +1,8 @@
-{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
+{% macro render_problem_title(pdoc, tdoc=none, prefix='/c', show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
   {%- if not invalid %}
   <a
   {%- if tdoc %}
-    href="/c/{{ tdoc.docId }}/p/{{ pdoc.docId }}"
+    href="{{ prefix }}/{{ tdoc.docId }}/p/{{ pdoc.docId }}"
   {%- else %}
     href="/p/{{ pdoc.pid }}"
   {%- endif %}

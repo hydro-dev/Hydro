@@ -74,7 +74,7 @@ const acm = {
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            if (tdoc.detail) { for (const item of tsdoc.detail) tsddict[item.pid] = item; }
+            if (tdoc.detail) { for (const item of tsdoc.journal) tsddict[item.pid] = item; }
             const row = [];
             row.push(
                 { type: 'string', value: rank },
@@ -229,13 +229,8 @@ function add(domainId, title, content, owner, rule,
  * @returns {Tdoc} tdoc after modification
  */
 async function edit(domainId, tid, $set, type = document.TYPE_CONTEST) {
-    if ($set.title) validator.checkTitle($set.title);
-    if ($set.content) validator.checkIntro($set.content);
-    if ($set.rule) { if (!this.RULES[$set.rule]) throw new ValidationError('rule'); }
-    if ($set.beginAt && $set.endAt) {
-        if ($set.beginAt >= $set.endAt) {
-            throw new ValidationError('beginAt', 'endAt');
-        }
+    if ($set.rule) {
+        if (!this.RULES[$set.rule]) throw new ValidationError('rule');
     }
     const tdoc = await document.get(domainId, type, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
@@ -259,7 +254,7 @@ async function updateStatus(
     domainId, tid, uid, rid, pid,
     accept = false, score = 0, type = document.TYPE_CONTEST,
 ) {
-    await get(domainId, tid);
+    await get(domainId, tid, type);
     const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
         rid, pid, accept, score,
     });
@@ -287,8 +282,8 @@ async function attend(domainId, tid, uid, type = document.TYPE_CONTEST) {
     return {};
 }
 
-function getMultiStatus(query) {
-    return document.getMultiStatus(query);
+function getMultiStatus(domainId, query, docType = document.TYPE_CONTEST) {
+    return document.getMultiStatus(domainId, docType, query);
 }
 
 function isNew(tdoc, days = 1) {
@@ -329,10 +324,10 @@ const ContestHandlerMixin = (c) => class extends c {
         return false;
     }
 
-    async getScoreboard(domainId, tid, isExport = false) {
-        const tdoc = await get(domainId, tid);
+    async getScoreboard(domainId, tid, isExport = false, docType = document.TYPE_CONTEST) {
+        const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        const tsdocs = await getMultiStatus(domainId, tid)
+        const tsdocs = await getMultiStatus(domainId, tid, docType)
             .sort(RULES[tdoc.rule].statusSort).toArray();
         const uids = [];
         for (const tsdoc of tsdocs) uids.push(tsdoc.uid);
@@ -375,10 +370,10 @@ function _getStatusJournal(tsdoc) {
 async function recalcStatus(domainId, tid, type) {
     const [tdoc, tsdocs] = await Promise.all([
         document.get(domainId, type, tid),
-        document.getMultiStatus(domainId, type, { docId: tid }),
+        document.getMultiStatus(domainId, type, { docId: tid }).toArray(),
     ]);
     const tasks = [];
-    for (const tsdoc of tsdocs) {
+    for (const tsdoc of tsdocs || []) {
         if (tsdoc.journal) {
             const journal = _getStatusJournal(tsdoc);
             const stats = RULES[tdoc.rule].stat(tdoc, journal);

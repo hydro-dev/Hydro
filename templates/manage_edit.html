@@ -6,8 +6,8 @@
     <form method="post">
       {{ form.form_text({
            label:'Name',
-           name:'uname',
-           value:system.uname,
+           name:'name',
+           value:domain.name,
            autofocus:true,
            required:true
          }) }}
@@ -15,13 +15,13 @@
            label:'Gravatar Email',
            help_text:'Will be used as the system icon.',
            name:'gravatar',
-           value:system.gravatar
+           value:domain.gravatar
          }) }}
       {{ form.form_textarea({
            columns:12,
            label:'Bulletin',
-           name:'bio',
-           value:system.bio,
+           name:'bulletin',
+           value:domain.bulletin,
            markdown:true,
            required:false
          }) }}

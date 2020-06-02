@@ -40,6 +40,8 @@ const perm = {
     PERM_CREATE_HOMEWORK: 'f',
     PERM_EDIT_HOMEWORK: 'g',
     PERM_ATTEND_HOMEWORK: 'h',
+    PERM_VIEW_HOMEWORK_SCOREBOARD: 'i',
+    PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD: 'j',
     PERM_JUDGE: 'd',
 };
 
@@ -83,9 +85,12 @@ const PERMS = [
     Permission('perm_contest', perm.PERM_CREATE_CONTEST, 'Create contests'),
     Permission('perm_contest', perm.PERM_ATTEND_CONTEST, 'Attend contests'),
     Permission('perm_contest', perm.PERM_EDIT_CONTEST, 'Edit any contests'),
-    Permission('perm_training', perm.PERM_VIEW_TRAINING, 'View training plans'),
-    Permission('perm_training', perm.PERM_CREATE_TRAINING, 'Create training plans'),
-    Permission('perm_training', perm.PERM_EDIT_TRAINING, 'Edit training plans'),
+    Permission('perm_homework', perm.PERM_VIEW_HOMEWORK, 'View homework'),
+    Permission('perm_homework', perm.PERM_VIEW_HOMEWORK_SCOREBOARD, 'View homework scoreboard'),
+    Permission('perm_homework', perm.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD, 'View hidden homework submission status and scoreboard'),
+    Permission('perm_homework', perm.PERM_CREATE_HOMEWORK, 'Create homework'),
+    Permission('perm_homework', perm.PERM_ATTEND_HOMEWORK, 'Claim homework'),
+    Permission('perm_homework', perm.PERM_EDIT_HOMEWORK, 'Edit any homework'),
 ];
 
 const PERMS_BY_FAMILY = {};
@@ -101,7 +106,8 @@ perm.PERM_BASIC = perm.PERM_VIEW_PROBLEM
     + perm.PERM_VIEW_TRAINING
     + perm.PERM_VIEW_CONTEST
     + perm.PERM_VIEW_CONTEST_SCOREBOARD
-    + perm.PERM_VIEW_HOMEWORK;
+    + perm.PERM_VIEW_HOMEWORK
+    + perm.PERM_VIEW_HOMEWORK_SCOREBOARD;
 
 perm.PERM_DEFAULT = perm.PERM_BASIC
     + perm.PERM_SUBMIT_PROBLEM

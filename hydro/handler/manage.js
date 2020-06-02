@@ -6,7 +6,7 @@ const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
-const { RoleAlreadyExistError, ValidationError } = require('../error');
+const { RoleAlreadyExistError, ValidationError, PermissionError } = require('../error');
 
 class ManageHandler extends Handler {
     async prepare({ domainId }) {
@@ -58,13 +58,16 @@ class ManageUserHandler extends ManageHandler {
         const uids = [];
         const rudocs = {};
         const [udocs, roles] = await Promise.all([
-            user.getMulti(domainId, { role: { $nin: ['default', 'guest'] } }).toArray(),
+            user.getInDomain(domainId),
             user.getRoles(domainId),
         ]);
         for (const role of roles) rudocs[role._id] = [];
         for (const udoc of udocs) {
-            uids.push(udoc._id);
-            rudocs[udoc.role].push(udoc);
+            uids.push(udoc.uid);
+            // TODO Improve here
+            // eslint-disable-next-line no-await-in-loop
+            const ud = await user.getById(domainId, udoc.uid);
+            rudocs[udoc.role].push({ ...ud, role: udoc.role });
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(domainId, uids);
@@ -79,17 +82,17 @@ class ManageUserHandler extends ManageHandler {
         };
     }
 
-    async postSetUser({ uid, role }) {
-        await user.setRole(uid, role);
+    async postSetUser({ domainId, uid, role }) {
+        await user.setRole(domainId, uid, role);
         this.back();
     }
 }
 
 class ManagePermissionHandler extends ManageHandler {
     async get({ domainId }) {
-        const [roles, sys] = await Promise.all([
+        const [roles, d] = await Promise.all([
             user.getRoles(domainId),
-            user.getById(domainId, 0),
+            domain.get(domainId),
         ]);
         const path = [
             ['Hydro', '/'],
@@ -97,27 +100,26 @@ class ManagePermissionHandler extends ManageHandler {
             ['manage_permission', null],
         ];
         this.response.template = 'manage_permission.html';
-        this.response.body = { roles, system: sys, path };
+        this.response.body = { roles, domain: d, path };
     }
 
-    async post({ roles }) {
-        for (const role of roles) {
-            let perms = '';
-            for (const perm of roles) {
-                perms += perm;
+    async post({ domainId }) {
+        const roles = {};
+        for (const role in this.request.body) {
+            if (this.request.body[role] instanceof Array) {
+                roles[role] = this.request.body[role].join('');
             }
-            roles[role] = perms;
         }
-        await user.setRoles(roles);
+        await user.setRoles(domainId, roles);
         this.back();
     }
 }
 
 class ManageRoleHandler extends ManageHandler {
     async get({ domainId }) {
-        const [roles, sys] = await Promise.all([
+        const [roles, d] = await Promise.all([
             user.getRoles(domainId),
-            user.getById(domainId, 0),
+            domain.get(domainId),
         ]);
         const path = [
             ['Hydro', '/'],
@@ -125,16 +127,16 @@ class ManageRoleHandler extends ManageHandler {
             ['manage_role', null],
         ];
         this.response.template = 'manage_role.html';
-        this.response.body = { roles, system: sys, path };
+        this.response.body = { roles, domain: d, path };
     }
 
-    async postAdd({ role }) {
+    async postAdd({ domainId, role }) {
         const [r, u] = await Promise.all([
-            user.getRole(role),
-            user.getRole('default'),
+            user.getRole(domainId, role),
+            user.getRole(domainId, 'default'),
         ]);
         if (r) throw new RoleAlreadyExistError(role);
-        await user.addRole(role, u.perm);
+        await user.addRole(domainId, role, u.perm);
         this.back();
     }
 
@@ -149,7 +151,13 @@ class ManageRoleHandler extends ManageHandler {
     }
 }
 
-class ManageModuleHandler extends ManageHandler {
+class SystemHandler extends Handler {
+    async prepare() {
+        if (!this.user.priv) throw new PermissionError('???');
+    }
+}
+
+class SystemModuleHandler extends SystemHandler {
     async get() {
         const installed = await hpm.getInstalled();
         const path = [
@@ -172,7 +180,7 @@ class ManageModuleHandler extends ManageHandler {
     }
 }
 
-class ManageSettingHandler extends ManageHandler {
+class SystemSettingHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_settings.html';
         const current = {};
@@ -180,9 +188,7 @@ class ManageSettingHandler extends ManageHandler {
         for (const s of settings) {
             current[s.key] = await system.get(s.key);
         }
-        this.response.body = {
-            current, settings,
-        };
+        this.response.body = { current, settings };
     }
 
     async post(args) {
@@ -208,8 +214,8 @@ async function apply() {
     Route('/manage/user', module.exports.ManageUserHandler);
     Route('/manage/permission', module.exports.ManagePermissionHandler);
     Route('/manage/role', module.exports.ManageRoleHandler);
-    Route('/manage/module', module.exports.ManageModuleHandler);
-    Route('/manage/setting', module.exports.ManageSettingHandler);
+    Route('/manage/module', SystemModuleHandler);
+    Route('/manage/setting', SystemSettingHandler);
 }
 
 global.Hydro.handler.manage = module.exports = {
@@ -219,7 +225,7 @@ global.Hydro.handler.manage = module.exports = {
     ManageUserHandler,
     ManagePermissionHandler,
     ManageRoleHandler,
-    ManageModuleHandler,
-    ManageSettingHandler,
+    SystemModuleHandler,
+    SystemSettingHandler,
     apply,
 };

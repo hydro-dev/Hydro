@@ -1,3 +1,4 @@
+const yaml = require('js-yaml');
 const {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
@@ -5,6 +6,7 @@ const {
 const {
     PERM_VIEW_HOMEWORK, PERM_ATTEND_HOMEWORK, PERM_VIEW_PROBLEM,
     PERM_SUBMIT_PROBLEM, PERM_CREATE_HOMEWORK, PERM_EDIT_HOMEWORK,
+    PERM_VIEW_HOMEWORK_SCOREBOARD,
 } = require('../permission');
 const { Route, Handler } = require('../service/server');
 const system = require('../model/system');
@@ -15,16 +17,8 @@ const problem = require('../model/problem');
 const record = require('../model/record');
 const document = require('../model/document');
 const paginate = require('../lib/paginate');
-
-function _formatPenaltyRules(penaltyRules) {
-    let doc = '';
-    for (const time in penaltyRules) {
-        const coefficient = penaltyRules[time];
-        const parsedTime = Math.round(parseFloat(time) / 36) / 100;
-        doc += '{0}: {1}\n'.format(parsedTime, coefficient);
-    }
-    return doc;
-}
+const misc = require('../lib/misc');
+const ranked = require('../lib/rank');
 
 const HomeworkHandler = contest.ContestHandlerMixin(Handler);
 
@@ -35,7 +29,7 @@ class HomeworkMainHandler extends HomeworkHandler {
         for (const tdoc of tdocs) {
             console.log(tdoc);
             const cal = { ...tdoc };
-            if (contest.isHomeWorkExtended(tdoc) || contest.isDone(tdoc)) {
+            if (contest.isHomeworkExtended(tdoc) || contest.isDone(tdoc)) {
                 cal.endAt = tdoc.endAt;
                 cal.penaltySince = tdoc.penaltySince;
             } else {
@@ -60,14 +54,14 @@ class HomeworkDetailHandler extends HomeworkHandler {
         let attended = false;
         if (tsdoc) {
             attended = tsdoc.attend === 1;
-            for (const pdetail of tsdoc.detail || []) {
+            for (const pdetail of tsdoc.journal || []) {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
             }
-            if (this.canShowRecord(tdoc) && tsdoc.detail) {
+            if (this.canShowRecord(tdoc) && tsdoc.journal) {
                 rdict = await record.getList(
                     domainId,
-                    tsdoc.detail.map((pdetail) => pdetail.rid),
+                    tsdoc.journal.map((pdetail) => pdetail.rid),
                     true,
                 );
             }
@@ -94,9 +88,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
     async postAttend({ domainId, tid }) {
         this.checkPerm(PERM_ATTEND_HOMEWORK);
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (contest.isDone(tdoc)) {
-            throw new HomeworkNotLiveError(tdoc.docId);
-        }
+        if (contest.isDone(tdoc)) throw new HomeworkNotLiveError(tdoc.docId);
         await contest.attend(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK);
         this.back();
     }
@@ -105,18 +97,16 @@ class HomeworkDetailHandler extends HomeworkHandler {
 class HomeworkDetailProblemHandler extends HomeworkHandler {
     async prepare({ domainId, tid, pid }) {
         this.checkPerm(PERM_VIEW_PROBLEM);
-        [this.tdoc, this.pdoc] = await Promise.all([
+        [this.tdoc, this.pdoc, this.tsdoc] = await Promise.all([
             contest.get(domainId, tid, document.TYPE_HOMEWORK),
             problem.get(domainId, pid, this.user._id),
+            contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
         ]);
     }
 
     async get({ domainId, tid, pid }) {
-        const [tsdoc, udoc] = await Promise.all(
-            contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
-            user.getById(domainId, this.tdoc.owner),
-        );
-        const attended = tsdoc && tsdoc.attend === 1;
+        const udoc = await user.getById(domainId, this.tdoc.owner);
+        const attended = this.tsdoc && this.tsdoc.attend === 1;
         if (!contest.isDone(this.tdoc)) {
             if (!attended) throw new HomeworkNotAttendedError(tid);
             if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
@@ -129,41 +119,31 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         ];
         this.response.template = 'problem_detail.html';
         this.response.body = {
-            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc, udoc, attended, path,
+            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc, udoc, attended, path,
         };
     }
 }
 
-class HomeworkDetailProblemSubmitHandler extends HomeworkHandler {
+class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     async get({ domainId, tid, pid }) {
-        const uid = this.user._id;
-        const [tdoc, pdoc] = await Promise.all([
-            contest.get(domainId, tid, document.TYPE_HOMEWORK),
-            problem.get(domainId, pid, uid),
-        ]);
-        const [tsdoc, udoc] = await Promise.all([
-            contest.getStatus(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK),
-            user.get_by_uid(tdoc.owner),
-        ]);
-        const attended = tsdoc && tsdoc.attend === 1;
-        if (!attended) { throw new HomeworkNotAttendedError(tdoc.docId); }
-        if (!contest.isOngoing(tdoc)) { throw new HomeworkNotLiveError(tdoc.docId); }
-        if (!tdoc.pids.includes(pid)) { throw new ProblemNotFoundError(domainId, pid, tdoc.docId); }
-        const rdocs = this.canShowRecord(tdoc)
-            ? await record.getUserInProblemMulti(domainId, uid, pdoc.docId, true)
-                .sort('_id', -1)
-                .limit(10)
-                .toArray()
+        const udoc = await user.getById(domainId, this.tdoc.owner);
+        const attended = this.tsdoc && this.tsdoc.attend === 1;
+        if (!attended) throw new HomeworkNotAttendedError(tid);
+        if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
+        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
+        const rdocs = this.canShowRecord(this.tdoc)
+            ? await record.getUserInProblemMulti(domainId, this.user._id, pid, true)
+                .sort('_id', -1).limit(10).toArray()
             : [];
         const path = [
             ['homework_main', '/homework'],
-            [tdoc.title, `/homework/${tid}`, true],
-            [pdoc.title, `/homework/${tid}/p/${pid}`, true],
+            [this.tdoc.title, `/homework/${tid}`, true],
+            [this.pdoc.title, `/homework/${tid}/p/${pid}`, true],
             ['homework_detail_problem_submit', null],
         ];
         this.response.template = 'problem_submit.html';
         this.response.body = {
-            tdoc, pdoc, rdocs, tsdoc, udoc, attended, path,
+            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc, udoc, attended, path, rdocs,
         };
     }
 
@@ -220,11 +200,11 @@ class HomeworkCreateHandler extends HomeworkHandler {
         try {
             penaltySince = new Date(Date.parse(`${penaltySinceDate} ${penaltySinceTime.replace('-', ':')}`));
         } catch (e) {
-            throw new ValidationError('end_at_date', 'end_at_time');
+            throw new ValidationError('endAtDate', 'endAtTime');
         }
         const endAt = penaltySince.delta({ days: extensionDays });
-        if (beginAt >= penaltySince) { throw new ValidationError('end_at_date', 'end_at_time'); }
-        if (penaltySince > endAt) throw new ValidationError('extension_days');
+        if (beginAt >= penaltySince) { throw new ValidationError('endAtDate', 'endAtTime'); }
+        if (penaltySince > endAt) throw new ValidationError('extensionDays');
         await this.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
             'homework', beginAt, endAt, pids, { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
@@ -253,7 +233,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             datePenaltyText: tdoc.penaltySince.format('%Y-%m-%d'),
             timePenaltyText: tdoc.penaltySince.format('%H:%M'),
             extensionDays,
-            penaltyRules: _formatPenaltyRules(tdoc.penaltyRules),
+            penaltyRules: yaml.safeDump(tdoc.penaltyRules),
             pids: tdoc.pids.join(','),
             path,
         };
@@ -295,8 +275,25 @@ class HomeworkEditHandler extends HomeworkHandler {
     }
 }
 
+class HomeworkScoreboardHandler extends HomeworkHandler {
+    async get({ domainId, tid }) {
+        const [tdoc, rows, udict] = await this.getScoreboard(
+            domainId, tid, false, document.TYPE_HOMEWORK,
+        );
+        const path = [
+            ['homework_main', '/homework'],
+            [tdoc.title, `/homework/${tid}`, true],
+            ['homework_scoreboard', null],
+        ];
+        this.response.template = 'contest_scoreboard.html';
+        this.response.body = {
+            tdoc, rows, path, udict,
+        };
+    }
+}
+
 async function apply() {
-    contest.isHomeWorkExtended = (tdoc) => {
+    contest.isHomeworkExtended = (tdoc) => {
         const now = new Date().getTime();
         return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
     };
@@ -342,46 +339,93 @@ async function apply() {
                 detail,
             };
         },
-        showScoreboard(tdoc, now) {
-            return now > tdoc.endAt;
-        },
-        showRecord(tdoc, now) {
-            return now > tdoc.endAt;
-        },
+        showScoreboard: () => true,
+        showRecord: () => true,
         scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
             const columns = [
                 { type: 'rank', value: _('Rank') },
                 { type: 'user', value: _('User') },
-                { type: 'total_score', value: _('Total Score') },
+                { type: 'total_score', value: _('Score') },
             ];
-            for (const i in tdoc.pids) {
+            if (isExport) {
+                columns.push(
+                    { type: 'total_original_score', value: _('Original Score') },
+                    { type: 'total_time', value: _('Total Time (Seconds)') },
+                );
+            }
+            for (const index in tdoc.pids) {
+                const pid = tdoc.pids[index];
                 if (isExport) {
-                    columns.push({
-                        type: 'problem_score',
-                        value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
-                    });
+                    columns.push(
+                        {
+                            type: 'problem_score',
+                            value: '#{0} {1}'.format(index + 1, pdict[pid].title),
+                        },
+                        {
+                            type: 'problem_original_score',
+                            value: '#{0} {1}'.format(index + 1, _('Original Score')),
+                        },
+                        {
+                            type: 'problem_time',
+                            value: '#{0} {1}'.format(index + 1, _('Time (Seconds)')),
+                        },
+                        {
+                            type: 'problem_time_str',
+                            value: '#{0} {1}'.format(index + 1, _('Time')),
+                        },
+                    );
                 } else {
                     columns.push({
                         type: 'problem_detail',
-                        value: '#{0}'.format(i + 1),
-                        raw: pdict[tdoc.pids[i]],
+                        value: '#{0}'.format(index + 1),
+                        raw: pdict[pid],
                     });
                 }
             }
             const rows = [columns];
-            for (const [rank, tsdoc] of rankedTsdocs) {
+            for (const rank in rankedTsdocs) {
+                const tsdoc = rankedTsdocs[rank];
                 const tsddict = {};
-                if (tsdoc.journal) { for (const item of tsdoc.journal) tsddict[item.pid] = item; }
-                const row = [];
-                row.push({ type: 'string', value: rank });
-                row.push({ type: 'user', value: udict[tsdoc.uid].uname, raw: udict[tsdoc.uid] });
-                row.push({ type: 'string', value: tsdoc.score || 0 });
+                for (const item of tsdoc.journal || []) {
+                    tsddict[item.pid] = item;
+                }
+                const row = [
+                    { type: 'string', value: rank + 1 },
+                    {
+                        type: 'user',
+                        value: udict[tsdoc.uid].uname,
+                        raw: udict[tsdoc.uid],
+                    },
+                    {
+                        type: 'string',
+                        value: tsdoc.penaltyScore || 0,
+                    },
+                ];
+                if (isExport) {
+                    row.push({ type: 'string', value: tsdoc.score || 0 });
+                    row.push({ type: 'string', value: tsdoc.time || 0.0 });
+                }
+                row.push({ type: 'string', value: misc.formatSeconds(tsdoc.time || 0) });
                 for (const pid of tdoc.pids) {
-                    row.push({
-                        type: 'record',
-                        value: (tsddict[pid] || {}).score || '-',
-                        raw: (tsddict[pid] || {}).rid || null,
-                    });
+                    const rdoc = (tsddict[pid] || {}).rid;
+                    const colScore = (tsddict[pid] || {}).penaltyScore || '-';
+                    const colOriginalScore = (tsddict[pid] || {}).score || '-';
+                    const colTime = (tsddict[pid] || {}).time || '-';
+                    const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime) : '-';
+                    if (isExport) {
+                        row.push(
+                            { type: 'string', value: colScore },
+                            { type: 'string', value: colOriginalScore },
+                            { type: 'string', value: colTime },
+                            { type: 'string', value: colTimeStr },
+                        );
+                    } else {
+                        row.push({
+                            type: 'record',
+                            value: '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
+                            raw: rdoc,
+                        });
+                    }
                 }
                 rows.push(row);
             }
@@ -392,6 +436,7 @@ async function apply() {
     Route('/homework', HomeworkMainHandler, PERM_VIEW_HOMEWORK);
     Route('/homework/create', HomeworkCreateHandler, PERM_CREATE_HOMEWORK);
     Route('/homework/:tid', HomeworkDetailHandler, PERM_VIEW_HOMEWORK);
+    Route('/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
     Route('/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
     Route('/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
     Route('/homework/:tid/edit', HomeworkEditHandler);
@@ -434,24 +479,6 @@ class HomeworkCodeHandler(base.OperationHandler):
 
     await this.binary(output_buffer.getvalue(), 'application/zip',
                       file_name='{}.zip'.format(tdoc['title']))
-
-
-@app.route('/homework/{tid}/scoreboard', 'homework_scoreboard')
-class HomeworkScoreboardHandler(contest.ContestMixin, base.Handler):
-  @base.route_argument
-  @base.require_perm(builtin.PERM_VIEW_HOMEWORK)
-  @base.require_perm(builtin.PERM_VIEW_HOMEWORK_SCOREBOARD)
-  @base.sanitize
-  async def get(this, *, tid: objectid.ObjectId):
-    tdoc, rows, udict = await this.get_scoreboard(document.TYPE_HOMEWORK, tid)
-    page_title = this.translate('homework_scoreboard')
-    path_components = this.build_path(
-        (this.translate('homework_main'), this.reverse_url('homework_main')),
-        (tdoc['title'], this.reverse_url('homework_detail', tid=tdoc['docId'])),
-        (page_title, None))
-    dudict = await domain.get_dict_user_by_uid(domain_id=domainId, uids=udict.keys())
-    this.render('contest_scoreboard.html', tdoc=tdoc, rows=rows, dudict=dudict,
-                page_title=page_title, path_components=path_components)
 
 
 @app.route('/homework/{tid}/scoreboard/download/{ext}', 'homework_scoreboard_download')

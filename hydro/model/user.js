@@ -16,6 +16,8 @@ class USER {
         this.salt = () => user.salt;
         this.hash = () => user.hash;
         this.perm = user.perm;
+        this.priv = user.priv;
+        this.role = user.role;
         this.viewLang = user.language || 'zh_CN';
         this.codeLang = user.codeLang || 'c';
         this.codeTemplate = user.codeTemplate || '';
@@ -161,6 +163,16 @@ function setRole(domainId, uid, role) {
     return document.setStatus(domainId, document.TYPE_DOMAIN_ROLE, 0, uid, { role });
 }
 
+function setRoles(domainId, roles) {
+    const tasks = [];
+    for (const role in roles) {
+        tasks.push(document.set(
+            domainId, document.TYPE_DOMAIN_ROLE, role, { content: roles[role] },
+        ));
+    }
+    return Promise.all(tasks);
+}
+
 async function getRoles(domainId) {
     const docs = await document.getMulti(domainId, document.TYPE_DOMAIN_ROLE).sort('_id', 1).toArray();
     const roles = [];
@@ -172,6 +184,10 @@ async function getRoles(domainId) {
 
 function getRole(domainId, name) {
     return document.get(domainId, document.TYPE_DOMAIN_ROLE, name);
+}
+
+function getInDomain(domainId) {
+    return document.getMultiStatus(domainId, document.TYPE_DOMAIN_ROLE).toArray();
 }
 
 function addRole(domainId, name, permission) {
@@ -205,9 +221,11 @@ global.Hydro.model.user = module.exports = {
     setPassword,
     getPrefixList,
     setRole,
+    setRoles,
     getRole,
     getList,
     getRoles,
+    getInDomain,
     addRole,
     deleteRoles,
     ensureIndexes,

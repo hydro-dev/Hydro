@@ -5,6 +5,7 @@ const {
 const { PERM_CREATE_CONTEST, PERM_EDIT_CONTEST } = require('../permission');
 const paginate = require('../lib/paginate');
 const contest = require('../model/contest');
+const document = require('../model/document');
 const problem = require('../model/problem');
 const record = require('../model/record');
 const user = require('../model/user');
@@ -241,14 +242,11 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
             pid: this.pdoc.docId,
             uid: this.user._id,
             tid: this.tdoc.docId,
+            ttype: document.TYPE_CONTEST,
             lang,
             code,
-            hidden: true,
         });
-        await Promise.all([
-            record.judge(domainId, rid),
-            contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
-        ]);
+        await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = `/c/${tid}`;

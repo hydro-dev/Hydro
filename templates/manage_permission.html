@@ -3,7 +3,7 @@
 <form method="post">
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('{0}: Permissions').format(system.uname) }}</h1>
+    <h1 class="section__title">{{ _('{0}: Permissions').format(domain.name) }}</h1>
   </div>
   <div class="section__body no-padding domain-users">
     <table class="data-table">
@@ -36,7 +36,7 @@
         {% for role in roles %}
           <td class="col--p">
             <label class="compact checkbox">
-              <input name="{{ role._id }}" data-checkbox-group="{{ role._id }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if role.perm.includes(perm.key) %} checked{% endif %}{% if role._id == 'root' %} disabled{% endif %}>
+              <input name="{{ role._id }}" data-checkbox-group="{{ role._id }}" data-checkbox-range value="{{ perm.key }}" type="checkbox"{% if role.perm.includes(perm.key) %} checked{% endif %}{% if role._id == 'admin' %} disabled{% endif %}>
             </label>
           </td>
         {% endfor %}

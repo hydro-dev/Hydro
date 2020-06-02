@@ -54,7 +54,7 @@
     {% endif %}
     {% if tdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
       <li class="menu__item"><a class="menu__link" href="/homework/{{ tdoc.docId }}/edit">
-        <span class="icon icon-edit"></span>  {{ _('Edit Homework') }}
+        <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
       </a></li>
     {% endif %}
     {% if handler.hasPerm(perm.PERM_READ_RECORD_CODE) %}

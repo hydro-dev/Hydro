@@ -16,7 +16,10 @@ async function _postJudge(rdoc) {
     const tasks = [];
     if (rdoc.tid) {
         tasks.push(
-            contest.updateStatus(rdoc.domainId, rdoc.tid, rdoc.uid, rdoc._id, rdoc.pid, accept, rdoc.score),
+            contest.updateStatus(
+                rdoc.domainId, rdoc.tid, rdoc.uid,
+                rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.ttype,
+            ),
         );
     }
     if (await problem.updateStatus(rdoc.pid, rdoc.uid, rdoc._id, rdoc.status)) {

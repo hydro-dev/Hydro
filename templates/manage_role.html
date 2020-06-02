@@ -20,7 +20,7 @@
 </div>
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('{0}: Roles').format(system.uname) }}</h1>
+    <h1 class="section__title">{{ _('{0}: Roles').format(domain.name) }}</h1>
     <div class="section__tools">
       <button class="primary rounded button" name="create_role">{{ _('Create Role') }}</button>
     </div>
@@ -47,7 +47,7 @@
       </thead>
       <tbody>
       {% for role in roles %}
-        {% set isBuiltin = role._id not in ['default', 'guest', 'root'] %}
+        {% set isBuiltin = role._id in ['default', 'guest', 'admin'] %}
         <tr{% if isBuiltin %} data-role="{{ role._id }}"{% endif %}>
           <td class="col--checkbox">
             <label class="compact checkbox">

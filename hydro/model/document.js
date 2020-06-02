@@ -47,7 +47,7 @@ function get(domainId, docType, docId) {
 async function set(domainId, docType, docId, args) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        { $set: { args } },
+        { $set: args },
         { returnOriginal: false },
     );
     return res.value;

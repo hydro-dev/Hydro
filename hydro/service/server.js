@@ -44,7 +44,7 @@ const validate = {
     pid: (pid) => (Number.isSafeInteger(parseInt(pid)) ? parseInt(pid) : pid),
     content: validator.checkContent,
     title: validator.checkTitle,
-    uid: parseInt(validator.checkUid),
+    uid: (uid) => parseInt(validator.checkUid(uid)),
     password: validator.checkPassword,
     mail: validator.checkEmail,
     uname: validator.checkUname,
@@ -58,12 +58,14 @@ const validate = {
         if (duration <= 0) throw new ValidationError('duration');
         return duration;
     },
-    pids: (pids) => pids.split(',').map((i) => i.trim()),
-    role: validator.checkRole,
-    roles: (roles) => {
-        for (const i of roles) validator.checkRole(i);
-        return roles;
+    pids: (pids) => {
+        const res = pids.split(',').map((i) => i.trim());
+        for (const i in res) {
+            if (Number.isSafeInteger(parseInt(res[i]))) res[i] = parseInt(res[i]);
+        }
+        return res;
     },
+    role: validator.checkRole,
     penaltyRules: (penaltyRules) => {
         try {
             penaltyRules = yaml.safeLoad(penaltyRules);

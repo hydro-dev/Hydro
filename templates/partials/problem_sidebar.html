@@ -1,7 +1,13 @@
 {% if tdoc %}
-  {% include "partials/problem_sidebar_contest.html" %}
-  {% set owner_udoc = udoc %}
-  {% include "partials/contest_sidebar.html" %}
+  {% if tdoc.docType == 60 %}
+    {% include "partials/problem_sidebar_homework.html" %}
+    {% set owner_udoc = udoc %}
+    {% include "partials/homework_sidebar.html" %}
+  {% else %}
+    {% include "partials/problem_sidebar_contest.html" %}
+    {% set owner_udoc = udoc %}
+    {% include "partials/contest_sidebar.html" %}
+  {% endif %}
 {% else %}
   {% include "partials/problem_sidebar_normal.html" %}
 {% endif %}

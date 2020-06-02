@@ -47,7 +47,7 @@
               {% if handler.canShowRecord(tdoc) %}
                 {{ record.render_status_td(rdoc) }}
               {% else %}
-                <td class="col--status record-status--border"><a href="/r/{{ rdoc._id }}">{{ _('Submitted') }}</a></td>
+                <td class="col--status record-status--border"><a href="/record/{{ rdoc._id }}">{{ _('Submitted') }}</a></td>
               {% endif %}
                 <td class="col--submit-at">{{ datetimeSpan(rdoc['_id'])|safe }}</td>
               {% else %}
@@ -57,7 +57,7 @@
             {% endif %}
               <td class="col--problem col--problem-name">
                 #{{ loop.index }}:
-                {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, prefix='/homework', show_invisible_flag=false, show_tags=false) }}
               </td>
             </tr>
           {% endfor %}

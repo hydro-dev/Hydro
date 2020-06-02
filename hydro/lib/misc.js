@@ -49,6 +49,11 @@ function size(s, base = 1) {
     return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);
 }
 
+function formatSeconds(seconds) {
+    seconds = parseInt(seconds);
+    return '{:02}:{:02}:{:02}'.format(Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), seconds % 60);
+}
+
 global.Hydro.lib.misc = module.exports = {
-    gravatar, datetimeSpan, paginate, size,
+    gravatar, datetimeSpan, paginate, size, formatSeconds,
 };

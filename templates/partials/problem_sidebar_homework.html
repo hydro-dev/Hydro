@@ -1,0 +1,42 @@
+{% import "components/user.html" as user with context %}
+<div class="section side section--problem-sidebar">
+{% if page_name != 'problem_detail' and page_name != 'homework_detail_problem' %}
+  <div class="section__header">
+    <h1 class="section__title">{{ pdoc['title'] }}</h1>
+  </div>
+{% endif %}
+  <div>
+    <ol class="menu">
+    {% if model.contest.isOngoing(tdoc) or model.contest.isHomeworkExtended(tdoc) %}
+    {% if page_name == 'homework_detail_problem' %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
+        <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
+      </a></li>
+      <li class="menu__item non-scratchpad--hide"><a class="menu__link" name="problem-sidebar__quit-scratchpad" href="javascript:;" data-global-hotkey="alt+q">
+        <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
+      </a></li>
+    {% else %}
+      <li class="menu__item"><a class="menu__link" href="/homework/{{ tdoc.docId }}/p/{{ pdoc.docId }}">
+        <span class="icon icon-flag"></span> {{ _('View Problem') }}
+      </a></li>
+    {% endif %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="/homework/{{ tdoc.docId }}/p/{{ pdoc.docId }}/submit">
+        <span class="icon icon-send"></span> {{ _('Submit') }}
+      </a></li>
+    {% elif model.contest.isDone(tdoc) %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
+        <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
+      </a></li>
+    {% endif %}
+    {% if pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+      <li class="menu__seperator"></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
+        <span class="icon icon-edit"></span> {{ _('Edit') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="/p/{{ pdoc.pid }}/settings">
+        <span class="icon icon-wrench"></span> {{ _('Settings') }}
+      </a></li>
+    {% endif %}
+    </ol>
+  </div>
+</div>

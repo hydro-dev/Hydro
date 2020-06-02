@@ -26,7 +26,19 @@ async function add(domainId, data) {
         judger: null,
         judgeAt: null,
     });
-    const res = await coll.insertOne(data);
+    const [pdoc, res] = await Promise.all([
+        problem.get(domainId, data.pid),
+        coll.insertOne(data),
+    ]);
+    await task.add({
+        type: 'judge',
+        rid: res.insertedId,
+        domainId,
+        pid: data.pid,
+        data: pdoc.data,
+        lang: data.lang,
+        code: data.code,
+    });
     return res.insertedId;
 }
 
@@ -35,11 +47,10 @@ async function add(domainId, data) {
  * @param {ObjectID} rid
  * @returns {import('../interface').Record}
  */
-async function get(domainId, rid, showHidden = false) {
+async function get(domainId, rid) {
     const _id = new ObjectID(rid);
     const rdoc = await coll.findOne({ domainId, _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
-    if (rdoc.hidden && !showHidden) throw new PermissionError(rid);
     return rdoc;
 }
 
