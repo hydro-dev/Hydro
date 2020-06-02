@@ -14,6 +14,10 @@ Array.isDiff = function isDiff(a, b) {
     return false;
 };
 
+/**
+ * @param {string} format %Y-%m-%d %H:%M:%S
+ * @returns {string} Formatted date string
+ */
 Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
     return fmt
         .replace('%Y', this.getFullYear())
@@ -23,6 +27,19 @@ Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
         .replace('%H', this.getHours())
         .replace('%M', this.getMinutes())
         .replace('%S', this.getSeconds());
+};
+
+/**
+ * @param {object} param0
+ * @returns {Date}
+ */
+Date.prototype.delta = function delta({
+    year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0,
+}) {
+    let ts = this.getTime();
+    ts += second * 1000 + minute * 60000 + hour * 60 * 60000;
+    ts += day * 24 * 60 * 60000 + month * 30 * 24 * 60 * 60000 + year * 365 * 24 * 60 * 60000;
+    return new Date(ts);
 };
 
 Set.isSuperset = function isSuperset(set, subset) {

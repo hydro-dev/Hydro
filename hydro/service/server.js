@@ -1,7 +1,9 @@
+const assert = require('assert');
 const path = require('path');
 const os = require('os');
 const { ObjectID } = require('bson');
 const Koa = require('koa');
+const yaml = require('js-yaml');
 const morgan = require('koa-morgan');
 const Body = require('koa-body');
 const Router = require('koa-router');
@@ -23,6 +25,55 @@ const {
 const app = new Koa();
 let server;
 const router = new Router();
+
+const _validateObjectId = (id, key) => {
+    if (ObjectID.isValid(id)) return new ObjectID(id);
+    throw new ValidationError(key);
+};
+
+const validate = {
+    tid: _validateObjectId,
+    rid: _validateObjectId,
+    did: _validateObjectId,
+    drid: _validateObjectId,
+    drrid: _validateObjectId,
+    psid: _validateObjectId,
+    psrid: _validateObjectId,
+    docId: _validateObjectId,
+    mongoId: _validateObjectId,
+    pid: (pid) => (Number.isSafeInteger(parseInt(pid)) ? parseInt(pid) : pid),
+    content: validator.checkContent,
+    title: validator.checkTitle,
+    uid: parseInt(validator.checkUid),
+    password: validator.checkPassword,
+    mail: validator.checkEmail,
+    uname: validator.checkUname,
+    page: (page) => {
+        if (Number.isSafeInteger(parseInt(page))) page = parseInt(page);
+        if (page <= 0) throw new ValidationError('page');
+        return page;
+    },
+    duration: (duration) => {
+        if (!Number.isNaN(parseFloat(duration))) duration = parseFloat(duration);
+        if (duration <= 0) throw new ValidationError('duration');
+        return duration;
+    },
+    pids: (pids) => pids.split(',').map((i) => i.trim()),
+    role: validator.checkRole,
+    roles: (roles) => {
+        for (const i of roles) validator.checkRole(i);
+        return roles;
+    },
+    penaltyRules: (penaltyRules) => {
+        try {
+            penaltyRules = yaml.safeLoad(penaltyRules);
+        } catch (e) {
+            throw new ValidationError('penalty_rules', 'parse error');
+        }
+        assert(typeof penaltyRules === 'object', new ValidationError('penalty_rules', 'invalid format'));
+        return penaltyRules;
+    },
+};
 
 async function prepare() {
     server = http.createServer(app.callback());
@@ -240,9 +291,7 @@ class Handler {
     }
 }
 
-const check = ['tid', 'rid', 'did', 'drid', 'drrid', 'psid', 'psrid', 'docId', 'mongoId'];
-
-function Route(route, RouteHandler) {
+function Route(route, RouteHandler, permission = null) {
     router.all(route, async (ctx) => {
         const h = new RouteHandler(ctx);
         try {
@@ -253,28 +302,13 @@ function Route(route, RouteHandler) {
             };
 
             if (h.___prepare) await h.___prepare(args);
+            if (permission) h.checkPerm(permission);
+
             try {
-                for (const l of check) {
-                    if (args[l]) {
-                        args[l] = new ObjectID(args[l]);
-                        if (!args[l]) throw new ValidationError(l);
+                for (const key in validate) {
+                    if (args[key]) {
+                        args[key] = validate[key](args[key], key);
                     }
-                }
-                if (args.pid) {
-                    if (Number.isInteger(Number(args.pid))) args.pid = Number(args.pid);
-                }
-                if (args.content) validator.checkContent(args.content);
-                if (args.title) validator.checkContent(args.title);
-                if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
-                if (args.password) validator.checkPassword(args.password);
-                if (args.mail) validator.checkEmail(args.mail);
-                if (args.uname) validator.checkUname(args.uname);
-                if (args.page) args.page = parseInt(args.page);
-                if (args.duration) args.duration = parseFloat(args.duration);
-                if (args.pids) args.pids = args.pids.split(',').map((i) => i.trim());
-                if (args.role) validator.checkRole(args.role);
-                if (args.roles) {
-                    for (const i of args.roles) validator.checkRole(i);
                 }
             } catch (e) {
                 if (e instanceof ValidationError) throw e;
@@ -392,6 +426,11 @@ function Middleware(middleware) {
     app.use(middleware);
 }
 
+function Validate(key, func) {
+    if (validate[key]) validate[key].push(func);
+    else validate[key] = [func];
+}
+
 async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
@@ -401,5 +440,5 @@ async function start() {
 }
 
 global.Hydro.service.server = module.exports = {
-    Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
+    Handler, ConnectionHandler, Route, Connection, Middleware, Validate, prepare, start,
 };

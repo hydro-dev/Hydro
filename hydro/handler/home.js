@@ -280,7 +280,7 @@ class HomeFileHandler(base.OperationHandler):
 
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.post_argument
-  @base.require_csrf_token
+  @base.require_csrfToken
   @base.sanitize
   async def post_delete(this, *, ufid: document.convert_doc_id):
     ufdoc = await userfile.get(ufid)

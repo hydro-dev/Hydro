@@ -1,43 +1,42 @@
-{% set page_name = "status" %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
-	<div class="medium-12 columns">
-		<div class="section">
-			<div class="section__body no-padding">
-				<div data-fragment-id="status">
-					<table class="data-table">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__body no-padding">
+        <div data-fragment-id="status">
+          <table class="data-table">
             <colgroup>
               <col class="col--id">
               <col class="col--status">
-							<col class="col--os">
-							<col class="col--cpu">
+              <col class="col--os">
+              <col class="col--cpu">
               <col class="col--memory">
-						</colgroup>
-						<thead>
-							<tr>
+            </colgroup>
+            <thead>
+              <tr>
                 <th class="col--id">{{ _('ID') }}</th>
-								<th class="col--status">{{ _('Current Status') }}</th>
+                <th class="col--status">{{ _('Current Status') }}</th>
                 <th class="col--os">{{ _('OS Info') }}</th>
-								<th class="col--cpu">{{ _('CPU Info') }}</th>
-								<th class="col--memory">{{ _('Memory Info') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for doc in stats %}
-							<tr>
+                <th class="col--cpu">{{ _('CPU Info') }}</th>
+                <th class="col--memory">{{ _('Memory Info') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in stats %}
+              <tr>
                 <td class="col--id">{{ doc._id|truncate(6, True, '') }}</td>
                 <td class="col--status">{{ doc.status }}</td>
-								<td class="col--os">{{ doc.osinfo }}</td>
-								<td class="col--cpu" data-tooltip="{{ doc.flags }}">{{ doc.cpu }}</td>
-								<td class="col--memory">{{ doc.memory }}</td>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
+                <td class="col--os">{{ doc.osinfo }}</td>
+                <td class="col--cpu" data-tooltip="{{ doc.flags }}">{{ doc.cpu }}</td>
+                <td class="col--memory">{{ doc.memory }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

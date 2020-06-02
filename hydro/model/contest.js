@@ -207,7 +207,7 @@ const RULES = {
  * @returns {ObjectID} tid
  */
 function add(domainId, title, content, owner, rule,
-    beginAt = new Date(), endAt = new Date(), pids = [], data = {}) {
+    beginAt = new Date(), endAt = new Date(), pids = [], data = {}, type = document.TYPE_CONTEST) {
     validator.checkTitle(title);
     validator.checkContent(content);
     if (!this.RULES[rule]) throw new ValidationError('rule');
@@ -216,7 +216,7 @@ function add(domainId, title, content, owner, rule,
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     this.RULES[rule].check(data);
-    return document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
+    return document.add(domainId, content, owner, type, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0,
     });
 }
@@ -225,9 +225,10 @@ function add(domainId, title, content, owner, rule,
  * @param {string} domainId
  * @param {ObjectID} tid
  * @param {object} $set
+ * @param {number} type
  * @returns {Tdoc} tdoc after modification
  */
-async function edit(domainId, tid, $set) {
+async function edit(domainId, tid, $set, type = document.TYPE_CONTEST) {
     if ($set.title) validator.checkTitle($set.title);
     if ($set.content) validator.checkIntro($set.content);
     if ($set.rule) { if (!this.RULES[$set.rule]) throw new ValidationError('rule'); }
@@ -236,33 +237,37 @@ async function edit(domainId, tid, $set) {
             throw new ValidationError('beginAt', 'endAt');
         }
     }
-    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+    const tdoc = await document.get(domainId, type, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
-    return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
+    return await document.set(domainId, type, tid, $set);
 }
 
 /**
  * @param {string} domainId
  * @param {ObjectID} tid
+ * @param {number} type
  * @returns {Tdoc}
  */
-async function get(domainId, tid) {
-    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+async function get(domainId, tid, type = document.TYPE_CONTEST) {
+    const tdoc = await document.get(domainId, type, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
 
-async function updateStatus(domainId, tid, uid, rid, pid, accept = false, score = 0) {
+async function updateStatus(
+    domainId, tid, uid, rid, pid,
+    accept = false, score = 0, type = document.TYPE_CONTEST,
+) {
     await get(domainId, tid);
-    const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, uid, 'journal', {
+    const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
         rid, pid, accept, score,
     });
     if (!tsdoc.attend) throw new ContestNotAttendedError(tid, uid);
 }
 
-function getStatus(domainId, tid, uid) {
-    return document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
+function getStatus(domainId, tid, uid, type = document.TYPE_CONTEST) {
+    return document.getStatus(domainId, type, tid, uid);
 }
 
 async function getListStatus(domainId, uid, tids) {
@@ -272,13 +277,13 @@ async function getListStatus(domainId, uid, tids) {
     return r;
 }
 
-async function attend(domainId, tid, uid) {
+async function attend(domainId, tid, uid, type = document.TYPE_CONTEST) {
     try {
-        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1);
+        await document.cappedIncStatus(domainId, type, tid, uid, 'attend', 1, 0, 1);
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
-    await document.inc(domainId, document.TYPE_CONTEST, tid, 'attend', 1);
+    await document.inc(domainId, type, tid, 'attend', 1);
     return {};
 }
 
@@ -355,6 +360,38 @@ function setStatus(domainId, tid, uid, $set) {
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
 
+function count(domainId, query, type = document.TYPE_CONTEST) {
+    return document.count(domainId, type, query);
+}
+
+function getMulti(domainId, query = {}, type = document.TYPE_CONTEST) {
+    return document.getMulti(domainId, type, query);
+}
+
+function _getStatusJournal(tsdoc) {
+    return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
+}
+
+async function recalcStatus(domainId, tid, type) {
+    const [tdoc, tsdocs] = await Promise.all([
+        document.get(domainId, type, tid),
+        document.getMultiStatus(domainId, type, { docId: tid }),
+    ]);
+    const tasks = [];
+    for (const tsdoc of tsdocs) {
+        if (tsdoc.journal) {
+            const journal = _getStatusJournal(tsdoc);
+            const stats = RULES[tdoc.rule].stat(tdoc, journal);
+            tasks.push(
+                document.revSetStatus(
+                    domainId, type, tid,
+                    tsdoc.uid, tsdoc.rev, { journal, ...stats }, false,
+                ),
+            );
+        }
+    }
+    return await Promise.all(tasks);
+}
 global.Hydro.model.contest = module.exports = {
     RULES,
     ContestHandlerMixin,
@@ -365,9 +402,10 @@ global.Hydro.model.contest = module.exports = {
     get,
     updateStatus,
     getStatus,
-    count: (domainId, query) => document.count(domainId, document.TYPE_CONTEST, query),
-    getMulti: (domainId, query = {}) => document.getMulti(domainId, document.TYPE_CONTEST, query),
+    count,
+    getMulti,
     setStatus,
+    recalcStatus,
     isNew,
     isUpcoming,
     isNotStarted,
@@ -388,27 +426,3 @@ global.Hydro.model.contest = module.exports = {
                 ? 'ongoing'
                 : 'finished'),
 };
-
-/*
-
-def _get_status_journal(tsdoc):
-  # Sort and uniquify journal of the contest status document, by rid.
-  return [list(g)[-1] for _, g in itertools.groupby(sorted(tsdoc['journal'], key=journal_key_func),
-                                                    key=journal_key_func)]
-
-@argmethod.wrap
-async def recalc_status(domainId: str, doc_type: int, cid: objeccid.Objeccid):
-  if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
-    raise error.InvalidArgumentError('doc_type')
-  tdoc = await document.get(domainId, doc_type, cid)
-  async with document.get_multi_status(domainId=domainId,
-                                       doc_type=doc_type,
-                                       doc_id=tdoc.docId) as tsdocs:
-    async for tsdoc in tsdocs:
-      if 'journal' not in tsdoc or not tsdoc['journal']:
-        continue
-      journal = _get_status_journal(tsdoc)
-      stats = RULES[tdoc['rule']].stat_func(tdoc, journal)
-      await document.rev_set_status(domainId, doc_type, cid, tsdoc['uid'], tsdoc['rev'],
-                                    return_doc=False, journal=journal, **stats)
-*/

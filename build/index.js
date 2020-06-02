@@ -31,8 +31,6 @@ async function build(type) {
         lang[i.split('.')[0]] = yaml.safeLoad(content);
     }
     const exclude = [
-        'partials/training_default.json',
-        'partials/problem_default.md',
         'bsod.html',
     ];
     const builtin = {

@@ -1,7 +1,6 @@
 const perm = {
     PERM_MANAGE: '#',
     PERM_LOGGEDIN: '0',
-    PERM_REGISTER_USER: '1',
     PERM_MOD_BADGE: '3',
     PERM_CREATE_PROBLEM: '5',
     PERM_EDIT_PROBLEM: '6',
@@ -37,6 +36,10 @@ const perm = {
     PERM_VIEW_TRAINING: 'a',
     PERM_CREATE_TRAINING: 'b',
     PERM_EDIT_TRAINING: 'c',
+    PERM_VIEW_HOMEWORK: 'e',
+    PERM_CREATE_HOMEWORK: 'f',
+    PERM_EDIT_HOMEWORK: 'g',
+    PERM_ATTEND_HOMEWORK: 'h',
     PERM_JUDGE: 'd',
 };
 
@@ -47,7 +50,6 @@ perm.PERM_ALL = PERM_ALL;
 const Permission = (family, key, desc) => ({ family, key, desc });
 
 const PERMS = [
-    Permission('perm_general', perm.PERM_REGISTER_USER, 'Register new account'),
     Permission('perm_general', perm.PERM_MANAGE, 'Manage the system'),
     Permission('perm_general', perm.PERM_MOD_BADGE, 'Show MOD badge'),
     Permission('perm_problem', perm.PERM_CREATE_PROBLEM, 'Create problems'),
@@ -99,7 +101,7 @@ perm.PERM_BASIC = perm.PERM_VIEW_PROBLEM
     + perm.PERM_VIEW_TRAINING
     + perm.PERM_VIEW_CONTEST
     + perm.PERM_VIEW_CONTEST_SCOREBOARD
-    + perm.PERM_REGISTER_USER;
+    + perm.PERM_VIEW_HOMEWORK;
 
 perm.PERM_DEFAULT = perm.PERM_BASIC
     + perm.PERM_SUBMIT_PROBLEM
@@ -110,7 +112,8 @@ perm.PERM_DEFAULT = perm.PERM_BASIC
     + perm.PERM_REPLY_DISCUSSION
     + perm.PERM_ATTEND_CONTEST
     + perm.PERM_CREATE_TRAINING
-    + perm.PERM_LOGGEDIN;
+    + perm.PERM_LOGGEDIN
+    + perm.PERM_ATTEND_HOMEWORK;
 
 perm.PERM_ADMIN = perm.PERM_ALL;
 

@@ -11,6 +11,7 @@ const Item = (path, name, prefix, perm) => {
 Item('/', 'domain_main', 'domain_main');
 Item('/p', 'problem_main', 'problem', permission.PERM_VIEW_PROBLEM);
 Item('/t', 'training_main', 'training', permission.PERM_VIEW_TRAINING);
+Item('/homework', 'homework_main', 'homework', permission.PERM_VIEW_HOMEWORK);
 Item('/discuss', 'discussion_main', 'discussion', permission.PERM_VIEW_DISCUSSION);
 Item('/c', 'contest_main', 'contest', permission.PERM_VIEW_CONTEST);
 Item('/manage', 'manage', 'manage', permission.PERM_MANAGE);

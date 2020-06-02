@@ -209,8 +209,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     async get({ domainId, tid, pid }) {
         let rdocs = [];
         if (this.canShowRecord(this.tdoc)) {
-            rdocs = await record.getUserInProblemMulti(domainId, this.user._id, this.pdoc.docId, true)
-                .sort({ _id: -1 }).limit(10).toArray();
+            rdocs = await record.getUserInProblemMulti(
+                domainId, this.user._id,
+                this.pdoc.docId, true,
+            ).sort({ _id: -1 }).limit(10).toArray();
         }
         this.response.template = 'problem_submit.html';
         const path = [
@@ -258,10 +260,6 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
 }
 
 class ContestCreateHandler extends ContestHandler {
-    async prepare() {
-        this.checkPerm(PERM_CREATE_CONTEST);
-    }
-
     async get() {
         this.response.template = 'contest_edit.html';
         const rules = {};
@@ -294,10 +292,12 @@ class ContestCreateHandler extends ContestHandler {
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        const endAt = new Date(beginAt.getTime() + duration * 3600 * 1000);
-        if (beginAt >= endAt) throw new ValidationError('duration');
+        const endAt = beginAt.delta({ hour: duration });
         pids = await this.verifyProblems(domainId, pids);
-        const tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids);
+        const tid = await contest.add(
+            domainId, title, content,
+            this.user._id, rule, beginAt, endAt, pids,
+        );
         this.response.body = { tid };
         this.response.redirect = `/c/${tid}`;
     }
@@ -311,7 +311,7 @@ async function apply() {
     Route('/c/:tid/export/:ext', module.exports.ContestScoreboardDownloadHandler);
     Route('/c/:tid/p/:pid', module.exports.ContestProblemHandler);
     Route('/c/:tid/p/:pid/submit', module.exports.ContestProblemSubmitHandler);
-    Route('/contest/create', module.exports.ContestCreateHandler);
+    Route('/contest/create', module.exports.ContestCreateHandler, PERM_CREATE_CONTEST);
 }
 
 global.Hydro.handler.contest = module.exports = {

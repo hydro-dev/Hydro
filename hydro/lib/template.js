@@ -29,21 +29,22 @@ class Nunjucks extends nunjucks.Environment {
 const env = new Nunjucks();
 
 function render(name, state) {
-    Object.assign(state, {
-        typeof: (o) => typeof o,
-        static_url: (str) => `/${str}`,
-        datetimeSpan: misc.datetimeSpan,
-        paginate: misc.paginate,
-        perm,
-        status: builtin.status,
-        size: misc.size,
-        gravatar: misc.gravatar,
-        model,
-        Context: global.Hydro.ui,
-        isIE: (str) => str.includes('MSIE') || str.includes('rv:11.0'),
-    });
     return new Promise((resolve, reject) => {
-        env.render(name, state, (err, res) => {
+        env.render(name, {
+            page_name: name.split('.')[0],
+            ...state,
+            typeof: (o) => typeof o,
+            static_url: (str) => `/${str}`,
+            datetimeSpan: misc.datetimeSpan,
+            paginate: misc.paginate,
+            perm,
+            status: builtin.status,
+            size: misc.size,
+            gravatar: misc.gravatar,
+            model,
+            Context: global.Hydro.ui,
+            isIE: (str) => str.includes('MSIE') || str.includes('rv:11.0'),
+        }, (err, res) => {
             if (err) reject(err);
             else resolve(res);
         });

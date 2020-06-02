@@ -3,7 +3,7 @@ const { ObjectID } = require('bson');
 const { STATUS_WAITING } = require('./builtin').STATUS;
 const task = require('./task');
 const problem = require('./problem');
-const { RecordNotFoundError } = require('../error');
+const { RecordNotFoundError, PermissionError } = require('../error');
 const db = require('../service/db');
 
 const coll = db.collection('record');
@@ -35,10 +35,11 @@ async function add(domainId, data) {
  * @param {ObjectID} rid
  * @returns {import('../interface').Record}
  */
-async function get(domainId, rid) {
+async function get(domainId, rid, showHidden = false) {
     const _id = new ObjectID(rid);
     const rdoc = await coll.findOne({ domainId, _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
+    if (rdoc.hidden && !showHidden) throw new PermissionError(rid);
     return rdoc;
 }
 
@@ -77,15 +78,18 @@ function count(domainId, query) {
     return coll.find({ domainId, ...query }).count();
 }
 
-async function getList(domainId, rids) {
+async function getList(domainId, rids, showHidden = false) {
     const r = {};
     // eslint-disable-next-line no-await-in-loop
-    for (const rid of rids) r[rid] = await get(domainId, rid);
+    for (const rid of rids) r[rid] = await get(domainId, rid, showHidden);
     return r;
 }
 
-function getUserInProblemMulti(domainId, uid, pid) {
-    return coll.find({ domainId, owner: uid, pid });
+function getUserInProblemMulti(domainId, uid, pid, getHidden = false) {
+    if (getHidden) return coll.find({ domainId, owner: uid, pid });
+    return coll.find({
+        domainId, owner: uid, pid, hidden: false,
+    });
 }
 
 async function judge(domainId, rid) {

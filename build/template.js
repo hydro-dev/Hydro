@@ -25,7 +25,7 @@ const build = (dirOrObject, exclude = []) => {
         }
     } else templates = dirOrObject;
     for (const i in templates) {
-        if (!exclude.includes(i)) {
+        if (!exclude.includes(i) && i.endsWith('.html')) {
             templates[i] = templates[i]
                 .trim()
                 .replace(/ *\n */gmi, ' ')

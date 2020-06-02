@@ -4,10 +4,11 @@ const token = require('../model/token');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
 const misc = require('../lib/misc');
-const { PERM_REGISTER_USER, PERM_LOGGEDIN } = require('../permission');
+const { PERM_LOGGEDIN } = require('../permission');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, LoginError, SystemError,
+    PermissionError,
 } = require('../error');
 
 class UserLoginHandler extends Handler {
@@ -32,10 +33,6 @@ class UserLoginHandler extends Handler {
 }
 
 class UserLogoutHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-    }
-
     async get() {
         this.response.template = 'user_logout.html';
     }
@@ -46,8 +43,10 @@ class UserLogoutHandler extends Handler {
 }
 
 class UserRegisterHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_REGISTER_USER);
+    async prepare() { // eslint-disable-line class-methods-use-this
+        if (!await system.get('user.register')) {
+            throw new PermissionError('Register');
+        }
     }
 
     async get() {
@@ -73,10 +72,6 @@ class UserRegisterHandler extends Handler {
 }
 
 class UserRegisterWithCodeHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_REGISTER_USER);
-    }
-
     async get({ code }) {
         this.response.template = 'user_register_with_code.html';
         const { mail } = await token.get(code, token.TYPE_REGISTRATION);
@@ -174,7 +169,7 @@ async function apply() {
     Route('/login', module.exports.UserLoginHandler);
     Route('/register', module.exports.UserRegisterHandler);
     Route('/register/:code', module.exports.UserRegisterWithCodeHandler);
-    Route('/logout', module.exports.UserLogoutHandler);
+    Route('/logout', module.exports.UserLogoutHandler, PERM_LOGGEDIN);
     Route('/lostpass', module.exports.UserLostPassHandler);
     Route('/lostpass/:code', module.exports.UserLostPassWithCodeHandler);
     Route('/user/search', module.exports.UserSearchHandler);

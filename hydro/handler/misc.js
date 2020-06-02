@@ -1,8 +1,18 @@
+
 const { PERM_JUDGE } = require('../permission');
-const { Route, Handler } = require('../service/server');
+const file = require('../model/file');
 const db = require('../service/db');
+const { Route, Handler } = require('../service/server');
 
 const coll = db.collection('status');
+
+class FileDownloadHandler extends Handler {
+    async get({ id, secret, name }) {
+        if (name) name = Buffer.from(name, 'base64').toString();
+        this.response.attachment(name || id);
+        this.response.body = await file.get(id, secret);
+    }
+}
 
 class StatusHandler extends Handler {
     async get() {
@@ -27,8 +37,15 @@ class StatusUpdateHandler extends Handler {
 }
 
 async function apply() {
+    Route('/fs/:id/:secret', FileDownloadHandler);
+    Route('/fs/:id/:name/:secret', FileDownloadHandler);
     Route('/status', StatusHandler);
     Route('/status/update', StatusUpdateHandler);
 }
 
-global.Hydro.handler.status = module.exports = { StatusHandler, StatusUpdateHandler, apply };
+global.Hydro.handler.misc = module.exports = {
+    FileDownloadHandler,
+    StatusHandler,
+    StatusUpdateHandler,
+    apply,
+};

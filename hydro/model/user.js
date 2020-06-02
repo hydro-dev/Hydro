@@ -60,6 +60,7 @@ async function getById(domainId, _id) {
 }
 
 async function getList(domainId, uids) {
+    uids = new Set(uids);
     const r = {};
     // eslint-disable-next-line no-await-in-loop
     for (const uid of uids) r[uid] = await getById(domainId, uid);
