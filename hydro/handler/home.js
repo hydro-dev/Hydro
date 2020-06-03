@@ -10,6 +10,7 @@ const misc = require('../lib/misc');
 const md5 = require('../lib/md5');
 const contest = require('../model/contest');
 const message = require('../model/message');
+const document = require('../model/document');
 const system = require('../model/system');
 const user = require('../model/user');
 const setting = require('../model/setting');
@@ -18,12 +19,26 @@ const token = require('../model/token');
 const training = require('../model/training');
 const {
     PERM_VIEW_TRAINING, PERM_VIEW_CONTEST, PERM_VIEW_DISCUSSION,
-    PERM_LOGGEDIN,
+    PERM_LOGGEDIN, PERM_VIEW_HOMEWORK,
 } = require('../permission');
 
 const { geoip, useragent } = global.Hydro.lib;
 
 class HomeHandler extends Handler {
+    async homework(domainId) {
+        if (this.user.hasPerm(PERM_VIEW_HOMEWORK)) {
+            const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
+                .limit(await system.get('HOMEWORK_ON_MAIN'))
+                .toArray();
+            const tsdict = await contest.getListStatus(
+                domainId, this.user._id,
+                tdocs.map((tdoc) => tdoc.docId), document.TYPE_HOMEWORK,
+            );
+            return [tdocs, tsdict];
+        }
+        return [[], {}];
+    }
+
     async contest(domainId) {
         if (this.user.hasPerm(PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
@@ -63,13 +78,17 @@ class HomeHandler extends Handler {
     }
 
     async get({ domainId }) {
-        const [[tdocs, tsdict], [trdocs, trsdict], [ddocs, vndict]] = await Promise.all([
-            this.contest(domainId), this.training(domainId), this.discussion(domainId),
+        const [
+            [htdocs, htsdict], [tdocs, tsdict],
+            [trdocs, trsdict], [ddocs, vndict],
+        ] = await Promise.all([
+            this.homework(domainId), this.contest(domainId),
+            this.training(domainId), this.discussion(domainId),
         ]);
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         this.response.template = 'main.html';
         this.response.body = {
-            tdocs, tsdict, trdocs, trsdict, ddocs, vndict, udict,
+            htdocs, htsdict, tdocs, tsdict, trdocs, trsdict, ddocs, vndict, udict,
         };
     }
 }
@@ -190,21 +209,37 @@ class HomeMessagesHandler extends Handler {
 
     async get() {
         // TODO(iceboy): projection, pagination.
-        const mdocs = await message.getMulti(this.user._id).sort('_id', -1).limit(50).toArray();
+        const messages = await message.getByUser(this.user._id);
         const udict = await user.getList([
-            ...mdocs.map((mdoc) => mdoc.from),
-            ...mdocs.map((mdoc) => mdoc.to),
+            ...messages.map((mdoc) => mdoc.from),
+            ...messages.map((mdoc) => mdoc.to),
         ]);
         // TODO(twd2): improve here:
-        for (const mdoc of mdocs) {
-            this.udoc(udict, mdoc.from);
-            this.udoc(udict, mdoc.to);
+        const parsed = {};
+        for (const m of messages) {
+            if (m.from === this.user._id) {
+                if (!parsed[m.to]) {
+                    parsed[m.to] = {
+                        udoc: { ...udict[m.to], gravatar: misc.gravatar(udict[m.to].gravatar) },
+                        messages: [],
+                    };
+                }
+                parsed[m.to].messages.push(m);
+            } else {
+                if (!parsed[m.from]) {
+                    parsed[m.from] = {
+                        udoc: { ...udict[m.from], gravatar: misc.gravatar(udict[m.from].gravatar) },
+                        messages: [],
+                    };
+                }
+                parsed[m.from].messages.push(m);
+            }
         }
         const path = [
             ['Hydro', '/'],
             ['home_messages', null],
         ];
-        this.response.body = { messages: mdocs, udict, path };
+        this.response.body = { messages, udict, path };
         this.response.template = 'home_messages.html';
     }
 

@@ -4,7 +4,7 @@ const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const { root } = require('./utils');
 
-const build = async (type, tag = '') => {
+const build = async (type) => {
     function hackNodeModuleFormidable() {
         const tasks = ['incoming_form', 'file', 'json_parser', 'querystring_parser'];
         for (const task of tasks) {
@@ -25,7 +25,7 @@ const build = async (type, tag = '') => {
             development: root('hydro/development.js'),
         },
         output: {
-            filename: `[name]${tag}.js`,
+            filename: '[name].js',
             path: root('.build'),
         },
         target: 'node',

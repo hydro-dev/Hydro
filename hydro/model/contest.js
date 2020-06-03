@@ -245,7 +245,11 @@ async function edit(domainId, tid, $set, type = document.TYPE_CONTEST) {
  * @returns {Tdoc}
  */
 async function get(domainId, tid, type = document.TYPE_CONTEST) {
-    const tdoc = await document.get(domainId, type, tid);
+    let tdoc;
+    if (type === -1) {
+        tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+        if (!tdoc) tdoc = await document.get(domainId, document.TYPE_HOMEWORK, tid);
+    } else tdoc = await document.get(domainId, type, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
@@ -265,10 +269,11 @@ function getStatus(domainId, tid, uid, type = document.TYPE_CONTEST) {
     return document.getStatus(domainId, type, tid, uid);
 }
 
-async function getListStatus(domainId, uid, tids) {
+async function getListStatus(domainId, uid, tids, type = document.TYPE_CONTEST) {
     const r = {};
+    console.log(tids);
     // eslint-disable-next-line no-await-in-loop
-    for (const tid of tids) r[tid] = await getStatus(domainId, tid, uid);
+    for (const tid of tids) r[tid] = await getStatus(domainId, tid, uid, type);
     return r;
 }
 
@@ -327,7 +332,7 @@ const ContestHandlerMixin = (c) => class extends c {
     async getScoreboard(domainId, tid, isExport = false, docType = document.TYPE_CONTEST) {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        const tsdocs = await getMultiStatus(domainId, tid, docType)
+        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType)
             .sort(RULES[tdoc.rule].statusSort).toArray();
         const uids = [];
         for (const tsdoc of tsdocs) uids.push(tsdoc.uid);

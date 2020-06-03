@@ -1,7 +1,5 @@
-const {
-    PERM_READ_RECORD_CODE, PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD,
-    PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN,
-} = require('../permission');
+const { PERM_READ_RECORD_CODE, PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
+const { PermissionError } = require('../error');
 const problem = require('../model/problem');
 const record = require('../model/record');
 const contest = require('../model/contest');
@@ -20,7 +18,12 @@ class RecordListHandler extends RecordHandler {
     }) {
         this.response.template = 'record_main.html';
         const q = { tid };
-        if (uname_or_uid) q.$or = [{ unameLower: uname_or_uid.toLowerCase() }, { _id: parseInt(uname_or_uid) }];
+        if (uname_or_uid) {
+            q.$or = [
+                { unameLower: uname_or_uid.toLowerCase() },
+                { _id: parseInt(uname_or_uid) },
+            ];
+        }
         const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
@@ -73,16 +76,30 @@ class RecordRejudgeHandler extends Handler {
     }
 }
 
-class RecordConnectionHandler extends ConnectionHandler {
-    async prepare({ domainId }) {
+const RecordConnectionHandler = contest.ContestHandlerMixin(ConnectionHandler);
+
+class RecordMainConnectionHandler extends RecordConnectionHandler {
+    async prepare({ domainId, tid }) {
         this.domainId = domainId;
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid, -1);
+            if (this.canShowRecord(tdoc)) this.tid = tid;
+            else {
+                this.close();
+                return;
+            }
+        }
         bus.subscribe(['record_change'], this.onRecordChange);
     }
 
     async message(msg) {
-        for (const rid of msg.rids) {
-            const rdoc = await record.get(this.domainId, rid); // eslint-disable-line no-await-in-loop
-            await this.onRecordChange({ value: rdoc }); // eslint-disable-line no-await-in-loop
+        const rdocs = await record.getMany(
+            this.domainId,
+            { _id: { $in: msg.rids } },
+            { _id: -1 }, 1, 100,
+        );
+        for (const rdoc of rdocs) {
+            this.onRecordChange({ value: rdoc });
         }
     }
 
@@ -107,7 +124,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     async prepare({ domainId, rid }) {
         const rdoc = await record.get(domainId, rid);
         if (rdoc.tid) {
-            const tdoc = await contest.get(domainId, rdoc.tid);
+            const tdoc = await contest.get(domainId, rdoc.tid, -1);
             if (!this.canShowRecord(tdoc)) {
                 this.close();
                 return;
@@ -133,21 +150,21 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 }
 
 async function apply() {
-    Route('/r', module.exports.RecordListHandler);
-    Route('/r/:rid', module.exports.RecordDetailHandler);
-    Route('/r/:rid/rejudge', module.exports.RecordRejudgeHandler);
-    Route('/record', module.exports.RecordListHandler);
-    Route('/record/:rid', module.exports.RecordDetailHandler);
-    Route('/record/:rid/rejudge', module.exports.RecordRejudgeHandler);
-    Connection('/record-conn', module.exports.RecordConnectionHandler);
-    Connection('/record-detail-conn', module.exports.RecordDetailConnectionHandler);
+    Route('/r', RecordListHandler);
+    Route('/r/:rid', RecordDetailHandler);
+    Route('/r/:rid/rejudge', RecordRejudgeHandler);
+    Route('/record', RecordListHandler);
+    Route('/record/:rid', RecordDetailHandler);
+    Route('/record/:rid/rejudge', RecordRejudgeHandler);
+    Connection('/record-conn', RecordMainConnectionHandler);
+    Connection('/record-detail-conn', RecordDetailConnectionHandler);
 }
 
 global.Hydro.handler.record = module.exports = {
     RecordListHandler,
     RecordDetailHandler,
     RecordRejudgeHandler,
-    RecordConnectionHandler,
+    RecordMainConnectionHandler,
     RecordDetailConnectionHandler,
     apply,
 };

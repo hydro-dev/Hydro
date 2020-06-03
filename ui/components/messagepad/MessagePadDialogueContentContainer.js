@@ -59,8 +59,8 @@ export default class MessagePadDialogueContentContainer extends React.PureCompon
         isSelf={reply.from === UserContext._id}
         faceUrl={
           reply.from === this.props.item.from
-            ? this.props.item.from_udoc.gravatar_url
-            : this.props.item.to_udoc.gravatar_url
+            ? this.props.item.from_udoc.gravatar
+            : this.props.item.to_udoc.gravatar
         }
       >
         <div>{reply.content}</div>

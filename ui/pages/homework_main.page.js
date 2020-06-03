@@ -7,12 +7,12 @@ const page = new NamedPage('homework_main', () => {
   // Homework Calendar
   if (Context.docs) {
     const events = Context.docs.map((doc) => ({
-      beginAt: doc.beginAt * 1000,
-      endAt: doc.endAt * 1000,
+      beginAt: doc.beginAt,
+      endAt: doc.endAt,
       title: doc.title,
-      maskFrom: doc.penaltySince ? doc.penaltySince * 1000 : null,
+      maskFrom: doc.penaltySince ? doc.penaltySince : null,
       maskTitle: i18n('Time Extension'),
-      colorIndex: parseMongoId(doc.id).timestamp % 12,
+      colorIndex: parseMongoId(doc._id).timestamp % 12,
       link: doc.url,
     }));
     const calendar = new Calendar(events);

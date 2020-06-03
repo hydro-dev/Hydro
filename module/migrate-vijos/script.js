@@ -43,7 +43,7 @@ const tasks = {
             doc_type: 'docType',
             num_submit: 'nSubmit',
             num_accept: 'nAccept',
-            difficulty_admin: 'difficulty',
+            difficulty: 'difficulty',
             pname: 'pid',
             title: 'title',
             content: 'content',
@@ -64,6 +64,17 @@ const tasks = {
             update_at: 'updateAt',
             begin_at: 'beginAt',
             end_at: 'endAt',
+            penalty_since: 'penaltySince',
+            penalty_rules: {
+                field: 'penaltyRules',
+                processer: (rule) => {
+                    const n = {};
+                    for (const key in rule) {
+                        n[key / 3600] = rule;
+                    }
+                    return n;
+                },
+            },
             rule: {
                 field: 'rule',
                 processer: (rule) => {
@@ -176,7 +187,7 @@ const tasks = {
                 score: c.score,
                 time: c.time_ms || c.time,
                 memory: c.memory_kb || c.memory,
-                judge_text: (c.judge_text || '') + (c.message || ''),
+                judgeText: (c.judge_text || '') + (c.message || ''),
             });
         }
         return {
@@ -194,7 +205,7 @@ const tasks = {
             judger: doc.judge_uid,
             judgeAt: doc.judge_at,
             judgeTexts: doc.judge_texts,
-            compileTexts: doc.compile_texts,
+            compilerTexts: doc.compiler_texts,
             rejudged: doc.rejudged,
             testCases,
         };
@@ -242,25 +253,42 @@ async function task(name, src, report) {
     const count = await cursor[name](src).count();
     await report({ progress: 1, message: `${name}: ${count}` });
     const total = Math.floor(count / 50);
+    let lastProgress = -1;
     for (let i = 0; i <= total; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
         const res = [];
         for (const doc of docs) {
             const d = await tasks[name](doc);
             if (d) {
-                if (d.docId && d.docType) {
-                    res.push(dst.collection(name).updateOne({
-                        docId: d.docId, docType: d.docType,
-                    }, { $set: d }, { upsert: true }));
+                const docWithoutId = {};
+                const docWithoutDid = {};
+                for (const key in d) {
+                    if (key !== '_id') {
+                        if (key !== 'domainId' && key !== 'docId' && key !== 'docType' && key !== 'uid') {
+                            docWithoutDid[key] = d[key];
+                        }
+                        docWithoutId[key] = d[key];
+                    }
+                }
+                if (d.domainId && d.docId && d.docType) {
+                    const query = { domainId: d.domainId, docId: d.docId, docType: d.docType };
+                    if (d.uid) query.uid = d.uid;
+                    res.push(dst.collection(name).updateOne(
+                        query, { $set: docWithoutDid }, { upsert: true },
+                    ));
                 } else if (d._id) {
                     res.push(dst.collection(name).updateOne({
                         _id: d._id,
-                    }, { $set: d }, { upsert: true }));
+                    }, { $set: docWithoutId }, { upsert: true }));
                 } else res.push(dst.collection(name).insertOne(d));
             }
         }
         await Promise.all(res);
-        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
+        const progress = Math.round(100 * ((i + 1) / (total + 1)));
+        if (progress > lastProgress) {
+            await report({ progress });
+            lastProgress = progress;
+        }
     }
     await fixPid(report);
 }
@@ -286,7 +314,6 @@ async function migrateVijos({
         { upsert: true },
     );
     await report({ progress: 1, message: 'Collection:system done.' });
-    await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
     if (!await dst.collection('system').findOne({ _id: 'migrateVijosFs' })) {
         const f = ['fs.files', 'fs.chunks'];
         for (const i of f) {
@@ -295,8 +322,10 @@ async function migrateVijos({
         }
         await dst.collection('system').insertOne({ _id: 'migrateVijosFs', value: true });
     }
+    await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
     const d = ['user', 'document', 'document.status', 'record', 'file'];
     for (const i of d) await task(i, src, report);
+    return true;
 }
 
 global.Hydro.script.migrateVijos = module.exports = { run: migrateVijos };

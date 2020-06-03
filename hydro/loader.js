@@ -20,20 +20,15 @@ let pending = [];
 const active = [];
 const fail = [];
 
-try {
-    // Let webpack pack builtin module together.
-    // eslint-disable-next-line import/no-unresolved
-    const f = require('../.build/module.json');
-    for (const filename in f) {
+if (global._hydroModule) {
+    for (const filename in global._hydroModule) {
         const m = {
-            ...yaml.safeLoad(zlib.gunzipSync(Buffer.from(f[filename], 'base64'))),
+            ...yaml.safeLoad(zlib.gunzipSync(Buffer.from(global._hydroModule[filename], 'base64'))),
             filename,
             isBuiltin: true,
         };
         pending.push(m);
     }
-} catch (e) {
-    // Ignore Missing
 }
 
 async function preload() {

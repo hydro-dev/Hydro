@@ -49,9 +49,18 @@ function size(s, base = 1) {
     return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);
 }
 
-function formatSeconds(seconds) {
+function _digit2(number) {
+    if (number < 10) return `0${number}`;
+    return number.toString();
+}
+
+function formatSeconds(seconds = 0) {
     seconds = parseInt(seconds);
-    return '{:02}:{:02}:{:02}'.format(Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), seconds % 60);
+    return '{0}:{1}:{2}'.format(
+        _digit2(Math.floor(seconds / 3600)),
+        _digit2(Math.floor((seconds % 3600) / 60)),
+        _digit2(seconds % 60),
+    );
 }
 
 global.Hydro.lib.misc = module.exports = {

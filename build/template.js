@@ -15,7 +15,7 @@ function getFiles(folder) {
     return files;
 }
 
-const build = (dirOrObject, exclude = []) => {
+const build = (dirOrObject) => {
     let templates = {};
     if (typeof dirOrObject === 'string') {
         const files = getFiles(dirOrObject);
@@ -25,7 +25,7 @@ const build = (dirOrObject, exclude = []) => {
         }
     } else templates = dirOrObject;
     for (const i in templates) {
-        if (!exclude.includes(i) && i.endsWith('.html')) {
+        if (i.endsWith('.html') && !templates[i].includes('No Compression')) {
             templates[i] = templates[i]
                 .trim()
                 .replace(/ *\n */gmi, ' ')

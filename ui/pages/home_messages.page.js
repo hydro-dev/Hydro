@@ -35,10 +35,7 @@ const page = new NamedPage('home_messages', () => {
 
     reduxStore = store;
 
-    const sock = new SockJs('/home/messages-conn');
-    sock.onopen = () => {
-      sock.send(document.cookie);
-    };
+    const sock = new SockJs(`/home/messages-conn?token=${UiContext.csrfToken}`);
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       store.dispatch({

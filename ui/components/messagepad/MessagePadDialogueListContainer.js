@@ -50,8 +50,8 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
             }
             faceUrl={
               dialogue.from === UserContext._id
-                ? dialogue.to_udoc.gravatar_url
-                : dialogue.from_udoc.gravatar_url
+                ? dialogue.to_udoc.gravatar
+                : dialogue.from_udoc.gravatar
             }
             active={dialogue._id === this.props.activeId}
             onClick={() => this.props.handleClick(dialogue._id)}

@@ -27,8 +27,7 @@ class HomeworkMainHandler extends HomeworkHandler {
         const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK).toArray();
         const calendar = [];
         for (const tdoc of tdocs) {
-            console.log(tdoc);
-            const cal = { ...tdoc };
+            const cal = { ...tdoc, url: `/homework/${tdoc.docId}` };
             if (contest.isHomeworkExtended(tdoc) || contest.isDone(tdoc)) {
                 cal.endAt = tdoc.endAt;
                 cal.penaltySince = tdoc.penaltySince;
@@ -37,7 +36,11 @@ class HomeworkMainHandler extends HomeworkHandler {
             }
             calendar.push(cal);
         }
-        this.response.body = { tdocs, calendar };
+        const path = [
+            ['Hydro', '/'],
+            ['homework_main', null],
+        ];
+        this.response.body = { tdocs, calendar, path };
         this.response.template = 'homework_main.html';
     }
 }
@@ -76,6 +79,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
         uids.push(tdoc.owner);
         const udict = await user.getList(domainId, uids);
         const path = [
+            ['Hydro', '/'],
             ['homework_main', '/homework'],
             [tdoc.title, null, true],
         ];
@@ -113,6 +117,7 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         }
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
         const path = [
+            ['Hydro', '/'],
             ['homework_main', '/homework'],
             [this.tdoc.title, `/homework/${tid}`, true],
             [this.pdoc.title, null, true],
@@ -136,6 +141,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
                 .sort('_id', -1).limit(10).toArray()
             : [];
         const path = [
+            ['Hydro', '/'],
             ['homework_main', '/homework'],
             [this.tdoc.title, `/homework/${tid}`, true],
             [this.pdoc.title, `/homework/${tid}/p/${pid}`, true],
@@ -162,6 +168,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
             rid, pid, false, 0, document.TYPE_HOMEWORK);
         this.response.body = { tid, rid };
         if (this.canShowRecord(this.tdoc)) this.response.redirect = `/record/${rid}`;
+        else this.response.redirect = `/homework/${tid}`;
     }
 }
 
@@ -170,6 +177,8 @@ class HomeworkCreateHandler extends HomeworkHandler {
         const beginAt = new Date().delta({ day: 1 });
         const penaltySince = beginAt.delta({ day: 7 });
         const path = [
+            ['Hydro', '/'],
+            ['homework_main', '/homework'],
             ['homework_create', null],
         ];
         this.response.template = 'homework_edit.html';
@@ -221,6 +230,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / 36000 / 24,
         ) / 100;
         const path = [
+            ['Hydro', '/'],
             ['homework_main', '/homework'],
             [tdoc.title, `/homework/${tid}`, true],
             ['homework_edit', null],
@@ -353,6 +363,7 @@ async function apply() {
                     { type: 'total_time', value: _('Total Time (Seconds)') },
                 );
             }
+            columns.push({ type: 'total_time_str', value: _('Total Time') });
             for (const index in tdoc.pids) {
                 const pid = tdoc.pids[index];
                 if (isExport) {
@@ -383,14 +394,13 @@ async function apply() {
                 }
             }
             const rows = [columns];
-            for (const rank in rankedTsdocs) {
-                const tsdoc = rankedTsdocs[rank];
+            for (const [rank, tsdoc] of rankedTsdocs) {
                 const tsddict = {};
                 for (const item of tsdoc.journal || []) {
                     tsddict[item.pid] = item;
                 }
                 const row = [
-                    { type: 'string', value: rank + 1 },
+                    { type: 'string', value: rank },
                     {
                         type: 'user',
                         value: udict[tsdoc.uid].uname,
@@ -411,7 +421,7 @@ async function apply() {
                     const colScore = (tsddict[pid] || {}).penaltyScore || '-';
                     const colOriginalScore = (tsddict[pid] || {}).score || '-';
                     const colTime = (tsddict[pid] || {}).time || '-';
-                    const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime) : '-';
+                    const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime || 0) : '-';
                     if (isExport) {
                         row.push(
                             { type: 'string', value: colScore },
@@ -431,7 +441,7 @@ async function apply() {
             }
             return rows;
         },
-        rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
+        rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
     };
     Route('/homework', HomeworkMainHandler, PERM_VIEW_HOMEWORK);
     Route('/homework/create', HomeworkCreateHandler, PERM_CREATE_HOMEWORK);

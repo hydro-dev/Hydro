@@ -28,6 +28,7 @@ async function run(username, password) {
         TRAINING_PER_PAGE: 10,
         DISCUSSION_PER_PAGE: 50,
         REPLY_PER_PAGE: 50,
+        HOMEWORK_ON_MAIN: 5,
         CONTESTS_ON_MAIN: 5,
         TRAININGS_ON_MAIN: 5,
         DISCUSSIONS_ON_MAIN: 20,

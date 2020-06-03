@@ -25,18 +25,15 @@ async function build(type) {
     ignoreFailure(fs.mkdirSync, root('.build'));
     ignoreFailure(fs.mkdirSync, root('.build/module'));
     const langs = fs.readdirSync(root('locales'));
-    const lang = {};
+    const locale = {};
     for (const i of langs) {
         const content = fs.readFileSync(root(`locales/${i}`)).toString();
-        lang[i.split('.')[0]] = yaml.safeLoad(content);
+        locale[i.split('.')[0]] = yaml.safeLoad(content);
     }
-    const exclude = [
-        'bsod.html',
-    ];
     const builtin = {
         id: 'builtin',
-        locale: lang,
-        template: template('templates', exclude),
+        locale,
+        template: template('templates'),
         file: {},
     };
     const files = getFiles('.uibuild');
@@ -72,10 +69,9 @@ async function build(type) {
             console.error(`Module pack failed: ${m}`);
         }
     }
-    await fsp.writeFile(root('.build/module.json'), JSON.stringify(j));
-    console.log('Build::Full');
-    await require('./webpack')(type, '-full');
-    await fsp.unlink(root('.build/module.json'));
+    const f = fs.readFileSync(root('.build/development.js')).toString();
+    const file = `global._hydroModule=${JSON.stringify(j)};${f}`;
+    fs.writeFileSync(root('.build/full.js'), file);
 }
 
 module.exports = build;
