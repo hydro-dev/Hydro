@@ -1,8 +1,31 @@
 const user = require('../model/user');
 const domain = require('../model/domain');
+const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
-const { RoleAlreadyExistError, ValidationError } = require('../error');
+const { RoleAlreadyExistError, ValidationError, PermissionError } = require('../error');
+
+class DomainCreateHandler extends Handler {
+    async prepare() {
+        if (this.user.priv !== 1) {
+            if (!await system.get('user.create_domain')) throw new PermissionError('domain_create');
+        }
+    }
+
+    async get() {
+        const path = [
+            ['Hydro', '/'],
+            ['domain_create', null],
+        ];
+        this.response.body = { path };
+        this.response.template = 'domain_create.html';
+    }
+
+    async post({ id, name }) {
+        await domain.add(id, this.user._id, name);
+        this.response.body = { domainId: id };
+    }
+}
 
 class ManageHandler extends Handler {
     async prepare({ domainId }) {
@@ -135,6 +158,7 @@ class DomainRoleHandler extends ManageHandler {
 }
 
 async function apply() {
+    Route('/domain/create', DomainCreateHandler);
     Route('/domain/dashboard', DomainDashboardHandler);
     Route('/domain/edit', DomainEditHandler);
     Route('/domain/user', DomainUserHandler);

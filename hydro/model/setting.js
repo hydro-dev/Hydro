@@ -45,6 +45,7 @@ for (const setting in SETTINGS) SETTINGS_BY_KEY[setting.key] = setting;
 
 const SYSTEM_SETTINGS = [
     Setting('setting_basic', 'user.register', null, false, 'checkbox', 'Allow register'),
+    Setting('setting_basic', 'user.create_domain', null, true, 'checkbox', 'Allow domain creation'),
     Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
     Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password'),
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),

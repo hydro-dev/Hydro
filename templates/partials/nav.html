@@ -11,11 +11,7 @@
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item"><a href="/" class="nav__logo">&nbsp;</a></li>
       {% for item in Context.nav %}
-        {% if item.perm %}
-          {% if handler.hasPerm(item.perm) %}
-            {{ nav_item(item.path, item.name, item.prefix) }}
-          {% endif %}
-        {% else %}
+        {% if item.checker(handler) %}
           {{ nav_item(item.path, item.name, item.prefix) }}
         {% endif %}
       {% endfor %}
