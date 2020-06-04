@@ -252,7 +252,7 @@ async function load() {
     const builtinHandler = [
         'home', 'problem', 'record', 'judge', 'user',
         'contest', 'training', 'discussion', 'manage', 'import',
-        'misc', 'homework',
+        'misc', 'homework', 'domain',
     ];
     for (const i of builtinHandler) require(`./handler/${i}`);
     await model();

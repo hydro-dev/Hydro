@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
       with:
-        node_version: '13.x'
+        node-version: '13.x'
     - run: cd ui && yarn && yarn build:production && cd ..
     - uses: actions/upload-artifact@v1
       with:

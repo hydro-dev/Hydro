@@ -53,6 +53,13 @@
           value:current[setting.key] or setting.value,
           markdown:true
         }) }}
+  {% elif setting.ui == 'checkbox' %}
+    {{ form.form_checkbox({
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value
+    })}}
   {% endif %}
   {% endfor %}
   </div>

@@ -54,7 +54,7 @@ class UserRegisterHandler extends Handler {
     }
 
     async post({ mail }) {
-        if (await user.getByEmail(mail, true)) throw new UserAlreadyExistError(mail);
+        if (await user.getByEmail('system', mail, true)) throw new UserAlreadyExistError(mail);
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
@@ -62,7 +62,9 @@ class UserRegisterHandler extends Handler {
             { mail },
         );
         if (await system.get('smtp.user')) {
-            const m = await this.renderHTML('user_register_mail', { url: `/register/${t[0]}` });
+            const m = await this.renderHTML('user_register_mail.html', {
+                url: `${await system.get('baseurl')}/register/${t[0]}`,
+            });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';
         } else {

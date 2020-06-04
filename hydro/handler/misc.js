@@ -32,7 +32,13 @@ class StatusHandler extends Handler {
 class StatusUpdateHandler extends Handler {
     async post(args) {
         this.checkPerm(PERM_JUDGE);
-        await coll.updateOne({ _id: args._id }, { $set: args }, { upsert: true });
+        await coll.updateOne({ _id: args._id }, { $set: { ...args, type: 'judger' } }, { upsert: true });
+    }
+}
+
+class SwitchLanguageHandler extends Handler {
+    async get({ lang }) {
+        this.session.language = lang;
     }
 }
 
@@ -41,6 +47,7 @@ async function apply() {
     Route('/fs/:id/:name/:secret', FileDownloadHandler);
     Route('/status', StatusHandler);
     Route('/status/update', StatusUpdateHandler);
+    Route('/language/:lang', SwitchLanguageHandler);
 }
 
 global.Hydro.handler.misc = module.exports = {

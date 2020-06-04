@@ -13,19 +13,8 @@
           </div>
           <ol class="menu collapsed">
             {{ sidemenu.render_item(null, 'manage_dashboard', '/manage/dashboard') }}
-            {{ sidemenu.render_item(null, 'manage_edit', '/manage/edit') }}
             {{ sidemenu.render_item(null, 'manage_module', '/manage/module') }}
             {{ sidemenu.render_item(null, 'manage_setting', '/manage/setting') }}
-          </ol>
-        </li>
-        <li class="menu__item">
-          <div class="menu__link expandable">
-            <span class="icon icon-user"></span> {{ _('Access Control') }}
-          </div>
-          <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'manage_role', '/manage/role') }}
-            {{ sidemenu.render_item(null, 'manage_user', '/manage/user') }}
-            {{ sidemenu.render_item(null, 'manage_permission', '/manage/permission') }}
           </ol>
         </li>
       </ol>

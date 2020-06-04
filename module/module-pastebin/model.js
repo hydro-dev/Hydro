@@ -1,26 +1,27 @@
 const { DocumentNotFoundError } = global.Hydro.error;
-const { db } = global.Hydro.service;
+const { document } = global.Hydro.model;
 
-const coll = db.collection('pastebin');
+document.TYPE_PASTE = 101;
 
-async function add({
+function add({
     owner, language, expire, password, title, content,
 }) {
-    const doc = {
-        owner, password, expire, language, title, content,
-    };
-    const res = await coll.insertOne(doc);
-    return res.insertedId;
+    return document.add(
+        'system', content, owner, document.TYPE_PASTE, null, null, null,
+        {
+            language, expire, title, password,
+        },
+    );
 }
 
 async function get(_id) {
-    const doc = await coll.findOne({ _id });
+    const doc = await document.get('system', document.TYPE_PASTE, _id);
     if (!doc) throw new DocumentNotFoundError(_id);
     return doc;
 }
 
 function del(_id) {
-    return coll.deleteOne({ _id });
+    return document.deleteOne('system', document.TYPE_PASTE, _id);
 }
 
 global.Hydro.model.pastebin = module.exports = { add, get, del };

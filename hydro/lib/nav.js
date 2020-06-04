@@ -14,6 +14,6 @@ Item('/t', 'training_main', 'training', permission.PERM_VIEW_TRAINING);
 Item('/homework', 'homework_main', 'homework', permission.PERM_VIEW_HOMEWORK);
 Item('/discuss', 'discussion_main', 'discussion', permission.PERM_VIEW_DISCUSSION);
 Item('/c', 'contest_main', 'contest', permission.PERM_VIEW_CONTEST);
-Item('/manage', 'manage', 'manage', permission.PERM_MANAGE);
+Item('/domain', 'domain_dashboard', 'domain', permission.PERM_MANAGE);
 
 global.Hydro.lib.nav = module.exports = Item;

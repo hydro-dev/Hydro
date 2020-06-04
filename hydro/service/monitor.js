@@ -16,7 +16,7 @@ async function postInit() {
     const info = await sysinfo.get();
     await coll.updateOne(
         { _id: info._id },
-        { $set: { ...info, updateAt: new Date() } },
+        { $set: { ...info, updateAt: new Date(), type: 'server' } },
         { upsert: true },
     );
     setInterval(update, 3 * 60 * 1000);
