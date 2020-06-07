@@ -271,7 +271,6 @@ function getStatus(domainId, tid, uid, type = document.TYPE_CONTEST) {
 
 async function getListStatus(domainId, uid, tids, type = document.TYPE_CONTEST) {
     const r = {};
-    console.log(tids);
     // eslint-disable-next-line no-await-in-loop
     for (const tid of tids) r[tid] = await getStatus(domainId, tid, uid, type);
     return r;
@@ -392,11 +391,13 @@ async function recalcStatus(domainId, tid, type) {
     }
     return await Promise.all(tasks);
 }
+
 global.Hydro.model.contest = module.exports = {
     RULES,
     ContestHandlerMixin,
     add,
     getListStatus,
+    getMultiStatus,
     attend,
     edit,
     get,

@@ -25,7 +25,6 @@ class RecordListHandler extends RecordHandler {
             ];
         }
         const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
-        console.log(rdocs);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false),

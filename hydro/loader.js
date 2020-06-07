@@ -263,10 +263,16 @@ async function load() {
     const notfound = require('./handler/notfound');
     await notfound.apply();
     for (const i in global.Hydro.service) {
-        if (global.Hydro.service[i].postInit) await global.Hydro.service[i].postInit();
+        if (global.Hydro.service[i].postInit) {
+            try {
+                await global.Hydro.service[i].postInit();
+            } catch (e) {
+                console.error(e);
+            }
+        }
     }
     const builtinScript = [
-        'install', 'uninstall',
+        'install', 'uninstall', 'rating',
     ];
     for (const i of builtinScript) require(`./script/${i}`);
     await script();

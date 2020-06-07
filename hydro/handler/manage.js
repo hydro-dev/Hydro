@@ -81,7 +81,6 @@ class SystemSettingHandler extends SystemHandler {
                     const s = setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`];
                     if (s) {
                         if (s.ui === 'number') args[key][sub] = Number(args[key][sub]);
-                        console.log(s);
                         subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
                     }
                 }
