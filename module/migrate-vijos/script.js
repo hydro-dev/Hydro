@@ -1,13 +1,12 @@
 /* eslint-disable no-await-in-loop */
 const { mongodb } = global.Hydro.nodeModules;
 const dst = global.Hydro.service.db;
+const { file, problem, discussion } = global.Hydro.model;
 
 const map = {};
 
 const pid = (id) => {
     if (map[id.toString()]) return map[id.toString()];
-    if (id.generationTime) return id;
-    id = id.toString();
     return id;
 };
 
@@ -114,6 +113,8 @@ const tasks = {
                 res[mapper[key]] = doc[key];
             } else if (typeof mapper[key] === 'object') {
                 res[mapper[key].field] = mapper[key].processer(doc[key]);
+            } else if (mapper[key] === null) {
+                // Ignore this key
             } else {
                 console.log('Unknown key:', key);
             }
@@ -214,7 +215,7 @@ const tasks = {
     'fs.chunks': async (doc) => doc,
     file: async (doc) => ({
         _id: doc._id,
-        count: doc.metadata.link,
+        count: 0,
         secret: doc.metadata.secret,
         size: doc.length,
         md5: doc.md5,
@@ -223,13 +224,36 @@ const tasks = {
 
 const cursor = {
     user: (s) => s.collection('user').find(),
-    document: (s) => s.collection('document').find(),
+    document: (s) => s.collection('document').find({ doc_type: { $ne: 20 } }),
     'document.status': (s) => s.collection('document.status').find(),
     record: (s) => s.collection('record').find(),
     'fs.files': (s) => s.collection('fs.files').find(),
     'fs.chunks': (s) => s.collection('fs.chunks').find(),
     file: (s) => s.collection('fs.files').find(),
 };
+
+async function discussionNode(src, report) {
+    const count = await src.collection('document').find({ doc_type: 20 }).count();
+    await report({ progress: 1, message: `discussion.node: ${count}` });
+    const total = Math.floor(count / 5);
+    for (let i = 0; i <= total; i++) {
+        const docs = await src.collection('document')
+            .find({ doc_type: 20 }).skip(i * 5).limit(5)
+            .toArray();
+        for (const doc of docs) {
+            const t = [];
+            for (const item of doc.content || []) {
+                const category = item[0];
+                const nodes = item[1];
+                for (const node of nodes || []) {
+                    t.push(discussion.addNode(doc.domain_id, node.name, category));
+                }
+            }
+            await Promise.all(t).catch((e) => e);
+        }
+        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
+    }
+}
 
 async function fixPid(report) {
     const count = await dst.collection('document').find({ docType: 10 }).count();
@@ -239,12 +263,28 @@ async function fixPid(report) {
         const docs = await dst.collection('document')
             .find({ docType: 10 }).skip(i * 50).limit(50)
             .toArray();
+        const t = [];
         for (const doc of docs) {
-            dst.collection('document').updateOne(
-                { _id: doc._id },
-                { $set: { pid: doc.pid || doc.docId.toString() } },
+            t.push(
+                dst.collection('document').updateOne(
+                    { _id: doc._id },
+                    { $set: { pid: doc.pid || doc.docId.toString() } },
+                ),
             );
+            if (doc.data && doc.data.generationTime) {
+                t.push(file.inc(doc.data));
+            } else if (doc.data) {
+                const pdoc = await problem.get(doc.data.domain, pid(doc.data.pid));
+                t.push(
+                    file.inc(pdoc.data),
+                    dst.collection('document').updateOne(
+                        { _id: doc._id },
+                        { $set: { data: pdoc.data } },
+                    ),
+                );
+            }
         }
+        await Promise.all(t);
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
 }
@@ -273,9 +313,23 @@ async function task(name, src, report) {
                 if (d.domainId && d.docId && d.docType) {
                     const query = { domainId: d.domainId, docId: d.docId, docType: d.docType };
                     if (d.uid) query.uid = d.uid;
-                    res.push(dst.collection(name).updateOne(
-                        query, { $set: docWithoutDid }, { upsert: true },
-                    ));
+                    res.push((async () => {
+                        const data = await dst.collection(name).findOne(query);
+                        if (data) {
+                            await dst.collection(name).updateOne(query, { $set: docWithoutId });
+                        } else if (d._id) {
+                            const dat = await dst.collection(name).findOne({ _id: d._id });
+                            if (dat) {
+                                await dst.collection(name).updateOne({
+                                    _id: d._id,
+                                }, { $set: docWithoutId });
+                            } else {
+                                await dst.collection(name).insertOne(d);
+                            }
+                        } else {
+                            await dst.collection(name).insertOne(d);
+                        }
+                    })());
                 } else if (d._id) {
                     res.push(dst.collection(name).updateOne({
                         _id: d._id,
@@ -290,7 +344,6 @@ async function task(name, src, report) {
             lastProgress = progress;
         }
     }
-    await fixPid(report);
 }
 
 async function migrateVijos({
@@ -325,6 +378,8 @@ async function migrateVijos({
     await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
     const d = ['user', 'document', 'document.status', 'record', 'file'];
     for (const i of d) await task(i, src, report);
+    await fixPid(report);
+    await discussionNode(src, report);
     return true;
 }
 

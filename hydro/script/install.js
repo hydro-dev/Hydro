@@ -19,7 +19,7 @@ const allowFail = async (func, ...args) => {
     return res;
 };
 
-async function run(username, password) {
+async function run({ username, password } = {}) {
     const def = {
         PROBLEM_PER_PAGE: 100,
         RECORD_PER_PAGE: 100,
@@ -39,7 +39,7 @@ async function run(username, password) {
         'smtp.pass': '',
         'smtp.secure': false,
         'db.ver': 1,
-        'listen.port': 8888,
+        'server.port': 8888,
         'session.keys': ['Hydro'],
         'session.secure': false,
         'session.saved_expire_seconds': 3600 * 24,
@@ -49,7 +49,10 @@ async function run(username, password) {
     };
     let tasks = [];
     for (const key in def) {
-        tasks.push(system.set(key, def[key]));
+        tasks.push(system.get(key).then((value) => {
+            if (!value) return system.set(key, def[key]);
+            return Promise.resolve();
+        }));
     }
     await Promise.all(tasks);
     tasks = [
@@ -90,12 +93,6 @@ async function run(username, password) {
                 }, udoc),
             }, { upsert: true }),
         );
-    }
-    for (const category in builtin.DEFAULT_NODES) {
-        const nodes = builtin.DEFAULT_NODES[category];
-        for (const node of nodes) {
-            tasks.push(discussion.addNode(node.name, category));
-        }
     }
     await Promise.all(tasks);
 }

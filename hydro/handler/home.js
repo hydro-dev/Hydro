@@ -100,7 +100,6 @@ class HomeSecurityHandler extends Handler {
 
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
-        // TODO(masnn): UA & IP
         const sessions = await token.getSessionListByUid(this.user._id);
         const parsed = [];
         for (const session of sessions) {
@@ -173,8 +172,13 @@ class HomeSettingsHandler extends Handler {
     }
 
     async post(args) {
-        // FIXME validation
-        await user.setById(args.domainId, this.user._id, args);
+        const $set = {};
+        for (const key in args) {
+            if (setting.SETTINGS_BY_KEY[args]) {
+                $set[key] = args[key];
+            }
+        }
+        await user.setById(args.domainId, this.user._id, $set);
         this.back();
     }
 }

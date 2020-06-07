@@ -41,7 +41,7 @@ const ACCOUNT_SETTINGS = [
 const SETTINGS = [...PREFERENCE_SETTINGS, ...ACCOUNT_SETTINGS];
 const SETTINGS_BY_KEY = {};
 
-for (const setting in SETTINGS) SETTINGS_BY_KEY[setting.key] = setting;
+for (const setting of SETTINGS) SETTINGS_BY_KEY[setting.key] = setting;
 
 const SYSTEM_SETTINGS = [
     Setting('setting_basic', 'user.register', null, false, 'checkbox', 'Allow register'),
@@ -49,19 +49,32 @@ const SYSTEM_SETTINGS = [
     Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
     Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password'),
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
-    Setting('setting_smtp', 'smtp.port', null, 465, 'text', 'SMTP Server Port'),
+    Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', null, false, 'checkbox', 'SSL'),
-    Setting('setting_server', 'listen.port', null, 8888, 'text', 'Server Port', ''),
-    Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'text', 'Problems per Page'),
-    Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'text', 'Contests per Page'),
-    Setting('setting_constant', 'DISCUSSION_PER_PAGE', null, 50, 'text', 'Discussion per Page'),
-    Setting('setting_constant', 'RECORD_PER_PAGE', null, 100, 'text', 'Record per Page'),
-    Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'text', 'Solutions per Page'),
-    Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'text', 'Training per Page'),
-    Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'text', 'Reply per Page'),
+    Setting('setting_server', 'server.hostname', null, null, 'text', 'Server Hostname'),
+    Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
+    Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
+    Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
+    Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'number', 'Problems per Page'),
+    Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'number', 'Contests per Page'),
+    Setting('setting_constant', 'DISCUSSION_PER_PAGE', null, 50, 'number', 'Discussion per Page'),
+    Setting('setting_constant', 'RECORD_PER_PAGE', null, 100, 'number', 'Record per Page'),
+    Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'number', 'Solutions per Page'),
+    Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'number', 'Training per Page'),
+    Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'number', 'Reply per Page'),
 ];
 
+const SYSTEM_SETTINGS_BY_KEY = {};
+
+for (const setting of SYSTEM_SETTINGS) SYSTEM_SETTINGS_BY_KEY[setting.key] = setting;
+
 global.Hydro.model.setting = module.exports = {
-    Setting, PREFERENCE_SETTINGS, ACCOUNT_SETTINGS, SETTINGS, SETTINGS_BY_KEY, SYSTEM_SETTINGS,
+    Setting,
+    PREFERENCE_SETTINGS,
+    ACCOUNT_SETTINGS,
+    SETTINGS,
+    SETTINGS_BY_KEY,
+    SYSTEM_SETTINGS,
+    SYSTEM_SETTINGS_BY_KEY,
 };

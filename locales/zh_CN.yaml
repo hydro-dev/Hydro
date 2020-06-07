@@ -307,7 +307,8 @@ Create Domain: 创建域
 Properties: 属性
 Access Control: 访问控制
 domain_main: 首页
-manage: 管理域
+manage: 管理
+manage_domain: 管理域
 manage_dashboard: 概况
 manage_discussion: 讨论节点
 manage_edit: 编辑域资料

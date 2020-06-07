@@ -1,7 +1,9 @@
+const { ObjectID } = require('bson');
 const paginate = require('../lib/paginate');
 const system = require('../model/system');
 const user = require('../model/user');
 const discussion = require('../model/discussion');
+const document = require('../model/document');
 const { Route, Handler } = require('../service/server');
 const { DiscussionNotFoundError, DocumentNotFoundError } = require('../error');
 const {
@@ -10,17 +12,24 @@ const {
     PERM_LOGGEDIN, PERM_CREATE_DISCUSSION, PERM_REPLY_DISCUSSION,
 } = require('../permission');
 
+const typeMapper = {
+    problem: document.TYPE_PROBLEM,
+    contest: document.TYPE_CONTEST,
+    node: document.TYPE_DISCUSSION_NODE,
+    training: document.TYPE_TRAINING,
+    homework: document.TYPE_HOMEWORK,
+};
+
 class DiscussionHandler extends Handler {
     async _prepare({
-        domainId, type = 'node', docId, name, did, drid, drrid,
+        domainId, type, name, did, drid, drrid,
     }) {
         this.checkPerm(PERM_VIEW_DISCUSSION);
-        docId = docId || name;
         if (did) {
             this.ddoc = await discussion.get(domainId, did);
             if (!this.ddoc) throw new DiscussionNotFoundError(did);
-            type = this.ddoc.parentType;
-            docId = this.ddoc.parentId;
+            type = discussion.typeDisplay[this.ddoc.parentType];
+            name = this.ddoc.parentId;
             if (drid) {
                 this.drdoc = await discussion.getReply(domainId, drid, did);
                 if (!this.drdoc) throw new DiscussionNotFoundError(drid);
@@ -37,7 +46,11 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
-        this.vnode = await discussion.getVnode(domainId, { parentType: type, parentId: docId }, this);
+        if (ObjectID.isValid(name)) name = new ObjectID(name);
+        this.vnode = await discussion.getVnode(domainId, {
+            parentType: typeMapper[type],
+            parentId: name,
+        }, this);
         if (this.ddoc) {
             this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
             this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
@@ -45,7 +58,7 @@ class DiscussionHandler extends Handler {
     }
 }
 
-class DiscussionMainHandler extends DiscussionHandler {
+class DiscussionMainHandler extends Handler {
     async get({ domainId, page = 1 }) {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId),
@@ -57,20 +70,20 @@ class DiscussionMainHandler extends DiscussionHandler {
             ['Hydro', '/'],
             ['discussion_main', null],
         ];
+        const vndict = await discussion.getListVnodes(domainId, ddocs, this);
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, page, page_name: 'discussion_main', vnode: {}, path,
+            ddocs, dpcount, udict, page, page_name: 'discussion_main', vndict, vnode: {}, path,
         };
     }
 }
 
 class DiscussionNodeHandler extends DiscussionHandler {
     async get({
-        domainId, type = 'node', docId, name, page = 1,
+        domainId, type, name, page = 1,
     }) {
-        docId = docId || name;
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti(domainId, { parentType: type, parentId: docId }),
+            discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name }),
             page,
             await system.get('DISCUSSION_PER_PAGE'),
         );
@@ -80,6 +93,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
             ['discussion_main', '/discuss'],
             [this.vnode.title, null, true],
         ];
+        const vndict = { [typeMapper[type]]: { [name]: this.vnode } };
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
             ddocs,
@@ -87,6 +101,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
             udict,
             path,
             page,
+            vndict,
             vnode: this.vnode,
             page_name: 'discussion_node',
         };
@@ -99,12 +114,11 @@ class DiscussionCreateHandler extends DiscussionHandler {
         this.checkPerm(PERM_CREATE_DISCUSSION);
     }
 
-    async get({ type = 'node', docId, name }) {
-        docId = docId || name;
+    async get({ type, name }) {
         const path = [
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
-            [this.vnode.title, `/discuss/${type}/${docId}`, true],
+            [this.vnode.title, `/discuss/${type}/${name}`, true],
             ['discussion_create', null],
         ];
         this.response.template = 'discussion_create.html';
@@ -112,13 +126,13 @@ class DiscussionCreateHandler extends DiscussionHandler {
     }
 
     async post({
-        domainId, type = 'node', docId, name, title, content, highlight,
+        domainId, type, name, title, content, highlight,
     }) {
-        docId = docId || name;
         this.limitRate('add_discussion', 3600, 30);
+        if (ObjectID.isValid(name)) name = new ObjectID(name);
         if (highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
         const did = await discussion.add(
-            domainId, type, docId, this.user._id,
+            domainId, typeMapper[type], name, this.user._id,
             title, content, this.request.ip, highlight,
         );
         this.response.body = { did };
@@ -136,7 +150,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             page,
             await system.get('REPLY_PER_PAGE'),
         );
-        const uids = drdocs.map(domainId, (drdoc) => drdoc.owner);
+        const uids = drdocs.map((drdoc) => drdoc.owner);
         uids.push(this.ddoc.owner);
         for (const drdoc of drdocs) {
             if (drdoc.reply) {
@@ -149,7 +163,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const path = [
             ['Hydro', '/'],
             ['discussion_main', '/discuss'],
-            [this.vnode.title, `/discuss/${this.ddoc.parentType}`, true],
+            [this.vnode.title, `/discuss/${discussion.typeDisplay[this.ddoc.parentType]}/${this.ddoc.parentId}`, true],
             [this.ddoc.title, null, true],
         ];
         this.response.template = 'discussion_detail.html';
@@ -275,10 +289,8 @@ async function apply() {
     Route('/discuss/:did/raw', module.exports.DiscussionDetailRawHandler);
     Route('/discuss/:did/:drid/raw', module.exports.DiscussionReplyRawHandler);
     Route('/discuss/:did/:drid/:drrid/raw', module.exports.DiscussionTailReplyRawHandler);
-    Route('/discuss/node/:name', module.exports.DiscussionNodeHandler);
-    Route('/discuss/node/:name/create', module.exports.DiscussionCreateHandler);
-    Route('/discuss/:type/:docId', module.exports.DiscussionNodeHandler);
-    Route('/discuss/:type/:docId/create', module.exports.DiscussionCreateHandler);
+    Route('/discuss/:type/:name', module.exports.DiscussionNodeHandler);
+    Route('/discuss/:type/:name/create', module.exports.DiscussionCreateHandler);
 }
 
 global.Hydro.handler.discussion = module.exports = {

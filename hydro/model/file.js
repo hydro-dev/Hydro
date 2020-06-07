@@ -30,8 +30,12 @@ function del(_id) {
 }
 
 async function inc(_id) {
-    const file = await coll.findOne({ _id });
-    file.count++;
+    const doc = await coll.findOneAndUpdate(
+        { _id },
+        { $inc: { count: 1 } },
+        { returnOriginal: false },
+    );
+    return (doc.value || {}).count;
 }
 
 async function dec(_id) {

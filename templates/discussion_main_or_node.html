@@ -7,15 +7,15 @@
     </div>
   </div>
   <div class="medium-3 columns">
-  {% if vnode.parentType == 'problem' %}
+  {% if vnode.parentType == model.document.TYPE_PROBLEM %}
     {% set pdoc = vnode %}
     {% set owner_udoc = udict[vnode.owner] %}
     {% include "partials/problem_sidebar.html" %}
-  {% elif vnode.parentType == 'contest' %}
+  {% elif vnode.parentType == model.document.TYPE_CONTEST %}
     {% set tdoc = vnode %}
     {% set owner_udoc = udict[vnode.owner] %}
     {% include "partials/contest_sidebar.html" %}
-  {% elif vnode.parentType == 'node' %}
+  {% elif vnode.parentType == model.document.TYPE_DISCUSSION_NODE %}
     <div class="section side">
       {% if vnode.pic %}<div class="discussion-node__bg {{ vnode.pic }}"></div>{% endif %}
       <div class="section__header">
@@ -24,7 +24,7 @@
       <div class="section__body">
       {% if vnode %}
       {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
-        <p><a href="/discuss/{{ vnode.parentType }}/{{ vnode.parentId }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
+        <p><a href="/discuss/{{ model.discussion.typeDisplay[vnode.parentType] }}/{{ vnode.parentId }}/create" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
       {% else %}
         {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
           <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>

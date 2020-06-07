@@ -45,7 +45,7 @@ async function get(domainId, pid, uid = null) {
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
-    if (!pdoc) throw new ProblemNotFoundError(pid);
+    if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
     if (uid) {
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }
@@ -110,10 +110,15 @@ async function random(domainId, query) {
     } return null;
 }
 
-async function getList(domainId, pids) {
+async function getList(domainId, pids, doThrow = true) {
     const r = {};
-    // eslint-disable-next-line no-await-in-loop
-    for (const pid of pids) r[pid] = await get(domainId, pid);
+    if (doThrow) {
+        // eslint-disable-next-line no-await-in-loop
+        for (const pid of pids) r[pid] = await get(domainId, pid);
+    } else {
+        // eslint-disable-next-line no-await-in-loop
+        for (const pid of pids) r[pid] = await get(domainId, pid).catch((e) => e);
+    }
     return r;
 }
 

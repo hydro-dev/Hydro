@@ -301,7 +301,8 @@ Create Domain: 創建域
 Properties: 屬性
 Access Control: 訪問控制
 domain_main: 首頁
-manage: 管理域
+manage: 管理
+manage_domain: 管理域
 manage_dashboard: 概況
 manage_edit: 編輯域資料
 manage_join_applications: 加域申請

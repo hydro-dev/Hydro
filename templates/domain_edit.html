@@ -4,6 +4,13 @@
   <div class="section__body">
     <form method="post">
       {{ form.form_text({
+           label:'ID',
+           name:'id',
+           value:domain._id,
+           disabled:true,
+           required:true
+         }) }}
+      {{ form.form_text({
            label:'Name',
            name:'name',
            value:domain.name,

@@ -22,6 +22,6 @@ Item('/homework', 'homework_main', 'homework', permission.PERM_VIEW_HOMEWORK);
 Item('/discuss', 'discussion_main', 'discussion', permission.PERM_VIEW_DISCUSSION);
 Item('/c', 'contest_main', 'contest', permission.PERM_VIEW_CONTEST);
 Item('/domain/dashboard', 'domain_dashboard', 'domain', permission.PERM_MANAGE);
-Item('/manage/dashboard', 'manage_dashboard', 'manage', null, (handler) => handler.user.priv === 1);
+Item('/manage/dashboard', 'manage', 'manage', null, (handler) => handler.user.priv === 1);
 
 global.Hydro.lib.nav = module.exports = Item;

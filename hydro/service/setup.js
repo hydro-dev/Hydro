@@ -1,8 +1,8 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const http = require('http');
 const Koa = require('koa');
-const morgan = require('koa-morgan');
 const Body = require('koa-body');
 const Router = require('koa-router');
 const cache = require('koa-static-cache');
@@ -19,20 +19,11 @@ class Loader {
     }
 }
 
-class Nunjucks extends nunjucks.Environment {
-    constructor() {
-        super(new Loader(), { autoescape: true, trimBlocks: true });
-        this.addFilter('json', (self) => JSON.stringify(self), false);
-        this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
-    }
-}
-const env = new Nunjucks();
+const env = new nunjucks.Environment(new Loader(), { autoescape: true, trimBlocks: true });
+
 function render(name) {
     return new Promise((resolve, reject) => {
         env.render(name, {
-            typeof: (o) => typeof o,
-            static_url: (str) => `/${str}`,
-            handler: { renderTitle: (str) => str },
             _: (str) => str,
         }, (err, res) => {
             if (err) reject(err);
@@ -40,15 +31,16 @@ function render(name) {
         });
     });
 }
+
 async function setup() {
     const app = new Koa();
     const server = http.createServer(app.callback());
     const router = new Router();
     app.keys = ['Hydro'];
-    app.use(cache(path.join(process.cwd(), '.uibuild'), {
+    app.use(cache(path.join(os.tmpdir(), 'hydro', 'builtin'), {
         maxAge: 365 * 24 * 60 * 60,
     }));
-    app.use(Body({ formidable: { maxFileSize: 256 * 1024 * 1024 } }));
+    app.use(Body());
     router.get('/', async (ctx) => {
         ctx.body = await render('setup.html');
         ctx.response.type = 'text/html';
@@ -66,9 +58,23 @@ async function setup() {
                     useNewUrlParser: true, useUnifiedTopology: true,
                 });
                 const db = Database.db(name);
-                // Check Write Access
-                await db.collection('test').insertOne({ test: 'test' });
-                await db.collection('test').deleteOne({ test: 'test' });
+                await Promise.all([
+                    db.collection('system').updateOne(
+                        { _id: 'server.host' },
+                        { $set: { value: ctx.request.host } },
+                        { upsert: true },
+                    ),
+                    db.collection('system').updateOne(
+                        { _id: 'server.hostname' },
+                        { $set: { value: ctx.request.hostname } },
+                        { upsert: true },
+                    ),
+                    db.collection('system').updateOne(
+                        { _id: 'server.url' },
+                        { $set: { value: ctx.request.href } },
+                        { upsert: true },
+                    ),
+                ]);
                 fs.writeFileSync(path.resolve(process.cwd(), 'config.json'), JSON.stringify({
                     host, port, name, username, password,
                 }));
@@ -79,7 +85,6 @@ async function setup() {
             }
         });
     });
-    app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(8888);
     console.log('Server listening at: 8888');

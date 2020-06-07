@@ -10,9 +10,9 @@ mongourl += `${options.host}:${options.port}/${options.name}`;
  */
 let db = null;
 Mongo.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then((Database) => {
-        db = Database.db(options.name);
-        db.Db = Database;
+    .then((Client) => {
+        db = Client.db(options.name);
+        db.Client = Client;
         bus.publish('system_database_connected', null);
     });
 

@@ -98,6 +98,8 @@ class Handler {
     constructor(ctx) {
         this.ctx = ctx;
         this.request = {
+            host: ctx.request.host,
+            hostname: ctx.request.hostname,
             ip: ctx.request.ip,
             headers: ctx.request.headers,
             cookies: ctx.cookies,
@@ -193,8 +195,8 @@ class Handler {
                 token.TYPE_SESSION,
                 this._handler.expireSeconds,
                 {
-                    update_ip: this.request.ip,
-                    update_ua: this.request.headers['user-agent'] || '',
+                    updateIp: this.request.ip,
+                    updateUa: this.request.headers['user-agent'] || '',
                 },
             ) : { uid: 1 };
         if (!this.session) this.session = { uid: 1 };
@@ -302,6 +304,9 @@ function Route(route, RouteHandler, permission = null) {
             const args = {
                 ...ctx.params, ...ctx.query, ...ctx.request.body, domainId: 'system',
             };
+            if (h.request.host !== await system.get('server.host')) {
+                args.domainId = h.request.url.split('//')[1].split(`.${await system.get('server.host')}`)[0] || '';
+            }
 
             if (h.___prepare) await h.___prepare(args);
             if (permission) h.checkPerm(permission);
@@ -437,8 +442,8 @@ async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('*', Handler);
-    server.listen(await system.get('listen.port'));
-    console.log('Server listening at: %s', await system.get('listen.port'));
+    server.listen(await system.get('server.port'));
+    console.log('Server listening at: %s', await system.get('server.port'));
 }
 
 global.Hydro.service.server = module.exports = {

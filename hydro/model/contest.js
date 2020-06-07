@@ -242,7 +242,7 @@ async function edit(domainId, tid, $set, type = document.TYPE_CONTEST) {
  * @param {string} domainId
  * @param {ObjectID} tid
  * @param {number} type
- * @returns {Tdoc}
+ * @returns {Promise<Tdoc>}
  */
 async function get(domainId, tid, type = document.TYPE_CONTEST) {
     let tdoc;

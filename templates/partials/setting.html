@@ -5,7 +5,7 @@
   </div>
   <div class="section__body">
   {% for setting in family_settings %}
-  {% if setting.ui == 'text' or setting.ui == 'password' %}
+  {% if setting.ui == 'text' or setting.ui == 'password' or setting.ui == 'number' %}
     {{ form.form_text({
           type:setting.ui,
           label:setting.name,

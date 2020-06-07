@@ -56,14 +56,11 @@ async function build(type) {
             rmdir(root(`.build/module/${f}`));
         }
     }
-    const modules = [
-        'builtin', 'contest-rule-homework', 'judger', 'migrate-vijos', 'module-pastebin',
-        'problem-import-syzoj', 'wiki',
-    ];
+    const modules = await fsp.readdir(root('.build/module'));
     const j = {};
     for (const m of modules) {
         try {
-            const d = await fsp.readFile(root(`.build/module/${m}.hydro`));
+            const d = await fsp.readFile(root(`.build/module/${m}`));
             j[m] = d.toString('base64');
         } catch (e) {
             console.error(`Module pack failed: ${m}`);

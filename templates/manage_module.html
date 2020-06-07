@@ -6,16 +6,10 @@
       <h1>{{ _('Add Module') }}</h1>
     </div></div>
     <div class="row">
-      <div class="medium-6 columns">
+      <div class="medium-12 columns">
         <label>
           {{ _('URL') }}
           <input name="url" type="text" class="textbox" autocomplete="off" data-autofocus>
-        </label>
-      </div>
-      <div class="medium-6 columns">
-        <label>
-          {{ _('ID (Optional)') }}
-          <input name="id" type="text" class="textbox" autocomplete="off">
         </label>
       </div>
     </div>
@@ -55,10 +49,9 @@
           <td class="col--size">{{ size(module.size) if module.size else '?' }}</td>
           <td class="col--version">{{ module.version|default('?') }}</td>
           <td class="col--action">
-            <a class="typo-a" href="/manage/module/download/{{ module.filename }}">{{ _('Download') }}</a>
             <form method="post">
               <input type="hidden" name="operation" value="delete">
-              <input type="hidden" name="id" value="{{ module.id }}">
+              <input type="hidden" name="id" value="{{ module.filename }}">
               <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
               <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
               <input type="submit" class="typo-a" value="{{ _('Delete') }}">

@@ -163,9 +163,9 @@ class RoleAlreadyExistError extends ForbiddenError {
 }
 
 class ProblemNotFoundError extends NotFoundError {
-    constructor(pid) {
+    constructor(domainId, pid) {
         super('ProblemNotFoundError');
-        this.params = [pid];
+        this.params = [domainId, pid];
     }
 }
 

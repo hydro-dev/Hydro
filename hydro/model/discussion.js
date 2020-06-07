@@ -2,8 +2,17 @@ const { ObjectID } = require('bson');
 const problem = require('./problem');
 const document = require('./document');
 const contest = require('./contest');
+const training = require('./training');
 const { PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { DocumentNotFoundError } = require('../error');
+
+const typeDisplay = {
+    [document.TYPE_PROBLEM]: 'problem',
+    [document.TYPE_CONTEST]: 'contest',
+    [document.TYPE_DISCUSSION_NODE]: 'node',
+    [document.TYPE_TRAINING]: 'training',
+    [document.TYPE_HOMEWORK]: 'homework',
+};
 
 function add(domainId, parentType, parentId, owner, title, content, ip = null, highlight = false) {
     return document.add(
@@ -115,9 +124,7 @@ function getStatus(domainId, did, uid) {
 }
 
 function addNode(domainId, _id, category) {
-    return document.add(
-        domainId, _id, 1, document.TYPE_DISCUSSION_NODE, null, null, null, { category },
-    );
+    return document.add(domainId, category, 1, document.TYPE_DISCUSSION_NODE, _id);
 }
 
 function getNode(domainId, _id) {
@@ -125,17 +132,32 @@ function getNode(domainId, _id) {
 }
 
 async function getVnode(domainId, ddoc, handler) {
-    if (ddoc.parentType === 'problem') {
+    if (ddoc.parentType === document.TYPE_PROBLEM) {
         const pdoc = await problem.getById(domainId, ddoc.parentId);
         if (!pdoc) return null;
         if (pdoc.hidden && handler) handler.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
         return { ...pdoc, type: ddoc.parentType, id: ddoc.parentId };
-    } if (ddoc.parentType === 'contest') {
+    }
+    if (ddoc.parentType === document.TYPE_CONTEST) {
         const tdoc = await contest.get(domainId, ddoc.parentId);
         return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
-    } if (ddoc.parentType === 'node') {
+    }
+    if (ddoc.parentType === document.TYPE_DISCUSSION_NODE) {
         const ndoc = await getNode(domainId, ddoc.parentId);
-        return { title: ndoc._id, type: ddoc.parentType, id: ddoc.parentId };
+        return {
+            ...ndoc,
+            title: ddoc.parentId,
+            type: ddoc.parentType,
+            id: ddoc.parentId,
+        };
+    }
+    if (ddoc.parentType === document.TYPE_TRAINING) {
+        const tdoc = await training.get(domainId, ddoc.parentId);
+        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
+    }
+    if (ddoc.parentType === document.TYPE_HOMEWORK) {
+        const tdoc = await contest.get(domainId, ddoc.parentId, document.TYPE_HOMEWORK);
+        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
     }
     return {
         title: 'Missing Node',
@@ -147,13 +169,15 @@ async function getVnode(domainId, ddoc, handler) {
 async function getListVnodes(domainId, ddocs, handler) {
     const res = {};
     for (const ddoc of ddocs) {
+        if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
         // FIXME no-await-in-loop
-        res[ddoc._id] = await getVnode(domainId, ddoc, handler); // eslint-disable-line no-await-in-loop
+        res[ddoc.parentType][ddoc.parentId] = await getVnode(domainId, ddoc, handler); // eslint-disable-line no-await-in-loop
     }
     return res;
 }
 
 global.Hydro.model.discussion = module.exports = {
+    typeDisplay,
     add,
     get,
     edit,

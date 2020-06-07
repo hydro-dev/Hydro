@@ -1,7 +1,5 @@
 FROM mhart/alpine-node:slim-10
 WORKDIR /app
-ADD .uibuild .build /app/
-RUN mkdir /config 
-VOLUME [ "/config" ]
+ADD .build /app
 EXPOSE 8888
 CMD ["node", ".build/development.js"]

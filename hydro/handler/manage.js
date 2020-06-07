@@ -78,10 +78,21 @@ class SystemSettingHandler extends SystemHandler {
             if (typeof args[key] === 'object') {
                 const subtasks = [];
                 for (const sub in args[key]) {
-                    subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                    const s = setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`];
+                    if (s) {
+                        if (s.ui === 'number') args[key][sub] = Number(args[key][sub]);
+                        console.log(s);
+                        subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                    }
                 }
                 tasks.push(Promise.all(subtasks));
-            } else tasks.push(system.set(key, args[key]));
+            } else {
+                const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
+                if (s) {
+                    if (s.ui === 'number') args[key] = Number(args[key]);
+                    tasks.push(system.set(key, args[key]));
+                }
+            }
         }
         await Promise.all(tasks);
         this.back();
