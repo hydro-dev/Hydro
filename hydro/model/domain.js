@@ -25,7 +25,7 @@ function add(domainId, owner, name) {
         tasks.push(
             document.add(
                 domainId, builtin.BUILTIN_ROLES[id].perm, owner,
-                document.TYPE_DOMAIN_ROLE, id,
+                document.TYPE_DOMAIN_USER, id,
             ),
         );
     }

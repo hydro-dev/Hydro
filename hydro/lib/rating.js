@@ -1,9 +1,9 @@
 class User {
-    constructor(rank, old, handle = 0) {
+    constructor(rank, old, uid = 0) {
         this.rank = rank;
         this.old = old;
         this.seed = 1;
-        this.handle = handle.toString();
+        this.uid = uid;
     }
 }
 

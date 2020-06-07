@@ -272,7 +272,7 @@ async function load() {
         }
     }
     const builtinScript = [
-        'install', 'uninstall', 'rating',
+        'install', 'uninstall', 'rating', 'recalcRating',
     ];
     for (const i of builtinScript) require(`./script/${i}`);
     await script();

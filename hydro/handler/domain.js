@@ -1,9 +1,34 @@
 const user = require('../model/user');
 const domain = require('../model/domain');
 const system = require('../model/system');
+const paginate = require('../lib/paginate');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
 const { RoleAlreadyExistError, ValidationError, PermissionError } = require('../error');
+
+class DomainRankHandler extends Handler {
+    async get({ domainId, page = 1 }) {
+        const [dudocs, upcount, ucount] = await paginate(
+            user.getMultiInDomain(domainId).sort({ rating: -1 }),
+            page,
+            100,
+        );
+        let udocs = [];
+        // eslint-disable-next-line no-await-in-loop
+        for (const uid of dudocs.map((dudoc) => dudoc.uid)) {
+            udocs.push(user.getById(domainId, uid));
+        }
+        udocs = await Promise.all(udocs);
+        const path = [
+            ['Hydro', '/'],
+            ['domain_rank', null],
+        ];
+        this.response.template = 'domain_rank.html';
+        this.response.body = {
+            udocs, upcount, ucount, page, path,
+        };
+    }
+}
 
 class DomainCreateHandler extends Handler {
     async prepare() {
@@ -158,6 +183,7 @@ class DomainRoleHandler extends ManageHandler {
 }
 
 async function apply() {
+    Route('/ranking', DomainRankHandler);
     Route('/domain/create', DomainCreateHandler);
     Route('/domain/dashboard', DomainDashboardHandler);
     Route('/domain/edit', DomainEditHandler);

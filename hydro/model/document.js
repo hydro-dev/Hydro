@@ -5,7 +5,7 @@ const db = require('../service/db');
 const coll = db.collection('document');
 const collStatus = db.collection('document.status');
 
-const TYPE_DOMAIN_ROLE = 0;
+const TYPE_DOMAIN_USER = 0;
 const TYPE_PROBLEM = 10;
 const TYPE_PROBLEM_SOLUTION = 11;
 const TYPE_PROBLEM_LIST = 12;
@@ -353,7 +353,7 @@ global.Hydro.model.document = module.exports = {
     setStatus,
     setSub,
 
-    TYPE_DOMAIN_ROLE,
+    TYPE_DOMAIN_USER,
     TYPE_CONTEST,
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,

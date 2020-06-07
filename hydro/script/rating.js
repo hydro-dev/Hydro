@@ -14,9 +14,8 @@ async function run({ domainId, contestId }) {
     for (const result of rankedTsdocs) {
         users.push({ ...result[1], rank: result[0], old: udict[result[1].uid].rating || 1500 });
     }
-    console.log(users);
     const rated = rating(users);
-    console.log(rated);
+    return rated;
 }
 
 global.Hydro.script.rating = module.exports = { run };
