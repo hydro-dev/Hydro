@@ -14,7 +14,7 @@ Hydro 的界面基于 Vijos 二次开发。
 #### 直接部署：
 
 安装mongodb （省略）  
-下载Github Actions自动编译的 development.js 直接运行即可。
+下载Github Actions自动编译的 app.js 直接运行即可。
 
 ## 鸣谢
 

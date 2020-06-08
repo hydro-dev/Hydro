@@ -66,7 +66,7 @@ async function build(type) {
             console.error(`Module pack failed: ${m}`);
         }
     }
-    const f = fs.readFileSync(root('.build/development.js')).toString();
+    const f = fs.readFileSync(root('.build/app.js')).toString();
     const installer = fs.readFileSync(root('tool/install.js')).toString();
     const file = `global._hydroModule=${JSON.stringify(j)};${f}`;
     fs.writeFileSync(root('.build/full.js'), file);

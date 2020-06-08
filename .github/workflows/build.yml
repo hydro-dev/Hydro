@@ -22,8 +22,8 @@ jobs:
         yarn build:production
     - uses: actions/upload-artifact@v1
       with:
-        name: development.js
-        path: .build/development.js
+        name: app.js
+        path: .build/app.js
     - uses: actions/upload-artifact@v1
       with:
         name: full.js

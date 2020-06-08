@@ -5,6 +5,8 @@ const fs = require('fs');
 const os = require('os');
 const zlib = require('zlib');
 const path = require('path');
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
 const yaml = require('js-yaml');
 
 function ensureDir(dir) {
@@ -31,12 +33,9 @@ if (global._hydroModule) {
     }
 }
 
-async function preload() {
+async function unzip() {
     for (const i of pending) {
         try {
-            if (i.os) {
-                if (!i.os.includes(os.platform().toLowerCase())) throw new Error('Unsupported OS');
-            }
             if (i.file) {
                 i.files = {};
                 ensureDir(path.resolve(os.tmpdir(), 'hydro', i.id));
@@ -49,6 +48,21 @@ async function preload() {
                         i.files[n] = e;
                     }
                 }
+            }
+        } catch (e) {
+            i.fail = true;
+            fail.push(i.id);
+            console.error(`Module Load Fail: ${i.id}`);
+            console.error(e);
+        }
+    }
+}
+
+async function preload() {
+    for (const i of pending) {
+        try {
+            if (i.os) {
+                if (!i.os.includes(os.platform().toLowerCase())) throw new Error('Unsupported OS');
             }
         } catch (e) {
             i.fail = true;
@@ -182,23 +196,33 @@ async function install() {
     await setup.setup();
 }
 
-async function load() {
+const builtinLib = [
+    'axios', 'download', 'i18n', 'mail', 'markdown',
+    'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
+    'template', 'validator', 'nav', 'sysinfo',
+];
+
+const builtinModel = [
+    'builtin', 'document', 'domain', 'blacklist', 'opcount',
+    'setting', 'token', 'user', 'problem', 'record',
+    'contest', 'message', 'solution', 'training', 'file',
+    'discussion', 'system',
+];
+
+const builtinHandler = [
+    'home', 'problem', 'record', 'judge', 'user',
+    'contest', 'training', 'discussion', 'manage', 'import',
+    'misc', 'homework', 'domain',
+];
+
+const builtinScript = [
+    'install', 'uninstall', 'rating', 'recalcRating',
+];
+
+async function loadAsMaster() {
     ensureDir(path.resolve(os.tmpdir(), 'hydro'));
-    global.Hydro = {
-        handler: {},
-        service: {},
-        model: {},
-        script: {},
-        lib: {},
-        nodeModules: {
-            bson: require('bson'),
-            'js-yaml': require('js-yaml'),
-            mongodb: require('mongodb'),
-        },
-        template: {},
-        ui: {},
-    };
     pending.push(...await require('./lib/hpm').getInstalled());
+    await unzip();
     await preload();
     require('./lib/i18n');
     require('./utils');
@@ -221,11 +245,6 @@ async function load() {
         bus.subscribe(['system_database_connected'], h);
         require('./service/db');
     });
-    const builtinLib = [
-        'axios', 'download', 'i18n', 'mail', 'markdown',
-        'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
-        'template', 'validator', 'nav', 'sysinfo',
-    ];
     for (const i of builtinLib) require(`./lib/${i}`);
     await lib();
     require('./service/gridfs');
@@ -233,12 +252,6 @@ async function load() {
     const server = require('./service/server');
     await server.prepare();
     await service();
-    const builtinModel = [
-        'builtin', 'document', 'domain', 'blacklist', 'opcount',
-        'setting', 'token', 'user', 'problem', 'record',
-        'contest', 'message', 'solution', 'training', 'file',
-        'discussion',
-    ];
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
         if (m.ensureIndexes) await m.ensureIndexes();
@@ -247,13 +260,8 @@ async function load() {
     const dbVer = await system.get('db.ver');
     if (dbVer !== 1) {
         const ins = require('./script/install');
-        await ins.run('Root', 'rootroot');
+        await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    const builtinHandler = [
-        'home', 'problem', 'record', 'judge', 'user',
-        'contest', 'training', 'discussion', 'manage', 'import',
-        'misc', 'homework', 'domain',
-    ];
     for (const i of builtinHandler) require(`./handler/${i}`);
     await model();
     await handler();
@@ -271,15 +279,129 @@ async function load() {
             }
         }
     }
-    const builtinScript = [
-        'install', 'uninstall', 'rating', 'recalcRating',
-    ];
+    for (const i of builtinScript) require(`./script/${i}`);
+    await script();
+    pending = [];
+    await server.start(await system.get('server.port'));
+}
+
+async function loadAsWorker() {
+    pending.push(...await require('./lib/hpm').getInstalled());
+    await preload();
+    require('./lib/i18n');
+    require('./utils');
+    require('./error');
+    require('./permission');
+    require('./options');
+    await Promise.all([locale(), template()]);
+    const bus = require('./service/bus');
+    await new Promise((resolve) => {
+        const h = () => {
+            console.log('Database connected');
+            bus.unsubscribe(['system_database_connected'], h);
+            resolve();
+        };
+        bus.subscribe(['system_database_connected'], h);
+        require('./service/db');
+    });
+    for (const i of builtinLib) require(`./lib/${i}`);
+    await lib();
+    require('./service/gridfs');
+    const server = require('./service/server');
+    await server.prepare();
+    await service();
+    for (const i of builtinModel) require(`./model/${i}`);
+    for (const i of builtinHandler) require(`./handler/${i}`);
+    await model();
+    await handler();
+    for (const i in global.Hydro.handler) {
+        await global.Hydro.handler[i]();
+    }
+    const notfound = require('./handler/notfound');
+    await notfound();
+    for (const i in global.Hydro.service) {
+        if (global.Hydro.service[i].postInit) {
+            try {
+                await global.Hydro.service[i].postInit();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
     for (const i of builtinScript) require(`./script/${i}`);
     await script();
     pending = [];
     await server.start();
 }
 
+async function terminate() {
+    for (const task of global.onDestory) {
+        // eslint-disable-next-line no-await-in-loop
+        await task();
+    }
+    process.exit(0);
+}
+
+async function load() {
+    global.Hydro = {
+        handler: {},
+        service: {},
+        model: {},
+        script: {},
+        lib: {},
+        nodeModules: {
+            bson: require('bson'),
+            'js-yaml': require('js-yaml'),
+            mongodb: require('mongodb'),
+        },
+        template: {},
+        ui: {},
+    };
+    global.onDestory = [];
+    if (cluster.isMaster) {
+        console.log(`Master ${process.pid} Starting`);
+        process.stdin.setEncoding('utf8');
+        process.stdin.on('data', async (input) => {
+            try {
+                const t = eval(input.toString().trim()); // eslint-disable-line no-eval
+                if (t instanceof Promise) console.log(await t);
+                else console.log(t);
+            } catch (e) {
+                console.warn(e);
+            }
+        });
+        process.on('unhandledRejection', (e) => console.log(e));
+        process.on('SIGINT', terminate);
+        await loadAsMaster();
+        cluster.on('exit', (worker, code, signal) => {
+            console.log(`Worker ${worker.process.pid} exit: ${code} ${signal}`);
+        });
+        cluster.on('disconnect', (worker) => {
+            console.log(`Worker ${worker.process.pid} disconnected`);
+        });
+        cluster.on('listening', (worker, address) => {
+            console.log(`Worker ${worker.process.pid} listening at `, address);
+        });
+        cluster.on('online', (worker) => {
+            console.log(`Worker ${worker.process.pid} is online`);
+        });
+        for (let i = 0; i < numCPUs; i++) {
+            cluster.fork();
+        }
+    } else {
+        console.log(`Worker ${process.pid} Starting`);
+        await loadAsWorker();
+        console.log(`Worker ${process.pid} Started`);
+    }
+}
+
 module.exports = {
     load, pending, active, fail,
 };
+
+if (!module.parent) {
+    load().catch((e) => {
+        console.error(e);
+        process.exit(1);
+    });
+}

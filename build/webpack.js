@@ -22,7 +22,7 @@ const build = async (type) => {
     const config = {
         mode: type,
         entry: {
-            development: root('hydro/development.js'),
+            app: root('hydro/loader.js'),
         },
         output: {
             filename: '[name].js',

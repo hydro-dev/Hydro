@@ -438,12 +438,12 @@ function Validate(key, func) {
     else validate[key] = [func];
 }
 
-async function start() {
+async function start(port) {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('*', Handler);
-    server.listen(await system.get('server.port'));
-    console.log('Server listening at: %s', await system.get('server.port'));
+    server.listen(port);
+    if (port) console.log('Server listening at: %s', port);
 }
 
 global.Hydro.service.server = module.exports = {
