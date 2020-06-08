@@ -258,10 +258,10 @@ async function load() {
     await model();
     await handler();
     for (const i in global.Hydro.handler) {
-        await global.Hydro.handler[i].apply();
+        await global.Hydro.handler[i]();
     }
     const notfound = require('./handler/notfound');
-    await notfound.apply();
+    await notfound();
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {

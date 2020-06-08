@@ -452,15 +452,7 @@ async function apply() {
     Route('/homework/:tid/edit', HomeworkEditHandler);
 }
 
-global.Hydro.handler.homework = {
-    HomeworkMainHandler,
-    HomeworkCreateHandler,
-    HomeworkDetailHandler,
-    HomeworkDetailProblemHandler,
-    HomeworkDetailProblemSubmitHandler,
-    HomeworkEditHandler,
-    apply,
-};
+global.Hydro.handler.homework = module.exports = apply;
 
 /*
 

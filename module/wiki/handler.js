@@ -23,6 +23,4 @@ async function apply() {
     Route('/wiki/:name', module.exports.WikiHandler);
 }
 
-global.Hydro.handler.wiki = module.exports = {
-    WikiHandler, apply,
-};
+global.Hydro.handler.wiki = module.exports = apply;

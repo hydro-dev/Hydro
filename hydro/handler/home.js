@@ -285,23 +285,15 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 }
 
 async function apply() {
-    Route('/', module.exports.HomeHandler);
-    Route('/home/security', module.exports.HomeSecurityHandler);
-    Route('/home/changeMail/:code', module.exports.UserChangemailWithCodeHandler);
-    Route('/home/settings/:category', module.exports.HomeSettingsHandler);
-    Route('/home/messages', module.exports.HomeMessagesHandler);
-    Connection('/home/messages-conn', module.exports.HomeMessagesConnectionHandler);
+    Route('/', HomeHandler);
+    Route('/home/security', HomeSecurityHandler);
+    Route('/home/changeMail/:code', UserChangemailWithCodeHandler);
+    Route('/home/settings/:category', HomeSettingsHandler);
+    Route('/home/messages', HomeMessagesHandler);
+    Connection('/home/messages-conn', HomeMessagesConnectionHandler);
 }
 
-global.Hydro.handler.home = module.exports = {
-    HomeHandler,
-    HomeSecurityHandler,
-    HomeSettingsHandler,
-    UserChangemailWithCodeHandler,
-    HomeMessagesHandler,
-    HomeMessagesConnectionHandler,
-    apply,
-};
+global.Hydro.handler.home = module.exports = apply;
 
 /*
 @app.route('/home/file', 'home_file', global_route=True)

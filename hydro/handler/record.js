@@ -160,11 +160,4 @@ async function apply() {
     Connection('/record-detail-conn', RecordDetailConnectionHandler);
 }
 
-global.Hydro.handler.record = module.exports = {
-    RecordListHandler,
-    RecordDetailHandler,
-    RecordRejudgeHandler,
-    RecordMainConnectionHandler,
-    RecordDetailConnectionHandler,
-    apply,
-};
+global.Hydro.handler.record = module.exports = apply;

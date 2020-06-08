@@ -190,6 +190,13 @@ async function setStatus(domainId, docType, docId, uid, args) {
     return res.value;
 }
 
+function setMultiStatus(domainId, docType, query, args) {
+    return collStatus.updateMany(
+        { domainId, docType, ...query },
+        { $set: args },
+    );
+}
+
 async function setIfNotStatus(domainId, docType, docId, uid, key, value, ifNot, args) {
     const res = await collStatus.findOneAndUpdate(
         {
@@ -351,6 +358,7 @@ global.Hydro.model.document = module.exports = {
     set,
     setIfNotStatus,
     setStatus,
+    setMultiStatus,
     setSub,
 
     TYPE_DOMAIN_USER,

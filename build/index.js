@@ -67,8 +67,14 @@ async function build(type) {
         }
     }
     const f = fs.readFileSync(root('.build/development.js')).toString();
+    const installer = fs.readFileSync(root('tool/install.js')).toString();
     const file = `global._hydroModule=${JSON.stringify(j)};${f}`;
     fs.writeFileSync(root('.build/full.js'), file);
+    const hydro = {};
+    hydro.app = Buffer.from(f).toString('base64');
+    hydro.modules = j;
+    const d = zlib.gzipSync(Buffer.from(JSON.stringify(hydro)), { level: -1 }).toString('base64');
+    fs.writeFileSync(root('.build/install.js'), `global.Hydro="${d}"; ${installer}`);
 }
 
 module.exports = build;

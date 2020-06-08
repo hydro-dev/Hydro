@@ -4,9 +4,9 @@ const sysinfo = require('../lib/sysinfo');
 const coll = db.collection('status');
 
 async function update() {
-    const [_id, $set] = await sysinfo.update();
+    const [mid, $set] = await sysinfo.update();
     await coll.updateOne(
-        { _id },
+        { mid, type: 'server' },
         { $set: { ...$set, updateAt: new Date() } },
         { upsert: true },
     );
@@ -15,7 +15,7 @@ async function update() {
 async function postInit() {
     const info = await sysinfo.get();
     await coll.updateOne(
-        { _id: info._id },
+        { mid: info.mid, type: 'server' },
         { $set: { ...info, updateAt: new Date(), type: 'server' } },
         { upsert: true },
     );

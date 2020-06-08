@@ -3,7 +3,6 @@ const permission = require('../permission');
 global.Hydro.ui.nav = [];
 
 const trueChecker = () => true;
-
 const Item = (path, name, prefix, perm, checker) => {
     if (perm && checker) {
         checker = ((_chk) => (handler) => _chk(handler) && handler.user.hasPerm(perm))(checker);
@@ -21,6 +20,8 @@ Item('/t', 'training_main', 'training', permission.PERM_VIEW_TRAINING);
 Item('/homework', 'homework_main', 'homework', permission.PERM_VIEW_HOMEWORK);
 Item('/discuss', 'discussion_main', 'discussion', permission.PERM_VIEW_DISCUSSION);
 Item('/c', 'contest_main', 'contest', permission.PERM_VIEW_CONTEST);
+Item('/record', 'record_main', 'record');
+Item('/ranking', 'domain_rank', 'domain_rank');
 Item('/domain/dashboard', 'domain_dashboard', 'domain', permission.PERM_MANAGE);
 Item('/manage/dashboard', 'manage', 'manage', null, (handler) => handler.user.priv === 1);
 

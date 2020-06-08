@@ -18,7 +18,6 @@ const page = new NamedPage('manage_module', () => {
   });
   addModuleDialog.clear = function () {
     this.$dom.find('[name="url"]').val('');
-    this.$dom.find('[name="id"]').val('');
     return this;
   };
 
@@ -26,12 +25,10 @@ const page = new NamedPage('manage_module', () => {
     const action = await addModuleDialog.clear().open();
     if (action !== 'ok') return;
     const url = addModuleDialog.$dom.find('[name="url"]').val();
-    const id = addModuleDialog.$dom.find('[name="id"]').val();
     try {
       await request.post('', {
         operation: 'install',
         url,
-        id,
       });
       window.location.reload();
     } catch (error) {

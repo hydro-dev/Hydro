@@ -283,24 +283,14 @@ class DiscussionEditHandler extends DiscussionHandler {
 }
 
 async function apply() {
-    Route('/discuss', module.exports.DiscussionMainHandler);
-    Route('/discuss/:did', module.exports.DiscussionDetailHandler);
-    Route('/discuss/:did/edit', module.exports.DiscussionEditHandler);
-    Route('/discuss/:did/raw', module.exports.DiscussionDetailRawHandler);
-    Route('/discuss/:did/:drid/raw', module.exports.DiscussionReplyRawHandler);
-    Route('/discuss/:did/:drid/:drrid/raw', module.exports.DiscussionTailReplyRawHandler);
-    Route('/discuss/:type/:name', module.exports.DiscussionNodeHandler);
-    Route('/discuss/:type/:name/create', module.exports.DiscussionCreateHandler);
+    Route('/discuss', DiscussionMainHandler);
+    Route('/discuss/:did', DiscussionDetailHandler);
+    Route('/discuss/:did/edit', DiscussionEditHandler);
+    Route('/discuss/:did/raw', DiscussionDetailRawHandler);
+    Route('/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
+    Route('/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
+    Route('/discuss/:type/:name', DiscussionNodeHandler);
+    Route('/discuss/:type/:name/create', DiscussionCreateHandler);
 }
 
-global.Hydro.handler.discussion = module.exports = {
-    DiscussionMainHandler,
-    DiscussionDetailHandler,
-    DiscussionEditHandler,
-    DiscussionDetailRawHandler,
-    DiscussionReplyRawHandler,
-    DiscussionTailReplyRawHandler,
-    DiscussionNodeHandler,
-    DiscussionCreateHandler,
-    apply,
-};
+global.Hydro.handler.discussion = module.exports = apply;

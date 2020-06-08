@@ -44,7 +44,8 @@ class USER {
 }
 
 async function getInDomain(domainId, udoc) {
-    const dudoc = await document.getStatus(domainId, document.TYPE_DOMAIN_USER, 0, udoc._id);
+    let dudoc = await document.getStatus(domainId, document.TYPE_DOMAIN_USER, 0, udoc._id);
+    dudoc = dudoc || {};
     if (udoc._id === 1) dudoc.role = 'guest';
     if (udoc.priv === 1) dudoc.role = 'admin';
     const p = await document.get(domainId, document.TYPE_DOMAIN_USER, dudoc.role || 'default');
@@ -154,6 +155,10 @@ function setInDomain(domainId, uid, params) {
     return document.setStatus(domainId, document.TYPE_DOMAIN_USER, 0, uid, params);
 }
 
+function setMultiInDomain(domainId, query, params) {
+    return document.setMultiStatus(domainId, document.TYPE_DOMAIN_USER, query, params);
+}
+
 async function getPrefixList(prefix, limit = 50) {
     prefix = prefix.toLowerCase();
     const $regex = new RegExp(`\\A\\Q${prefix.replace(/\\E/gmi, /\\E\\E\\Q/gmi)}\\E`, 'gmi');
@@ -222,6 +227,7 @@ global.Hydro.model.user = module.exports = {
     setEmail,
     setPassword,
     setInDomain,
+    setMultiInDomain,
     getMultiInDomain,
     getPrefixList,
     setRole,

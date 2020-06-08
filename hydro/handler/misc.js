@@ -24,7 +24,11 @@ class StatusHandler extends Handler {
             desc = desc || 'Online';
             stats[i].status = desc;
         }
-        this.response.body = { stats };
+        console.log(stats);
+        const path = [
+            ['Hydro', '/'],
+        ];
+        this.response.body = { stats, path };
         this.response.template = 'status.html';
     }
 }
@@ -32,7 +36,12 @@ class StatusHandler extends Handler {
 class StatusUpdateHandler extends Handler {
     async post(args) {
         this.checkPerm(PERM_JUDGE);
-        await coll.updateOne({ _id: args._id }, { $set: { ...args, type: 'judger' } }, { upsert: true });
+        args.type = 'judger';
+        return coll.updateOne(
+            { mid: args.mid, type: 'judger' },
+            { $set: args },
+            { upsert: true },
+        );
     }
 }
 
@@ -50,9 +59,13 @@ async function apply() {
     Route('/language/:lang', SwitchLanguageHandler);
 }
 
-global.Hydro.handler.misc = module.exports = {
-    FileDownloadHandler,
-    StatusHandler,
-    StatusUpdateHandler,
-    apply,
+apply.updateStatus = function updateStatus(args) {
+    args.type = 'judger';
+    return coll.updateOne(
+        { mid: args.mid, type: 'judger' },
+        { $set: args },
+        { upsert: true },
+    );
 };
+
+global.Hydro.handler.misc = module.exports = apply;

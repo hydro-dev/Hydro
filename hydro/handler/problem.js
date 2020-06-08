@@ -443,40 +443,22 @@ class ProblemCreateHandler extends Handler {
 }
 
 async function apply() {
-    Route('/p', module.exports.ProblemHandler);
-    Route('/p/category/:category', module.exports.ProblemCategoryHandler);
-    Route('/problem/random', module.exports.ProblemRandomHandler);
-    Route('/p/:pid', module.exports.ProblemDetailHandler);
-    Route('/p/:pid/submit', module.exports.ProblemSubmitHandler);
-    Route('/p/:pid/pretest', module.exports.ProblemPretestHandler);
-    Route('/p/:pid/settings', module.exports.ProblemSettingsHandler);
-    Route('/p/:pid/statistics', module.exports.ProblemStatisticsHandler);
-    Route('/p/:pid/edit', module.exports.ProblemEditHandler);
-    Route('/p/:pid/upload', module.exports.ProblemDataUploadHandler);
-    Route('/p/:pid/data', module.exports.ProblemDataDownloadHandler);
-    Route('/p/:pid/solution', module.exports.ProblemSolutionHandler);
-    Route('/p/:pid/solution/:psid/raw', module.exports.ProblemSolutionRawHandler);
-    Route('/p/:pid/solution/:psid/:psrid/raw', module.exports.ProblemSolutionReplyRawHandler);
-    Route('/problem/create', module.exports.ProblemCreateHandler);
-    Connection('/p/:pid/pretest-conn', module.exports.ProblemPretestConnectionHandler);
+    Route('/p', ProblemHandler);
+    Route('/p/category/:category', ProblemCategoryHandler);
+    Route('/problem/random', ProblemRandomHandler);
+    Route('/p/:pid', ProblemDetailHandler);
+    Route('/p/:pid/submit', ProblemSubmitHandler);
+    Route('/p/:pid/pretest', ProblemPretestHandler);
+    Route('/p/:pid/settings', ProblemSettingsHandler);
+    Route('/p/:pid/statistics', ProblemStatisticsHandler);
+    Route('/p/:pid/edit', ProblemEditHandler);
+    Route('/p/:pid/upload', ProblemDataUploadHandler);
+    Route('/p/:pid/data', ProblemDataDownloadHandler);
+    Route('/p/:pid/solution', ProblemSolutionHandler);
+    Route('/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
+    Route('/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
+    Route('/problem/create', ProblemCreateHandler);
+    Connection('/p/:pid/pretest-conn', ProblemPretestConnectionHandler);
 }
 
-global.Hydro.handler.problem = module.exports = {
-    ProblemHandler,
-    ProblemCategoryHandler,
-    ProblemRandomHandler,
-    ProblemDetailHandler,
-    ProblemSubmitHandler,
-    ProblemPretestHandler,
-    ProblemSettingsHandler,
-    ProblemStatisticsHandler,
-    ProblemEditHandler,
-    ProblemDataUploadHandler,
-    ProblemDataDownloadHandler,
-    ProblemSolutionHandler,
-    ProblemSolutionRawHandler,
-    ProblemSolutionReplyRawHandler,
-    ProblemCreateHandler,
-    ProblemPretestConnectionHandler,
-    apply,
-};
+global.Hydro.handler.problem = module.exports = apply;

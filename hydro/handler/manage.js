@@ -1,57 +1,45 @@
-const domain = require('../model/domain');
 const setting = require('../model/setting');
 const system = require('../model/system');
 const { Route, Handler } = require('../service/server');
-const { PERM_MANAGE } = require('../permission');
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
 const { PermissionError } = require('../error');
 
-class ManageHandler extends Handler {
-    async prepare({ domainId }) {
-        this.checkPerm(PERM_MANAGE);
-        this.domain = await domain.get(domainId);
+class SystemHandler extends Handler {
+    async prepare() {
+        if (!this.user.priv) throw new PermissionError('???');
+        this.body = {
+            path: [
+                ['Hydro', '/'],
+                ['manage_main', '/manage'],
+            ],
+        };
     }
 }
 
-class ManageMainHandler extends ManageHandler {
+class SystemMainHandler extends SystemHandler {
     async get() {
         this.response.redirect = '/manage/dashboard';
     }
 }
 
-class ManageDashboardHandler extends ManageHandler {
+class SystemDashboardHandler extends SystemHandler {
     async get() {
-        const path = [
-            ['Hydro', '/'],
-            ['manage', '/manage'],
-            ['manage_dashboard', null],
-        ];
         this.response.template = 'manage_dashboard.html';
-        this.response.body = { domain: this.domain, path };
-    }
-}
-
-class SystemHandler extends Handler {
-    async prepare() {
-        if (!this.user.priv) throw new PermissionError('???');
+        this.response.body.path.push(['manage_dashboard', null]);
     }
 }
 
 class SystemModuleHandler extends SystemHandler {
     async get() {
-        const installed = await hpm.getInstalled();
-        const path = [
-            ['Hydro', '/'],
-            ['manage', '/manage'],
-            ['manage_module', null],
-        ];
-        this.response.body = { installed, active: loader.active, path };
+        this.response.body.path.push(['manage_module', null]);
+        this.response.body.installed = await hpm.getInstalled();
+        this.response.active = loader.active;
         this.response.template = 'manage_module.html';
     }
 
-    async postInstall({ url, id }) {
-        await hpm.install(url, id);
+    async postInstall({ url }) {
+        await hpm.install(url);
         this.back();
     }
 
@@ -61,15 +49,29 @@ class SystemModuleHandler extends SystemHandler {
     }
 }
 
+class SystemScriptHandler extends SystemHandler {
+    async get() {
+        this.response.template = 'manage_script.html';
+        this.response.body.scripts = global.Hydro.script;
+        this.response.body.path.push(['manage_script', null]);
+    }
+
+    async post({ id, args }) {
+        // TODO Do not use console.log
+        await global.Hydro.script[id].run(args, console.log);
+        this.back();
+    }
+}
+
 class SystemSettingHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_settings.html';
-        const current = {};
-        const settings = setting.SYSTEM_SETTINGS;
-        for (const s of settings) {
-            current[s.key] = await system.get(s.key);
+        this.response.body.path.push(['manage_settings', null]);
+        this.response.body.current = {};
+        this.response.body.settings = setting.SYSTEM_SETTINGS;
+        for (const s of this.response.body.settings) {
+            this.response.body.current[s.key] = await system.get(s.key);
         }
-        this.response.body = { current, settings };
     }
 
     async post(args) {
@@ -99,16 +101,11 @@ class SystemSettingHandler extends SystemHandler {
 }
 
 async function apply() {
-    Route('/manage', module.exports.ManageMainHandler);
-    Route('/manage/dashboard', module.exports.ManageDashboardHandler);
+    Route('/manage', SystemMainHandler);
+    Route('/manage/dashboard', SystemDashboardHandler);
+    Route('/manage/script', SystemScriptHandler);
     Route('/manage/module', SystemModuleHandler);
     Route('/manage/setting', SystemSettingHandler);
 }
 
-global.Hydro.handler.manage = module.exports = {
-    ManageMainHandler,
-    ManageDashboardHandler,
-    SystemModuleHandler,
-    SystemSettingHandler,
-    apply,
-};
+global.Hydro.handler.manage = module.exports = apply;

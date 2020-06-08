@@ -133,10 +133,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
 }
 
 async function apply() {
-    Route('/judge', module.exports.JudgeHandler);
-    Connection('/judge/conn', module.exports.JudgeConnectionHandler);
+    Route('/judge', JudgeHandler);
+    Connection('/judge/conn', JudgeConnectionHandler);
 }
 
-global.Hydro.handler.judge = module.exports = {
-    JudgeHandler, JudgeConnectionHandler, apply, next, end,
-};
+apply.next = next;
+apply.end = end;
+
+global.Hydro.handler.judge = module.exports = apply;

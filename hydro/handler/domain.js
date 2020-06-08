@@ -192,6 +192,4 @@ async function apply() {
     Route('/domain/role', DomainRoleHandler);
 }
 
-global.Hydro.handler.domain = module.exports = {
-    apply,
-};
+global.Hydro.handler.domain = module.exports = apply;

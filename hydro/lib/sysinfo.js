@@ -21,13 +21,13 @@ async function get() {
     let battery;
     if (!Battery.hasbattery) battery = 'No battery';
     else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.ischarging ? ' Charging' : ''}`;
-    const _id = OsInfo.serial;
+    const mid = OsInfo.serial;
     cache.cpu = cpu;
     cache.osinfo = osinfo;
     cache.flags = flags;
-    cache._id = _id;
+    cache.mid = mid;
     return {
-        _id, cpu, memory, osinfo, load, flags, CpuTemp, battery,
+        mid, cpu, memory, osinfo, load, flags, CpuTemp, battery,
     };
 }
 
@@ -39,7 +39,7 @@ async function update() {
         systeminformation.battery(),
     ]);
     const {
-        _id, cpu, osinfo, flags,
+        mid, cpu, osinfo, flags,
     } = cache;
     const memory = `${size(Memory.active)}/${size(Memory.total)}`;
     const load = `${CurrentLoad.avgload}`;
@@ -47,12 +47,12 @@ async function update() {
     if (!Battery.hasbattery) battery = 'No battery';
     else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.ischarging ? ' Charging' : ''}`;
     return [
-        _id,
+        mid,
         {
             memory, load, battery, CpuTemp,
         },
         {
-            _id, cpu, memory, osinfo, load, flags, battery, CpuTemp,
+            mid, cpu, memory, osinfo, load, flags, battery, CpuTemp,
         },
     ];
 }
