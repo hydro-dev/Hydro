@@ -207,7 +207,8 @@ const RULES = {
  * @returns {ObjectID} tid
  */
 function add(domainId, title, content, owner, rule,
-    beginAt = new Date(), endAt = new Date(), pids = [], data = {}, type = document.TYPE_CONTEST) {
+    beginAt = new Date(), endAt = new Date(), pids = [], rated = false,
+    data = {}, type = document.TYPE_CONTEST) {
     validator.checkTitle(title);
     validator.checkContent(content);
     if (!this.RULES[rule]) throw new ValidationError('rule');
@@ -217,7 +218,7 @@ function add(domainId, title, content, owner, rule,
     });
     this.RULES[rule].check(data);
     return document.add(domainId, content, owner, type, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0,
+        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
 }
 

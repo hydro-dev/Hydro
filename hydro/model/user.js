@@ -29,7 +29,7 @@ class USER {
         this.nSubmit = dudoc.nSubmit || 0;
         this.rating = dudoc.rating || 1500;
         this.perm = dudoc.perm;
-        this.role = dudoc.role;
+        this.role = dudoc.role || 'default';
     }
 
     hasPerm(p) {
@@ -39,7 +39,7 @@ class USER {
     checkPassword(password) {
         const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
         if (!h) throw new Error('Unknown hash method');
-        return h.check(password, this.salt(), this.hash());
+        return h.check(password, this.salt(), this.hash(), this);
     }
 }
 
@@ -120,6 +120,17 @@ async function inc(_id, field, n = 1) {
     return udoc;
 }
 
+function setInDomain(domainId, uid, params) {
+    return document.setStatus(domainId, document.TYPE_DOMAIN_USER, 0, uid, params);
+}
+
+async function incDomain(domainId, uid, field, n = 1) {
+    const dudoc = await getInDomain(domainId, { _id: uid });
+    dudoc[field] = dudoc[field] + n || n;
+    await setInDomain(domainId, uid, { [field]: dudoc[field] });
+    return dudoc;
+}
+
 async function create({
     uid, mail, uname, password, regip = '127.0.0.1', priv = perm.PRIV_NONE,
 }) {
@@ -149,10 +160,6 @@ async function create({
 
 function getMulti(params) {
     return coll.find(params);
-}
-
-function setInDomain(domainId, uid, params) {
-    return document.setStatus(domainId, document.TYPE_DOMAIN_USER, 0, uid, params);
 }
 
 function setMultiInDomain(domainId, query, params) {
@@ -193,8 +200,8 @@ function getRole(domainId, name) {
     return document.get(domainId, document.TYPE_DOMAIN_USER, name);
 }
 
-function getMultiInDomain(domainId) {
-    return document.getMultiStatus(domainId, document.TYPE_DOMAIN_USER);
+function getMultiInDomain(domainId, query) {
+    return document.getMultiStatus(domainId, document.TYPE_DOMAIN_USER, query);
 }
 
 function addRole(domainId, name, permission) {
@@ -223,6 +230,7 @@ global.Hydro.model.user = module.exports = {
     getByUname,
     getMulti,
     inc,
+    incDomain,
     setById,
     setEmail,
     setPassword,

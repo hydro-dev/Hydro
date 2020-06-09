@@ -216,7 +216,7 @@ const builtinHandler = [
 ];
 
 const builtinScript = [
-    'install', 'uninstall', 'rating', 'recalcRating',
+    'install', 'uninstall', 'rating', 'recalcRating', 'register',
 ];
 
 async function loadAsMaster() {
@@ -385,7 +385,7 @@ async function load() {
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} is online`);
         });
-        for (let i = 0; i < numCPUs; i++) {
+        for (let i = 1; i < numCPUs; i++) {
             cluster.fork();
         }
     } else {

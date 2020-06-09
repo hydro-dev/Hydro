@@ -95,7 +95,12 @@ class DomainUserHandler extends ManageHandler {
         const uids = [];
         const rudocs = {};
         const [udocs, roles] = await Promise.all([
-            user.getInDomain(domainId),
+            user.getMultiInDomain(domainId, {
+                $and: [
+                    { role: { $ne: 'default' } },
+                    { role: { $ne: null } },
+                ],
+            }).toArray(),
             user.getRoles(domainId),
         ]);
         for (const role of roles) rudocs[role._id] = [];
@@ -104,7 +109,7 @@ class DomainUserHandler extends ManageHandler {
             // TODO Improve here
             // eslint-disable-next-line no-await-in-loop
             const ud = await user.getById(domainId, udoc.uid);
-            rudocs[udoc.role].push({ ...ud, role: udoc.role });
+            rudocs[ud.role].push(ud);
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(domainId, uids);

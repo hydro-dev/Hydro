@@ -282,7 +282,7 @@ class ContestCreateHandler extends ContestHandler {
     }
 
     async post({
-        domainId, title, content, rule, beginAtDate, beginAtTime, duration, pids,
+        domainId, title, content, rule, beginAtDate, beginAtTime, duration, pids, rated = false,
     }) {
         let beginAt;
         try {
@@ -294,7 +294,7 @@ class ContestCreateHandler extends ContestHandler {
         pids = await this.verifyProblems(domainId, pids);
         const tid = await contest.add(
             domainId, title, content,
-            this.user._id, rule, beginAt, endAt, pids,
+            this.user._id, rule, beginAt, endAt, pids, rated,
         );
         this.response.body = { tid };
         this.response.redirect = `/c/${tid}`;

@@ -1,6 +1,6 @@
 {
     "name": "hydro",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "main": "hydro/development.js",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
@@ -35,8 +35,10 @@
         "build": "node build/index.js",
         "build:development": "node build/development.js",
         "build:production": "node build/production.js",
+        "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn && yarn build:production",
+        "start": "node hydro/loader.js",
         "pack": "pkg .",
-        "lint": "eslint build hydro module --fix"
+        "lint": "eslint build hydro module tool --fix"
     },
     "pkg": {
         "scripts": [

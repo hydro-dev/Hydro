@@ -302,7 +302,7 @@ function Route(route, RouteHandler, permission = null) {
             const method = ctx.method.toLowerCase();
             // TODO(masnn) domainId
             const args = {
-                ...ctx.params, ...ctx.query, ...ctx.request.body, domainId: 'system',
+                domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
             };
             if (h.request.host !== await system.get('server.host')) {
                 args.domainId = h.request.url.split('//')[1].split(`.${await system.get('server.host')}`)[0] || '';
@@ -399,7 +399,7 @@ function Connection(prefix, RouteConnHandler) {
     sock.on('connection', async (conn) => {
         const h = new RouteConnHandler(conn);
         try {
-            const args = { ...h.request.params, domainId: 'system' };
+            const args = { domainId: 'system', ...h.request.params };
 
             if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
             if (args.page) args.page = parseInt(args.page);

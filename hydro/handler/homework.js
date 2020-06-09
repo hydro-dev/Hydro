@@ -197,7 +197,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
     async post({
         domainId, title, content, beginAtDate, beginAtTime,
         penaltySinceDate, penaltySinceTime, extensionDays,
-        penaltyRules, pids,
+        penaltyRules, pids, rated = false,
     }) {
         let beginAt;
         let penaltySince;
@@ -216,7 +216,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
         if (penaltySince > endAt) throw new ValidationError('extensionDays');
         await this.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
-            'homework', beginAt, endAt, pids, { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
+            'homework', beginAt, endAt, pids, rated, { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
         this.response.redirect = `/homework/${tid}`;
     }

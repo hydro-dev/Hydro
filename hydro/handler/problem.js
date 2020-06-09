@@ -176,7 +176,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         });
         await Promise.all([
             record.judge(domainId, rid),
-            user.inc(this.user._id, 'nSubmit'),
+            user.incDomain(domainId, this.user._id, 'nSubmit'),
         ]);
         this.response.body = { rid };
         this.response.redirect = `/r/${rid}`;

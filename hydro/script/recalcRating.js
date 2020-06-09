@@ -14,28 +14,30 @@ async function run({ domainId, isSub = false }, report) {
         }
         return true;
     }
-    const contests = await contest.getMulti(domainId).sort('endAt', -1).toArray();
+    const contests = await contest.getMulti(domainId, { rated: true }).sort('endAt', -1).toArray();
     await report({ total: contests.length });
-    await user.setMultiInDomain(domainId, {}, { rating: 1500 });
+    const udict = {};
     for (const i in contests) {
         const tdoc = contests[i];
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tdoc.docId })
             .sort(contest.RULES[tdoc.rule].statusSort).toArray();
-        const udict = await user.getList(domainId, tsdocs.map((tsdoc) => tsdoc.uid));
         const rankedTsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
         const users = [];
         for (const result of rankedTsdocs) {
-            users.push({ ...result[1], rank: result[0], old: udict[result[1].uid].rating || 1500 });
+            users.push({ ...result[1], rank: result[0], old: udict[result[1].uid] || 1500 });
         }
         const rated = rating(users);
-        const tasks = [];
         for (const udoc of rated) {
-            tasks.push(user.setInDomain(domainId, udoc.uid, { rating: udoc.new }));
+            udict[udoc.uid] = udoc.new;
         }
-        await Promise.all(tasks);
         if (isSub) await report({ subProgress: (i + 1) / contests.length });
         else await report({ current: parseInt(i) + 1 });
     }
+    const tasks = [];
+    for (const uid in udict) {
+        tasks.push(user.setInDomain(domainId, uid, { rating: udict[uid] }));
+    }
+    await Promise.all(tasks);
     return true;
 }
 

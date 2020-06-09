@@ -56,7 +56,7 @@ async function run({ username, password } = {}) {
     }
     await Promise.all(tasks);
     tasks = [
-        allowFail(domain.add, 'system', 0),
+        domain.add('system', 0, 'Hydro').catch(() => domain.edit('system', { owner: 0, name: 'Hydro' })),
         collUser.updateOne({ _id: 0 }, {
             $set: defaults({
                 _id: 0,

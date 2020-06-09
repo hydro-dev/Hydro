@@ -8,7 +8,7 @@ const { PermissionError } = require('../error');
 class SystemHandler extends Handler {
     async prepare() {
         if (!this.user.priv) throw new PermissionError('???');
-        this.body = {
+        this.response.body = {
             path: [
                 ['Hydro', '/'],
                 ['manage_main', '/manage'],
@@ -58,7 +58,7 @@ class SystemScriptHandler extends SystemHandler {
 
     async post({ id, args }) {
         // TODO Do not use console.log
-        await global.Hydro.script[id].run(args, console.log);
+        await global.Hydro.script[id].run(JSON.parse(args), console.log);
         this.back();
     }
 }

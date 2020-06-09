@@ -15,7 +15,7 @@
                  row:false
                }) }}
             {{ form.form_text({
-                 columns:8,
+                 columns:4,
                  label:'Title',
                  name:'title',
                  placeholder:_('title'),
@@ -23,6 +23,14 @@
                  autofocus:true,
                  row:false
                }) }}
+            {{ form.form_checkbox({
+                columns:4,
+                label:'Rated',
+                name:'rated',
+                placeholder:_('rated'),
+                value:true,
+                row:false
+              }) }}
           </div><div class="row">
             {{ form.form_text({
                  columns:4,

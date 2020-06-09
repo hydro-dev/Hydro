@@ -34,151 +34,123 @@ const tasks = {
         gender: doc.gender,
         qq: doc.qq,
     }),
-    document: async (doc) => {
-        const res = {};
-        const mapper = {
-            _id: '_id',
-            doc_id: 'docId',
-            doc_type: 'docType',
-            num_submit: 'nSubmit',
-            num_accept: 'nAccept',
-            difficulty: 'difficulty',
-            pname: 'pid',
-            title: 'title',
-            content: 'content',
-            owner_uid: 'owner',
-            category: 'category',
-            hidden: 'hidden',
-            data: 'data',
-            tag: 'tag',
-            vote: 'vote',
-            reply: 'reply',
-            parent_doc_id: 'parentId',
-            parent_doc_type: 'parentType',
-            num_replies: 'nReply',
-            views: 'views',
-            highlight: 'highlight',
-            ip: 'ip',
-            domain_id: 'domainId',
-            update_at: 'updateAt',
-            begin_at: 'beginAt',
-            end_at: 'endAt',
-            penalty_since: 'penaltySince',
-            penalty_rules: {
-                field: 'penaltyRules',
-                processer: (rule) => {
-                    const n = {};
-                    for (const key in rule) {
-                        n[key / 3600] = rule;
-                    }
-                    return n;
-                },
+    document: {
+        _id: '_id',
+        doc_id: 'docId',
+        doc_type: 'docType',
+        num_submit: 'nSubmit',
+        num_accept: 'nAccept',
+        difficulty: 'difficulty',
+        pname: 'pid',
+        title: 'title',
+        content: 'content',
+        owner_uid: 'owner',
+        category: 'category',
+        hidden: 'hidden',
+        data: 'data',
+        tag: 'tag',
+        vote: 'vote',
+        reply: 'reply',
+        parent_doc_id: 'parentId',
+        parent_doc_type: 'parentType',
+        num_replies: 'nReply',
+        views: 'views',
+        highlight: 'highlight',
+        ip: 'ip',
+        domain_id: 'domainId',
+        update_at: 'updateAt',
+        begin_at: 'beginAt',
+        end_at: 'endAt',
+        penalty_since: 'penaltySince',
+        penalty_rules: {
+            field: 'penaltyRules',
+            processer: (rule) => {
+                const n = {};
+                for (const key in rule) {
+                    n[key / 3600] = rule;
+                }
+                return n;
             },
-            rule: {
-                field: 'rule',
-                processer: (rule) => {
-                    const rules = {
-                        2: 'oi',
-                        3: 'acm',
-                        11: 'homework',
-                    };
-                    return rules[rule];
-                },
+        },
+        rule: {
+            field: 'rule',
+            processer: (rule) => {
+                const rules = {
+                    2: 'oi',
+                    3: 'acm',
+                    11: 'homework',
+                };
+                return rules[rule];
             },
-            pids: {
-                field: 'pids',
-                processer: (pids) => pids.map((p) => pid(p)),
+        },
+        pids: {
+            field: 'pids',
+            processer: (pids) => pids.map((p) => pid(p)),
+        },
+        attend: 'attend',
+        desc: 'description',
+        enroll: 'enroll',
+        dag: {
+            field: 'dag',
+            processer: (dag) => {
+                const r = [];
+                for (const t of dag) {
+                    r.push({
+                        _id: t._id,
+                        title: t.title,
+                        requireNids: t.require_nids,
+                        pids: t.pids.map((id) => pid(id)),
+                    });
+                }
+                return r;
             },
-            attend: 'attend',
-            desc: 'description',
-            enroll: 'enroll',
-            dag: {
-                field: 'dag',
-                processer: (dag) => {
-                    const r = [];
-                    for (const t of dag) {
-                        r.push({
-                            _id: t._id,
-                            title: t.title,
-                            requireNids: t.require_nids,
-                            pids: t.pids.map((id) => pid(id)),
-                        });
-                    }
-                    return r;
-                },
-            },
-        };
-        for (const key in doc) {
-            if (typeof mapper[key] === 'string') {
-                res[mapper[key]] = doc[key];
-            } else if (typeof mapper[key] === 'object') {
-                res[mapper[key].field] = mapper[key].processer(doc[key]);
-            } else if (mapper[key] === null) {
-                // Ignore this key
-            } else {
-                console.log('Unknown key:', key);
-            }
-        }
-        return res;
+        },
     },
-    'document.status': async (doc) => {
-        const res = {};
-        const mapper = {
-            _id: '_id',
-            doc_id: 'docId',
-            doc_type: 'docType',
-            uid: 'uid',
-            domain_id: 'domainId',
-            num_accept: 'nAccept',
-            num_submit: 'nSubmit',
-            rp: 'rp',
-            status: 'status',
-            accept: 'accept',
-            vote: 'vote',
-            star: 'star',
-            enroll: 'enroll',
-            rid: 'rid',
-            rev: 'rev',
-            attend: 'attend',
-            journal: {
-                field: 'journal',
-                processer: (journal) => {
-                    const r = [];
-                    for (const i of journal) {
-                        r.push({ ...i, pid: pid(i.pid) });
-                    }
-                    return r;
-                },
+    'document.status': {
+        _id: '_id',
+        doc_id: 'docId',
+        doc_type: 'docType',
+        uid: 'uid',
+        domain_id: 'domainId',
+        num_accept: 'nAccept',
+        num_submit: 'nSubmit',
+        rp: 'rp',
+        status: 'status',
+        accept: 'accept',
+        vote: 'vote',
+        star: 'star',
+        enroll: 'enroll',
+        rid: 'rid',
+        rev: 'rev',
+        attend: 'attend',
+        journal: {
+            field: 'journal',
+            processer: (journal) => {
+                const r = [];
+                for (const i of journal) {
+                    r.push({ ...i, pid: pid(i.pid) });
+                }
+                return r;
             },
-            detail: {
-                field: 'detail',
-                processer: (detail) => {
-                    const r = [];
-                    for (const i of detail) {
-                        r.push({ ...i, pid: pid(i.pid) });
-                    }
-                    return r;
-                },
+        },
+        detail: {
+            field: 'detail',
+            processer: (detail) => {
+                const r = [];
+                for (const i of detail) {
+                    r.push({ ...i, pid: pid(i.pid) });
+                }
+                return r;
             },
-            score: 'score',
-            time: 'time',
-            done: 'done',
-            done_nids: 'doneNids',
-            done_pids: {
-                field: 'donePids',
-                processer: (pids) => pids.map((id) => pid(id)),
-            },
-        };
-        for (const key in doc) {
-            if (typeof mapper[key] === 'string') {
-                res[mapper[key]] = doc[key];
-            } else if (typeof mapper[key] === 'object') {
-                res[mapper[key].field] = mapper[key].processer(doc[key]);
-            } else {
-                console.log('Unknown key:', key);
-            }
-        }
-        return res;
+        },
+        score: 'score',
+        time: 'time',
+        done: 'done',
+        done_nids: 'doneNids',
+        done_pids: {
+            field: 'donePids',
+            processer: (pids) => pids.map((id) => pid(id)),
+        },
     },
     record: async (doc) => {
         const testCases = [];
@@ -211,6 +183,16 @@ const tasks = {
             testCases,
         };
     },
+    domain: {
+        _id: '_id',
+        doc_id: 'docId',
+        doc_type: 'docType',
+        owner_uid: 'owner',
+        name: 'name',
+        gravatar: 'gravatar',
+        bulletin: 'bulletin',
+        pid_counter: 'pidCounter',
+    },
     'fs.files': async (doc) => doc,
     'fs.chunks': async (doc) => doc,
     file: async (doc) => ({
@@ -227,6 +209,7 @@ const cursor = {
     document: (s) => s.collection('document').find({ doc_type: { $ne: 20 } }),
     'document.status': (s) => s.collection('document.status').find(),
     record: (s) => s.collection('record').find(),
+    domain: (s) => s.collection('domain').find(),
     'fs.files': (s) => s.collection('fs.files').find(),
     'fs.chunks': (s) => s.collection('fs.chunks').find(),
     file: (s) => s.collection('fs.files').find(),
@@ -250,6 +233,59 @@ async function discussionNode(src, report) {
                 }
             }
             await Promise.all(t).catch((e) => e);
+        }
+        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
+    }
+}
+
+async function domainUser(src, report) {
+    const count = await src.collection('domain.user').find().count();
+    await report({ progress: 1, message: `domain.user: ${count}` });
+    const total = Math.floor(count / 50);
+    for (let i = 0; i <= total; i++) {
+        const docs = await src.collection('domain.user')
+            .find().skip(i * 50).limit(50)
+            .toArray();
+        for (const doc of docs) {
+            const mapper = {
+                _id: '_id',
+                uid: 'uid',
+                join_at: 'joinAt',
+                role: 'role',
+                num_liked: 'nLike',
+                num_submit: 'nSubmit',
+                num_accept: 'nAccept',
+                num_problems: 'nProblems',
+                domain_id: 'domainId',
+                level: 'level',
+            };
+            const d = {};
+            for (const key in doc) {
+                if (typeof mapper[key] === 'string') {
+                    d[mapper[key]] = doc[key];
+                } else if (typeof mapper[key] === 'object') {
+                    d[mapper[key].field] = mapper[key].processer(doc[key]);
+                } else if (mapper[key] === null) {
+                    // Ignore this key
+                } else {
+                    console.log('Unknown key:', key);
+                }
+            }
+            const docWithoutId = {};
+            for (const key in d) {
+                if (key !== '_id') {
+                    docWithoutId[key] = d[key];
+                }
+            }
+            d.push(dst.collection('document').updateOne(
+                { _id: d._id },
+                {
+                    $set: {
+                        ...docWithoutId, docType: 0, docId: 1, role: docWithoutId.role || 'default',
+                    },
+                },
+                { upsert: true },
+            ));
         }
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
@@ -298,8 +334,25 @@ async function task(name, src, report) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
         const res = [];
         for (const doc of docs) {
-            const d = await tasks[name](doc);
+            let d = {};
+            if (typeof tasks[name].call === 'function') {
+                d = await tasks[name](doc);
+            } else {
+                const mapper = tasks[name];
+                for (const key in doc) {
+                    if (typeof mapper[key] === 'string') {
+                        res[mapper[key]] = doc[key];
+                    } else if (typeof mapper[key] === 'object') {
+                        res[mapper[key].field] = mapper[key].processer(doc[key]);
+                    } else if (mapper[key] === null) {
+                        // Ignore this key
+                    } else {
+                        console.log('Unknown key:', key);
+                    }
+                }
+            }
             if (d) {
+                if (d.rule) d.rated = true; // Hack contest rated field
                 const docWithoutId = {};
                 const docWithoutDid = {};
                 for (const key in d) {
@@ -380,6 +433,7 @@ async function migrateVijos({
     for (const i of d) await task(i, src, report);
     await fixPid(report);
     await discussionNode(src, report);
+    await domainUser(src, report);
     return true;
 }
 
