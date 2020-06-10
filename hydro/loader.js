@@ -3,11 +3,9 @@
 /* eslint-disable no-eval */
 const fs = require('fs');
 const os = require('os');
-const zlib = require('zlib');
 const path = require('path');
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
-const yaml = require('js-yaml');
 
 function ensureDir(dir) {
     if (!fs.existsSync(dir)) {
@@ -18,73 +16,30 @@ function ensureDir(dir) {
     }
 }
 
+function superRequire(p) {
+    // eslint-disable-next-line camelcase
+    if (typeof __non_webpack_require__ === 'function') {
+        // eslint-disable-next-line no-undef
+        return __non_webpack_require__(p);
+    } return require(p);
+}
+
 let pending = [];
 const active = [];
 const fail = [];
 
-if (global._hydroModule) {
-    for (const filename in global._hydroModule) {
-        const m = {
-            ...yaml.safeLoad(zlib.gunzipSync(Buffer.from(global._hydroModule[filename], 'base64'))),
-            filename,
-            isBuiltin: true,
-        };
-        pending.push(m);
-    }
-}
-
-async function unzip() {
-    for (const i of pending) {
-        try {
-            if (i.file) {
-                i.files = {};
-                ensureDir(path.resolve(os.tmpdir(), 'hydro', i.id));
-                for (const n in i.file) {
-                    if (i.file[n] === null) {
-                        ensureDir(path.resolve(os.tmpdir(), 'hydro', i.id, n));
-                    } else {
-                        const e = path.resolve(os.tmpdir(), 'hydro', i.id, n);
-                        fs.writeFileSync(e, Buffer.from(i.file[n], 'base64'), { mode: 755 });
-                        i.files[n] = e;
-                    }
-                }
-            }
-        } catch (e) {
-            i.fail = true;
-            fail.push(i.id);
-            console.error(`Module Load Fail: ${i.id}`);
-            console.error(e);
-        }
-    }
-}
-
-async function preload() {
-    for (const i of pending) {
-        try {
-            if (i.os) {
-                if (!i.os.includes(os.platform().toLowerCase())) throw new Error('Unsupported OS');
-            }
-        } catch (e) {
-            i.fail = true;
-            fail.push(i.id);
-            console.error(`Module Load Fail: ${i.id}`);
-            console.error(e);
-        }
-    }
-}
-
 async function handler() {
     for (const i of pending) {
-        if (i.handler && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/handler.js`;
+        if (fs.existsSync(p) && i.fail) {
             try {
-                console.log(`Handler init: ${i.id}`);
-                console.time(`Handler init: ${i.id}`);
-                eval(i.handler);
-                console.timeEnd(`Handler init: ${i.id}`);
+                console.log(`Handler init: ${i}`);
+                console.time(`Handler init: ${i}`);
+                superRequire(p);
+                console.timeEnd(`Handler init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Handler Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Handler Load Fail: ${i}`);
             }
         }
     }
@@ -92,14 +47,14 @@ async function handler() {
 
 async function locale() {
     for (const i of pending) {
-        if (i.locale && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/locale.json`;
+        if (fs.existsSync(p) && i.fail) {
             try {
-                global.Hydro.lib.i18n(i.locale);
-                console.log(`Locale init: ${i.id}`);
+                global.Hydro.lib.i18n(superRequire(p));
+                console.log(`Locale init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Locale Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Locale Load Fail: ${i}`);
             }
         }
     }
@@ -107,14 +62,14 @@ async function locale() {
 
 async function template() {
     for (const i of pending) {
-        if (i.template && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/template.json`;
+        if (fs.existsSync(p) && !i.fail) {
             try {
-                Object.assign(global.Hydro.template, i.template);
-                console.log(`Template init: ${i.id}`);
+                Object.assign(global.Hydro.template, superRequire(p));
+                console.log(`Template init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Template Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Template Load Fail: ${i}`);
             }
         }
     }
@@ -122,17 +77,16 @@ async function template() {
 
 async function model() {
     for (const i of pending) {
-        if (i.model && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/model.js`;
+        if (fs.existsSync(p) && !i.fail) {
             try {
-                console.log(`Model init: ${i.id}`);
-                console.time(`Model init: ${i.id}`);
-                const m = eval(i.model);
-                if ((m || {}).index) await m.index();
-                console.timeEnd(`Model init: ${i.id}`);
+                console.log(`Model init: ${i}`);
+                console.time(`Model init: ${i}`);
+                superRequire(p);
+                console.timeEnd(`Model init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Model Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Model Load Fail: ${i}`);
             }
         }
     }
@@ -140,16 +94,16 @@ async function model() {
 
 async function lib() {
     for (const i of pending) {
-        if (i.lib && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/lib.js`;
+        if (fs.existsSync(p) && !i.fail) {
             try {
-                console.log(`Lib init: ${i.id}`);
-                console.time(`Lib init: ${i.id}`);
-                eval(i.lib);
-                console.timeEnd(`Lib init: ${i.id}`);
+                console.log(`Lib init: ${i}`);
+                console.time(`Lib init: ${i}`);
+                superRequire(p);
+                console.timeEnd(`Lib init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Lib Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Lib Load Fail: ${i}`);
             }
         }
     }
@@ -157,16 +111,16 @@ async function lib() {
 
 async function service() {
     for (const i of pending) {
-        if (i.service && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/service.js`;
+        if (fs.existsSync(p) && !i.fail) {
             try {
-                console.time(`Service init: ${i.id}`);
-                const m = eval(i.service);
-                if ((m || {}).init) await m.init();
-                console.timeEnd(`Service init: ${i.id}`);
+                console.log(`Service init: ${i}`);
+                console.time(`Service init: ${i}`);
+                superRequire(p);
+                console.timeEnd(`Service init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Service Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Service Load Fail: ${i}`);
                 console.error(e);
             }
         }
@@ -175,19 +129,18 @@ async function service() {
 
 async function script() {
     for (const i of pending) {
-        if (i.script && !i.fail) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/script.js`;
+        if (fs.existsSync(p) && !i.fail) {
             try {
-                console.time(`Script init: ${i.id}`);
-                eval(i.script);
-                console.timeEnd(`Script init: ${i.id}`);
+                console.time(`Script init: ${i}`);
+                superRequire(p);
+                console.timeEnd(`Script init: ${i}`);
             } catch (e) {
-                i.fail = true;
-                fail.push(i.id);
-                console.error(`Script Load Fail: ${i.id}`);
+                fail.push(i);
+                console.error(`Script Load Fail: ${i}`);
                 console.error(e);
             }
         }
-        if (!i.fail) active.push(i.name);
     }
 }
 
@@ -217,13 +170,14 @@ const builtinHandler = [
 
 const builtinScript = [
     'install', 'uninstall', 'rating', 'recalcRating', 'register',
+    'blacklist',
 ];
 
 async function loadAsMaster() {
     ensureDir(path.resolve(os.tmpdir(), 'hydro'));
-    pending.push(...await require('./lib/hpm').getInstalled());
-    await unzip();
-    await preload();
+    // TODO better run in another process as this needs lots of memory
+    require('./unzip')();
+    pending = await require('./lib/hpm').getInstalled();
     require('./lib/i18n');
     require('./utils');
     require('./error');
@@ -247,10 +201,7 @@ async function loadAsMaster() {
     });
     for (const i of builtinLib) require(`./lib/${i}`);
     await lib();
-    require('./service/gridfs');
     require('./service/monitor');
-    const server = require('./service/server');
-    await server.prepare();
     await service();
     for (const i of builtinModel) {
         const m = require(`./model/${i}`);
@@ -262,14 +213,7 @@ async function loadAsMaster() {
         const ins = require('./script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    for (const i of builtinHandler) require(`./handler/${i}`);
     await model();
-    await handler();
-    for (const i in global.Hydro.handler) {
-        await global.Hydro.handler[i]();
-    }
-    const notfound = require('./handler/notfound');
-    await notfound();
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {
@@ -279,15 +223,11 @@ async function loadAsMaster() {
             }
         }
     }
-    for (const i of builtinScript) require(`./script/${i}`);
-    await script();
     pending = [];
-    await server.start(await system.get('server.port'));
 }
 
 async function loadAsWorker() {
-    pending.push(...await require('./lib/hpm').getInstalled());
-    await preload();
+    pending = await require('./lib/hpm').getInstalled();
     require('./lib/i18n');
     require('./utils');
     require('./error');
@@ -385,7 +325,8 @@ async function load() {
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} is online`);
         });
-        for (let i = 1; i < numCPUs; i++) {
+        // FIXME this requires lots of memory
+        for (let i = 0; i < numCPUs; i++) {
             cluster.fork();
         }
     } else {
@@ -393,6 +334,7 @@ async function load() {
         await loadAsWorker();
         console.log(`Worker ${process.pid} Started`);
     }
+    if (global.gc) global.gc();
 }
 
 module.exports = {

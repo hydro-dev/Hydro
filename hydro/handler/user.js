@@ -8,7 +8,7 @@ const { PERM_LOGGEDIN } = require('../permission');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, LoginError, SystemError,
-    PermissionError,
+    PermissionError, BlacklistedError,
 } = require('../error');
 
 class UserLoginHandler extends Handler {
@@ -23,8 +23,7 @@ class UserLoginHandler extends Handler {
         if (!udoc) throw new LoginError(uname);
         if (udoc) udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
-        udoc.salt = '';
-        udoc.password = '';
+        if (udoc.ban) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
         this.session.rememberme = rememberme;
         const referer = this.request.headers.referer || '/';
@@ -63,7 +62,7 @@ class UserRegisterHandler extends Handler {
         );
         if (await system.get('smtp.user')) {
             const m = await this.renderHTML('user_register_mail.html', {
-                url: `${await system.get('baseurl')}/register/${t[0]}`,
+                url: `${await system.get('server.url')}/register/${t[0]}`,
             });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';

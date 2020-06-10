@@ -246,6 +246,7 @@ async function domainUser(src, report) {
         const docs = await src.collection('domain.user')
             .find().skip(i * 50).limit(50)
             .toArray();
+        const t = [];
         for (const doc of docs) {
             const mapper = {
                 _id: '_id',
@@ -277,7 +278,7 @@ async function domainUser(src, report) {
                     docWithoutId[key] = d[key];
                 }
             }
-            d.push(dst.collection('document').updateOne(
+            t.push(dst.collection('document.status').updateOne(
                 { _id: d._id },
                 {
                     $set: {
@@ -287,6 +288,7 @@ async function domainUser(src, report) {
                 { upsert: true },
             ));
         }
+        await Promise.all(t);
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
 }
@@ -341,9 +343,9 @@ async function task(name, src, report) {
                 const mapper = tasks[name];
                 for (const key in doc) {
                     if (typeof mapper[key] === 'string') {
-                        res[mapper[key]] = doc[key];
+                        d[mapper[key]] = doc[key];
                     } else if (typeof mapper[key] === 'object') {
-                        res[mapper[key].field] = mapper[key].processer(doc[key]);
+                        d[mapper[key].field] = mapper[key].processer(doc[key]);
                     } else if (mapper[key] === null) {
                         // Ignore this key
                     } else {
@@ -369,7 +371,7 @@ async function task(name, src, report) {
                     res.push((async () => {
                         const data = await dst.collection(name).findOne(query);
                         if (data) {
-                            await dst.collection(name).updateOne(query, { $set: docWithoutId });
+                            await dst.collection(name).updateOne(query, { $set: docWithoutDid });
                         } else if (d._id) {
                             const dat = await dst.collection(name).findOne({ _id: d._id });
                             if (dat) {
@@ -390,7 +392,7 @@ async function task(name, src, report) {
                 } else res.push(dst.collection(name).insertOne(d));
             }
         }
-        await Promise.all(res);
+        await Promise.all(res).catch((e) => console.log(e));
         const progress = Math.round(100 * ((i + 1) / (total + 1)));
         if (progress > lastProgress) {
             await report({ progress });

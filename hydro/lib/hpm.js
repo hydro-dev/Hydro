@@ -3,9 +3,7 @@
 /* eslint-disable no-eval */
 const fs = require('fs');
 const os = require('os');
-const zlib = require('zlib');
 const path = require('path');
-const yaml = require('js-yaml');
 const download = require('./download');
 
 function root(name) {
@@ -28,18 +26,14 @@ for (const i of moduleRoots) {
 
 async function getInstalled() {
     const modules = [];
-    const files = fs.readdirSync(moduleRoot);
+    const files = fs.readdirSync(`${os.tmpdir()}/hydro/tmp`);
     for (const file of files) {
-        if (file.endsWith('.hydro')) {
+        const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
+        if (fs.existsSync(info)) {
             try {
-                const f = fs.readFileSync(root(`${moduleRoot}/${file}`));
-                const s = fs.statSync(root(`${moduleRoot}/${file}`));
-                const m = {
-                    ...yaml.safeLoad(zlib.gunzipSync(f)),
-                    filename: file.split('.')[0],
-                    size: s.size,
-                };
-                modules.push(m);
+                const m = file;
+                const t = JSON.parse(fs.readFileSync(info).toString());
+                modules.push(`${m}|${t.id}`);
             } catch (e) {
                 if (e.code === 'Z_DATA_ERROR') {
                     console.error(`Module Load Fail: ${file} (File Corrupted)`);

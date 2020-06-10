@@ -37,12 +37,12 @@ function edit(domainId, did, title, content, highlight) {
 }
 
 function del(domainId, did) {
-    // TODO(masnn) delete status
     return Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION, did),
         document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
             parentType: document.TYPE_DISCUSSION, parentId: did,
         }),
+        document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: did }),
     ]);
 }
 
@@ -167,12 +167,16 @@ async function getVnode(domainId, ddoc, handler) {
 }
 
 async function getListVnodes(domainId, ddocs, handler) {
+    const tasks = [];
     const res = {};
-    for (const ddoc of ddocs) {
-        if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
-        // FIXME no-await-in-loop
-        res[ddoc.parentType][ddoc.parentId] = await getVnode(domainId, ddoc, handler); // eslint-disable-line no-await-in-loop
+    function task(ddoc) {
+        return getVnode(domainId, ddoc, handler).then((vnode) => {
+            if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
+            res[ddoc.parentType][ddoc.parentId] = vnode;
+        });
     }
+    for (const ddoc of ddocs) tasks.push(task(ddoc));
+    await Promise.all(tasks);
     return res;
 }
 

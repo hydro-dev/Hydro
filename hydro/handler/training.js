@@ -97,7 +97,6 @@ class TrainingDetailHandler extends TrainingHandler {
     async get({ domainId, tid }) {
         const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
-        // TODO(twd2): check status, eg. test, hidden problem, ...
         const f = this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN) ? {} : { hidden: false };
         const [udoc, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),

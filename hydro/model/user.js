@@ -1,6 +1,7 @@
 const builtin = require('./builtin');
 const document = require('./document');
 const system = require('./system');
+const token = require('./token');
 const { UserNotFoundError, UserAlreadyExistError } = require('../error');
 const perm = require('../permission');
 const pwhash = require('../lib/hash.hydro');
@@ -25,6 +26,7 @@ class USER {
         this.loginat = udoc.loginat;
         this.bio = udoc.bio || '';
         this.gravatar = udoc.gravatar || '';
+        this.ban = udoc.ban || false;
         this.nAccept = dudoc.nAccept || 0;
         this.nSubmit = dudoc.nSubmit || 0;
         this.rating = dudoc.rating || 1500;
@@ -215,6 +217,13 @@ function deleteRoles(domainId, roles) {
     ]);
 }
 
+function ban(uid) {
+    return Promise.all([
+        coll.updateOne({ _id: uid }, { $set: { ban: true } }),
+        token.deleteByUid(uid),
+    ]);
+}
+
 function ensureIndexes() {
     return Promise.all([
         coll.createIndex('unameLower', { unique: true }),
@@ -246,5 +255,6 @@ global.Hydro.model.user = module.exports = {
     getInDomain,
     addRole,
     deleteRoles,
+    ban,
     ensureIndexes,
 };

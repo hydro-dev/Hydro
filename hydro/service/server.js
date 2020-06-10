@@ -1,6 +1,7 @@
 const assert = require('assert');
 const path = require('path');
 const os = require('os');
+const cluster = require('cluster');
 const { ObjectID } = require('bson');
 const Koa = require('koa');
 const yaml = require('js-yaml');
@@ -438,12 +439,17 @@ function Validate(key, func) {
     else validate[key] = [func];
 }
 
-async function start(port) {
+async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('*', Handler);
-    server.listen(port);
-    if (port) console.log('Server listening at: %s', port);
+    if (cluster.worker.id === 1) {
+        const port = await system.get('server.port');
+        server.listen(port);
+        console.log('Server listening at: %s', port);
+    } else {
+        server.listen();
+    }
 }
 
 global.Hydro.service.server = module.exports = {
