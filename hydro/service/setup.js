@@ -11,9 +11,70 @@ const mongodb = require('mongodb');
 
 class Loader {
     getSource(name) { // eslint-disable-line class-methods-use-this
-        if (!global.Hydro.template[name]) throw new Error(`Cannot get template ${name}`);
         return {
-            src: global.Hydro.template[name],
+            src: `
+            <!DOCTYPE html>
+            <html data-page="setup" data-layout="immersive" class="layout--immersive page--setup nojs">
+            <head>
+              <meta charset="UTF-8">
+              <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+              <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+              <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+              <meta name="msapplication-TileColor" content="#579e9a">
+              <meta name="theme-color" content="#56758f">
+              <link rel="stylesheet" media="all" href="/vj4.css">
+              <title>{{ _('Setup') }}</title>
+            </head>
+            <body>
+            <div class="slideout-panel" id="panel">
+              <div class="main">
+                <div class="row"><div class="columns">
+                <div class="immersive--content immersive--center">
+                  <h1>{{ _('Setup') }}</h1>
+                  <form method="POST">
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
+                        {{ _('Database Host') }}
+                        <input name="host" type="text" value="127.0.0.1" autofocus>
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
+                        {{ _('Database Port') }}
+                        <input name="port" type="number" value="27017">
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
+                        {{ _('Database Name') }}
+                        <input name="name" type="text" value="hydro">
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
+                        {{ _('Database Username') }}
+                        <input name="username" type="text" placeholder="{{ _('Leave blank if none') }}">
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
+                        {{ _('Database Password') }}
+                        <input name="password" type="password" placeholder="{{ _('Leave blank if none') }}">
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <div class="text-center">
+                        <input type="submit" value="{{ _('Confirm') }}" class="inverse expanded rounded primary button">
+                      </div>
+                    </div></div>
+                  </form>
+                </div>
+                </div></div>
+              </div>
+            </div>
+            </body>
+            </html>
+            `,
             path: name,
         };
     }
@@ -95,6 +156,7 @@ async function setup() {
             else resolve();
         });
     });
+    console.log('Done! Please restart.');
 }
 
 module.exports = { setup };

@@ -306,7 +306,8 @@ function Route(route, RouteHandler, permission = null) {
                 domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
             };
             if (h.request.host !== await system.get('server.host')) {
-                args.domainId = h.request.url.split('//')[1].split(`.${await system.get('server.host')}`)[0] || '';
+                args.domainId = (h.request.url.split('//')[1] || '')
+                    .split(`.${await system.get('server.host')}`)[0] || 'system';
             }
 
             if (h.___prepare) await h.___prepare(args);

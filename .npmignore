@@ -4,3 +4,12 @@ docker-compose.yml
 Dockerfile
 .vscode
 .github
+.uibuild
+templates
+ui
+locales
+module
+hydro
+build
+tool
+.build/install.js
