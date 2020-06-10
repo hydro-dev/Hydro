@@ -35,7 +35,7 @@ async function run({ domainId, isSub = false }, report) {
     }
     const tasks = [];
     for (const uid in udict) {
-        tasks.push(user.setInDomain(domainId, uid, { rating: udict[uid] }));
+        tasks.push(user.setInDomain(domainId, parseInt(uid), { rating: udict[uid] }));
     }
     await Promise.all(tasks);
     return true;

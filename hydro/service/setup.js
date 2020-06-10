@@ -156,7 +156,7 @@ async function setup() {
             else resolve();
         });
     });
-    console.log('Done! Please restart.');
+    console.log('Done! Restarting...');
 }
 
 module.exports = { setup };

@@ -1,6 +1,7 @@
 
-const { PERM_JUDGE } = require('../permission');
+const { PERM_JUDGE, PERM_LOGGEDIN } = require('../permission');
 const file = require('../model/file');
+const user = require('../model/user');
 const db = require('../service/db');
 const { Route, Handler } = require('../service/server');
 
@@ -47,7 +48,9 @@ class StatusUpdateHandler extends Handler {
 
 class SwitchLanguageHandler extends Handler {
     async get({ lang }) {
-        this.session.language = lang;
+        if (this.user.hasPerm(PERM_LOGGEDIN)) await user.setById(this.user._id, { viewLang: lang });
+        else this.session.viewLang = lang;
+        this.back();
     }
 }
 

@@ -56,9 +56,10 @@ class SystemScriptHandler extends SystemHandler {
         this.response.body.path.push(['manage_script', null]);
     }
 
-    async post({ id, args }) {
+    async post({ id, args = '{}' }) {
+        args = JSON.parse(args);
         // TODO Do not use console.log
-        await global.Hydro.script[id].run(JSON.parse(args), console.log);
+        await global.Hydro.script[id].run(args, console.log);
         this.back();
     }
 }

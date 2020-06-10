@@ -138,8 +138,7 @@ class UserLostPassWithCodeHandler extends Handler {
 class UserDetailHandler extends Handler {
     async get({ domainId, uid }) {
         const isSelfProfile = this.user._id === uid;
-        const udoc = await user.getById(domainId, uid);
-        if (!udoc) throw new UserNotFoundError(uid);
+        const udoc = await user.getById(domainId, uid, true);
         const sdoc = await token.getMostRecentSessionByUid(uid);
         this.response.template = 'user_detail.html';
         this.response.body = { isSelfProfile, udoc, sdoc };
@@ -151,12 +150,8 @@ class UserSearchHandler extends Handler {
         let udocs;
         if (exactMatch) udocs = [];
         else udocs = await user.getPrefixList(q, 20);
-        try {
-            const udoc = await user.getById(domainId, parseInt(q));
-            if (udoc) udocs.push(udoc);
-        } catch (e) {
-            /* Ignore */
-        }
+        const udoc = await user.getById(domainId, parseInt(q));
+        if (udoc) udocs.push(udoc);
         for (const i in udocs) {
             if (udocs[i].gravatar) {
                 udocs[i].gravatar_url = misc.gravatar(udocs[i].gravatar);

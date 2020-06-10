@@ -21,9 +21,9 @@ class DomainRankHandler extends Handler {
         udocs = await Promise.all(udocs);
         const path = [
             ['Hydro', '/'],
-            ['domain_rank', null],
+            ['ranking', null],
         ];
-        this.response.template = 'domain_rank.html';
+        this.response.template = 'ranking.html';
         this.response.body = {
             udocs, upcount, ucount, page, path,
         };

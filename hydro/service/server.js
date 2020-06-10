@@ -130,7 +130,7 @@ class Handler {
         this.hasPerm = (perm) => this.user.hasPerm(perm);
         const res = await template.render(name, Object.assign(context, {
             handler: this,
-            _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+            _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
             user: this.user,
         }));
         console.timeEnd(name);
@@ -173,7 +173,7 @@ class Handler {
     }
 
     translate(str) {
-        return str ? str.toString().translate(this.user.language) : '';
+        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
     }
 
     binary(data, name) {
@@ -364,11 +364,10 @@ class ConnectionHandler {
     }
 
     async renderHTML(name, context) {
-        console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
         const res = await template.render(name, Object.assign(context, {
             handler: this,
-            _: (str) => (str ? str.toString().translate(this.user.language) : ''),
+            _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
             user: this.user,
         }));
         return res;

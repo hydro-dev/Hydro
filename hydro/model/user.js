@@ -19,7 +19,7 @@ class USER {
         this.salt = () => udoc.salt;
         this.hash = () => udoc.hash;
         this.priv = udoc.priv;
-        this.viewLang = udoc.language || 'zh_CN';
+        this.viewLang = udoc.viewLang || 'zh_CN';
         this.codeLang = udoc.codeLang || 'c';
         this.codeTemplate = udoc.codeTemplate || '';
         this.regat = udoc.regat;
@@ -55,9 +55,12 @@ async function getInDomain(domainId, udoc) {
     return dudoc;
 }
 
-async function getById(domainId, _id) {
+async function getById(domainId, _id, throwError = false) {
     const udoc = await coll.findOne({ _id });
-    if (!udoc) throw new UserNotFoundError(_id);
+    if (!udoc) {
+        if (throwError) throw new UserNotFoundError(_id);
+        else return null;
+    }
     const dudoc = await getInDomain(domainId, udoc);
     return new USER(udoc, dudoc);
 }
@@ -224,6 +227,10 @@ function ban(uid) {
     ]);
 }
 
+function setSuperAdmin(uid) {
+    return setById(uid, { priv: 1 });
+}
+
 function ensureIndexes() {
     return Promise.all([
         coll.createIndex('unameLower', { unique: true }),
@@ -255,6 +262,7 @@ global.Hydro.model.user = module.exports = {
     getInDomain,
     addRole,
     deleteRoles,
+    setSuperAdmin,
     ban,
     ensureIndexes,
 };

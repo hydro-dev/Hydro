@@ -8,20 +8,20 @@ const Item = (path, name, prefix, perm, checker) => {
         checker = ((_chk) => (handler) => _chk(handler) && handler.user.hasPerm(perm))(checker);
     } else if (perm) {
         checker = (handler) => handler.user.hasPerm(perm);
-    } else checker = trueChecker;
+    } else if (!checker) checker = trueChecker;
     global.Hydro.ui.nav.push({
         path, name, prefix, checker,
     });
 };
 
-Item('/', 'domain_main', 'domain_main');
+Item('/', 'homepage', 'homepage');
 Item('/p', 'problem_main', 'problem', permission.PERM_VIEW_PROBLEM);
 Item('/t', 'training_main', 'training', permission.PERM_VIEW_TRAINING);
 Item('/homework', 'homework_main', 'homework', permission.PERM_VIEW_HOMEWORK);
 Item('/discuss', 'discussion_main', 'discussion', permission.PERM_VIEW_DISCUSSION);
 Item('/c', 'contest_main', 'contest', permission.PERM_VIEW_CONTEST);
 Item('/record', 'record_main', 'record');
-Item('/ranking', 'domain_rank', 'domain_rank');
+Item('/ranking', 'ranking', 'ranking');
 Item('/domain/dashboard', 'domain_dashboard', 'domain', permission.PERM_MANAGE);
 Item('/manage/dashboard', 'manage', 'manage', null, (handler) => handler.user.priv === 1);
 

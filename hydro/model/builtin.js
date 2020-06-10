@@ -203,11 +203,10 @@ const CATEGORIES = {
 };
 const FOOTER_EXTRA_HTMLS = [];
 const VIEW_LANGS = [
-    { code: 'zh-CN', name: 'zh-CN' },
+    { code: 'zh_CN', name: '简体中文' },
+    { code: 'zh_TW', name: '正體中文' },
+    { code: 'en', name: 'English' },
 ];
-const LANGS = {
-    cc: 'cpp',
-};
 const LANG_TEXTS = {
     c: 'C',
     cc: 'C++',
@@ -296,7 +295,6 @@ global.Hydro.model.builtin = module.exports = {
     CATEGORIES,
     VIEW_LANGS,
     FOOTER_EXTRA_HTMLS,
-    LANGS,
     LANG_TEXTS,
     LANG_HIGHLIGHT_ID,
     STATUS,

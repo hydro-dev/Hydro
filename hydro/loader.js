@@ -171,7 +171,7 @@ const builtinHandler = [
 
 const builtinScript = [
     'install', 'uninstall', 'rating', 'recalcRating', 'register',
-    'blacklist',
+    'blacklist', 'setSuperadmin',
 ];
 
 async function loadAsMaster() {
@@ -313,6 +313,7 @@ async function load() {
     };
     global.onDestory = [];
     Error.stackTraceLimit = 50;
+    process.on('unhandledRejection', (e) => console.error(e));
     if (cluster.isMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
@@ -325,7 +326,6 @@ async function load() {
                 console.warn(e);
             }
         });
-        process.on('unhandledRejection', (e) => console.log(e));
         process.on('SIGINT', terminate);
         await loadAsMaster();
         cluster.on('exit', (worker, code, signal) => {
@@ -340,7 +340,6 @@ async function load() {
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} is online`);
         });
-        // FIXME this requires lots of memory
         for (let i = 0; i < numCPUs; i++) {
             cluster.fork();
         }
