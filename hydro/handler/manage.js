@@ -33,7 +33,7 @@ class SystemDashboardHandler extends SystemHandler {
 class SystemModuleHandler extends SystemHandler {
     async get() {
         this.response.body.path.push(['manage_module', null]);
-        this.response.body.installed = await hpm.getInstalled();
+        this.response.body.installed = await hpm.getDetail();
         this.response.active = loader.active;
         this.response.template = 'manage_module.html';
     }

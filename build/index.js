@@ -5,6 +5,7 @@ const zlib = require('zlib');
 const yaml = require('js-yaml');
 const { root, ignoreFailure, rmdir } = require('./utils');
 const template = require('./template');
+const hack = require('./hack');
 
 const fsp = fs.promises;
 
@@ -24,6 +25,11 @@ async function build(type) {
     if (!['development', 'production'].includes(type)) throw new Error(`Unknown type: ${type}`);
     ignoreFailure(fs.mkdirSync, root('.build'));
     ignoreFailure(fs.mkdirSync, root('.build/module'));
+
+    for (const task in hack) {
+        hack[task]();
+    }
+
     const langs = fs.readdirSync(root('locales'));
     const locale = {};
     for (const i of langs) {
@@ -34,14 +40,14 @@ async function build(type) {
         id: 'builtin',
         locale,
         template: template('templates'),
-        file: {},
+        public: {},
     };
     const files = getFiles('.uibuild');
     for (const f of files) {
         if (fs.statSync(root(`.uibuild/${f}`)).isDirectory()) {
-            builtin.file[f] = null;
+            builtin.public[f] = null;
         } else {
-            builtin.file[f] = fs.readFileSync(root(`.uibuild/${f}`)).toString('base64');
+            builtin.public[f] = fs.readFileSync(root(`.uibuild/${f}`)).toString('base64');
         }
     }
     const data = zlib.gzipSync(Buffer.from(yaml.safeDump(builtin)), { level: -1 });
@@ -68,8 +74,6 @@ async function build(type) {
     }
     const f = fs.readFileSync(root('.build/app.js')).toString();
     const installer = fs.readFileSync(root('tool/install.js')).toString();
-    const file = `global._hydroModule=${JSON.stringify(j)};${f}`;
-    fs.writeFileSync(root('.build/full.js'), file);
     const hydro = {};
     hydro.app = Buffer.from(f).toString('base64');
     hydro.modules = j;

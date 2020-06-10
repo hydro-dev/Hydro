@@ -1,24 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const fs = require('fs');
 const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const { root } = require('./utils');
 
 const build = async (type) => {
-    function hackNodeModuleFormidable() {
-        const tasks = ['incoming_form', 'file', 'json_parser', 'querystring_parser'];
-        for (const task of tasks) {
-            let file = fs.readFileSync(root(`node_modules/formidable/lib/${task}.js`)).toString();
-            if (file.startsWith('if (global.GENTLY) require = GENTLY.hijack(require);')) {
-                file = file.split('\n');
-                file[0] = '';
-                file = file.join('\n');
-                fs.writeFileSync(root(`node_modules/formidable/lib/${task}.js`), file);
-            }
-        }
-    }
-    hackNodeModuleFormidable();
-
     const config = {
         mode: type,
         entry: {

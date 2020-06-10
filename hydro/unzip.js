@@ -66,7 +66,7 @@ function exec() {
                     if (m[i]) {
                         fs.writeFileSync(
                             `${os.tmpdir()}/hydro/tmp/${id}/${i}.js`,
-                            f[i],
+                            m[i],
                         );
                     }
                 }
@@ -78,6 +78,17 @@ function exec() {
                         } else {
                             const e = path.resolve(os.tmpdir(), 'hydro', m.id, n);
                             fs.writeFileSync(e, Buffer.from(m.file[n], 'base64'), { mode: 755 });
+                        }
+                    }
+                }
+                if (m.public) {
+                    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public'));
+                    for (const n in m.public) {
+                        if (m.public[n] === null) {
+                            ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public', n));
+                        } else {
+                            const e = path.resolve(os.tmpdir(), 'hydro', 'public', n);
+                            fs.writeFileSync(e, Buffer.from(m.public[n], 'base64'), { mode: 755 });
                         }
                     }
                 }

@@ -81,7 +81,7 @@ const validate = {
 async function prepare() {
     server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
-    app.use(cache(path.join(os.tmpdir(), 'hydro', 'builtin'), {
+    app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
         maxAge: 365 * 24 * 60 * 60,
     }));
     app.use(Body({

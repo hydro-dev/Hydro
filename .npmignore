@@ -1,0 +1,6 @@
+node_modules
+config.json
+docker-compose.yml
+Dockerfile
+.vscode
+.github

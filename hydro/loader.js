@@ -31,7 +31,7 @@ const fail = [];
 async function handler() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/handler.js`;
-        if (fs.existsSync(p) && i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.log(`Handler init: ${i}`);
                 console.time(`Handler init: ${i}`);
@@ -48,7 +48,7 @@ async function handler() {
 async function locale() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/locale.json`;
-        if (fs.existsSync(p) && i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 global.Hydro.lib.i18n(superRequire(p));
                 console.log(`Locale init: ${i}`);
@@ -63,7 +63,7 @@ async function locale() {
 async function template() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/template.json`;
-        if (fs.existsSync(p) && !i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 Object.assign(global.Hydro.template, superRequire(p));
                 console.log(`Template init: ${i}`);
@@ -78,7 +78,7 @@ async function template() {
 async function model() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/model.js`;
-        if (fs.existsSync(p) && !i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.log(`Model init: ${i}`);
                 console.time(`Model init: ${i}`);
@@ -95,7 +95,7 @@ async function model() {
 async function lib() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/lib.js`;
-        if (fs.existsSync(p) && !i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.log(`Lib init: ${i}`);
                 console.time(`Lib init: ${i}`);
@@ -112,7 +112,7 @@ async function lib() {
 async function service() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/service.js`;
-        if (fs.existsSync(p) && !i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.log(`Service init: ${i}`);
                 console.time(`Service init: ${i}`);
@@ -130,7 +130,7 @@ async function service() {
 async function script() {
     for (const i of pending) {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/script.js`;
-        if (fs.existsSync(p) && !i.fail) {
+        if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.time(`Script init: ${i}`);
                 superRequire(p);
@@ -141,6 +141,7 @@ async function script() {
                 console.error(e);
             }
         }
+        active.push(i);
     }
 }
 
@@ -175,6 +176,8 @@ const builtinScript = [
 
 async function loadAsMaster() {
     ensureDir(path.resolve(os.tmpdir(), 'hydro'));
+    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'tmp'));
+    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public'));
     // TODO better run in another process as this needs lots of memory
     require('./unzip')();
     pending = await require('./lib/hpm').getInstalled();
@@ -182,7 +185,6 @@ async function loadAsMaster() {
     require('./utils');
     require('./error');
     require('./permission');
-    await Promise.all([locale(), template()]);
     try {
         require('./options');
     } catch (e) {
@@ -201,11 +203,18 @@ async function loadAsMaster() {
     });
     for (const i of builtinLib) require(`./lib/${i}`);
     await lib();
+    require('./service/gridfs');
     require('./service/monitor');
+    const server = require('./service/server');
+    await server.prepare();
     await service();
-    for (const i of builtinModel) {
-        const m = require(`./model/${i}`);
-        if (m.ensureIndexes) await m.ensureIndexes();
+    for (const i of builtinModel) require(`./model/${i}`);
+    for (const i of builtinHandler) require(`./handler/${i}`);
+    await model();
+    for (const m in global.Hydro.model) {
+        if (global.Hydro.model[m].ensureIndexes) {
+            await global.Hydro.model[m].ensureIndexes();
+        }
     }
     const system = require('./model/system');
     const dbVer = await system.get('db.ver');
@@ -213,7 +222,10 @@ async function loadAsMaster() {
         const ins = require('./script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    await model();
+    await handler();
+    for (const i in global.Hydro.handler) {
+        await global.Hydro.handler[i]();
+    }
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {
@@ -223,6 +235,8 @@ async function loadAsMaster() {
             }
         }
     }
+    for (const i of builtinScript) require(`./script/${i}`);
+    await script();
     pending = [];
 }
 

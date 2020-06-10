@@ -22,9 +22,9 @@ class StatusHandler extends Handler {
             const online = new Date(stats[i].updateAt).getTime() > new Date().getTime() - 300000;
             if (!online) desc = 'Offline';
             desc = desc || 'Online';
+            stats[i].isOnline = online;
             stats[i].status = desc;
         }
-        console.log(stats);
         const path = [
             ['Hydro', '/'],
         ];

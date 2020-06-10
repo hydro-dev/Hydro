@@ -30,15 +30,26 @@ async function getInstalled() {
     for (const file of files) {
         const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
         if (fs.existsSync(info)) {
-            try {
-                const m = file;
-                const t = JSON.parse(fs.readFileSync(info).toString());
-                modules.push(`${m}|${t.id}`);
-            } catch (e) {
-                if (e.code === 'Z_DATA_ERROR') {
-                    console.error(`Module Load Fail: ${file} (File Corrupted)`);
-                } else console.error(`Module Load Fail: ${file} ${e}`);
-            }
+            modules.push(file);
+        }
+    }
+    return modules;
+}
+
+async function getDetail() {
+    const modules = [];
+    const files = fs.readdirSync(`${os.tmpdir()}/hydro/tmp`);
+    for (const file of files) {
+        const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
+        if (fs.existsSync(info)) {
+            const i = JSON.parse(fs.readFileSync(info).toString());
+            const f = fs.statSync(info);
+            modules.push({
+                id: i.id,
+                version: i.version,
+                description: i.description,
+                size: f.size,
+            });
         }
     }
     return modules;
@@ -52,4 +63,6 @@ async function install(url) {
     await download(url, root(`${moduleRoot}/${String.random(16)}.hydro`));
 }
 
-global.Hydro.lib.hpm = module.exports = { getInstalled, del, install };
+global.Hydro.lib.hpm = module.exports = {
+    getInstalled, getDetail, del, install,
+};

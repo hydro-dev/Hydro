@@ -26,10 +26,6 @@ jobs:
         path: .build/app.js
     - uses: actions/upload-artifact@v1
       with:
-        name: full.js
-        path: .build/full.js
-    - uses: actions/upload-artifact@v1
-      with:
         name: install.js
         path: .build/install.js
     - uses: actions/upload-artifact@v1

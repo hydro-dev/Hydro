@@ -26,7 +26,7 @@
               {% for doc in stats %}
               <tr>
                 <td class="col--id">{{ doc._id }}</td>
-                <td class="col--status">{{ doc.status }}</td>
+                <td class="col--status">{% if doc.isOnline %}{{ doc.status }}{% else %}{{ datetimeSpan(doc.updateAt)|safe }}{% endif %}</td>
                 <td class="col--os">{{ doc.osinfo }}</td>
                 <td class="col--cpu" data-tooltip="{{ doc.flags }}">{{ doc.cpu }}</td>
                 <td class="col--memory"{% if doc.stack %} data-tooltip="Stack size: {{ doc.stack }}MB"{% endif %}>{{ doc.memory }}</td>
