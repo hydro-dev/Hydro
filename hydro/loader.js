@@ -312,6 +312,7 @@ async function load() {
         ui: {},
     };
     global.onDestory = [];
+    Error.stackTraceLimit = 50;
     if (cluster.isMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');

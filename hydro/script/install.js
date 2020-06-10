@@ -1,23 +1,11 @@
 const { defaults } = require('lodash');
 const db = require('../service/db');
-const builtin = require('../model/builtin');
-const discussion = require('../model/discussion');
 const system = require('../model/system');
 const domain = require('../model/domain');
 const pwhash = require('../lib/hash.hydro');
 const { udoc } = require('../interface');
 
 const collUser = db.collection('user');
-
-const allowFail = async (func, ...args) => {
-    let res;
-    try {
-        res = await func(...args);
-    } catch (e) {
-        return null;
-    }
-    return res;
-};
 
 async function run({ username, password } = {}) {
     const def = {

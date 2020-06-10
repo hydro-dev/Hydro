@@ -3,7 +3,7 @@ const { ObjectID } = require('bson');
 const { STATUS_WAITING } = require('./builtin').STATUS;
 const task = require('./task');
 const problem = require('./problem');
-const { RecordNotFoundError, PermissionError } = require('../error');
+const { RecordNotFoundError } = require('../error');
 const db = require('../service/db');
 
 const coll = db.collection('record');

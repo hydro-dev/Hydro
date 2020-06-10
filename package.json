@@ -1,6 +1,6 @@
 {
     "name": "hydro",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "main": "hydro/development.js",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
@@ -42,10 +42,10 @@
     },
     "pkg": {
         "scripts": [
-            ".build/development.js"
+            ".build/app.js"
         ],
         "assets": [
-            ".build/*"
+            ".build/module/**"
         ]
     }
 }

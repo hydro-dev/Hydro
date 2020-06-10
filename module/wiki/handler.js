@@ -20,7 +20,7 @@ class WikiHandler extends Handler {
 }
 
 async function apply() {
-    Route('/wiki/:name', module.exports.WikiHandler);
+    Route('/wiki/:name', WikiHandler);
 }
 
 global.Hydro.handler.wiki = module.exports = apply;

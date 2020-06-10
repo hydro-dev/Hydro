@@ -1,4 +1,3 @@
-const { ObjectID } = require('bson');
 const { MessageNotFoundError } = require('../error');
 const db = require('../service/db.js');
 
