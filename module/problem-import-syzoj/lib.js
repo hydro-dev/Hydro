@@ -1,7 +1,6 @@
 const assert = require('assert');
 
-const { download } = global.Hydro.lib;
-const { axios } = global.Hydro.lib;
+const { download, axios } = global.Hydro.lib;
 const { ValidationError, RemoteOnlineJudgeError } = global.Hydro.error;
 
 async function syzoj(url, handler) {

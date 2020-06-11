@@ -3,18 +3,9 @@
 Hydro是一个高效的信息学在线测评系统。  
 特点： 易于部署，轻量，功能强大。  
 
+[中文文档](wiki/deploy.md)
+
 Hydro 的界面基于 Vijos 二次开发。
-
-## 使用方式
-
-#### 使用 `docker-compose`（推荐）
-
-// TODO(WIP)
-
-#### 直接部署：
-
-安装mongodb （省略）  
-下载Github Actions自动编译的 app.js 直接运行即可。
 
 ## 鸣谢
 

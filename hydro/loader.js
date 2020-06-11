@@ -166,7 +166,7 @@ const builtinModel = [
 const builtinHandler = [
     'home', 'problem', 'record', 'judge', 'user',
     'contest', 'training', 'discussion', 'manage', 'import',
-    'misc', 'homework', 'domain',
+    'misc', 'homework', 'domain', 'wiki',
 ];
 
 const builtinScript = [
@@ -297,23 +297,25 @@ async function terminate() {
 }
 
 async function load() {
+    global.nodeModules = {
+        bson: require('bson'),
+        'js-yaml': require('js-yaml'),
+        mongodb: require('mongodb'),
+    };
     global.Hydro = {
         handler: {},
         service: {},
         model: {},
         script: {},
         lib: {},
-        nodeModules: {
-            bson: require('bson'),
-            'js-yaml': require('js-yaml'),
-            mongodb: require('mongodb'),
-        },
+        wiki: {},
         template: {},
         ui: {},
     };
     global.onDestory = [];
     Error.stackTraceLimit = 50;
     process.on('unhandledRejection', (e) => console.error(e));
+    process.on('SIGINT', terminate);
     if (cluster.isMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
@@ -326,7 +328,6 @@ async function load() {
                 console.warn(e);
             }
         });
-        process.on('SIGINT', terminate);
         await loadAsMaster();
         cluster.on('exit', (worker, code, signal) => {
             console.log(`Worker ${worker.process.pid} exit: ${code} ${signal}`);

@@ -6,6 +6,7 @@ const yaml = require('js-yaml');
 const { root, ignoreFailure, rmdir } = require('./utils');
 const template = require('./template');
 const hack = require('./hack');
+const wikiBuild = require('./wiki');
 
 const fsp = fs.promises;
 
@@ -42,6 +43,8 @@ async function build(type) {
         template: template('templates'),
         public: {},
     };
+    const wiki = wikiBuild();
+    builtin.lib = `Object.assign(global.Hydro.wiki,${JSON.stringify(wiki)})`;
     const files = getFiles('.uibuild');
     for (const f of files) {
         if (fs.statSync(root(`.uibuild/${f}`)).isDirectory()) {

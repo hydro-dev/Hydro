@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-const { mongodb } = global.Hydro.nodeModules;
+const { mongodb } = global.nodeModules;
 const dst = global.Hydro.service.db;
 const { file, problem, discussion } = global.Hydro.model;
 

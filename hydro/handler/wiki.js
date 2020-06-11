@@ -1,12 +1,10 @@
-const { Route, Handler } = global.Hydro.service.server;
-const { NotFoundError } = global.Hydro.error;
-// eslint-disable-next-line import/no-unresolved
-const pages = require('./__build.json');
+const { Route, Handler } = require('../service/server');
+const { NotFoundError } = require('../error');
 
 class WikiHandler extends Handler {
     async get({ name }) {
-        if (!pages[name]) throw new NotFoundError(name);
-        const contents = pages[name];
+        if (!global.Hydro.wiki[name]) throw new NotFoundError(name);
+        const contents = global.Hydro.wiki[name];
         const path = [
             ['Hydro', '/'],
             ['wiki', '/wiki'],
