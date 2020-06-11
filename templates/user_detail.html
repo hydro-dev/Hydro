@@ -1,10 +1,15 @@
 {% import "components/home.html" as home with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
+<style>
+  .user-profile-bg {
+    background-image : "{{ udoc.backgroundImage }}";
+  }
+</style>
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
-      <div class="profile-header user-profile-bg--{{ udoc.background_img or 1 }}">
+      <div class="profile-header user-profile-bg">
         <div class="profile-header__content">
           <div class="media">
             <div class="media__left">

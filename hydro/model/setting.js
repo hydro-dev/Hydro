@@ -5,9 +5,9 @@ const i18n = require('../lib/i18n');
 const Setting = (
     family, key, range = null,
     value = null, ui = 'text', name = '',
-    desc = '', imageClass = '',
+    desc = '',
 ) => ({
-    family, key, range, value, ui, name, desc, imageClass,
+    family, key, range, value, ui, name, desc,
 });
 
 const PREFERENCE_SETTINGS = [
@@ -32,10 +32,9 @@ const ACCOUNT_SETTINGS = [
         null, 'select', 'Gender'),
     Setting('setting_info', 'bio', null,
         null, 'markdown', 'Bio'),
-    Setting('setting_customize', 'background_img', builtin.BACKGROUND_RANGE,
-        null, 'image_radio', 'Profile Background Image',
-        'Choose the background image in your profile page.',
-        'user-profile-bg--thumbnail-{0}'),
+    Setting('setting_customize', 'backgroundImage', null,
+        '/components/background/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
+        'Choose the background image in your profile page.'),
 ];
 
 const SETTINGS = [...PREFERENCE_SETTINGS, ...ACCOUNT_SETTINGS];

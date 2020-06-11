@@ -4,7 +4,6 @@ const token = require('../model/token');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
 const misc = require('../lib/misc');
-const { PERM_LOGGEDIN } = require('../permission');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, LoginError, SystemError,
@@ -165,7 +164,7 @@ async function apply() {
     Route('/login', UserLoginHandler);
     Route('/register', UserRegisterHandler);
     Route('/register/:code', UserRegisterWithCodeHandler);
-    Route('/logout', UserLogoutHandler, PERM_LOGGEDIN);
+    Route('/logout', UserLogoutHandler);
     Route('/lostpass', UserLostPassHandler);
     Route('/lostpass/:code', UserLostPassWithCodeHandler);
     Route('/user/search', UserSearchHandler);

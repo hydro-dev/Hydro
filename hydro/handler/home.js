@@ -158,11 +158,16 @@ class HomeSettingsHandler extends Handler {
     }
 
     async get({ category }) {
+        const path = [
+            ['Hydro', '/'],
+            ['home_settings', null],
+        ];
         this.response.template = 'home_settings.html';
         this.response.body = {
             category,
             page_name: `home_${category}`,
             current: this.user,
+            path,
         };
         if (category === 'preference') {
             this.response.body.settings = setting.PREFERENCE_SETTINGS;
