@@ -169,10 +169,12 @@ export default function (env = {}) {
       }),
 
       // copy static assets
-      new CopyWebpackPlugin([{ from: root('static') }]),
-
-      // copy emoji images
-      new CopyWebpackPlugin([{ from: root('node_modules/emojify.js/dist/images/basic'), to: 'img/emoji/' }]),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: root('static') },
+          { from: root('node_modules/emojify.js/dist/images/basic'), to: 'img/emoji/' },
+        ]
+      }),
 
       // Options are provided by LoaderOptionsPlugin until webpack#3136 is fixed
       new webpack.LoaderOptionsPlugin({
