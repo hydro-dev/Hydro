@@ -160,7 +160,7 @@ class HomeSettingsHandler extends Handler {
     async get({ category }) {
         const path = [
             ['Hydro', '/'],
-            ['home_settings', null],
+            [`home_${category}`, null],
         ];
         this.response.template = 'home_settings.html';
         this.response.body = {
@@ -179,11 +179,11 @@ class HomeSettingsHandler extends Handler {
     async post(args) {
         const $set = {};
         for (const key in args) {
-            if (setting.SETTINGS_BY_KEY[args]) {
+            if (setting.SETTINGS_BY_KEY[key]) {
                 $set[key] = args[key];
             }
         }
-        await user.setById(args.domainId, this.user._id, $set);
+        await user.setById(this.user._id, $set);
         this.back();
     }
 }

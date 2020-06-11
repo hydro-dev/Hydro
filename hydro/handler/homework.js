@@ -1,4 +1,5 @@
 const yaml = require('js-yaml');
+const moment = require('moment-timezone');
 const {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
@@ -174,8 +175,8 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 
 class HomeworkCreateHandler extends HomeworkHandler {
     async get() {
-        const beginAt = new Date().delta({ day: 1 });
-        const penaltySince = beginAt.delta({ day: 7 });
+        const beginAt = moment().add(1, 'day');
+        const penaltySince = beginAt.add(7, 'days');
         const path = [
             ['Hydro', '/'],
             ['homework_main', '/homework'],
@@ -184,9 +185,9 @@ class HomeworkCreateHandler extends HomeworkHandler {
         this.response.template = 'homework_edit.html';
         this.response.body = {
             path,
-            dateBeginText: beginAt.format('%Y-%m-%d'),
+            dateBeginText: beginAt.tz(this.user.timeZone).format('YYYY-M-D'),
             timeBeginText: '00:00',
-            datePenaltyText: penaltySince.format('%Y-%m-%d'),
+            datePenaltyText: penaltySince.tz(this.user.timeZone).format('YYYY-M-D'),
             timePenaltyText: '23:59',
             pids: '1000, 1001',
             extensionDays: 1,
@@ -202,21 +203,23 @@ class HomeworkCreateHandler extends HomeworkHandler {
         let beginAt;
         let penaltySince;
         try {
-            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
+            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         try {
-            penaltySince = new Date(Date.parse(`${penaltySinceDate} ${penaltySinceTime.replace('-', ':')}`));
+            penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('endAtDate', 'endAtTime');
         }
-        const endAt = penaltySince.delta({ days: extensionDays });
-        if (beginAt >= penaltySince) { throw new ValidationError('endAtDate', 'endAtTime'); }
-        if (penaltySince > endAt) throw new ValidationError('extensionDays');
+        const endAt = penaltySince.add(extensionDays, 'days');
+        if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
+        if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
+        penaltySince = penaltySince.toDate();
         await this.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
-            'homework', beginAt, endAt, pids, rated, { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
+            'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
+            { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
         this.response.redirect = `/homework/${tid}`;
     }
@@ -235,13 +238,15 @@ class HomeworkEditHandler extends HomeworkHandler {
             [tdoc.title, `/homework/${tid}`, true],
             ['homework_edit', null],
         ];
+        const beginAt = moment(tdoc.beginAt).tz(this.user.timeZone);
+        const penaltySince = moment(tdoc.penaltySince).tz(this.user.timeZone);
         this.response.template = 'homework_edit.html';
         this.response.body = {
             tdoc,
-            dateBeginText: tdoc.beginAt.format('%Y-%m-%d'),
-            timeBeginText: tdoc.beginAt.format('%H:%M'),
-            datePenaltyText: tdoc.penaltySince.format('%Y-%m-%d'),
-            timePenaltyText: tdoc.penaltySince.format('%H:%M'),
+            dateBeginText: beginAt.format('YYYY-M-D'),
+            timeBeginText: beginAt.format('hh:mm'),
+            datePenaltyText: penaltySince.format('YYYY-M-D'),
+            timePenaltyText: penaltySince.format('hh:mm'),
             extensionDays,
             penaltyRules: yaml.safeDump(tdoc.penaltyRules),
             pids: tdoc.pids.join(','),
@@ -259,18 +264,21 @@ class HomeworkEditHandler extends HomeworkHandler {
         let beginAt;
         let penaltySince;
         try {
-            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
+            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         try {
-            penaltySince = new Date(Date.parse(`${penaltySinceDate} ${penaltySinceTime.replace('-', ':')}`));
+            penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('endAtDate', 'endAtTime');
         }
-        const endAt = penaltySince.delta({ days: extensionDays });
-        if (beginAt >= penaltySince) throw new ValidationError('end_at_date', 'end_at_time');
+        let endAt = penaltySince.add(extensionDays, 'days');
+        if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         await this.verifyProblems(domainId, pids);
+        beginAt = beginAt.toDate();
+        endAt = endAt.toDate();
+        penaltySince = penaltySince.toDate();
         await contest.edit(domainId, tid, {
             title, content, beginAt, endAt, pids, penaltySince, penaltyRules,
         }, document.TYPE_HOMEWORK);

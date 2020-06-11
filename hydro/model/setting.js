@@ -1,6 +1,15 @@
+const moment = require('moment-timezone');
 const builtin = require('./builtin');
 const options = require('../options');
 const i18n = require('../lib/i18n');
+
+const countries = moment.tz.countries();
+const tzs = new Set();
+for (const country of countries) {
+    const tz = moment.tz.zonesForCountry(country);
+    for (const t of tz) tzs.add(t);
+}
+const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
 
 const Setting = (
     family, key, range = null,
@@ -11,9 +20,9 @@ const Setting = (
 });
 
 const PREFERENCE_SETTINGS = [
-    Setting('setting_display', 'viewLang', i18n,
+    Setting('setting_display', 'viewLang', builtin.VIEW_LANGS.map((i) => [i.code, i.name]),
         options.default_locale, 'select', 'UI Language'),
-    Setting('setting_display', 'timezone', [], // TODO(masnn) timezone
+    Setting('setting_display', 'timezone', timezones,
         'Asia/Shanghai', 'select', 'Timezone'),
     Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS,
         null, 'select', 'Default Code Language'),

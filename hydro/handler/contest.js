@@ -1,3 +1,4 @@
+const moment = require('moment-timezone');
 const {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError,
@@ -150,12 +151,13 @@ class ContestEditHandler extends ContestDetailHandler {
     }) {
         let beginAt;
         try {
-            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
+            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.uset.timeZone);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        const endAt = new Date(beginAt + duration * 3600 * 1000);
-        if (beginAt >= endAt) throw new ValidationError('duration');
+        const endAt = beginAt.add(duration, 'hours').toDate();
+        if (beginAt.isSameOrAfter(endAt)) throw new ValidationError('duration');
+        beginAt = beginAt.toDate();
         pids = await this.verifyProblems(domainId, pids);
         await contest.edit(domainId, this.tdoc.docId, title, content, rule, beginAt, endAt, pids);
         if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
@@ -286,11 +288,11 @@ class ContestCreateHandler extends ContestHandler {
     }) {
         let beginAt;
         try {
-            beginAt = new Date(Date.parse(`${beginAtDate} ${beginAtTime.replace('-', ':')}`));
+            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        const endAt = beginAt.delta({ hour: duration });
+        const endAt = beginAt.add(duration, 'hours');
         pids = await this.verifyProblems(domainId, pids);
         const tid = await contest.add(
             domainId, title, content,

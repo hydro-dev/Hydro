@@ -17,6 +17,7 @@
         "lodash": "^4.17.15",
         "markdown-it": "^10.0.0",
         "markdown-it-katex": "^2.0.3",
+        "moment-timezone": "^0.5.31",
         "mongodb": "^3.5.7",
         "nodemailer": "^6.3.1",
         "nunjucks": "^3.2.1",

@@ -227,7 +227,7 @@ function add(domainId, title, content, owner, rule,
  * @param {ObjectID} tid
  * @param {object} $set
  * @param {number} type
- * @returns {Tdoc} tdoc after modification
+ * @returns {Promise<Tdoc>} tdoc after modification
  */
 async function edit(domainId, tid, $set, type = document.TYPE_CONTEST) {
     if ($set.rule) {

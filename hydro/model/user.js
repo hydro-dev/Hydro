@@ -19,6 +19,7 @@ class USER {
         this.salt = () => udoc.salt;
         this.hash = () => udoc.hash;
         this.priv = udoc.priv;
+        this.timeZone = udoc.timeZone || 'Asia/Shanghai';
         this.viewLang = udoc.viewLang || 'zh_CN';
         this.codeLang = udoc.codeLang || 'c';
         this.codeTemplate = udoc.codeTemplate || '';
