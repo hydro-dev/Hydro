@@ -365,7 +365,7 @@ function count(domainId, query, type = document.TYPE_CONTEST) {
 }
 
 function getMulti(domainId, query = {}, type = document.TYPE_CONTEST) {
-    return document.getMulti(domainId, type, query);
+    return document.getMulti(domainId, type, query).sort('beginAt', -1);
 }
 
 function _getStatusJournal(tsdoc) {

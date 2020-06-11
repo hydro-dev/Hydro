@@ -109,7 +109,7 @@ class HomeSecurityHandler extends Handler {
             if (geoip) session.updateGeoip = geoip.lookup(session.updateIp || session.createIp);
         }
         this.response.template = 'home_security.html';
-        this.response.body = { sessions: parsed };
+        this.response.body = { sessions: parsed, geoipProvider: (geoip || {}).provider };
     }
 
     async postChangePassword({ current, password, verifyPassword }) {

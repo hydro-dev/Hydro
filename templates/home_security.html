@@ -21,7 +21,7 @@
                label:'Current Email',
                columns:10,
                name:'currentEmail',
-               value:this.user.email,
+               value:handler.user.mail,
                disabled:true
              }) }}
           {{ form.form_text({
@@ -123,9 +123,11 @@
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <input type="submit" value="{{ _('Logout All Sessions') }}" class="primary rounded button">
         </form>
+        {% if geoipProvider %}
         <div class="typo">
-          <p><small>IP geo-location data is provided by <a href="http://www.maxmind.com" target="_blank">MaxMind</a>.</small></p>
+          <p><small>IP geo-location data is provided by {{ geoipProvider|safe }}.</small></p>
         </div>
+        {% endif %}
       </div>
     </div>
     </div>
