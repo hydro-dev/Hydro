@@ -2,7 +2,7 @@ const { Route, Handler } = require('../service/server');
 const { NotFoundError } = require('../error');
 
 class WikiHandler extends Handler {
-    async get({ name: page }) {
+    async get({ page }) {
         if (!global.Hydro.wiki[page]) throw new NotFoundError(page);
         const contents = global.Hydro.wiki[page];
         const path = [

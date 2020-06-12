@@ -2,6 +2,7 @@
 const { PERM_JUDGE, PERM_LOGGEDIN } = require('../permission');
 const file = require('../model/file');
 const user = require('../model/user');
+const markdown = require('../lib/markdown');
 const db = require('../service/db');
 const { Route, Handler } = require('../service/server');
 
@@ -54,12 +55,21 @@ class SwitchLanguageHandler extends Handler {
     }
 }
 
+class MarkdownHandler extends Handler {
+    async post({ text, safe = true }) {
+        this.response.body = safe
+            ? markdown.safe.render(text)
+            : markdown.unsafe.render(text);
+    }
+}
+
 async function apply() {
     Route('file_download', '/fs/:id/:secret', FileDownloadHandler);
     Route('file_download_with_name', '/fs/:id/:name/:secret', FileDownloadHandler);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
+    Route('markdown', '/markdown', MarkdownHandler);
 }
 
 apply.updateStatus = function updateStatus(args) {

@@ -3,6 +3,12 @@ const { PERM_LOGGEDIN } = global.Hydro.permission;
 const { pastebin } = global.Hydro.model;
 const { nav } = global.Hydro.lib;
 
+class PasteMainHandler extends Handler {
+    async get() {
+        this.response.redirect = this.url('paste_creaate');
+    }
+}
+
 class PasteShowHandler extends Handler {
     async get({ docId }) {
         const doc = await pastebin.get(docId);
@@ -42,9 +48,10 @@ class PasteCreateHandler extends Handler {
 }
 
 async function apply() {
+    Route('paste', '/paste', PasteMainHandler);
     Route('paste_create', '/paste/create', PasteCreateHandler);
     Route('paste_show', '/paste/:docId', PasteShowHandler);
-    nav('/paste/create', 'pastebin', 'pastebin', PERM_LOGGEDIN);
+    nav('paste', null, 'paste', PERM_LOGGEDIN);
 }
 
 global.Hydro.handler.pastebin = module.exports = apply;

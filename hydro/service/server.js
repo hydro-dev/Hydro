@@ -186,14 +186,16 @@ class Handler {
 
     url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
         delete kwargs.__keywords;
-        let res;
-        const { anchor } = kwargs;
-        if (kwargs.query) {
-            const { query } = kwargs;
-            delete kwargs.query;
-            res = router.url(name, kwargs, { query });
+        if (this.args.domainId !== 'system') {
+            name += '_with_domainId';
+            kwargs.domainId = kwargs.domainId || this.args.domainId;
         }
-        res = router.url(name, kwargs);
+        let res;
+        const { anchor, query } = kwargs;
+        delete kwargs.anchor;
+        delete kwargs.query;
+        if (query) res = router.url(name, kwargs, { query });
+        else res = router.url(name, kwargs);
         if (anchor) return `${res}#${anchor}`;
         return res;
     }
@@ -311,60 +313,55 @@ class Handler {
     }
 }
 
-function Route(name, route, RouteHandler, permission = null) {
-    router.all(name, route, async (ctx) => {
-        const h = new RouteHandler(ctx);
+async function handle(ctx, HandlerClass, permission) {
+    const h = new HandlerClass(ctx);
+    try {
+        const method = ctx.method.toLowerCase();
+        const args = {
+            domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
+        };
+
+        if (h.___prepare) await h.___prepare(args);
+        if (permission) h.checkPerm(permission);
+
         try {
-            const method = ctx.method.toLowerCase();
-            // TODO(masnn) domainId
-            const args = {
-                domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
-            };
-            if (h.request.host !== await system.get('server.host')) {
-                try {
-                    args.domainId = (h.request.url.split('//')[1] || '')
-                        .split(`.${await system.get('server.host')}`)[0] || 'system';
-                } catch (e) {
-                    // Ignore
+            for (const key in validate) {
+                if (args[key]) {
+                    args[key] = validate[key](args[key], key);
                 }
             }
-
-            if (h.___prepare) await h.___prepare(args);
-            if (permission) h.checkPerm(permission);
-
-            try {
-                for (const key in validate) {
-                    if (args[key]) {
-                        args[key] = validate[key](args[key], key);
-                    }
-                }
-            } catch (e) {
-                if (e instanceof ValidationError) throw e;
-                throw new ValidationError('Argument check failed');
-            }
-            if (h.__prepare) await h.__prepare(args);
-            if (h._prepare) await h._prepare(args);
-            if (h.prepare) await h.prepare(args);
-
-            if (h[`___${method}`]) await h[`___${method}`](args);
-            if (h[`__${method}`]) await h[`__${method}`](args);
-            if (h[`_${method}`]) await h[`_${method}`](args);
-            if (h[method]) await h[method](args);
-
-            if (method === 'post' && ctx.request.body.operation) {
-                const operation = `_${ctx.request.body.operation}`
-                    .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
-                if (h[`${method}${operation}`]) await h[`${method}${operation}`](args);
-            }
-
-            if (h.cleanup) await h.cleanup(args);
-            if (h._cleanup) await h._cleanup(args);
-            if (h.__cleanup) await h.__cleanup(args);
-            if (h.___cleanup) await h.___cleanup(args);
         } catch (e) {
-            if (h.onerror) await h.onerror(e);
+            if (e instanceof ValidationError) throw e;
+            throw new ValidationError('Argument check failed');
         }
-    });
+        h.args = args;
+        if (h.__prepare) await h.__prepare(args);
+        if (h._prepare) await h._prepare(args);
+        if (h.prepare) await h.prepare(args);
+
+        if (h[`___${method}`]) await h[`___${method}`](args);
+        if (h[`__${method}`]) await h[`__${method}`](args);
+        if (h[`_${method}`]) await h[`_${method}`](args);
+        if (h[method]) await h[method](args);
+
+        if (method === 'post' && ctx.request.body.operation) {
+            const operation = `_${ctx.request.body.operation}`
+                .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
+            if (h[`${method}${operation}`]) await h[`${method}${operation}`](args);
+        }
+
+        if (h.cleanup) await h.cleanup(args);
+        if (h._cleanup) await h._cleanup(args);
+        if (h.__cleanup) await h.__cleanup(args);
+        if (h.___cleanup) await h.___cleanup(args);
+    } catch (e) {
+        if (h.onerror) await h.onerror(e);
+    }
+}
+
+function Route(name, route, RouteHandler, permission = null) {
+    router.all(name, route, (ctx) => handle(ctx, RouteHandler, permission));
+    router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, permission));
 }
 
 class ConnectionHandler {
@@ -461,7 +458,7 @@ function Validate(key, func) {
 async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
-    Route('*', Handler);
+    Route('notfound_handler', '*', Handler);
     if (cluster.worker.id === 1) {
         const port = await system.get('server.port');
         server.listen(port);

@@ -92,8 +92,9 @@ export default class VjCmEditor extends SimpleMDE {
   }
 
   async markdown(text) {
+    // FIXME preview wont update after first toggle
     const data = await request.ajax({
-      url: '/preview',
+      url: '/markdown',
       method: 'post',
       data: $.param({ text }, true),
       dataType: 'text',

@@ -14,7 +14,7 @@ const RecordHandler = contest.ContestHandlerMixin(Handler);
 
 class RecordListHandler extends RecordHandler {
     async get({
-        domainId, page = 1, tid, uidOrName,
+        domainId, page = 1, pid, tid, uidOrName,
     }) {
         this.response.template = 'record_main.html';
         const q = { tid };
@@ -24,6 +24,7 @@ class RecordListHandler extends RecordHandler {
                 { _id: parseInt(uidOrName) },
             ];
         }
+        if (pid) q.pid = pid;
         const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
@@ -34,7 +35,14 @@ class RecordListHandler extends RecordHandler {
             ['record_main', null],
         ];
         this.response.body = {
-            path, page, rdocs, pdict, udict,
+            path,
+            page,
+            rdocs,
+            pdict,
+            udict,
+            fliterPid: pid,
+            fliterTid: tid,
+            fliterUidOrName: uidOrName,
         };
     }
 }

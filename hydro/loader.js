@@ -16,14 +16,6 @@ function ensureDir(dir) {
     }
 }
 
-function superRequire(p) {
-    // eslint-disable-next-line camelcase
-    if (typeof __non_webpack_require__ === 'function') {
-        // eslint-disable-next-line no-undef
-        return __non_webpack_require__(p);
-    } return require(p);
-}
-
 let pending = [];
 const active = [];
 const fail = [];
@@ -35,7 +27,7 @@ async function handler() {
             try {
                 console.log(`Handler init: ${i}`);
                 console.time(`Handler init: ${i}`);
-                superRequire(p);
+                eval('require')(p);
                 console.timeEnd(`Handler init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -50,7 +42,7 @@ async function locale() {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/locale.json`;
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                global.Hydro.lib.i18n(superRequire(p));
+                global.Hydro.lib.i18n(eval('require')(p));
                 console.log(`Locale init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -65,7 +57,7 @@ async function template() {
         const p = `${os.tmpdir()}/hydro/tmp/${i}/template.json`;
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                Object.assign(global.Hydro.template, superRequire(p));
+                Object.assign(global.Hydro.template, eval('require')(p));
                 console.log(`Template init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -82,7 +74,7 @@ async function model() {
             try {
                 console.log(`Model init: ${i}`);
                 console.time(`Model init: ${i}`);
-                superRequire(p);
+                eval('require')(p);
                 console.timeEnd(`Model init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -99,7 +91,7 @@ async function lib() {
             try {
                 console.log(`Lib init: ${i}`);
                 console.time(`Lib init: ${i}`);
-                superRequire(p);
+                eval('require')(p);
                 console.timeEnd(`Lib init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -116,7 +108,7 @@ async function service() {
             try {
                 console.log(`Service init: ${i}`);
                 console.time(`Service init: ${i}`);
-                superRequire(p);
+                eval('require')(p);
                 console.timeEnd(`Service init: ${i}`);
             } catch (e) {
                 fail.push(i);
@@ -133,7 +125,7 @@ async function script() {
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 console.time(`Script init: ${i}`);
-                superRequire(p);
+                eval('require')(p);
                 console.timeEnd(`Script init: ${i}`);
             } catch (e) {
                 fail.push(i);

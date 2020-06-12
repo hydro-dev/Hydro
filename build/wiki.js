@@ -20,7 +20,6 @@ module.exports = () => {
             } else {
                 content.content = `${content.content}${line}\n`;
             }
-            res[pagename].push(content);
         }
     }
     return res;

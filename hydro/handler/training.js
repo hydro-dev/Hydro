@@ -28,12 +28,16 @@ async function _parseDagJson(domainId, dag) {
             for (const nid of node.requireNids) {
                 assert(ids.has(nid), `required nid ${nid} not found`);
             }
+            const tasks = [];
             for (const i in node.pids) {
-                // eslint-disable-next-line no-await-in-loop
-                const pdoc = await problem.get(domainId, node.pids[i]); // FIXME no-await-in-loop
-                assert(pdoc, `Problem not found: ${node.pids[i]}`);
-                node.pids[i] = pdoc.docId;
+                tasks.push(problem.get(domainId, node.pids[i]).then((pdoc) => {
+                    if (!pdoc) throw new ProblemNotFoundError(domainId, node.pids[i]);
+                    node.pids[i] = pdoc.docId;
+                }));
             }
+            // FIXME no-await-in-loop
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(tasks);
             const newNode = {
                 _id: parseInt(node._id),
                 title: node.title,

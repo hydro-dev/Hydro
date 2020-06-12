@@ -48,6 +48,7 @@ class DomainCreateHandler extends Handler {
     async post({ id, name }) {
         await domain.add(id, this.user._id, name);
         this.response.body = { domainId: id };
+        this.response.redirect = this.url('homepage', { domainId: id });
     }
 }
 

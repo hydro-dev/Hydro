@@ -1,6 +1,6 @@
-{% macro nav_item(target_page_url, target_page_name, target_page_prefix) %}
+{% macro nav_item(target_page_name, target_page_args, target_page_prefix) %}
 <li class="nav__list-item">
-  <a href="{{ target_page_url }}" class="nav__item{% if page_name.startsWith(target_page_prefix) %} nav--active{% endif %}">
+  <a href="{{ url(target_page_name, target_page_args) }}" class="nav__item{% if page_name.startsWith(target_page_prefix) %} nav--active{% endif %}">
     {{ _(target_page_name) }}
   </a>
 </li>
@@ -12,7 +12,7 @@
       <li class="nav__list-item"><a href="/" class="nav__logo">&nbsp;</a></li>
       {% for item in Context.nav %}
         {% if item.checker(handler) %}
-          {{ nav_item(item.path, item.name, item.prefix) }}
+          {{ nav_item(item.name, item.args, item.prefix) }}
         {% endif %}
       {% endfor %}
     </ol>
