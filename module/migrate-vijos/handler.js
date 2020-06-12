@@ -1,7 +1,6 @@
 const { Route, Handler } = global.Hydro.service.server;
 const { PERM_MANAGE } = global.Hydro.permission;
 const { message } = global.Hydro.model;
-const migrate = global.Hydro.script.migrateVijos;
 
 class MigrateVijosHandler extends Handler {
     async prepare() {
@@ -20,7 +19,7 @@ class MigrateVijosHandler extends Handler {
     async post({
         host, port, name, username, password,
     }) {
-        migrate({
+        global.Hydro.script.migrateVijos({
             host, port, name, username, password,
         }, (data) => message.send(1, 1, data));
         this.response.redirect = '/manage/log';
@@ -28,9 +27,7 @@ class MigrateVijosHandler extends Handler {
 }
 
 async function apply() {
-    Route('/migrate/vijos', module.exports.MigrateVijosHandler);
+    Route('migrate_vijos', '/migrate/vijos', MigrateVijosHandler);
 }
 
-global.Hydro.handler.pastebin = module.exports = {
-    MigrateVijosHandler, apply,
-};
+global.Hydro.handler.migrateVijos = module.exports = apply;

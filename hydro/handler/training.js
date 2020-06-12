@@ -153,11 +153,6 @@ class TrainingDetailHandler extends TrainingHandler {
 }
 
 class TrainingCreateHandler extends TrainingHandler {
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-        this.checkPerm(PERM_CREATE_TRAINING);
-    }
-
     async get() {
         const path = [
             ['Hydro', '/'],
@@ -248,10 +243,10 @@ class TrainingEditHandler extends TrainingHandler {
 }
 
 async function apply() {
-    Route('/t', TrainingMainHandler);
-    Route('/t/:tid', TrainingDetailHandler);
-    Route('/t/:tid/edit', TrainingEditHandler);
-    Route('/training/create', TrainingCreateHandler);
+    Route('training_main', '/training', TrainingMainHandler);
+    Route('training_create', '/training/create', TrainingCreateHandler, PERM_CREATE_TRAINING);
+    Route('training_detail', '/training/:tid', TrainingDetailHandler);
+    Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
 }
 
 global.Hydro.handler.training = module.exports = apply;

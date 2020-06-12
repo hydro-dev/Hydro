@@ -7,10 +7,10 @@
         <h1 class="section__title">{{ _('Dataset') }}</h1>
       </div>
       <div class="section__body">
-        <iframe src="/p/{{ pdoc.pid }}/upload" frameborder="0" style="width: 100%; height: 100px;"></iframe>
-        <p class="help-text">{{ _('Hint') }}: <a href="/wiki/help#upload">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
+        <iframe src="{{ url('problem_upload', pid=pdoc.pid) }}" frameborder="0" style="width: 100%; height: 100px;"></iframe>
+        <p class="help-text">{{ _('Hint') }}: <a href="{{ url('wiki', page='help', anchor='upload') }}">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
         {% if pdoc and (pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
-        <p><a href="/p/{{ pdoc.pid }}/data" class="expanded button">{{ _('Download Dataset') }}</a></p>
+        <p><a href="{{ url('problem_data', pid=pdoc.pid) }}" class="expanded button">{{ _('Download Dataset') }}</a></p>
         {% endif %}
       </div>
     </div>

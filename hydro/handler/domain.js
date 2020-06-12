@@ -14,9 +14,8 @@ class DomainRankHandler extends Handler {
             100,
         );
         let udocs = [];
-        // eslint-disable-next-line no-await-in-loop
-        for (const uid of dudocs.map((dudoc) => dudoc.uid)) {
-            udocs.push(user.getById(domainId, uid));
+        for (const dudoc of dudocs) {
+            udocs.push(user.getById(domainId, dudoc.uid));
         }
         udocs = await Promise.all(udocs);
         const path = [
@@ -189,13 +188,13 @@ class DomainRoleHandler extends ManageHandler {
 }
 
 async function apply() {
-    Route('/ranking', DomainRankHandler);
-    Route('/domain/create', DomainCreateHandler);
-    Route('/domain/dashboard', DomainDashboardHandler);
-    Route('/domain/edit', DomainEditHandler);
-    Route('/domain/user', DomainUserHandler);
-    Route('/domain/permission', DomainPermissionHandler);
-    Route('/domain/role', DomainRoleHandler);
+    Route('ranking', '/ranking', DomainRankHandler);
+    Route('domain_create', '/domain/create', DomainCreateHandler);
+    Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
+    Route('domain_edit', '/domain/edit', DomainEditHandler);
+    Route('domain_user', '/domain/user', DomainUserHandler);
+    Route('domain_permission', '/domain/permission', DomainPermissionHandler);
+    Route('domain_role', '/domain/role', DomainRoleHandler);
 }
 
 global.Hydro.handler.domain = module.exports = apply;

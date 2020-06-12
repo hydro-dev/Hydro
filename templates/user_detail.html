@@ -32,11 +32,11 @@
               <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</p>
               <div class="profile-header__contact-bar">
               {% if is_self_profile %}
-                <a class="profile-header__contact-item" href="/home/account#setting_info" data-tooltip="{{ _('Edit Profile') }}">
+                <a class="profile-header__contact-item" href="{{ url('home_settings', category='account') }}" data-tooltip="{{ _('Edit Profile') }}">
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
-                <a class="profile-header__contact-item" href="/home/messages?target_uid={{ udoc['_id'] }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
+                <a class="profile-header__contact-item" href="{{ url('home_messages', query={target_uid:udoc._id}) }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
               {% if udoc['mail'] %}
@@ -99,7 +99,7 @@
                 </div>
                 <div class="section__body">
                 {% for pdoc in pdocs %}
-                  <p><a href="/p/{{pdoc.pid}}">{{ pdoc['title'] }}</a></p>
+                  <p><a href="{{ url('problem_detail', pid=pdoc.pid) }}">{{ pdoc['title'] }}</a></p>
                 {% endfor %}
                 </div>
               {% endif %}

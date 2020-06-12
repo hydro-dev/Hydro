@@ -24,7 +24,7 @@
       <div class="section__body">
       {% if vnode %}
       {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
-        <p><a href="/discuss/{{ model.discussion.typeDisplay[vnode.parentType] }}/{{ vnode.parentId }}/create" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
+        <p><a href="{{ url('discussion_create', type=model.discussion.typeDisplay[vnode.parentType], name=vnode.parentId) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
       {% else %}
         {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
           <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>

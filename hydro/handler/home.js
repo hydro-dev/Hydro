@@ -290,12 +290,12 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 }
 
 async function apply() {
-    Route('/', HomeHandler);
-    Route('/home/security', HomeSecurityHandler);
-    Route('/home/changeMail/:code', UserChangemailWithCodeHandler);
-    Route('/home/settings/:category', HomeSettingsHandler);
-    Route('/home/messages', HomeMessagesHandler);
-    Connection('/home/messages-conn', HomeMessagesConnectionHandler);
+    Route('homepage', '/', HomeHandler);
+    Route('home_security', '/home/security', HomeSecurityHandler);
+    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler);
+    Route('home_settings', '/home/settings/:category', HomeSettingsHandler);
+    Route('home_messages', '/home/messages', HomeMessagesHandler);
+    Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler);
 }
 
 global.Hydro.handler.home = module.exports = apply;

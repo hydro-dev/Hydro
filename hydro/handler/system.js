@@ -78,9 +78,9 @@ class SystemSettingHandler extends SystemHandler {
 }
 
 async function apply() {
-    Route('/system', SystemDashboardHandler);
-    Route('/system/module', SystemModuleHandler);
-    Route('/system/setting', SystemSettingHandler);
+    Route('system_dashboard', '/system', SystemDashboardHandler);
+    Route('system_module', '/system/module', SystemModuleHandler);
+    Route('system_setting', '/system/setting', SystemSettingHandler);
 }
 
 global.Hydro.handler.manage = module.exports = apply;

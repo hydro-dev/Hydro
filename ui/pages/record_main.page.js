@@ -24,7 +24,7 @@ const page = new NamedPage('record_main', async () => {
       $newTr.trigger('vjContentNew');
     }
   };
-  UserSelectAutoComplete.getOrConstruct($('.filter-user [name="uid_or_name"]'), {
+  UserSelectAutoComplete.getOrConstruct($('.filter-user [name="uidOrName"]'), {
     clearDefaultValue: false,
   });
 });

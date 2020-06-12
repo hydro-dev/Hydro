@@ -283,14 +283,14 @@ class DiscussionEditHandler extends DiscussionHandler {
 }
 
 async function apply() {
-    Route('/discuss', DiscussionMainHandler);
-    Route('/discuss/:did', DiscussionDetailHandler);
-    Route('/discuss/:did/edit', DiscussionEditHandler);
-    Route('/discuss/:did/raw', DiscussionDetailRawHandler);
-    Route('/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
-    Route('/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
-    Route('/discuss/:type/:name', DiscussionNodeHandler);
-    Route('/discuss/:type/:name/create', DiscussionCreateHandler);
+    Route('discussion_main', '/discuss', DiscussionMainHandler);
+    Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
+    Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
+    Route('discussion_detail', '/discuss/:did/raw', DiscussionDetailRawHandler);
+    Route('discission_reply_raw', '/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
+    Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
+    Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
+    Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler);
 }
 
 global.Hydro.handler.discussion = module.exports = apply;

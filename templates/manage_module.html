@@ -20,7 +20,7 @@
     <h1 class="section__title">{{ _('Installed Modules') }}</h1>
     <div class="section__tools">
       <button class="primary rounded button" name="add_module"><span class="icon icon-add"></span> {{ _('Add module') }}</button>
-      <a class="tool-button" href="/wiki/help#module"><span class="icon icon-help"></span> {{ _("What's module?") }}</a>
+      <a class="tool-button" href="{{ url('wiki', page='help', anchor='module') }}"><span class="icon icon-help"></span> {{ _("What's module?") }}</a>
     </div>
   </div>
   <div class="section__body no-padding">

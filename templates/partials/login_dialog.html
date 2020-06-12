@@ -5,11 +5,11 @@
       <div class="dialog--signin__side">
         <h1>{{ _("Don\'t have an account?") }}</h1>
         <p>{{ _('By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.') }}</p>
-        <div><a href="/register" class="inverse rounded button">{{ _('Sign Up Now') }}</a></div>
+        <div><a href="{{ url('user_register') }}" class="inverse rounded button">{{ _('Sign Up Now') }}</a></div>
       </div>
     </div>
     <div class="dialog--signin__main">
-      <form action="/login" method="post">
+      <form action="{{ url('user_login') }}" method="post">
         <div class="dialog--signin__close-container supplementary">
           <a name="dialog--signin__close" href="javascript:;">{{ _('CLOSE') }}</a>
         </div>
@@ -37,7 +37,7 @@
         </div></div>
         <div class="row"><div class="columns">
           <div class="supplementary text-center">
-            <a href="/lostpass">{{ _('Forgot password or username?') }}</a>
+            <a href="{{ url('user_lostpass') }}">{{ _('Forgot password or username?') }}</a>
           </div>
         </div></div>
       </form>

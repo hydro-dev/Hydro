@@ -36,7 +36,7 @@ class ProblemImportHandler extends Handler {
 }
 
 async function apply() {
-    Route('/problem/import', ProblemImportHandler);
+    Route('problem_import', '/problem/import', ProblemImportHandler);
 }
 
 global.Hydro.handler.import = module.exports = apply;

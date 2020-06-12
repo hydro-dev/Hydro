@@ -1,6 +1,6 @@
 <div data-fragment-id="problem_lucky">
   <p>
-    <a href="/problem/random{% if category %}?category={{ category }}{% endif %}" class="expanded button" target="_blank">
+    <a href="{{ url('problem_random', query={category:category}) if category else url('problem_random') }}" class="expanded button" target="_blank">
       <span class="icon icon-feeling-lucky"></span> {{ _('Lucky') }}
     </a>
   </p>

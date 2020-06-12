@@ -31,7 +31,7 @@
     </div>
     <div class="media__right middle">
       <div class="section__body">
-        <a href="/c/{{ tdoc.docId }}" class="detail-button">{{ _('View Details') }}</a>
+        <a href="{{ url('contest_detail', tid=tdoc.docId) }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
         {% if tsdict[tdoc.docId].attend %}
           <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
@@ -87,7 +87,7 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="/c/{{ tdoc.docId }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
@@ -123,7 +123,7 @@
         </h1>
       </div>
       <div class="section__body">
-        <p><a href="/contest/create" class="expanded primary button">{{ _('Create a contest') }}</a></p>
+        <p><a href="{{ url('contest_create') }}" class="expanded primary button">{{ _('Create a contest') }}</a></p>
       </div>
     </div>
   {% endif %}

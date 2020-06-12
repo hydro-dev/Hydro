@@ -16,7 +16,7 @@
           <h1 class="section__title">{{ _('Filter') }}</h1>
           <div class="section__tools">
             <button type="submit" class="primary button"><span class="icon icon-filter"></span> {{ _('Filter') }}</button>
-            <a href="/r" class="button">{{ _('Reset') }}</a>
+            <a href="{{ url('record_main') }}" class="button">{{ _('Reset') }}</a>
           </div>
         </div>
         <div class="section__body">
@@ -25,7 +25,7 @@
             <div class="medium-4 columns">
               <label class="filter-user">
                 {{ _('By Username / UID') }}
-                <input name="uid_or_name" type="text" class="textbox" value="{{ filter_uid_or_name }}" autocomplete="off" data-autofocus>
+                <input name="uidOrName" type="text" class="textbox" value="{{ filter_uidOrName }}" autocomplete="off" data-autofocus>
               </label>
             </div>
             <div class="medium-4 columns">
@@ -47,7 +47,7 @@
     <div class="section">
       <div class="section__body no-padding">
       {% if not rdocs %}
-        {% if not filter_uid_or_name and not filter_pid and not filter_tid %}
+        {% if not filter_uidOrName and not filter_pid and not filter_tid %}
         {{ nothing.render('Oh, there is no task in the queue!') }}
         {% else %}
         {{ nothing.render('Oh, there is no task that matches the filter!') }}

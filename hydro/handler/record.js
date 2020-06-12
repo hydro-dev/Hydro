@@ -14,14 +14,14 @@ const RecordHandler = contest.ContestHandlerMixin(Handler);
 
 class RecordListHandler extends RecordHandler {
     async get({
-        domainId, page = 1, tid, uname_or_uid,
+        domainId, page = 1, tid, uidOrName,
     }) {
         this.response.template = 'record_main.html';
         const q = { tid };
-        if (uname_or_uid) {
+        if (uidOrName) {
             q.$or = [
-                { unameLower: uname_or_uid.toLowerCase() },
-                { _id: parseInt(uname_or_uid) },
+                { unameLower: uidOrName.toLowerCase() },
+                { _id: parseInt(uidOrName) },
             ];
         }
         const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
@@ -150,14 +150,11 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 }
 
 async function apply() {
-    Route('/r', RecordListHandler);
-    Route('/r/:rid', RecordDetailHandler);
-    Route('/r/:rid/rejudge', RecordRejudgeHandler);
-    Route('/record', RecordListHandler);
-    Route('/record/:rid', RecordDetailHandler);
-    Route('/record/:rid/rejudge', RecordRejudgeHandler);
-    Connection('/record-conn', RecordMainConnectionHandler);
-    Connection('/record-detail-conn', RecordDetailConnectionHandler);
+    Route('record_main', '/record', RecordListHandler);
+    Route('record_detail', '/record/:rid', RecordDetailHandler);
+    Route('record_rejudge', '/record/:rid/rejudge', RecordRejudgeHandler);
+    Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
+    Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }
 
 global.Hydro.handler.record = module.exports = apply;

@@ -130,6 +130,7 @@ class Handler {
         this.hasPerm = (perm) => this.user.hasPerm(perm);
         const res = await template.render(name, Object.assign(context, {
             handler: this,
+            url: (...args) => this.url(...args),
             _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
             user: this.user,
         }));
@@ -181,6 +182,20 @@ class Handler {
         this.response.template = null;
         this.response.type = 'application/octet-stream';
         this.response.disposition = `attachment; filename="${name}"`;
+    }
+
+    url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
+        delete kwargs.__keywords;
+        let res;
+        const { anchor } = kwargs;
+        if (kwargs.query) {
+            const { query } = kwargs;
+            delete kwargs.query;
+            res = router.url(name, kwargs, { query });
+        }
+        res = router.url(name, kwargs);
+        if (anchor) return `${res}#${anchor}`;
+        return res;
     }
 
     async ___prepare({ domainId }) {
@@ -296,8 +311,8 @@ class Handler {
     }
 }
 
-function Route(route, RouteHandler, permission = null) {
-    router.all(route, async (ctx) => {
+function Route(name, route, RouteHandler, permission = null) {
+    router.all(name, route, async (ctx) => {
         const h = new RouteHandler(ctx);
         try {
             const method = ctx.method.toLowerCase();
@@ -399,7 +414,7 @@ class ConnectionHandler {
     }
 }
 
-function Connection(prefix, RouteConnHandler) {
+function Connection(name, prefix, RouteConnHandler) {
     const sock = sockjs.createServer({ prefix });
     sock.on('connection', async (conn) => {
         const h = new RouteConnHandler(conn);

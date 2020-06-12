@@ -83,10 +83,6 @@ async function end(body) {
 }
 
 class JudgeHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_JUDGE);
-    }
-
     async get({ check = false }) {
         if (check) return;
         const tasks = [];
@@ -109,10 +105,6 @@ class JudgeHandler extends Handler {
 }
 
 class JudgeConnectionHandler extends ConnectionHandler {
-    async prepare() {
-        this.checkPerm(PERM_JUDGE);
-    }
-
     async message(msg) {
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
@@ -133,8 +125,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
 }
 
 async function apply() {
-    Route('/judge', JudgeHandler);
-    Connection('/judge/conn', JudgeConnectionHandler);
+    Route('judge', '/judge', JudgeHandler, PERM_JUDGE);
+    Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, PERM_JUDGE);
 }
 
 apply.next = next;

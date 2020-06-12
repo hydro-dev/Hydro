@@ -304,14 +304,14 @@ class ContestCreateHandler extends ContestHandler {
 }
 
 async function apply() {
-    Route('/c', ContestListHandler);
-    Route('/c/:tid', ContestDetailHandler);
-    Route('/c/:tid/edit', ContestEditHandler);
-    Route('/c/:tid/scoreboard', ContestScoreboardHandler);
-    Route('/c/:tid/export/:ext', ContestScoreboardDownloadHandler);
-    Route('/c/:tid/p/:pid', ContestProblemHandler);
-    Route('/c/:tid/p/:pid/submit', ContestProblemSubmitHandler);
-    Route('/contest/create', ContestCreateHandler, PERM_CREATE_CONTEST);
+    Route('contest_main', '/contest', ContestListHandler);
+    Route('contest_detail', '/contest/:tid', ContestDetailHandler);
+    Route('contest_edit', '/contest/:tid/edit', ContestEditHandler);
+    Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler);
+    Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler);
+    Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler);
+    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler);
+    Route('contest_create', '/contest/create', ContestCreateHandler, PERM_CREATE_CONTEST);
 }
 
 global.Hydro.handler.contest = module.exports = apply;

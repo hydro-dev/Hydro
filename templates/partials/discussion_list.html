@@ -15,10 +15,10 @@
           </div>
         </div>
         <div class="media__body top">
-          <h1 class="discussion__title"><a href="/discuss/{{ ddoc._id }}#{{ ddoc.updateAt }}" data-emoji-enabled>{{ ddoc['title'] }}</a></h1>
+          <h1 class="discussion__title"><a href="{{ url('discussion_detail', did=ddoc._id, anchor=ddoc.updateAt.getTime()) }}" data-emoji-enabled>{{ ddoc['title'] }}</a></h1>
           <ul class="supplementary list">
             <li>
-              <a class="discussion-node-tag" href="/discuss/{{ model.discussion.typeDisplay[ddoc.parentType] }}/{{ ddoc.parentId }}">
+              <a class="discussion-node-tag" href="{{ url('discussion_node', type=model.discussion.typeDisplay[ddoc.parentType], name=ddoc.parentId) }}">
               {% if ddoc.parentType == model.document.TYPE_PROBLEM %}
                 <span class="v-center icon icon-tag"></span>
               {% elif ddoc.parentType == model.document.TYPE_CONTEST %}

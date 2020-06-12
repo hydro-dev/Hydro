@@ -25,7 +25,7 @@ const build = (dirOrObject) => {
         }
     } else templates = dirOrObject;
     for (const i in templates) {
-        if (i.endsWith('.html') && !templates[i].includes('No Compression')) {
+        if (i.endsWith('.html') && !global.DEBUG && !templates[i].includes('No Compression')) {
             templates[i] = templates[i]
                 .trim()
                 .replace(/ *\n */gmi, ' ')

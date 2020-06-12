@@ -16,24 +16,24 @@
         <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
       </a></li>
     {% else %}
-      <li class="menu__item"><a class="menu__link" href="/c/{{ tdoc.docId }}/p/{{ pdoc.docId }}">
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=pdoc.docId) }}">
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="/c/{{ tdoc.docId }}/p/{{ pdoc.docId }}/submit">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="{{ url('contest_detail_problem_submit', tid=tdoc.docId, pid=pdoc.docId) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif model.contest.isDone(tdoc) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link" href="/p/{{ pdoc.pid }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ url('problem_detail', pid=pdoc.pid) }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
     {% if pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="/p/{{ pdoc.pid }}/edit">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.pid) }}">
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="/p/{{ pdoc.pid }}/settings">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ url('problem_settings', pid=pdoc.pid) }}">
         <span class="icon icon-wrench"></span> {{ _('Settings') }}
       </a></li>
     {% endif %}

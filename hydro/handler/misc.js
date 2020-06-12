@@ -55,11 +55,11 @@ class SwitchLanguageHandler extends Handler {
 }
 
 async function apply() {
-    Route('/fs/:id/:secret', FileDownloadHandler);
-    Route('/fs/:id/:name/:secret', FileDownloadHandler);
-    Route('/status', StatusHandler);
-    Route('/status/update', StatusUpdateHandler);
-    Route('/language/:lang', SwitchLanguageHandler);
+    Route('file_download', '/fs/:id/:secret', FileDownloadHandler);
+    Route('file_download_with_name', '/fs/:id/:name/:secret', FileDownloadHandler);
+    Route('status', '/status', StatusHandler);
+    Route('status_update', '/status/update', StatusUpdateHandler);
+    Route('switch_language', '/language/:lang', SwitchLanguageHandler);
 }
 
 apply.updateStatus = function updateStatus(args) {

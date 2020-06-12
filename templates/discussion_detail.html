@@ -7,10 +7,10 @@
       <div class="section__body">
         <ul class="supplementary list">
           <li>
-            <a class="discussion-node-tag" href="/discuss/{{ vnode.type }}/{{ vnode.id }}">
-            {% if ddoc.parentType == 'node' %}
+            <a class="discussion-node-tag" href="{{ url('discussion_node', type=model.discussion.typeDisplay[vnode.parentType], name=vnode.id) }}">
+            {% if ddoc.parentType == model.document.TYPE_DISCUSSION_NODE %}
               <span class="v-center icon icon-tag"></span>
-            {% elif ddoc.parentType == 'contest' %}
+            {% elif ddoc.parentType == model.document.TYPE_CONTEST %}
               <span class="v-center icon icon-award"></span>
             {% else %}
               <span class="v-center icon icon-flag"></span>
@@ -24,14 +24,14 @@
             {{ datetimeSpan(ddoc._id)|safe }}
           </li>
         </ul>
-        <div class="typo topic__content" data-emoji-enabled data-raw-url="/discuss/{{ ddoc._id }}/raw">
+        <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
           {{ ddoc['content']|markdown|safe }}
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
       {% if ddoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
         <li>
-          <a href="/discuss/{{ ddoc._id }}/edit"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
+          <a href="{{ url('discussion_edit', did=ddoc.docId) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
       {% endif %}
         <li>
@@ -48,7 +48,7 @@
         </form></li>
       {% endif %}
         <li>
-          <a href="/wiki/about#contact"><span class="icon icon-warning"></span> {{ _('Report') }}</a>
+          <a href="{{ url('wiki', page='about', anchor='contact') }}"><span class="icon icon-warning"></span> {{ _('Report') }}</a>
         </li>
       </ul>
     </div>

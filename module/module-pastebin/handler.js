@@ -42,8 +42,8 @@ class PasteCreateHandler extends Handler {
 }
 
 async function apply() {
-    Route('/paste/create', PasteCreateHandler);
-    Route('/paste/:docId', PasteShowHandler);
+    Route('paste_create', '/paste/create', PasteCreateHandler);
+    Route('paste_show', '/paste/:docId', PasteShowHandler);
     nav('/paste/create', 'pastebin', 'pastebin', PERM_LOGGEDIN);
 }
 

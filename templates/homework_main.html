@@ -19,7 +19,7 @@
             </select>
           </span>
         {% if handler.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
-          <a class="compact button" href="/homework/create">{{ _('Create Homework') }}</a>
+          <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
         {% endif %}
         </div>
       </div>
@@ -38,7 +38,7 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="homework__title"><a href="/homework/{{ tdoc.docId }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
                     {{ _('Status') }}: <span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span>

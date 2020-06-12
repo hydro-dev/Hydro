@@ -3,10 +3,10 @@
 <div class="row"><div class="medium-12 columns">
   <div class="section visible">
     <div class="section__header">
-      <a class="button" target="_blank" href="/c/{{ tdoc.docId }}/export/html">
+      <a class="button" target="_blank" href="{{ url('contest_scoreboard_download', tid=tdoc.docId, ext='html') }}">
         <span class="icon icon-download"></span> {{ _('Export as HTML') }}
       </a>
-      <a class="button" href="/c/{{ tdoc.docId }}/export/csv">
+      <a class="button" href="{{ url('contest_scoreboard_download', tid=tdoc.docId, ext='csv') }}">
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
     </div>
@@ -22,7 +22,7 @@
           {%- for column in rows[0] -%}
             <th class="col--{{ column['type'] }}">
             {% if column.type == 'problem_detail' %}
-              <a href="/c/{{ tdoc.docId }}/p/{{ column.raw._id }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
+              <a href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=column.raw._id) }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
             {% else %}
               {{ column.value }}
             {% endif %}
@@ -38,7 +38,7 @@
               {% if column.type == 'user' %}
                 {{ user.render_inline(column.raw, badge=false) }}
               {% elif column.type == 'record' and column.raw %}
-                <a href="/r/{{ column.raw }}">{{ column.value }}</a>
+                <a href="{{ url('record_detail', rid=column.raw) }}">{{ column.value }}</a>
               {% else %}
                 {{ column.value }}
               {% endif %}

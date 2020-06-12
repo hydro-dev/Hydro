@@ -85,9 +85,3 @@ async function build(type) {
 }
 
 module.exports = build;
-
-if (!module.parent) {
-    build('development').catch((e) => {
-        console.error(e);
-    });
-}

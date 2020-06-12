@@ -3,9 +3,9 @@
 <script>
   var Context = {
     'problemId': "{{ pdoc.pid }}",
-    'postSubmitUrl': "/p/{{ pdoc.pid }}/submit",
-    'getSubmissionsUrl': "/p/{{ pdoc.pid }}/submit",
-    'getRecordDetailUrl': "/r/{rid}",
+    'postSubmitUrl': "{{ url('problem_submit', pid=pdoc.pid) }}",
+    'getSubmissionsUrl': "{{ url('problem_submit', pid=pdoc.pid) }}",
+    'getRecordDetailUrl': "{{ url('record_detail', rid='{rid}') }}",
     'code_lang': "{{ handler.user.codeLang }}",
     'code_template': "{{ handler.user.codeTemplate }}",
   };

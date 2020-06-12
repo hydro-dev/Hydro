@@ -451,13 +451,13 @@ async function apply() {
         },
         rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
     };
-    Route('/homework', HomeworkMainHandler, PERM_VIEW_HOMEWORK);
-    Route('/homework/create', HomeworkCreateHandler, PERM_CREATE_HOMEWORK);
-    Route('/homework/:tid', HomeworkDetailHandler, PERM_VIEW_HOMEWORK);
-    Route('/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
-    Route('/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
-    Route('/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
-    Route('/homework/:tid/edit', HomeworkEditHandler);
+    Route('homework_main', '/homework', HomeworkMainHandler, PERM_VIEW_HOMEWORK);
+    Route('homework_create', '/homework/create', HomeworkCreateHandler, PERM_CREATE_HOMEWORK);
+    Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM_VIEW_HOMEWORK);
+    Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
+    Route('homework_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
+    Route('homework_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
+    Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }
 
 global.Hydro.handler.homework = module.exports = apply;
