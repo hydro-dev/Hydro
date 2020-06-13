@@ -31,7 +31,7 @@ class RecordListHandler extends RecordHandler {
             problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false),
         ]);
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['record_main', null],
         ];
         this.response.body = {
@@ -64,7 +64,7 @@ class RecordDetailHandler extends RecordHandler {
         ]);
         this.response.body = {
             path: [
-                ['Hydro', '/'],
+                ['Hydro', 'homepage'],
                 ['record_detail', null],
             ],
             udoc,

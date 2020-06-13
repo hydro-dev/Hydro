@@ -12,8 +12,8 @@ class ProblemImportHandler extends Handler {
         this.response.template = 'problem_import.html';
         this.response.body = {
             path: [
-                ['Hydro', '/'],
-                ['problem_main', '/p'],
+                ['Hydro', 'homepage'],
+                ['problem_main', 'problem_main'],
                 ['problem_import', null],
             ],
         };

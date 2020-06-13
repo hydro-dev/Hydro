@@ -16,8 +16,8 @@ class SystemHandler extends Handler {
 class SystemDashboardHandler extends SystemHandler {
     async get() {
         const path = [
-            ['Hydro', '/'],
-            ['manage', '/manage'],
+            ['Hydro', 'homepage'],
+            ['manage', null],
             ['manage_dashboard', null],
         ];
         this.response.template = 'manage_dashboard.html';
@@ -29,8 +29,8 @@ class SystemModuleHandler extends SystemHandler {
     async get() {
         const installed = await hpm.getInstalled();
         const path = [
-            ['Hydro', '/'],
-            ['manage', '/manage'],
+            ['Hydro', 'homepage'],
+            ['manage', null],
             ['manage_module', null],
         ];
         this.response.body = { installed, active: loader.active, path };

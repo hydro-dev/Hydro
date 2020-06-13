@@ -35,7 +35,7 @@ class ContestListHandler extends ContestHandler {
         for (const tdoc of tdocs) tids.push(tdoc.docId);
         const tsdict = await contest.getListStatus(domainId, this.user._id, tids);
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['contest_main', null],
         ];
         this.response.body = {
@@ -71,9 +71,9 @@ class ContestDetailHandler extends ContestHandler {
         } else attended = false;
         const udict = await user.getList(domainId, [this.tdoc.owner]);
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
-            [this.tdoc.title, null, true],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [this.tdoc.title, null, null, true],
         ];
         this.response.body = {
             path, tdoc: this.tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
@@ -91,9 +91,9 @@ class ContestScoreboardHandler extends ContestDetailHandler {
     async get({ domainId, tid }) {
         const [tdoc, rows, udict] = await this.getScoreboard(domainId, tid);
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
-            [tdoc.title, `/c/${tid}`, true],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [tdoc.title, 'contest_detail', { tid }, true],
             ['contest_scoreboard', null],
         ];
         this.response.template = 'contest_scoreboard.html';
@@ -128,9 +128,9 @@ class ContestEditHandler extends ContestDetailHandler {
         }
         const duration = (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / 3600 / 1000;
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
-            [this.tdoc.title, `/c/${this.tdoc.docId}`, true],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
             ['contest_edit', null],
         ];
         const dt = this.tdoc.beginAt;
@@ -192,10 +192,10 @@ class ContestProblemHandler extends ContestDetailHandler {
 
     async get({ tid }) {
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
-            [this.tdoc.title, `/c/${tid}`, true],
-            [this.pdoc.title, null, true],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [this.tdoc.title, 'contest_detail', { tid }, true],
+            [this.pdoc.title, null, null, true],
         ];
         this.response.body = {
             tdoc: this.tdoc,
@@ -219,10 +219,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         }
         this.response.template = 'problem_submit.html';
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
-            [this.tdoc.title, `/c/${tid}`, true],
-            [this.pdoc.title, `/c/${tid}/p/${pid}`, true],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [this.tdoc.title, 'contest_detail', { tid }, true],
+            [this.pdoc.title, 'contest_detail_problem', { tid, pid }, true],
             ['contest_detail_problem_submit', null],
         ];
         this.response.body = {
@@ -269,8 +269,8 @@ class ContestCreateHandler extends ContestHandler {
         ts = ts - (ts % (15 * 60 * 1000)) + 15 * 60 * 1000;
         const dt = new Date(ts);
         const path = [
-            ['Hydro', '/'],
-            ['contest_main', '/c'],
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
             ['contest_create', null],
         ];
         this.response.body = {

@@ -13,7 +13,7 @@ class PasteShowHandler extends Handler {
     async get({ docId }) {
         const doc = await pastebin.get(docId);
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['paste_show', null],
             [doc.title, null, true],
         ];
@@ -29,7 +29,7 @@ class PasteCreateHandler extends Handler {
 
     async get() {
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['paste_create', null],
         ];
         this.response.body = { path };

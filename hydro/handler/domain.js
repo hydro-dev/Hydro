@@ -19,7 +19,7 @@ class DomainRankHandler extends Handler {
         }
         udocs = await Promise.all(udocs);
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['ranking', null],
         ];
         this.response.template = 'ranking.html';
@@ -38,7 +38,7 @@ class DomainCreateHandler extends Handler {
 
     async get() {
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['domain_create', null],
         ];
         this.response.body = { path };
@@ -62,8 +62,8 @@ class ManageHandler extends Handler {
 class DomainEditHandler extends ManageHandler {
     async get() {
         const path = [
-            ['Hydro', '/'],
-            ['domain', '/domain'],
+            ['Hydro', 'homepage'],
+            ['domain', null],
             ['domain_edit', null],
         ];
         this.response.template = 'domain_edit.html';
@@ -81,8 +81,8 @@ class DomainEditHandler extends ManageHandler {
 class DomainDashboardHandler extends ManageHandler {
     async get() {
         const path = [
-            ['Hydro', '/'],
-            ['domain', '/domain'],
+            ['Hydro', 'homepage'],
+            ['domain', null],
             ['domain_dashboard', null],
         ];
         this.response.template = 'domain_dashboard.html';
@@ -115,8 +115,8 @@ class DomainUserHandler extends ManageHandler {
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const udict = await user.getList(domainId, uids);
         const path = [
-            ['Hydro', '/'],
-            ['domain', '/domain'],
+            ['Hydro', 'homepage'],
+            ['domain', null],
             ['domain_user', null],
         ];
         this.response.template = 'domain_user.html';
@@ -135,8 +135,8 @@ class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await user.getRoles(domainId);
         const path = [
-            ['Hydro', '/'],
-            ['domain', '/domain'],
+            ['Hydro', 'homepage'],
+            ['domain', null],
             ['domain_permission', null],
         ];
         this.response.template = 'domain_permission.html';
@@ -159,8 +159,8 @@ class DomainRoleHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await user.getRoles(domainId);
         const path = [
-            ['Hydro', '/'],
-            ['domain', '/domain'],
+            ['Hydro', 'homepage'],
+            ['domain', null],
             ['domain_role', null],
         ];
         this.response.template = 'domain_role.html';

@@ -67,7 +67,7 @@ class DiscussionMainHandler extends Handler {
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['discussion_main', null],
         ];
         const vndict = await discussion.getListVnodes(domainId, ddocs, this);
@@ -89,8 +89,8 @@ class DiscussionNodeHandler extends DiscussionHandler {
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
-            ['Hydro', '/'],
-            ['discussion_main', '/discuss'],
+            ['Hydro', 'homepage'],
+            ['discussion_main', 'discussion_main'],
             [this.vnode.title, null, true],
         ];
         const vndict = { [typeMapper[type]]: { [name]: this.vnode } };
@@ -116,9 +116,9 @@ class DiscussionCreateHandler extends DiscussionHandler {
 
     async get({ type, name }) {
         const path = [
-            ['Hydro', '/'],
-            ['discussion_main', '/discuss'],
-            [this.vnode.title, `/discuss/${type}/${name}`, true],
+            ['Hydro', 'homepage'],
+            ['discussion_main', 'discussion_main'],
+            [this.vnode.title, 'discussion_node', { type, name }, true],
             ['discussion_create', null],
         ];
         this.response.template = 'discussion_create.html';
@@ -161,10 +161,10 @@ class DiscussionDetailHandler extends DiscussionHandler {
         }
         const udict = await user.getList(domainId, uids);
         const path = [
-            ['Hydro', '/'],
-            ['discussion_main', '/discuss'],
-            [this.vnode.title, `/discuss/${discussion.typeDisplay[this.ddoc.parentType]}/${this.ddoc.parentId}`, true],
-            [this.ddoc.title, null, true],
+            ['Hydro', 'homepage'],
+            ['discussion_main', 'discussion_main'],
+            [this.vnode.title, 'discussion_node', { type: discussion.typeDisplay[this.ddoc.parentType], name: this.ddoc.parentId }, true],
+            [this.ddoc.title, null, null, true],
         ];
         this.response.template = 'discussion_detail.html';
         this.response.body = {
@@ -253,10 +253,10 @@ class DiscussionEditHandler extends DiscussionHandler {
     async get() {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
         const path = [
-            ['Hydro', '/'],
-            ['discussion_main', '/discuss'],
-            [this.vnode.title, `/discuss/${this.ddoc.parentType}`, true],
-            [this.ddoc.title, `/discuss/${this.ddoc.docId}`, true],
+            ['Hydro', 'homepage'],
+            ['discussion_main', 'discussion_main'],
+            [this.vnode.title, 'discussion_node', { type: discussion.typeDisplay[this.ddoc.parentType], name: this.ddoc.parentId }, true],
+            [this.ddoc.title, 'discussion_detail', { did: this.ddoc.docId }, true],
             ['discussion_edit', null],
         ];
         this.response.template = 'discussion_edit.html';
@@ -278,7 +278,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION);
         await discussion.delete(domainId, did);
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
-        this.response.redirect = `/discuss/${this.ddoc.type}/${this.ddoc.parent}`;
+        this.response.redirect = `/discuss/${this.ddoc.parentType}/${this.ddoc.parentId}`;
     }
 }
 

@@ -6,8 +6,8 @@ class WikiHandler extends Handler {
         if (!global.Hydro.wiki[page]) throw new NotFoundError(page);
         const contents = global.Hydro.wiki[page];
         const path = [
-            ['Hydro', '/'],
-            ['wiki', '/wiki'],
+            ['Hydro', 'homepage'],
+            ['wiki', null],
             [`wiki_${page}`, null],
         ];
         this.response.body = {

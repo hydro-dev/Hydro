@@ -28,7 +28,8 @@ class StatusHandler extends Handler {
             stats[i].status = desc;
         }
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
+            ['status', null],
         ];
         this.response.body = { stats, path };
         this.response.template = 'status.html';

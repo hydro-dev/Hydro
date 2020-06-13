@@ -10,8 +10,8 @@ class SystemHandler extends Handler {
         if (!this.user.priv) throw new PermissionError('???');
         this.response.body = {
             path: [
-                ['Hydro', '/'],
-                ['manage_main', '/manage'],
+                ['Hydro', 'homepage'],
+                ['manage_main', null],
             ],
         };
     }

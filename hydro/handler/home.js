@@ -28,6 +28,7 @@ class HomeHandler extends Handler {
     async homework(domainId) {
         if (this.user.hasPerm(PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
+                .sort('beginAt', -1)
                 .limit(await system.get('HOMEWORK_ON_MAIN'))
                 .toArray();
             const tsdict = await contest.getListStatus(
@@ -42,6 +43,7 @@ class HomeHandler extends Handler {
     async contest(domainId) {
         if (this.user.hasPerm(PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
+                .sort('beginAt', -1)
                 .limit(await system.get('CONTESTS_ON_MAIN'))
                 .toArray();
             const tsdict = await contest.getListStatus(
@@ -159,7 +161,7 @@ class HomeSettingsHandler extends Handler {
 
     async get({ category }) {
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             [`home_${category}`, null],
         ];
         this.response.template = 'home_settings.html';
@@ -245,7 +247,7 @@ class HomeMessagesHandler extends Handler {
             }
         }
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['home_messages', null],
         ];
         this.response.body = { messages, udict, path };

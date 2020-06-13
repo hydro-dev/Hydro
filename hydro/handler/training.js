@@ -87,7 +87,7 @@ class TrainingMainHandler extends TrainingHandler {
         }
         for (const tdoc in tdocs) tdict[tdoc.docId] = tdoc;
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['training_main', null],
         ];
         this.response.template = 'training_main.html';
@@ -139,8 +139,9 @@ class TrainingDetailHandler extends TrainingHandler {
             done: doneNids.size === tdoc.dag.length,
         });
         const path = [
+            ['Hydro', 'homepage'],
             ['training_main', 'training_main'],
-            [tdoc.title, null, true],
+            [tdoc.title, null, null, true],
         ];
         this.response.template = 'training_detail.html';
         this.response.body = {
@@ -159,9 +160,9 @@ class TrainingDetailHandler extends TrainingHandler {
 class TrainingCreateHandler extends TrainingHandler {
     async get() {
         const path = [
-            ['Hydro', '/'],
-            ['problem_main', '/t'],
-            ['problem_create', null],
+            ['Hydro', 'homepage'],
+            ['training_main', 'training_main'],
+            ['training_create', null],
         ];
         this.response.template = 'training_edit.html';
         this.response.body = { page_name: 'training_create', path };
@@ -201,8 +202,9 @@ class TrainingEditHandler extends TrainingHandler {
         if (tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_TRAINING);
         const dag = JSON.stringify(tdoc.dag, null, 2);
         const path = [
-            ['training_main', '/t'],
-            [tdoc.title, `/t/${tdoc.docId}`, true],
+            ['Hydro', 'homepage'],
+            ['training_main', 'training_main'],
+            [tdoc.title, 'training_detail', { tid: tdoc.docId }, true],
             ['training_edit', null],
         ];
         this.response.template = 'training_edit.html';

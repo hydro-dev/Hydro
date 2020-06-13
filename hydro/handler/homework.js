@@ -38,7 +38,7 @@ class HomeworkMainHandler extends HomeworkHandler {
             calendar.push(cal);
         }
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['homework_main', null],
         ];
         this.response.body = { tdocs, calendar, path };
@@ -80,9 +80,9 @@ class HomeworkDetailHandler extends HomeworkHandler {
         uids.push(tdoc.owner);
         const udict = await user.getList(domainId, uids);
         const path = [
-            ['Hydro', '/'],
-            ['homework_main', '/homework'],
-            [tdoc.title, null, true],
+            ['Hydro', 'homepage'],
+            ['homework_main', 'homework_main'],
+            [tdoc.title, null, null, true],
         ];
         this.response.template = 'homework_detail.html';
         this.response.body = {
@@ -118,10 +118,10 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         }
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['homework_main', '/homework'],
-            [this.tdoc.title, `/homework/${tid}`, true],
-            [this.pdoc.title, null, true],
+            [this.tdoc.title, 'homework_detail', { tid }, true],
+            [this.pdoc.title, null, null, true],
         ];
         this.response.template = 'problem_detail.html';
         this.response.body = {
@@ -142,10 +142,10 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
                 .sort('_id', -1).limit(10).toArray()
             : [];
         const path = [
-            ['Hydro', '/'],
-            ['homework_main', '/homework'],
-            [this.tdoc.title, `/homework/${tid}`, true],
-            [this.pdoc.title, `/homework/${tid}/p/${pid}`, true],
+            ['Hydro', 'homepage'],
+            ['homework_main', 'homework_main'],
+            [this.tdoc.title, 'homework_detail', { tid }, true],
+            [this.pdoc.title, 'homework_detail_problem', { tid, pid }, true],
             ['homework_detail_problem_submit', null],
         ];
         this.response.template = 'problem_submit.html';
@@ -178,8 +178,8 @@ class HomeworkCreateHandler extends HomeworkHandler {
         const beginAt = moment().add(1, 'day');
         const penaltySince = beginAt.add(7, 'days');
         const path = [
-            ['Hydro', '/'],
-            ['homework_main', '/homework'],
+            ['Hydro', 'homepage'],
+            ['homework_main', 'homework_main'],
             ['homework_create', null],
         ];
         this.response.template = 'homework_edit.html';
@@ -233,9 +233,9 @@ class HomeworkEditHandler extends HomeworkHandler {
             (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / 36000 / 24,
         ) / 100;
         const path = [
-            ['Hydro', '/'],
-            ['homework_main', '/homework'],
-            [tdoc.title, `/homework/${tid}`, true],
+            ['Hydro', 'homepage'],
+            ['homework_main', 'homework_main'],
+            [tdoc.title, 'homework_detail', { tid }, true],
             ['homework_edit', null],
         ];
         const beginAt = moment(tdoc.beginAt).tz(this.user.timeZone);
@@ -299,8 +299,9 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
             domainId, tid, false, document.TYPE_HOMEWORK,
         );
         const path = [
-            ['homework_main', '/homework'],
-            [tdoc.title, `/homework/${tid}`, true],
+            ['Hydro', 'homepage'],
+            ['homework_main', 'homework_main'],
+            [tdoc.title, 'homework_detail', { tid }, true],
             ['homework_scoreboard', null],
         ];
         this.response.template = 'contest_scoreboard.html';

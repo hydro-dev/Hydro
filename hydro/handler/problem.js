@@ -45,7 +45,7 @@ class ProblemHandler extends Handler {
             );
         }
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['problem_main', null],
         ];
         this.response.body = {
@@ -95,8 +95,8 @@ class ProblemCategoryHandler extends ProblemHandler {
             );
         }
         const path = [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
+            ['Hydro', 'homepage'],
+            ['problem_main', 'problem_main'],
             [category, null, true],
         ];
         this.response.body = {
@@ -119,11 +119,9 @@ class ProblemRandomHandler extends ProblemHandler {
 class ProblemDetailHandler extends ProblemHandler {
     async _prepare({ domainId, pid }) {
         this.response.template = 'problem_detail.html';
-        this.uid = this.user._id;
-        this.pid = pid;
         if (pid) {
-            this.pdoc = await problem.get(domainId, pid, this.uid);
-            if (this.pdoc.hidden && this.pdoc.owner !== this.uid) {
+            this.pdoc = await problem.get(domainId, pid, this.user._id);
+            if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
                 this.checkPerm(PERM_VIEW_PROBLEM_HIDDEN);
             }
             if (this.pdoc) this.udoc = await user.getById(domainId, this.pdoc.owner);
@@ -137,8 +135,8 @@ class ProblemDetailHandler extends ProblemHandler {
 
     async get() {
         this.response.body.path = [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
+            ['Hydro', 'homepage'],
+            ['problem_main', 'problem_main'],
             [this.pdoc.title, null, true],
         ];
     }
@@ -149,17 +147,17 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         this.checkPerm(PERM_SUBMIT_PROBLEM);
     }
 
-    async get({ domainId }) {
+    async get({ domainId, pid }) {
         this.response.template = 'problem_submit.html';
-        const rdocs = await record.getUserInProblemMulti(domainId, this.uid, this.pdoc.docId)
+        const rdocs = await record.getUserInProblemMulti(domainId, this.user._id, this.pdoc.docId)
             .sort({ _id: -1 })
             .limit(10)
             .toArray();
         this.response.body = {
             path: [
-                ['Hydro', '/'],
-                ['problem_main', '/p'],
-                [this.pdoc.title, `/p/${this.pid}`, true],
+                ['Hydro', 'homepage'],
+                ['problem_main', 'problem_main'],
+                [this.pdoc.title, 'problem_detail', { pid }, true],
                 ['problem_submit', null],
             ],
             pdoc: this.pdoc,
@@ -172,7 +170,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
     async post({ domainId }) {
         const { lang, code } = this.request.body;
         const rid = await record.add(domainId, {
-            uid: this.uid, lang, code, pid: this.pdoc.docId,
+            uid: this.user._id, lang, code, pid: this.pdoc.docId,
         });
         await Promise.all([
             record.judge(domainId, rid),
@@ -189,7 +187,7 @@ class ProblemPretestHandler extends ProblemDetailHandler {
     }) {
         this.limitRate('add_record', 60, 100);
         const rid = await record.add(domainId, {
-            uid: this.uid, lang, code, pid: this.pdoc.docId, input,
+            uid: this.user._id, lang, code, pid: this.pdoc.docId, input,
         });
         await record.judge(domainId, rid);
         this.response.body = { rid };
@@ -223,8 +221,8 @@ class ProblemStatisticsHandler extends ProblemDetailHandler {
     async get({ domainId }) {
         const udoc = await user.getById(domainId, this.pdoc.owner);
         const path = [
-            ['problem_main', '/p'],
-            [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
+            ['problem_main', 'problem_main'],
+            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid }, true],
             ['problem_statistics', null],
         ];
         this.response.template = 'problem_statistics.html';
@@ -234,17 +232,17 @@ class ProblemStatisticsHandler extends ProblemDetailHandler {
 
 class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
-        if (this.pdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM);
+        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_PROBLEM);
     }
 }
 
 class ProblemSettingsHandler extends ProblemManageHandler {
-    async get() {
+    async get({ pid }) {
         this.response.template = 'problem_settings.html';
         this.response.body.path = [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
-            [this.pdoc.title, `/p/${this.pid}`, true],
+            ['Hydro', 'homepage'],
+            ['problem_main', 'problem_main'],
+            [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_settings', null],
         ];
     }
@@ -259,9 +257,9 @@ class ProblemEditHandler extends ProblemManageHandler {
     async get({ pid }) {
         this.response.template = 'problem_edit.html';
         this.response.body.path = [
-            ['Hydro', '/'],
-            ['problem_main', '/p'],
-            [this.pdoc.title, `/p/${pid}`, true],
+            ['Hydro', 'homepage'],
+            ['problem_main', 'problem_main'],
+            [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_edit', null],
         ];
         this.response.body.page_name = 'problem_edit';
@@ -302,7 +300,7 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
 
 class ProblemDataDownloadHandler extends ProblemDetailHandler {
     async get({ pid }) {
-        if (this.uid !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
+        if (this.user._id !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
         else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
         this.response.redirect = file.url(this.pdoc.data, this.pdoc.title);
@@ -328,10 +326,10 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
             }
         }
         const udict = await user.getList(uids);
-        const pssdict = solution.getListStatus(domainId, docids, this.uid);
+        const pssdict = solution.getListStatus(domainId, docids, this.user._id);
         const path = [
-            ['problem_main', '/p'],
-            [this.pdoc.title, `/p/${this.pdoc.pid}`, true],
+            ['problem_main', 'problem_main'],
+            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid }, true],
             ['problem_solution', null],
         ];
         this.response.body = {
@@ -345,19 +343,19 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
 
     async postSubmit({ domainId, content }) {
         this.checkPerm(PERM_CREATE_PROBLEM_SOLUTION);
-        await solution.add(domainId, this.pdoc.docId, this.uid, content);
+        await solution.add(domainId, this.pdoc.docId, this.user._id, content);
         this.back();
     }
 
     async postEditSolution({ domainId, content }) {
-        if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
+        if (this.psdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION);
         this.psdoc = await solution.edit(domainId, this.psdoc.docId, content);
         this.ctx.body.psdoc = this.psdoc;
         this.back();
     }
 
     async postDeleteSolution({ domainId }) {
-        if (this.psdoc.owner !== this.uid) this.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
+        if (this.psdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_PROBLEM_SOLUTION);
         await solution.del(domainId, this.psdoc.docId);
         this.back();
     }
@@ -365,7 +363,7 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     async postReply({ domainId, psid, content }) {
         this.checkPerm(PERM_REPLY_PROBLEM_SOLUTION);
         const psdoc = await solution.get(domainId, psid);
-        await solution.reply(domainId, psdoc.docId, this.uid, content);
+        await solution.reply(domainId, psdoc.docId, this.user._id, content);
     }
 
     async postEditReply({
@@ -373,26 +371,26 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     }) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+        if (psrdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         await solution.editReply(domainId, psid, psrid, content);
     }
 
     async postDeleteReply({ domainId, psid, psrid }) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (psrdoc.owner !== this.uid) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+        if (psrdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         await solution.delReply(domainId, psid, psrid);
         this.back();
     }
 
     async postUpvote({ domainId }) {
-        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.uid, 1);
+        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.user._id, 1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
         this.back();
     }
 
     async postDownvote({ domainId }) {
-        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.uid, -1);
+        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.user._id, -1);
         this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
         this.back();
     }
@@ -423,8 +421,8 @@ class ProblemCreateHandler extends Handler {
         this.checkPerm(PERM_CREATE_PROBLEM);
         this.response.body = {
             path: [
-                ['Hydro', '/'],
-                ['problem_main', '/p'],
+                ['Hydro', 'homepage'],
+                ['problem_main', 'problem_main'],
                 ['problem_create', null],
             ],
             page_name: 'problem_create',
