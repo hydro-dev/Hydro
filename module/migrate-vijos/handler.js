@@ -9,7 +9,7 @@ class MigrateVijosHandler extends Handler {
 
     async get() {
         const path = [
-            ['Hydro', '/'],
+            ['Hydro', 'homepage'],
             ['migrate_vijos', null],
         ];
         this.response.body = { path };

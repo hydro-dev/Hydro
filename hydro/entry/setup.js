@@ -93,12 +93,12 @@ function render(name) {
     });
 }
 
-async function setup() {
+async function load() {
     const app = new Koa();
     const server = http.createServer(app.callback());
     const router = new Router();
     app.keys = ['Hydro'];
-    app.use(cache(path.join(os.tmpdir(), 'hydro', 'builtin'), {
+    app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
         maxAge: 365 * 24 * 60 * 60,
     }));
     app.use(Body());
@@ -156,7 +156,7 @@ async function setup() {
             else resolve();
         });
     });
-    console.log('Done! Restarting...');
+    return 'Done! Restarting...';
 }
 
-module.exports = { setup };
+module.exports = load;

@@ -30,7 +30,7 @@ for (const i of moduleRoots) {
         break;
     }
 }
-function exec() {
+async function load() {
     const files = fs.readdirSync(moduleRoot);
     const t = ['service', 'lib', 'model', 'handler', 'script'];
     ensureDir(`${os.tmpdir()}/hydro`);
@@ -111,4 +111,4 @@ function exec() {
     }
 }
 
-module.exports = exec;
+module.exports = load;
