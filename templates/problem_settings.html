@@ -16,6 +16,29 @@
     </div>
     <div class="section">
       <div class="section__header">
+        <h1 class="section__title">{{ _('Testdata Config') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_textarea({
+               columns:null,
+               label:'Config',
+               name:'yaml',
+               value:pdoc['config']|default(''),
+               yaml:true
+             }) }}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="operation" value="config">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+            <button type="submit" class="rounded primary button">
+              {{ _('Update') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
         <h1 class="section__title">{{ _('Settings') }}</h1>
       </div>
       <div class="section__body">
@@ -41,6 +64,7 @@
                value:pdoc['tag']|join(', ')
              }) }}
           <div class="row"><div class="columns">
+            <input type="hidden" name="operation" value="settings">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}

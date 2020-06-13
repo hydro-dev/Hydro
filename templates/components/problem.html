@@ -1,9 +1,10 @@
-{% macro render_problem_title(pdoc, tdoc=none, prefix='/c', show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
+{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, rp=none, invalid=false) %}
   {%- if not invalid %}
   <a
-  {%- if tdoc %}
-  {# TODO(masnn) use url() #}
-    href="{{ prefix }}/{{ tdoc.docId }}/p/{{ pdoc.docId }}"
+  {%- if tdoc and tdoc.docType == model.document.TYPE_CONTEST %}
+    href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=pdoc.docId) }}"
+  {%- elif tdoc and tdoc.docType == model.document.TYPE_HOMEWORK %}
+    href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.docId) }}"
   {%- else %}
     href="{{ url('problem_detail', pid=pdoc.pid) }}"
   {%- endif %}

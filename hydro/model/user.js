@@ -224,7 +224,7 @@ function deleteRoles(domainId, roles) {
 function ban(uid) {
     return Promise.all([
         coll.updateOne({ _id: uid }, { $set: { ban: true } }),
-        token.deleteByUid(uid),
+        token.delByUid(uid),
     ]);
 }
 

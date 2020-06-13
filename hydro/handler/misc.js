@@ -9,10 +9,10 @@ const { Route, Handler } = require('../service/server');
 const coll = db.collection('status');
 
 class FileDownloadHandler extends Handler {
-    async get({ id, secret, name }) {
+    async get({ docId, secret, name }) {
         if (name) name = Buffer.from(name, 'base64').toString();
-        this.response.attachment(name || id);
-        this.response.body = await file.get(id, secret);
+        this.response.attachment(name || docId);
+        this.response.body = await file.get(docId, secret);
     }
 }
 
@@ -65,8 +65,8 @@ class MarkdownHandler extends Handler {
 }
 
 async function apply() {
-    Route('file_download', '/fs/:id/:secret', FileDownloadHandler);
-    Route('file_download_with_name', '/fs/:id/:name/:secret', FileDownloadHandler);
+    Route('file_download', '/fs/:docId/:secret', FileDownloadHandler);
+    Route('file_download_with_name', '/fs/:docId/:name/:secret', FileDownloadHandler);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);

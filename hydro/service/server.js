@@ -54,6 +54,9 @@ const validate = {
         if (page <= 0) throw new ValidationError('page');
         return page;
     },
+    category: (category) => category.split(',').map((i) => i.trim()),
+    tag: (tag) => tag.split(',').map((i) => i.trim()),
+    hidden: (hidden) => !!hidden,
     duration: (duration) => {
         if (!Number.isNaN(parseFloat(duration))) duration = parseFloat(duration);
         if (duration <= 0) throw new ValidationError('duration');
@@ -75,6 +78,10 @@ const validate = {
         }
         assert(typeof penaltyRules === 'object', new ValidationError('penalty_rules', 'invalid format'));
         return penaltyRules;
+    },
+    yaml: (input) => {
+        yaml.safeLoad(input);
+        return input;
     },
 };
 
@@ -222,7 +229,7 @@ class Handler {
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
-        [this.csrfToken] = await token.add(token.TYPE_CSRF_TOKEN, 600, {
+        this.csrfToken = await token.createOrUpdate(token.TYPE_CSRF_TOKEN, 600, {
             path: this.request.path,
             uid: this.session.uid,
         });
@@ -400,7 +407,7 @@ class ConnectionHandler {
     async ___prepare({ domainId }) {
         try {
             this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN);
-            await token.delete(this.request.params.token, token.TYPE_CSRF_TOKEN);
+            await token.del(this.request.params.token, token.TYPE_CSRF_TOKEN);
         } catch (e) {
             this.session = { uid: 1 };
         }

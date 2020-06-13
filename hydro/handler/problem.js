@@ -247,8 +247,15 @@ class ProblemSettingsHandler extends ProblemManageHandler {
         ];
     }
 
-    async post() {
-        // TODO(masnn)
+    async postConfig({ domainId, pid, yaml }) {
+        await problem.edit(domainId, pid, { config: yaml });
+        this.back();
+    }
+
+    async postSetting({
+        domainId, pid, hidden = false, category, tag,
+    }) {
+        await problem.edit(domainId, pid, { hidden, category, tag });
         this.back();
     }
 }
@@ -303,7 +310,7 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
         if (this.user._id !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
         else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
-        this.response.redirect = file.url(this.pdoc.data, this.pdoc.title);
+        this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
     }
 }
 

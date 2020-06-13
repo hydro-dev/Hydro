@@ -141,7 +141,7 @@ class HomeSecurityHandler extends Handler {
         for (const session of sessions) {
             if (tokenDigest === md5(session._id)) {
                 // eslint-disable-next-line no-await-in-loop
-                await token.delete(session._id, token.TYPE_SESSION);
+                await token.del(session._id, token.TYPE_SESSION);
                 return this.back();
             }
         }
@@ -149,7 +149,7 @@ class HomeSecurityHandler extends Handler {
     }
 
     async postDeleteAllTokens() {
-        await token.deleteByUid(this.user._id);
+        await token.delByUid(this.user._id);
         this.response.redirect = '/login';
     }
 }
@@ -200,7 +200,7 @@ class UserChangemailWithCodeHandler extends Handler {
         if (udoc) throw new UserAlreadyExistError(tdoc.mail);
         await Promise.all([
             user.setEmail(this.user._id, tdoc.mail),
-            token.delete(code, token.TYPE_CHANGEMAIL),
+            token.del(code, token.TYPE_CHANGEMAIL),
         ]);
         this.response.redirect = '/home/security';
     }

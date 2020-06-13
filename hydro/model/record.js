@@ -110,6 +110,7 @@ async function judge(domainId, rid) {
         type: 'judge',
         rid,
         domainId,
+        config: pdoc.config || '',
         pid: rdoc.pid,
         data: pdoc.data,
         lang: rdoc.lang,

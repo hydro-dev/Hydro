@@ -90,7 +90,7 @@ function getMultiStatus(domainId, query) {
  * @returns {Pdoc}
  */
 function edit(domainId, _id, $set) {
-    return document.set(domainId, document.TYPE_CONTEST, _id, $set);
+    return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
 }
 
 function inc(domainId, _id, field, n) {
@@ -111,13 +111,21 @@ async function random(domainId, query) {
 }
 
 async function getList(domainId, pids, doThrow = true) {
+    pids = new Set(pids);
     const r = {};
-    if (doThrow) {
-        // eslint-disable-next-line no-await-in-loop
-        for (const pid of pids) r[pid] = await get(domainId, pid);
-    } else {
-        // eslint-disable-next-line no-await-in-loop
-        for (const pid of pids) r[pid] = await get(domainId, pid).catch((e) => e);
+    const pdocs = await document.getMulti(
+        domainId, document.TYPE_PROBLEM,
+        { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] },
+    ).toArray();
+    for (const pdoc of pdocs) {
+        r[pdoc.docId] = r[pdoc.pid] = pdoc;
+    }
+    if (pdocs.length !== pids.size) {
+        if (doThrow) {
+            for (const pid of pids) {
+                if (!r[pid]) throw new ProblemNotFoundError(domainId, pid);
+            }
+        }
     }
     return r;
 }
@@ -141,6 +149,7 @@ async function updateStatus(domainId, pid, uid, rid, status) {
 }
 
 async function setTestdata(domainId, _id, readStream) {
+    // TODO read config in zipfile
     const pdoc = await get(domainId, _id);
     const id = await file.add(readStream, 'data.zip');
     if (pdoc.data && typeof pdoc.data === 'object') file.dec(this.pdoc.data);

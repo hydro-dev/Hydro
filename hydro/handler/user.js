@@ -89,7 +89,7 @@ class UserRegisterWithCodeHandler extends Handler {
         await user.create({
             uid, uname, password, mail, regip: this.request.ip,
         });
-        await token.delete(code, token.TYPE_REGISTRATION);
+        await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
         this.response.redirect = '/';
     }
@@ -129,7 +129,7 @@ class UserLostPassWithCodeHandler extends Handler {
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
         await user.setPassword(tdoc.uid, password);
-        await token.delete(code, token.TYPE_LOSTPASS);
+        await token.del(code, token.TYPE_LOSTPASS);
         this.response.redirect = '/';
     }
 }

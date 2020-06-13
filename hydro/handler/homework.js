@@ -311,6 +311,18 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
     }
 }
 
+class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
+    async get({ domainId, tid, ext }) {
+        const getContent = {
+            csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
+            html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
+        };
+        if (!getContent[ext]) throw new ValidationError('ext');
+        const [, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_CONTEST);
+        this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
+    }
+}
+
 async function apply() {
     contest.isHomeworkExtended = (tdoc) => {
         const now = new Date().getTime();
@@ -456,15 +468,15 @@ async function apply() {
     Route('homework_create', '/homework/create', HomeworkCreateHandler, PERM_CREATE_HOMEWORK);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM_VIEW_HOMEWORK);
     Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
-    Route('homework_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
-    Route('homework_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
+    Route('homework_scoreboard', '/homework/:tid/scoreboard/download/:ext', HomeworkScoreboardDownloadHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
+    Route('homework_detail_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
+    Route('homework_detail_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
     Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }
 
 global.Hydro.handler.homework = module.exports = apply;
 
 /*
-
 @app.route('/homework/{tid:\w{24}}/code', 'homework_code')
 class HomeworkCodeHandler(base.OperationHandler):
   @base.limit_rate('homework_code', 3600, 60)
@@ -490,32 +502,4 @@ class HomeworkCodeHandler(base.OperationHandler):
 
     await this.binary(output_buffer.getvalue(), 'application/zip',
                       file_name='{}.zip'.format(tdoc['title']))
-
-
-@app.route('/homework/{tid}/scoreboard/download/{ext}', 'homework_scoreboard_download')
-class HomeworkScoreboardDownloadHandler(contest.ContestMixin, base.Handler):
-  def _export_status_as_csv(this, rows):
-    # \r\n for notepad compatibility
-    csv_content = '\r\n'.join([','.join([str(c['value']) for c in row]) for row in rows])
-    data = '\uFEFF' + csv_content
-    return data.encode()
-
-  def _export_status_as_html(this, rows):
-    return this.render_html('contest_scoreboard_download_html.html', rows=rows).encode()
-
-  @base.route_argument
-  @base.require_perm(builtin.PERM_VIEW_HOMEWORK)
-  @base.require_perm(builtin.PERM_VIEW_HOMEWORK_SCOREBOARD)
-  @base.sanitize
-  async def get(this, *, tid: objectid.ObjectId, ext: str):
-    get_status_content = {
-      'csv': this._export_status_as_csv,
-      'html': this._export_status_as_html,
-    }
-    if ext not in get_status_content:
-      raise error.ValidationError('ext')
-    tdoc, rows, udict = await this.get_scoreboard(document.TYPE_HOMEWORK, tid, True)
-    data = get_status_content[ext](rows)
-    file_name = tdoc['title']
-    await this.binary(data, file_name='{}.{}'.format(file_name, ext))
 */
