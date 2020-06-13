@@ -2,7 +2,7 @@ const user = require('./user');
 const problem = require('./problem');
 const {
     ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
-    ContestNotAttendedError, ProblemNotFoundError, ContestScoreboardHiddenError,
+    ContestNotAttendedError, ContestScoreboardHiddenError,
 } = require('../error');
 const { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
 const validator = require('../lib/validator');
@@ -74,7 +74,9 @@ const acm = {
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            if (tdoc.detail) { for (const item of tsdoc.journal) tsddict[item.pid] = item; }
+            if (tdoc.detail) {
+                for (const item of tsdoc.journal) tsddict[item.pid] = item;
+            }
             const row = [];
             row.push(
                 { type: 'string', value: rank },
@@ -346,13 +348,7 @@ const ContestHandlerMixin = (c) => class extends c {
     }
 
     async verifyProblems(domainId, pids) { // eslint-disable-line class-methods-use-this
-        const r = [];
-        for (const pid of pids) {
-            const res = await problem.get(domainId, pid); // eslint-disable-line no-await-in-loop
-            if (res) r.push(res.docId);
-            else throw new ProblemNotFoundError(pid);
-        }
-        return r;
+        return await problem.getList(domainId, pids, true);
     }
 };
 

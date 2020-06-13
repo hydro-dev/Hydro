@@ -79,9 +79,15 @@ class ProblemHandler extends Handler {
 class ProblemCategoryHandler extends ProblemHandler {
     async get({ domainId, page = 1, category }) {
         this.response.template = 'problem_main.html';
-        const q = {
-            $or: [{ category }, { tag: category }],
-        };
+        const q = { $and: [] };
+        for (const name of category) {
+            q.$and.push({
+                $or: [
+                    { category: { $elemMatch: { $eq: name } } },
+                    { tag: { $elemMatch: { $eq: name } } },
+                ],
+            });
+        }
         let psdict = {};
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
@@ -97,10 +103,10 @@ class ProblemCategoryHandler extends ProblemHandler {
         const path = [
             ['Hydro', 'homepage'],
             ['problem_main', 'problem_main'],
-            [category, null, true],
+            [category, null, null, true],
         ];
         this.response.body = {
-            path, page, pcount, ppcount, pdocs, psdict, category,
+            path, page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
         };
     }
 }
@@ -295,8 +301,7 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
 
     async post({ domainId }) {
         if (!this.request.files.file) throw new BadRequestError();
-        const r = fs.createReadStream(this.request.files.file.path);
-        await problem.setTestdata(domainId, this.pdoc.docId, r);
+        await problem.setTestdata(domainId, this.pdoc.docId, this.request.files.file.path);
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
             const f = await file.getMeta(this.pdoc.data);
             this.md5 = f.md5;

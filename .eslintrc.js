@@ -27,5 +27,6 @@ module.exports = {
         "global-require": "off",
         "no-nested-ternary": "off",
         "no-multi-assign": "off",
+        "no-return-await": "off",
     },
 };

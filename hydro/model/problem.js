@@ -3,6 +3,7 @@ const file = require('./file');
 const document = require('./document');
 const domain = require('./domain');
 const { ProblemNotFoundError } = require('../error');
+const readConfig = require('../lib/readConfig');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
@@ -30,9 +31,13 @@ async function add(domainId, title, content, owner, {
 }) {
     const d = await domain.inc(domainId, 'pidCounter', 1);
     if (!pid) pid = d.pidCounter.toString();
-    return await document.add(domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null, {
-        pid, title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
-    });
+    // eslint-disable-next-line no-return-await
+    return await document.add(
+        domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null,
+        {
+            pid, title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
+        },
+    );
 }
 
 /**
@@ -148,12 +153,12 @@ async function updateStatus(domainId, pid, uid, rid, status) {
     return true;
 }
 
-async function setTestdata(domainId, _id, readStream) {
-    // TODO read config in zipfile
+async function setTestdata(domainId, _id, filePath) {
     const pdoc = await get(domainId, _id);
-    const id = await file.add(readStream, 'data.zip');
-    if (pdoc.data && typeof pdoc.data === 'object') file.dec(this.pdoc.data);
-    return await edit(domainId, _id, { data: id }); // eslint-disable-line no-return-await
+    const config = await readConfig(filePath);
+    const id = await file.add(filePath, 'data.zip');
+    if (pdoc.data && typeof pdoc.data === 'object') file.dec(pdoc.data);
+    return await edit(domainId, _id, { data: id, config });
 }
 
 global.Hydro.model.problem = module.exports = {

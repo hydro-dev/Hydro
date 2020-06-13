@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const problem = require('../model/problem');
 const { Route, Handler } = require('../service/server');
 const { PERM_CREATE_PROBLEM } = require('../permission');
@@ -29,7 +32,14 @@ class ProblemImportHandler extends Handler {
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
         const docId = await problem.add(domainId, pdoc.title, pdoc.content, this.user._id, pdoc);
-        await problem.setTestdata(docId, testdata);
+        const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${pid}.zip`);
+        const w = fs.createWriteStream(file);
+        await new Promise((resolve, reject) => {
+            w.on('finish', resolve);
+            w.on('error', reject);
+            testdata.pipe(w);
+        });
+        await problem.setTestdata(domainId, docId, file);
         this.response.body = { pid: pid || docId };
         this.response.redirect = `/p/${pid || docId}/settings`;
     }

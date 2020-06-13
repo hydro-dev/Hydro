@@ -76,7 +76,7 @@ function editReply(domainId, drid, content) {
 async function delReply(domainId, drid) {
     const drdoc = await getReply(domainId, drid);
     if (!drdoc) throw new DocumentNotFoundError(drid);
-    return await Promise.all([ // eslint-disable-line no-return-await
+    return await Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION_REPLY, drid),
         document.inc(domainId, document.TYPE_DISCUSSION, drdoc.parentId, 'nReply', -1),
     ]);

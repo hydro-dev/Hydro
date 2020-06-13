@@ -1,7 +1,6 @@
 const moment = require('moment-timezone');
 const builtin = require('./builtin');
 const options = require('../options');
-const i18n = require('../lib/i18n');
 
 const countries = moment.tz.countries();
 const tzs = new Set();

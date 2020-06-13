@@ -112,7 +112,7 @@ async function changePassword(uid, currentPassword, newPassword) {
     const udoc = await getById(uid);
     udoc.checkPassword(currentPassword);
     const salt = String.random();
-    return await coll.findOneAndUpdate({ // eslint-disable-line no-return-await
+    return await coll.findOneAndUpdate({
         _id: udoc._id,
     }, {
         $set: { salt, hash: pwhash.hash(newPassword, salt), hashType: 'hydro' },

@@ -1,31 +1,36 @@
+const fs = require('fs');
 const { ForbiddenError } = require('../error');
 const db = require('../service/db');
-const fs = require('../service/gridfs');
+const gridfs = require('../service/gridfs');
 const hash = require('../lib/hash.hydro');
 
 const coll = db.collection('file');
+const collFile = db.collection('fs.files');
+const collChunk = db.collection('fs.chunks');
 
 function _timestamp() {
     return Math.floor(Number(new Date()) / 1000000);
 }
 
-async function add(stream, filename, meta = {}) {
-    const file = await coll.insertOne(meta);
-    const w = fs.openUploadStreamWithId(file.insertedId, filename);
+async function add(streamOrPath, filename, meta = {}) {
+    if (typeof streamOrPath === 'string') streamOrPath = fs.createReadStream(streamOrPath);
+    const w = gridfs.openUploadStream(filename);
+    await coll.insertOne({ ...meta, _id: w.id });
     await new Promise((resolve, reject) => {
-        stream.on('end', resolve);
-        stream.on('error', reject);
-        stream.pipe(w);
+        w.on('error', reject);
+        w.on('finish', resolve);
+        streamOrPath.pipe(w);
     });
-    const c = await fs.find({ _id: file.insertedId }).toArray();
-    await coll.updateOne({ _id: file.insertedId }, { $set: { md5: c[0].md5, size: c[0].size } });
-    return file.insertedId;
+    const c = await gridfs.find({ _id: w.id }).toArray();
+    await coll.updateOne({ _id: w.id }, { $set: { md5: c[0].md5, size: c[0].size } });
+    return w.id;
 }
 
 function del(_id) {
     return Promise.all([
         coll.deleteOne({ _id }),
-        fs.delete(_id),
+        collFile.deleteOne({ _id }),
+        collChunk.deleteMany({ files_id: _id }),
     ]);
 }
 
@@ -58,7 +63,7 @@ async function get(_id, secret) {
             }
         }
     }
-    return fs.openDownloadStream(_id);
+    return gridfs.openDownloadStream(_id);
 }
 
 function getMeta(_id) {

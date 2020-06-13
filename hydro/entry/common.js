@@ -6,6 +6,7 @@ const builtinLib = [
     'axios', 'download', 'i18n', 'mail', 'markdown',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
     'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
+    'readConfig',
 ];
 
 const builtinModel = [

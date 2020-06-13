@@ -45,7 +45,7 @@ async function load() {
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', async (input) => {
             try {
-                const t = eval(input.toString().trim()); // eslint-disable-line no-eval
+                const t = eval(input.toString().trim());
                 if (t instanceof Promise) console.log(await t);
                 else console.log(t);
             } catch (e) {
