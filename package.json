@@ -1,61 +1,57 @@
 {
-  "name": "hydrooj",
-  "version": "2.2.1",
-  "main": "hydro/loader.js",
-  "repository": "https://github.com/hydro-dev/Hydro.git",
-  "author": "masnn",
-  "license": "GPL-3.0-only",
-  "dependencies": {
-    "adm-zip": "^0.4.14",
-    "axios": "^0.19.0",
-    "bson": "^4.0.2",
-    "js-yaml": "^3.13.1",
-    "koa": "^2.11.0",
-    "koa-body": "^4.1.1",
-    "koa-morgan": "^1.0.1",
-    "koa-router": "^8.0.8",
-    "koa-static-cache": "^5.1.3",
-    "lodash": "^4.17.15",
-    "markdown-it": "^10.0.0",
-    "markdown-it-container": "^3.0.0",
-    "markdown-it-footnote": "^3.0.2",
-    "markdown-it-imsize": "^2.0.1",
-    "markdown-it-katex": "^2.0.3",
-    "markdown-it-mark": "^3.0.0",
-    "moment-timezone": "^0.5.31",
-    "mongodb": "^3.5.7",
-    "nodemailer": "^6.3.1",
-    "nunjucks": "^3.2.1",
-    "prismjs": "^1.20.0",
-    "sockjs": "^0.3.20",
-    "systeminformation": "^4.26.5",
-    "snyk": "^1.341.1"
-  },
-  "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.2",
-    "friendly-errors-webpack-plugin": "^1.7.0",
-    "webpack": "^4.42.1"
-  },
-  "scripts": {
-    "build": "node build/development.js",
-    "build:development": "node build/development.js",
-    "build:production": "node build/production.js",
-    "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn && yarn build:production",
-    "start": "node hydro/loader.js",
-    "pack": "pkg .",
-    "lint": "eslint build hydro module tool --fix",
-    "snyk-protect": "snyk protect",
-    "prepare": "yarn run snyk-protect"
-  },
-  "pkg": {
-    "scripts": [
-      ".build/app.js"
-    ],
-    "assets": [
-      ".build/module/**"
-    ]
-  },
-  "snyk": true
+    "name": "hydrooj",
+    "version": "2.2.1",
+    "main": "hydro/loader.js",
+    "repository": "https://github.com/hydro-dev/Hydro.git",
+    "author": "masnn",
+    "license": "GPL-3.0-only",
+    "dependencies": {
+        "adm-zip": "^0.4.14",
+        "axios": "^0.19.0",
+        "bson": "^4.0.2",
+        "js-yaml": "^3.13.1",
+        "koa": "^2.11.0",
+        "koa-body": "^4.1.1",
+        "koa-morgan": "^1.0.1",
+        "koa-router": "^8.0.8",
+        "koa-static-cache": "^5.1.3",
+        "lodash": "^4.17.15",
+        "markdown-it": "^10.0.0",
+        "markdown-it-container": "^3.0.0",
+        "markdown-it-footnote": "^3.0.2",
+        "markdown-it-imsize": "^2.0.1",
+        "markdown-it-katex": "^2.0.3",
+        "markdown-it-mark": "^3.0.0",
+        "moment-timezone": "^0.5.31",
+        "mongodb": "^3.5.7",
+        "nodemailer": "^6.3.1",
+        "nunjucks": "^3.2.1",
+        "prismjs": "^1.20.0",
+        "sockjs": "^0.3.20",
+        "systeminformation": "^4.26.5"
+    },
+    "devDependencies": {
+        "eslint": "^6.8.0",
+        "eslint-config-airbnb-base": "^14.1.0",
+        "eslint-plugin-import": "^2.20.2",
+        "friendly-errors-webpack-plugin": "^1.7.0",
+        "webpack": "^4.42.1"
+    },
+    "scripts": {
+        "build": "node build/development.js",
+        "build:development": "node build/development.js",
+        "build:production": "node build/production.js",
+        "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn && yarn build:production",
+        "start": "node hydro/loader.js",
+        "pack": "pkg .",
+        "lint": "eslint build hydro module tool --fix"
+    },
+    "pkg": {
+        "scripts": [
+            ".build/app.js"
+        ],
+        "assets": [
+            ".build/module/**"
+        ]
+    }
 }
