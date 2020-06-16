@@ -31,6 +31,11 @@ class SystemDashboardHandler extends SystemHandler {
         this.response.template = 'manage_dashboard.html';
         this.response.body.path.push(['manage_dashboard', null]);
     }
+
+    async postRestart() {
+        process.send({ event: 'restart' });
+        this.back();
+    }
 }
 
 class SystemModuleHandler extends SystemHandler {

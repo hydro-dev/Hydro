@@ -103,6 +103,7 @@ async function lib(pending, fail) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Lib Load Fail: ${i}`);
+                console.error(e);
             }
         }
     }

@@ -11,6 +11,12 @@
 <div class="section">
   <div class="section__header">
     <h1 class="section__title" data-heading>{{ _('Information') }}</h1>
+    <div class="section__tools">
+      <form method="post">
+        <input type="hidden" name="operation" value="restart">
+        <button type="submit" class="primary rounded button"><span class="icon icon-refresh"></span> {{ _('Restart') }}</button>
+      </form>
+    </div>
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">

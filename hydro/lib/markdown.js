@@ -23,6 +23,8 @@ const Mark = require('markdown-it-mark');
 // :::warn This page requires javascript. :::
 // :::record-pass Accepted :::
 const Container = require('markdown-it-container');
+const Anchor = require('markdown-it-anchor');
+const TOC = require('markdown-it-table-of-contents');
 
 require('prismjs/components/index');
 
@@ -45,6 +47,8 @@ class Markdown extends MarkdownIt {
         this.use(Imsize);
         this.use(Footnote);
         this.use(Mark);
+        this.use(Anchor);
+        this.use(TOC);
         const RE_CONTAINER = /^(note|warn|record-pending|record-progress|record-fail|record-pass|record-ignored)\s+(.*)$/;
         const CONTAINER_MAP = {
             note: ['<blockquote class="note">', '</blockquote>'],

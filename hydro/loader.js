@@ -20,6 +20,25 @@ async function entry(config) {
     }
 }
 
+async function stopWorker() {
+    cluster.disconnect();
+}
+
+async function startWorker() {
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+}
+
+async function messageHandler(worker, msg) {
+    if (msg.event && msg.event === 'restart') {
+        console.log('Restarting');
+        await stopWorker();
+        console.log('Worker stopped');
+        await startWorker();
+    }
+}
+
 async function load() {
     global.nodeModules = {
         bson: require('bson'),
@@ -65,9 +84,8 @@ async function load() {
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} is online`);
         });
-        for (let i = 0; i < numCPUs; i++) {
-            cluster.fork();
-        }
+        cluster.on('message', messageHandler);
+        await startWorker();
     } else {
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });
