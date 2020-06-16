@@ -1,5 +1,11 @@
 const { ValidationError } = require('../error');
 
+/**
+ * @param {import('mongodb').Cursor} cursor
+ * @param {number} page
+ * @param {number} pageSize
+ * @returns {Promise<Array[]>} pageDocs numPages count
+ */
 async function paginate(cursor, page, pageSize) {
     if (page <= 0) throw new ValidationError('page');
     const [count, pageDocs] = await Promise.all([

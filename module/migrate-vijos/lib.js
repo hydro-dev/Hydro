@@ -1,4 +1,3 @@
-
 const { md5, sha1 } = global.Hydro.lib;
 
 global.Hydro.lib['hash.vj2'] = module.exports = {

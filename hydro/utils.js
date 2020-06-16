@@ -1,3 +1,5 @@
+const { hasIn } = require("lodash");
+
 const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
 String.random = function random(digit) {
@@ -19,14 +21,19 @@ Array.isDiff = function isDiff(a, b) {
  * @returns {string} Formatted date string
  */
 Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
+    let h = this.getHours();
+    if (h < 10) h = `0${h}`;
+    let m = this.getMinutes();
+    if (m < 10) m = `0${m}`;
+    let s = this.getSeconds();
+    if (s < 10) s = `0${s}`;
     return fmt
         .replace('%Y', this.getFullYear())
         .replace('%m', this.getMonth() + 1)
-        .replace('%D', this.getDate())
         .replace('%d', this.getDate())
-        .replace('%H', this.getHours())
-        .replace('%M', this.getMinutes())
-        .replace('%S', this.getSeconds());
+        .replace('%H', h)
+        .replace('%M', m)
+        .replace('%S', s);
 };
 
 /**

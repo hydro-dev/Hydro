@@ -1,6 +1,29 @@
 const MarkdownIt = require('markdown-it');
-const katex = require('markdown-it-katex');
+
+const md = MarkdownIt();
 const Prism = require('prismjs');
+
+// For math: $a\times b\eq 10$
+const katex = require('markdown-it-katex');
+// Specific image size: ![image](image.png =100x100)
+const Imsize = require('markdown-it-imsize');
+/* Footnote support.
+Here is a footnote reference,[^1] and another.[^longnote]
+
+[^1]: Here is the footnote.
+
+[^longnote]: Here's one with multiple blocks.
+
+    Subsequent paragraphs are indented to show that they
+belong to the previous footnote.
+*/
+const Footnote = require('markdown-it-footnote');
+// ==Highlight==
+const Mark = require('markdown-it-mark');
+// :::warn This page requires javascript. :::
+// :::record-pass Accepted :::
+const Container = require('markdown-it-container');
+
 require('prismjs/components/index');
 
 class Markdown extends MarkdownIt {
@@ -19,6 +42,38 @@ class Markdown extends MarkdownIt {
         });
         this.linkify.tlds('.py', false);
         this.use(katex);
+        this.use(Imsize);
+        this.use(Footnote);
+        this.use(Mark);
+        const RE_CONTAINER = /^(note|warn|record-pending|record-progress|record-fail|record-pass|record-ignored)\s+(.*)$/;
+        const CONTAINER_MAP = {
+            note: ['<blockquote class="note">', '</blockquote>'],
+            warn: ['<blockquote class="warn">', '</blockquote>'],
+            'record-pending': ['<span class="record-status--text pending">', '</span>'],
+            'record-progress': ['<span class="record-status--text progress">', '</span>'],
+            'record-fail': ['<span class="record-status--text fail">', '</span>'],
+            'record-pass': ['<span class="record-status--text pass">', '</span>'],
+            'record-ignored': ['<span class="record-status--text ignored">', '</span>'],
+        };
+        this.use(Container, 'blockquote', {
+            validate(params) {
+                return params.trim().match(RE_CONTAINER);
+            },
+            render(tokens, idx) {
+                const m = tokens[idx].info.trim().match(RE_CONTAINER);
+                if (!m) return '';
+                if (tokens[idx].nesting === 1) {
+                    if (CONTAINER_MAP[m[1]]) {
+                        return `${CONTAINER_MAP[m[1]][0] + md.utils.escapeHtml(m[2])}\n`;
+                    }
+                    return `[${m[1]}] ${md.utils.escapeHtml(m[2])}\n`;
+                }
+                if (CONTAINER_MAP[m[1]]) {
+                    return `${CONTAINER_MAP[m[1]][1]}\n`;
+                }
+                return `[/${m[1]}]`;
+            },
+        });
     }
 }
 

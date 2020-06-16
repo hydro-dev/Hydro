@@ -1,5 +1,8 @@
 const setting = require('../model/setting');
 const system = require('../model/system');
+const { STATUS } = require('../model/builtin');
+const record = require('../model/record');
+const judge = require('./judge');
 const { Route, Handler } = require('../service/server');
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
@@ -56,11 +59,49 @@ class SystemScriptHandler extends SystemHandler {
         this.response.body.path.push(['manage_script', null]);
     }
 
-    async post({ id, args = '{}' }) {
+    async post({ domainId, id, args = '{}' }) {
         args = JSON.parse(args);
         // TODO Do not use console.log
-        await global.Hydro.script[id].run(args, console.log);
-        this.back();
+        const rid = await record.add(domainId, {
+            pid: id,
+            uid: this.user._id,
+            lang: null,
+            code: null,
+            status: STATUS.STATUS_JUDGING,
+        }, false);
+        async function report(data) {
+            judge.next({ domainId, rid, ...data });
+        }
+        setTimeout(() => {
+            const start = new Date().getTime();
+            global.Hydro.script[id].run(args, report)
+                .then((ret) => {
+                    const time = new Date().getTime() - start;
+                    judge.end({
+                        domainId,
+                        rid,
+                        status: STATUS.STATUS_ACCEPTED,
+                        judge_text: ret,
+                        judger: 1,
+                        time_ms: time,
+                        memory_kb: 0,
+                    });
+                })
+                .catch((err) => {
+                    const time = new Date().getTime() - start;
+                    judge.end({
+                        domainId,
+                        rid,
+                        status: STATUS.STATUS_SYSTEM_ERROR,
+                        judge_text: `${err}\n${err.stack}`,
+                        judger: 1,
+                        time_ms: time,
+                        memory_kb: 0,
+                    });
+                });
+        }, 500);
+        this.response.body = { rid };
+        this.response.redirect = this.url('record_main', { rid });
     }
 }
 

@@ -176,7 +176,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 class HomeworkCreateHandler extends HomeworkHandler {
     async get() {
         const beginAt = moment().add(1, 'day');
-        const penaltySince = beginAt.add(7, 'days');
+        const penaltySince = beginAt.clone().add(7, 'days');
         const path = [
             ['Hydro', 'homepage'],
             ['homework_main', 'homework_main'],
@@ -212,7 +212,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
         } catch (e) {
             throw new ValidationError('endAtDate', 'endAtTime');
         }
-        const endAt = penaltySince.add(extensionDays, 'days');
+        const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
         penaltySince = penaltySince.toDate();
@@ -273,7 +273,7 @@ class HomeworkEditHandler extends HomeworkHandler {
         } catch (e) {
             throw new ValidationError('endAtDate', 'endAtTime');
         }
-        let endAt = penaltySince.add(extensionDays, 'days');
+        let endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         await this.verifyProblems(domainId, pids);
         beginAt = beginAt.toDate();

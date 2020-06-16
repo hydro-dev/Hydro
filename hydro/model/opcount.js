@@ -25,4 +25,8 @@ async function inc(op, ident, periodSecs, maxOperations) {
     }
 }
 
-global.Hydro.model.opcount = module.exports = { inc };
+function ensureIndexes() {
+    return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
+}
+
+global.Hydro.model.opcount = module.exports = { inc, ensureIndexes };

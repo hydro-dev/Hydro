@@ -44,13 +44,16 @@ async function add(domainId, title, content, owner, {
  * @param {string} domainId
  * @param {string|number} pid
  * @param {number} uid
- * @returns {Pdoc}
+ * @returns {Promise<Pdoc>}
  */
-async function get(domainId, pid, uid = null) {
+async function get(domainId, pid, uid = null, doThrow = true) {
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
-    if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
+    if (!pdoc) {
+        if (doThrow) throw new ProblemNotFoundError(domainId, pid);
+        return null;
+    }
     if (uid) {
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }
@@ -63,7 +66,7 @@ async function get(domainId, pid, uid = null) {
  * @param {object} sort
  * @param {number} page
  * @param {number} limit
- * @returns {Pdoc[]}
+ * @returns {Promise<Pdoc[]>}
  */
 function getMany(domainId, query, sort, page, limit) {
     return document.getMulti(domainId, query).sort(sort).skip((page - 1) * limit).limit(limit)
@@ -116,7 +119,7 @@ async function random(domainId, query) {
 }
 
 async function getList(domainId, pids, doThrow = true) {
-    pids = new Set(pids);
+    pids = Array.from(new Set(pids));
     const r = {};
     const pdocs = await document.getMulti(
         domainId, document.TYPE_PROBLEM,
@@ -125,7 +128,7 @@ async function getList(domainId, pids, doThrow = true) {
     for (const pdoc of pdocs) {
         r[pdoc.docId] = r[pdoc.pid] = pdoc;
     }
-    if (pdocs.length !== pids.size) {
+    if (pdocs.length !== pids.length) {
         if (doThrow) {
             for (const pid of pids) {
                 if (!r[pid]) throw new ProblemNotFoundError(domainId, pid);

@@ -3,6 +3,9 @@ const { mongodb } = global.nodeModules;
 const dst = global.Hydro.service.db;
 const { file, problem, discussion } = global.Hydro.model;
 
+// TODO read config file
+// TODO output enhancement
+
 const map = {};
 
 const pid = (id) => {
@@ -114,7 +117,6 @@ const tasks = {
         domain_id: 'domainId',
         num_accept: 'nAccept',
         num_submit: 'nSubmit',
-        rp: 'rp',
         status: 'status',
         accept: 'accept',
         vote: 'vote',
@@ -259,6 +261,8 @@ async function domainUser(src, report) {
                 num_problems: 'nProblems',
                 domain_id: 'domainId',
                 level: 'level',
+                rp: null,
+                rank: null,
             };
             const d = {};
             for (const key in doc) {
@@ -269,7 +273,7 @@ async function domainUser(src, report) {
                 } else if (mapper[key] === null) {
                     // Ignore this key
                 } else {
-                    console.log('Unknown key:', key);
+                    await report({ message: `Unknown key ${key} in collection domain.user` });
                 }
             }
             const docWithoutId = {};
@@ -282,7 +286,7 @@ async function domainUser(src, report) {
                 { _id: d._id },
                 {
                     $set: {
-                        ...docWithoutId, docType: 0, docId: 1, role: docWithoutId.role || 'default',
+                        ...docWithoutId, docType: 0, docId: 0, role: docWithoutId.role || 'default',
                     },
                 },
                 { upsert: true },
@@ -349,7 +353,7 @@ async function task(name, src, report) {
                     } else if (mapper[key] === null) {
                         // Ignore this key
                     } else {
-                        console.log('Unknown key:', key);
+                        await report({ message: `Unknown key ${key} in collection ${name}` });
                     }
                 }
             }
@@ -392,7 +396,7 @@ async function task(name, src, report) {
                 } else res.push(dst.collection(name).insertOne(d));
             }
         }
-        await Promise.all(res).catch((e) => console.log(e));
+        await Promise.all(res).catch((e) => report({ message: `${e}\n${e.stack}` }));
         const progress = Math.round(100 * ((i + 1) / (total + 1)));
         if (progress > lastProgress) {
             await report({ progress });
@@ -403,7 +407,7 @@ async function task(name, src, report) {
 
 async function migrateVijos({
     host, port, name, username, password,
-}, report = () => { }) {
+}, report) {
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;

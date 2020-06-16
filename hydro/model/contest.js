@@ -348,7 +348,8 @@ const ContestHandlerMixin = (c) => class extends c {
     }
 
     async verifyProblems(domainId, pids) { // eslint-disable-line class-methods-use-this
-        return await problem.getList(domainId, pids, true);
+        await problem.getList(domainId, pids, true);
+        return pids;
     }
 };
 

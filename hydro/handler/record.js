@@ -5,6 +5,7 @@ const record = require('../model/record');
 const contest = require('../model/contest');
 const system = require('../model/system');
 const user = require('../model/user');
+const paginate = require('../lib/paginate');
 const bus = require('../service/bus');
 const {
     Route, Handler, Connection, ConnectionHandler,
@@ -25,7 +26,11 @@ class RecordListHandler extends RecordHandler {
             ];
         }
         if (pid) q.pid = pid;
-        const rdocs = await record.getMany(domainId, q, { _id: -1 }, page, await system.get('RECORD_PER_PAGE'));
+        const [rdocs] = await paginate(
+            record.getMulti(domainId, q).sort('_id', -1),
+            page,
+            await system.get('RECORD_PER_PAGE'),
+        );
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false),
@@ -59,7 +64,7 @@ class RecordDetailHandler extends RecordHandler {
             rdoc.code = null;
         }
         const [pdoc, udoc] = await Promise.all([
-            problem.get(domainId, rdoc.pid),
+            problem.get(domainId, rdoc.pid, null, false),
             user.getById(domainId, rdoc.uid),
         ]);
         this.response.body = {
@@ -101,13 +106,13 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     }
 
     async message(msg) {
-        const rdocs = await record.getMany(
-            this.domainId,
-            { _id: { $in: msg.rids } },
-            { _id: -1 }, 1, 100,
-        );
-        for (const rdoc of rdocs) {
-            this.onRecordChange({ value: rdoc });
+        if (msg.rids instanceof Array) {
+            const rdocs = await record.getMulti(
+                this.domainId, { _id: { $in: msg.rids } },
+            ).toArray();
+            for (const rdoc of rdocs) {
+                this.onRecordChange({ value: rdoc });
+            }
         }
     }
 

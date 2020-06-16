@@ -147,25 +147,27 @@ class ContestEditHandler extends ContestDetailHandler {
     }
 
     async post({
-        domainId, beginAtDate, beginAtTime, duration, title, content, rule, pids,
+        domainId, beginAtDate, beginAtTime, duration, title, content, rule, pids, rated = false,
     }) {
         let beginAt;
         try {
-            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.uset.timeZone);
+            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        const endAt = beginAt.add(duration, 'hours').toDate();
+        const endAt = beginAt.clone().add(duration, 'hours').toDate();
         if (beginAt.isSameOrAfter(endAt)) throw new ValidationError('duration');
         beginAt = beginAt.toDate();
         pids = await this.verifyProblems(domainId, pids);
-        await contest.edit(domainId, this.tdoc.docId, title, content, rule, beginAt, endAt, pids);
+        await contest.edit(domainId, this.tdoc.docId, {
+            title, content, rule, beginAt, endAt, pids, rated,
+        });
         if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
             || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
             await contest.recalcStatus(this.tdoc.docId);
         }
-        if (this.preferJson) this.response.body = { tid: this.tdoc.docId };
-        else this.response.redirect = `/c/${this.tdoc.docId}`;
+        this.response.body = { tid: this.tdoc.docId };
+        this.response.redirect = this.url('contest_detail', { tid: this.tdoc.docId });
     }
 }
 
@@ -251,10 +253,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
-            this.response.redirect = `/c/${tid}`;
+            this.response.redirect = this.url('contest_detail', { tid });
         } else {
             this.response.body = { rid };
-            this.response.redirect = `/r/${rid}`;
+            this.response.redirect = this.url('record_detail', { rid });
         }
     }
 }
@@ -292,14 +294,14 @@ class ContestCreateHandler extends ContestHandler {
         } catch (e) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
-        const endAt = beginAt.add(duration, 'hours');
+        const endAt = beginAt.clone().add(duration, 'hours');
         pids = await this.verifyProblems(domainId, pids);
         const tid = await contest.add(
             domainId, title, content,
             this.user._id, rule, beginAt, endAt, pids, rated,
         );
         this.response.body = { tid };
-        this.response.redirect = `/c/${tid}`;
+        this.response.redirect = this.url('contest_detail', { tid });
     }
 }
 

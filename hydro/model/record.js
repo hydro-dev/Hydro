@@ -12,7 +12,7 @@ const coll = db.collection('record');
  * @param {string} domainId
  * @param {import('../interface').Record} data
  */
-async function add(domainId, data) {
+async function add(domainId, data, addTask = true) {
     _.defaults(data, {
         status: STATUS_WAITING,
         domainId,
@@ -27,18 +27,20 @@ async function add(domainId, data) {
         judgeAt: null,
     });
     const [pdoc, res] = await Promise.all([
-        problem.get(domainId, data.pid),
+        problem.get(domainId, data.pid, null, false),
         coll.insertOne(data),
     ]);
-    await task.add({
-        type: 'judge',
-        rid: res.insertedId,
-        domainId,
-        pid: data.pid,
-        data: pdoc.data,
-        lang: data.lang,
-        code: data.code,
-    });
+    if (addTask) {
+        await task.add({
+            type: 'judge',
+            rid: res.insertedId,
+            domainId,
+            pid: data.pid,
+            data: (pdoc || {}).data,
+            lang: data.lang,
+            code: data.code,
+        });
+    }
     return res.insertedId;
 }
 
@@ -54,16 +56,16 @@ async function get(domainId, rid) {
     return rdoc;
 }
 
-function getMany(domainId, query, sort, page, limit) {
-    return coll.find({ ...query, domainId }).sort(sort).skip((page - 1) * limit).limit(limit)
-        .toArray();
+function getMulti(domainId, query) {
+    return coll.find({ ...query, domainId });
 }
 
-async function update(domainId, rid, $set, $push) {
+async function update(domainId, rid, $set, $push, $unset) {
     const _id = new ObjectID(rid);
     const upd = {};
     if ($set && Object.keys($set).length) upd.$set = $set;
     if ($push && Object.keys($push).length) upd.$push = $push;
+    if ($unset && Object.keys($unset).length) upd.$unset = $unset;
     await coll.findOneAndUpdate({ domainId, _id }, upd);
     const rdoc = await coll.findOne({ _id });
     if (!rdoc) throw new RecordNotFoundError(rid);
@@ -136,7 +138,7 @@ async function rejudge(domainId, rid) {
 global.Hydro.model.record = module.exports = {
     add,
     get,
-    getMany,
+    getMulti,
     update,
     count,
     reset,

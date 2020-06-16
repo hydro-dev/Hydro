@@ -31,6 +31,18 @@ const _validateObjectId = (id, key) => {
     if (ObjectID.isValid(id)) return new ObjectID(id);
     throw new ValidationError(key);
 };
+const _bool = (val) => !!val;
+const _splitAndTrim = (val) => val.split(',').map((i) => i.trim());
+const _date = (val) => {
+    const d = val.split('-');
+    assert(d.length === 3);
+    return `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
+};
+const _time = (val) => {
+    const t = val.split(':');
+    assert(t.length === 2);
+    return `${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`;
+};
 
 const validate = {
     tid: _validateObjectId,
@@ -42,6 +54,12 @@ const validate = {
     psrid: _validateObjectId,
     docId: _validateObjectId,
     mongoId: _validateObjectId,
+    hidden: _bool,
+    rated: _bool,
+    category: _splitAndTrim,
+    tag: _splitAndTrim,
+    beginAtDate: _date,
+    beginAtTime: _time,
     pid: (pid) => (Number.isSafeInteger(parseInt(pid)) ? parseInt(pid) : pid),
     content: validator.checkContent,
     title: validator.checkTitle,
@@ -54,9 +72,6 @@ const validate = {
         if (page <= 0) throw new ValidationError('page');
         return page;
     },
-    category: (category) => category.split(',').map((i) => i.trim()),
-    tag: (tag) => tag.split(',').map((i) => i.trim()),
-    hidden: (hidden) => !!hidden,
     duration: (duration) => {
         if (!Number.isNaN(parseFloat(duration))) duration = parseFloat(duration);
         if (duration <= 0) throw new ValidationError('duration');
@@ -192,18 +207,22 @@ class Handler {
     }
 
     url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
-        delete kwargs.__keywords;
-        if (this.args.domainId !== 'system') {
-            name += '_with_domainId';
-            kwargs.domainId = kwargs.domainId || this.args.domainId;
+        let res = '#';
+        try {
+            delete kwargs.__keywords;
+            if (this.args.domainId !== 'system') {
+                name += '_with_domainId';
+                kwargs.domainId = kwargs.domainId || this.args.domainId;
+            }
+            const { anchor, query } = kwargs;
+            delete kwargs.anchor;
+            delete kwargs.query;
+            if (query) res = router.url(name, kwargs, { query });
+            else res = router.url(name, kwargs);
+            if (anchor) return `${res}#${anchor}`;
+        } catch (e) {
+            console.error(e.message);
         }
-        let res;
-        const { anchor, query } = kwargs;
-        delete kwargs.anchor;
-        delete kwargs.query;
-        if (query) res = router.url(name, kwargs, { query });
-        else res = router.url(name, kwargs);
-        if (anchor) return `${res}#${anchor}`;
         return res;
     }
 
@@ -331,15 +350,17 @@ async function handle(ctx, HandlerClass, permission) {
         if (h.___prepare) await h.___prepare(args);
         if (permission) h.checkPerm(permission);
 
+        let checking = '';
         try {
             for (const key in validate) {
+                checking = key;
                 if (args[key]) {
                     args[key] = validate[key](args[key], key);
                 }
             }
         } catch (e) {
             if (e instanceof ValidationError) throw e;
-            throw new ValidationError('Argument check failed');
+            throw new ValidationError(`Argument ${checking} check failed`);
         }
         h.args = args;
         if (h.__prepare) await h.__prepare(args);

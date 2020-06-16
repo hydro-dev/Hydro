@@ -24,21 +24,21 @@ Hydro 评测机使用进程虚拟内存与物理内存总和计算内存空间�
 
 # Judge Status
 
-- <span class="record-status--text pending">Waiting</span> 评测：评测请求正在等待被评测机抓取
-- <span class="record-status--text progress">Fetched</span> 评测：评测请求已被评测机抓取，正在准备开始评测
-- <span class="record-status--text progress">Compiling</span> 评测：正在编译中
-- <span class="record-status--text progress">Judging</span> 评测：编译成功，正在评测中
-- <span class="record-status--text pass">Accepted</span> 通过：程序输出完全正确
-- <span class="record-status--text fail">Wrong Answer</span> 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）
-- <span class="record-status--text fail">Time Exceeded</span> 不通过：程序运行时间超过了题目限制
-- <span class="record-status--text fail">Memory Exceeded</span> 不通过：程序运行内存空间超过了题目限制
-- <span class="record-status--text fail">Runtime Error</span> 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）
-- <span class="record-status--text fail">Compile Error</span> 不通过：编译失败
-- <span class="record-status--text fail">System Error</span> 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）
-- <span class="record-status--text ignored">Canceled</span> 其他：评测被取消
-- <span class="record-status--text fail">Unknown Error</span> 其他：未知错误
+- :::record-pending Waiting::: 评测：评测请求正在等待被评测机抓取
+- :::record-progress Fetched::: 评测：评测请求已被评测机抓取，正在准备开始评测
+- :::record-progress Compiling::: 评测：正在编译中
+- :::record-progress Judging::: 评测：编译成功，正在评测中
+- :::record-pass Accepted::: 通过：程序输出完全正确
+- :::record-fail Wrong Answer::: 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）
+- :::record-fail Time Exceeded::: 不通过：程序运行时间超过了题目限制
+- :::record-fail Memory Exceeded::: 不通过：程序运行内存空间超过了题目限制
+- :::record-fail Runtime Error::: 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）
+- :::record-fail Compile Error::: 不通过：编译失败
+- :::record-fail System Error::: 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）
+- :::record-ignored Canceled::: 其他：评测被取消
+- :::record-fail Unknown Error::: 其他：未知错误
 
-<blockquote class="note">有“成绩取消”字样则说明管理员手动标记此记录为取消，可能违反了服务条款，比如代码被发现与其他用户的代码十分相似。</blockquote>
+:::note 有“成绩取消”字样则说明管理员手动标记此记录为取消，可能违反了服务条款，比如代码被发现与其他用户的代码十分相似。:::
 
 # Compile Error
 
@@ -49,7 +49,7 @@ Hydro 评测机使用进程虚拟内存与物理内存总和计算内存空间�
 - 对于 C/C++：见下
 - 一般性的编译错误
 
-<blockquote class="warn">
+:::warn
     对 C/C++ 选手的特别提醒：
     <ul>
         <li>1. __int64 在 GNU C++ 中应写成 long long 类型</li>
@@ -58,7 +58,7 @@ Hydro 评测机使用进程虚拟内存与物理内存总和计算内存空间�
         <li>4. itoa 不是一个通用 ANSI 函数（标准 C/C++ 中无此函数）</li>
         <li>5. printf 中使用 %lf 格式是不正确的</li>
     </ul>
-</blockquote>
+:::
 
 # Training
 
@@ -82,7 +82,7 @@ ACM/ICPC 赛制排名规则为：通过题目数多的排在前面，通过题�
 Hydro RP 分为固定 RP 与浮动 RP ，固定 RP 可由活动、比赛等的奖励获得，浮动 RP 由一般性通过题目获得。  
 浮动 RP 是一个动态的数值，每个用户在每道题上获得的 RP 都不一样，并且未来也不固定（即浮动之意）。  
 
-<blockquote class="note">每道题的浮动 RP 由该题通过总人数与该用户通过此题的名次计算得来。</blockquote>
+:::note 每道题的浮动 RP 由该题通过总人数与该用户通过此题的名次计算得来。:::
 
 # Dataset Format
 
