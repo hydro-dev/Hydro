@@ -2,7 +2,7 @@ const builtin = require('./builtin');
 const document = require('./document');
 const system = require('./system');
 const token = require('./token');
-const { UserNotFoundError, UserAlreadyExistError } = require('../error');
+const { UserNotFoundError, UserAlreadyExistError, LoginError } = require('../error');
 const perm = require('../permission');
 const pwhash = require('../lib/hash.hydro');
 const db = require('../service/db');
@@ -42,7 +42,10 @@ class USER {
     checkPassword(password) {
         const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
         if (!h) throw new Error('Unknown hash method');
-        return h.check(password, this.salt(), this.hash(), this);
+        console.log(h(password, this.salt(), this), this.hash());
+        if (!(h(password, this.salt(), this) === this.hash())) {
+            throw new LoginError(this.uname);
+        }
     }
 }
 
@@ -149,7 +152,7 @@ async function create({
             mailLower: mail.trim().toLowerCase(),
             uname,
             unameLower: uname.trim().toLowerCase(),
-            password: pwhash.hash(password, salt),
+            password: pwhash(password, salt),
             salt,
             hashType: 'hydro',
             regat: new Date(),

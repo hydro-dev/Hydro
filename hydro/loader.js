@@ -30,12 +30,25 @@ async function startWorker() {
     }
 }
 
+async function executeCommand(input) {
+    try {
+        const t = eval(input.toString().trim());
+        if (t instanceof Promise) console.log(await t);
+        else console.log(t);
+    } catch (e) {
+        console.warn(e);
+    }
+}
+
 async function messageHandler(worker, msg) {
+    if (!msg) msg = worker;
     if (msg.event && msg.event === 'restart') {
         console.log('Restarting');
         await stopWorker();
         console.log('Worker stopped');
         await startWorker();
+    } else if (msg.event && msg.event === 'run') {
+        await executeCommand(msg.command);
     }
 }
 
@@ -60,16 +73,15 @@ async function load() {
     Error.stackTraceLimit = 50;
     process.on('unhandledRejection', (e) => console.error(e));
     process.on('SIGINT', terminate);
+    process.on('message', messageHandler);
     if (cluster.isMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
-        process.stdin.on('data', async (input) => {
-            try {
-                const t = eval(input.toString().trim());
-                if (t instanceof Promise) console.log(await t);
-                else console.log(t);
-            } catch (e) {
-                console.warn(e);
+        process.stdin.on('data', (input) => {
+            if (input[0] === '@') {
+                cluster.workers[1].send({ event: 'run', command: input.substr(1, input.length - 1) });
+            } else {
+                executeCommand(input);
             }
         });
         await entry({ entry: 'master' });
@@ -85,7 +97,6 @@ async function load() {
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} is online`);
         });
-        cluster.on('message', messageHandler);
         await startWorker();
     } else {
         console.log(`Worker ${process.pid} Starting`);

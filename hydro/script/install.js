@@ -74,7 +74,7 @@ async function run({ username, password } = {}) {
                     mailLower: 'root@hydro',
                     uname: username,
                     unameLower: username.trim().toLowerCase(),
-                    hash: pwhash.hash(password, salt),
+                    hash: pwhash(password, salt),
                     salt,
                     gravatar: 'root@hydro',
                     priv: 1,
