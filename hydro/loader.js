@@ -46,6 +46,7 @@ async function load() {
         mongodb: require('mongodb'),
     };
     global.Hydro = {
+        config: {},
         handler: {},
         service: {},
         model: {},

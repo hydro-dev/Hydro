@@ -149,10 +149,8 @@ class ContestEditHandler extends ContestDetailHandler {
     async post({
         domainId, beginAtDate, beginAtTime, duration, title, content, rule, pids, rated = false,
     }) {
-        let beginAt;
-        try {
-            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        } catch (e) {
+        let beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
+        if (!beginAt.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         const endAt = beginAt.clone().add(duration, 'hours').toDate();
@@ -288,10 +286,8 @@ class ContestCreateHandler extends ContestHandler {
     async post({
         domainId, title, content, rule, beginAtDate, beginAtTime, duration, pids, rated = false,
     }) {
-        let beginAt;
-        try {
-            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        } catch (e) {
+        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
+        if (!beginAt.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         const endAt = beginAt.clone().add(duration, 'hours');

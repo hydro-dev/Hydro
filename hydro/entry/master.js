@@ -4,8 +4,8 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const {
-    lib, service, model, handler, script,
-    builtinLib, builtinScript, builtinHandler, builtinModel,
+    lib, service, model, config,
+    builtinLib, builtinHandler, builtinModel,
 } = require('./common');
 
 function ensureDir(dir) {
@@ -67,10 +67,7 @@ async function load(call) {
         const ins = require('../script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    await handler(pending, fail);
-    for (const i in global.Hydro.handler) {
-        await global.Hydro.handler[i]();
-    }
+    await config(pending, fail);
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {
@@ -80,8 +77,6 @@ async function load(call) {
             }
         }
     }
-    for (const i of builtinScript) require(`../script/${i}`);
-    await script(pending, fail, active);
     pending = [];
     return { fail, active };
 }

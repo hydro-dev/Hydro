@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const os = require('os');
 const fs = require('fs');
@@ -6,7 +7,7 @@ const builtinLib = [
     'axios', 'download', 'i18n', 'mail', 'markdown',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
     'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
-    'readConfig',
+    'readConfig', 'logger',
 ];
 
 const builtinModel = [
@@ -54,6 +55,25 @@ async function locale(pending, fail) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Locale Load Fail: ${i}`);
+            }
+        }
+    }
+}
+
+async function config(pending, fail, system) {
+    for (const i of pending) {
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/config.js`;
+        if (fs.existsSync(p) && !fail.includes(i)) {
+            try {
+                global.Hydro.config[i] = eval('require')(p);
+                for (const key in global.Hydro.config[i]) {
+                    if (global.Hydro.config[i][key].default) {
+                        const current = await system.get(`${i}.${key}`);
+                        if (!current) await system.set(`${i}.${key}`, global.Hydro.config[i][key].default);
+                    }
+                }
+            } catch (e) {
+                console.error(`Config Load Fail: ${i}`);
             }
         }
     }
@@ -157,4 +177,5 @@ module.exports = {
     script,
     service,
     template,
+    config,
 };

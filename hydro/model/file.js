@@ -57,8 +57,8 @@ async function get(_id, secret) {
     const file = await coll.findOne({ _id });
     if (typeof secret !== 'undefined') {
         const timestamp = _timestamp();
-        if (!hash.check(file.secret, timestamp.toString(), secret)) {
-            if (!hash.check(file.secret, timestamp.toString() - 1, secret)) {
+        if (!(hash(file.secret, timestamp.toString()) === secret)) {
+            if (!(hash(file.secret, timestamp.toString() - 1) === secret)) {
                 throw new ForbiddenError();
             }
         }
@@ -72,7 +72,7 @@ function getMeta(_id) {
 
 async function url(_id, name) {
     const file = await coll.findOne({ _id });
-    const secret = hash.hash(file.secret, _timestamp().toString());
+    const secret = hash(file.secret, _timestamp().toString());
     if (name) return `/fs/${_id}/${Buffer.from(name).toString('base64')}/${secret}`;
     return `/fs/${_id}/${secret}`;
 }
