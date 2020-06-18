@@ -21,11 +21,9 @@ async function load(call) {
     ensureDir(path.resolve(os.tmpdir(), 'hydro'));
     ensureDir(path.resolve(os.tmpdir(), 'hydro', 'tmp'));
     ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public'));
-    // TODO better run in another process as this needs lots of memory
     await call({ entry: 'unzip', newProcess: true });
     let pending = await require('../lib/hpm').getInstalled();
     const fail = [];
-    const active = [];
     require('../lib/i18n');
     require('../utils');
     require('../error');

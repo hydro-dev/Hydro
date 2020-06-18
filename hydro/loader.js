@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const cluster = require('cluster');
+const { argv } = require('yargs');
 
 async function terminate() {
     for (const task of global.onDestory) {
@@ -11,11 +12,28 @@ async function terminate() {
     process.exit(0);
 }
 
+async function fork(args) {
+    if (args) {
+        cluster.setupMaster({ args });
+        const r = cluster.fork();
+        cluster.setupMaster({ args: [] });
+        return r;
+    }
+    return cluster.fork();
+}
+
 async function entry(config) {
     if (config.entry) {
         // TODO newProcess
-        const loader = require(`./entry/${config.entry}`);
-        return await loader(entry);
+        if (config.newProcess) {
+            const process = await fork([`--entry=${config.entry}`]);
+            await new Promise((resolve) => {
+                process.on('exit', resolve);
+            });
+        } else {
+            const loader = require(`./entry/${config.entry}`);
+            return await loader(entry);
+        }
     }
     return null;
 }
@@ -25,9 +43,7 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt) {
-    for (let i = 0; i < cnt; i++) {
-        cluster.fork();
-    }
+    for (let i = 0; i < cnt; i++) await fork();
 }
 
 async function executeCommand(input) {
@@ -99,6 +115,10 @@ async function load() {
             console.log(`Worker ${worker.process.pid} ${worker.id} is online`);
         });
         await startWorker(cnt);
+    } else if (argv.entry) {
+        console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
+        await entry({ entry: argv.entry });
+        console.log(`Worker ${process.pid} Started as ${argv.entry}`);
     } else {
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });

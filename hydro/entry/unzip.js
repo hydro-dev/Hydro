@@ -31,6 +31,10 @@ for (const i of moduleRoots) {
     }
 }
 async function load() {
+    process.on('unhandledRejection', (e) => {
+        console.error(e);
+        process.exit(1);
+    });
     const files = fs.readdirSync(moduleRoot);
     const t = ['service', 'lib', 'model', 'handler', 'script'];
     ensureDir(`${os.tmpdir()}/hydro`);
@@ -115,6 +119,9 @@ async function load() {
             }
         }
     }
+    setTimeout(() => {
+        process.exit(0);
+    }, 0);
 }
 
 module.exports = load;
