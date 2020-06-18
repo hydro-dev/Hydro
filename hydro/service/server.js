@@ -487,13 +487,9 @@ async function start() {
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     app.use(router.routes()).use(router.allowedMethods());
     Route('notfound_handler', '*', Handler);
-    if (cluster.worker.id === 1) {
-        const port = await system.get('server.port');
-        server.listen(port);
-        console.log('Server listening at: %s', port);
-    } else {
-        server.listen();
-    }
+    const port = await system.get('server.port');
+    server.listen(port);
+    console.log('Server listening at: %s', port);
 }
 
 global.Hydro.service.server = module.exports = {

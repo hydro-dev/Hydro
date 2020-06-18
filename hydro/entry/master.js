@@ -4,7 +4,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const {
-    lib, service, model, config,
+    lib, service, model, setting,
     builtinLib, builtinHandler, builtinModel,
 } = require('./common');
 
@@ -61,13 +61,14 @@ async function load(call) {
             await global.Hydro.model[m].ensureIndexes();
         }
     }
-    const system = require('../model/system');
-    const dbVer = await system.get('db.ver');
+    const modelSystem = require('../model/system');
+    const modelSetting = require('../model/setting');
+    const dbVer = await modelSystem.get('db.ver');
     if (dbVer !== 1) {
         const ins = require('../script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    await config(pending, fail);
+    await setting(pending, fail, modelSetting, modelSystem);
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {
@@ -78,7 +79,7 @@ async function load(call) {
         }
     }
     pending = [];
-    return { fail, active };
+    return await modelSystem.get('server.worker');
 }
 
 module.exports = load;

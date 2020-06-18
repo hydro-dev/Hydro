@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 const {
-    locale, template, lib, service, model, handler, script,
+    locale, template, lib, service, model, handler, script, setting,
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } = require('./common');
 
@@ -34,6 +34,8 @@ async function load() {
     for (const i of builtinModel) require(`../model/${i}`);
     for (const i of builtinHandler) require(`../handler/${i}`);
     await model(pending, fail);
+    const modelSetting = require('../model/setting');
+    await setting(pending, fail, modelSetting);
     await handler(pending, fail);
     for (const i in global.Hydro.handler) {
         await global.Hydro.handler[i]();

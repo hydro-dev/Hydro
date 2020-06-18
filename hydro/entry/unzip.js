@@ -56,6 +56,12 @@ async function load() {
                         JSON.stringify(m.locale),
                     );
                 }
+                if (m.setting) {
+                    fs.writeFileSync(
+                        `${os.tmpdir()}/hydro/tmp/${id}/setting.yaml`,
+                        m.setting,
+                    );
+                }
                 if (m.template) {
                     fs.writeFileSync(
                         `${os.tmpdir()}/hydro/tmp/${id}/template.json`,

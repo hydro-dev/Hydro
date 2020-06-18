@@ -268,10 +268,10 @@ async function domainUser(src, report) {
             for (const key in doc) {
                 if (typeof mapper[key] === 'string') {
                     d[mapper[key]] = doc[key];
-                } else if (typeof mapper[key] === 'object') {
-                    d[mapper[key].field] = mapper[key].processer(doc[key]);
                 } else if (mapper[key] === null) {
                     // Ignore this key
+                } else if (typeof mapper[key] === 'object') {
+                    d[mapper[key].field] = mapper[key].processer(doc[key]);
                 } else {
                     await report({ message: `Unknown key ${key} in collection domain.user` });
                 }
@@ -348,10 +348,10 @@ async function task(name, src, report) {
                 for (const key in doc) {
                     if (typeof mapper[key] === 'string') {
                         d[mapper[key]] = doc[key];
-                    } else if (typeof mapper[key] === 'object') {
-                        d[mapper[key].field] = mapper[key].processer(doc[key]);
                     } else if (mapper[key] === null) {
                         // Ignore this key
+                    } else if (typeof mapper[key] === 'object') {
+                        d[mapper[key].field] = mapper[key].processer(doc[key]);
                     } else {
                         await report({ message: `Unknown key ${key} in collection ${name}` });
                     }

@@ -183,7 +183,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
             user.incDomain(domainId, this.user._id, 'nSubmit'),
         ]);
         this.response.body = { rid };
-        this.response.redirect = `/r/${rid}`;
+        this.response.redirect = this.url('record_detail', { rid });
     }
 }
 

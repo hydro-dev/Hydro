@@ -2,12 +2,13 @@
 /* eslint-disable no-eval */
 const os = require('os');
 const fs = require('fs');
+const yaml = require('js-yaml');
 
 const builtinLib = [
     'axios', 'download', 'i18n', 'mail', 'markdown',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
     'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
-    'readConfig', 'logger',
+    'readConfig', 'logger', 'useragent',
 ];
 
 const builtinModel = [
@@ -60,17 +61,28 @@ async function locale(pending, fail) {
     }
 }
 
-async function config(pending, fail, system) {
+async function setting(pending, fail, modelSetting, modelSystem) {
+    const map = {
+        system: modelSetting.SystemSetting,
+        account: modelSetting.AccountSetting,
+        preference: modelSetting.PreferenceSetting,
+    };
     for (const i of pending) {
-        const p = `${os.tmpdir()}/hydro/tmp/${i}/config.js`;
+        const p = `${os.tmpdir()}/hydro/tmp/${i}/setting.yaml`;
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                global.Hydro.config[i] = eval('require')(p);
-                for (const key in global.Hydro.config[i]) {
-                    if (global.Hydro.config[i][key].default) {
-                        const current = await system.get(`${i}.${key}`);
-                        if (!current) await system.set(`${i}.${key}`, global.Hydro.config[i][key].default);
+                const cfg = yaml.safeLoad(fs.readFileSync(p).toString());
+                for (const key in cfg) {
+                    if (cfg[key].default && modelSystem) {
+                        const current = await modelSystem.get(`${i}.${key}`);
+                        if (!current) await modelSystem.set(`${i}.${key}`, cfg[key].default);
                     }
+                    map[cfg[key].category || 'system'](
+                        modelSetting.Setting(
+                            i, `${i}.${key}`, cfg[key].range, cfg[key].default,
+                            cfg[key].type || 'text', cfg[key].name || key, cfg[key].desc || '',
+                        ),
+                    );
                 }
             } catch (e) {
                 console.error(`Config Load Fail: ${i}`);
@@ -177,5 +189,5 @@ module.exports = {
     script,
     service,
     template,
-    config,
+    setting,
 };

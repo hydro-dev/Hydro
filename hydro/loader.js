@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 const cluster = require('cluster');
-const numCPUs = require('os').cpus().length;
 
 async function terminate() {
     for (const task of global.onDestory) {
@@ -16,16 +15,17 @@ async function entry(config) {
     if (config.entry) {
         // TODO newProcess
         const loader = require(`./entry/${config.entry}`);
-        await loader(entry);
+        return await loader(entry);
     }
+    return null;
 }
 
 async function stopWorker() {
     cluster.disconnect();
 }
 
-async function startWorker() {
-    for (let i = 0; i < numCPUs; i++) {
+async function startWorker(cnt) {
+    for (let i = 0; i < cnt; i++) {
         cluster.fork();
     }
 }
@@ -46,7 +46,7 @@ async function messageHandler(worker, msg) {
         console.log('Restarting');
         await stopWorker();
         console.log('Worker stopped');
-        await startWorker();
+        await startWorker(msg.count);
     } else if (msg.event && msg.event === 'run') {
         await executeCommand(msg.command);
     }
@@ -74,6 +74,7 @@ async function load() {
     process.on('unhandledRejection', (e) => console.error(e));
     process.on('SIGINT', terminate);
     process.on('message', messageHandler);
+    cluster.on('message', messageHandler);
     if (cluster.isMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
@@ -84,20 +85,20 @@ async function load() {
                 executeCommand(input);
             }
         });
-        await entry({ entry: 'master' });
+        const cnt = await entry({ entry: 'master' });
         cluster.on('exit', (worker, code, signal) => {
-            console.log(`Worker ${worker.process.pid} exit: ${code} ${signal}`);
+            console.log(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
         });
         cluster.on('disconnect', (worker) => {
-            console.log(`Worker ${worker.process.pid} disconnected`);
+            console.log(`Worker ${worker.process.pid} ${worker.id} disconnected`);
         });
         cluster.on('listening', (worker, address) => {
-            console.log(`Worker ${worker.process.pid} listening at `, address);
+            console.log(`Worker ${worker.process.pid} ${worker.id} listening at `, address);
         });
         cluster.on('online', (worker) => {
-            console.log(`Worker ${worker.process.pid} is online`);
+            console.log(`Worker ${worker.process.pid} ${worker.id} is online`);
         });
-        await startWorker();
+        await startWorker(cnt);
     } else {
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });

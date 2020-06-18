@@ -42,7 +42,6 @@ class USER {
     checkPassword(password) {
         const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
         if (!h) throw new Error('Unknown hash method');
-        console.log(h(password, this.salt(), this), this.hash());
         if (!(h(password, this.salt(), this) === this.hash())) {
             throw new LoginError(this.uname);
         }

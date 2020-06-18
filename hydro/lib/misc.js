@@ -1,4 +1,12 @@
+const ansiup = require('ansi_up');
 const md5 = require('./md5');
+
+// eslint-disable-next-line new-cap
+const AU = new ansiup.default();
+
+function ansiToHtml(str) {
+    return AU.ansi_to_html(str);
+}
 
 function gravatar(email, s = 32) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${s}`;
@@ -64,5 +72,5 @@ function formatSeconds(seconds = 0) {
 }
 
 global.Hydro.lib.misc = module.exports = {
-    gravatar, datetimeSpan, paginate, size, formatSeconds,
+    gravatar, datetimeSpan, paginate, size, formatSeconds, ansiToHtml,
 };

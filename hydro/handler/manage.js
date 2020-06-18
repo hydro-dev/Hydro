@@ -33,7 +33,8 @@ class SystemDashboardHandler extends SystemHandler {
     }
 
     async postRestart() {
-        process.send({ event: 'restart' });
+        const count = await system.get('server.worker');
+        process.send({ event: 'restart', count });
         this.back();
     }
 }

@@ -9,12 +9,12 @@
   </div>
 {% if rdoc.compilerTexts.length %}
   <div class="section__body">
-    <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n') }}</pre>
+    <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n')|ansi|safe }}</pre>
   </div>
 {% endif %}
 {% if rdoc.judgeTexts.length %}
   <div class="section__body">
-    <pre class="judge-text">{{ rdoc.judgeTexts|join('\n') }}</pre>
+    <pre class="judge-text">{{ rdoc.judgeTexts|join('\n')|ansi|safe }}</pre>
   </div>
 {% endif %}
 {% if rdoc.testCases.length %}
