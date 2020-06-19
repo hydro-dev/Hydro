@@ -1,5 +1,7 @@
 const yaml = require('js-yaml');
 const moment = require('moment-timezone');
+const { ObjectID } = require('bson');
+const AdmZip = require('adm-zip');
 const {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
@@ -7,7 +9,7 @@ const {
 const {
     PERM_VIEW_HOMEWORK, PERM_ATTEND_HOMEWORK, PERM_VIEW_PROBLEM,
     PERM_SUBMIT_PROBLEM, PERM_CREATE_HOMEWORK, PERM_EDIT_HOMEWORK,
-    PERM_VIEW_HOMEWORK_SCOREBOARD,
+    PERM_VIEW_HOMEWORK_SCOREBOARD, PERM_READ_RECORD_CODE,
 } = require('../permission');
 const { Route, Handler } = require('../service/server');
 const system = require('../model/system');
@@ -221,7 +223,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
             'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
             { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
-        this.response.redirect = `/homework/${tid}`;
+        this.response.redirect = this.url('homework_detail', { tid });
     }
 }
 
@@ -289,7 +291,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             await contest.recalcStatus(domainId, document.TYPE_HOMEWORK, tdoc.docId);
         }
         this.response.body = { tid };
-        this.response.redirect = `/homework/${tid}`;
+        this.response.redirect = this.url('homework_detail', { tid });
     }
 }
 
@@ -320,6 +322,32 @@ class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
         if (!getContent[ext]) throw new ValidationError('ext');
         const [, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_CONTEST);
         this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
+    }
+}
+
+class HomeworkCodeHandler extends HomeworkHandler {
+    async get({ domainId, tid }) {
+        this.checkPerm(PERM_READ_RECORD_CODE);
+        this.limitRate('homework_code', 3600, 60);
+        const [tdoc, tsdocs] = await contest.getAndListStatus(
+            domainId, tid, document.TYPE_HOMEWORK,
+        );
+        const rnames = {};
+        for (const tsdoc of tsdocs) {
+            for (const pdetail of tsdoc.detail || []) {
+                rnames[pdetail.rid] = `U${tsdoc.uid}_P${pdetail.pid}_R${pdetail.rid}`;
+            }
+        }
+        const zip = new AdmZip();
+        const rdocs = await record.getMulti(domainId, {
+            _id: {
+                $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)),
+            },
+        }).toArray();
+        for (const rdoc of rdocs) {
+            zip.addFile(`${rnames[rdoc._id]}.${rdoc.lang}`, rdoc.code);
+        }
+        await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }
 }
 
@@ -471,35 +499,8 @@ async function apply() {
     Route('homework_scoreboard', '/homework/:tid/scoreboard/download/:ext', HomeworkScoreboardDownloadHandler, PERM_VIEW_HOMEWORK_SCOREBOARD);
     Route('homework_detail_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM_VIEW_HOMEWORK);
     Route('homework_detail_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
+    Route('homework_code', '/homework/:tid/code', HomeworkCodeHandler, PERM_VIEW_HOMEWORK);
     Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }
 
 global.Hydro.handler.homework = module.exports = apply;
-
-/*
-@app.route('/homework/{tid:\w{24}}/code', 'homework_code')
-class HomeworkCodeHandler(base.OperationHandler):
-  @base.limit_rate('homework_code', 3600, 60)
-  @base.route_argument
-  @base.require_perm(builtin.PERM_VIEW_HOMEWORK)
-  @base.require_perm(builtin.PERM_READ_RECORD_CODE)
-  @base.sanitize
-  async def get(this, *, tid: objectid.ObjectId):
-    tdoc, tsdocs = await contest.get_and_list_status(domainId, document.TYPE_HOMEWORK, tid)
-    rnames = {}
-    for tsdoc in tsdocs:
-      for pdetail in tsdoc.get('detail', []):
-        rnames[pdetail['rid']] = 'U{}_P{}_R{}'.format(tsdoc['uid'], pdetail['pid'], pdetail['rid'])
-    output_buffer = io.BytesIO()
-    zip_file = zipfile.ZipFile(output_buffer, 'a', zipfile.ZIP_DEFLATED)
-    rdocs = record.get_multi(get_hidden=True, _id={'$in': list(rnames.keys())})
-    async for rdoc in rdocs:
-      zip_file.writestr(rnames[rdoc['_id']] + '.' + rdoc['lang'], rdoc['code'])
-    # mark all files as created in Windows :p
-    for zfile in zip_file.filelist:
-      zfile.create_system = 0
-    zip_file.close()
-
-    await this.binary(output_buffer.getvalue(), 'application/zip',
-                      file_name='{}.zip'.format(tdoc['title']))
-*/

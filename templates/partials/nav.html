@@ -1,10 +1,10 @@
-{% macro nav_item(target_page_name, target_page_args, target_page_prefix) %}
+{%- macro nav_item(target_page_name, target_page_args, target_page_prefix) -%}
 <li class="nav__list-item">
   <a href="{{ url(target_page_name, target_page_args) }}" class="nav__item{% if page_name.startsWith(target_page_prefix) %} nav--active{% endif %}">
     {{ _(target_page_name) }}
   </a>
 </li>
-{% endmacro %}
+{%- endmacro -%}
 
 <nav class="nav slideout-menu" id="menu">
   <div class="row"><div class="columns clearfix">

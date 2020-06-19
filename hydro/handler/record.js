@@ -1,3 +1,4 @@
+const { ObjectID } = require('bson');
 const { PERM_READ_RECORD_CODE, PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { PermissionError } = require('../error');
 const problem = require('../model/problem');
@@ -108,7 +109,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     async message(msg) {
         if (msg.rids instanceof Array) {
             const rdocs = await record.getMulti(
-                this.domainId, { _id: { $in: msg.rids } },
+                this.domainId, { _id: { $in: msg.rids.map((id) => new ObjectID(id)) } },
             ).toArray();
             for (const rdoc of rdocs) {
                 this.onRecordChange({ value: rdoc });
@@ -150,7 +151,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 
     async onRecordChange(data) {
         const rdoc = data.value;
-        if (rdoc._id.toString() !== this.rid) return;
+        if (rdoc._id.toString() !== this.rid.toString()) return;
         this.send({
             status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),

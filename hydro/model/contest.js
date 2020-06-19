@@ -369,6 +369,14 @@ function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }
 
+async function getAndListStatus(domainId, tid, docType = document.TYPE_CONTEST) {
+    // TODO(iceboy): projection, pagination.
+    const tdoc = await get(domainId, tid, docType);
+    const tsdocs = await document.getMultiStatus(domainId, docType, { docId: tid })
+        .sort(RULES[tdoc.rule].statusSort).toArray();
+    return [tdoc, tsdocs];
+}
+
 async function recalcStatus(domainId, tid, type) {
     const [tdoc, tsdocs] = await Promise.all([
         document.get(domainId, type, tid),
@@ -404,6 +412,7 @@ global.Hydro.model.contest = module.exports = {
     count,
     getMulti,
     setStatus,
+    getAndListStatus,
     recalcStatus,
     isNew,
     isUpcoming,

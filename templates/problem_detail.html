@@ -1,14 +1,14 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <script>
-  var Context = {
-    'problemId': "{{ pdoc.pid }}",
-    'postSubmitUrl': "{{ url('problem_submit', pid=pdoc.pid) }}",
-    'getSubmissionsUrl': "{{ url('problem_submit', pid=pdoc.pid) }}",
-    'getRecordDetailUrl': "{{ url('record_detail', rid='{rid}') }}",
-    'code_lang': "{{ handler.user.codeLang }}",
-    'code_template': "{{ handler.user.codeTemplate }}",
-  };
+  var Context = {{ {
+    problemId: pdoc.pid,
+    postSubmitUrl: url('problem_submit', pid=pdoc.pid),
+    getSubmissionsUrl: url('problem_submit', pid=pdoc.pid),
+    getRecordDetailUrl: url('record_detail', rid='{rid}'),
+    codeLang: handler.user.codeLang,
+    codeTemplate: handler.user.codeTemplate
+  }|json|safe }};
 </script>
 <div class="row">
   <div class="medium-9 columns">

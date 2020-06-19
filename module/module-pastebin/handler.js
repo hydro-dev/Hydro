@@ -5,7 +5,7 @@ const { nav } = global.Hydro.lib;
 
 class PasteMainHandler extends Handler {
     async get() {
-        this.response.redirect = this.url('paste_creaate');
+        this.response.redirect = this.url('paste_create');
     }
 }
 

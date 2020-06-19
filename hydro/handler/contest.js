@@ -1,9 +1,14 @@
 const moment = require('moment-timezone');
+const { ObjectID } = require('bson');
+const AdmZip = require('adm-zip');
 const {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError,
 } = require('../error');
-const { PERM_CREATE_CONTEST, PERM_EDIT_CONTEST } = require('../permission');
+const {
+    PERM_CREATE_CONTEST, PERM_EDIT_CONTEST, PERM_READ_RECORD_CODE,
+    PERM_VIEW_CONTEST,
+} = require('../permission');
 const paginate = require('../lib/paginate');
 const contest = require('../model/contest');
 const document = require('../model/document');
@@ -259,6 +264,30 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     }
 }
 
+class ContestCodeHandler extends ContestDetailHandler {
+    async get({ domainId, tid }) {
+        this.checkPerm(PERM_READ_RECORD_CODE);
+        this.limitRate('homework_code', 3600, 60);
+        const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
+        const rnames = {};
+        for (const tsdoc of tsdocs) {
+            for (const pdetail of tsdoc.detail || []) {
+                rnames[pdetail.rid] = `U${tsdoc.uid}_P${pdetail.pid}_R${pdetail.rid}`;
+            }
+        }
+        const zip = new AdmZip();
+        const rdocs = await record.getMulti(domainId, {
+            _id: {
+                $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)),
+            },
+        }).toArray();
+        for (const rdoc of rdocs) {
+            zip.addFile(`${rnames[rdoc._id]}.${rdoc.lang}`, rdoc.code);
+        }
+        await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
+    }
+}
+
 class ContestCreateHandler extends ContestHandler {
     async get() {
         this.response.template = 'contest_edit.html';
@@ -302,13 +331,14 @@ class ContestCreateHandler extends ContestHandler {
 }
 
 async function apply() {
-    Route('contest_main', '/contest', ContestListHandler);
-    Route('contest_detail', '/contest/:tid', ContestDetailHandler);
-    Route('contest_edit', '/contest/:tid/edit', ContestEditHandler);
-    Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler);
-    Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler);
-    Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler);
-    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler);
+    Route('contest_main', '/contest', ContestListHandler, PERM_VIEW_CONTEST);
+    Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM_VIEW_CONTEST);
+    Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM_VIEW_CONTEST);
+    Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM_VIEW_CONTEST);
+    Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM_VIEW_CONTEST);
+    Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM_VIEW_CONTEST);
+    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler, PERM_VIEW_CONTEST);
+    Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM_VIEW_CONTEST);
     Route('contest_create', '/contest/create', ContestCreateHandler, PERM_CREATE_CONTEST);
 }
 

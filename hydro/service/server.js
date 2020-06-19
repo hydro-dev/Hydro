@@ -281,10 +281,15 @@ class Handler {
 
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
-        if (this.response.redirect && !this.preferJson) {
-            this.ctx.response.type = 'application/octet-stream';
-            this.ctx.response.status = 302;
-            this.ctx.redirect(this.response.redirect);
+        if (this.response.redirect) {
+            if (!this.preferJson) {
+                this.ctx.response.type = 'application/octet-stream';
+                this.ctx.response.status = 302;
+                this.ctx.redirect(this.response.redirect);
+            } else {
+                this.response.body = this.response.body || {};
+                this.response.body.url = this.response.redirect;
+            }
         } else {
             if (this.response.body != null) {
                 this.ctx.response.body = this.response.body;
@@ -439,19 +444,26 @@ class ConnectionHandler {
     }
 }
 
-function Connection(name, prefix, RouteConnHandler) {
+function Connection(name, prefix, RouteConnHandler, permission) {
     const sock = sockjs.createServer({ prefix });
     sock.on('connection', async (conn) => {
         const h = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
-
-            if (args.uid) args.uid = parseInt(validator.checkUid(args.uid));
-            if (args.page) args.page = parseInt(args.page);
-            if (args.rid) args.rid = new ObjectID(args.rid);
-            if (args.tid) args.tid = new ObjectID(args.tid);
-
             if (h.___prepare) await h.___prepare(args);
+            if (permission) h.checkPerm(permission);
+            let checking = '';
+            try {
+                for (const key in validate) {
+                    checking = key;
+                    if (args[key]) {
+                        args[key] = validate[key](args[key], key);
+                    }
+                }
+            } catch (e) {
+                if (e instanceof ValidationError) throw e;
+                throw new ValidationError(`Argument ${checking} check failed`);
+            }
             if (h.__prepare) await h.__prepare(args);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);

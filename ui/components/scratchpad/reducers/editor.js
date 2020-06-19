@@ -1,6 +1,6 @@
 export default function reducer(state = {
-  lang: Context.code_lang,
-  code: Context.code_template,
+  lang: Context.codeLang,
+  code: Context.codeTemplate,
 }, action) {
   switch (action.type) {
   case 'SCRATCHPAD_EDITOR_UPDATE_CODE': {

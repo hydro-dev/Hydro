@@ -26,11 +26,11 @@ const page = new NamedPage('manage_script', () => {
     if (action !== 'ok') return;
     const args = runScriptDialog.$dom.find('[name="args"]').val();
     try {
-      await request.post('', {
+      const res = await request.post('', {
         args,
         id,
       });
-      window.location.reload();
+      window.location.href = res.url;
     } catch (error) {
       Notification.error(error.message);
     }

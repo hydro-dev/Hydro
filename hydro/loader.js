@@ -24,7 +24,6 @@ async function fork(args) {
 
 async function entry(config) {
     if (config.entry) {
-        // TODO newProcess
         if (config.newProcess) {
             const process = await fork([`--entry=${config.entry}`]);
             await new Promise((resolve) => {
@@ -43,7 +42,8 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt) {
-    for (let i = 0; i < cnt; i++) await fork();
+    await fork(['--firstWorker']);
+    for (let i = 1; i < cnt; i++) await fork();
 }
 
 async function executeCommand(input) {
@@ -120,6 +120,7 @@ async function load() {
         await entry({ entry: argv.entry });
         console.log(`Worker ${process.pid} Started as ${argv.entry}`);
     } else {
+        if (argv.firstWorker) cluster.isFirstWorker = true;
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });
         console.log(`Worker ${process.pid} Started`);
