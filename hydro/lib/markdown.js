@@ -23,6 +23,7 @@ const Mark = require('markdown-it-mark');
 // :::warn This page requires javascript. :::
 // :::record-pass Accepted :::
 const Container = require('markdown-it-container');
+// FIXME doesn't work for webpack
 const Anchor = require('markdown-it-anchor');
 const TOC = require('markdown-it-table-of-contents');
 
