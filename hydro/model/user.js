@@ -98,7 +98,7 @@ async function getByEmail(domainId, mail, ignoreMissing = false) {
 function setPassword(uid, password) {
     const salt = String.random();
     return coll.findOneAndUpdate({ _id: uid }, {
-        $set: { salt, hash: pwhash.hash(password, salt), hashType: 'hydro' },
+        $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' },
     });
 }
 

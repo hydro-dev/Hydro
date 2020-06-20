@@ -194,7 +194,7 @@ class Handler {
     }
 
     back(body) {
-        if (body) this.response.body = body;
+        this.response.body = body || this.response.body || {};
         this.response.redirect = this.request.headers.referer || '/';
     }
 
@@ -225,6 +225,7 @@ class Handler {
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);
+            console.log(name, kwargs);
         }
         return res;
     }
@@ -284,16 +285,15 @@ class Handler {
 
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
-        if (this.response.redirect) {
-            if (!this.preferJson) {
-                this.ctx.response.type = 'application/octet-stream';
-                this.ctx.response.status = 302;
-                this.ctx.redirect(this.response.redirect);
-            } else {
+        if (this.response.redirect && !this.preferJson) {
+            this.ctx.response.type = 'application/octet-stream';
+            this.ctx.response.status = 302;
+            this.ctx.redirect(this.response.redirect);
+        } else {
+            if (this.response.body.redirect) {
                 this.response.body = this.response.body || {};
                 this.response.body.url = this.response.redirect;
             }
-        } else {
             if (this.response.body != null) {
                 this.ctx.response.body = this.response.body;
                 this.ctx.response.status = this.response.status || 200;

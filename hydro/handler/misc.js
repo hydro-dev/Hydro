@@ -1,4 +1,3 @@
-
 const { PERM_JUDGE, PERM_LOGGEDIN } = require('../permission');
 const file = require('../model/file');
 const user = require('../model/user');

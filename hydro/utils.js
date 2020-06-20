@@ -1,8 +1,6 @@
-const { hasIn } = require("lodash");
-
 const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
-String.random = function random(digit) {
+String.random = function random(digit = 32) {
     let str = '';
     for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * 62)];
     return str;

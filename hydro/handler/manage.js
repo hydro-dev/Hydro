@@ -14,7 +14,6 @@ class SystemHandler extends Handler {
         this.response.body = {
             path: [
                 ['Hydro', 'homepage'],
-                ['manage_main', null],
             ],
         };
     }
@@ -118,6 +117,8 @@ class SystemSettingHandler extends SystemHandler {
         this.response.body.current = {};
         this.response.body.settings = setting.SYSTEM_SETTINGS;
         for (const s of this.response.body.settings) {
+            // FIXME no-await-in-loop
+            // eslint-disable-next-line no-await-in-loop
             this.response.body.current[s.key] = await system.get(s.key);
         }
     }

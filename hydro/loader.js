@@ -96,7 +96,10 @@ async function load() {
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', (input) => {
             if (input[0] === '@') {
-                cluster.workers[1].send({ event: 'run', command: input.substr(1, input.length - 1) });
+                for (const i in cluster.workers) {
+                    cluster.workers[i].send({ event: 'run', command: input.substr(1, input.length - 1) });
+                    break;
+                }
             } else {
                 executeCommand(input);
             }

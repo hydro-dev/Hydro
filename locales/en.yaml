@@ -10,7 +10,14 @@ discussion_edit: Discussion Edit
 discussion_main: Discussion
 discussion_node: Discussion
 display_name: Display Name
+domain_dashboard: Dashboard
+domain_discussion: Discussion Nodes
+domain_edit: Edit Info
+domain_join_applications: Join Applications
 domain_main: Main
+domain_permission: System Permission
+domain_role: System Role
+domain_user: System User
 fs_upload: File Upload
 home_account: Account Settings
 home_domain_account: Profile @ Domain
@@ -20,6 +27,7 @@ home_file: My Files
 home_messages: Messages
 home_preference: Preference
 home_security: Security
+homepage: Home
 homework_create: Homework Create
 homework_detail_problem_submit: Submit Homework Problem
 homework_edit: Homework Edit
@@ -27,15 +35,9 @@ homework_main: Homework
 homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
-manage_dashboard: Dashboard
-manage_discussion: Discussion Nodes
-manage_edit: Edit Info
-manage_join_applications: Join Applications
 manage_module: Module Management
-manage_permission: System Permission
-manage_role: System Role
+manage_script: Scripts
 manage_setting: System Settings
-manage_user: System User
 manage: System Manage
 no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
 page.problem_detail.sidebar.show_category: Click to Show
@@ -53,6 +55,7 @@ perm_record: Records
 perm_training: Trainings
 problem_create: Problem Create
 problem_edit: Problem Edit
+problem_import: Import Problem
 problem_main: Problem Set
 problem_settings: Problem Settings
 problem_solution: Problem Solution
@@ -60,6 +63,7 @@ problem_statistics: Problem Statistics
 problem_submit: Problem Submit
 problem-category-delim: '|'
 problem-subcategory-delim: ', '
+ranking: Ranking
 record_detail: Record Detail
 record_main: Judging Queue
 setting_customize: Customize
@@ -70,7 +74,7 @@ setting_info: Personal Info
 setting_preference: Preference
 setting_privacy: Privacy
 setting_usage: Usage Preference
-timeago_locale: en
+timeago_locale: en_US
 training_create: Training Create
 training_edit: Training Edit
 training_main: Training

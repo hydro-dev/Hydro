@@ -1,6 +1,6 @@
 {% extends "layout/mail.html" %}
 {% block title %}{{ _('Sign Up') }}{% endblock %}
 {% block content %}
-<p>{{ _('Hello! You can click following link to sign up your Vijos account:') }}</p>
-<p><a href="{{ url_prefix }}{{ url }}">{{ url_prefix }}{{ url }}</a></p>
+<p>{{ _('Hello! You can click following link to sign up your Hydro account:') }}</p>
+<p><a href="{{ url_prefix|safe }}{{ path|safe }}">{{ url_prefix|safe }}{{ path|safe }}</a></p>
 {% endblock %}

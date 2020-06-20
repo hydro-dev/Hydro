@@ -274,95 +274,54 @@ class FileTooLongError(ValidationError):
   def message(self):
     return 'The uploaded file is too long.'
 
-
 class FileTypeNotAllowedError(ValidationError):
   @property
   def message(self):
     return 'This type of files are not allowed to be uploaded.'
 
-
-class UnknownFieldError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Unknown field {0}.'
-
 class CsrfTokenError(ForbiddenError):
   pass
-
 
 class InvalidOperationError(ForbiddenError):
   pass
 
-
 class InvalidTokenDigestError(ForbiddenError):
   pass
-
 
 class CurrentPasswordError(ForbiddenError):
   @property
   def message(self):
     return "Current password doesn't match."
 
-
 class DiscussionCategoryAlreadyExistError(ForbiddenError):
   @property
   def message(self):
     return 'Discussion category {1} already exists.'
-
 
 class DiscussionCategoryNotFoundError(NotFoundError):
   @property
   def message(self):
     return 'Discussion category {1} not found.'
 
-
 class DiscussionNodeAlreadyExistError(ForbiddenError):
   @property
   def message(self):
     return 'Discussion node {1} already exists.'
-
 
 class TrainingRequirementNotSatisfiedError(ForbiddenError):
   @property
   def message(self):
     return 'Training requirement is not satisfied.'
 
-
 class UsageExceededError(ForbiddenError):
   @property
   def message(self):
     return 'Usage exceeded.'
 
-
 class InvalidArgumentError(BadRequestError):
   @property
   def message(self):
     return 'Argument {0} is invalid.'
-
-
-class BatchCopyLimitExceededError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Only {0} problems can be copied in one request, got {1}.'
-
-
-class UpgradeLockAcquireError(Error):
-  @property
-  def message(self):
-    return 'Failed to acquire the upgrade lock. There may be another ongoing upgrade process, or a previous process is exited unexpectedly.'
-
-
-class UpgradeLockReleaseError(Error):
-  @property
-  def message(self):
-    return 'Failed to release the upgrade lock. The database is malformed during the upgrade.'
-
-
-class DatabaseVersionMismatchError(Error):
-  @property
-  def message(self):
-    return 'Database version mismatch, got {0}, expect {1}. You need to invoke database upgrades.'
-
 
 class SendMailError(UserFacingError):
   @property

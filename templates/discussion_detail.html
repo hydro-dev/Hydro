@@ -7,7 +7,7 @@
       <div class="section__body">
         <ul class="supplementary list">
           <li>
-            <a class="discussion-node-tag" href="{{ url('discussion_node', type=model.discussion.typeDisplay[vnode.parentType], name=vnode.id) }}">
+            <a class="discussion-node-tag" href="{{ url('discussion_node', type=model.discussion.typeDisplay[vnode.type], name=vnode.id) }}">
             {% if ddoc.parentType == model.document.TYPE_DISCUSSION_NODE %}
               <span class="v-center icon icon-tag"></span>
             {% elif ddoc.parentType == model.document.TYPE_CONTEST %}
@@ -97,26 +97,26 @@
         <div class="balancer sidebar-user-stat">
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ udict[ddoc['owner']].nAccept or 0 }}</div>
+              <div class="numbox__num medium">{{ udict[ddoc.owner].nAccept or 0 }}</div>
               <div class="numbox__text">{{ _('Accepted') }}</div>
             </div>
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ udict[ddoc['owner']].nLike or 0 }}</div>
+              <div class="numbox__num medium">{{ udict[ddoc.owner].nLike or 0 }}</div>
               <div class="numbox__text">{{ _('Solutions Liked') }}</div>
             </div>
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ udict[ddoc['owner']].nProblems or 0 }}</div>
+              <div class="numbox__num medium">{{ udict[ddoc.owner].nProblems or 0 }}</div>
               <div class="numbox__text">{{ _('Upload Problem') }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    {% if vnode.type == 'problem' %}
+    {% if vnode.type == model.document.TYPE_PROBLEM %}
       {% set pdoc = vnode %}
       {% set owner_udoc = udict[vnode['owner']] %}
       {% include "partials/problem_sidebar.html" %}

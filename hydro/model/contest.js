@@ -186,7 +186,6 @@ const oi = {
     rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
 };
 
-
 const RULES = {
     acm, oi,
 };

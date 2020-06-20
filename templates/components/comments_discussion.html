@@ -14,7 +14,7 @@
         </div>
         {{ reply_operations(doc, rdoc) }}
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id }}">
+      <div class="typo" data-emoji-enabled data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}">
         {{ rdoc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
@@ -33,12 +33,12 @@
 {% endif %}
 {% if doc.owner == handler.state.user._id or handler.hasPerm(reply_edit_perm) %}
   <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-reply"
-    data-form="{&quot;operation&quot;:&quot;{{reply_edit_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;,&quot;{{reply_ref}}&quot;:&quot;{{rdoc._id}}&quot;}"
+    data-form="{{ {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}|json }}"
   ><span class="icon icon-edit"></span></a>
 {% endif %}
 {% if doc.owner == handler.state.user._id or handler.hasPerm(reply_delete_perm) %}
   <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-reply"
-    data-form="{&quot;operation&quot;:&quot;{{reply_delete_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;,&quot;{{reply_ref}}&quot;:&quot;{{rdoc._id}}&quot;}"
+    data-form="{{ {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}|json }}"
   ><span class="icon icon-delete"></span></a>
 {% endif %}
 </div>
@@ -92,7 +92,7 @@
         </form>
       </div>
       <div class="nojs--hide">
-        <textarea class="textbox" name="dczcomments__dummy-box" readonly data-form="{&quot;operation&quot;:&quot;{{comment_post_op}}&quot;}" placeholder="{{ _(comment_placeholder) }}"></textarea>
+        <textarea class="textbox" name="dczcomments__dummy-box" readonly data-form="{{ {operation: comment_post_op}|json }}" placeholder="{{ _(comment_placeholder) }}"></textarea>
       </div>
       <div class="commentbox-placeholder"></div>
       <ul style="display:none">
@@ -118,28 +118,28 @@
         <div class="dczcomments__operations nojs--hide">
         {% if handler.hasPerm(reply_post_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
-            data-form="{&quot;operation&quot;:&quot;{{reply_post_op}}&quot;, &quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+            data-form="{{ {operation: reply_post_op, drid: doc._id}|json }}"
           ><span class="icon icon-reply"></span></a>
         {% endif %}
         {% if doc.owner == handler.state.user._id or handler.hasPerm(comment_edit_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
-            data-form="{&quot;operation&quot;:&quot;{{comment_edit_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+            data-form="{{ {operation: comment_edit_op, drid: doc._id}|json }}"
           ><span class="icon icon-edit"></span></a>
         {% endif %}
         {% if doc.owner == handler.state.user._id or handler.hasPerm(comment_delete_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
-            data-form="{&quot;operation&quot;:&quot;{{comment_delete_op}}&quot;,&quot;{{comment_ref}}&quot;:&quot;{{doc._id}}&quot;}"
+            data-form="{{ {operation: comment_delete_op, drid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>
         {% endif %}
         </div>
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ url('discuss_reply_raw', did=doc.parentId, drid=doc._id) }}">
+      <div class="typo" data-emoji-enabled data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
       <ul class="dczcomments__replies commentbox-reply-target">
       {% for rdoc in doc['reply'] %}
-        {{ reply(mode_create, udict[rdoc['owner']], doc, rdoc) }}
+        {{ reply(mode_create, udict[rdoc.owner], doc, rdoc) }}
       {% endfor %}
       </ul>
     </div>

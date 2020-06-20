@@ -1,4 +1,3 @@
-const fs = require('fs');
 const paginate = require('../lib/paginate');
 const validator = require('../lib/validator');
 const file = require('../model/file');

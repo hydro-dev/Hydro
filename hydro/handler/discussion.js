@@ -31,13 +31,15 @@ class DiscussionHandler extends Handler {
             type = discussion.typeDisplay[this.ddoc.parentType];
             name = this.ddoc.parentId;
             if (drid) {
-                this.drdoc = await discussion.getReply(domainId, drid, did);
+                this.drdoc = await discussion.getReply(domainId, drid);
                 if (!this.drdoc) throw new DiscussionNotFoundError(drid);
-                if (this.drdoc.parent !== this.ddoc._id) throw new DocumentNotFoundError(drid);
+                if (!this.drdoc.parentId.equals(this.ddoc._id)) {
+                    throw new DocumentNotFoundError(drid);
+                }
                 if (drrid) {
                     [, this.drrdoc] = await discussion.getTailReply(domainId, drid, drrid);
                     if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
-                    if (this.drrdoc.parent !== this.drdoc._id) {
+                    if (!this.drrdoc.parentId.equals(this.drdoc._id)) {
                         throw new DocumentNotFoundError(drid);
                     }
                 }
@@ -196,7 +198,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     async postDeleteReply({ domainId, drid }) {
         if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
-        await discussion.deleteReply(domainId, drid);
+        await discussion.delReply(domainId, drid);
         this.back();
     }
 
@@ -210,20 +212,18 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     async postDeleteTailReply({ domainId, drid, drrid }) {
         if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION_REPLY);
-        await discussion.deleteTailReply(domainId, drid, drrid);
+        await discussion.delTailReply(domainId, drid, drrid);
         this.back();
     }
 
-    async postStar({ domainId, did, star }) {
+    async postStar({ domainId, did }) {
         await discussion.setStar(domainId, did, this.user._id, true);
-        this.response.body = { star };
-        this.response.direct = this.request.path;
+        this.back({ star: true });
     }
 
-    async postUnstar({ domainId, did, star }) {
+    async postUnstar({ domainId, did }) {
         await discussion.setStar(domainId, did, this.user._id, false);
-        this.response.body = { star };
-        this.response.direct = this.request.path;
+        this.back({ star: false });
     }
 }
 
@@ -240,7 +240,6 @@ class DiscussionReplyRawHandler extends DiscussionHandler {
         this.response.body = this.drdoc.content;
     }
 }
-
 
 class DiscussionTailReplyRawHandler extends DiscussionHandler {
     async get() {
@@ -263,22 +262,24 @@ class DiscussionEditHandler extends DiscussionHandler {
         this.response.body = { ddoc: this.ddoc, path };
     }
 
-    async post({
-        domainId, did, title, content, highlight, operation,
+    async postUpdate({
+        domainId, did, title, content, highlight,
     }) {
-        if (operation) return;
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
         if (highlight && !this.ddoc.highlight) this.checkPerm(PERM_HIGHLIGHT_DISCUSSION);
         await discussion.edit(domainId, did, title, content, highlight);
         this.response.body = { did };
-        this.response.redirect = `/discuss/${did}`;
+        this.response.redirect = this.url('discussion_detail', { did });
     }
 
     async postDelete({ domainId, did }) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_DELETE_DISCUSSION);
-        await discussion.delete(domainId, did);
+        await discussion.del(domainId, did);
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
-        this.response.redirect = `/discuss/${this.ddoc.parentType}/${this.ddoc.parentId}`;
+        this.response.redirect = this.url('discussion_node', {
+            type: discussion.typeDisplay[this.ddoc.parentType],
+            name: this.ddoc.parentId,
+        });
     }
 }
 
@@ -287,7 +288,7 @@ async function apply() {
     Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
     Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
     Route('discussion_detail', '/discuss/:did/raw', DiscussionDetailRawHandler);
-    Route('discission_reply_raw', '/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
+    Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
     Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
     Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
     Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler);
