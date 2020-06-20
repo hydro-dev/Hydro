@@ -1,83 +1,82 @@
-#English
----
-contest_main: Contest
+__langname: English
+Can be Extended For: Extension
 contest_create: Contest Create
-contest_edit: Contest Edit
-contest_scoreboard: Scoreboard
 contest_detail_problem_submit: Submit Contest Problem
+contest_edit: Contest Edit
+contest_main: Contest
+contest_scoreboard: Scoreboard
 discussion_create: Create Discussion
+discussion_edit: Discussion Edit
 discussion_main: Discussion
 discussion_node: Discussion
+display_name: Display Name
+domain_main: Main
+fs_upload: File Upload
 home_account: Account Settings
 home_domain_account: Profile @ Domain
-home_preference: Preference
-home_messages: Messages
-home_security: Security
+home_domain_create: Create Domain
 home_domain: My Domains
-homework_main: Homework
+home_file: My Files
+home_messages: Messages
+home_preference: Preference
+home_security: Security
 homework_create: Homework Create
-homework_edit: Homework Edit
-homework_scoreboard: Scoreboard
 homework_detail_problem_submit: Submit Homework Problem
+homework_edit: Homework Edit
+homework_main: Homework
+homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
+manage_dashboard: Dashboard
+manage_discussion: Discussion Nodes
+manage_edit: Edit Info
+manage_join_applications: Join Applications
+manage_module: Module Management
+manage_permission: System Permission
+manage_role: System Role
+manage_setting: System Settings
+manage_user: System User
+manage: System Manage
+no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
+page.problem_detail.sidebar.show_category: Click to Show
+page.training_detail.invalid_when_not_enrolled: You cannot view problem details unless enrolled.
 pager_first: « First
 pager_last: Last »
 pager_next: Next ›
 pager_previous: ‹ Previous
+perm_contest: Contests
+perm_discussion: Discussions
+perm_general: General
+perm_problem_solution: Problem Solutions
+perm_problem: Problems
+perm_record: Records
+perm_training: Trainings
 problem_create: Problem Create
 problem_edit: Problem Edit
 problem_main: Problem Set
-problem_solution: Problem Solution
-problem_submit: Problem Submit
 problem_settings: Problem Settings
+problem_solution: Problem Solution
 problem_statistics: Problem Statistics
+problem_submit: Problem Submit
+problem-category-delim: '|'
+problem-subcategory-delim: ', '
 record_detail: Record Detail
 record_main: Judging Queue
+setting_customize: Customize
+setting_display: Display Preference
 setting_function: Function
+setting_info_domain: Personal Info
 setting_info: Personal Info
 setting_preference: Preference
 setting_privacy: Privacy
-setting_customize: Customize
-training_main: Training
-training_edit: Training Edit
+setting_usage: Usage Preference
+timeago_locale: en
 training_create: Training Create
+training_edit: Training Edit
+training_main: Training
 user_detail: User Detail
 user_login: Login
 user_logout: Logout
 user_lostpass: Lost Password
 user_register: Register
-home_domain_create: Create Domain
-domain_main: Main
-manage: System Manage
-manage_dashboard: Dashboard
-manage_discussion: Discussion Nodes
-manage_edit: Edit Info
-manage_join_applications: Join Applications
-manage_role: System Role
-manage_user: System User
-manage_permission: System Permission
-manage_module: Module Management
-manage_setting: System Settings
-timeago_locale: en
-perm_general: General
-perm_problem: Problems
-perm_record: Records
-perm_problem_solution: Problem Solutions
-perm_discussion: Discussions
-perm_contest: Contests
-perm_training: Trainings
-discussion_edit: Discussion Edit
 wiki_help: Help
-no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
-problem-category-delim: '|'
-problem-subcategory-delim: ', '
-setting_display: Display Preference
-setting_usage: Usage Preference
-home_file: My Files
-fs_upload: File Upload
-page.training_detail.invalid_when_not_enrolled: You cannot view problem details unless enrolled.
-page.problem_detail.sidebar.show_category: Click to Show
-setting_info_domain: Personal Info
-display_name: Display Name
-Can be Extended For: Extension

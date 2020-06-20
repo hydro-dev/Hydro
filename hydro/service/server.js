@@ -1,7 +1,7 @@
 const assert = require('assert');
 const path = require('path');
 const os = require('os');
-const cluster = require('cluster');
+const _ = require('lodash');
 const { ObjectID } = require('bson');
 const Koa = require('koa');
 const yaml = require('js-yaml');
@@ -32,7 +32,10 @@ const _validateObjectId = (id, key) => {
     throw new ValidationError(key);
 };
 const _bool = (val) => !!val;
-const _splitAndTrim = (val) => val.split(',').map((i) => i.trim());
+const _splitAndTrim = (val) => {
+    const t = val.split(',').map((i) => i.trim().split('+'));
+    return _.flatten(t);
+};
 const _date = (val) => {
     const d = val.split('-');
     assert(d.length === 3);
@@ -412,10 +415,31 @@ class ConnectionHandler {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
+    url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
+        let res = '#';
+        try {
+            delete kwargs.__keywords;
+            if (this.args.domainId !== 'system') {
+                name += '_with_domainId';
+                kwargs.domainId = kwargs.domainId || this.args.domainId;
+            }
+            const { anchor, query } = kwargs;
+            delete kwargs.anchor;
+            delete kwargs.query;
+            if (query) res = router.url(name, kwargs, { query });
+            else res = router.url(name, kwargs);
+            if (anchor) return `${res}#${anchor}`;
+        } catch (e) {
+            console.error(e.message);
+        }
+        return res;
+    }
+
     async renderHTML(name, context) {
         this.hasPerm = (perm) => this.user.hasPerm(perm);
         const res = await template.render(name, Object.assign(context, {
             handler: this,
+            url: (...args) => this.url(...args),
             _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
             user: this.user,
         }));
@@ -450,6 +474,7 @@ function Connection(name, prefix, RouteConnHandler, permission) {
         const h = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
+            h.args = args;
             if (h.___prepare) await h.___prepare(args);
             if (permission) h.checkPerm(permission);
             let checking = '';

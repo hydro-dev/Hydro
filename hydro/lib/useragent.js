@@ -1,9 +1,11 @@
 const browser = require('detect-browser');
 
-function get(str) {
-    const ua = browser.parseUserAgent(str);
-    console.log(ua);
-    return ua;
+function parse(str) {
+    return browser.parseUserAgent(str);
 }
 
-global.Hydro.lib.useragent = module.exports = get;
+function icon(str) {
+    return str.split(' ')[0].toLowerCase();
+}
+
+global.Hydro.lib.useragent = module.exports = { parse, icon };

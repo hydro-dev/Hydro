@@ -103,7 +103,6 @@ class HomeSecurityHandler extends Handler {
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
         const sessions = await token.getSessionListByUid(this.user._id);
-        const parsed = [];
         for (const session of sessions) {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
@@ -111,7 +110,8 @@ class HomeSecurityHandler extends Handler {
             if (geoip) session.updateGeoip = geoip.lookup(session.updateIp || session.createIp);
         }
         this.response.template = 'home_security.html';
-        this.response.body = { sessions: parsed, geoipProvider: (geoip || {}).provider };
+        this.response.body = { sessions, geoipProvider: (geoip || {}).provider };
+        if (useragent) this.response.body.icon = useragent.icon;
     }
 
     async postChangePassword({ current, password, verifyPassword }) {
@@ -160,6 +160,8 @@ class HomeSettingsHandler extends Handler {
     }
 
     async get({ category }) {
+        // eslint-disable-next-line prefer-destructuring
+        category = category[0]; // Category would be splitted into array
         const path = [
             ['Hydro', 'homepage'],
             [`home_${category}`, null],

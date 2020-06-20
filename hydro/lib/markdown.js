@@ -23,8 +23,10 @@ const Mark = require('markdown-it-mark');
 // :::warn This page requires javascript. :::
 // :::record-pass Accepted :::
 const Container = require('markdown-it-container');
-// FIXME doesn't work for webpack
-const Anchor = require('markdown-it-anchor');
+let Anchor = require('markdown-it-anchor');
+// For webpack
+if (Anchor.default) Anchor = Anchor.default;
+
 const TOC = require('markdown-it-table-of-contents');
 
 require('prismjs/components/index');

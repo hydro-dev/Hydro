@@ -90,13 +90,13 @@
           <li class="sessionlist__item">
             <div class="media">
               <div class="media__left medium">
-                <span class="sessionlist__icon icon icon-platform--{{ session.updateUa.icon }}"></span>
+                <span class="sessionlist__icon icon icon-platform--{{ icon(session.updateUa.os) }}"></span>
               </div>
               <div class="media__body medium typo">
                 <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
                 <p>{{ _('Location') }}: {{ _(session.updateGeoip) }} ({{ session.updateIp }})</p>
                 <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
-                <p>{{ _('Browser') }}: {{ session.updateUa.browser }}</p>
+                <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
                 <!-- {{ _('User-Agent') }}: {{ session['update_ua']['str'] }} -->
                 {% if session.isCurrent %}
                 <p class="sessionlist__current-session"><span class="icon icon-check"></span> {{ _('This is the current session') }}</p>

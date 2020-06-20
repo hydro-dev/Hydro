@@ -4,7 +4,8 @@ import { AutoloadPage } from 'vj/misc/PageLoader';
 
 import i18n from 'vj/utils/i18n';
 
-timeago.register(i18n('timeago_locale'));
+const locales = require.context('timeago.js/lib/lang', false, /\.js$/);
+timeago.register(i18n('timeago_locale'), locales(`./${i18n('timeago_locale')}.js`).default);
 
 function runRelativeTime($container) {
   $container.find('span.time.relative[data-timestamp]').get().forEach((element) => {
@@ -15,7 +16,7 @@ function runRelativeTime($container) {
     $element.attr('data-tooltip', $element.text());
     $element.attr('datetime', ($element.attr('data-timestamp') || 0) * 1000);
     $element.attr('data-has-timeago', '1');
-    timeago.render(element);
+    timeago.render(element, i18n('timeago_locale'));
   });
 }
 

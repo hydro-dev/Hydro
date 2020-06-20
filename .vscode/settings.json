@@ -3,7 +3,7 @@
     "files.autoSave": "onFocusChange",
     "files.encoding": "utf8",
     "files.eol": "\n",
-    "editor.detectIndentation": false,
+    "editor.detectIndentation": true,
     "editor.tabSize": 4,
     "editor.formatOnSave": true,
     "editor.renderWhitespace": "boundary"

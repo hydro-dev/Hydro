@@ -48,10 +48,10 @@ class PasteCreateHandler extends Handler {
 }
 
 async function apply() {
-    Route('paste', '/paste', PasteMainHandler);
+    Route('pastebin', '/paste', PasteMainHandler);
     Route('paste_create', '/paste/create', PasteCreateHandler);
     Route('paste_show', '/paste/:docId', PasteShowHandler);
-    nav('paste', null, 'paste', PERM_LOGGEDIN);
+    nav('pastebin', null, 'pastebin', PERM_LOGGEDIN);
 }
 
 global.Hydro.handler.pastebin = module.exports = apply;

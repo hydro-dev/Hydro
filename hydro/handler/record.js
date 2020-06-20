@@ -127,9 +127,9 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.get(this.domainId, rdoc.pid),
+            problem.get(this.domainId, rdoc.pid, null, false),
         ]);
-        if (pdoc.hidden && !this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+        if (pdoc && pdoc.hidden && !this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
         this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
