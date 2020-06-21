@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { ForbiddenError } = require('../error');
+const { ForbiddenError, NotFoundError } = require('../error');
 const db = require('../service/db');
 const gridfs = require('../service/gridfs');
 const hash = require('../lib/hash.hydro');
@@ -55,6 +55,7 @@ async function dec(_id) {
 
 async function get(_id, secret) {
     const file = await coll.findOne({ _id });
+    if (!file) throw new NotFoundError(_id);
     if (typeof secret !== 'undefined') {
         const timestamp = _timestamp();
         if (!(hash(file.secret, timestamp.toString()) === secret)) {

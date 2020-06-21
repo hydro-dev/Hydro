@@ -55,6 +55,10 @@ async function load() {
     await script(pending, fail, active);
     pending = [];
     await server.start();
+    setInterval(() => {
+        process.send({ event: 'stat', count: global.Hydro.stat.reqCount });
+        global.Hydro.stat.reqCount = 0;
+    }, 30 * 1000);
     return { active, fail };
 }
 

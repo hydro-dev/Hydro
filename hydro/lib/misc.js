@@ -1,8 +1,7 @@
-const ansiup = require('ansi_up');
+const { default: AnsiUp } = require('ansi_up');
 const md5 = require('./md5');
 
-// eslint-disable-next-line new-cap
-const AU = new ansiup.default();
+const AU = new AnsiUp();
 
 function ansiToHtml(str) {
     return AU.ansi_to_html(str);

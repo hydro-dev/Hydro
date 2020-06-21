@@ -3,43 +3,7 @@
 <div class="section">
   <div class="section__body">
     <form method="post">
-      {{ form.form_text({
-           label:'ID',
-           name:'id',
-           value:domain._id,
-           disabled:true,
-           required:true
-         }) }}
-      {{ form.form_text({
-           label:'Name',
-           name:'name',
-           value:domain.name,
-           autofocus:true,
-           required:true
-         }) }}
-      {{ form.form_text({
-           label:'Gravatar Email',
-           help_text:'Will be used as the system icon.',
-           name:'gravatar',
-           value:domain.gravatar
-         }) }}
-      {{ form.form_textarea({
-           columns:12,
-           label:'Bulletin',
-           name:'bulletin',
-           value:domain.bulletin,
-           markdown:true,
-           required:false
-         }) }}
-      <div class="row"><div class="columns">
-        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-        <button type="submit" class="rounded primary button">
-          {{ _('Update') }}
-        </button>
-        <button type="button" class="rounded button" onclick="window.history.go(-1)">
-          {{ _('Cancel') }}
-        </button>
-      </div></div>
+      {% include "partials/setting.html" with context %}
     </form>
   </div>
 </div>

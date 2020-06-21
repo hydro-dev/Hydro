@@ -133,6 +133,7 @@ class Handler {
             files: ctx.request.files,
             query: ctx.query,
             path: ctx.path,
+            referer: ctx.request.headers.referer || '/',
         };
         this.response = {
             body: '',
@@ -348,6 +349,7 @@ class Handler {
 }
 
 async function handle(ctx, HandlerClass, permission) {
+    global.Hydro.stat.reqCount++;
     const h = new HandlerClass(ctx);
     try {
         const method = ctx.method.toLowerCase();

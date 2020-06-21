@@ -1,6 +1,7 @@
 const user = require('../model/user');
 const domain = require('../model/domain');
 const system = require('../model/system');
+const { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } = require('../model/setting');
 const paginate = require('../lib/paginate');
 const { Route, Handler } = require('../service/server');
 const { PERM_MANAGE } = require('../permission');
@@ -67,14 +68,16 @@ class DomainEditHandler extends ManageHandler {
             ['domain_edit', null],
         ];
         this.response.template = 'domain_edit.html';
-        this.response.body = { domain: this.domain, path };
+        this.response.body = { current: this.domain, settings: DOMAIN_SETTINGS, path };
     }
 
-    async post({
-        domainId, name, gravatar, bulletin,
-    }) {
-        await domain.edit(domainId, { name, gravatar, bulletin });
-        this.response.redirect = '/domain/dashboard';
+    async post(args) {
+        const $set = {};
+        for (const key of args) {
+            if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
+        }
+        await domain.edit(args.domainId, $set);
+        this.response.redirect = this.url('domain_dashboard');
     }
 }
 

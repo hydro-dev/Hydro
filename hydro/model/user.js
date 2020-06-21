@@ -2,6 +2,7 @@ const builtin = require('./builtin');
 const document = require('./document');
 const system = require('./system');
 const token = require('./token');
+const setting = require('./setting');
 const { UserNotFoundError, UserAlreadyExistError, LoginError } = require('../error');
 const perm = require('../permission');
 const pwhash = require('../lib/hash.hydro');
@@ -19,14 +20,16 @@ class USER {
         this.salt = () => udoc.salt;
         this.hash = () => udoc.hash;
         this.priv = udoc.priv;
-        this.timeZone = udoc.timeZone || 'Asia/Shanghai';
-        this.viewLang = udoc.viewLang || 'zh_CN';
-        this.codeLang = udoc.codeLang || 'c';
-        this.codeTemplate = udoc.codeTemplate || '';
+
+        for (const key in setting.SETTINGS_BY_KEY) {
+            if (udoc[key]) this[key] = udoc[key];
+            else if (setting.SETTINGS_BY_KEY[key].value) {
+                this[key] = setting.SETTINGS_BY_KEY[key].value;
+            }
+        }
+
         this.regat = udoc.regat;
         this.loginat = udoc.loginat;
-        this.bio = udoc.bio || '';
-        this.gravatar = udoc.gravatar || '';
         this.ban = udoc.ban || false;
         this.nAccept = dudoc.nAccept || 0;
         this.nSubmit = dudoc.nSubmit || 0;
@@ -76,10 +79,13 @@ async function getList(domainId, uids) {
     return r;
 }
 
-async function getByUname(domainId, uname) {
+async function getByUname(domainId, uname, ignoreMissing = false) {
     const unameLower = uname.trim().toLowerCase();
     const udoc = await coll.findOne({ unameLower });
-    if (!udoc) throw new UserNotFoundError(uname);
+    if (!udoc) {
+        if (ignoreMissing) return null;
+        throw new UserNotFoundError(uname);
+    }
     const dudoc = await getInDomain(domainId, udoc);
     return new USER(udoc, dudoc);
 }
@@ -97,9 +103,10 @@ async function getByEmail(domainId, mail, ignoreMissing = false) {
 
 function setPassword(uid, password) {
     const salt = String.random();
-    return coll.findOneAndUpdate({ _id: uid }, {
-        $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' },
-    });
+    return coll.findOneAndUpdate(
+        { _id: uid },
+        { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
+    );
 }
 
 function setById(uid, args) {
@@ -114,11 +121,10 @@ async function changePassword(uid, currentPassword, newPassword) {
     const udoc = await getById(uid);
     udoc.checkPassword(currentPassword);
     const salt = String.random();
-    return await coll.findOneAndUpdate({
-        _id: udoc._id,
-    }, {
-        $set: { salt, hash: pwhash.hash(newPassword, salt), hashType: 'hydro' },
-    });
+    return await coll.findOneAndUpdate(
+        { _id: udoc._id },
+        { $set: { salt, hash: pwhash(newPassword, salt), hashType: 'hydro' } },
+    );
 }
 
 async function inc(_id, field, n = 1) {
@@ -139,11 +145,14 @@ async function incDomain(domainId, uid, field, n = 1) {
     return dudoc;
 }
 
+/**
+ * @returns {Promise<number>} uid
+ */
 async function create({
     uid, mail, uname, password, regip = '127.0.0.1', priv = perm.PRIV_NONE,
 }) {
     const salt = String.random();
-    if (!uid) uid = system.inc('user');
+    if (!uid) uid = await system.inc('user');
     try {
         await coll.insertOne({
             _id: uid,
@@ -164,6 +173,7 @@ async function create({
     } catch (e) {
         throw new UserAlreadyExistError([uid, uname, mail]);
     }
+    return uid;
 }
 
 function getMulti(params) {

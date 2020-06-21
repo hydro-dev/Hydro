@@ -58,24 +58,30 @@ async function executeCommand(input) {
 
 async function messageHandler(worker, msg) {
     if (!msg) msg = worker;
-    if (msg.event && msg.event === 'restart') {
-        console.log('Restarting');
-        await stopWorker();
-        console.log('Worker stopped');
-        await startWorker(msg.count);
-    } else if (msg.event && msg.event === 'run') {
-        await executeCommand(msg.command);
+    if (msg.event) {
+        if (msg.event === 'stat') {
+            global.Hydro.stat.reqCount += msg.count;
+        } else if (msg.event === 'restart') {
+            console.log('Restarting');
+            await stopWorker();
+            console.log('Worker stopped');
+            await startWorker(msg.count);
+        } else if (msg.event === 'run') {
+            await executeCommand(msg.command);
+        }
     }
 }
 
 async function load() {
     global.nodeModules = {
+        'adm-zip': require('adm-zip'),
+        axios: require('axios'),
         bson: require('bson'),
         'js-yaml': require('js-yaml'),
         mongodb: require('mongodb'),
     };
     global.Hydro = {
-        config: {},
+        stat: { reqCount: 0 },
         handler: {},
         service: {},
         model: {},

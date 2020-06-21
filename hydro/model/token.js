@@ -97,6 +97,7 @@ global.Hydro.model.token = module.exports = {
     TYPE_CSRF_TOKEN: 1,
     TYPE_REGISTER: 2,
     TYPE_CHANGEMAIL: 3,
+    TYPE_OAUTH: 4,
 
     ensureIndexes,
     add,

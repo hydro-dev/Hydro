@@ -7,9 +7,10 @@ async function update() {
     const [mid, $set] = await sysinfo.update();
     await coll.updateOne(
         { mid, type: 'server' },
-        { $set: { ...$set, updateAt: new Date() } },
+        { $set: { ...$set, updateAt: new Date(), reqCount: global.Hydro.stat.reqCount } },
         { upsert: true },
     );
+    global.Hydro.stat.reqCount = 0;
 }
 
 async function postInit() {
@@ -19,7 +20,7 @@ async function postInit() {
         { $set: { ...info, updateAt: new Date(), type: 'server' } },
         { upsert: true },
     );
-    setInterval(update, 3 * 60 * 1000);
+    setInterval(update, 60 * 1000);
 }
 
 global.Hydro.service.monitor = module.exports = { postInit };

@@ -1,3 +1,4 @@
+const axios = require('axios');
 const { Route, Handler } = require('../service/server.js');
 const user = require('../model/user');
 const token = require('../model/token');
@@ -7,7 +8,7 @@ const misc = require('../lib/misc');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, LoginError, SystemError,
-    PermissionError, BlacklistedError,
+    PermissionError, BlacklistedError, UserFacingError,
 } = require('../error');
 
 class UserLoginHandler extends Handler {
@@ -25,8 +26,7 @@ class UserLoginHandler extends Handler {
         if (udoc.ban) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
         this.session.rememberme = rememberme;
-        const referer = this.request.headers.referer || '/';
-        this.response.redirect = referer.endsWith('/login') ? '/' : referer;
+        this.response.redirect = this.request.referer.endsWith('/login') ? '/' : this.request.referer;
     }
 }
 
@@ -161,8 +161,76 @@ class UserSearchHandler extends Handler {
     }
 }
 
+class OauthHandler extends Handler {
+    async get({ type }) {
+        if (type === 'github') {
+            const [appid, [state]] = await Promise.all([
+                system.get('oauth.githubappid'),
+                token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+            ]);
+            this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
+        }
+    }
+}
+
+class OauthCallbackHandler extends Handler {
+    async get({ type, state, code }) {
+        if (type === 'github') {
+            const [appid, secret, url, s] = await Promise.all([
+                system.get('oauth.githubappid'),
+                system.get('oauth.githubsecret'),
+                system.get('server.url'),
+                token.get(state, token.TYPE_OAUTH),
+            ]);
+            const res = await axios.post('https://github.com/login/oauth/access_token', {
+                client_id: appid,
+                client_secret: secret,
+                code,
+                redirect_uri: `${url}oauth/github/callback`,
+                state,
+            }, { headers: { accept: 'application/json' } });
+            if (res.data.error) {
+                throw new UserFacingError(
+                    res.data.error, res.data.error_description, res.data.error_uri,
+                );
+            }
+            const t = res.data.access_token;
+            const userInfo = await axios.get('https://api.github.com/user', {
+                headers: {
+                    Authorization: `token ${t}`,
+                },
+            });
+            const {
+                email: mail, bio, name, login,
+            } = userInfo.data;
+            const udoc = await user.getByEmail('system', mail, true);
+            if (udoc) {
+                this.session.uid = udoc._id;
+                await token.del(s, token.TYPE_OAUTH);
+            } else {
+                let uname;
+                const nudoc = await user.getByUname('system', name, true);
+                if (!nudoc) uname = name;
+                else {
+                    const ludoc = await user.getByUname('system', login, true);
+                    if (!ludoc) uname = login;
+                    else uname = String.random(16);
+                }
+                const uid = await user.create({
+                    mail, uname, password: String.random(32), regip: this.request.ip,
+                });
+                await user.setById(uid, { bio, oauth: 'github' });
+                this.session.uid = uid;
+            }
+            this.response.redirect = s.redirect;
+        }
+    }
+}
+
 async function apply() {
     Route('user_login', '/login', UserLoginHandler);
+    Route('user_oauth', '/oauth/:type', OauthHandler);
+    Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     Route('user_register', '/register', UserRegisterHandler);
     Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler);
     Route('user_logout', '/logout', UserLogoutHandler);

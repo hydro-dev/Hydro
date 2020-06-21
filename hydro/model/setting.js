@@ -12,9 +12,11 @@ const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
 
 const PREFERENCE_SETTINGS = [];
 const ACCOUNT_SETTINGS = [];
+const DOMAIN_SETTINGS = [];
 const SYSTEM_SETTINGS = [];
 const SETTINGS = [];
 const SETTINGS_BY_KEY = {};
+const DOMAIN_SETTINGS_BY_KEY = {};
 const SYSTEM_SETTINGS_BY_KEY = {};
 
 const Setting = (
@@ -39,6 +41,12 @@ const AccountSetting = (...settings) => {
         SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
+const DomainSetting = (...settings) => {
+    for (const setting of settings) {
+        DOMAIN_SETTINGS.push(setting);
+        DOMAIN_SETTINGS_BY_KEY[setting.key] = setting;
+    }
+};
 const SystemSetting = (...settings) => {
     for (const setting of settings) {
         SYSTEM_SETTINGS.push(setting);
@@ -47,8 +55,9 @@ const SystemSetting = (...settings) => {
 };
 
 PreferenceSetting(
+    // TODO generate by global.Hydro.locales
     Setting('setting_display', 'viewLang', builtin.VIEW_LANGS.map((i) => [i.code, i.name]),
-        options.default_locale, 'select', 'UI Language'),
+        'zh_CN', 'select', 'UI Language'),
     Setting('setting_display', 'timezone', timezones,
         'Asia/Shanghai', 'select', 'Timezone'),
     Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS,
@@ -73,6 +82,12 @@ AccountSetting(
         'Choose the background image in your profile page.'),
 );
 
+DomainSetting(
+    Setting('setting_domain', 'name', null, 'New domain', 'text', 'name'),
+    Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
+    Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
+);
+
 SystemSetting(
     Setting('setting_basic', 'user.register', null, false, 'checkbox', 'Allow register'),
     Setting('setting_basic', 'user.create_domain', null, true, 'checkbox', 'Allow domain creation'),
@@ -87,6 +102,8 @@ SystemSetting(
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
     Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
+    Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
+    Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret'),
     Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'number', 'Problems per Page'),
     Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'number', 'Contests per Page'),
     Setting('setting_constant', 'DISCUSSION_PER_PAGE', null, 50, 'number', 'Discussion per Page'),
@@ -100,6 +117,7 @@ global.Hydro.model.setting = module.exports = {
     Setting,
     PreferenceSetting,
     AccountSetting,
+    DomainSetting,
     SystemSetting,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
@@ -107,4 +125,6 @@ global.Hydro.model.setting = module.exports = {
     SETTINGS_BY_KEY,
     SYSTEM_SETTINGS,
     SYSTEM_SETTINGS_BY_KEY,
+    DOMAIN_SETTINGS,
+    DOMAIN_SETTINGS_BY_KEY,
 };

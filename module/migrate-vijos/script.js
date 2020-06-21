@@ -1,9 +1,12 @@
 /* eslint-disable no-await-in-loop */
+const fs = require('fs');
+const os = require('os');
+
 const { mongodb } = global.nodeModules;
 const dst = global.Hydro.service.db;
 const { file, problem, discussion } = global.Hydro.model;
+const { readConfig } = global.Hydro.lib;
 
-// TODO read config file
 // TODO output enhancement
 
 const map = {};
@@ -23,8 +26,8 @@ const tasks = {
         hashType: doc.hash.split('|')[0] === 'vj4' ? 'hydro' : doc.hash.split('|')[0],
         priv: doc.priv === -1 ? 1 : 0,
         gravatar: doc.gravatar,
-        email: doc.mail,
-        emailLower: doc.mail_lower,
+        mail: doc.mail,
+        mailLower: doc.mail_lower,
         regat: doc.regat,
         regip: doc.regip,
         loginat: doc.loginat,
@@ -44,6 +47,7 @@ const tasks = {
         num_submit: 'nSubmit',
         num_accept: 'nAccept',
         difficulty: 'difficulty',
+        difficulty_admin: null,
         pname: 'pid',
         title: 'title',
         content: 'content',
@@ -153,6 +157,7 @@ const tasks = {
             field: 'donePids',
             processer: (pids) => pids.map((id) => pid(id)),
         },
+        rp: null,
     },
     record: async (doc) => {
         const testCases = [];
@@ -297,7 +302,54 @@ async function domainUser(src, report) {
     }
 }
 
-async function fixPid(report) {
+async function fix(doc) {
+    await dst.collection('document').updateOne(
+        { _id: doc._id },
+        { $set: { pid: doc.pid || doc.docId.toString() } },
+    );
+    if (doc.data && doc.data.generationTime) {
+        await file.inc(doc.data);
+        const r = await file.get(doc.data);
+        const p = `${os.tmpdir()}/hydro/migrate.vijos.${doc._id}.zip`;
+        const w = fs.createWriteStream(p);
+        await new Promise((resolve, reject) => {
+            w.on('finish', resolve);
+            w.on('error', reject);
+            r.pipe(w);
+        });
+        const config = await readConfig(p);
+        await dst.collection('document').updateOne(
+            { _id: doc._id },
+            { $set: { config } },
+        );
+        fs.unlinkSync(p);
+    } else if (doc.data) {
+        const pdoc = await problem.get(doc.data.domain, pid(doc.data.pid));
+        await Promise.all([
+            file.inc(pdoc.data),
+            dst.collection('document').updateOne(
+                { _id: doc._id },
+                { $set: { data: pdoc.data } },
+            ),
+        ]);
+        const r = await file.get(pdoc.data);
+        const p = `${os.tmpdir()}/hydro/migrate.vijos.${doc._id}.zip`;
+        const w = fs.createWriteStream(p);
+        await new Promise((resolve, reject) => {
+            w.on('finish', resolve);
+            w.on('error', reject);
+            r.pipe(w);
+        });
+        const config = await readConfig(p);
+        await dst.collection('document').updateOne(
+            { _id: doc._id },
+            { $set: { config } },
+        );
+        fs.unlinkSync(p);
+    }
+}
+
+async function fixProblem(report) {
     const count = await dst.collection('document').find({ docType: 10 }).count();
     await report({ progress: 1, message: `Fix pid: ${count}` });
     const total = Math.floor(count / 50);
@@ -305,28 +357,13 @@ async function fixPid(report) {
         const docs = await dst.collection('document')
             .find({ docType: 10 }).skip(i * 50).limit(50)
             .toArray();
-        const t = [];
         for (const doc of docs) {
-            t.push(
-                dst.collection('document').updateOne(
-                    { _id: doc._id },
-                    { $set: { pid: doc.pid || doc.docId.toString() } },
-                ),
-            );
-            if (doc.data && doc.data.generationTime) {
-                t.push(file.inc(doc.data));
-            } else if (doc.data) {
-                const pdoc = await problem.get(doc.data.domain, pid(doc.data.pid));
-                t.push(
-                    file.inc(pdoc.data),
-                    dst.collection('document').updateOne(
-                        { _id: doc._id },
-                        { $set: { data: pdoc.data } },
-                    ),
-                );
+            try {
+                await fix(doc);
+            } catch (e) {
+                await report({ message: e.toString() });
             }
         }
-        await Promise.all(t);
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
     }
 }
@@ -437,7 +474,7 @@ async function migrateVijos({
     await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
     const d = ['user', 'document', 'document.status', 'record', 'file'];
     for (const i of d) await task(i, src, report);
-    await fixPid(report);
+    await fixProblem(report);
     await discussionNode(src, report);
     await domainUser(src, report);
     return true;
