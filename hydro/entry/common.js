@@ -5,7 +5,7 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 
 const builtinLib = [
-    'axios', 'download', 'i18n', 'mail', 'markdown',
+    'jwt', 'download', 'i18n', 'mail', 'markdown',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
     'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
     'readConfig', 'logger', 'useragent',

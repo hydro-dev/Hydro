@@ -7,10 +7,25 @@ async function get(_id) {
     if (doc) return doc.value;
     return null;
 }
+
+async function getMany(keys) {
+    const docs = await coll.find({ _id: { $in: keys } }).toArray();
+    const dict = {};
+    const res = [];
+    for (const doc of docs) {
+        dict[doc._id] = doc.value;
+    }
+    for (const key of keys) {
+        res.push(dict[key] || null);
+    }
+    return res;
+}
+
 async function update(_id, operation, config) {
     await coll.findOneAndUpdate({ _id }, operation, config);
     return get(_id);
 }
+
 async function set(_id, value) {
     await coll.findOneAndUpdate({ _id }, { $set: { value } }, { upsert: true });
     return get(_id);
@@ -25,6 +40,7 @@ function inc(field) {
 
 global.Hydro.model.system = module.exports = {
     get,
+    getMany,
     update,
     inc,
     set,

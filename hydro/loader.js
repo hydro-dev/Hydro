@@ -75,8 +75,8 @@ async function messageHandler(worker, msg) {
 async function load() {
     global.nodeModules = {
         'adm-zip': require('adm-zip'),
-        axios: require('axios'),
         bson: require('bson'),
+        superagent: require('superagent'),
         'js-yaml': require('js-yaml'),
         mongodb: require('mongodb'),
     };

@@ -1,4 +1,4 @@
-const axios = require('axios');
+const superagent = require('superagent');
 const { Route, Handler } = require('../service/server.js');
 const user = require('../model/user');
 const token = require('../model/token');
@@ -162,67 +162,127 @@ class UserSearchHandler extends Handler {
 }
 
 class OauthHandler extends Handler {
+    async github() {
+        const [appid, [state]] = await Promise.all([
+            system.get('oauth.githubappid'),
+            token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+        ]);
+        this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
+    }
+
+    async google() {
+        const [appid, url, [state]] = await Promise.all([
+            system.get('oauth.googleappid'),
+            system.get('server.url'),
+            token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+        ]);
+        this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=${state}`;
+    }
+
     async get({ type }) {
-        if (type === 'github') {
-            const [appid, [state]] = await Promise.all([
-                system.get('oauth.githubappid'),
-                token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
-            ]);
-            this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
-        }
+        if (type === 'github') await this.github();
+        else if (type === 'google') await this.google();
     }
 }
 
 class OauthCallbackHandler extends Handler {
-    async get({ type, state, code }) {
-        if (type === 'github') {
-            const [appid, secret, url, s] = await Promise.all([
-                system.get('oauth.githubappid'),
-                system.get('oauth.githubsecret'),
-                system.get('server.url'),
-                token.get(state, token.TYPE_OAUTH),
-            ]);
-            const res = await axios.post('https://github.com/login/oauth/access_token', {
+    async github({ state, code }) {
+        const [appid, secret, url, s] = await Promise.all([
+            system.get('oauth.githubappid'),
+            system.get('oauth.githubsecret'),
+            system.get('server.url'),
+            token.get(state, token.TYPE_OAUTH),
+        ]);
+        const res = await superagent.post('https://github.com/login/oauth/access_token')
+            .send({
                 client_id: appid,
                 client_secret: secret,
                 code,
                 redirect_uri: `${url}oauth/github/callback`,
                 state,
-            }, { headers: { accept: 'application/json' } });
-            if (res.data.error) {
-                throw new UserFacingError(
-                    res.data.error, res.data.error_description, res.data.error_uri,
-                );
-            }
-            const t = res.data.access_token;
-            const userInfo = await axios.get('https://api.github.com/user', {
-                headers: {
-                    Authorization: `token ${t}`,
-                },
+            })
+            .set('accept', 'application/json');
+        if (res.body.error) {
+            throw new UserFacingError(
+                res.body.error, res.body.error_description, res.body.error_uri,
+            );
+        }
+        const t = res.body.access_token;
+        const userInfo = await superagent.get('https://api.github.com/user')
+            .set('Authorization', `token ${t}`);
+        const ret = {
+            email: userInfo.body.mail,
+            bio: userInfo.body.bio,
+            uname: [userInfo.body.name, userInfo.body.login],
+        };
+        this.response.redirect = s.redirect;
+        await token.del(s, token.TYPE_OAUTH);
+        return ret;
+    }
+
+    async google({
+        code, scope, authuser, prompt, error, state,
+    }) {
+        if (error) throw new UserFacingError(error);
+        console.log(scope, authuser, prompt);
+        const [
+            [appid, secret, url, proxy],
+            s,
+        ] = await Promise.all([
+            system.getMany([
+                'oauth.googleappid', 'oauth.googlesecret', 'server.url', 'proxy',
+            ]),
+            token.get(state, token.TYPE_OAUTH),
+        ]);
+        const res = await superagent.post('https://oauth2.googleapis.com/token')
+            .proxy(proxy)
+            .send({
+                client_id: appid,
+                client_secret: secret,
+                code,
+                grant_type: 'authorization_code',
+                redirect_uri: `${url}oauth/google/callback`,
             });
-            const {
-                email: mail, bio, name, login,
-            } = userInfo.data;
-            const udoc = await user.getByEmail('system', mail, true);
-            if (udoc) {
-                this.session.uid = udoc._id;
-                await token.del(s, token.TYPE_OAUTH);
-            } else {
-                let uname;
-                const nudoc = await user.getByUname('system', name, true);
-                if (!nudoc) uname = name;
-                else {
-                    const ludoc = await user.getByUname('system', login, true);
-                    if (!ludoc) uname = login;
-                    else uname = String.random(16);
+        const payload = global.Hydro.lib.jwt.decode(res.body.id_token);
+        await token.del(state, token.TYPE_OAUTH);
+        this.response.redirect = s.redirect;
+        return {
+            email: payload.email,
+            uname: [payload.given_name, payload.name, payload.family_name],
+            viewLang: payload.locale.replace('-', '_'),
+        };
+    }
+
+    async get(args) {
+        let r;
+        if (args.type === 'github') r = await this.github(args);
+        else if (args.type === 'google') r = await this.google(args);
+        else throw new UserFacingError('Oauth type');
+        const udoc = await user.getByEmail('system', r.email, true);
+        if (udoc) {
+            this.session.uid = udoc._id;
+        } else {
+            let username = '';
+            r.uname = r.uname || [];
+            r.uname.push(String.random(16));
+            for (const uname of r.uname) {
+                // eslint-disable-next-line no-await-in-loop
+                const nudoc = await user.getByUname('system', uname, true);
+                if (!nudoc) {
+                    username = uname;
+                    break;
                 }
-                const uid = await user.create({
-                    mail, uname, password: String.random(32), regip: this.request.ip,
-                });
-                await user.setById(uid, { bio, oauth: 'github' });
-                this.session.uid = uid;
             }
-            this.response.redirect = s.redirect;
+            const uid = await user.create({
+                mail: r.email, uname: username, password: String.random(32), regip: this.request.ip,
+            });
+            const $set = {
+                oauth: args.type,
+            };
+            if (r.bio) $set.bio = r.bio;
+            if (r.viewLang) $set.viewLang = r.viewLang;
+            await user.setById(uid, $set);
+            this.session.uid = uid;
         }
     }
 }

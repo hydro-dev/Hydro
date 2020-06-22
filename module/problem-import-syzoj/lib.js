@@ -1,6 +1,7 @@
 const assert = require('assert');
 
-const { download, axios } = global.Hydro.lib;
+const { download } = global.Hydro.lib;
+const { superagent } = global.nodeModules;
 const { ValidationError, RemoteOnlineJudgeError } = global.Hydro.error;
 
 async function syzoj(url, handler) {
@@ -8,7 +9,7 @@ async function syzoj(url, handler) {
     assert(url.match(RE_SYZOJ), new ValidationError('url'));
     if (!url.endsWith('/')) url += '/';
     const [, host, pid] = RE_SYZOJ.exec(url);
-    const res = await axios.get(`${url}export`);
+    const res = await superagent.get(`${url}export`);
     assert(res.status === 200, new RemoteOnlineJudgeError('Cannot connect to target server'));
     assert(res.data.success, new RemoteOnlineJudgeError((res.data.error || {}).message));
     const p = res.data.obj;

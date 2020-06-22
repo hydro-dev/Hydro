@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "main": "hydro/loader.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "author": "masnn",
@@ -8,7 +8,6 @@
   "dependencies": {
     "adm-zip": "^0.4.14",
     "ansi_up": "^4.0.4",
-    "axios": "^0.19.0",
     "bson": "^4.0.2",
     "detect-browser": "^5.1.1",
     "eslint": "7.2.0",
@@ -32,10 +31,12 @@
     "nodemailer": "^6.4.10",
     "nunjucks": "^3.2.1",
     "prismjs": "^1.20.0",
+    "snyk": "^1.346.0",
     "sockjs": "^0.3.20",
+    "superagent": "^5.2.2",
+    "superagent-proxy": "^2.0.0",
     "systeminformation": "^4.26.5",
-    "yargs": "^15.3.1",
-    "snyk": "^1.346.0"
+    "yargs": "^15.3.1"
   },
   "devDependencies": {
     "eslint-config-airbnb-base": "^14.2.0",

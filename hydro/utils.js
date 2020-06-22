@@ -1,3 +1,8 @@
+const superagent = require('superagent');
+const proxy = require('superagent-proxy');
+
+proxy(superagent);
+
 const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
 String.random = function random(digit = 32) {
