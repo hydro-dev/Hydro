@@ -13,6 +13,12 @@ const {
 
 class UserLoginHandler extends Handler {
     async get() {
+        const [loginWithGithub, loginWithGoogle] = await system.getMany(
+            ['oauth.githubappid', 'oauth.googleappid'],
+        );
+        this.response.body = {
+            loginWithGithub, loginWithGoogle,
+        };
         this.response.template = 'user_login.html';
     }
 
@@ -187,13 +193,15 @@ class OauthHandler extends Handler {
 
 class OauthCallbackHandler extends Handler {
     async github({ state, code }) {
-        const [appid, secret, url, s] = await Promise.all([
+        const [appid, secret, url, proxy, s] = await Promise.all([
             system.get('oauth.githubappid'),
             system.get('oauth.githubsecret'),
             system.get('server.url'),
+            system.get('proxy'),
             token.get(state, token.TYPE_OAUTH),
         ]);
         const res = await superagent.post('https://github.com/login/oauth/access_token')
+            .proxy(proxy)
             .send({
                 client_id: appid,
                 client_secret: secret,
@@ -209,9 +217,11 @@ class OauthCallbackHandler extends Handler {
         }
         const t = res.body.access_token;
         const userInfo = await superagent.get('https://api.github.com/user')
+            .proxy(proxy)
+            .set('User-Agent', 'Hydro-OAuth')
             .set('Authorization', `token ${t}`);
         const ret = {
-            email: userInfo.body.mail,
+            email: userInfo.body.email,
             bio: userInfo.body.bio,
             uname: [userInfo.body.name, userInfo.body.login],
         };

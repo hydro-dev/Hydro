@@ -78,7 +78,7 @@ AccountSetting(
     Setting('setting_info', 'bio', null,
         null, 'markdown', 'Bio'),
     Setting('setting_customize', 'backgroundImage', null,
-        '/components/background/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
+        '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
 );
 

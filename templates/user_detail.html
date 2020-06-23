@@ -3,7 +3,7 @@
 {% block content %}
 <style>
   .user-profile-bg {
-    background-image : "{{ udoc.backgroundImage }}";
+    background-image : url("{{ udoc.backgroundImage }}");
   }
 </style>
 <div class="row">
@@ -31,7 +31,7 @@
               </p>
               <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</p>
               <div class="profile-header__contact-bar">
-              {% if is_self_profile %}
+              {% if isSelfProfile %}
                 <a class="profile-header__contact-item" href="{{ url('home_settings', category='account') }}" data-tooltip="{{ _('Edit Profile') }}">
                   <span class="icon icon-edit"></span>
                 </a>

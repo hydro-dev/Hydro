@@ -1,9 +1,8 @@
-{# No Compression #}
 <div class="dialog dialog--signin" style="display:none">
   <div class="dialog__content">
     <div class="dialog--signin__bg">
       <div class="dialog--signin__side">
-        <h1>{{ _("Don\'t have an account?") }}</h1>
+        <h1>{{ _("Don't have an account?") }}</h1>
         <p>{{ _('By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.') }}</p>
         <div><a href="{{ url('user_register') }}" class="inverse rounded button">{{ _('Sign Up Now') }}</a></div>
       </div>
@@ -31,6 +30,12 @@
           <label class="checkbox">
             <input type="checkbox" name="rememberme">{{ _('Remember me') }}
           </label>
+        </div></div>
+        <div class="row"><div class="columns">
+          <a href="{{ url('user_oauth', type='github') }}" class="expanded rounded button">{{ _('Login with Github') }}</a>
+        </div></div>
+        <div class="row"><div class="columns">
+          <a href="{{ url('user_oauth', type='google') }}" class="expanded rounded button">{{ _('Login with Google') }}</a>
         </div></div>
         <div class="row"><div class="columns">
           <input type="submit" value="{{ _('Sign In') }}" class="expanded rounded primary button">

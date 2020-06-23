@@ -210,23 +210,24 @@ class Handler {
         this.response.disposition = `attachment; filename="${name}"`;
     }
 
-    url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
+    url(name, kwargs = {}) {
         let res = '#';
+        const args = { ...kwargs };
         try {
-            delete kwargs.__keywords;
+            delete args.__keywords;
             if (this.args.domainId !== 'system') {
                 name += '_with_domainId';
-                kwargs.domainId = kwargs.domainId || this.args.domainId;
+                args.domainId = args.domainId || this.args.domainId;
             }
-            const { anchor, query } = kwargs;
-            delete kwargs.anchor;
-            delete kwargs.query;
-            if (query) res = router.url(name, kwargs, { query });
-            else res = router.url(name, kwargs);
+            const { anchor, query } = args;
+            delete args.anchor;
+            delete args.query;
+            if (query) res = router.url(name, args, { query });
+            else res = router.url(name, args);
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);
-            console.log(name, kwargs);
+            console.log(name, args);
         }
         return res;
     }
@@ -417,19 +418,20 @@ class ConnectionHandler {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
-    url(name, kwargs = {}) { // eslint-disable-line class-methods-use-this
+    url(name, kwargs = {}) {
         let res = '#';
+        const args = { ...kwargs };
         try {
-            delete kwargs.__keywords;
+            delete args.__keywords;
             if (this.args.domainId !== 'system') {
                 name += '_with_domainId';
-                kwargs.domainId = kwargs.domainId || this.args.domainId;
+                args.domainId = args.domainId || this.args.domainId;
             }
-            const { anchor, query } = kwargs;
-            delete kwargs.anchor;
-            delete kwargs.query;
-            if (query) res = router.url(name, kwargs, { query });
-            else res = router.url(name, kwargs);
+            const { anchor, query } = args;
+            delete args.anchor;
+            delete args.query;
+            if (query) res = router.url(name, args, { query });
+            else res = router.url(name, args);
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);
