@@ -52,7 +52,7 @@ class Markdown extends MarkdownIt {
         this.use(Mark);
         this.use(Anchor);
         this.use(TOC);
-        const RE_CONTAINER = /^(note|warn|record-pending|record-progress|record-fail|record-pass|record-ignored)\s+(.*)$/;
+        const RE_CONTAINER = /^(note|warn|record-pending|record-progress|record-fail|record-pass|record-ignored)\s+(.*?):::(.*)$/;
         const CONTAINER_MAP = {
             note: ['<blockquote class="note">', '</blockquote>'],
             warn: ['<blockquote class="warn">', '</blockquote>'],
@@ -69,16 +69,10 @@ class Markdown extends MarkdownIt {
             render(tokens, idx) {
                 const m = tokens[idx].info.trim().match(RE_CONTAINER);
                 if (!m) return '';
-                if (tokens[idx].nesting === 1) {
-                    if (CONTAINER_MAP[m[1]]) {
-                        return `${CONTAINER_MAP[m[1]][0] + md.utils.escapeHtml(m[2])}\n`;
-                    }
-                    return `[${m[1]}] ${md.utils.escapeHtml(m[2])}\n`;
-                }
                 if (CONTAINER_MAP[m[1]]) {
-                    return `${CONTAINER_MAP[m[1]][1]}\n`;
+                    return `${CONTAINER_MAP[m[1]][0]}${md.utils.escapeHtml(m[2])}\n${CONTAINER_MAP[m[1]][1]}\n${md.utils.escapeHtml(m[3])}`;
                 }
-                return `[/${m[1]}]`;
+                return `[${m[1]}]\n${md.utils.escapeHtml(m[2])}\n[/${m[1]}]\n${md.utils.escapeHtml(m[3])}`;
             },
         });
     }
