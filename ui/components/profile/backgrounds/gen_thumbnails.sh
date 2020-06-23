@@ -1,3 +1,5 @@
+#!/bin/bash
+
 for f in *.jpg
 do
   echo "$f..."

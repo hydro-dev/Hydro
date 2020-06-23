@@ -54,6 +54,7 @@ class SystemSettingHandler extends SystemHandler {
         const current = {};
         const settings = setting.SYSTEM_SETTINGS;
         for (const s of settings) {
+            // eslint-disable-next-line no-await-in-loop
             current[s.key] = await system.get(s.key);
         }
         this.response.body = {

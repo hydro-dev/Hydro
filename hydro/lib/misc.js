@@ -62,7 +62,7 @@ function _digit2(number) {
 }
 
 function formatSeconds(seconds = 0) {
-    seconds = parseInt(seconds);
+    seconds = parseInt(seconds, 10);
     return '{0}:{1}:{2}'.format(
         _digit2(Math.floor(seconds / 3600)),
         _digit2(Math.floor((seconds % 3600) / 60)),

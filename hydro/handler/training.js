@@ -39,7 +39,7 @@ async function _parseDagJson(domainId, dag) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(tasks);
             const newNode = {
-                _id: parseInt(node._id),
+                _id: parseInt(node._id, 10),
                 title: node.title,
                 requireNids: Array.from(new Set(node.requireNids)),
                 pids: Array.from(new Set(node.pids)),
@@ -112,8 +112,9 @@ class TrainingDetailHandler extends TrainingHandler {
         for (const pid in psdict) {
             const psdoc = psdict[pid];
             if (psdoc.status) {
-                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) donePids.add(parseInt(pid));
-                else progPids.add(parseInt(pid));
+                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) {
+                    donePids.add(parseInt(pid, 10));
+                } else progPids.add(parseInt(pid, 10));
             }
         }
         const nsdict = {};
@@ -124,7 +125,7 @@ class TrainingDetailHandler extends TrainingHandler {
             const totalCount = node.pids.length;
             const doneCount = Set.union(new Set(node.pids), donePids).size;
             const nsdoc = {
-                progress: totalCount ? parseInt(100 * (doneCount / totalCount)) : 100,
+                progress: totalCount ? parseInt(100 * (doneCount / totalCount), 10) : 100,
                 isDone: training.isDone(node, doneNids, donePids),
                 isProgress: training.isProgress(node, doneNids, donePids, progPids),
                 isOpen: training.isOpen(node, doneNids, donePids, progPids),

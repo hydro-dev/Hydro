@@ -156,7 +156,7 @@ class UserSearchHandler extends Handler {
         let udocs;
         if (exactMatch) udocs = [];
         else udocs = await user.getPrefixList(q, 20);
-        const udoc = await user.getById(domainId, parseInt(q));
+        const udoc = await user.getById(domainId, parseInt(q, 10));
         if (udoc) udocs.push(udoc);
         for (const i in udocs) {
             if (udocs[i].gravatar) {

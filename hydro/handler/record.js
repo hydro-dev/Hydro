@@ -23,7 +23,7 @@ class RecordListHandler extends RecordHandler {
         if (uidOrName) {
             q.$or = [
                 { unameLower: uidOrName.toLowerCase() },
-                { _id: parseInt(uidOrName) },
+                { _id: parseInt(uidOrName, 10) },
             ];
         }
         if (pid) q.pid = pid;

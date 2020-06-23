@@ -22,7 +22,6 @@ module.exports = {
         'no-underscore-dangle': 'off',
         'no-restricted-syntax': 'off',
         'max-classes-per-file': 'off',
-        radix: 'off',
         'guard-for-in': 'off',
         'no-param-reassign': 'off',
         'global-require': 'off',

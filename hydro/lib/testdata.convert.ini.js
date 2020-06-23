@@ -6,9 +6,9 @@ function convert(ini) {
     const res = { cases: [] };
     for (let i = 1; i <= count; i++) {
         const [input, output, time, score, memory] = f[i].split('|');
-        const cur = { input, output, score: parseInt(score) };
+        const cur = { input, output, score: parseInt(score, 10) };
         cur.time = `${time}s`;
-        if (!Number.isNaN(parseInt(memory))) cur.memory = `${Math.floor(parseInt(memory) / 1024)}m`;
+        if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
         else cur.memory = '128m';
         res.cases.push(cur);
     }

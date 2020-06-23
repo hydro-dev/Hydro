@@ -83,8 +83,8 @@ global.Hydro.model.training = module.exports = {
         if (!tdoc) throw new TrainingNotFoundError(tid);
         for (const i in tdoc.dag) {
             for (const j in tdoc.dag[i].pids) {
-                if (Number.isSafeInteger(parseInt(tdoc.dag[i].pids[j]))) {
-                    tdoc.dag[i].pids[j] = parseInt(tdoc.dag[i].pids[j]);
+                if (Number.isSafeInteger(parseInt(tdoc.dag[i].pids[j], 10))) {
+                    tdoc.dag[i].pids[j] = parseInt(tdoc.dag[i].pids[j], 10);
                 }
             }
         }

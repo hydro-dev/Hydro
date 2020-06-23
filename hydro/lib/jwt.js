@@ -3,8 +3,8 @@ function decodeBase64WithUriEncoding(encodedText) {
 }
 
 function unescapedString(escapedString) {
-    escapedString += new Array(5 - escapedString.length % 4).join('=');
-    return escapedString.replace(/\-/g, '+').replace(/_/g, '/');
+    escapedString += new Array(5 - (escapedString.length % 4)).join('=');
+    return escapedString.replace(/-/g, '+').replace(/_/g, '/');
 }
 
 function decodeJWT(idToken) {

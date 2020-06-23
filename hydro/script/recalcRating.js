@@ -20,7 +20,7 @@ async function run({ domainId, isSub = false }, report) {
                     memory_kb: 0,
                     score: 0,
                 },
-                progress: Math.floor(((parseInt(i) + 1) / domains.length) * 100),
+                progress: Math.floor(((parseInt(i, 10) + 1) / domains.length) * 100),
             });
         }
         return true;
@@ -44,7 +44,7 @@ async function run({ domainId, isSub = false }, report) {
             udict[udoc.uid] = udoc.new;
         }
         if (!isSub) {
-            await report({ progress: Math.floor(((parseInt(i) + 1) / contests.length) * 100) });
+            await report({ progress: Math.floor(((parseInt(i, 10) + 1) / contests.length) * 100) });
         }
         await report({
             case: {
@@ -58,7 +58,7 @@ async function run({ domainId, isSub = false }, report) {
     }
     const tasks = [];
     for (const uid in udict) {
-        tasks.push(user.setInDomain(domainId, parseInt(uid), { rating: udict[uid] }));
+        tasks.push(user.setInDomain(domainId, parseInt(uid, 10), { rating: udict[uid] }));
     }
     await Promise.all(tasks);
     return true;

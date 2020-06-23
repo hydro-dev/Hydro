@@ -63,15 +63,15 @@ const validate = {
     tag: _splitAndTrim,
     beginAtDate: _date,
     beginAtTime: _time,
-    pid: (pid) => (Number.isSafeInteger(parseInt(pid)) ? parseInt(pid) : pid),
+    pid: (pid) => (Number.isSafeInteger(parseInt(pid, 10)) ? parseInt(pid, 10) : pid),
     content: validator.checkContent,
     title: validator.checkTitle,
-    uid: (uid) => parseInt(validator.checkUid(uid)),
+    uid: (uid) => parseInt(validator.checkUid(uid), 10),
     password: validator.checkPassword,
     mail: validator.checkEmail,
     uname: validator.checkUname,
     page: (page) => {
-        if (Number.isSafeInteger(parseInt(page))) page = parseInt(page);
+        if (Number.isSafeInteger(parseInt(page, 10))) page = parseInt(page, 10);
         if (page <= 0) throw new ValidationError('page');
         return page;
     },
@@ -83,7 +83,7 @@ const validate = {
     pids: (pids) => {
         const res = pids.split(',').map((i) => i.trim());
         for (const i in res) {
-            if (Number.isSafeInteger(parseInt(res[i]))) res[i] = parseInt(res[i]);
+            if (Number.isSafeInteger(parseInt(res[i], 10))) res[i] = parseInt(res[i], 10);
         }
         return res;
     },
