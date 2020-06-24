@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const superagent = require('superagent');
 const proxy = require('superagent-proxy');
 
@@ -72,3 +74,33 @@ Set.intersection = function Intersection(setA, setB) {
     }
     return intersection;
 };
+
+/**
+ * calculate size of a file or directory synchronously
+ * @param {String} folderPath path of the file or folder
+ * @param {fsizeOptions} opts additional options
+ * @returns {Number}
+ */
+function folderSize(folderPath) {
+    let size = 0;
+    const _next = function a(p) {
+        if (p) {
+            const stats = fs.statSync(p);
+            if (!stats.isDirectory() || stats.isSymbolicLink()) {
+                if (!stats.isSymbolicLink()) size += stats.size;
+            } else {
+                size += stats.size;
+                const files = fs.readdirSync(p);
+                if (Array.isArray(files)) {
+                    files.forEach((file) => {
+                        _next(path.join(p, file));
+                    });
+                }
+            }
+        }
+    };
+    _next(folderPath);
+    return size;
+}
+
+exports.folderSize = folderSize;

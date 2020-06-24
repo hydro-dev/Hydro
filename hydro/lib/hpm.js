@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const download = require('./download');
+const { folderSize } = require('../utils');
 
 function root(name) {
     return path.resolve(process.cwd(), name);
@@ -43,12 +44,12 @@ async function getDetail() {
         const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
         if (fs.existsSync(info)) {
             const i = JSON.parse(fs.readFileSync(info).toString());
-            const f = fs.statSync(info);
+            const size = folderSize(`${os.tmpdir()}/hydro/tmp/${file}`);
             modules.push({
                 id: i.id,
                 version: i.version,
                 description: i.description,
-                size: f.size,
+                size,
             });
         }
     }

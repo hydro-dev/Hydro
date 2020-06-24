@@ -4,7 +4,7 @@ const md = MarkdownIt();
 const Prism = require('prismjs');
 
 // For math: $a\times b\eq 10$
-const katex = require('markdown-it-katex');
+const katex = require('@hydrooj/markdown-it-katex');
 // Specific image size: ![image](image.png =100x100)
 const Imsize = require('markdown-it-imsize');
 /* Footnote support.

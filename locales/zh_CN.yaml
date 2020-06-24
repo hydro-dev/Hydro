@@ -415,6 +415,7 @@ My Files: 我的文件
 My Profile: 我的资料
 My Recent Submissions: 我的最近递交记录
 My Role: 我的角色
+name: 名称
 Name: 名称
 Network error: 网络错误
 Never expire: 从不过期
@@ -605,6 +606,7 @@ Set Roles for Selected User: 设置所选用户的角色
 Set Roles for selected users: 为所选用户设置角色
 setting_customize: 个性化
 setting_display: 显示偏好
+setting_domain: 域设置
 setting_info_domain: 个人信息
 setting_info: 个人信息
 setting_privacy: 隐私
@@ -769,7 +771,7 @@ What's script?: 什么是脚本？
 What's this?: 这是什么？
 Whether to show tags in the problem list.: 是否在题目列表中显示题目的标签。
 wiki_help: 帮助
-Will be used as the system icon.: 将被用作系统图标。
+Will be used as the domain icon.: 将被用作系统图标。
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
 Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解

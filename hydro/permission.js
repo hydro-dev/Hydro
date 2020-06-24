@@ -52,7 +52,7 @@ perm.PERM_ALL = PERM_ALL;
 const Permission = (family, key, desc) => ({ family, key, desc });
 
 const PERMS = [
-    Permission('perm_general', perm.PERM_MANAGE, 'Manage the system'),
+    Permission('perm_general', perm.PERM_MANAGE, 'Manage domain'),
     Permission('perm_general', perm.PERM_MOD_BADGE, 'Show MOD badge'),
     Permission('perm_problem', perm.PERM_CREATE_PROBLEM, 'Create problems'),
     Permission('perm_problem', perm.PERM_EDIT_PROBLEM, 'Edit problems'),

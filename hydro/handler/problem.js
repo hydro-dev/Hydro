@@ -279,7 +279,7 @@ class ProblemEditHandler extends ProblemManageHandler {
 
     async post({ domainId, title, content }) {
         const pid = validator.checkPid(this.request.body.pid);
-        const pdoc = await problem.get(domainId, this.params.pid);
+        const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, { title, content, pid });
         this.response.redirect = `/p/${pid}`;
     }

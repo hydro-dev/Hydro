@@ -1,10 +1,6 @@
 {% extends "domain_base.html" %}
 {% block domain_content %}
 <div class="section">
-  <div class="section__body">
-    <form method="post">
-      {% include "partials/setting.html" with context %}
-    </form>
-  </div>
+  {% include "partials/setting.html" %}
 </div>
 {% endblock %}

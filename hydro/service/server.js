@@ -133,6 +133,7 @@ class Handler {
             files: ctx.request.files,
             query: ctx.query,
             path: ctx.path,
+            params: ctx.params,
             referer: ctx.request.headers.referer || '/',
         };
         this.response = {
