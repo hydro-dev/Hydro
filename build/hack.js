@@ -34,19 +34,4 @@ module.exports = {
             console.error('Cannot hack yargs');
         }
     },
-    'markdown-it-katex': () => {
-        const p = require.resolve('markdown-it-katex');
-        const file = fs.readFileSync(p).toString().split('\n');
-        if (file[27].includes('if (prevChar === 0x20/* " " */ || prevChar === 0x09/* \\t */ ||')) {
-            file[27] = 'if (prevChar === 0x09/* \\t */ ||';
-        } else if (!file[27].includes('if (prevChar === 0x09/* \\t */ ||')) {
-            console.error('Cannot hack markdown-it-katex');
-        }
-        if (file[31].includes('if (nextChar === 0x20/* " " */ || nextChar === 0x09/* \\t */) {')) {
-            file[31] = 'if (nextChar === 0x09/* \\t */) {';
-        } else if (!file[27].includes('if (nextChar === 0x09/* \\t */) {')) {
-            console.error('Cannot hack markdown-it-katex');
-        }
-        fs.writeFileSync(p, file.join('\n'));
-    },
 };

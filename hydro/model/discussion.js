@@ -123,8 +123,11 @@ function getStatus(domainId, did, uid) {
     return document.getStatus(domainId, document.TYPE_DISCUSSION, did, uid);
 }
 
-function addNode(domainId, _id, category) {
-    return document.add(domainId, category, 1, document.TYPE_DISCUSSION_NODE, _id);
+function addNode(domainId, _id, category, args) {
+    return document.add(
+        domainId, category, 1, document.TYPE_DISCUSSION_NODE,
+        _id, null, null, args,
+    );
 }
 
 function getNode(domainId, _id) {
@@ -166,6 +169,10 @@ async function getVnode(domainId, ddoc, handler) {
     };
 }
 
+function getNodes(domainId) {
+    return document.getMulti(domainId, document.TYPE_DISCUSSION_NODE).toArray();
+}
+
 async function getListVnodes(domainId, ddocs, handler) {
     const tasks = [];
     const res = {};
@@ -201,6 +208,7 @@ global.Hydro.model.discussion = module.exports = {
     setStar,
     getStatus,
     addNode,
+    getNodes,
     getVnode,
     getListVnodes,
 };

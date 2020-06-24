@@ -102,6 +102,7 @@ SystemSetting(
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
     Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
+    Setting('setting_server', 'server.log', null, false, 'checkbox', 'Disable Access Log'),
     Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
     Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret'),
     Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID'),

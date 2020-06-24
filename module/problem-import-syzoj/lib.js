@@ -11,8 +11,8 @@ async function syzoj(url, handler) {
     const [, host, pid] = RE_SYZOJ.exec(url);
     const res = await superagent.get(`${url}export`);
     assert(res.status === 200, new RemoteOnlineJudgeError('Cannot connect to target server'));
-    assert(res.data.success, new RemoteOnlineJudgeError((res.data.error || {}).message));
-    const p = res.data.obj;
+    assert(res.body.success, new RemoteOnlineJudgeError((res.body.error || {}).message));
+    const p = res.body.obj;
     const content = [];
     if (p.description) {
         content.push(
@@ -64,8 +64,8 @@ async function syzoj(url, handler) {
             type: p.type,
         },
     };
-    const r = await download(`${url}testdata/download`);
+    const r = download(`${url}testdata/download`);
     return [pdoc, r];
 }
 
-global.Hydro.lib['import.syzoj'] = syzoj;
+global.Hydro.lib['import.syzoj'] = module.exports = syzoj;

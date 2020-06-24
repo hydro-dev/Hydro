@@ -14,6 +14,7 @@ const document = require('../model/document');
 const system = require('../model/system');
 const user = require('../model/user');
 const setting = require('../model/setting');
+const domain = require('../model/domain');
 const discussion = require('../model/discussion');
 const token = require('../model/token');
 const training = require('../model/training');
@@ -87,10 +88,24 @@ class HomeHandler extends Handler {
             this.homework(domainId), this.contest(domainId),
             this.training(domainId), this.discussion(domainId),
         ]);
-        const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
+        const [udict, dodoc, vnodes] = await Promise.all([
+            user.getList(domainId, ddocs.map((ddoc) => ddoc.owner)),
+            domain.get(domainId),
+            discussion.getNodes(domainId),
+        ]);
         this.response.template = 'main.html';
         this.response.body = {
-            htdocs, htsdict, tdocs, tsdict, trdocs, trsdict, ddocs, vndict, udict,
+            htdocs,
+            htsdict,
+            tdocs,
+            tsdict,
+            trdocs,
+            trsdict,
+            ddocs,
+            vndict,
+            udict,
+            domain: dodoc,
+            vnodes,
         };
     }
 }

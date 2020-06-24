@@ -102,7 +102,7 @@ class TrainingDetailHandler extends TrainingHandler {
         const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
         const f = this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN) ? {} : { hidden: false };
-        const [udoc, pdict] = await Promise.all([
+        const [owner, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             problem.getList(domainId, pids, f),
         ]);
@@ -146,7 +146,7 @@ class TrainingDetailHandler extends TrainingHandler {
         ];
         this.response.template = 'training_detail.html';
         this.response.body = {
-            path, tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc,
+            path, tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, owner,
         };
     }
 
@@ -193,7 +193,7 @@ class TrainingCreateHandler extends TrainingHandler {
         }
         const tid = await training.add(domainId, title, content, this.user._id, dag, description);
         this.response.body = { tid };
-        this.response.redirect = `/t/${tid}`;
+        this.response.redirect = this.url('training_detail', { tid });
     }
 }
 
@@ -245,7 +245,7 @@ class TrainingEditHandler extends TrainingHandler {
             title, content, dag, description,
         });
         this.response.body = { tid };
-        this.response.redirect = `/t/${tid}`;
+        this.response.redirect = this.url('training_detail', { tid });
     }
 }
 

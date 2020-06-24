@@ -15,7 +15,7 @@ function _timestamp() {
 async function add(streamOrPath, filename, meta = {}) {
     if (typeof streamOrPath === 'string') streamOrPath = fs.createReadStream(streamOrPath);
     const w = gridfs.openUploadStream(filename);
-    await coll.insertOne({ ...meta, _id: w.id });
+    await coll.insertOne({ ...meta, _id: w.id, secret: String.random(32) });
     await new Promise((resolve, reject) => {
         w.on('error', reject);
         w.on('finish', resolve);

@@ -31,7 +31,6 @@ async function add(domainId, title, content, owner, {
 }) {
     const d = await domain.inc(domainId, 'pidCounter', 1);
     if (!pid) pid = d.pidCounter.toString();
-    // eslint-disable-next-line no-return-await
     return await document.add(
         domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null,
         {
@@ -47,6 +46,7 @@ async function add(domainId, title, content, owner, {
  * @returns {Promise<Pdoc>}
  */
 async function get(domainId, pid, uid = null, doThrow = true) {
+    if (!Number.isNaN(parseInt(pid, 10))) pid = parseInt(pid, 10);
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
@@ -95,7 +95,7 @@ function getMultiStatus(domainId, query) {
  * @param {string} domainId
  * @param {ObjectID} _id
  * @param {object} query
- * @returns {Pdoc}
+ * @returns {Promise<Pdoc>}
  */
 function edit(domainId, _id, $set) {
     return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
@@ -156,6 +156,10 @@ async function updateStatus(domainId, pid, uid, rid, status) {
     return true;
 }
 
+function setStar(domainId, pid, uid, star) {
+    return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
+}
+
 async function setTestdata(domainId, _id, filePath) {
     const pdoc = await get(domainId, _id);
     const config = await readConfig(filePath);
@@ -176,6 +180,7 @@ global.Hydro.model.problem = module.exports = {
     getList,
     getListStatus,
     getMultiStatus,
+    setStar,
     setTestdata,
     updateStatus,
 };

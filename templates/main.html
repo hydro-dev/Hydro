@@ -3,12 +3,12 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
 {% block content %}
-{% if system['bulletin'] %}
+{% if domain['bulletin'] %}
 <div class="row">
   <div class="large-12 columns">
     <div class="section">
       <div class="section__body typo">
-        {{ system['bulletin']|markdown }}
+        {{ domain['bulletin']|markdown|safe }}
       </div>
     </div>
   </div>
@@ -158,7 +158,7 @@
   </div>
   <div class="large-3 columns">
   {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-    {#{% include 'discussion_nodes_widget.html' %} // TODO(masnn) #}
+    {% include 'partials/discussion_nodes_widget.html' %}
   {% endif %}
     <div class="section side">
       <div class="section__header">

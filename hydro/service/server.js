@@ -23,6 +23,8 @@ const {
     UserFacingError, ValidationError,
 } = require('../error');
 
+let enableLog = true;
+
 const app = new Koa();
 let server;
 const router = new Router();
@@ -153,7 +155,7 @@ class Handler {
     }
 
     async renderHTML(name, context) {
-        console.time(name);
+        if (enableLog) console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
         const res = await template.render(name, Object.assign(context, {
             handler: this,
@@ -161,7 +163,7 @@ class Handler {
             _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
             user: this.user,
         }));
-        console.timeEnd(name);
+        if (enableLog) console.timeEnd(name);
         return res;
     }
 
@@ -266,6 +268,7 @@ class Handler {
         try {
             await this.renderBody();
         } catch (error) {
+            this.response.status = error instanceof UserFacingError ? error.code : 500;
             if (this.preferJson) this.response.body = { error };
             else await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error });
         }
@@ -342,6 +345,7 @@ class Handler {
     async onerror(error) {
         console.error(error.message, error.params);
         console.error(error.stack);
+        this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
         this.response.body = {
             error: { message: error.message, params: error.params, stack: error.stack },
@@ -526,10 +530,12 @@ function Validate(key, func) {
 }
 
 async function start() {
-    app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+    const [disableLog, port] = await system.getMany(['server.log', 'server.port']);
+    if (!disableLog) {
+        app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+    } else enableLog = false;
     app.use(router.routes()).use(router.allowedMethods());
     Route('notfound_handler', '*', Handler);
-    const port = await system.get('server.port');
     server.listen(port);
     console.log('Server listening at: %s', port);
 }

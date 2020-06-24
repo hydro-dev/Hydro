@@ -153,9 +153,7 @@
         </div>
       </div>
       {% endfor %}
-
       <div class="section__body">&nbsp;<!-- space placeholder --></div>
-
     </div>
   </div>
   <div class="medium-3 columns">
@@ -194,7 +192,7 @@
           {% endif %}
           <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc['enroll']|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>
-          <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
+          <dd>{{ user.render_inline(owner, badge=false) }}</dd>
         </dl>
       </div>
     </div>

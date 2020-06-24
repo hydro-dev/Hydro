@@ -60,8 +60,8 @@ async function del(id) {
     fs.unlinkSync(root(`${moduleRoot}/${id}.hydro`));
 }
 
-async function install(url) {
-    await download(url, root(`${moduleRoot}/${String.random(16)}.hydro`));
+function install(url) {
+    return download(url, root(`${moduleRoot}/${String.random(16)}.hydro`));
 }
 
 global.Hydro.lib.hpm = module.exports = {

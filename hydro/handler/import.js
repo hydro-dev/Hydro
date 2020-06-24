@@ -32,16 +32,18 @@ class ProblemImportHandler extends Handler {
         if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
         const docId = await problem.add(domainId, pdoc.title, pdoc.content, this.user._id, pdoc);
-        const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${pid}.zip`);
-        const w = fs.createWriteStream(file);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', reject);
-            testdata.pipe(w);
-        });
-        await problem.setTestdata(domainId, docId, file);
+        if (testdata) {
+            const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${pid || pdoc.pid || docId}.zip`);
+            const w = fs.createWriteStream(file);
+            await new Promise((resolve, reject) => {
+                w.on('finish', resolve);
+                w.on('error', reject);
+                testdata.pipe(w);
+            });
+            await problem.setTestdata(domainId, docId, file);
+        }
         this.response.body = { pid: pid || docId };
-        this.response.redirect = `/p/${pid || docId}/settings`;
+        this.response.redirect = this.url('problem_settings', { pid: pid || docId });
     }
 }
 

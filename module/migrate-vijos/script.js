@@ -236,7 +236,13 @@ async function discussionNode(src, report) {
                 const category = item[0];
                 const nodes = item[1];
                 for (const node of nodes || []) {
-                    t.push(discussion.addNode(doc.domain_id, node.name, category));
+                    if (node.pic) {
+                        t.push(discussion.addNode(
+                            doc.domain_id, node.name, category, { pic: node.pic },
+                        ));
+                    } else {
+                        t.push(discussion.addNode(doc.domain_id, node.name, category));
+                    }
                 }
             }
             await Promise.all(t).catch((e) => e);

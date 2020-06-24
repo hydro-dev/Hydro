@@ -27,14 +27,23 @@ class ProblemHandler extends Handler {
         this.checkPerm(PERM_VIEW_PROBLEM);
     }
 
-    async get({ domainId, page = 1, category = '' }) {
+    async get({ domainId, page = 1, q = '' }) {
         this.response.template = 'problem_main.html';
-        const q = {};
+        const query = {};
         let psdict = {};
-        if (category) q.$or = [{ category }, { tag: category }];
-        if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        const path = [
+            ['Hydro', 'homepage'],
+            ['problem_main', null],
+        ];
+        if (q) {
+            q = q.toLowerCase();
+            const $regex = new RegExp(`\\A\\Q${q.replace(/\\E/gmi, /\\E\\E\\Q/gmi)}\\E`, 'gmi');
+            query.title = { $regex };
+            path.push([q, null, null, true]);
+        }
+        if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(domainId, q).sort({ pid: 1 }),
+            problem.getMulti(domainId, query).sort({ pid: 1 }),
             page,
             await system.get('PROBLEM_PER_PAGE'),
         );
@@ -43,13 +52,19 @@ class ProblemHandler extends Handler {
                 domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
             );
         }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['problem_main', null],
-        ];
         this.response.body = {
-            path, page, pcount, ppcount, pdocs, psdict, category,
+            path, page, pcount, ppcount, pdocs, psdict, category: q,
         };
+    }
+
+    async postStar({ domainId, pid }) {
+        await problem.setStar(domainId, pid, this.user._id, true);
+        this.back({ star: true });
+    }
+
+    async postUnstar({ domainId, pid }) {
+        await problem.setStar(domainId, pid, this.user._id, false);
+        this.back({ star: false });
     }
 
     async cleanup() {
