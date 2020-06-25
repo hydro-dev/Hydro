@@ -26,7 +26,7 @@ const builtinHandler = [
 
 const builtinScript = [
     'install', 'uninstall', 'rating', 'recalcRating', 'register',
-    'blacklist', 'setSuperadmin',
+    'blacklist', 'setSuperadmin', 'deleteUser',
 ];
 
 async function handler(pending, fail) {

@@ -68,7 +68,18 @@ class SystemSettingHandler extends SystemHandler {
             if (typeof args[key] === 'object') {
                 const subtasks = [];
                 for (const sub in args[key]) {
-                    subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                    if (setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`]) {
+                        const s = setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`];
+                        if (s.ui === 'checkbox') {
+                            if (args[key][sub] === 'on') {
+                                subtasks.push(system.set(`${key}.${sub}`, true));
+                            } else {
+                                subtasks.push(system.set(`${key}.${sub}`, false));
+                            }
+                        } else {
+                            subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                        }
+                    }
                 }
                 tasks.push(Promise.all(subtasks));
             } else tasks.push(system.set(key, args[key]));

@@ -72,10 +72,13 @@ class DiscussionMainHandler extends Handler {
             ['Hydro', 'homepage'],
             ['discussion_main', null],
         ];
-        const vndict = await discussion.getListVnodes(domainId, ddocs, this);
+        const [vndict, vnodes] = await Promise.all([
+            discussion.getListVnodes(domainId, ddocs, this),
+            discussion.getNodes(domainId),
+        ]);
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, page, page_name: 'discussion_main', vndict, vnode: {}, path,
+            ddocs, dpcount, udict, page, page_name: 'discussion_main', vndict, vnode: {}, path, vnodes,
         };
     }
 }

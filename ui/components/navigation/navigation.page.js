@@ -7,7 +7,6 @@ import responsiveCutoff from 'vj/breakpoints.json';
 import { isAbove } from 'vj/utils/mediaQuery';
 import Navigation from '.';
 
-
 const nav = Navigation.instance;
 const { $nav } = nav;
 

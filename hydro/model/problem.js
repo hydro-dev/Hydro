@@ -110,7 +110,7 @@ function count(domainId, query) {
 }
 
 async function random(domainId, query) {
-    const cursor = document.getMulti(domainId, query);
+    const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
     const pcount = await cursor.count();
     if (pcount) {
         const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();

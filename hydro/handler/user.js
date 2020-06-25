@@ -1,7 +1,9 @@
 const superagent = require('superagent');
+const moment = require('moment-timezone');
 const { Route, Handler } = require('../service/server.js');
 const user = require('../model/user');
 const token = require('../model/token');
+const task = require('../model/task');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
 const misc = require('../lib/misc');
@@ -10,6 +12,7 @@ const {
     UserNotFoundError, LoginError, SystemError,
     PermissionError, BlacklistedError, UserFacingError,
 } = require('../error');
+const { PERM_LOGGEDIN } = require('../permission.js');
 
 class UserLoginHandler extends Handler {
     async get() {
@@ -112,12 +115,12 @@ class UserLostPassHandler extends Handler {
         if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail(mail);
         if (!udoc) throw new UserNotFoundError(mail);
-        const tid = await token.add(
+        const [tid] = await token.add(
             token.TYPE_LOSTPASS,
             await system.get('lostpass_token_expire_seconds'),
             { uid: udoc._id },
         );
-        const m = await this.renderHTML('user_lostpass_mail', { url: `/lostpass/${tid}`, uname: udoc.uname });
+        const m = await this.renderHTML('user_lostpass_mail', { url: `lostpass/${tid}`, uname: udoc.uname });
         await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);
         this.response.template = 'user_lostpass_mail_sent.html';
     }
@@ -148,6 +151,20 @@ class UserDetailHandler extends Handler {
         const sdoc = await token.getMostRecentSessionByUid(uid);
         this.response.template = 'user_detail.html';
         this.response.body = { isSelfProfile, udoc, sdoc };
+    }
+}
+
+class UserDeleteHandler extends Handler {
+    async post({ password }) {
+        this.user.checkPassword(password);
+        const tid = await task.add({
+            executeAfter: moment().add(7, 'days').toDate(),
+            type: 'script',
+            id: 'deleteUser',
+            args: { uid: this.user._id },
+        });
+        await user.setById(this.user._id, { del: tid });
+        this.response.template = 'user_delete_pending.html';
     }
 }
 
@@ -307,6 +324,7 @@ async function apply() {
     Route('user_lostpass', '/lostpass', UserLostPassHandler);
     Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
     Route('user_search', '/user/search', UserSearchHandler);
+    Route('user_delete', '/user/delete', UserDeleteHandler, PERM_LOGGEDIN);
     Route('user_detail', '/user/:uid', UserDetailHandler);
 }
 

@@ -126,13 +126,23 @@ class ProblemCategoryHandler extends ProblemHandler {
 }
 
 class ProblemRandomHandler extends ProblemHandler {
-    async get({ domainId }) {
-        const q = {};
+    async get({ domainId, category }) {
+        const q = category[0] ? { $and: [] } : {};
+        for (const name of category) {
+            if (name) {
+                q.$and.push({
+                    $or: [
+                        { category: { $elemMatch: { $eq: name } } },
+                        { tag: { $elemMatch: { $eq: name } } },
+                    ],
+                });
+            }
+        }
         if (!this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
-        this.response.redirect = `/p/${pid}`;
+        this.response.redirect = this.url('problem_detail', { pid });
     }
 }
 
@@ -163,10 +173,6 @@ class ProblemDetailHandler extends ProblemHandler {
 }
 
 class ProblemSubmitHandler extends ProblemDetailHandler {
-    async prepare() {
-        this.checkPerm(PERM_SUBMIT_PROBLEM);
-    }
-
     async get({ domainId, pid }) {
         this.response.template = 'problem_submit.html';
         const rdocs = await record.getUserInProblemMulti(domainId, this.user._id, this.pdoc.docId)
@@ -471,7 +477,7 @@ async function apply() {
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler);
     Route('problem_random', '/problem/random', ProblemRandomHandler);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler);
-    Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler);
+    Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM_SUBMIT_PROBLEM);
     Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler);
     Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);
     Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler);

@@ -217,14 +217,11 @@ class Handler {
         let res = '#';
         const args = { ...kwargs };
         try {
-            delete args.__keywords;
             if (this.args.domainId !== 'system') {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.args.domainId;
             }
             const { anchor, query } = args;
-            delete args.anchor;
-            delete args.query;
             if (query) res = router.url(name, args, { query });
             else res = router.url(name, args);
             if (anchor) return `${res}#${anchor}`;
@@ -427,14 +424,11 @@ class ConnectionHandler {
         let res = '#';
         const args = { ...kwargs };
         try {
-            delete args.__keywords;
             if (this.args.domainId !== 'system') {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.args.domainId;
             }
             const { anchor, query } = args;
-            delete args.anchor;
-            delete args.query;
             if (query) res = router.url(name, args, { query });
             else res = router.url(name, args);
             if (anchor) return `${res}#${anchor}`;
