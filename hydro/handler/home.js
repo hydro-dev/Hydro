@@ -1,3 +1,4 @@
+const fs = require('fs');
 const {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError,
@@ -13,6 +14,7 @@ const message = require('../model/message');
 const document = require('../model/document');
 const system = require('../model/system');
 const user = require('../model/user');
+const file = require('../model/file');
 const setting = require('../model/setting');
 const domain = require('../model/domain');
 const discussion = require('../model/discussion');
@@ -140,13 +142,13 @@ class HomeSecurityHandler extends Handler {
         this.user.checkPassword(currentPassword);
         const udoc = await user.getByMail(mail);
         if (udoc) throw new UserAlreadyExistError(mail);
-        const [rid] = await token.add(
+        const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
             await system.get('changemail_token_expire_seconds'),
             { uid: this.udoc._id, mail },
         );
         await mail.sendMail(mail, 'Change Email', 'user_changemail_mail.html', {
-            url: `/changeMail/${rid}`, uname: this.udoc.uname,
+            url: this.url('user_changemail_with_code', { code }), uname: this.udoc.uname,
         });
         this.response.template = 'user_changemail_mail_sent.html';
     }
@@ -165,7 +167,7 @@ class HomeSecurityHandler extends Handler {
 
     async postDeleteAllTokens() {
         await token.delByUid(this.user._id);
-        this.response.redirect = '/login';
+        this.response.redirect = this.url('user_login');
     }
 }
 
@@ -219,73 +221,47 @@ class UserChangemailWithCodeHandler extends Handler {
             user.setEmail(this.user._id, tdoc.mail),
             token.del(code, token.TYPE_CHANGEMAIL),
         ]);
-        this.response.redirect = '/home/security';
+        this.response.redirect = this.url('home_security');
     }
 }
 
 class HomeMessagesHandler extends Handler {
-    udoc(udict, key) { // eslint-disable-line class-methods-use-this
-        const udoc = udict[key];
-        if (!udoc) return;
-        const gravatar_url = misc.gravatar(udoc.gravatar);
-        if (udoc.gravatar) udict[key] = { ...udoc, gravatar_url, gravatar: '' };
-    }
-
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-    }
-
     async get() {
         // TODO(iceboy): projection, pagination.
         const messages = await message.getByUser(this.user._id);
-        const udict = await user.getList([
+        const udict = await user.getList('system', [
             ...messages.map((mdoc) => mdoc.from),
             ...messages.map((mdoc) => mdoc.to),
         ]);
         // TODO(twd2): improve here:
         const parsed = {};
         for (const m of messages) {
-            if (m.from === this.user._id) {
-                if (!parsed[m.to]) {
-                    parsed[m.to] = {
-                        udoc: { ...udict[m.to], gravatar: misc.gravatar(udict[m.to].gravatar) },
-                        messages: [],
-                    };
-                }
-                parsed[m.to].messages.push(m);
-            } else {
-                if (!parsed[m.from]) {
-                    parsed[m.from] = {
-                        udoc: { ...udict[m.from], gravatar: misc.gravatar(udict[m.from].gravatar) },
-                        messages: [],
-                    };
-                }
-                parsed[m.from].messages.push(m);
+            const target = m.from === this.user._id ? m.to : m.from;
+            if (!parsed[target]) {
+                parsed[target] = {
+                    _id: target,
+                    udoc: { ...udict[target], gravatar: misc.gravatar(udict[target].gravatar) },
+                    messages: [],
+                };
             }
+            parsed[target].messages.push(m);
         }
         const path = [
             ['Hydro', 'homepage'],
             ['home_messages', null],
         ];
-        this.response.body = { messages, udict, path };
+        this.response.body = { messages: parsed, path };
         this.response.template = 'home_messages.html';
     }
 
-    async postSend({ uid, content, type = 'full' }) {
+    async postSend({ uid, content }) {
         const udoc = await user.getById('system', uid);
-        let mdoc = await message.send(this.user._id, uid, content);
-        if (type === 'single') {
-            mdoc = mdoc.reply[mdoc.reply.length - 1];
-        }
+        const mdoc = await message.send(this.user._id, uid, content);
         // TODO(twd2): improve here: projection
-        mdoc.from_udoc = this.user;
-        mdoc.to_udoc = udoc;
-        this.udoc(mdoc, 'from');
-        this.udoc(mdoc, 'to');
         if (this.user._id !== uid) {
-            await bus.publish(`user_message-${uid}`, { type: 'new', data: mdoc });
+            await bus.publish(`user_message-${uid}`, { mdoc, udoc });
         }
-        this.back(type === 'full' ? { mdoc } : { reply: mdoc });
+        this.back({ mdoc, udoc });
     }
 
     async postDeleteMessage({ messageId }) {
@@ -296,53 +272,43 @@ class HomeMessagesHandler extends Handler {
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
     async prepare() {
-        bus.subscribe([`message_received-${this.user._id}`], this.onMessageReceived);
+        bus.subscribe([`user_message-${this.user._id}`], (...args) => this.onMessageReceived(...args));
     }
 
     async onMessageReceived(e) {
-        this.send(...e.value);
+        this.send(e.value);
     }
 
-    async clearup() {
+    async cleanup() {
         bus.unsubscribe(this.onMessageReceived);
+    }
+}
+
+// TODO draft
+class HomeFileHandler extends Handler {
+    async get() {
+        const ufdocs = await file.getMulti({ owner: this.user._id }).toArray();
+        const fdict = await fs.getMetaDict(ufdocs.map((ufdoc) => ufdoc._id));
+        this.response.template = 'home_file.html';
+        this.response.body = { ufdocs, fdict };
+    }
+
+    async postDelete(ufid) {
+        const ufdoc = await file.get(ufid);
+        if (ufdoc.owner !== this.user._id) this.checkPriv(PRIV_DELETE_FILE);
+        const result = await file.del(ufdoc._id);
+        if (result) await file.decUsage(this.user._id, ufdoc.length);
+        this.back();
     }
 }
 
 async function apply() {
     Route('homepage', '/', HomeHandler);
-    Route('home_security', '/home/security', HomeSecurityHandler);
-    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler);
-    Route('home_settings', '/home/settings/:category', HomeSettingsHandler);
-    Route('home_messages', '/home/messages', HomeMessagesHandler);
+    Route('home_security', '/home/security', HomeSecurityHandler, PERM_LOGGEDIN);
+    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PERM_LOGGEDIN);
+    Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PERM_LOGGEDIN);
+    Route('home_messages', '/home/messages', HomeMessagesHandler, PERM_LOGGEDIN);
     Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler);
 }
 
 global.Hydro.handler.home = module.exports = apply;
-
-/*
-@app.route('/home/file', 'home_file', global_route=True)
-class HomeFileHandler(base.OperationHandler):
-  def file_url(this, fdoc):
-    return options.cdn_prefix.rstrip('/') + \
-      this.reverse_url('fs_get', domain_id=builtin.DOMAIN_ID_SYSTEM,
-                       secret=fdoc['metadata']['secret'])
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  async def get(this):
-    ufdocs = await userfile.get_multi(owner_uid=this.user['_id']).to_list()
-    fdict = await fs.get_meta_dict(ufdoc.get('file_id') for ufdoc in ufdocs)
-    this.render('home_file.html', ufdocs=ufdocs, fdict=fdict)
-
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.post_argument
-  @base.require_csrfToken
-  @base.sanitize
-  async def post_delete(this, *, ufid: document.convert_doc_id):
-    ufdoc = await userfile.get(ufid)
-    if not this.own(ufdoc, priv=builtin.PRIV_DELETE_FILE_this):
-      this.check_priv(builtin.PRIV_DELETE_FILE)
-    result = await userfile.delete(ufdoc['doc_id'])
-    if result:
-      await userfile.dec_usage(this.user['_id'], ufdoc['length'])
-    this.redirect(this.referer_or_main)
-*/

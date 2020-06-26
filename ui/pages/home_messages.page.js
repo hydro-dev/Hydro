@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { NamedPage } from 'vj/misc/PageLoader';
 import request from 'vj/utils/request';
 import loadReactRedux from 'vj/utils/loadReactRedux';
@@ -11,17 +10,15 @@ const page = new NamedPage('home_messages', () => {
   let reduxStore;
 
   function createDialog(user) {
-    const id = _.uniqueId('PLACEHOLDER_');
     reduxStore.dispatch({
       type: 'DIALOGUES_CREATE',
       payload: {
-        id,
         user,
       },
     });
     reduxStore.dispatch({
       type: 'DIALOGUES_SWITCH_TO',
-      payload: id,
+      payload: user._id,
     });
   }
 
@@ -82,11 +79,11 @@ const page = new NamedPage('home_messages', () => {
    */
   async function loadSendTarget() {
     const queryString = parseQueryString();
-    if (!queryString.target_uid) {
+    if (!queryString.target) {
       return;
     }
     const user = await request.get('/user/search', {
-      q: queryString.target_uid,
+      q: queryString.target,
       exact_match: true,
     });
     if (!user || user.length === 0) {

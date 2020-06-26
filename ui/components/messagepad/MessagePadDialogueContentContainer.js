@@ -7,6 +7,7 @@ import 'jquery-scroll-lock';
 import 'jquery.easing';
 
 import i18n from 'vj/utils/i18n';
+import { parse as parseMongoId } from 'vj/utils/mongoId';
 import Message from './MessageComponent';
 
 const mapStateToProps = (state) => ({
@@ -22,24 +23,17 @@ export default class MessagePadDialogueContentContainer extends React.PureCompon
     $(this.refs.list).scrollLock({ strict: true });
   }
 
-  UNSAFE_componentWillUpdate(nextProps) { // eslint-disable-line camelcase
-    if (nextProps.activeId !== this.props.activeId) {
+  componentDidUpdate(prevProps) {
+    const node = this.refs.list;
+    if (this.props.activeId !== prevProps.activeId) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = false;
-      return;
-    }
-    const node = this.refs.list;
-    if (node.scrollTop + node.offsetHeight === node.scrollHeight) {
+    } else if (node.scrollTop + node.offsetHeight === node.scrollHeight) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = true;
-      return;
-    }
-    this.scrollToBottom = false;
-  }
+    } else this.scrollToBottom = false;
 
-  componentDidUpdate() {
     if (this.scrollToBottom) {
-      const node = this.refs.list;
       const targetScrollTop = node.scrollHeight - node.offsetHeight;
       if (this.scrollWithAnimation) {
         $(node).stop().animate({ scrollTop: targetScrollTop }, 200, 'easeOutCubic');
@@ -53,19 +47,19 @@ export default class MessagePadDialogueContentContainer extends React.PureCompon
     if (this.props.activeId === null) {
       return [];
     }
-    return _.map(this.props.item.reply, (reply, idx) => (
+    return _.map(this.props.item.messages, (reply) => (
       <Message
-        key={idx}
+        key={reply._id}
         isSelf={reply.from === UserContext._id}
         faceUrl={
-          reply.from === this.props.item.from
-            ? this.props.item.from_udoc.gravatar
-            : this.props.item.to_udoc.gravatar
+          reply.from === UserContext._id
+            ? UserContext.gravatar
+            : this.props.item.udoc.gravatar
         }
       >
         <div>{reply.content}</div>
-        <time data-tooltip={moment(reply.at).format('YYYY-MM-DD HH:mm:ss')}>
-          <TimeAgo datetime={reply.at} locale={i18n('timeago_locale')} />
+        <time data-tooltip={moment(parseMongoId(reply._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
+          <TimeAgo datetime={parseMongoId(reply._id).timestamp * 1000} locale={i18n('timeago_locale')} />
         </time>
       </Message>
     ));

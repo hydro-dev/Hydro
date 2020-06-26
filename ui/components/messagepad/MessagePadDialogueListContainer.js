@@ -28,9 +28,9 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
   render() {
     const orderedDialogues = _.orderBy(
       _.values(this.props.dialogues),
-      (dialogue) => (dialogue.isPlaceholder
-        ? Number.POSITIVE_INFINITY
-        : _.maxBy(dialogue.reply, 'at').at),
+      (dialogue) => (_.maxBy(dialogue.messages, '_id')
+        ? _.maxBy(dialogue.messages, '_id')._id
+        : Number.POSITIVE_INFINITY),
       'desc',
     );
     return (
@@ -38,21 +38,9 @@ export default class MessagePadDialogueListContainer extends React.PureComponent
         {_.map(orderedDialogues, (dialogue) => (
           <ListItem
             key={dialogue._id}
-            userName={
-              dialogue.from === UserContext._id
-                ? dialogue.to_udoc.uname
-                : dialogue.from_udoc.uname
-            }
-            summary={
-              dialogue.isPlaceholder
-                ? ''
-                : _.last(dialogue.reply).content
-            }
-            faceUrl={
-              dialogue.from === UserContext._id
-                ? dialogue.to_udoc.gravatar
-                : dialogue.from_udoc.gravatar
-            }
+            userName={dialogue.udoc.uname}
+            summary={(_.last(dialogue.messages)?.content) || ''}
+            faceUrl={dialogue.udoc.gravatar}
             active={dialogue._id === this.props.activeId}
             onClick={() => this.props.handleClick(dialogue._id)}
           />

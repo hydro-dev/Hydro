@@ -23,13 +23,13 @@
   <meta name="theme-color" content="#56758f">
 
   <link rel="stylesheet" media="all" href="{{ static_url('vj4.css') }}">
-  <title>{{ handler.renderTitle(page_title) }}</title>
+  <title>{{ handler.renderTitle(page_name) }}</title>
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
     var _htmlNode = document.documentElement;
     _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
     var UiContext = {{ handler.UIContext|json|safe }};
-    var UserContext = {{ handler.user|json|safe }};
+    var UserContext = {{ handler._user|json|safe }};
   </script>
   {% endif %}
 </head>

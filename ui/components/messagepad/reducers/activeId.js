@@ -26,7 +26,7 @@ export default function reducer(state = null, action) {
     return action.payload;
   }
   case 'DIALOGUES_POST_SEND_FULFILLED': {
-    return action.payload.mdoc._id;
+    return action.meta.dialogueId;
   }
   default:
     return state;

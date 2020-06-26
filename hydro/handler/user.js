@@ -3,6 +3,8 @@ const moment = require('moment-timezone');
 const { Route, Handler } = require('../service/server.js');
 const user = require('../model/user');
 const token = require('../model/token');
+const record = require('../model/record');
+const problem = require('../model/problem');
 const task = require('../model/task');
 const system = require('../model/system');
 const { sendMail } = require('../lib/mail');
@@ -149,8 +151,14 @@ class UserDetailHandler extends Handler {
         const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(domainId, uid, true);
         const sdoc = await token.getMostRecentSessionByUid(uid);
+        const rdocs = await record.getByUid(domainId, uid);
+        const pdict = await problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false);
+        // Remove sensitive data
+        if (!isSelfProfile) sdoc.createIp = sdoc.updateIp = sdoc._id = '';
         this.response.template = 'user_detail.html';
-        this.response.body = { isSelfProfile, udoc, sdoc };
+        this.response.body = {
+            isSelfProfile, udoc, sdoc, rdocs, pdict,
+        };
     }
 }
 
@@ -177,7 +185,7 @@ class UserSearchHandler extends Handler {
         if (udoc) udocs.push(udoc);
         for (const i in udocs) {
             if (udocs[i].gravatar) {
-                udocs[i].gravatar_url = misc.gravatar(udocs[i].gravatar);
+                udocs[i].gravatar = misc.gravatar(udocs[i].gravatar);
             }
         }
         this.response.body = udocs;
@@ -248,10 +256,9 @@ class OauthCallbackHandler extends Handler {
     }
 
     async google({
-        code, scope, authuser, prompt, error, state,
+        code, error, state,
     }) {
         if (error) throw new UserFacingError(error);
-        console.log(scope, authuser, prompt);
         const [
             [appid, secret, url, proxy],
             s,

@@ -13,6 +13,7 @@ const sockjs = require('sockjs');
 const http = require('http');
 const validator = require('../lib/validator');
 const template = require('../lib/template');
+const misc = require('../lib/misc');
 const user = require('../model/user');
 const system = require('../model/system');
 const blacklist = require('../model/blacklist');
@@ -157,6 +158,8 @@ class Handler {
     async renderHTML(name, context) {
         if (enableLog) console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
+        // FIXME fix this ugly hack
+        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
         const res = await template.render(name, Object.assign(context, {
             handler: this,
             url: (...args) => this.url(...args),
@@ -359,6 +362,7 @@ async function handle(ctx, HandlerClass, permission) {
         const args = {
             domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
         };
+        h.args = args;
 
         if (h.___prepare) await h.___prepare(args);
         if (permission) h.checkPerm(permission);
@@ -375,7 +379,6 @@ async function handle(ctx, HandlerClass, permission) {
             if (e instanceof ValidationError) throw e;
             throw new ValidationError(`Argument ${checking} check failed`);
         }
-        h.args = args;
         if (h.__prepare) await h.__prepare(args);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
@@ -440,6 +443,7 @@ class ConnectionHandler {
 
     async renderHTML(name, context) {
         this.hasPerm = (perm) => this.user.hasPerm(perm);
+        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
         const res = await template.render(name, Object.assign(context, {
             handler: this,
             url: (...args) => this.url(...args),

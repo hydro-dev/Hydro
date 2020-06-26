@@ -27,8 +27,7 @@ const mapDispatchToProps = (dispatch) => ({
       },
     });
   },
-  postSend(placeholderId, uid, value) {
-    if (placeholderId === null) return;
+  postSend(uid, value) {
     const req = request.post('', {
       operation: 'send',
       uid,
@@ -38,23 +37,7 @@ const mapDispatchToProps = (dispatch) => ({
       type: 'DIALOGUES_POST_SEND',
       payload: req,
       meta: {
-        placeholderId,
-      },
-    });
-  },
-  postReply(_id, uid, value) {
-    if (_id === null) return;
-    const req = request.post('', {
-      operation: 'send',
-      type: 'single',
-      uid,
-      content: value,
-    });
-    dispatch({
-      type: 'DIALOGUES_POST_REPLY',
-      payload: req,
-      meta: {
-        dialogueId: _id,
+        dialogueId: uid,
       },
     });
   },
@@ -88,20 +71,10 @@ export default class MessagePadInputContainer extends React.PureComponent {
   }
 
   submit() {
-    const state = this.context.store.getState();
-    if (state.dialogues[this.props.activeId].isPlaceholder) {
-      this.props.postSend(
-        this.props.activeId,
-        state.dialogues[this.props.activeId].to,
-        this.props.inputValue,
-      );
-    } else {
-      this.props.postReply(
-        this.props.activeId,
-        state.dialogues[this.props.activeId].to,
-        this.props.inputValue,
-      );
-    }
+    this.props.postSend(
+      this.props.activeId,
+      this.props.inputValue,
+    );
   }
 
   render() {

@@ -4,9 +4,12 @@ const db = require('../service/db.js');
 const coll = db.collection('message');
 
 async function send(from, to, content) {
-    await coll.insertOne({
+    const res = await coll.insertOne({
         from, to, content, unread: true,
     });
+    return {
+        from, to, content, unread: true, _id: res.insertedId,
+    };
 }
 
 async function get(_id) {
@@ -16,7 +19,7 @@ async function get(_id) {
 }
 
 function getByUser(uid) {
-    return coll.find({ $or: [{ from: uid }, { to: uid }] }).toArray();
+    return coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', 1).toArray();
 }
 
 function getMany(query, sort, page, limit) {
