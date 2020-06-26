@@ -92,7 +92,10 @@ class DiscussionNodeHandler extends DiscussionHandler {
             page,
             await system.get('DISCUSSION_PER_PAGE'),
         );
-        const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
+        const [udict, vnodes] = await Promise.all([
+            user.getList(domainId, ddocs.map((ddoc) => ddoc.owner)),
+            discussion.getNodes(domainId),
+        ]);
         const path = [
             ['Hydro', 'homepage'],
             ['discussion_main', 'discussion_main'],
@@ -109,6 +112,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
             vndict,
             vnode: this.vnode,
             page_name: 'discussion_node',
+            vnodes,
         };
     }
 }
@@ -141,7 +145,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
             title, content, this.request.ip, highlight,
         );
         this.response.body = { did };
-        this.response.redirect = `/discuss/${did}`;
+        this.response.redirect = this.url('discussion_detail', { did });
     }
 }
 

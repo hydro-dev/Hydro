@@ -5,7 +5,17 @@ function warp(func, type) {
         const time = new Date();
         func(...args);
         if (global.Hydro.model.message) {
-            global.Hydro.model.message.send(1, 1, yaml.safeDump({ time, type, args }));
+            try {
+                for (let i = 0; i <= args.length; i++) {
+                    if (args[i] instanceof Error) {
+                        // js-yaml cannot dump [object Error]
+                        args[i] = `${args[i].message}\n${args[i].stack}`;
+                    }
+                }
+                global.Hydro.model.message.send(1, 1, yaml.dump({ time, type, args }, {}));
+            } catch (e) {
+                func(e.message);
+            }
         }
     };
 }

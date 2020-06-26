@@ -24,6 +24,7 @@ function add(domainId, parentType, parentId, owner, title, content, ip = null, h
             highlight,
             nReply: 0,
             updateAt: new Date(),
+            views: 0,
         },
     );
 }

@@ -98,11 +98,12 @@ async function getList(domainId, rids, showHidden = false) {
     return r;
 }
 
-function getUserInProblemMulti(domainId, uid, pid, getHidden = false) {
-    if (getHidden) return coll.find({ domainId, owner: uid, pid });
-    return coll.find({
-        domainId, owner: uid, pid, hidden: false,
-    });
+function getUserInProblemMulti(domainId, uid, pid) {
+    return coll.find({ domainId, uid, pid });
+}
+
+function getByUid(domainId, uid) {
+    return coll.find({ domainId, uid }).toArray();
 }
 
 async function judge(domainId, rid) {
@@ -144,6 +145,7 @@ global.Hydro.model.record = module.exports = {
     reset,
     getList,
     getUserInProblemMulti,
+    getByUid,
     judge,
     rejudge,
 };

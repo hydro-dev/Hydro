@@ -151,7 +151,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 
     async onRecordChange(data) {
         const rdoc = data.value;
-        if (rdoc._id.toString() !== this.rid.toString()) return;
+        if (!rdoc._id.equals(this.rid)) return;
         this.send({
             status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),

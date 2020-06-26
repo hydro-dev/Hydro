@@ -175,8 +175,8 @@ class Handler {
         this.response.type = 'text/html';
     }
 
-    renderTitle(str) { // eslint-disable-line class-methods-use-this
-        return str;
+    renderTitle(str) {
+        return `${this.translate(str)} - Hydro`;
     }
 
     checkPerm(...args) {
@@ -261,6 +261,7 @@ class Handler {
             path: this.request.path,
             uid: this.session.uid,
         });
+        this.UIContext.csrfToken = this.csrfToken;
         this.preferJson = (this.request.headers.accept || '').includes('application/json');
     }
 

@@ -4,8 +4,10 @@ const db = require('../service/db');
 const coll = db.collection('task');
 
 async function add(task) {
-    task.executeAfter = task.executeAfter || new Date();
-    const res = await coll.insertOne(task);
+    const t = { ...task };
+    if (typeof t.executeAfter === 'object') t.executeAfter = t.executeAfter.getTime();
+    t.executeAfter = t.executeAfter || new Date().getTime();
+    const res = await coll.insertOne(t);
     return res.insertedId;
 }
 
@@ -22,8 +24,9 @@ function del(_id) {
 }
 
 async function getFirst(query) {
-    query.executeAfter = query.executeAfter || { $lte: new Date() };
-    const res = await coll.find(query).sort('_id', 1).limit(1).toArray();
+    const q = { ...query };
+    q.executeAfter = q.executeAfter || { $lt: new Date().getTime() };
+    const res = await coll.find(q).sort('_id', 1).limit(1).toArray();
     if (res.length) {
         await coll.deleteOne({ _id: res[0]._id });
         if (res[0].interval) {
@@ -37,9 +40,19 @@ async function getFirst(query) {
 }
 
 async function consume(query, cb) {
-    setInterval(async () => {
+    let isRunning = false;
+    const interval = setInterval(async () => {
+        if (isRunning) return;
+        isRunning = true;
         const res = await getFirst(query);
-        if (res) cb(res);
+        if (res) {
+            try {
+                await cb(res);
+            } catch (e) {
+                clearInterval(interval);
+            }
+        }
+        isRunning = false;
     }, 100);
 }
 

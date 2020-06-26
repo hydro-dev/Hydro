@@ -308,10 +308,14 @@ async function domainUser(src, report) {
     }
 }
 
+function addSpace(content) {
+    return content.split('\n').map((line) => (line.endsWith('  ') ? line : `${line}  `)).join('\n');
+}
+
 async function fix(doc) {
     await dst.collection('document').updateOne(
         { _id: doc._id },
-        { $set: { pid: doc.pid || doc.docId.toString() } },
+        { $set: { pid: doc.pid || doc.docId.toString(), content: addSpace(doc.content) } },
     );
     if (doc.data && doc.data.generationTime) {
         await file.inc(doc.data);
