@@ -2,7 +2,7 @@
 const fs = require('fs');
 const os = require('os');
 
-const { mongodb } = global.nodeModules;
+const { mongodb, bson } = global.nodeModules;
 const dst = global.Hydro.service.db;
 const { file, problem, discussion } = global.Hydro.model;
 const { readConfig } = global.Hydro.lib;
@@ -378,6 +378,42 @@ async function fixProblem(report) {
     }
 }
 
+/**
+ * @param {Date} ts
+ */
+function objid(ts) {
+    const p = Math.floor(ts.getTime() / 1000).toString(16);
+    const id = new bson.ObjectID();
+    return p + id.toString().slice(8, 8 + 6 + 4 + 6);
+}
+
+/**
+ * @param {import('mongodb').Db} src
+ * @param {*} report
+ */
+async function message(src, report) {
+    const count = await src.collection('message').find().count();
+    await report({ progress: 1, message: `Messages: ${count}` });
+    const total = Math.floor(count / 50);
+    for (let i = 0; i <= total; i++) {
+        const docs = await dst.collection('message')
+            .find().skip(i * 50).limit(50)
+            .toArray();
+        for (const doc of docs) {
+            for (const msg of doc.reply) {
+                await dst.collection('message').insertOne({
+                    _id: objid(msg.at),
+                    from: msg.sender_uid,
+                    to: msg.sender_uid === doc.sender_uid ? doc.sendee_uid : doc.sender_uid,
+                    content: msg.content,
+                    unread: msg.status !== 0,
+                });
+            }
+        }
+        await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });
+    }
+}
+
 async function task(name, src, report) {
     const count = await cursor[name](src).count();
     await report({ progress: 1, message: `${name}: ${count}` });
@@ -482,11 +518,13 @@ async function migrateVijos({
         await dst.collection('system').insertOne({ _id: 'migrateVijosFs', value: true });
     }
     await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
+    await dst.collection('message').deleteMany();
     const d = ['user', 'document', 'document.status', 'record', 'file'];
     for (const i of d) await task(i, src, report);
     await fixProblem(report);
     await discussionNode(src, report);
     await domainUser(src, report);
+    await message(src, report);
     return true;
 }
 

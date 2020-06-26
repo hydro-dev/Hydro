@@ -109,8 +109,11 @@ function setPassword(uid, password) {
     );
 }
 
-function setById(uid, args) {
-    return coll.findOneAndUpdate({ _id: uid }, { $set: args });
+function setById(uid, $set, $unset) {
+    const op = {};
+    if ($set && Object.keys($set).length) op.$set = $set;
+    if ($unset && Object.keys($unset).length) op.$unset = $unset;
+    return coll.findOneAndUpdate({ _id: uid }, op);
 }
 
 function setEmail(uid, mail) {

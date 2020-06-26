@@ -272,7 +272,7 @@ class HomeMessagesHandler extends Handler {
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
     async prepare() {
-        bus.subscribe([`user_message-${this.user._id}`], (...args) => this.onMessageReceived(...args));
+        bus.subscribe([`user_message-${this.user._id}`], this, 'onMessageReceived');
     }
 
     async onMessageReceived(e) {
@@ -280,7 +280,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe(this.onMessageReceived);
+        bus.unsubscribe([`user_message-${this.user._id}`], this, 'onMessageReceived');
     }
 }
 

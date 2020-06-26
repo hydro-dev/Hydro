@@ -1,9 +1,14 @@
 const fs = require('fs');
+const cluster = require('cluster');
 const path = require('path');
 const superagent = require('superagent');
 const proxy = require('superagent-proxy');
 
 proxy(superagent);
+
+if (!cluster.worker) {
+    cluster.worker = { id: 0 };
+}
 
 const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 

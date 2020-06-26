@@ -106,7 +106,7 @@ class SystemScriptHandler extends SystemHandler {
                 });
         }, 500);
         this.response.body = { rid };
-        this.response.redirect = this.url('record_main', { rid });
+        this.response.redirect = this.url('record_detail', { rid });
     }
 }
 

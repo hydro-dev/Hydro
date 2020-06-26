@@ -73,7 +73,7 @@ class DomainEditHandler extends ManageHandler {
 
     async post(args) {
         const $set = {};
-        for (const key of args) {
+        for (const key in args) {
             if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
         }
         await domain.edit(args.domainId, $set);
