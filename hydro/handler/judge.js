@@ -1,4 +1,6 @@
+const yaml = require('js-yaml');
 const { PERM_JUDGE } = require('../permission');
+const { parseTimeMS, parseMemoryMB } = require('../utils');
 const record = require('../model/record');
 const problem = require('../model/problem');
 const builtin = require('../model/builtin');
@@ -13,6 +15,7 @@ const {
 async function _postJudge(rdoc) {
     const accept = rdoc.status === builtin.STATUS_ACCEPTED;
     bus.publish('record_change', rdoc);
+    if (rdoc.type === 'run') return;
     const tasks = [];
     if (rdoc.tid) {
         tasks.push(
@@ -26,7 +29,7 @@ async function _postJudge(rdoc) {
         if (accept && !rdoc.rejudged) {
             tasks.push(
                 problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1),
-                user.inc(rdoc.domainId, rdoc.uid, 'nAccept', 1),
+                user.incDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1),
             );
         }
     }
@@ -78,6 +81,8 @@ async function end(body) {
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
+    if (body.stdout) $set.stdout = body.stdout;
+    if (body.stderr) $set.stderr = body.stderr;
     if (body.time_ms) $set.time = body.time_ms;
     if (body.memory_kb) $set.memory = body.memory_kb;
     $set.judgeAt = new Date();
@@ -85,6 +90,34 @@ async function end(body) {
     rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
     rdoc = await record.update(body.domainId, body.rid, $set, $push);
+}
+
+class PretestHandler extends Handler {
+    async post({
+        domainId, pid, code, lang, time = '1s', memory = '256m', input = '',
+    }) {
+        if (pid) {
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc.config) {
+                const config = yaml.safeLoad(pdoc.config);
+                if (config.time) time = config.time;
+                if (config.memory) memory = config.memory;
+            }
+        }
+        const rid = await record.add(domainId, {
+            pid: pid || String.random(16),
+            uid: this.user._id,
+            type: 'run',
+            time: parseTimeMS(time),
+            memory: parseMemoryMB(memory),
+            input,
+            lang,
+            code,
+            hidden: true,
+        });
+        this.response.body = { rid };
+        this.response.redirect = this.url('record_detail', { rid });
+    }
 }
 
 class JudgeHandler extends Handler {
@@ -130,6 +163,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
 }
 
 async function apply() {
+    Route('pretest', '/pretest', PretestHandler);
     Route('judge', '/judge', JudgeHandler, PERM_JUDGE);
     Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, PERM_JUDGE);
 }

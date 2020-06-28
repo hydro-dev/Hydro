@@ -132,6 +132,7 @@ async function changePassword(uid, currentPassword, newPassword) {
 
 async function inc(_id, field, n = 1) {
     const udoc = await coll.findOne({ _id });
+    if (!udoc) throw new UserNotFoundError(_id);
     udoc[field] = udoc[field] + n || n;
     await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
     return udoc;

@@ -19,6 +19,7 @@ async function add(domainId, data, addTask = true) {
         score: 0,
         time: 0,
         memory: 0,
+        hidden: false,
         rejudged: false,
         judgeTexts: [],
         compilerTexts: [],
@@ -31,15 +32,26 @@ async function add(domainId, data, addTask = true) {
         coll.insertOne(data),
     ]);
     if (addTask) {
-        await task.add({
-            type: 'judge',
+        const t = {
+            type: data.type || 'judge',
+            event: data.type || 'judge',
             rid: res.insertedId,
             domainId,
             pid: data.pid,
-            data: (pdoc || {}).data,
             lang: data.lang,
             code: data.code,
-        });
+        };
+        if (t.type === 'judge') {
+            t.data = pdoc.data;
+            t.config = pdoc.config;
+        } else {
+            t.config = {
+                time: data.time,
+                memory: data.memory,
+                input: data.input,
+            };
+        }
+        await task.add(t);
     }
     return res.insertedId;
 }
@@ -66,8 +78,7 @@ async function update(domainId, rid, $set, $push, $unset) {
     if ($set && Object.keys($set).length) upd.$set = $set;
     if ($push && Object.keys($push).length) upd.$push = $push;
     if ($unset && Object.keys($unset).length) upd.$unset = $unset;
-    await coll.findOneAndUpdate({ domainId, _id }, upd);
-    const rdoc = await coll.findOne({ _id });
+    const rdoc = await coll.findOneAndUpdate({ domainId, _id }, upd, { returnOriginal: false });
     if (!rdoc) throw new RecordNotFoundError(rid);
     return rdoc;
 }

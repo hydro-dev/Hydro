@@ -297,7 +297,7 @@ class Handler {
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            if (this.response.body.redirect) {
+            if (this.response.redirect) {
                 this.response.body = this.response.body || {};
                 this.response.body.url = this.response.redirect;
             }
@@ -438,6 +438,7 @@ class ConnectionHandler {
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);
+            console.error(name, kwargs);
         }
         return res;
     }

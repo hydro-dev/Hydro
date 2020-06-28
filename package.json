@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "main": "hydro/loader.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "author": "masnn",

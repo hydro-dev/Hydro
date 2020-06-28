@@ -4,6 +4,7 @@ config.json
 .build/
 *.build
 .uibuild/
+dist/
 .cache/
 *.cache
 __*

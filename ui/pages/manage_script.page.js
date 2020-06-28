@@ -7,14 +7,6 @@ import request from 'vj/utils/request';
 const page = new NamedPage('manage_script', () => {
   const runScriptDialog = new ActionDialog({
     $body: $('.dialog__body--run-script > div'),
-    onDispatch(action) {
-      const $args = runScriptDialog.$dom.find('[name="args"]');
-      if (action === 'ok' && $args.val() === '') {
-        $args.focus();
-        return false;
-      }
-      return true;
-    },
   });
   runScriptDialog.clear = function () {
     this.$dom.find('[name="args"]').val('');

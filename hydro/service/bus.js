@@ -1,5 +1,4 @@
 const { EventEmitter } = require('events');
-const cluster = require('cluster');
 
 const bus = new EventEmitter();
 
@@ -26,27 +25,18 @@ function unsubscribe(events, handler, funcName) {
     }
 }
 
-function publish(event, data, isMaster = true) {
-    bus.emit(event, { value: data, event });
-    if (isMaster && global.Hydro.model.task) {
-        global.Hydro.model.task.add({
-            type: 'bus',
-            count: Object.keys(cluster.workers).length,
-            sender: cluster.worker.id,
-            event,
-            data,
+function publish(event, payload, isMaster = true) {
+    if (isMaster && process.send) {
+        process.send({
+            event: 'bus',
+            eventName: event,
+            payload,
         });
+    } else {
+        bus.emit(event, { value: payload, event });
     }
 }
 
-function postInit() {
-    const { task } = global.Hydro.model;
-    task.consume({ type: 'bus' }, (data) => {
-        if (data.sender === cluster.worker.id) return;
-        publish(data.event, data.value, false);
-    });
-}
-
 global.Hydro.service.bus = module.exports = {
-    subscribe, unsubscribe, publish, postInit,
+    subscribe, unsubscribe, publish,
 };

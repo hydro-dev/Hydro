@@ -59,7 +59,15 @@ async function executeCommand(input) {
 async function messageHandler(worker, msg) {
     if (!msg) msg = worker;
     if (msg.event) {
-        if (msg.event === 'stat') {
+        if (msg.event === 'bus') {
+            if (cluster.isMaster) {
+                for (const i in cluster.workers) {
+                    if (i !== worker.id) cluster.workers[i].send(msg);
+                }
+            } else {
+                global.Hydro.service.bus.publish(msg.eventName, msg.payload, false);
+            }
+        } else if (msg.event === 'stat') {
             global.Hydro.stat.reqCount += msg.count;
         } else if (msg.event === 'restart') {
             console.log('Restarting');

@@ -224,7 +224,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     async prepare({ domainId, pid }) {
         this.pid = pid.toString();
         this.domainId = domainId;
-        bus.subscribe(['record_change'], this.onRecordChange);
+        bus.subscribe(['record_change'], this, 'onRecordChange');
     }
 
     async onRecordChange(data) {
@@ -239,7 +239,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this.onRecordChange);
+        bus.unsubscribe(['record_change'], this, 'onRecordChange');
     }
 }
 

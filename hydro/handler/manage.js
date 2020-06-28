@@ -66,13 +66,13 @@ class SystemScriptHandler extends SystemHandler {
 
     async post({ domainId, id, args = '{}' }) {
         args = JSON.parse(args);
-        // TODO Do not use console.log
         const rid = await record.add(domainId, {
             pid: id,
             uid: this.user._id,
             lang: null,
             code: null,
             status: STATUS.STATUS_JUDGING,
+            hidden: true,
         }, false);
         async function report(data) {
             judge.next({ domainId, rid, ...data });

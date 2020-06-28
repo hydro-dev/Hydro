@@ -19,7 +19,7 @@ class RecordListHandler extends RecordHandler {
         domainId, page = 1, pid, tid, uidOrName,
     }) {
         this.response.template = 'record_main.html';
-        const q = { tid };
+        const q = { tid, hidden: false };
         if (uidOrName) {
             q.$or = [
                 { unameLower: uidOrName.toLowerCase() },
@@ -64,6 +64,7 @@ class RecordDetailHandler extends RecordHandler {
         if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM_READ_RECORD_CODE)) {
             rdoc.code = null;
         }
+        if (rdoc.type !== 'run') rdoc.stdout = rdoc.stderr = '';
         const [pdoc, udoc] = await Promise.all([
             problem.get(domainId, rdoc.pid, null, false),
             user.getById(domainId, rdoc.uid),
@@ -76,7 +77,8 @@ class RecordDetailHandler extends RecordHandler {
             udoc,
             rdoc,
             pdoc,
-            show_status: true,
+            // TODO protect
+            showStatus: true,
         };
     }
 }
@@ -144,14 +146,14 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
                 return;
             }
         }
-        this.rid = rid;
+        this.rid = rid.toString();
         bus.subscribe(['record_change'], this, 'onRecordChange');
         this.onRecordChange({ value: rdoc });
     }
 
     async onRecordChange(data) {
         const rdoc = data.value;
-        if (!rdoc._id.equals(this.rid)) return;
+        if (rdoc._id.toString() !== this.rid) return;
         this.send({
             status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),

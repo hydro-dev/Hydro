@@ -188,6 +188,7 @@ const tasks = {
             compilerTexts: doc.compiler_texts,
             rejudged: doc.rejudged,
             testCases,
+            hidden: doc.hidden,
         };
     },
     domain: {

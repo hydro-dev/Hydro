@@ -109,3 +109,24 @@ function folderSize(folderPath) {
 }
 
 exports.folderSize = folderSize;
+
+const TIME_RE = /^([0-9]+(?:\.[0-9]*)?)([mu]?)s?$/i;
+const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
+const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
+const MEMORY_UNITS = { k: 0.1, m: 1, g: 1024 };
+
+function parseTimeMS(str) {
+    const match = TIME_RE.exec(str);
+    if (!match) throw new Error(str, 'error parsing time');
+    return parseInt(parseFloat(match[1], 10) * TIME_UNITS[match[2]], 10);
+}
+
+exports.parseTimeMS = parseTimeMS;
+
+function parseMemoryMB(str) {
+    const match = MEMORY_RE.exec(str);
+    if (!match) throw new Error(str, 'error parsing memory');
+    return parseInt(parseFloat(match[1], 10) * MEMORY_UNITS[match[2]], 10);
+}
+
+exports.parseMemoryMB = parseMemoryMB;

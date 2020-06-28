@@ -8,7 +8,7 @@
 </script>
 <div class="row">
   <div class="medium-9 columns">
-    {% if show_status %}
+    {% if showStatus %}
     {% include 'record_detail_status.html' %}
     {% endif %}
     {% if rdoc['code'] %}
@@ -19,6 +19,23 @@
       <div class="section__body" data-syntax-hl-show-line-number>
         <pre><code class="language-{{ model.builtin.LANG_HIGHLIGHT_ID[rdoc['lang']] }}">{{ rdoc['code'] }}</code></pre>
       </div>
+    </div>
+    {% endif %}
+    {% if rdoc['stdout'] or rdoc['stderr'] %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Stdout') }}</h1>
+      </div>
+      {% if rdoc['stdout'] %}
+      <div class="section__body" data-syntax-hl-show-line-number>
+        <pre><code>{{ rdoc['stdout']|ansi|safe }}</code></pre>
+      </div>
+      {% endif %}
+      {% if rdoc['stderr'] %}
+      <div class="section__body" data-syntax-hl-show-line-number>
+        <pre><code>{{ rdoc['stderr']|ansi|safe }}</code></pre>
+      </div>
+      {% endif %}
     </div>
     {% endif %}
   </div>
