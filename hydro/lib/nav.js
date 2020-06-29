@@ -1,13 +1,35 @@
-const permission = require('../permission');
+const { isNull } = require('lodash');
+
+const permission = require('../model/builtin').PERM;
 
 global.Hydro.ui.nav = [];
 
 const trueChecker = () => true;
-const Item = (name, args, prefix, perm, checker) => {
-    if (perm && checker) {
-        checker = ((_chk) => (handler) => _chk(handler) && handler.user.hasPerm(perm))(checker);
-    } else if (perm) {
-        checker = (handler) => handler.user.hasPerm(perm);
+const Item = (name, args, prefix, ...permPrivChecker) => {
+    let _priv;
+    let _perm;
+    let checker;
+    for (const item of permPrivChecker) {
+        if (typeof item === 'object' && !isNull(item)) {
+            if (typeof item.call !== 'undefined') {
+                checker = item;
+            } if (typeof item[0] === 'number') {
+                _priv = item;
+            } else if (typeof item[0] === 'string') {
+                _perm = item;
+            }
+        } else if (typeof item === 'number') {
+            _priv = item;
+        } else if (typeof item === 'string') {
+            _perm = item;
+        }
+    }
+    if ((_perm || _priv) && checker) {
+        checker = ((_chk) => (handler) => _chk(handler)
+            && (_perm ? handler.user.hasPerm(_perm) : true)
+            && (_priv ? handler.user.hasPriv(_priv) : true))(checker);
+    } else if (_perm) {
+        checker = (handler) => handler.user.hasPerm(_perm);
     } else if (!checker) checker = trueChecker;
     global.Hydro.ui.nav.push({
         name, args: args || {}, prefix, checker,

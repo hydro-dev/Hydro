@@ -135,7 +135,7 @@
                   <span class="icon training-status--icon done"></span>
                   <span class="training-status--text done">{{ _('Completed') }} 100%</span>
                   {% endif %}
-                {% elif handler.hasPerm(perm.PERM_LOGGEDIN) %}
+                {% elif handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                   <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
                 {% endif %}
                 </li>
@@ -157,7 +157,7 @@
   {% endif %}
   </div>
   <div class="large-3 columns">
-  {% if handler.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
+  {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
     {% include 'partials/discussion_nodes_widget.html' %}
   {% endif %}
     <div class="section side">

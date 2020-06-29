@@ -1,5 +1,5 @@
 const { Route, Handler } = global.Hydro.service.server;
-const { PERM_LOGGEDIN } = global.Hydro.permission;
+const { PRIV: { PRIV_USER_PROFILE } } = global.Hydro.model.builtin;
 const { pastebin } = global.Hydro.model;
 const { nav } = global.Hydro.lib;
 
@@ -23,10 +23,6 @@ class PasteShowHandler extends Handler {
 }
 
 class PasteCreateHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-    }
-
     async get() {
         const path = [
             ['Hydro', 'homepage'],
@@ -49,9 +45,9 @@ class PasteCreateHandler extends Handler {
 
 async function apply() {
     Route('pastebin', '/paste', PasteMainHandler);
-    Route('paste_create', '/paste/create', PasteCreateHandler);
+    Route('paste_create', '/paste/create', PasteCreateHandler, PRIV_USER_PROFILE);
     Route('paste_show', '/paste/:docId', PasteShowHandler);
-    nav('pastebin', null, 'pastebin', PERM_LOGGEDIN);
+    nav('pastebin', null, 'pastebin', PRIV_USER_PROFILE);
 }
 
 global.Hydro.handler.pastebin = module.exports = apply;

@@ -29,7 +29,7 @@
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if ddoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
+      {% if ddoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) %}
         <li>
           <a href="{{ url('discussion_edit', did=ddoc.docId) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
@@ -37,7 +37,7 @@
         <li>
           {{ _('{0} views').format(ddoc['views']) }}
         </li>
-      {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <li><form class="form--inline" method="post">
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
@@ -64,11 +64,11 @@
           comment_ref = 'drid',
           reply_ref = 'drrid',
           comment_post_perm = perm.PERM_REPLY_DISCUSSION,
-          comment_edit_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
-          comment_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
+          comment_edit_perm = perm.PERM_NONE if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
+          comment_delete_perm = perm.PERM_NONE if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_post_perm = perm.PERM_REPLY_DISCUSSION,
-          reply_edit_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
-          reply_delete_perm = perm.PERM_LOGGEDIN if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY
+          reply_edit_perm = perm.PERM_NONE if ddoc.owner == handler.user._id else perm.PERM_EDIT_DISCUSSION_REPLY,
+          reply_delete_perm = perm.PERM_NONE if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}

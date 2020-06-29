@@ -112,6 +112,17 @@ class PermissionError extends ForbiddenError {
     }
 }
 
+class PrivilegeError extends ForbiddenError {
+    constructor(priv) {
+        if (priv === global.Hydro.model.builtin.PRIV.PRIV_USER_PROFILE) {
+            super("You're not logged in.");
+        } else {
+            super("You don't have the required privilege.");
+        }
+        this.params = [priv];
+    }
+}
+
 class ValidationError extends ForbiddenError {
     constructor(field0, field1) {
         super('ValidationError');
@@ -245,6 +256,7 @@ global.Hydro.error = module.exports = {
     ProblemDataNotFoundError,
     OpcountExceededError,
     PermissionError,
+    PrivilegeError,
     NoProblemError,
     ValidationError,
     ProblemNotFoundError,

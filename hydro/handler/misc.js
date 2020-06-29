@@ -1,4 +1,4 @@
-const { PERM_JUDGE, PERM_LOGGEDIN } = require('../permission');
+const { PRIV_JUDGE, PRIV_USER_PROFILE } = require('../model/builtin').PRIV;
 const file = require('../model/file');
 const user = require('../model/user');
 const markdown = require('../lib/markdown');
@@ -37,7 +37,7 @@ class StatusHandler extends Handler {
 
 class StatusUpdateHandler extends Handler {
     async post(args) {
-        this.checkPerm(PERM_JUDGE);
+        this.checkPerm(PRIV_JUDGE);
         args.type = 'judger';
         return coll.updateOne(
             { mid: args.mid, type: 'judger' },
@@ -49,7 +49,7 @@ class StatusUpdateHandler extends Handler {
 
 class SwitchLanguageHandler extends Handler {
     async get({ lang }) {
-        if (this.user.hasPerm(PERM_LOGGEDIN)) await user.setById(this.user._id, { viewLang: lang });
+        if (this.user.hasPriv(PRIV_USER_PROFILE)) await user.setById(this.user._id, { viewLang: lang });
         else this.session.viewLang = lang;
         this.back();
     }

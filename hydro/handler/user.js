@@ -12,9 +12,16 @@ const misc = require('../lib/misc');
 const {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, LoginError, SystemError,
-    PermissionError, BlacklistedError, UserFacingError,
+    BlacklistedError, UserFacingError,
 } = require('../error');
-const { PERM_LOGGEDIN } = require('../permission.js');
+const {
+    PERM: {
+        PERM_VIEW_PROBLEM_HIDDEN,
+    },
+    PRIV: {
+        PRIV_USER_PROFILE, PRIV_REGISTER_USER,
+    },
+} = require('../model/builtin');
 
 class UserLoginHandler extends Handler {
     async get() {
@@ -47,17 +54,11 @@ class UserLogoutHandler extends Handler {
     }
 
     async post() {
-        this.session.uid = 1;
+        this.session.uid = 0;
     }
 }
 
 class UserRegisterHandler extends Handler {
-    async prepare() { // eslint-disable-line class-methods-use-this
-        if (!await system.get('user.register')) {
-            throw new PermissionError('Register');
-        }
-    }
-
     async get() {
         this.response.template = 'user_register.html';
     }
@@ -78,7 +79,7 @@ class UserRegisterHandler extends Handler {
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';
         } else {
-            this.response.redirect = `/register/${t[0]}`;
+            this.response.redirect = this.url('user_register_with_code', { code: t[0] });
         }
     }
 }
@@ -103,7 +104,7 @@ class UserRegisterWithCodeHandler extends Handler {
         });
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
-        this.response.redirect = '/';
+        this.response.redirect = this.url('homepage');
     }
 }
 
@@ -142,7 +143,7 @@ class UserLostPassWithCodeHandler extends Handler {
         if (password !== verifyPassword) throw new VerifyPasswordError();
         await user.setPassword(tdoc.uid, password);
         await token.del(code, token.TYPE_LOSTPASS);
-        this.response.redirect = '/';
+        this.response.redirect = this.url('homepage');
     }
 }
 
@@ -152,9 +153,12 @@ class UserDetailHandler extends Handler {
         const udoc = await user.getById(domainId, uid, true);
         const sdoc = await token.getMostRecentSessionByUid(uid);
         const rdocs = await record.getByUid(domainId, uid);
-        const pdict = await problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false);
+        const pdict = await problem.getList(
+            domainId, rdocs.map((rdoc) => rdoc.pid),
+            this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN), false,
+        );
         // Remove sensitive data
-        if (!isSelfProfile) sdoc.createIp = sdoc.updateIp = sdoc._id = '';
+        if (!isSelfProfile && sdoc) sdoc.createIp = sdoc.updateIp = sdoc._id = '';
         this.response.template = 'user_detail.html';
         this.response.body = {
             isSelfProfile, udoc, sdoc, rdocs, pdict,
@@ -296,6 +300,7 @@ class OauthCallbackHandler extends Handler {
         if (udoc) {
             this.session.uid = udoc._id;
         } else {
+            this.checkPriv(PRIV_REGISTER_USER);
             let username = '';
             r.uname = r.uname || [];
             r.uname.push(String.random(16));
@@ -325,13 +330,13 @@ async function apply() {
     Route('user_login', '/login', UserLoginHandler);
     Route('user_oauth', '/oauth/:type', OauthHandler);
     Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
-    Route('user_register', '/register', UserRegisterHandler);
-    Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler);
-    Route('user_logout', '/logout', UserLogoutHandler);
+    Route('user_register', '/register', UserRegisterHandler, PRIV_REGISTER_USER);
+    Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV_REGISTER_USER);
+    Route('user_logout', '/logout', UserLogoutHandler, PRIV_USER_PROFILE);
     Route('user_lostpass', '/lostpass', UserLostPassHandler);
     Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
     Route('user_search', '/user/search', UserSearchHandler);
-    Route('user_delete', '/user/delete', UserDeleteHandler, PERM_LOGGEDIN);
+    Route('user_delete', '/user/delete', UserDeleteHandler, PRIV_USER_PROFILE);
     Route('user_detail', '/user/:uid', UserDetailHandler);
 }
 

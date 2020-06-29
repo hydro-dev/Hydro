@@ -9,7 +9,7 @@
       <div class="section__body">
         <iframe src="{{ url('problem_upload', pid=pdoc.pid) }}" frameborder="0" style="width: 100%; height: 100px;"></iframe>
         <p class="help-text">{{ _('Hint') }}: <a href="{{ url('wiki', page='help', anchor='upload') }}">{{ _('Dataset Format') }}</a>, {{ _('An example of dataset') }}: <a href="https://github.com/vijos/jd4/blob/master/jd4/testdata/aplusb-legacy.zip?raw=true">{{ _('Download') }}</a></p>
-        {% if pdoc and (pdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
+        {% if pdoc and (pdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
         <p><a href="{{ url('problem_data', pid=pdoc.pid) }}" class="expanded button">{{ _('Download Dataset') }}</a></p>
         {% endif %}
       </div>

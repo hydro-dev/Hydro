@@ -4,13 +4,18 @@ const system = require('../model/system');
 const user = require('../model/user');
 const discussion = require('../model/discussion');
 const document = require('../model/document');
+const {
+    PERM: {
+        PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
+        PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY, PERM_HIGHLIGHT_DISCUSSION,
+        PERM_CREATE_DISCUSSION, PERM_REPLY_DISCUSSION,
+    },
+    PRIV: {
+        PRIV_USER_PROFILE,
+    },
+} = require('../model/builtin');
 const { Route, Handler } = require('../service/server');
 const { DiscussionNotFoundError, DocumentNotFoundError } = require('../error');
-const {
-    PERM_VIEW_DISCUSSION, PERM_EDIT_DISCUSSION, PERM_EDIT_DISCUSSION_REPLY,
-    PERM_DELETE_DISCUSSION, PERM_DELETE_DISCUSSION_REPLY, PERM_HIGHLIGHT_DISCUSSION,
-    PERM_LOGGEDIN, PERM_CREATE_DISCUSSION, PERM_REPLY_DISCUSSION,
-} = require('../permission');
 
 const typeMapper = {
     problem: document.TYPE_PROBLEM,
@@ -119,7 +124,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
 
 class DiscussionCreateHandler extends DiscussionHandler {
     async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
+        this.checkPriv(PRIV_USER_PROFILE);
         this.checkPerm(PERM_CREATE_DISCUSSION);
     }
 
@@ -151,7 +156,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
 
 class DiscussionDetailHandler extends DiscussionHandler {
     async get({ domainId, did, page = 1 }) {
-        const dsdoc = this.user.hasPerm(PERM_LOGGEDIN)
+        const dsdoc = this.user.hasPriv(PRIV_USER_PROFILE)
             ? await discussion.getStatus(domainId, did, this.user._id)
             : null;
         const [drdocs, pcount, drcount] = await paginate(
@@ -181,8 +186,11 @@ class DiscussionDetailHandler extends DiscussionHandler {
         };
     }
 
+    async post() {
+        this.checkPriv(PRIV_USER_PROFILE);
+    }
+
     async postReply({ domainId, did, content }) {
-        this.checkPerm(PERM_LOGGEDIN);
         this.checkPerm(PERM_REPLY_DISCUSSION);
         this.limitRate('add_discussion', 3600, 30);
         await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
@@ -190,7 +198,6 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     async postTailReply({ domainId, drid, content }) {
-        this.checkPerm(PERM_LOGGEDIN);
         this.checkPerm(PERM_REPLY_DISCUSSION);
         this.limitRate('add_discussion', 3600, 30);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
@@ -257,7 +264,6 @@ class DiscussionTailReplyRawHandler extends DiscussionHandler {
 
 class DiscussionEditHandler extends DiscussionHandler {
     async get() {
-        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_DISCUSSION);
         const path = [
             ['Hydro', 'homepage'],
             ['discussion_main', 'discussion_main'],

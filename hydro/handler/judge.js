@@ -1,5 +1,4 @@
 const yaml = require('js-yaml');
-const { PERM_JUDGE } = require('../permission');
 const { parseTimeMS, parseMemoryMB } = require('../utils');
 const record = require('../model/record');
 const problem = require('../model/problem');
@@ -164,8 +163,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
 async function apply() {
     Route('pretest', '/pretest', PretestHandler);
-    Route('judge', '/judge', JudgeHandler, PERM_JUDGE);
-    Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, PERM_JUDGE);
+    Route('judge', '/judge', JudgeHandler, builtin.PERM.PERM_JUDGE);
+    Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PERM.PERM_JUDGE);
 }
 
 apply.next = next;

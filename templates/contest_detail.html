@@ -24,7 +24,7 @@
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
-          {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
             <col class="col--status">
             <col class="col--submit-at">
           {% endif %}
@@ -32,7 +32,7 @@
           </colgroup>
           <thead>
             <tr>
-            {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
               <th class="col--submit-at">{{ _('Last Submit At') }}</th>
             {% endif %}
@@ -42,7 +42,7 @@
           <tbody>
           {% for pid in tdoc.pids %}
             <tr>
-            {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
               {% set rdoc = rdict[psdict[pid].rid] %}
               {% if handler.canShowRecord(tdoc) %}

@@ -21,7 +21,7 @@ const token = require('../model/token');
 const opcount = require('../model/opcount');
 const {
     UserNotFoundError, BlacklistedError, PermissionError,
-    UserFacingError, ValidationError,
+    UserFacingError, ValidationError, PrivilegeError,
 } = require('../error');
 
 let enableLog = true;
@@ -196,6 +196,23 @@ class Handler {
         }
     }
 
+    checkPriv(...args) {
+        for (const i in args) {
+            if (args[i] instanceof Array) {
+                let p = false;
+                for (const j in args) {
+                    if (this.user.hasPriv(args[i][j])) {
+                        p = true;
+                        break;
+                    }
+                }
+                if (!p) throw new PrivilegeError([args[i]]);
+            } else if (!this.user.hasPriv(args[i])) {
+                throw new PrivilegeError([[args[i]]]);
+            }
+        }
+    }
+
     async limitRate(op, periodSecs, maxOperations) {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
@@ -252,7 +269,7 @@ class Handler {
                     updateUa: this.request.headers['user-agent'] || '',
                 },
             ) : { uid: 1 };
-        if (!this.session) this.session = { uid: 1 };
+        if (!this.session) this.session = { uid: 0 };
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(domainId, this.session.uid);
@@ -355,7 +372,7 @@ class Handler {
     }
 }
 
-async function handle(ctx, HandlerClass, permission) {
+async function handle(ctx, HandlerClass, checker) {
     global.Hydro.stat.reqCount++;
     const h = new HandlerClass(ctx);
     try {
@@ -366,7 +383,7 @@ async function handle(ctx, HandlerClass, permission) {
         h.args = args;
 
         if (h.___prepare) await h.___prepare(args);
-        if (permission) h.checkPerm(permission);
+        if (checker) checker.call(h);
 
         let checking = '';
         try {
@@ -404,9 +421,38 @@ async function handle(ctx, HandlerClass, permission) {
     }
 }
 
-function Route(name, route, RouteHandler, permission = null) {
-    router.all(name, route, (ctx) => handle(ctx, RouteHandler, permission));
-    router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, permission));
+function Route(name, route, RouteHandler, ...permPrivChecker) {
+    let _priv;
+    let _perm;
+    let checker;
+    for (const item of permPrivChecker) {
+        if (typeof item === 'object') {
+            if (typeof item.call !== 'undefined') {
+                checker = item;
+            } if (typeof item[0] === 'number') {
+                _priv = item;
+            } else if (typeof item[0] === 'string') {
+                _perm = item;
+            }
+        } else if (typeof item === 'number') {
+            _priv = item;
+        } else if (typeof item === 'string') {
+            _perm = item;
+        }
+    }
+    if ((_perm || _priv) && checker) {
+        checker = ((_chk) => function __() {
+            _chk();
+            if (_perm) this.checkPerm(_perm);
+            if (_priv) this.checkPriv(_priv);
+        })(checker);
+    } else if (_perm) {
+        checker = function __() {
+            this.checkPerm(_perm);
+        };
+    }
+    router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
+    router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
 
 class ConnectionHandler {
@@ -444,7 +490,6 @@ class ConnectionHandler {
     }
 
     async renderHTML(name, context) {
-        this.hasPerm = (perm) => this.user.hasPerm(perm);
         this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
         const res = await template.render(name, Object.assign(context, {
             handler: this,

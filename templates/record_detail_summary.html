@@ -4,7 +4,7 @@
   <dd>{{ rdoc['score'] }}</dd>
   {% endif %}
   <dt>{{ _('Total Time') }}</dt>
-  <dd>{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time }}ms</dd>
+  <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time }}ms</dd>
   <dt>{{ _('Peak Memory') }}</dt>
-  <dd>{% if rdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</dd>
+  <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</dd>
 </dl>

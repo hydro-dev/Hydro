@@ -48,8 +48,8 @@
             <span>{{ rcdoc['judgeText'] }}</span>
             <a class="tool-button" href="{{ url('wiki', page='help', anchor='status') }}"><span class="icon icon-help"></span></a>
           </td>
-          <td class="col--time">{% if rcdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time }}ms</td>
-          <td class="col--memory">{% if rcdoc['status'] == status.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == status.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == status.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+          <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time }}ms</td>
+          <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
         </tr>
       {% endfor %}
       </tbody>

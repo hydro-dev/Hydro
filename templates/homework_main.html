@@ -18,7 +18,7 @@
               <option value="list">{{ _('List View') }}</option>
             </select>
           </span>
-        {% if handler.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
+        {% if handler.user.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
           <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
         {% endif %}
         </div>

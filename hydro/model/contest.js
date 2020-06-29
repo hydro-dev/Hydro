@@ -4,7 +4,7 @@ const {
     ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } = require('../error');
-const { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('../permission');
+const { PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD } = require('./builtin').PERM;
 const validator = require('../lib/validator');
 const ranked = require('../lib/rank');
 const document = require('./document');
@@ -339,7 +339,7 @@ const ContestHandlerMixin = (c) => class extends c {
         for (const tsdoc of tsdocs) uids.push(tsdoc.uid);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, uids),
-            problem.getList(domainId, tdoc.pids),
+            problem.getList(domainId, tdoc.pids, true),
         ]);
         const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
         const rows = RULES[tdoc.rule].scoreboard(isExport, (str) => (str ? str.toString().translate(this.user.language) : ''), tdoc, rankedTsdocs, udict, pdict);

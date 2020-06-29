@@ -6,7 +6,7 @@
       {{ model.builtin.STATUS_TEXTS[rdoc['status']] }}
     </a>
   </div>
-{% if rdoc['status'] == status.STATUS_JUDGING %}
+{% if rdoc['status'] == STATUS.STATUS_JUDGING %}
   <div class="col--status__progress-container">
     <div class="col--status__progress" style="width: {{ rdoc['progress']|default(50)|int }}%"></div>
   </div>

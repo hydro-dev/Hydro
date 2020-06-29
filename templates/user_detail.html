@@ -62,7 +62,7 @@
                   {{ model.builtin.USER_GENDER_ICONS[udoc.gender] }}
                 </span>
               {% endif %}
-              {% if handler.hasPerm(perm.PERM_MOD_BADGE) %}
+              {% if handler.user.hasPerm(perm.PERM_MOD_BADGE) %}
                 <span
                   class="profile-header__contact-item user-profile-badge badge--mod"
                   data-tooltip="{{ _('{0} is a moderator of this domain.').format(_('She' if udoc.gender == 1 else 'He')) }}"

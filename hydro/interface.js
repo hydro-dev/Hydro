@@ -20,7 +20,7 @@ exports.udoc = {
     viewLang: 'zh_CN',
     loginat: new Date(),
     loginip: '0.0.0.0',
-    priv: 0,
+    priv: '',
 };
 
 exports.pdoc = {

@@ -6,12 +6,12 @@ const {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
 } = require('../error');
+const { Route, Handler } = require('../service/server');
 const {
     PERM_VIEW_HOMEWORK, PERM_ATTEND_HOMEWORK, PERM_VIEW_PROBLEM,
     PERM_SUBMIT_PROBLEM, PERM_CREATE_HOMEWORK, PERM_EDIT_HOMEWORK,
     PERM_VIEW_HOMEWORK_SCOREBOARD, PERM_READ_RECORD_CODE,
-} = require('../permission');
-const { Route, Handler } = require('../service/server');
+} = require('../model/builtin').PERM;
 const system = require('../model/system');
 const user = require('../model/user');
 const contest = require('../model/contest');
@@ -53,7 +53,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         const [tsdoc, pdict] = await Promise.all([
             contest.getStatus(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK),
-            problem.getList(domainId, tdoc.pids),
+            problem.getList(domainId, tdoc.pids, true),
         ]);
         const psdict = {};
         let rdict = {};

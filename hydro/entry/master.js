@@ -27,7 +27,6 @@ async function load(call) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    require('../permission');
     try {
         require('../options');
     } catch (e) {

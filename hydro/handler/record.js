@@ -1,6 +1,6 @@
 const { ObjectID } = require('bson');
-const { PERM_READ_RECORD_CODE, PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
 const { PermissionError } = require('../error');
+const { PERM_READ_RECORD_CODE, PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../model/builtin').PERM;
 const problem = require('../model/problem');
 const record = require('../model/record');
 const contest = require('../model/contest');
@@ -34,7 +34,7 @@ class RecordListHandler extends RecordHandler {
         );
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
-            problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false),
+            problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false, false),
         ]);
         const path = [
             ['Hydro', 'homepage'],

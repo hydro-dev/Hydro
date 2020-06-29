@@ -6,6 +6,18 @@ const record = require('../model/record');
 const user = require('../model/user');
 const solution = require('../model/solution');
 const system = require('../model/system');
+const {
+    PERM: {
+        PERM_VIEW_PROBLEM, PERM_VIEW_PROBLEM_HIDDEN, PERM_SUBMIT_PROBLEM,
+        PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
+        PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
+        PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
+        PERM_REPLY_PROBLEM_SOLUTION,
+    },
+    PRIV: {
+        PRIV_USER_PROFILE, PRIV_JUDGE,
+    },
+} = require('../model/builtin');
 const bus = require('../service/bus');
 const {
     Route, Connection, Handler, ConnectionHandler,
@@ -14,13 +26,6 @@ const {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
 } = require('../error');
-const {
-    PERM_VIEW_PROBLEM, PERM_VIEW_PROBLEM_HIDDEN, PERM_SUBMIT_PROBLEM,
-    PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
-    PERM_JUDGE, PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
-    PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
-    PERM_REPLY_PROBLEM_SOLUTION, PERM_LOGGEDIN,
-} = require('../permission');
 
 class ProblemHandler extends Handler {
     async _prepare() {
@@ -47,7 +52,7 @@ class ProblemHandler extends Handler {
             page,
             await system.get('PROBLEM_PER_PAGE'),
         );
-        if (this.user.hasPerm(PERM_LOGGEDIN)) {
+        if (this.user.hasPriv(PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
                 domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
             );
@@ -109,7 +114,7 @@ class ProblemCategoryHandler extends ProblemHandler {
             page,
             await system.get('PROBLEM_PER_PAGE'),
         );
-        if (this.user.hasPerm(PERM_LOGGEDIN)) {
+        if (this.user.hasPriv(PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
                 domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
             );
@@ -302,7 +307,7 @@ class ProblemEditHandler extends ProblemManageHandler {
         const pid = validator.checkPid(this.request.body.pid);
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, { title, content, pid });
-        this.response.redirect = `/p/${pid}`;
+        this.back();
     }
 }
 
@@ -332,7 +337,9 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
 
 class ProblemDataDownloadHandler extends ProblemDetailHandler {
     async get({ pid }) {
-        if (this.user._id !== this.pdoc.owner) this.checkPerm([PERM_READ_PROBLEM_DATA, PERM_JUDGE]);
+        if (this.user._id !== this.pdoc.owner) {
+            if (!this.user.hasPerm(PERM_READ_PROBLEM_DATA)) this.checkPriv(PRIV_JUDGE);
+        }
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
         else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
         this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);

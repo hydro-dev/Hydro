@@ -4,7 +4,7 @@ const system = require('../model/system');
 const { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } = require('../model/setting');
 const paginate = require('../lib/paginate');
 const { Route, Handler } = require('../service/server');
-const { PERM_MANAGE } = require('../permission');
+const { PERM_MANAGE } = require('../model/builtin').PERM;
 const { RoleAlreadyExistError, ValidationError, PermissionError } = require('../error');
 
 class DomainRankHandler extends Handler {

@@ -1,8 +1,6 @@
 const nunjucks = require('nunjucks');
 const markdown = require('./markdown');
-const perm = require('../permission');
-const builtin = require('../model/builtin');
-const model = require('../model');
+const { STATUS, PERM, PRIV } = require('../model/builtin');
 const misc = require('./misc');
 
 function Loader() { }
@@ -38,11 +36,12 @@ function render(name, state) {
             static_url: (str) => `/${str}`,
             datetimeSpan: misc.datetimeSpan,
             paginate: misc.paginate,
-            perm,
-            status: builtin.status,
+            perm: PERM,
+            PRIV,
+            STATUS,
             size: misc.size,
             gravatar: misc.gravatar,
-            model,
+            model: global.Hydro.model,
             Context: global.Hydro.ui,
             isIE: (str) => str.includes('MSIE') || str.includes('rv:11.0'),
         }, (err, res) => {

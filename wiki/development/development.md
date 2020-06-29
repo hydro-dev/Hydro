@@ -55,12 +55,12 @@ Hydro.json 是模块的声明文件，格式如下。
 
 ```js
 const { Handler, Route } = global.Hydro.service.server;
-const { user } = global.Hydro.model;
-const { PERM_LOGGEDIN } = global.Hydro.permission;
+const { user, builtin } = global.Hydro.model;
 
 class CustomHandler extends Handler {
     async prepare() {
-        this.checkPassword(PERM_LOGGEDIN);
+        this.checkPriv(builtin.PRIV.PRIV_USER_PROFILE);
+        // this.checkPerm(), this.user.hasPerm(), this.user.hasPriv(), etc.
     }
 
     async get({ username, password }) {
@@ -95,7 +95,7 @@ _prepare, prepare, get, post, post[Operation], cleanup, _cleanup
 args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参数，并对以下字段进行了校验：  
 
 |   名称   |     类型      |
-| :------: | :-----------: |
+|:--------:|:-------------:|
 | content  |    string     |
 |  title   |    string     |
 |   uid    |  number(int)  |

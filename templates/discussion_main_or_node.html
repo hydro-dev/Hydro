@@ -23,10 +23,10 @@
       </div>
       <div class="section__body">
       {% if vnode %}
-      {% if handler.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
+      {% if handler.user.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
         <p><a href="{{ url('discussion_create', type=model.discussion.typeDisplay[vnode.type], name=vnode.id) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
       {% else %}
-        {% if not handler.hasPerm(perm.PERM_LOGGEDIN) %}
+        {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>
         {% else %}
           <p><a href="javascript:;" class="disabled expanded primary button">{{ _('No Permission to Create a Discussion') }}</a></p>

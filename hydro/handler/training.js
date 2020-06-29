@@ -1,10 +1,15 @@
 const assert = require('assert');
 const { ValidationError, ProblemNotFoundError } = require('../error');
-const {
-    PERM_LOGGEDIN, PERM_VIEW_TRAINING, PERM_VIEW_PROBLEM_HIDDEN,
-    PERM_CREATE_TRAINING, PERM_EDIT_TRAINING,
-} = require('../permission');
 const paginate = require('../lib/paginate');
+const {
+    PERM: {
+        PERM_VIEW_TRAINING, PERM_VIEW_PROBLEM_HIDDEN, PERM_CREATE_TRAINING,
+        PERM_EDIT_TRAINING,
+    },
+    PRIV: {
+        PRIV_USER_PROFILE,
+    },
+} = require('../model/builtin');
 const problem = require('../model/problem');
 const builtin = require('../model/builtin');
 const training = require('../model/training');
@@ -70,7 +75,7 @@ class TrainingMainHandler extends TrainingHandler {
         for (const tdoc of tdocs) tids.add(tdoc.docId);
         const tsdict = {};
         let tdict = {};
-        if (this.user.hasPerm(PERM_LOGGEDIN)) {
+        if (this.user.hasPriv(PRIV_USER_PROFILE)) {
             const enrolledTids = new Set();
             const tsdocs = await training.getMultiStatus(domainId, {
                 uid: this.user._id,
@@ -101,10 +106,9 @@ class TrainingDetailHandler extends TrainingHandler {
     async get({ domainId, tid }) {
         const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
-        const f = this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN) ? {} : { hidden: false };
         const [owner, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            problem.getList(domainId, pids, f),
+            problem.getList(domainId, pids, this.user.hasPerm(PERM_VIEW_PROBLEM_HIDDEN)),
         ]);
         const psdict = await problem.getListStatus(domainId, this.user._id, pids);
         const donePids = new Set();
@@ -151,7 +155,7 @@ class TrainingDetailHandler extends TrainingHandler {
     }
 
     async postEnroll({ domainId, tid }) {
-        this.checkPerm(PERM_LOGGEDIN);
+        this.checkPriv(PRIV_USER_PROFILE);
         const tdoc = await training.get(domainId, tid);
         await training.enroll(domainId, tdoc.docId, this.user._id);
         this.back();

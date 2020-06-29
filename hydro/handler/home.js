@@ -21,9 +21,14 @@ const discussion = require('../model/discussion');
 const token = require('../model/token');
 const training = require('../model/training');
 const {
-    PERM_VIEW_TRAINING, PERM_VIEW_CONTEST, PERM_VIEW_DISCUSSION,
-    PERM_LOGGEDIN, PERM_VIEW_HOMEWORK,
-} = require('../permission');
+    PERM: {
+        PERM_VIEW_TRAINING, PERM_VIEW_CONTEST, PERM_VIEW_DISCUSSION,
+        PERM_VIEW_HOMEWORK,
+    },
+    PRIV: {
+        PRIV_USER_PROFILE, PRIV_DELETE_FILE, PRIV_DELETE_FILE_SELF,
+    },
+} = require('../model/builtin');
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -113,10 +118,6 @@ class HomeHandler extends Handler {
 }
 
 class HomeSecurityHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-    }
-
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
         const sessions = await token.getSessionListByUid(this.user._id);
@@ -172,10 +173,6 @@ class HomeSecurityHandler extends Handler {
 }
 
 class HomeSettingsHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM_LOGGEDIN);
-    }
-
     async get({ category }) {
         // eslint-disable-next-line prefer-destructuring
         category = category[0]; // Category would be splitted into array
@@ -284,7 +281,6 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-// TODO draft
 class HomeFileHandler extends Handler {
     async get() {
         const ufdocs = await file.getMulti({ owner: this.user._id }).toArray();
@@ -296,6 +292,7 @@ class HomeFileHandler extends Handler {
     async postDelete(ufid) {
         const ufdoc = await file.get(ufid);
         if (ufdoc.owner !== this.user._id) this.checkPriv(PRIV_DELETE_FILE);
+        else this.checkPriv(PRIV_DELETE_FILE_SELF);
         const result = await file.del(ufdoc._id);
         if (result) await file.decUsage(this.user._id, ufdoc.length);
         this.back();
@@ -304,11 +301,12 @@ class HomeFileHandler extends Handler {
 
 async function apply() {
     Route('homepage', '/', HomeHandler);
-    Route('home_security', '/home/security', HomeSecurityHandler, PERM_LOGGEDIN);
-    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PERM_LOGGEDIN);
-    Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PERM_LOGGEDIN);
-    Route('home_messages', '/home/messages', HomeMessagesHandler, PERM_LOGGEDIN);
-    Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler);
+    Route('home_security', '/home/security', HomeSecurityHandler, PRIV_USER_PROFILE);
+    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV_USER_PROFILE);
+    Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PRIV_USER_PROFILE);
+    Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV_USER_PROFILE);
+    Route('home_file', '/home/file', HomeFileHandler, PRIV_USER_PROFILE);
+    Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV_USER_PROFILE);
 }
 
 global.Hydro.handler.home = module.exports = apply;

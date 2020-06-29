@@ -24,7 +24,7 @@
     {% endif %}
     {% if not attended and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
-    {% if handler.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.hasPerm(perm.PERM_LOGGEDIN) %}
+    {% if handler.user.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <form action="{{ url('homework_detail', tid=tdoc.docId) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
@@ -32,7 +32,7 @@
             <span class="icon icon-add"></span> {{ _('Claim Homework') }}
           </button>
         </form>
-    {% elif not handler.hasPerm(perm.PERM_LOGGEDIN) %}
+    {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
         </a>
@@ -52,12 +52,12 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if tdoc.owner == handler.user._id or handler.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+    {% if tdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
       </a></li>
     {% endif %}
-    {% if handler.hasPerm(perm.PERM_READ_RECORD_CODE) %}
+    {% if handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}">
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>

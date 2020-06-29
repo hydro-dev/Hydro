@@ -8,7 +8,7 @@
 {% else %}
   <table class="data-table">
     <colgroup>
-    {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <col class="col--status">
     {% endif %}
       <col class="col--name">
@@ -18,7 +18,7 @@
     </colgroup>
     <thead>
       <tr>
-      {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <th class="col--status record-status--border">{{ _('Status') }}</th>
       {% endif %}
         <th class="col--name">{{ _('Problem') }}</th>
@@ -31,7 +31,7 @@
     {% for pdoc in pdocs %}
     {% set psdoc = psdict[pdoc['docId']] %}
       <tr>
-      {% if handler.hasPerm(perm.PERM_LOGGEDIN) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       {% if psdoc['rid'] %}
         {{ record.render_status_td(psdoc, rid_key='rid') }}
       {% else %}

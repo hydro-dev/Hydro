@@ -1,5 +1,5 @@
 {% import "components/form.html" as form with context %}
-{% if ddoc.highlight or handler.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION) %}
+{% if ddoc.highlight or handler.user.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION) %}
   {{ form.form_checkbox({
        label:'Highlight',
        name:'highlight',

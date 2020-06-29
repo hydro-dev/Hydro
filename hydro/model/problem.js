@@ -4,6 +4,7 @@ const document = require('./document');
 const domain = require('./domain');
 const { ProblemNotFoundError } = require('../error');
 const readConfig = require('../lib/readConfig');
+const { ObjectId } = require('bson');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
@@ -11,16 +12,50 @@ const readConfig = require('../lib/readConfig');
  * @typedef {import('mongodb').Cursor} Cursor
  */
 
+class Problem {
+    constructor(pdoc) {
+        this.docType = document.TYPE_PROBLEM;
+        if (pdoc) {
+            this._id = pdoc._id;
+            this.docId = pdoc.docId;
+            this.pid = pdoc.pid;
+            this.title = pdoc.title;
+            this.content = pdoc.content;
+            this.owner = pdoc.owner;
+            this.config = pdoc.config;
+            this.data = pdoc.data;
+            this.nSubmit = pdoc.nSubmit;
+            this.nAccept = pdoc.nAccept;
+            this.difficulty = pdoc.difficulty || 0;
+            this.tag = pdoc.tag || [];
+            this.category = pdoc.category || [];
+            this.hidden = pdoc.hidden || false;
+        } else {
+            this._id = new ObjectId();
+            this.docId = this._id;
+            this.pid = String.random(8);
+            this.title = '*';
+            this.content = '';
+            this.owner = 1;
+            this.config = '';
+            this.data = null;
+            this.nSubmit = 0;
+            this.nAccept = 0;
+            this.difficulty = 0;
+            this.tag = [];
+            this.category = [];
+            this.hidden = true;
+        }
+    }
+}
+
 /**
  * @param {string} domainId
  * @param {string} title
  * @param {string} content
  * @param {number} owner
- * @param {number} pid
- * @param {import('bson').ObjectID} data
- * @param {string[]} category
- * @param {string[]} tag
- * @param {boolean} hidden
+ * @param {object} args
+ * @returns {Promise<ObjectID>} docId
  */
 async function add(domainId, title, content, owner, {
     pid = null,
@@ -43,7 +78,7 @@ async function add(domainId, title, content, owner, {
  * @param {string} domainId
  * @param {string|number} pid
  * @param {number} uid
- * @returns {Promise<Pdoc>}
+ * @returns {Promise<Problem>}
  */
 async function get(domainId, pid, uid = null, doThrow = true) {
     if (!Number.isNaN(parseInt(pid, 10))) pid = parseInt(pid, 10);
@@ -57,7 +92,7 @@ async function get(domainId, pid, uid = null, doThrow = true) {
     if (uid) {
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }
-    return pdoc;
+    return new Problem(pdoc);
 }
 
 /**
@@ -66,11 +101,16 @@ async function get(domainId, pid, uid = null, doThrow = true) {
  * @param {object} sort
  * @param {number} page
  * @param {number} limit
- * @returns {Promise<Pdoc[]>}
+ * @returns {Promise<Problem[]>}
  */
-function getMany(domainId, query, sort, page, limit) {
-    return document.getMulti(domainId, query).sort(sort).skip((page - 1) * limit).limit(limit)
+async function getMany(domainId, query, sort, page, limit) {
+    const pdocs = await document.getMulti(domainId, query)
+        .sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
+    for (let i = 0; i < pdocs.length; i++) {
+        pdocs[i] = new Problem(pdocs[i]);
+    }
+    return pdocs;
 }
 
 /**
@@ -95,10 +135,11 @@ function getMultiStatus(domainId, query) {
  * @param {string} domainId
  * @param {ObjectID} _id
  * @param {object} query
- * @returns {Promise<Pdoc>}
+ * @returns {Promise<Problem>}
  */
-function edit(domainId, _id, $set) {
-    return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
+async function edit(domainId, _id, $set) {
+    const pdoc = await document.set(domainId, document.TYPE_PROBLEM, _id, $set);
+    return new Problem(pdoc);
 }
 
 function inc(domainId, _id, field, n) {
@@ -118,20 +159,23 @@ async function random(domainId, query) {
     } return null;
 }
 
-async function getList(domainId, pids, doThrow = true) {
+async function getList(domainId, pids, getHidden = false, doThrow = true) {
     pids = Array.from(new Set(pids));
     const r = {};
-    const pdocs = await document.getMulti(
-        domainId, document.TYPE_PROBLEM,
-        { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] },
-    ).toArray();
+    const q = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
+    if (!getHidden) q.hidden = false;
+    const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q).toArray();
     for (const pdoc of pdocs) {
         r[pdoc.docId] = r[pdoc.pid] = pdoc;
     }
     if (pdocs.length !== pids.length) {
-        if (doThrow) {
-            for (const pid of pids) {
-                if (!r[pid]) throw new ProblemNotFoundError(domainId, pid);
+        for (const pid of pids) {
+            if (!r[pid]) {
+                if (doThrow) {
+                    throw new ProblemNotFoundError(domainId, pid);
+                } else {
+                    r[pid] = new Problem();
+                }
             }
         }
     }

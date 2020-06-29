@@ -28,15 +28,15 @@
 
 {% macro reply_operations(doc, rdoc) %}
 <div class="dczcomments__operations nojs--hide">
-{% if handler.hasPerm(reply_post_perm) %}
+{% if handler.user.hasPerm(reply_post_perm) %}
   <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-reply"><span class="icon icon-reply"></span></a>
 {% endif %}
-{% if doc.owner == handler.state.user._id or handler.hasPerm(reply_edit_perm) %}
+{% if doc.owner == handler.state.user._id or handler.user.hasPerm(reply_edit_perm) %}
   <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-reply"
     data-form="{{ {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}|json }}"
   ><span class="icon icon-edit"></span></a>
 {% endif %}
-{% if doc.owner == handler.state.user._id or handler.hasPerm(reply_delete_perm) %}
+{% if doc.owner == handler.state.user._id or handler.user.hasPerm(reply_delete_perm) %}
   <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-reply"
     data-form="{{ {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}|json }}"
   ><span class="icon icon-delete"></span></a>
@@ -71,7 +71,7 @@
   reply_delete_op = 'delete_tail_reply'
 ) %}
 <ul class="dczcomments__list view--discussion">
-{% if handler.hasPerm(comment_post_perm) %}
+{% if handler.user.hasPerm(comment_post_perm) %}
 <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
@@ -116,17 +116,17 @@
           @ {{ datetimeSpan(doc['_id'])|safe }}
         </div>
         <div class="dczcomments__operations nojs--hide">
-        {% if handler.hasPerm(reply_post_perm) %}
+        {% if handler.user.hasPerm(reply_post_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
             data-form="{{ {operation: reply_post_op, drid: doc._id}|json }}"
           ><span class="icon icon-reply"></span></a>
         {% endif %}
-        {% if doc.owner == handler.state.user._id or handler.hasPerm(comment_edit_perm) %}
+        {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_edit_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
             data-form="{{ {operation: comment_edit_op, drid: doc._id}|json }}"
           ><span class="icon icon-edit"></span></a>
         {% endif %}
-        {% if doc.owner == handler.state.user._id or handler.hasPerm(comment_delete_perm) %}
+        {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_delete_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
             data-form="{{ {operation: comment_delete_op, drid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>

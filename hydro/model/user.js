@@ -4,9 +4,9 @@ const system = require('./system');
 const token = require('./token');
 const setting = require('./setting');
 const { UserNotFoundError, UserAlreadyExistError, LoginError } = require('../error');
-const perm = require('../permission');
 const pwhash = require('../lib/hash.hydro');
 const db = require('../service/db');
+const { PRIV } = require('./builtin');
 
 const coll = db.collection('user');
 
@@ -42,6 +42,11 @@ class USER {
         return this.perm.includes(p);
     }
 
+    hasPriv(p) {
+        // eslint-disable-next-line no-bitwise
+        return this.priv & p;
+    }
+
     checkPassword(password) {
         const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
         if (!h) throw new Error('Unknown hash method');
@@ -55,14 +60,17 @@ async function getInDomain(domainId, udoc) {
     let dudoc = await document.getStatus(domainId, document.TYPE_DOMAIN_USER, 0, udoc._id);
     dudoc = dudoc || {};
     if (udoc._id === 1) dudoc.role = 'guest';
-    if (udoc.priv === 1) dudoc.role = 'admin';
+    // eslint-disable-next-line no-bitwise
+    if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     const p = await document.get(domainId, document.TYPE_DOMAIN_USER, dudoc.role || 'default');
     dudoc.perm = p ? p.content : builtin.BUILTIN_ROLES[dudoc.role || 'default'].perm;
     return dudoc;
 }
 
 async function getById(domainId, _id, throwError = false) {
-    const udoc = await coll.findOne({ _id });
+    const udoc = _id === 0 || _id === 1
+        ? builtin.BUILTIN_USERS[_id]
+        : await coll.findOne({ _id });
     if (!udoc) {
         if (throwError) throw new UserNotFoundError(_id);
         else return null;
@@ -81,7 +89,11 @@ async function getList(domainId, uids) {
 
 async function getByUname(domainId, uname, ignoreMissing = false) {
     const unameLower = uname.trim().toLowerCase();
-    const udoc = await coll.findOne({ unameLower });
+    const udoc = (unameLower === 'guest')
+        ? builtin.BUILTIN_USERS[0]
+        : unameLower === 'hydro'
+            ? builtin.BUILTIN_USERS[1]
+            : await coll.findOne({ unameLower });
     if (!udoc) {
         if (ignoreMissing) return null;
         throw new UserNotFoundError(uname);
@@ -92,7 +104,11 @@ async function getByUname(domainId, uname, ignoreMissing = false) {
 
 async function getByEmail(domainId, mail, ignoreMissing = false) {
     const mailLower = mail.trim().toLowerCase();
-    const udoc = await coll.findOne({ mailLower });
+    const udoc = (mailLower === 'guest@hydro.local')
+        ? builtin.BUILTIN_USERS[0]
+        : mailLower === 'hydro@hydro.local'
+            ? builtin.BUILTIN_USERS[1]
+            : await coll.findOne({ mailLower });
     if (!udoc) {
         if (ignoreMissing) return null;
         throw new UserNotFoundError(mail);
@@ -121,7 +137,7 @@ function setEmail(uid, mail) {
 }
 
 async function changePassword(uid, currentPassword, newPassword) {
-    const udoc = await getById(uid);
+    const udoc = await getById('system', uid);
     udoc.checkPassword(currentPassword);
     const salt = String.random();
     return await coll.findOneAndUpdate(
@@ -153,7 +169,7 @@ async function incDomain(domainId, uid, field, n = 1) {
  * @returns {Promise<number>} uid
  */
 async function create({
-    uid, mail, uname, password, regip = '127.0.0.1', priv = perm.PRIV_NONE,
+    uid, mail, uname, password, regip = '127.0.0.1', priv = PRIV.PRIV_DEFAULT,
 }) {
     const salt = String.random();
     if (!uid) uid = await system.inc('user');
@@ -193,6 +209,10 @@ async function getPrefixList(prefix, limit = 50) {
     const $regex = new RegExp(`\\A\\Q${prefix.replace(/\\E/gmi, /\\E\\E\\Q/gmi)}\\E`, 'gmi');
     const udocs = await coll.find({ unameLower: { $regex } }).limit(limit).toArray();
     return udocs;
+}
+
+function setPriv(uid, priv) {
+    return coll.findOneAndUpdate({ _id: uid }, { $set: priv }, { returnOriginal: false });
 }
 
 function setRole(domainId, uid, role) {
@@ -271,6 +291,7 @@ global.Hydro.model.user = module.exports = {
     setMultiInDomain,
     getMultiInDomain,
     getPrefixList,
+    setPriv,
     setRole,
     setRoles,
     getRole,

@@ -2,7 +2,7 @@ const domain = require('../model/domain');
 const system = require('../model/system');
 const setting = require('../model/setting');
 const { Route, Handler } = require('../service/server');
-const { PERM_MANAGE } = require('../permission');
+const { PERM_MANAGE } = require('../model/builtin').PERM;
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
 

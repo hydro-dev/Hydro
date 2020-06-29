@@ -5,11 +5,16 @@ const {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError,
 } = require('../error');
-const {
-    PERM_CREATE_CONTEST, PERM_EDIT_CONTEST, PERM_READ_RECORD_CODE,
-    PERM_VIEW_CONTEST,
-} = require('../permission');
 const paginate = require('../lib/paginate');
+const {
+    PERM: {
+        PERM_CREATE_CONTEST, PERM_EDIT_CONTEST, PERM_READ_RECORD_CODE,
+        PERM_VIEW_CONTEST, PERM_EDIT_CONTEST_SELF,
+    },
+    PRIV: {
+        PRIV_READ_RECORD_CODE
+    }
+} = require('../model/builtin');
 const contest = require('../model/contest');
 const document = require('../model/document');
 const problem = require('../model/problem');
@@ -58,7 +63,7 @@ class ContestDetailHandler extends ContestHandler {
         this.response.template = 'contest_detail.html';
         const [tsdoc, pdict] = await Promise.all([
             contest.getStatus(domainId, this.tdoc.docId, this.user._id),
-            problem.getList(domainId, this.tdoc.pids),
+            problem.getList(domainId, this.tdoc.pids, true),
         ]);
         const psdict = {};
         let rdict = {};
@@ -123,6 +128,7 @@ class ContestScoreboardDownloadHandler extends ContestDetailHandler {
 class ContestEditHandler extends ContestDetailHandler {
     async prepare() {
         if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_CONTEST);
+        else this.checkPerm(PERM_EDIT_CONTEST_SELF);
     }
 
     async get() {
@@ -266,7 +272,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
 
 class ContestCodeHandler extends ContestDetailHandler {
     async get({ domainId, tid }) {
-        this.checkPerm(PERM_READ_RECORD_CODE);
+        if (!this.user.hasPriv(PRIV_READ_RECORD_CODE)) this.checkPerm(PERM_READ_RECORD_CODE);
         this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         const rnames = {};

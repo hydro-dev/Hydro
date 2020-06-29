@@ -12,7 +12,6 @@ async function load() {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    require('../permission');
     require('../options');
     await Promise.all([locale(pending, fail), template(pending, fail)]);
     const bus = require('../service/bus');

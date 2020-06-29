@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const problem = require('../model/problem');
+const { PERM_CREATE_PROBLEM } = require('../model/builtin').PERM;
 const { Route, Handler } = require('../service/server');
-const { PERM_CREATE_PROBLEM } = require('../permission');
 const { ValidationError } = require('../error');
 
 class ProblemImportHandler extends Handler {

@@ -3,7 +3,7 @@ const problem = require('./problem');
 const document = require('./document');
 const contest = require('./contest');
 const training = require('./training');
-const { PERM_VIEW_PROBLEM_HIDDEN } = require('../permission');
+const { PERM_VIEW_PROBLEM_HIDDEN } = require('./builtin').PERM;
 const { DocumentNotFoundError } = require('../error');
 
 const typeDisplay = {
