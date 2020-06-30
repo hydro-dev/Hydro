@@ -3,7 +3,7 @@
 Hydro是一个高效的信息学在线测评系统。  
 特点： 易于部署，轻量，功能强大。  
 
-[中文文档](wiki/deploy.md)
+[中文文档](wiki/admin/deploy.md)
 
 Hydro 的界面基于 Vijos 二次开发。
 

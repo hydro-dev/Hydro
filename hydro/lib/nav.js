@@ -42,8 +42,8 @@ Item('homework_main', null, 'homework', PERM.PERM_VIEW_HOMEWORK);
 Item('discussion_main', null, 'discussion', PERM.PERM_VIEW_DISCUSSION);
 Item('contest_main', null, 'contest', PERM.PERM_VIEW_CONTEST);
 Item('record_main', null, 'record');
-Item('ranking', null, 'ranking');
+Item('ranking', null, 'ranking', PERM.PERM_VIEW_RANKING);
 Item('domain_dashboard', null, 'domain', PERM.PERM_EDIT_DOMAIN);
-Item('manage_dashboard', null, 'manage', PRIV.PRIV_SET_PRIV);
+Item('manage_dashboard', null, 'manage', PRIV.PRIV_EDIT_SYSTEM);
 
 global.Hydro.lib.nav = module.exports = Item;

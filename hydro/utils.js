@@ -130,3 +130,27 @@ function parseMemoryMB(str) {
 }
 
 exports.parseMemoryMB = parseMemoryMB;
+
+/**
+ * Checks if an object could be an instantiable class.
+ * @param {any} obj
+ * @param {boolean} strict
+ * @returns {boolean}
+ */
+function isClass(obj, strict = false) {
+    if (typeof obj !== 'function') return false;
+    const str = obj.toString();
+    if (obj.prototype === undefined) return false;
+    if (obj.prototype.constructor !== obj) return false;
+    if (str.slice(0, 5) === 'class') return true;
+    if (Object.getOwnPropertyNames(obj.prototype).length >= 2) return true;
+    if (/^function\s+\(|^function\s+anonymous\(/.test(str)) return false;
+    if (strict && /^function\s+[A-Z]/.test(str)) return true;
+    if (/\b\(this\b|\bthis[.[]\b/.test(str)) {
+        if (!strict || /classCallCheck\(this/.test(str)) return true;
+        return /^function\sdefault_\d+\s*\(/.test(str);
+    }
+    return false;
+}
+
+exports.isClass = isClass;

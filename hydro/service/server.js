@@ -22,6 +22,7 @@ const opcount = require('../model/opcount');
 const {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
+    CsrfTokenError,
 } = require('../error');
 
 let enableLog = true;
@@ -282,6 +283,11 @@ class Handler {
         this.preferJson = (this.request.headers.accept || '').includes('application/json');
     }
 
+    async checkCsrfToken(csrfToken) {
+        const sdoc = await token.get(csrfToken, token.TYPE_CSRF_TOKEN);
+        if (!sdoc || sdoc.uid !== this.user._id) throw new CsrfTokenError(csrfToken);
+    }
+
     async ___cleanup() {
         try {
             await this.renderBody();
@@ -361,12 +367,12 @@ class Handler {
     }
 
     async onerror(error) {
-        console.error(error.message, error.params);
+        console.error(error.msg(), error.params);
         console.error(error.stack);
         this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
         this.response.body = {
-            error: { message: error.message, params: error.params, stack: error.stack },
+            error: { message: error.msg(), params: error.params, stack: error.stack },
         };
         await this.___cleanup().catch(() => { });
     }
@@ -384,6 +390,7 @@ async function handle(ctx, HandlerClass, checker) {
 
         if (h.___prepare) await h.___prepare(args);
         if (checker) checker.call(h);
+        if (method === 'post') await h.checkCsrfToken(args.csrfToken);
 
         let checking = '';
         try {
@@ -421,10 +428,16 @@ async function handle(ctx, HandlerClass, checker) {
     }
 }
 
+const Checker = (perm, priv, checker) => function __() {
+    checker();
+    if (perm) this.checkPerm(perm);
+    if (priv) this.checkPriv(priv);
+};
+
 function Route(name, route, RouteHandler, ...permPrivChecker) {
     let _priv;
     let _perm;
-    let checker;
+    let checker = () => { };
     for (const item of permPrivChecker) {
         if (typeof item === 'object') {
             if (typeof item.call !== 'undefined') {
@@ -440,17 +453,7 @@ function Route(name, route, RouteHandler, ...permPrivChecker) {
             _perm = item;
         }
     }
-    if ((_perm || _priv) && checker) {
-        checker = ((_chk) => function __() {
-            _chk();
-            if (_perm) this.checkPerm(_perm);
-            if (_priv) this.checkPriv(_priv);
-        })(checker);
-    } else if (_perm) {
-        checker = function __() {
-            this.checkPerm(_perm);
-        };
-    }
+    checker = Checker(_perm, _priv, checker);
     router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
     router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
 }

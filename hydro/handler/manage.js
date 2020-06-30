@@ -1,16 +1,15 @@
 const setting = require('../model/setting');
 const system = require('../model/system');
-const { STATUS } = require('../model/builtin');
+const { STATUS, PRIV } = require('../model/builtin');
 const record = require('../model/record');
 const judge = require('./judge');
 const { Route, Handler } = require('../service/server');
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
-const { PermissionError } = require('../error');
 
 class SystemHandler extends Handler {
     async prepare() {
-        if (!this.user.priv) throw new PermissionError('???');
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         this.response.body = {
             path: [
                 ['Hydro', 'homepage'],

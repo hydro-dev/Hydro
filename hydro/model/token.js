@@ -53,14 +53,17 @@ async function get(tokenId, tokenType) {
  */
 async function update(tokenId, tokenType, expireSeconds, data) {
     const now = new Date();
-    const res = await coll.findOneAndUpdate({ _id: tokenId, tokenType }, {
-        $set: {
-            ...data,
-            updateAt: now,
-            expireAt: new Date(now.getTime() + expireSeconds * 1000),
-            tokenType,
+    const res = await coll.updateOne(
+        { _id: tokenId, tokenType },
+        {
+            $set: {
+                ...data,
+                updateAt: now,
+                expireAt: new Date(now.getTime() + expireSeconds * 1000),
+                tokenType,
+            },
         },
-    });
+    );
     return res.value;
 }
 
