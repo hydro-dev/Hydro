@@ -36,6 +36,7 @@ const SystemError = Err('SystemError', HydroError, 'SystemError', 500);
 const BadRequestError = Err('BadRequestError', UserFacingError, 400);
 const ForbiddenError = Err('ForbiddenError', UserFacingError, 403);
 const NotFoundError = Err('NotFoundError', UserFacingError, 404);
+const MethodNotAllowedError = Err('MethodNotAllowedError', UserFacingError, 405);
 const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 500);
 
 const AlreadyVotedError = Err('AlreadyVotedError', ForbiddenError, "You've already voted.");
@@ -78,6 +79,8 @@ const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFoundError);
 const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNotFoundError, 'Discussion {0} not found.');
 const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', DocumentNotFoundError, 'Discussion node {1} not found.');
 
+const InvalidOperationError = Err('InvalidOperationError', MethodNotAllowedError);
+
 global.Hydro.error = module.exports = {
     Err,
     HydroError,
@@ -87,6 +90,8 @@ global.Hydro.error = module.exports = {
     NotFoundError,
     LoginError,
     CsrfTokenError,
+    MethodNotAllowedError,
+    InvalidOperationError,
     UserAlreadyExistError,
     InvalidTokenError,
     UserNotFoundError,
@@ -128,9 +133,6 @@ class FileTypeNotAllowedError(ValidationError):
   @property
   def message(self):
     return 'This type of files are not allowed to be uploaded.'
-
-class InvalidOperationError(ForbiddenError):
-  pass
 
 class InvalidTokenDigestError(ForbiddenError):
   pass

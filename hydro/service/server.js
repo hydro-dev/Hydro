@@ -22,7 +22,7 @@ const opcount = require('../model/opcount');
 const {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
-    CsrfTokenError,
+    CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
 } = require('../error');
 
 let enableLog = true;
@@ -387,10 +387,26 @@ async function handle(ctx, HandlerClass, checker) {
             domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
         };
         h.args = args;
+        let operation;
+        if (method === 'post' && ctx.request.body.operation) {
+            operation = `_${ctx.request.body.operation}`
+                .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
+        }
 
         if (h.___prepare) await h.___prepare(args);
         if (checker) checker.call(h);
-        if (method === 'post') await h.checkCsrfToken(args.csrfToken);
+        if (method === 'post') {
+            await h.checkCsrfToken(args.csrfToken);
+            if (operation) {
+                if (typeof h[`post${operation}`] !== 'function') {
+                    throw new InvalidOperationError(operation);
+                }
+            } else if (typeof h.post !== 'function') {
+                throw new MethodNotAllowedError(method);
+            }
+        } else if (typeof h[method] !== 'function') {
+            throw new MethodNotAllowedError(method);
+        }
 
         let checking = '';
         try {
@@ -404,6 +420,7 @@ async function handle(ctx, HandlerClass, checker) {
             if (e instanceof ValidationError) throw e;
             throw new ValidationError(`Argument ${checking} check failed`);
         }
+
         if (h.__prepare) await h.__prepare(args);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);

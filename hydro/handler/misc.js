@@ -64,6 +64,12 @@ class MarkdownHandler extends Handler {
     }
 }
 
+class SockToken extends Handler {
+    async get() {
+        this.response.body = { token: this.csrfToken };
+    }
+}
+
 async function apply() {
     Route('file_download', '/fs/:docId/:secret', FileDownloadHandler);
     Route('file_download_with_name', '/fs/:docId/:name/:secret', FileDownloadHandler);
@@ -71,6 +77,7 @@ async function apply() {
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     Route('markdown', '/markdown', MarkdownHandler);
+    Route('token', '/token', SockToken);
 }
 
 apply.updateStatus = function updateStatus(args) {

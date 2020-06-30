@@ -4,7 +4,7 @@ const paginate = require('../lib/paginate');
 const {
     PERM: {
         PERM_VIEW_TRAINING, PERM_VIEW_PROBLEM_HIDDEN, PERM_CREATE_TRAINING,
-        PERM_EDIT_TRAINING,
+        PERM_EDIT_TRAINING, PERM_EDIT_TRAINING_SELF,
     },
     PRIV: {
         PRIV_USER_PROFILE,
@@ -57,13 +57,7 @@ async function _parseDagJson(domainId, dag) {
     return parsed;
 }
 
-class TrainingHandler extends Handler {
-    async _prepare() {
-        this.checkPerm(PERM_VIEW_TRAINING);
-    }
-}
-
-class TrainingMainHandler extends TrainingHandler {
+class TrainingMainHandler extends Handler {
     async get({ domainId, sort, page }) {
         const qs = sort ? 'sort={0}'.format(sort) : '';
         const [tdocs, tpcount] = await paginate(
@@ -102,7 +96,7 @@ class TrainingMainHandler extends TrainingHandler {
     }
 }
 
-class TrainingDetailHandler extends TrainingHandler {
+class TrainingDetailHandler extends Handler {
     async get({ domainId, tid }) {
         const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
@@ -162,7 +156,7 @@ class TrainingDetailHandler extends TrainingHandler {
     }
 }
 
-class TrainingCreateHandler extends TrainingHandler {
+class TrainingCreateHandler extends Handler {
     async get() {
         const path = [
             ['Hydro', 'homepage'],
@@ -201,28 +195,30 @@ class TrainingCreateHandler extends TrainingHandler {
     }
 }
 
-class TrainingEditHandler extends TrainingHandler {
-    async get({ domainId, tid }) {
-        const tdoc = await training.get(domainId, tid);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_TRAINING);
-        const dag = JSON.stringify(tdoc.dag, null, 2);
+class TrainingEditHandler extends Handler {
+    async prepare({ domainId, tid }) {
+        this.tdoc = await training.get(domainId, tid);
+        if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_TRAINING);
+        else this.checkPerm(PERM_EDIT_TRAINING_SELF);
+    }
+
+    async get({ tid }) {
+        const dag = JSON.stringify(this.tdoc.dag, null, 2);
         const path = [
             ['Hydro', 'homepage'],
             ['training_main', 'training_main'],
-            [tdoc.title, 'training_detail', { tid: tdoc.docId }, true],
+            [this.tdoc.title, 'training_detail', { tid }, true],
             ['training_edit', null],
         ];
         this.response.template = 'training_edit.html';
         this.response.body = {
-            tdoc, dag, path, page_name: 'training_edit',
+            tdoc: this.tdoc, dag, path, page_name: 'training_edit',
         };
     }
 
     async post({
         domainId, tid, title, content, dag, description,
     }) {
-        const tdoc = await training.get(domainId, tid);
-        if (!this.user._id === tdoc.owner) this.checkPerm(PERM_EDIT_TRAINING);
         dag = await _parseDagJson(domainId, dag);
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
@@ -254,9 +250,9 @@ class TrainingEditHandler extends TrainingHandler {
 }
 
 async function apply() {
-    Route('training_main', '/training', TrainingMainHandler);
+    Route('training_main', '/training', TrainingMainHandler, PERM_VIEW_TRAINING);
     Route('training_create', '/training/create', TrainingCreateHandler, PERM_CREATE_TRAINING);
-    Route('training_detail', '/training/:tid', TrainingDetailHandler);
+    Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM_VIEW_TRAINING);
     Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
 }
 
