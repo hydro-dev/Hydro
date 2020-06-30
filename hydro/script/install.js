@@ -1,3 +1,5 @@
+const description = 'Install';
+
 const { defaults } = require('lodash');
 const db = require('../service/db');
 const { PRIV_ALL } = require('../model/builtin').PRIV;
@@ -66,4 +68,4 @@ async function run({ username, password } = {}) {
     await Promise.all(tasks);
 }
 
-global.Hydro.script.install = module.exports = { run };
+global.Hydro.script.install = module.exports = { run, description };

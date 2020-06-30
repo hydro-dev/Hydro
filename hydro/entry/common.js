@@ -25,7 +25,7 @@ const builtinHandler = [
 ];
 
 const builtinScript = [
-    'install', 'uninstall', 'rating', 'recalcRating', 'register',
+    'install', 'rating', 'recalcRating', 'register', 'problemStat',
     'blacklist', 'setSuperadmin', 'deleteUser',
 ];
 

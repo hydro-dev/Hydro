@@ -1,3 +1,5 @@
+const description = 'Delete a user';
+
 /* eslint-disable no-await-in-loop */
 const user = require('../model/user');
 const document = require('../model/document');
@@ -85,4 +87,4 @@ async function run({
     return uid;
 }
 
-global.Hydro.script.deleteUser = module.exports = { run };
+global.Hydro.script.deleteUser = module.exports = { run, description };

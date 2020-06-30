@@ -31,6 +31,7 @@
             <input type="checkbox" name="rememberme">{{ _('Remember me') }}
           </label>
         </div></div>
+        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <div class="row"><div class="columns">
           <a href="{{ url('user_oauth', type='github') }}" class="expanded rounded button">{{ _('Login with Github') }}</a>
         </div></div>

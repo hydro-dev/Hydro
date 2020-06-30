@@ -1,3 +1,5 @@
+const description = 'Set a user as superadmin.';
+
 const user = require('../model/user');
 const { PRIV_ALL } = require('../model/builtin').PRIV;
 
@@ -10,4 +12,4 @@ async function run({
     return uid;
 }
 
-global.Hydro.script.setSuperadmin = module.exports = { run };
+global.Hydro.script.setSuperadmin = module.exports = { run, description };

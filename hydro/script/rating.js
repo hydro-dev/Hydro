@@ -1,3 +1,5 @@
+const description = 'Calculate the rating of a contest';
+
 const { ObjectID } = require('bson');
 const contest = require('../model/contest');
 const user = require('../model/user');
@@ -18,4 +20,4 @@ async function run({ domainId, contestId }) {
     return rated;
 }
 
-global.Hydro.script.rating = module.exports = { run };
+global.Hydro.script.rating = module.exports = { run, description };

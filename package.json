@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.4.3",
+  "version": "2.5.0",
   "main": "hydro/loader.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "author": "masnn",
@@ -31,7 +31,7 @@
     "nodemailer": "^6.4.10",
     "nunjucks": "^3.2.1",
     "prismjs": "^1.20.0",
-    "snyk": "^1.348.1",
+    "snyk": "^1.354.0",
     "sockjs": "^0.3.20",
     "superagent": "^5.2.2",
     "superagent-proxy": "^2.0.0",

@@ -1,3 +1,5 @@
+const description = 'Calculate rating of a domain, or all domains';
+
 /* eslint-disable no-await-in-loop */
 const domain = require('../model/domain');
 const contest = require('../model/contest');
@@ -64,4 +66,4 @@ async function run({ domainId, isSub = false }, report) {
     return true;
 }
 
-global.Hydro.script.recalcRating = module.exports = { run };
+global.Hydro.script.recalcRating = module.exports = { run, description };

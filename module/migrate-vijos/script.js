@@ -170,7 +170,7 @@ const tasks = {
                 judgeText: (c.judge_text || '') + (c.message || ''),
             });
         }
-        return {
+        const rdoc = {
             _id: doc._id,
             status: doc.status,
             score: doc.score,
@@ -180,16 +180,17 @@ const tasks = {
             lang: doc.lang,
             uid: doc.uid,
             pid: pid(doc.pid),
-            tid: doc.tid,
             domainId: doc.domain_id,
             judger: doc.judge_uid,
             judgeAt: doc.judge_at,
             judgeTexts: doc.judge_texts,
             compilerTexts: doc.compiler_texts,
-            rejudged: doc.rejudged,
             testCases,
             hidden: doc.hidden,
         };
+        if (doc.rejudged) rdoc.rejudged = true;
+        if (doc.tid) rdoc.tid = doc.tid;
+        return rdoc;
     },
     domain: {
         _id: '_id',

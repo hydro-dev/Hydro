@@ -37,9 +37,9 @@ async function add(tokenType, expireSeconds, data) {
  * @param {number} tokenType type of the token.
  * @returns {Promise<object>} The token document, or null.
  */
-async function get(tokenId, tokenType) {
+async function get(tokenId, tokenType, doThrow = true) {
     const res = await coll.findOne({ _id: tokenId, tokenType });
-    if (!res) throw new ValidationError('token');
+    if (!res && doThrow) throw new ValidationError('token');
     return res;
 }
 

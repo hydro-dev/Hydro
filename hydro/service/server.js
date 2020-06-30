@@ -284,7 +284,7 @@ class Handler {
     }
 
     async checkCsrfToken(csrfToken) {
-        const sdoc = await token.get(csrfToken, token.TYPE_CSRF_TOKEN);
+        const sdoc = await token.get(csrfToken, token.TYPE_CSRF_TOKEN, false);
         if (!sdoc || sdoc.uid !== this.user._id) throw new CsrfTokenError(csrfToken);
     }
 
@@ -429,12 +429,7 @@ async function handle(ctx, HandlerClass, checker) {
         if (h[`__${method}`]) await h[`__${method}`](args);
         if (h[`_${method}`]) await h[`_${method}`](args);
         if (h[method]) await h[method](args);
-
-        if (method === 'post' && ctx.request.body.operation) {
-            const operation = `_${ctx.request.body.operation}`
-                .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
-            if (h[`${method}${operation}`]) await h[`${method}${operation}`](args);
-        }
+        if (operation) await h[`post${operation}`](args);
 
         if (h.cleanup) await h.cleanup(args);
         if (h._cleanup) await h._cleanup(args);

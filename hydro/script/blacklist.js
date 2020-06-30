@@ -1,3 +1,5 @@
+const description = 'Add blacklist by ip, uid';
+
 // This code format is just for fun. DO NOT DO THIS IN YOUR CODE !
 /* eslint-disable */
 const { ObjectID } = require('bson');
@@ -61,4 +63,4 @@ async function run({address = null, discuss = null, user = null, dryrun = true},
     if (user)
         await _user(user, new Set(), new Set(), new Set(), dryrun, report)                         }
 
-global.Hydro.script.blacklist = module.exports = { run };
+global.Hydro.script.blacklist = module.exports = { run, description };

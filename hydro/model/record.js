@@ -20,7 +20,6 @@ async function add(domainId, data, addTask = true) {
         time: 0,
         memory: 0,
         hidden: false,
-        rejudged: false,
         judgeTexts: [],
         compilerTexts: [],
         testCases: [],

@@ -1,3 +1,5 @@
+const description = 'Create a new user';
+
 const user = require('../model/user');
 const system = require('../model/system');
 
@@ -13,4 +15,4 @@ async function run({
     return uid;
 }
 
-global.Hydro.script.register = module.exports = { run };
+global.Hydro.script.register = module.exports = { run, description };
