@@ -1,4 +1,4 @@
-const builtin = require('./builtin');
+const { BUILTIN_ROLES, BUILTIN_USERS, PRIV } = require('./builtin');
 const document = require('./document');
 const system = require('./system');
 const token = require('./token');
@@ -6,7 +6,6 @@ const setting = require('./setting');
 const { UserNotFoundError, UserAlreadyExistError, LoginError } = require('../error');
 const pwhash = require('../lib/hash.hydro');
 const db = require('../service/db');
-const { PRIV } = require('./builtin');
 
 const coll = db.collection('user');
 
@@ -63,13 +62,13 @@ async function getInDomain(domainId, udoc) {
     // eslint-disable-next-line no-bitwise
     if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     const p = await document.get(domainId, document.TYPE_DOMAIN_USER, dudoc.role || 'default');
-    dudoc.perm = p ? p.content : builtin.BUILTIN_ROLES[dudoc.role || 'default'].perm;
+    dudoc.perm = p ? p.content : BUILTIN_ROLES[dudoc.role || 'default'].perm;
     return dudoc;
 }
 
 async function getById(domainId, _id, throwError = false) {
     const udoc = _id === 0 || _id === 1
-        ? builtin.BUILTIN_USERS[_id]
+        ? BUILTIN_USERS[_id]
         : await coll.findOne({ _id });
     if (!udoc) {
         if (throwError) throw new UserNotFoundError(_id);
@@ -90,9 +89,9 @@ async function getList(domainId, uids) {
 async function getByUname(domainId, uname, ignoreMissing = false) {
     const unameLower = uname.trim().toLowerCase();
     const udoc = (unameLower === 'guest')
-        ? builtin.BUILTIN_USERS[0]
+        ? BUILTIN_USERS[0]
         : unameLower === 'hydro'
-            ? builtin.BUILTIN_USERS[1]
+            ? BUILTIN_USERS[1]
             : await coll.findOne({ unameLower });
     if (!udoc) {
         if (ignoreMissing) return null;
@@ -105,9 +104,9 @@ async function getByUname(domainId, uname, ignoreMissing = false) {
 async function getByEmail(domainId, mail, ignoreMissing = false) {
     const mailLower = mail.trim().toLowerCase();
     const udoc = (mailLower === 'guest@hydro.local')
-        ? builtin.BUILTIN_USERS[0]
+        ? BUILTIN_USERS[0]
         : mailLower === 'hydro@hydro.local'
-            ? builtin.BUILTIN_USERS[1]
+            ? BUILTIN_USERS[1]
             : await coll.findOne({ mailLower });
     if (!udoc) {
         if (ignoreMissing) return null;
@@ -259,13 +258,9 @@ function deleteRoles(domainId, roles) {
 
 function ban(uid) {
     return Promise.all([
-        coll.updateOne({ _id: uid }, { $set: { ban: true } }),
+        setPriv(uid, PRIV.PRIV_NONE),
         token.delByUid(uid),
     ]);
-}
-
-function setSuperAdmin(uid) {
-    return setById(uid, { priv: 1 });
 }
 
 function ensureIndexes() {
@@ -300,7 +295,6 @@ global.Hydro.model.user = module.exports = {
     getInDomain,
     addRole,
     deleteRoles,
-    setSuperAdmin,
     ban,
     ensureIndexes,
 };

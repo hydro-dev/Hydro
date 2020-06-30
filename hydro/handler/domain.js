@@ -2,9 +2,9 @@ const user = require('../model/user');
 const domain = require('../model/domain');
 const system = require('../model/system');
 const { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } = require('../model/setting');
+const { PERM: { PERM_EDIT_DOMAIN }, PERMS_BY_FAMILY } = require('../model/builtin');
 const paginate = require('../lib/paginate');
 const { Route, Handler } = require('../service/server');
-const { PERM_MANAGE } = require('../model/builtin').PERM;
 const { RoleAlreadyExistError, ValidationError, PermissionError } = require('../error');
 
 class DomainRankHandler extends Handler {
@@ -55,7 +55,7 @@ class DomainCreateHandler extends Handler {
 
 class ManageHandler extends Handler {
     async prepare({ domainId }) {
-        this.checkPerm(PERM_MANAGE);
+        this.checkPerm(PERM_EDIT_DOMAIN);
         this.domain = await domain.get(domainId);
     }
 }
@@ -95,9 +95,8 @@ class DomainDashboardHandler extends ManageHandler {
 
 class DomainUserHandler extends ManageHandler {
     async get({ domainId }) {
-        const uids = [];
         const rudocs = {};
-        const [udocs, roles] = await Promise.all([
+        const [dudocs, roles] = await Promise.all([
             user.getMultiInDomain(domainId, {
                 $and: [
                     { role: { $ne: 'default' } },
@@ -106,17 +105,14 @@ class DomainUserHandler extends ManageHandler {
             }).toArray(),
             user.getRoles(domainId),
         ]);
+        const uids = dudocs.map((dudoc) => dudoc.uid);
+        const udict = await user.getList(domainId, uids);
         for (const role of roles) rudocs[role._id] = [];
-        for (const udoc of udocs) {
-            uids.push(udoc.uid);
-            const ud = user.getById(domainId, udoc.uid);
+        for (const dudoc of dudocs) {
+            const ud = udict[dudoc.uid];
             rudocs[ud.role].push(ud);
         }
-        const tasks = [];
-        for (const key in rudocs) tasks.push(Promise.all(rudocs[key]));
-        await Promise.all(tasks);
         const rolesSelect = roles.map((role) => [role._id, role._id]);
-        const udict = await user.getList(domainId, uids);
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],
@@ -143,7 +139,9 @@ class DomainPermissionHandler extends ManageHandler {
             ['domain_permission', null],
         ];
         this.response.template = 'domain_permission.html';
-        this.response.body = { roles, domain: this.domain, path };
+        this.response.body = {
+            roles, PERMS_BY_FAMILY, domain: this.domain, path,
+        };
     }
 
     async post({ domainId }) {

@@ -1,10 +1,10 @@
+const { ObjectId } = require('bson');
 const { STATUS_ACCEPTED } = require('./builtin').STATUS;
 const file = require('./file');
 const document = require('./document');
 const domain = require('./domain');
 const { ProblemNotFoundError } = require('../error');
 const readConfig = require('../lib/readConfig');
-const { ObjectId } = require('bson');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc

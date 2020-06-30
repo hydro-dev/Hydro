@@ -73,6 +73,9 @@ const PERM = {
     PERM_CREATE_TRAINING: 't',
     PERM_EDIT_TRAINING: 'u',
     PERM_EDIT_TRAINING_SELF: 'v',
+
+    // Ranking
+    PERM_VIEW_RANKING: 'w',
 };
 
 const Permission = (family, key, desc) => ({ family, key, desc });
@@ -206,7 +209,7 @@ PERM.PERM_ADMIN = PERM.PERM_ALL;
 
 const PRIV = {
     PRIV_NONE: 0,
-    PRIV_SET_PRIV: 1 << 0,
+    PRIV_EDIT_SYSTEM: 1 << 0, // renamed from PRIV_SET_PRIV
     PRIV_SET_PERM: 1 << 1,
     PRIV_USER_PROFILE: 1 << 2,
     PRIV_REGISTER_USER: 1 << 3,

@@ -1,5 +1,6 @@
 const { defaults } = require('lodash');
 const db = require('../service/db');
+const { PRIV_ALL } = require('../model/builtin').PRIV;
 const system = require('../model/system');
 const domain = require('../model/domain');
 const pwhash = require('../lib/hash.hydro');
@@ -43,27 +44,7 @@ async function run({ username, password } = {}) {
         }));
     }
     await Promise.all(tasks);
-    tasks = [
-        domain.add('system', 0, 'Hydro').catch(() => domain.edit('system', { owner: 0, name: 'Hydro' })),
-        collUser.updateOne({ _id: 0 }, {
-            $set: defaults({
-                _id: 0,
-                uname: 'Hydro',
-                unameLower: 'hydro',
-                mail: 'hydro@hydro',
-                mailLower: 'hydro@hydro',
-            }, udoc),
-        }, { upsert: true }),
-        collUser.updateOne({ _id: 1 }, {
-            $set: defaults({
-                _id: 1,
-                mail: 'guest@hydro',
-                mailLower: 'guest@hydro',
-                uname: 'Guest',
-                unameLower: 'guest',
-            }, udoc),
-        }, { upsert: true }),
-    ];
+    tasks = [domain.add('system', 0, 'Hydro', true)];
     if (username && password) {
         const salt = String.random();
         tasks.push(
@@ -77,7 +58,7 @@ async function run({ username, password } = {}) {
                     hash: pwhash(password, salt),
                     salt,
                     gravatar: 'root@hydro',
-                    priv: 1,
+                    priv: PRIV_ALL,
                 }, udoc),
             }, { upsert: true }),
         );

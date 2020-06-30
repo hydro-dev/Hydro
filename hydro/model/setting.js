@@ -12,18 +12,20 @@ const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
 const PREFERENCE_SETTINGS = [];
 const ACCOUNT_SETTINGS = [];
 const DOMAIN_SETTINGS = [];
+const DOMAIN_USER_SETTINGS = [];
 const SYSTEM_SETTINGS = [];
 const SETTINGS = [];
 const SETTINGS_BY_KEY = {};
+const DOMAIN_USER_SETTINGS_BY_KEY = {};
 const DOMAIN_SETTINGS_BY_KEY = {};
 const SYSTEM_SETTINGS_BY_KEY = {};
 
 const Setting = (
     family, key, range = null,
     value = null, ui = 'text', name = '',
-    desc = '',
+    desc = '', hidden = false,
 ) => ({
-    family, key, range, value, ui, name, desc,
+    family, key, range, value, ui, name, desc, hidden,
 });
 
 const PreferenceSetting = (...settings) => {
@@ -38,6 +40,12 @@ const AccountSetting = (...settings) => {
         ACCOUNT_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
+    }
+};
+const DomainUserSetting = (...settings) => {
+    for (const setting of settings) {
+        DOMAIN_USER_SETTINGS.push(setting);
+        DOMAIN_USER_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
 const DomainSetting = (...settings) => {
@@ -119,6 +127,7 @@ global.Hydro.model.setting = module.exports = {
     PreferenceSetting,
     AccountSetting,
     DomainSetting,
+    DomainUserSetting,
     SystemSetting,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
@@ -128,4 +137,6 @@ global.Hydro.model.setting = module.exports = {
     SYSTEM_SETTINGS_BY_KEY,
     DOMAIN_SETTINGS,
     DOMAIN_SETTINGS_BY_KEY,
+    DOMAIN_USER_SETTINGS,
+    DOMAIN_USER_SETTINGS_BY_KEY,
 };

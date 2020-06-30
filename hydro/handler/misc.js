@@ -49,8 +49,9 @@ class StatusUpdateHandler extends Handler {
 
 class SwitchLanguageHandler extends Handler {
     async get({ lang }) {
-        if (this.user.hasPriv(PRIV_USER_PROFILE)) await user.setById(this.user._id, { viewLang: lang });
-        else this.session.viewLang = lang;
+        if (this.user.hasPriv(PRIV_USER_PROFILE)) {
+            await user.setById(this.user._id, { viewLang: lang });
+        } else this.session.viewLang = lang;
         this.back();
     }
 }

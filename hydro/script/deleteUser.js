@@ -4,7 +4,7 @@ const document = require('../model/document');
 const setting = require('../model/setting');
 const db = require('../service/db');
 const paginate = require('../lib/paginate');
-const { STATUS } = require('../model/builtin');
+const { STATUS, PRIV } = require('../model/builtin');
 
 const collDocument = db.collection('document');
 const collStatus = db.collection('document.status');
@@ -78,7 +78,7 @@ async function run({
     await user.setById(uid, {
         uname,
         unameLower: uname.toLowerCase(),
-        priv: 0,
+        priv: PRIV.PRIV_NONE,
     }, $unset);
     await user.setPassword(uid, String.random(32));
     // TODO delete contest, homework, etc

@@ -15,12 +15,23 @@ const coll = db.collection('domain');
  * @param {string} domainId
  * @param {number} owner
  */
-function add(domainId, owner, name) {
-    const tasks = [
-        coll.insertOne({
-            _id: domainId, owner, name, bulletin: '',
-        }),
-    ];
+function add(domainId, owner, name, isEnsure = false) {
+    const tasks = [];
+    if (isEnsure) {
+        tasks.push(
+            coll.updateOne(
+                { _id: domainId },
+                { $set: { owner }, $setOnInsert: { name, bulletin: '' } },
+                { upsert: true },
+            ),
+        );
+    } else {
+        tasks.push(
+            coll.insertOne({
+                _id: domainId, owner, name, bulletin: '',
+            }),
+        );
+    }
     for (const id in builtin.BUILTIN_ROLES) {
         tasks.push(
             document.add(

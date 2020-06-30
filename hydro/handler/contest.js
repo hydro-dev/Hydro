@@ -12,8 +12,8 @@ const {
         PERM_VIEW_CONTEST, PERM_EDIT_CONTEST_SELF,
     },
     PRIV: {
-        PRIV_READ_RECORD_CODE
-    }
+        PRIV_READ_RECORD_CODE,
+    },
 } = require('../model/builtin');
 const contest = require('../model/contest');
 const document = require('../model/document');

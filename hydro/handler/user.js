@@ -19,7 +19,7 @@ const {
         PERM_VIEW_PROBLEM_HIDDEN,
     },
     PRIV: {
-        PRIV_USER_PROFILE, PRIV_REGISTER_USER,
+        PRIV_USER_PROFILE, PRIV_REGISTER_USER, PRIV_NONE,
     },
 } = require('../model/builtin');
 
@@ -41,7 +41,7 @@ class UserLoginHandler extends Handler {
         if (!udoc) throw new LoginError(uname);
         if (udoc) udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
-        if (udoc.ban) throw new BlacklistedError(uname);
+        if (udoc.priv === PRIV_NONE) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
         this.session.rememberme = rememberme;
         this.response.redirect = this.request.referer.endsWith('/login') ? '/' : this.request.referer;

@@ -5,6 +5,7 @@
   </div>
   <div class="section__body">
   {% for setting in family_settings %}
+  {% if not setting.hidden %}
   {% if setting.ui == 'text' or setting.ui == 'password' or setting.ui == 'number' %}
     {{ form.form_text({
           type:setting.ui,
@@ -60,6 +61,7 @@
           name:setting.key,
           value:current[setting.key] or setting.value
     })}}
+  {% endif %}
   {% endif %}
   {% endfor %}
   </div>

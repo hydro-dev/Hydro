@@ -2,13 +2,13 @@ const domain = require('../model/domain');
 const system = require('../model/system');
 const setting = require('../model/setting');
 const { Route, Handler } = require('../service/server');
-const { PERM_MANAGE } = require('../model/builtin').PERM;
+const { PRIV_EDIT_SYSTEM } = require('../model/builtin').PRIV;
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
 
 class SystemHandler extends Handler {
     async prepare({ domainId }) {
-        this.checkPerm(PERM_MANAGE);
+        this.checkPriv(PRIV_EDIT_SYSTEM);
         this.domain = await domain.get(domainId);
     }
 }
