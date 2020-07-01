@@ -22,10 +22,10 @@ const SYSTEM_SETTINGS_BY_KEY = {};
 
 const Setting = (
     family, key, range = null,
-    value = null, ui = 'text', name = '',
-    desc = '', hidden = false,
+    value = null, type = 'text', name = '',
+    desc = '', hidden = false, disabled = false,
 ) => ({
-    family, key, range, value, ui, name, desc, hidden,
+    family, key, range, value, type, name, desc, hidden, disabled,
 });
 
 const PreferenceSetting = (...settings) => {
@@ -101,13 +101,13 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
     Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
-    Setting('setting_smtp', 'smtp.secure', null, false, 'checkbox', 'SSL'),
+    Setting('setting_smtp', 'smtp.secure', null, false, 'boolean', 'SSL'),
     Setting('setting_server', 'server.worker', null, 1, 'number', 'Server Workers Number'),
     Setting('setting_server', 'server.hostname', null, null, 'text', 'Server Hostname'),
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
     Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
-    Setting('setting_server', 'server.log', null, false, 'checkbox', 'Disable Access Log'),
+    Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
     Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
     Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret'),
     Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID'),

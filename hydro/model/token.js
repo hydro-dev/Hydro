@@ -53,7 +53,7 @@ async function get(tokenId, tokenType, doThrow = true) {
  */
 async function update(tokenId, tokenType, expireSeconds, data) {
     const now = new Date();
-    const res = await coll.updateOne(
+    const res = await coll.findOneAndUpdate(
         { _id: tokenId, tokenType },
         {
             $set: {
@@ -63,6 +63,7 @@ async function update(tokenId, tokenType, expireSeconds, data) {
                 tokenType,
             },
         },
+        { returnOriginal: false },
     );
     return res.value;
 }

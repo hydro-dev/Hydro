@@ -6,60 +6,67 @@
   <div class="section__body">
   {% for setting in family_settings %}
   {% if not setting.hidden %}
-  {% if setting.ui == 'text' or setting.ui == 'password' or setting.ui == 'number' %}
+  {% if setting.type == 'text' or setting.type == 'password' or setting.type == 'number' %}
     {{ form.form_text({
-          type:setting.ui,
+          type:setting.type,
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
         }) }}
-  {% elif setting.ui == 'select' %}
+  {% elif setting.type == 'select' %}
     {{ form.form_select({
           options:setting.range,
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
         }) }}
-  {% elif setting.ui == 'radio' %}
+  {% elif setting.type == 'radio' %}
     {{ form.form_radio({
           options:setting.range,
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
         }) }}
-  {% elif setting.ui == 'image_radio' %}
+  {% elif setting.type == 'image_radio' %}
     {{ form.form_image_radio({
           options:setting.range,
           image_class:setting.image_class,
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
         }) }}
-  {% elif setting.ui == 'textarea' %}
-    {{ form.form_textarea({
-          label:setting.name,
-          help_text:setting.desc,
-          name:setting.key,
-          value:current[setting.key] or setting.value
-        }) }}
-  {% elif setting.ui == 'markdown' %}
+  {% elif setting.type == 'textarea' %}
     {{ form.form_textarea({
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
           value:current[setting.key] or setting.value,
-          markdown:true
+          disabled:setting.disabled
         }) }}
-  {% elif setting.ui == 'checkbox' %}
+  {% elif setting.type == 'markdown' %}
+    {{ form.form_textarea({
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value,
+          markdown:true,
+          disabled:setting.disabled
+        }) }}
+  {% elif setting.type == 'boolean' %}
     {{ form.form_checkbox({
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
     })}}
   {% endif %}
   {% endif %}

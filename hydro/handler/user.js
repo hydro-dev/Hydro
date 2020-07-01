@@ -39,7 +39,7 @@ class UserLoginHandler extends Handler {
     }) {
         const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new LoginError(uname);
-        if (udoc) udoc.checkPassword(password);
+        udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (udoc.priv === PRIV_NONE) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
