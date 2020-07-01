@@ -12,22 +12,21 @@ async function terminate() {
     process.exit(0);
 }
 
-async function fork(args) {
-    if (args) {
-        cluster.setupMaster({ args });
-        const r = cluster.fork();
-        cluster.setupMaster({ args: [] });
-        return r;
-    }
+async function fork(args = []) {
+    cluster.setupMaster({ args, exec: __filename });
     return cluster.fork();
 }
 
 async function entry(config) {
     if (config.entry) {
         if (config.newProcess) {
-            const process = await fork([`--entry=${config.entry}`]);
-            await new Promise((resolve) => {
-                process.on('exit', resolve);
+            const p = await fork([`--entry=${config.entry}`]);
+            await new Promise((resolve, reject) => {
+                p.on('exit', resolve);
+                p.on('error', (err) => {
+                    p.kill();
+                    reject(err);
+                });
             });
         } else {
             const loader = require(`./entry/${config.entry}`);
@@ -119,6 +118,7 @@ async function load() {
             }
         });
         const cnt = await entry({ entry: 'master' });
+        console.log('Master started');
         cluster.on('exit', (worker, code, signal) => {
             console.log(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
         });

@@ -119,9 +119,8 @@ async function load() {
             }
         }
     }
-    setTimeout(() => {
-        process.exit(0);
-    }, 0);
+    console.log('Unzip done.');
+    process.exit(0);
 }
 
 module.exports = load;

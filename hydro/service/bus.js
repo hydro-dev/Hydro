@@ -1,4 +1,5 @@
 const { EventEmitter } = require('events');
+const cluster = require('cluster');
 
 const bus = new EventEmitter();
 
@@ -26,7 +27,8 @@ function unsubscribe(events, handler, funcName) {
 }
 
 function publish(event, payload, isMaster = true) {
-    if (isMaster && process.send) {
+    // Process forked by pm2 would also have process.send
+    if (isMaster && process.send && !cluster.isMaster) {
         process.send({
             event: 'bus',
             eventName: event,
