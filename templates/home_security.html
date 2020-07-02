@@ -94,7 +94,7 @@
               </div>
               <div class="media__body medium typo">
                 <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
-                <p>{{ _('Location') }}: {{ _(session.updateGeoip) }} ({{ session.updateIp }})</p>
+                <p>{{ _('Location') }}: {{ _(session.updateGeoip.display) }} ({{ session.updateIp }})</p>
                 <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
                 <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
                 <!-- {{ _('User-Agent') }}: {{ session['update_ua']['str'] }} -->

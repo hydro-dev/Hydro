@@ -125,7 +125,12 @@ class HomeSecurityHandler extends Handler {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
             if (useragent) session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
-            if (geoip) session.updateGeoip = geoip.lookup(session.updateIp || session.createIp);
+            if (geoip) {
+                session.updateGeoip = geoip.lookup(
+                    session.updateIp || session.createIp,
+                    this.translate('geoip_locale'),
+                );
+            }
         }
         this.response.template = 'home_security.html';
         this.response.body = { sessions, geoipProvider: (geoip || {}).provider };

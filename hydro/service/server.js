@@ -367,6 +367,7 @@ class Handler {
     }
 
     async onerror(error) {
+        if (!error.msg) error.msg = () => error.message;
         console.error(error.msg(), error.params);
         console.error(error.stack);
         this.response.status = error instanceof UserFacingError ? error.code : 500;
