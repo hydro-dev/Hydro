@@ -7,7 +7,7 @@ const coll = db.collection('domain');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
- * @typedef {import('bson').ObjectID} ObjectID
+ * @typedef {import('mongodb').ObjectID} ObjectID
  * @typedef {import('mongodb').Cursor} Cursor
  */
 

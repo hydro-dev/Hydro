@@ -2,7 +2,7 @@ const description = 'Add blacklist by ip, uid';
 
 // This code format is just for fun. DO NOT DO THIS IN YOUR CODE !
 /* eslint-disable */
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const document = require('../model/document');
 const discussion = require('../model/discussion');
 const user = require('../model/user');

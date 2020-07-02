@@ -94,28 +94,28 @@ _prepare, prepare, get, post, post[Operation], cleanup, _cleanup
 先执行 _prepare(args) （如果存在）
 args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参数，并对以下字段进行了校验：  
 
-|   名称   |     类型      |
-|:--------:|:-------------:|
-| content  |    string     |
-|  title   |    string     |
-|   uid    |  number(int)  |
-| password |    string     |
-|   mail   | string(mail)  |
-|  uname   |    string     |
-|   page   |  number(int)  |
-| duration | number(float) |
-|   role   |    string     |
-|  roles   |   string[]    |
-|   pids   |    string     |
-|   tid    | bson.ObjectID |
-|   rid    | bson.ObjectID |
-|   did    | bson.ObjectID |
-|   drid   | bson.ObjectID |
-|  drrid   | bson.ObjectID |
-|   psid   | bson.ObjectID |
-|  psrid   | bson.ObjectID |
-|  docId   | bson.ObjectID |
-| mongoId  | bson.ObjectID |
+|   Key    |      Type        |
+|:--------:|:----------------:|
+| content  |      string      |
+|  title   |      string      |
+|   uid    |    number(int)   |
+| password |      string      |
+|   mail   |   string(mail)   |
+|  uname   |      string      |
+|   page   |    number(int)   |
+| duration |   number(float)  |
+|   role   |      string      |
+|  roles   |     string[]     |
+|   pids   |      string      |
+|   tid    | mongodb.ObjectID |
+|   rid    | mongodb.ObjectID |
+|   did    | mongodb.ObjectID |
+|   drid   | mongodb.ObjectID |
+|  drrid   | mongodb.ObjectID |
+|   psid   | mongodb.ObjectID |
+|  psrid   | mongodb.ObjectID |
+|  docId   | mongodb.ObjectID |
+| mongoId  | mongodb.ObjectID |
 
 再执行 prepare(args) （如果存在）  
 检查请求类型：

@@ -35,10 +35,11 @@ async function load() {
         console.error(e);
         process.exit(1);
     });
+    ensureDir(path.resolve(os.tmpdir(), 'hydro'));
+    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'tmp'));
+    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public'));
     const files = fs.readdirSync(moduleRoot);
     const t = ['service', 'lib', 'model', 'handler', 'script'];
-    ensureDir(`${os.tmpdir()}/hydro`);
-    ensureDir(`${os.tmpdir()}/hydro/tmp`);
     for (const file of files) {
         if (file.endsWith('.hydro')) {
             try {

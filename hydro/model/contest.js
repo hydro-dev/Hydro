@@ -191,7 +191,7 @@ const RULES = {
 };
 
 /**
- * @typedef {import('bson').ObjectID} ObjectID
+ * @typedef {import('mongodb').ObjectID} ObjectID
  * @typedef {import('../interface').Tdoc} Tdoc
  */
 

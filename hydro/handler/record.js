@@ -1,4 +1,4 @@
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const { PermissionError } = require('../error');
 const { PERM_READ_RECORD_CODE, PERM_REJUDGE, PERM_VIEW_PROBLEM_HIDDEN } = require('../model/builtin').PERM;
 const problem = require('../model/problem');

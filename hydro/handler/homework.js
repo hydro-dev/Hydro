@@ -1,6 +1,6 @@
 const yaml = require('js-yaml');
 const moment = require('moment-timezone');
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const AdmZip = require('adm-zip');
 const {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,

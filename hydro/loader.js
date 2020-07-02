@@ -4,6 +4,8 @@
 const cluster = require('cluster');
 const { argv } = require('yargs');
 
+if (argv.debug) console.log(process.argv);
+
 async function terminate() {
     for (const task of global.onDestory) {
         // eslint-disable-next-line no-await-in-loop
@@ -13,7 +15,7 @@ async function terminate() {
 }
 
 async function fork(args = []) {
-    cluster.setupMaster({ args, exec: __filename });
+    cluster.setupMaster({ args });
     return cluster.fork();
 }
 
@@ -82,7 +84,6 @@ async function messageHandler(worker, msg) {
 async function load() {
     global.nodeModules = {
         'adm-zip': require('adm-zip'),
-        bson: require('bson'),
         superagent: require('superagent'),
         'js-yaml': require('js-yaml'),
         mongodb: require('mongodb'),
@@ -104,7 +105,7 @@ async function load() {
     process.on('SIGINT', terminate);
     process.on('message', messageHandler);
     cluster.on('message', messageHandler);
-    if (cluster.isMaster) {
+    if (cluster.isMaster || argv.startAsMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', (input) => {
@@ -117,6 +118,7 @@ async function load() {
                 executeCommand(input);
             }
         });
+        await entry({ entry: 'unzip', newProcess: true });
         const cnt = await entry({ entry: 'master' });
         console.log('Master started');
         cluster.on('exit', (worker, code, signal) => {
@@ -145,7 +147,7 @@ async function load() {
     if (global.gc) global.gc();
 }
 
-if (!module.parent) {
+if (argv.pandora || !module.parent) {
     load().catch((e) => {
         console.error(e);
         process.exit(1);

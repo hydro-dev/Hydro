@@ -1,4 +1,4 @@
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 
 exports.udoc = {
     _id: 0,

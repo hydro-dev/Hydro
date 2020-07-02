@@ -1,4 +1,4 @@
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const problem = require('./problem');
 const document = require('./document');
 const contest = require('./contest');

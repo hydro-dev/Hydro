@@ -1,4 +1,4 @@
-const { ObjectId } = require('bson');
+const { ObjectId } = require('mongodb');
 const { STATUS_ACCEPTED } = require('./builtin').STATUS;
 const file = require('./file');
 const document = require('./document');
@@ -8,7 +8,7 @@ const readConfig = require('../lib/readConfig');
 
 /**
  * @typedef {import('../interface').Pdoc} Pdoc
- * @typedef {import('bson').ObjectID} ObjectID
+ * @typedef {import('mongodb').ObjectID} ObjectID
  * @typedef {import('mongodb').Cursor} Cursor
  */
 

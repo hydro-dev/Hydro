@@ -9,7 +9,6 @@
     "@hydrooj/markdown-it-katex": "^2.1.1",
     "adm-zip": "^0.4.16",
     "ansi_up": "^4.0.4",
-    "bson": "^4.0.2",
     "detect-browser": "^5.1.1",
     "eslint": "7.2.0",
     "js-yaml": "^3.13.1",

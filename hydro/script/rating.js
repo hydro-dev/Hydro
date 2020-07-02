@@ -1,6 +1,6 @@
 const description = 'Calculate the rating of a contest';
 
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const contest = require('../model/contest');
 const user = require('../model/user');
 const rating = require('../lib/rating');

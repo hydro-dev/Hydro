@@ -1,27 +1,11 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
 const {
     lib, service, model, setting,
     builtinLib, builtinHandler, builtinModel,
 } = require('./common');
 
-function ensureDir(dir) {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
-    } else if (!fs.statSync(dir).isDirectory()) {
-        fs.unlinkSync(dir);
-        fs.mkdirSync(dir);
-    }
-}
-
 async function load(call) {
-    ensureDir(path.resolve(os.tmpdir(), 'hydro'));
-    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'tmp'));
-    ensureDir(path.resolve(os.tmpdir(), 'hydro', 'public'));
-    await call({ entry: 'unzip', newProcess: true });
     let pending = await require('../lib/hpm').getInstalled();
     const fail = [];
     require('../lib/i18n');

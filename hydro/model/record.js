@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { ObjectID } = require('bson');
+const { ObjectID } = require('mongodb');
 const { STATUS_WAITING } = require('./builtin').STATUS;
 const task = require('./task');
 const problem = require('./problem');

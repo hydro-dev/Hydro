@@ -1,4 +1,4 @@
-import { ObjectID } from 'bson';
+import { ObjectID } from 'mongodb';
 
 export interface Udoc {
     _id: number
