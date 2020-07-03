@@ -234,7 +234,6 @@ const Handler = HandlerMixin(class {
             cdn_prefix: '/',
             url_prefix: '/',
         };
-        this._handler = {};
         this.session = {};
     }
 
@@ -255,34 +254,37 @@ const Handler = HandlerMixin(class {
         this.response.disposition = `attachment; filename="${name}"`;
     }
 
-    async init({ domainId }) {
-        this.response.body = {};
-        this.now = new Date();
-        this._handler.sid = this.request.cookies.get('sid');
-        this._handler.save = this.request.cookies.get('save');
-        if (this._handler.save) this._handler.expireSeconds = await system.get('session.saved_expire_seconds');
-        else this._handler.expireSeconds = await system.get('session.unsaved_expire_seconds');
-        this.session = this._handler.sid
-            ? await token.update(
-                this._handler.sid,
-                token.TYPE_SESSION,
-                this._handler.expireSeconds,
-                {
-                    updateIp: this.request.ip,
-                    updateUa: this.request.headers['user-agent'] || '',
-                },
-            ) : { uid: 1 };
+    async getSession() {
+        const sid = this.request.cookies.get('sid');
+        this.session = await token.get(sid, token.TYPE_SESSION, false);
         if (!this.session) this.session = { uid: 0 };
+    }
+
+    async getBdoc() {
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
-        this.user = await user.getById(domainId, this.session.uid);
-        if (!this.user) throw new UserNotFoundError(this.session.uid);
+    }
+
+    async getCsrfToken() {
         this.csrfToken = await token.createOrUpdate(token.TYPE_CSRF_TOKEN, 600, {
             path: this.request.path,
             uid: this.session.uid,
         });
         this.UIContext.csrfToken = this.csrfToken;
+    }
+
+    async init({ domainId }) {
+        this.response.body = {};
+        this.now = new Date();
         this.preferJson = (this.request.headers.accept || '').includes('application/json');
+        await Promise.all([
+            this.getSession(),
+            this.getBdoc(),
+        ]);
+        [this.user] = await Promise.all([
+            user.getById(domainId, this.session.uid, true),
+            this.getCsrfToken(),
+        ]);
     }
 
     async checkCsrfToken(csrfToken) {
@@ -339,31 +341,37 @@ const Handler = HandlerMixin(class {
     }
 
     async saveCookie() {
+        const expireSeconds = this.session.save
+            ? await system.get('session.expire_seconds')
+            : await system.get('session.unsaved_expire_seconds');
         if (this.session._id) {
             await token.update(
                 this.session._id,
                 token.TYPE_SESSION,
-                this._handler.expireSeconds,
-                this.session,
+                expireSeconds,
+                {
+                    ...this.session,
+                    updateIp: this.request.ip,
+                    updateUa: this.request.headers['user-agent'] || '',
+                },
             );
         } else {
-            [this.session._id] = await token.add(
+            [, this.session] = await token.add(
                 token.TYPE_SESSION,
-                this._handler.expireSeconds,
+                expireSeconds,
                 {
+                    ...this.session,
                     createIp: this.request.ip,
                     createUa: this.request.headers['user-agent'] || '',
                     updateIp: this.request.ip,
                     updateUa: this.request.headers['user-agent'] || '',
-                    ...this.session,
                 },
             );
         }
         const cookie = { secure: await system.get('session.secure') };
-        if (this._handler.save) {
+        if (this.session.save) {
             cookie.expires = this.session.expireAt;
-            cookie.maxAge = this._handler.expireSeconds;
-            this.ctx.cookies.set('save', 'true', cookie);
+            cookie.maxAge = expireSeconds;
         }
         this.ctx.cookies.set('sid', this.session._id, cookie);
     }

@@ -28,7 +28,7 @@ async function add(tokenType, expireSeconds, data) {
         updateAt: now,
         expireAt: new Date(now.getTime() + expireSeconds * 1000),
     });
-    return [str, res.ops];
+    return [str, res.ops[0]];
 }
 
 /**
@@ -109,7 +109,7 @@ global.Hydro.model.token = module.exports = {
     get,
     update,
     del,
-    deleteByUid(uid) {
+    delByUid(uid) {
         return coll.deleteMany({ uid });
     },
     getMostRecentSessionByUid(uid) {

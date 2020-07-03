@@ -6,11 +6,11 @@ services:
         links:
         - mongo
         volumes: 
-        - ./config.yaml:/config/config.yaml
+        - ./data/config:/config
         ports:
         - 8888:8888
     mongo:
         image: mongo:latest
         restart: always
         volumes:
-        - ./db:/data/db
+        - ./data/db:/data/db

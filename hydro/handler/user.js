@@ -43,7 +43,7 @@ class UserLoginHandler extends Handler {
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (udoc.priv === PRIV_NONE) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
-        this.session.rememberme = rememberme;
+        this.session.save = rememberme;
         this.response.redirect = this.request.referer.endsWith('/login') ? '/' : this.request.referer;
     }
 }

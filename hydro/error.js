@@ -33,11 +33,11 @@ class HydroError extends Error {
 const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);
 const SystemError = Err('SystemError', HydroError, 'SystemError', 500);
 
-const BadRequestError = Err('BadRequestError', UserFacingError, 400);
-const ForbiddenError = Err('ForbiddenError', UserFacingError, 403);
-const NotFoundError = Err('NotFoundError', UserFacingError, 404);
-const MethodNotAllowedError = Err('MethodNotAllowedError', UserFacingError, 405);
-const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 500);
+const BadRequestError = Err('BadRequestError', UserFacingError, 'BadRequestError', 400);
+const ForbiddenError = Err('ForbiddenError', UserFacingError, 'ForbiddenError', 403);
+const NotFoundError = Err('NotFoundError', UserFacingError, 'NotFoundError', 404);
+const MethodNotAllowedError = Err('MethodNotAllowedError', UserFacingError, 'MethodNotAllowedError', 405);
+const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 'RemoteOnlineJudgeError', 500);
 
 const AlreadyVotedError = Err('AlreadyVotedError', ForbiddenError, "You've already voted.");
 const LoginError = Err('LoginError', ForbiddenError, 'Invalid password for user {0}.');
@@ -63,7 +63,7 @@ const ContestNotLiveError = Err('ContestNotLiveError', ForbiddenError, 'This con
 const ContestScoreboardHiddenError = Err('ContestScoreboardHiddenError', ForbiddenError, 'Contest scoreboard is not visible.');
 const TrainingAlreadyEnrollError = Err('TrainingAlreadyEnrollError', ForbiddenError, "You've already enrolled this training.");
 const RoleAlreadyExistError = Err('RoleAlreadyExistError', ForbiddenError, 'This role already exists.');
-const CsrfTokenError = Err('CsrfTokenError', ForbiddenError);
+const CsrfTokenError = Err('CsrfTokenError', ForbiddenError, 'CsrfTokenError');
 
 const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
@@ -72,10 +72,10 @@ const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFoundError, 
 const MessageNotFoundError = Err('MessageNotFoundError', NotFoundError, 'Message {0} not found.');
 const DocumentNotFoundError = Err('DocumentNotFoundError', NotFoundError, 'Document {2} not found.');
 
-const ProblemNotFoundError = Err('ProblemNotFountError', DocumentNotFoundError, 'Problem {1} not found.');
-const SolutionNotFoundError = Err('SolutionNotFoundError', DocumentNotFoundError);
-const TrainingNotFoundError = Err('TrainingNotFoundError', DocumentNotFoundError);
-const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFoundError);
+const ProblemNotFoundError = Err('ProblemNotFountError', DocumentNotFoundError, 'Problem {0} not found.');
+const SolutionNotFoundError = Err('SolutionNotFoundError', DocumentNotFoundError, 'Solution {0} not found.');
+const TrainingNotFoundError = Err('TrainingNotFoundError', DocumentNotFoundError, 'Training {0} not found.');
+const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFoundError, 'Contest {0} not found.');
 const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNotFoundError, 'Discussion {0} not found.');
 const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', DocumentNotFoundError, 'Discussion node {1} not found.');
 

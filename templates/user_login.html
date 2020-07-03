@@ -33,6 +33,7 @@
       {% endif %}
       <div class="row"><div class="columns">
         <div class="text-center">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <input type="submit" value="{{ _('Login') }}" class="inverse expanded rounded primary button">
         </div>
       </div></div>
