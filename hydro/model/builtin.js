@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 const PERM = {
     PERM_NONE: '',
 

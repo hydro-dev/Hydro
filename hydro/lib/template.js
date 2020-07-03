@@ -23,6 +23,7 @@ class Nunjucks extends nunjucks.Environment {
         });
         this.addFilter('ansi', (self) => misc.ansiToHtml(self));
         this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
+        this.addFilter('bitand', (self, val) => self & val);
     }
 }
 const env = new Nunjucks();

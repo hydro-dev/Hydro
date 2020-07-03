@@ -1,7 +1,7 @@
 // From https://github.com/pvorb/node-md5/blob/master/md5.js
 // BSD 3-Clause "New" or "Revised" License
 
-/* eslint-disable no-bitwise */ /* eslint-disable max-len */
+/* eslint-disable max-len */
 function safeAdd(x, y) {
     const lsw = (x & 0xffff) + (y & 0xffff);
     const msw = (x >> 16) + (y >> 16) + (lsw >> 16);

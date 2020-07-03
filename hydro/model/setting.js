@@ -9,6 +9,10 @@ for (const country of countries) {
 }
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
 
+const FLAG_HIDDEN = 1;
+const FLAG_DISABLED = 2;
+const FLAG_SECRET = 4;
+
 const PREFERENCE_SETTINGS = [];
 const ACCOUNT_SETTINGS = [];
 const DOMAIN_SETTINGS = [];
@@ -23,9 +27,9 @@ const SYSTEM_SETTINGS_BY_KEY = {};
 const Setting = (
     family, key, range = null,
     value = null, type = 'text', name = '',
-    desc = '', hidden = false, disabled = false,
+    desc = '', flag = 0,
 ) => ({
-    family, key, range, value, type, name, desc, hidden, disabled,
+    family, key, range, value, type, name, desc, flag,
 });
 
 const PreferenceSetting = (...settings) => {
@@ -93,11 +97,15 @@ DomainSetting(
     Setting('setting_domain', 'name', null, 'New domain', 'text', 'name'),
     Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
+    Setting('storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN & FLAG_DISABLED),
+    Setting('storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN & FLAG_DISABLED),
+    Setting('storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN & FLAG_DISABLED),
+    Setting('storage', 'rating', null, 1500, 'number', 'rating', null, FLAG_HIDDEN & FLAG_DISABLED),
 );
 
 SystemSetting(
     Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
-    Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password'),
+    Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password', null, FLAG_SECRET),
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
     Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
@@ -109,9 +117,9 @@ SystemSetting(
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
     Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
-    Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret'),
-    Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID'),
-    Setting('setting_oauth', 'oauth.googlesecret', null, null, 'text', 'Google Oauth Secret'),
+    Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret', null, FLAG_SECRET),
+    Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID', null),
+    Setting('setting_oauth', 'oauth.googlesecret', null, null, 'text', 'Google Oauth Secret', null, FLAG_SECRET),
     Setting('setting_proxy', 'proxy', null, null, 'text', 'Proxy Server URL'),
     Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'number', 'Problems per Page'),
     Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'number', 'Contests per Page'),
@@ -129,6 +137,9 @@ global.Hydro.model.setting = module.exports = {
     DomainSetting,
     DomainUserSetting,
     SystemSetting,
+    FLAG_HIDDEN,
+    FLAG_DISABLED,
+    FLAG_SECRET,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
     SETTINGS,

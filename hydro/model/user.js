@@ -9,6 +9,14 @@ const db = require('../service/db');
 
 const coll = db.collection('user');
 
+function setPassword(uid, password) {
+    const salt = String.random();
+    return coll.findOneAndUpdate(
+        { _id: uid },
+        { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
+    );
+}
+
 class USER {
     constructor(udoc, dudoc) {
         this.udoc = () => udoc;
@@ -18,7 +26,12 @@ class USER {
         this.uname = udoc.uname;
         this.salt = () => udoc.salt;
         this.hash = () => udoc.hash;
+        this.hashType = udoc.hashType || 'hydro';
         this.priv = udoc.priv;
+        this.regat = udoc.regat;
+        this.loginat = udoc.loginat;
+        this.perm = dudoc.perm;
+        this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
             if (udoc[key]) this[key] = udoc[key];
@@ -27,14 +40,12 @@ class USER {
             }
         }
 
-        this.regat = udoc.regat;
-        this.loginat = udoc.loginat;
-        this.ban = udoc.ban || false;
-        this.nAccept = dudoc.nAccept || 0;
-        this.nSubmit = dudoc.nSubmit || 0;
-        this.rating = dudoc.rating || 1500;
-        this.perm = dudoc.perm;
-        this.role = dudoc.role || 'default';
+        for (const key in setting.DOMAIN_USER_SETTINGS_BY_KEY) {
+            if (dudoc[key]) this[key] = dudoc[key];
+            else if (setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value) {
+                this[key] = setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
+            }
+        }
     }
 
     hasPerm(p) {
@@ -42,15 +53,16 @@ class USER {
     }
 
     hasPriv(p) {
-        // eslint-disable-next-line no-bitwise
         return this.priv & p;
     }
 
     checkPassword(password) {
-        const h = global.Hydro.lib[`hash.${this.hashType || 'hydro'}`];
+        const h = global.Hydro.lib[`hash.${this.hashType}`];
         if (!h) throw new Error('Unknown hash method');
         if (!(h(password, this.salt(), this) === this.hash())) {
             throw new LoginError(this.uname);
+        } else if (this.hashType !== 'hydro') {
+            setPassword(this._id, password);
         }
     }
 }
@@ -59,7 +71,6 @@ async function getInDomain(domainId, udoc) {
     let dudoc = await document.getStatus(domainId, document.TYPE_DOMAIN_USER, 0, udoc._id);
     dudoc = dudoc || {};
     if (udoc._id === 1) dudoc.role = 'guest';
-    // eslint-disable-next-line no-bitwise
     if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     const p = await document.get(domainId, document.TYPE_DOMAIN_USER, dudoc.role || 'default');
     dudoc.perm = p ? p.content : BUILTIN_ROLES[dudoc.role || 'default'].perm;
@@ -114,14 +125,6 @@ async function getByEmail(domainId, mail, ignoreMissing = false) {
     }
     const dudoc = await getInDomain(domainId, udoc);
     return new USER(udoc, dudoc);
-}
-
-function setPassword(uid, password) {
-    const salt = String.random();
-    return coll.findOneAndUpdate(
-        { _id: uid },
-        { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
-    );
 }
 
 function setById(uid, $set, $unset) {

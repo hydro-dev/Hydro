@@ -3,9 +3,12 @@ const system = require('../model/system');
 const { STATUS, PRIV } = require('../model/builtin');
 const record = require('../model/record');
 const judge = require('./judge');
-const { Route, Handler } = require('../service/server');
+const {
+    Route, Connection, Handler, ConnectionHandler,
+} = require('../service/server');
 const hpm = require('../lib/hpm');
 const loader = require('../loader');
+const check = require('../check');
 
 class SystemHandler extends Handler {
     async prepare() {
@@ -21,6 +24,24 @@ class SystemHandler extends Handler {
 class SystemMainHandler extends SystemHandler {
     async get() {
         this.response.redirect = '/manage/dashboard';
+    }
+}
+
+class SystemCheckConnHandler extends ConnectionHandler {
+    async prepare() {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await this.check();
+    }
+
+    async check() {
+        const log = (payload) => this.send({ type: 'log', payload });
+        const warn = (payload) => this.send({ type: 'warn', payload });
+        const error = (payload) => this.send({ type: 'error', payload });
+        await check.start(log, warn, error, (id) => { this.id = id; });
+    }
+
+    async cleanup() {
+        check.cancel(this.token);
     }
 }
 
@@ -111,8 +132,8 @@ class SystemScriptHandler extends SystemHandler {
 
 class SystemSettingHandler extends SystemHandler {
     async get() {
-        this.response.template = 'manage_settings.html';
-        this.response.body.path.push(['manage_settings', null]);
+        this.response.template = 'manage_setting.html';
+        this.response.body.path.push(['manage_setting', null]);
         this.response.body.current = {};
         this.response.body.settings = setting.SYSTEM_SETTINGS;
         for (const s of this.response.body.settings) {
@@ -129,7 +150,7 @@ class SystemSettingHandler extends SystemHandler {
                 const subtasks = [];
                 for (const sub in args[key]) {
                     const s = setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`];
-                    if (s) {
+                    if (s && !((s.flag & setting.FLAG_SECRET) && args[key][sub] === '')) {
                         if (s.ui === 'number') args[key][sub] = Number(args[key][sub]);
                         subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
                     }
@@ -137,7 +158,7 @@ class SystemSettingHandler extends SystemHandler {
                 tasks.push(Promise.all(subtasks));
             } else {
                 const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
-                if (s) {
+                if (s && !((s.flag & setting.FLAG_SECRET) && args[key] === '')) {
                     if (s.ui === 'number') args[key] = Number(args[key]);
                     tasks.push(system.set(key, args[key]));
                 }
@@ -154,6 +175,7 @@ async function apply() {
     Route('manage_script', '/manage/script', SystemScriptHandler);
     Route('manage_module', '/manage/module', SystemModuleHandler);
     Route('manage_setting', '/manage/setting', SystemSettingHandler);
+    Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
 
 global.Hydro.handler.manage = module.exports = apply;

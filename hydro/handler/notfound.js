@@ -1,10 +1,16 @@
+/* eslint-disable no-empty-function */
+/* eslint-disable class-methods-use-this */
 const { Route, Handler } = require('../service/server');
 const { NotFoundError } = require('../error');
 
 class NotFoundHandler extends Handler {
-    async prepare() { // eslint-disable-line class-methods-use-this
+    async prepare() {
         throw new NotFoundError();
     }
+
+    async get() { }
+
+    async post() { }
 }
 
 async function apply() {

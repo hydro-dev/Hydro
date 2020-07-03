@@ -132,8 +132,12 @@ class HomeSecurityHandler extends Handler {
                 );
             }
         }
+        const path = [
+            ['Hydro', 'homepage'],
+            ['home_security', null],
+        ];
         this.response.template = 'home_security.html';
-        this.response.body = { sessions, geoipProvider: (geoip || {}).provider };
+        this.response.body = { sessions, geoipProvider: (geoip || {}).provider, path };
         if (useragent) this.response.body.icon = useragent.icon;
     }
 
@@ -202,7 +206,7 @@ class HomeSettingsHandler extends Handler {
     async post(args) {
         const $set = {};
         for (const key in args) {
-            if (setting.SETTINGS_BY_KEY[key]) {
+            if (setting.SETTINGS_BY_KEY[key] && !setting.SETTINGS_BY_KEY[key].disabled) {
                 $set[key] = args[key];
             }
         }

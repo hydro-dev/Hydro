@@ -28,5 +28,6 @@ module.exports = {
         'no-nested-ternary': 'off',
         'no-multi-assign': 'off',
         'no-return-await': 'off',
+        'no-bitwise': 'off',
     },
 };

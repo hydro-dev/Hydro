@@ -121,41 +121,7 @@ async function prepare() {
     }));
 }
 
-class Handler {
-    /**
-     * @param {import('koa').Context} ctx
-     */
-    constructor(ctx) {
-        this.ctx = ctx;
-        this.request = {
-            host: ctx.request.host,
-            hostname: ctx.request.hostname,
-            ip: ctx.request.ip,
-            headers: ctx.request.headers,
-            cookies: ctx.cookies,
-            body: ctx.request.body,
-            files: ctx.request.files,
-            query: ctx.query,
-            path: ctx.path,
-            params: ctx.params,
-            referer: ctx.request.headers.referer || '/',
-        };
-        this.response = {
-            body: '',
-            type: '',
-            status: null,
-            template: null,
-            redirect: null,
-            attachment: (name) => ctx.attachment(name),
-        };
-        this.UIContext = {
-            cdn_prefix: '/',
-            url_prefix: '/',
-        };
-        this._handler = {};
-        this.session = {};
-    }
-
+const HandlerMixin = (Class) => class extends Class {
     async renderHTML(name, context) {
         if (enableLog) console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
@@ -171,9 +137,12 @@ class Handler {
         return res;
     }
 
-    async render(name, context) {
-        this.response.body = await this.renderHTML(name, context);
-        this.response.type = 'text/html';
+    async limitRate(op, periodSecs, maxOperations) {
+        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
+    }
+
+    translate(str) {
+        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
     }
 
     renderTitle(str) {
@@ -214,26 +183,6 @@ class Handler {
         }
     }
 
-    async limitRate(op, periodSecs, maxOperations) {
-        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
-    }
-
-    back(body) {
-        this.response.body = body || this.response.body || {};
-        this.response.redirect = this.request.headers.referer || '/';
-    }
-
-    translate(str) {
-        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
-    }
-
-    binary(data, name) {
-        this.response.body = data;
-        this.response.template = null;
-        this.response.type = 'application/octet-stream';
-        this.response.disposition = `attachment; filename="${name}"`;
-    }
-
     url(name, kwargs = {}) {
         let res = '#';
         const args = { ...kwargs };
@@ -252,8 +201,61 @@ class Handler {
         }
         return res;
     }
+};
 
-    async ___prepare({ domainId }) {
+const Handler = HandlerMixin(class {
+    /**
+     * @param {import('koa').Context} ctx
+     */
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.request = {
+            host: ctx.request.host,
+            hostname: ctx.request.hostname,
+            ip: ctx.request.ip,
+            headers: ctx.request.headers,
+            cookies: ctx.cookies,
+            body: ctx.request.body,
+            files: ctx.request.files,
+            query: ctx.query,
+            path: ctx.path,
+            params: ctx.params,
+            referer: ctx.request.headers.referer || '/',
+        };
+        this.response = {
+            body: '',
+            type: '',
+            status: null,
+            template: null,
+            redirect: null,
+            attachment: (name) => ctx.attachment(name),
+        };
+        this.UIContext = {
+            cdn_prefix: '/',
+            url_prefix: '/',
+        };
+        this._handler = {};
+        this.session = {};
+    }
+
+    async render(name, context) {
+        this.response.body = await this.renderHTML(name, context);
+        this.response.type = 'text/html';
+    }
+
+    back(body) {
+        this.response.body = body || this.response.body || {};
+        this.response.redirect = this.request.headers.referer || '/';
+    }
+
+    binary(data, name) {
+        this.response.body = data;
+        this.response.template = null;
+        this.response.type = 'application/octet-stream';
+        this.response.disposition = `attachment; filename="${name}"`;
+    }
+
+    async init({ domainId }) {
         this.response.body = {};
         this.now = new Date();
         this._handler.sid = this.request.cookies.get('sid');
@@ -377,7 +379,7 @@ class Handler {
         };
         await this.___cleanup().catch(() => { });
     }
-}
+});
 
 async function handle(ctx, HandlerClass, checker) {
     global.Hydro.stat.reqCount++;
@@ -394,7 +396,7 @@ async function handle(ctx, HandlerClass, checker) {
                 .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
         }
 
-        if (h.___prepare) await h.___prepare(args);
+        if (h.init) await h.init(args);
         if (checker) checker.call(h);
         if (method === 'post') {
             await h.checkCsrfToken(args.csrfToken);
@@ -437,7 +439,7 @@ async function handle(ctx, HandlerClass, checker) {
         if (h.__cleanup) await h.__cleanup(args);
         if (h.___cleanup) await h.___cleanup(args);
     } catch (e) {
-        if (h.onerror) await h.onerror(e);
+        await h.onerror(e);
     }
 }
 
@@ -471,7 +473,7 @@ function Route(name, route, RouteHandler, ...permPrivChecker) {
     router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
 
-class ConnectionHandler {
+const ConnectionHandler = HandlerMixin(class {
     /**
      * @param {import('sockjs').Connection} conn
      */
@@ -484,25 +486,6 @@ class ConnectionHandler {
         const p = (conn.url.split('?')[1] || '').split('&');
         for (const i in p) p[i] = p[i].split('=');
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
-    }
-
-    url(name, kwargs = {}) {
-        let res = '#';
-        const args = { ...kwargs };
-        try {
-            if (this.args.domainId !== 'system') {
-                name += '_with_domainId';
-                args.domainId = args.domainId || this.args.domainId;
-            }
-            const { anchor, query } = args;
-            if (query) res = router.url(name, args, { query });
-            else res = router.url(name, args);
-            if (anchor) return `${res}#${anchor}`;
-        } catch (e) {
-            console.error(e.message);
-            console.error(name, kwargs);
-        }
-        return res;
     }
 
     async renderHTML(name, context) {
@@ -524,7 +507,12 @@ class ConnectionHandler {
         this.conn.close(code, reason);
     }
 
-    async ___prepare({ domainId }) {
+    onerror(err) {
+        console.error(err);
+        this.close(1001, err.toString());
+    }
+
+    async init({ domainId }) {
         try {
             this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN);
             await token.del(this.request.params.token, token.TYPE_CSRF_TOKEN);
@@ -536,7 +524,7 @@ class ConnectionHandler {
         this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
-}
+});
 
 function Connection(name, prefix, RouteConnHandler, permission) {
     const sock = sockjs.createServer({ prefix });
@@ -545,7 +533,7 @@ function Connection(name, prefix, RouteConnHandler, permission) {
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
-            if (h.___prepare) await h.___prepare(args);
+            if (h.init) await h.init(args);
             if (permission) h.checkPerm(permission);
             let checking = '';
             try {
@@ -575,7 +563,7 @@ function Connection(name, prefix, RouteConnHandler, permission) {
             });
         } catch (e) {
             console.log(e);
-            if (h.onerror) await h.onerror(e);
+            await h.onerror(e);
         }
     });
     sock.installHandlers(server);

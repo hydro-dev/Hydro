@@ -5,15 +5,17 @@
   </div>
   <div class="section__body">
   {% for setting in family_settings %}
-  {% if not setting.hidden %}
+  {% if not setting.flag|bitand(model.setting.FLAG_HIDDEN) %}
+  {% set secret = setting.flag|bitand(model.setting.FLAG_SECRET) != 0 %}
   {% if setting.type == 'text' or setting.type == 'password' or setting.type == 'number' %}
     {{ form.form_text({
           type:setting.type,
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value,
-          disabled:setting.disabled
+          value:'' if secret else (current[setting.key]|default(setting.value)),
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
         }) }}
   {% elif setting.type == 'select' %}
     {{ form.form_select({
@@ -48,17 +50,19 @@
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value,
-          disabled:setting.disabled
+          value:'' if secret else (current[setting.key]|default(setting.value)),
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
         }) }}
   {% elif setting.type == 'markdown' %}
     {{ form.form_textarea({
           label:setting.name,
           help_text:setting.desc,
           name:setting.key,
-          value:current[setting.key] or setting.value,
+          value:'' if secret else (current[setting.key]|default(setting.value)),
           markdown:true,
-          disabled:setting.disabled
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
         }) }}
   {% elif setting.type == 'boolean' %}
     {{ form.form_checkbox({
