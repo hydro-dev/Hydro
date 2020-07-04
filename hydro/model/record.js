@@ -73,13 +73,13 @@ function getMulti(domainId, query) {
 
 async function update(domainId, rid, $set, $push, $unset) {
     const _id = new ObjectID(rid);
-    const upd = {};
-    if ($set && Object.keys($set).length) upd.$set = $set;
-    if ($push && Object.keys($push).length) upd.$push = $push;
-    if ($unset && Object.keys($unset).length) upd.$unset = $unset;
-    const rdoc = await coll.findOneAndUpdate({ domainId, _id }, upd, { returnOriginal: false });
-    if (!rdoc) throw new RecordNotFoundError(rid);
-    return rdoc;
+    const $update = {};
+    if ($set && Object.keys($set).length) $update.$set = $set;
+    if ($push && Object.keys($push).length) $update.$push = $push;
+    if ($unset && Object.keys($unset).length) $update.$unset = $unset;
+    const res = await coll.findOneAndUpdate({ domainId, _id }, $update, { returnOriginal: false });
+    if (!res.value) throw new RecordNotFoundError(rid);
+    return res.value;
 }
 
 function reset(domainId, rid) {

@@ -87,11 +87,11 @@ global.Hydro.handler.handlerName = module.exports = apply;
 
 在路由中定义所有的函数应均为异步函数，支持的函数如下：
 
-_prepare, prepare, get, post, post[Operation], cleanup, _cleanup
+prepare, get, post, post[Operation], cleanup
 
 具体流程如下：
 
-先执行 _prepare(args) （如果存在）
+先执行 prepare(args) （如果存在）
 args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参数，并对以下字段进行了校验：  
 
 |   Key    |      Type        |
@@ -130,7 +130,6 @@ args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参
 ```
 
 执行 cleanup()  
-执行 _cleanup()  
 
 如果在 this.response.template 指定模板则渲染，否则直接返回 this.response.body 中的内容。  
 

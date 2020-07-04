@@ -207,8 +207,9 @@ const Handler = HandlerMixin(class {
     /**
      * @param {import('koa').Context} ctx
      */
-    constructor(ctx) {
+    constructor(ctx, args) {
         this.ctx = ctx;
+        this.args = args;
         this.request = {
             host: ctx.request.host,
             hostname: ctx.request.hostname,
@@ -223,7 +224,7 @@ const Handler = HandlerMixin(class {
             referer: ctx.request.headers.referer || '/',
         };
         this.response = {
-            body: '',
+            body: {},
             type: '',
             status: null,
             template: null,
@@ -274,8 +275,6 @@ const Handler = HandlerMixin(class {
     }
 
     async init({ domainId }) {
-        this.response.body = {};
-        this.now = new Date();
         this.preferJson = (this.request.headers.accept || '').includes('application/json');
         await Promise.all([
             this.getSession(),
@@ -292,7 +291,7 @@ const Handler = HandlerMixin(class {
         if (!sdoc || sdoc.uid !== this.user._id) throw new CsrfTokenError(csrfToken);
     }
 
-    async ___cleanup() {
+    async finish() {
         try {
             await this.renderBody();
         } catch (error) {
@@ -385,26 +384,25 @@ const Handler = HandlerMixin(class {
         this.response.body = {
             error: { message: error.msg(), params: error.params, stack: error.stack },
         };
-        await this.___cleanup().catch(() => { });
+        await this.finish().catch(() => { });
     }
 });
 
 async function handle(ctx, HandlerClass, checker) {
     global.Hydro.stat.reqCount++;
-    const h = new HandlerClass(ctx);
+    const args = {
+        domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
+    };
+    const h = new HandlerClass(ctx, args);
     try {
         const method = ctx.method.toLowerCase();
-        const args = {
-            domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
-        };
-        h.args = args;
         let operation;
         if (method === 'post' && ctx.request.body.operation) {
             operation = `_${ctx.request.body.operation}`
                 .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
         }
 
-        if (h.init) await h.init(args);
+        await h.init(args);
         if (checker) checker.call(h);
         if (method === 'post') {
             await h.checkCsrfToken(args.csrfToken);
@@ -432,51 +430,47 @@ async function handle(ctx, HandlerClass, checker) {
             throw new ValidationError(`Argument ${checking} check failed`);
         }
 
-        if (h.__prepare) await h.__prepare(args);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
 
-        if (h[`___${method}`]) await h[`___${method}`](args);
-        if (h[`__${method}`]) await h[`__${method}`](args);
-        if (h[`_${method}`]) await h[`_${method}`](args);
         if (h[method]) await h[method](args);
         if (operation) await h[`post${operation}`](args);
 
         if (h.cleanup) await h.cleanup(args);
-        if (h._cleanup) await h._cleanup(args);
-        if (h.__cleanup) await h.__cleanup(args);
-        if (h.___cleanup) await h.___cleanup(args);
+        if (h.finish) await h.finish(args);
     } catch (e) {
         await h.onerror(e);
     }
 }
 
-const Checker = (perm, priv, checker) => function __() {
-    checker();
-    if (perm) this.checkPerm(perm);
-    if (priv) this.checkPriv(priv);
-};
-
-function Route(name, route, RouteHandler, ...permPrivChecker) {
-    let _priv;
-    let _perm;
+const Checker = (permPrivChecker) => {
+    let perm;
+    let priv;
     let checker = () => { };
     for (const item of permPrivChecker) {
         if (typeof item === 'object') {
             if (typeof item.call !== 'undefined') {
                 checker = item;
             } if (typeof item[0] === 'number') {
-                _priv = item;
+                priv = item;
             } else if (typeof item[0] === 'string') {
-                _perm = item;
+                perm = item;
             }
         } else if (typeof item === 'number') {
-            _priv = item;
+            priv = item;
         } else if (typeof item === 'string') {
-            _perm = item;
+            perm = item;
         }
     }
-    checker = Checker(_perm, _priv, checker);
+    return function check() {
+        checker();
+        if (perm) this.checkPerm(perm);
+        if (priv) this.checkPriv(priv);
+    };
+};
+
+function Route(name, route, RouteHandler, ...permPrivChecker) {
+    const checker = Checker(permPrivChecker);
     router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
     router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
@@ -496,17 +490,6 @@ const ConnectionHandler = HandlerMixin(class {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
-    async renderHTML(name, context) {
-        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
-        const res = await template.render(name, Object.assign(context, {
-            handler: this,
-            url: (...args) => this.url(...args),
-            _: (str) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
-            user: this.user,
-        }));
-        return res;
-    }
-
     send(data) {
         this.conn.write(JSON.stringify(data));
     }
@@ -522,10 +505,9 @@ const ConnectionHandler = HandlerMixin(class {
 
     async init({ domainId }) {
         try {
-            this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN);
-            await token.del(this.request.params.token, token.TYPE_CSRF_TOKEN);
+            this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN, true);
         } catch (e) {
-            this.session = { uid: 1 };
+            this.session = { uid: 0 };
         }
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
@@ -534,15 +516,16 @@ const ConnectionHandler = HandlerMixin(class {
     }
 });
 
-function Connection(name, prefix, RouteConnHandler, permission) {
+function Connection(name, prefix, RouteConnHandler, ...permPrivChecker) {
     const sock = sockjs.createServer({ prefix });
+    const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
         const h = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
-            if (h.init) await h.init(args);
-            if (permission) h.checkPerm(permission);
+            await h.init(args);
+            checker.call(h);
             let checking = '';
             try {
                 for (const key in validate) {
@@ -555,7 +538,6 @@ function Connection(name, prefix, RouteConnHandler, permission) {
                 if (e instanceof ValidationError) throw e;
                 throw new ValidationError(`Argument ${checking} check failed`);
             }
-            if (h.__prepare) await h.__prepare(args);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             if (h.message) {
@@ -565,9 +547,7 @@ function Connection(name, prefix, RouteConnHandler, permission) {
             }
             conn.on('close', async () => {
                 if (h.cleanup) await h.cleanup(args);
-                if (h._cleanup) await h._cleanup(args);
-                if (h.__cleanup) await h.__cleanup(args);
-                if (h.___cleanup) await h.___cleanup(args);
+                if (h.finish) await h.finish(args);
             });
         } catch (e) {
             console.log(e);

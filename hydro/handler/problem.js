@@ -12,7 +12,7 @@ const {
         PERM_CREATE_PROBLEM, PERM_READ_PROBLEM_DATA, PERM_EDIT_PROBLEM,
         PERM_VIEW_PROBLEM_SOLUTION, PERM_CREATE_PROBLEM_SOLUTION,
         PERM_EDIT_PROBLEM_SOLUTION, PERM_DELETE_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SOLUTION_REPLY,
-        PERM_REPLY_PROBLEM_SOLUTION,
+        PERM_REPLY_PROBLEM_SOLUTION, PERM_EDIT_PROBLEM_SELF,
     },
     PRIV: {
         PRIV_USER_PROFILE, PRIV_JUDGE,
@@ -202,11 +202,8 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         const { lang, code } = this.request.body;
         const rid = await record.add(domainId, {
             uid: this.user._id, lang, code, pid: this.pdoc.docId,
-        });
-        await Promise.all([
-            record.judge(domainId, rid),
-            user.incDomain(domainId, this.user._id, 'nSubmit'),
-        ]);
+        }, true);
+        await user.incDomain(domainId, this.user._id, 'nSubmit');
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -264,6 +261,7 @@ class ProblemStatisticsHandler extends ProblemDetailHandler {
 class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM_EDIT_PROBLEM);
+        else this.checkPerm(PERM_EDIT_PROBLEM_SELF);
     }
 }
 
@@ -475,7 +473,7 @@ class ProblemCreateHandler extends Handler {
             pid, hidden,
         });
         this.response.body = { pid };
-        this.response.redirect = `/p/${pid}/settings`;
+        this.response.redirect = this.url('problem_settings', { pid });
     }
 }
 

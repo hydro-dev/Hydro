@@ -21,6 +21,7 @@ function unsubscribe(events, handler, funcName) {
         handler.__bus = (...args) => {
             handler[funcName].call(handler, ...args);
         };
+        // FIXME doesn't work
         for (const event of events) bus.off(event, handler.__bus);
         delete handler.__bus;
     }

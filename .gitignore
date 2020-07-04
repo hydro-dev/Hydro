@@ -10,5 +10,5 @@ dist/
 __*
 ui/misc/.iconfont
 ui/static/locale
-.webpackStats.json
+*.log
 !.gitkeep

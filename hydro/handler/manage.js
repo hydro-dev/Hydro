@@ -10,6 +10,25 @@ const hpm = require('../lib/hpm');
 const loader = require('../loader');
 const check = require('../check');
 
+function set(key, value) {
+    if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
+        const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
+        if (s.flag & setting.FLAG_DISABLED) return undefined;
+        if (s.type === 'boolean') {
+            if (value === 'on') return true;
+            return false;
+        }
+        if (s.type === 'number') {
+            if (!Number.isSafeInteger(parseInt(value, 10))) {
+                throw new ValidationError(key);
+            }
+            return parseInt(value, 10);
+        }
+        return value;
+    }
+    return undefined;
+}
+
 class SystemHandler extends Handler {
     async prepare() {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
@@ -147,21 +166,14 @@ class SystemSettingHandler extends SystemHandler {
         const tasks = [];
         for (const key in args) {
             if (typeof args[key] === 'object') {
-                const subtasks = [];
-                for (const sub in args[key]) {
-                    const s = setting.SYSTEM_SETTINGS_BY_KEY[`${key}.${sub}`];
-                    if (s && !((s.flag & setting.FLAG_SECRET) && args[key][sub] === '')) {
-                        if (s.ui === 'number') args[key][sub] = Number(args[key][sub]);
-                        subtasks.push(system.set(`${key}.${sub}`, args[key][sub]));
+                for (const subkey in args[key]) {
+                    console.log(`${key}.${subkey}`, set(`${key}.${subkey}`, args[key][subkey]));
+                    if (typeof set(`${key}.${subkey}`, args[key][subkey]) !== 'undefined') {
+                        tasks.push(system.set(`${key}.${subkey}`, set(`${key}.${subkey}`, args[key][subkey])));
                     }
                 }
-                tasks.push(Promise.all(subtasks));
-            } else {
-                const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
-                if (s && !((s.flag & setting.FLAG_SECRET) && args[key] === '')) {
-                    if (s.ui === 'number') args[key] = Number(args[key]);
-                    tasks.push(system.set(key, args[key]));
-                }
+            } else if (typeof set(key, args[key]) !== 'undefined') {
+                tasks.push(system.set(key, set(key, args[key])));
             }
         }
         await Promise.all(tasks);
