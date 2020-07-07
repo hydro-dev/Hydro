@@ -7,7 +7,7 @@
 {% endif %}
   <div>
     <ol class="menu">
-    {% if model.contest.isOngoing(tdoc) or model.contest.isHomeworkExtended(tdoc) %}
+    {% if model.contest.isOngoing(tdoc) or model.contest.isExtended(tdoc) %}
     {% if page_name == 'homework_detail_problem' %}
       <li class="menu__item scratchpad--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)

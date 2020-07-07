@@ -11,4 +11,5 @@ __*
 ui/misc/.iconfont
 ui/static/locale
 *.log
+*.hydro
 !.gitkeep

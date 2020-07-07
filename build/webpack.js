@@ -7,7 +7,7 @@ const build = async (type) => {
     const config = {
         mode: type,
         entry: {
-            app: root('hydro/loader.js'),
+            app: root('dist/loader.js'),
         },
         output: {
             filename: '[name].js',

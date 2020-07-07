@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "commonjs",
+        "outDir": "./dist/",
+        "rootDir": "./hydro/",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "experimentalDecorators": true
+    },
+    "exclude": [
+        "node_modules",
+        "ui",
+        "build"
+    ]
+}

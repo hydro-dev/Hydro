@@ -22,7 +22,7 @@ clone 本项目到一个空文件夹，并进行编译：
 git clone https://github.com/hydro-dev/Hydro.git
 cd Hydro
 yarn build:all
-node hydro/loader.js
+yarn start
 ```
 
 注意：单个Hydro实例需要约100MB的运行内存，但在载入时可能需要较多内存（取决于安装的模块数量与大小）  

@@ -81,7 +81,7 @@
                     {{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}
                   </li>
                   <li>
-                  {% if model.contest.isHomeworkExtended(tdoc) or model.contest.isDone(tdoc) %}
+                  {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
                     {{ _('Hard Deadline') }}: {{ datetimeSpan(tdoc['endAt'])|safe }}
                   {% else %}
                     {{ _('Deadline') }}: {{ datetimeSpan(tdoc['penaltySince'])|safe }}

@@ -7,7 +7,7 @@ const document = require('../model/document');
 const discussion = require('../model/discussion');
 const user = require('../model/user');
 const blacklist = require('../model/blacklist');
-const db = require('../service/db.js');
+const db = require('../service/db');
 
 async function _address(ip, bset, uset, dset, dryrun, report)                                      {
     if (bset.has(ip))
