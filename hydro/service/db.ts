@@ -6,6 +6,7 @@ let mongourl = 'mongodb://';
 if (options.username) mongourl += `${options.username}:${options.password}@`;
 mongourl += `${options.host}:${options.port}/${options.name}`;
 
+// eslint-disable-next-line import/no-mutable-exports
 export let db: mongodb.Db = null;
 
 mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })

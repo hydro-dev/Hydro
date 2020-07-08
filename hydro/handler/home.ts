@@ -1,4 +1,3 @@
-import fs from 'fs';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError,

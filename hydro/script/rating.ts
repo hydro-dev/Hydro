@@ -1,11 +1,11 @@
-const description = 'Calculate the rating of a contest';
+import { ObjectID } from 'mongodb';
+import * as contest from '../model/contest';
+import * as user from '../model/user';
+import rating from '../lib/rating';
 
-const { ObjectID } = require('mongodb');
-const contest = require('../model/contest');
-const user = require('../model/user');
-const rating = require('../lib/rating');
+export const description = 'Calculate the rating of a contest';
 
-async function run({ domainId, contestId }) {
+export async function run({ domainId, contestId }) {
     contestId = new ObjectID(contestId);
     const tdoc = await contest.get(domainId, contestId);
     const tsdocs = await contest.getMultiStatus(domainId, { docId: contestId })
@@ -20,4 +20,9 @@ async function run({ domainId, contestId }) {
     return rated;
 }
 
-global.Hydro.script.rating = module.exports = { run, description };
+export const validate = {
+    domainId: { $type: 'string' },
+    contestId: { $type: ObjectID },
+};
+
+global.Hydro.script.rating = { run, description, validate };

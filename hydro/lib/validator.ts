@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 import { ValidationError } from '../error';
 
 const RE_UID = /^-?\d+$/i;
@@ -5,6 +6,75 @@ const RE_PID = /^([a-zA-Z]+[a-zA-Z0-9]*)|$/i;
 const RE_UNAME = /[^\s\u3000](.{,254}[^\s\u3000])?$/i;
 const RE_ROLE = /^[_0-9A-Za-z]{1,256}$/i;
 const RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;
+
+// eslint-disable-next-line consistent-return
+function _validate(scheme: any, arg: any, base: string) {
+    if (!(scheme instanceof Object)) return _validate({ $type: scheme }, arg, base);
+    if (scheme.$validate) scheme.$validate(arg);
+    if (scheme.$group) _validate(scheme.$group, arg, base);
+    if (scheme.$or) {
+        if (scheme.$or instanceof Array) {
+            for (const s of scheme.$or) {
+                let success = false;
+                try {
+                    _validate(s, arg, base);
+                    success = true;
+                } catch { }
+                // TODO beautify output
+                if (!success) throw new ValidationError(scheme.$or);
+            }
+        } else {
+            for (const skey in scheme.$or) {
+                let success = false;
+                try {
+                    _validate(scheme.$or[skey], arg[skey], `${base}.${skey}`);
+                    success = true;
+                } catch { }
+                // TODO beautify output
+                if (!success) throw new ValidationError(base, scheme.$or);
+            }
+        }
+    }
+    if (scheme.$and) for (const s of scheme.$and) _validate(s, arg, base);
+    if (scheme.$type) {
+        if (typeof scheme.$type === 'string') {
+            if (!typeof arg === scheme.$type) {
+                throw new ValidationError();
+            }
+        } else if (!(arg instanceof scheme.$type)) {
+            throw new ValidationError();
+        }
+    }
+    if (scheme.$eq && scheme.$eq !== arg) throw new ValidationError(base);
+    if (scheme.$not && scheme.$not === arg) throw new ValidationError(base);
+    if (scheme.$in && !(scheme.$in.includes(arg))) throw new ValidationError(base);
+    if (scheme.$nin && scheme.$nin.includes(arg)) throw new ValidationError(base);
+    for (const key in scheme) {
+        if (key[0] !== '$') {
+            if (arg instanceof Object) {
+                _validate(scheme[key], arg[key], `${base}.${key}`);
+            } else {
+                throw new ValidationError();
+            }
+        }
+    }
+}
+
+function descriptor(scheme: any) {
+    return function desc(target: any, name: string, descriptor: any) {
+        const originalMethod = descriptor.value;
+        descriptor.value = function val(...args: any[]) {
+            _validate(scheme, args[0], '');
+            return originalMethod.call(this, ...args);
+        };
+        return descriptor;
+    };
+}
+
+export function validate(scheme: any, arg: any) {
+    if (arguments.length === 1) return descriptor(scheme);
+    return _validate(scheme, arg, '');
+}
 
 export const isTitle = (s) => s && s.length < 64;
 export const checkTitle = (s) => { if (!isTitle(s)) throw new ValidationError('title'); else return s; };
@@ -30,28 +100,29 @@ export const isDescription = () => true;
 export const checkDescription = (s) => { if (!isDescription()) throw new ValidationError('description'); else return s; };
 
 global.Hydro.lib.validator = {
-  isTitle,
-  checkTitle,
-  isUid,
-  checkUid,
-  isUname,
-  checkUname,
-  isRole,
-  checkRole,
-  isPassword,
-  checkPassword,
-  isEmail,
-  checkEmail,
-  isContent,
-  checkContent,
-  isName,
-  checkName,
-  isPid,
-  checkPid,
-  isIntro,
-  checkIntro,
-  isDescription,
-  checkDescription,
+    validate: _validate,
+    isTitle,
+    checkTitle,
+    isUid,
+    checkUid,
+    isUname,
+    checkUname,
+    isRole,
+    checkRole,
+    isPassword,
+    checkPassword,
+    isEmail,
+    checkEmail,
+    isContent,
+    checkContent,
+    isName,
+    checkName,
+    isPid,
+    checkPid,
+    isIntro,
+    checkIntro,
+    isDescription,
+    checkDescription,
 };
 /*
 ID_RE = re.compile(r'[^\\/\s\u3000]([^\\/\n\r]*[^\\/\s\u3000])?')

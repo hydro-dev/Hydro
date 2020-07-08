@@ -1,14 +1,14 @@
 import assert from 'assert';
+import { ObjectID } from 'mongodb';
 import { ValidationError, ProblemNotFoundError } from '../error';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as problem from '../model/problem';
-import * as  builtin from '../model/builtin';
+import * as builtin from '../model/builtin';
 import * as training from '../model/training';
 import * as user from '../model/user';
 import * as system from '../model/system';
 import { Route, Handler } from '../service/server';
-import { ObjectID } from 'mongodb';
 
 async function _parseDagJson(domainId, dag) {
     const parsed = [];

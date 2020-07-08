@@ -1,10 +1,10 @@
-const description = 'Recalcuates nSubmit and nAccept in problem status.';
+import * as db from '../service/db';
+import { STATUS } from '../model/builtin';
+import * as document from '../model/document';
 
-const db = require('../service/db');
-const { STATUS_ACCEPTED } = require('../model/builtin').STATUS;
-const document = require('../model/document');
+export const description = 'Recalcuates nSubmit and nAccept in problem status.';
 
-async function run() {
+export async function run() {
     const pipeline = [
         {
             $match: { hidden: false, type: { $ne: 'run' } },
@@ -15,7 +15,7 @@ async function run() {
                 nSubmit: { $sum: 1 },
                 nAccept: {
                     $sum: {
-                        $cond: [{ $eq: ['$status', STATUS_ACCEPTED] }, 1, 0],
+                        $cond: [{ $eq: ['$status', STATUS.STATUS_ACCEPTED] }, 1, 0],
                     },
                 },
             },
@@ -29,8 +29,8 @@ async function run() {
         },
     ];
     const bulk = db.collection('document').initializeUnorderedBulkOp();
-    db.collection('record').aggregate(pipeline).forEach(
-        (adoc) => bulk.find({
+    db.collection('record').aggregate(pipeline).each(
+        (err, adoc: any) => bulk.find({
             domainId: adoc._id.domainId,
             docType: document.TYPE_PROBLEM,
             docId: adoc._id.pid,
@@ -44,4 +44,6 @@ async function run() {
     await bulk.execute();
 }
 
-global.Hydro.script.problemStat = module.exports = { run, description };
+export const validate = {};
+
+global.Hydro.script.problemStat = { run, description, validate };

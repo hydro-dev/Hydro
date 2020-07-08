@@ -8,6 +8,7 @@ import * as record from '../model/record';
 import {
     Route, Connection, Handler, ConnectionHandler,
 } from '../service/server';
+import { validate } from '../lib/validator';
 import * as hpm from '../lib/hpm';
 
 function set(key, value) {
@@ -103,7 +104,9 @@ class SystemScriptHandler extends SystemHandler {
     }
 
     async post({ domainId, id, args = '{}' }) {
+        if (!global.Hydro.script[id]) throw new ValidationError('id');
         args = JSON.parse(args);
+        validate(global.Hydro.script[id].validate, args);
         const rid = await record.add(domainId, {
             pid: id,
             uid: this.user._id,
@@ -161,7 +164,7 @@ class SystemSettingHandler extends SystemHandler {
         }
     }
 
-    async post(args) {
+    async post(args: any) {
         const tasks = [];
         for (const key in args) {
             if (typeof args[key] === 'object') {

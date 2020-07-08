@@ -1,13 +1,13 @@
-const description = 'Calculate rating of a domain, or all domains';
-
 /* eslint-disable no-await-in-loop */
-const domain = require('../model/domain');
-const contest = require('../model/contest');
-const user = require('../model/user');
-const rating = require('../lib/rating');
-const { STATUS } = require('../model/builtin');
+import * as domain from '../model/domain';
+import * as contest from '../model/contest';
+import * as user from '../model/user';
+import rating from '../lib/rating';
+import { STATUS } from '../model/builtin';
 
-async function run({ domainId, isSub = false }, report) {
+export const description = 'Calculate rating of a domain, or all domains';
+
+export async function run({ domainId, isSub = false }, report) {
     if (!domainId) {
         const domains = await domain.getMulti().toArray();
         await report({ message: `Found ${domains.length} domains` });
@@ -66,4 +66,11 @@ async function run({ domainId, isSub = false }, report) {
     return true;
 }
 
-global.Hydro.script.recalcRating = module.exports = { run, description };
+export const validate = {
+    $or: [
+        { domainId: 'string' },
+        { domainId: 'undefined' },
+    ],
+};
+
+global.Hydro.script.recalcRating = { run, description, validate };

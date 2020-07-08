@@ -22,7 +22,7 @@ declare global {
 }
 
 declare module 'cluster' {
-    var isFirstWorker: boolean;
+    let isFirstWorker: boolean;
 }
 
 export { };

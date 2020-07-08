@@ -347,7 +347,7 @@ class HomeworkCodeHandler extends HomeworkHandler {
     }
 }
 
-async function apply() {
+export async function apply() {
     Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_create', '/homework/create', HomeworkCreateHandler, PERM.PERM_CREATE_HOMEWORK);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);

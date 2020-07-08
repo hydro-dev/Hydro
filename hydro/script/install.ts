@@ -1,12 +1,12 @@
-const description = 'Install';
+import { PRIV } from '../model/builtin';
+import * as system from '../model/system';
+import * as user from '../model/user';
+import * as domain from '../model/domain';
+import pwhash from '../lib/hash.hydro';
 
-const { PRIV_ALL } = require('../model/builtin').PRIV;
-const system = require('../model/system');
-const user = require('../model/user');
-const domain = require('../model/domain');
-const pwhash = require('../lib/hash.hydro');
+export const description = 'Install';
 
-async function run({ username, password } = {}) {
+export async function run({ username = '', password = '' } = {}) {
     const def = {
         PROBLEM_PER_PAGE: 100,
         RECORD_PER_PAGE: 100,
@@ -52,7 +52,7 @@ async function run({ username, password } = {}) {
                 uname: username,
                 password,
                 regip: '127.0.0.1',
-                priv: PRIV_ALL,
+                priv: PRIV.PRIV_ALL,
             });
         } else {
             const salt = String.random();
@@ -60,11 +60,18 @@ async function run({ username, password } = {}) {
                 uname: username,
                 unameLower: username.trim().toLowerCase(),
                 salt,
-                hash: pwhash.default(password, salt),
+                hash: pwhash(password, salt),
                 hashType: 'hydro',
             });
         }
     }
 }
 
-global.Hydro.script.install = module.exports = { run, description };
+export const validate = {
+    $or: [
+        { username: 'string', password: 'string' },
+        { username: 'undefined', password: 'undefined' },
+    ],
+};
+
+global.Hydro.script.install = { run, description, validate };

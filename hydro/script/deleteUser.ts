@@ -1,12 +1,12 @@
-const description = 'Delete a user';
-
 /* eslint-disable no-await-in-loop */
-const user = require('../model/user');
-const document = require('../model/document');
-const setting = require('../model/setting');
-const db = require('../service/db');
-const paginate = require('../lib/paginate');
-const { STATUS, PRIV } = require('../model/builtin');
+import * as user from '../model/user';
+import * as document from '../model/document';
+import * as setting from '../model/setting';
+import * as db from '../service/db';
+import paginate from '../lib/paginate';
+import { STATUS, PRIV } from '../model/builtin';
+
+export const description = 'Delete a user';
 
 const collDocument = db.collection('document');
 const collStatus = db.collection('document.status');
@@ -19,7 +19,7 @@ for (const s of setting.PREFERENCE_SETTINGS) {
     $unset[s.key] = '';
 }
 
-async function deleteRecord(uid) {
+async function deleteRecord(uid: number) {
     const [, pcount] = await paginate(
         collRecord.find(),
         1,
@@ -45,7 +45,7 @@ async function deleteRecord(uid) {
     await collRecord.deleteMany({ uid });
 }
 
-async function deleteDiscussion(uid) {
+async function deleteDiscussion(uid: number) {
     const [, pcount] = await paginate(
         collDocument.find({ docType: document.TYPE_DISCUSSION, owner: uid }),
         1,
@@ -70,7 +70,7 @@ async function deleteDiscussion(uid) {
     // TODO delete replies
 }
 
-async function run({
+export async function run({
     uid,
 }) {
     await deleteRecord(uid);
@@ -87,4 +87,8 @@ async function run({
     return uid;
 }
 
-global.Hydro.script.deleteUser = module.exports = { run, description };
+export const validate = {
+    uid: 'number',
+};
+
+global.Hydro.script.deleteUser = { run, description, validate };

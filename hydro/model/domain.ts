@@ -42,7 +42,7 @@ export function getMany(query: any, sort: any, page: number, limit: number) {
         .toArray();
 }
 
-export function getMulti(query: any) {
+export function getMulti(query: any = {}) {
     return coll.find(query);
 }
 

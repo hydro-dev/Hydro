@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { ValidationError } from '../error'
+import { ValidationError } from '../error';
 import * as problem from '../model/problem';
 import { PERM } from '../model/builtin';
-import { Route, Handler } from '../service/server'
+import { Route, Handler } from '../service/server';
 
 class ProblemImportHandler extends Handler {
     async prepare() {

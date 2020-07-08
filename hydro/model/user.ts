@@ -44,6 +44,10 @@ export class User {
 
     role: string;
 
+    regip: () => string;
+
+    loginip: () => string;
+
     constructor(udoc, dudoc) {
         this.udoc = () => udoc;
         this.dudoc = () => dudoc;
@@ -55,7 +59,9 @@ export class User {
         this.hashType = udoc.hashType || 'hydro';
         this.priv = udoc.priv;
         this.regat = udoc.regat;
+        this.regip = () => udoc.regip;
         this.loginat = udoc.loginat;
+        this.loginip = () => udoc.loginip;
         this.perm = dudoc.perm;
         this.role = dudoc.role || 'default';
 

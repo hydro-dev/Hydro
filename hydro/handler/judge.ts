@@ -6,7 +6,7 @@ import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
 import * as user from '../model/user';
 import * as task from '../model/task';
-import * as  bus from '../service/bus';
+import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler,
 } from '../service/server';

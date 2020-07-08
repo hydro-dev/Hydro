@@ -73,7 +73,7 @@
     "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn && yarn build && yarn pack:production",
     "start": "ts-node hydro/loader.ts",
     "pkg": "pkg .",
-    "lint": "eslint build hydro module tool --fix",
+    "lint": "eslint build hydro module tool --ext ts,js --fix",
     "snyk-protect": "snyk protect",
     "prepare": "yarn run snyk-protect"
   },
