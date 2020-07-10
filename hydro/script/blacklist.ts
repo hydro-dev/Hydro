@@ -62,6 +62,7 @@ async function _user(
 }
 
 export async function run({
+    // eslint-disable-next-line no-shadow
     address = null, discuss = null, user = null, dryrun = true,
 }, report) {
     if (address) await _address(address, new Set(), new Set(), new Set(), dryrun, report);

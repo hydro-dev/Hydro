@@ -116,7 +116,10 @@ export async function random<T>(domainId: string, query: FilterQuery<T>) {
     } return null;
 }
 
-export async function getList(domainId: string, pids: number[], getHidden = false, doThrow = true) {
+export async function getList(
+    domainId: string, pids: Array<number | string>,
+    getHidden = false, doThrow = true,
+) {
     pids = Array.from(new Set(pids));
     const r = {};
     const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };

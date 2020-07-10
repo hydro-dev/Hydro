@@ -17,7 +17,7 @@ export async function load(call) {
         await call({ entry: 'setup' });
         require('../options');
     }
-    const bus = require('../service/bus').default;
+    const bus = require('../service/bus');
     await new Promise((resolve) => {
         const h = () => {
             console.log('Database connected');
@@ -32,7 +32,7 @@ export async function load(call) {
     require('../service/gridfs');
     require('../service/monitor');
     const server = require('../service/server');
-    await server.default.prepare();
+    await server.prepare();
     await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     for (const i of builtinHandler) require(`../handler/${i}`);

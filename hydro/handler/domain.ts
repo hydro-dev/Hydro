@@ -5,10 +5,14 @@ import * as system from '../model/system';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import { PERM, PERMS_BY_FAMILY } from '../model/builtin';
 import paginate from '../lib/paginate';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
+import { isTitle, isUname } from '../lib/validator';
 
 class DomainRankHandler extends Handler {
-    async get({ domainId, page = 1 }) {
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
             user.getMultiInDomain(domainId).sort({ rating: -1 }),
             page,
@@ -46,7 +50,9 @@ class DomainCreateHandler extends Handler {
         this.response.template = 'domain_create.html';
     }
 
-    async post({ id, name }) {
+    @param('id', Types.String, isUname)
+    @param('name', Types.String, isTitle)
+    async post(domainId: string, id: string, name: string) {
         await domain.add(id, this.user._id, name);
         this.response.body = { domainId: id };
         this.response.redirect = this.url('homepage', { domainId: id });

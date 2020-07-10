@@ -1,31 +1,29 @@
+/* eslint-disable prefer-destructuring */
 import assert from 'assert';
 import path from 'path';
 import os from 'os';
 import http from 'http';
-import _ from 'lodash';
+import moment from 'moment-timezone';
+import { isSafeInteger } from 'lodash';
 import { ObjectID } from 'mongodb';
 import Koa from 'koa';
-import yaml from 'js-yaml';
 import morgan from 'koa-morgan';
 import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
-
 import { render } from '../lib/template';
-import * as validator from '../lib/validator';
 import * as misc from '../lib/misc';
 import * as user from '../model/user';
 import * as system from '../model/system';
 import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
-
-const {
+import {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
-} = require('../error');
+} from '../error';
 
 let enableLog = true;
 
@@ -33,86 +31,141 @@ const app = new Koa();
 let server;
 const router = new Router();
 
-const _validateObjectId = (id: string | ObjectID, key: string) => {
-    if (ObjectID.isValid(id)) return new ObjectID(id);
-    throw new ValidationError(key);
-};
-const _bool = (val: any) => !!val;
-const _splitAndTrim = (val: string) => {
-    const t = val.split(',').map((i) => i.trim().split('+'));
-    return _.flatten(t);
-};
-const _date = (val: string) => {
-    const d = val.split('-');
-    assert(d.length === 3);
-    return `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
-};
-const _time = (val: string) => {
-    const t = val.split(':');
-    assert(t.length === 2);
-    return `${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`;
-};
+interface IConstructor {
+    // @ts-ignore
+    new(value: any): any;
+}
+interface IHandler {
+    // @ts-ignore
+    new(ctx: Koa.Context): Handler;
+}
+interface IConnectionHandler {
+    // @ts-ignore
+    new(conn: sockjs.Connection): ConnectionHandler;
+}
+type MethodDecorator = (target: any, name: string, obj: any) => any;
+type Converter = IConstructor | ((value: any) => any);
+type Validator = (value: any) => boolean;
+interface ParamOption {
+    name: string,
+    isOptional?: boolean,
+    convert?: Converter,
+    validate?: Validator,
+}
 
-const validate = {
-    tid: _validateObjectId,
-    rid: _validateObjectId,
-    did: _validateObjectId,
-    drid: _validateObjectId,
-    drrid: _validateObjectId,
-    psid: _validateObjectId,
-    psrid: _validateObjectId,
-    docId: _validateObjectId,
-    mongoId: _validateObjectId,
-    hidden: _bool,
-    rated: _bool,
-    category: _splitAndTrim,
-    tag: _splitAndTrim,
-    beginAtDate: _date,
-    beginAtTime: _time,
-    pid: (pid: string) => (Number.isSafeInteger(parseInt(pid, 10)) ? parseInt(pid, 10) : pid),
-    content: validator.checkContent,
-    title: validator.checkTitle,
-    uid: (uid: string) => parseInt(validator.checkUid(uid), 10),
-    password: validator.checkPassword,
-    mail: validator.checkEmail,
-    uname: validator.checkUname,
-    page: (_page: string) => {
-        let page: number;
-        if (Number.isSafeInteger(parseInt(_page, 10))) page = parseInt(_page, 10);
-        if (page <= 0) throw new ValidationError('page');
-        return page;
-    },
-    duration: (_duration: string) => {
-        let duration: number;
-        if (!Number.isNaN(parseFloat(_duration))) duration = parseFloat(_duration);
-        if (duration <= 0) throw new ValidationError('duration');
-        return duration;
-    },
-    pids: (pids: string) => {
-        const src = pids.split(',').map((i) => i.trim());
-        const d: number[] = [];
-        for (const i in src) {
-            if (Number.isSafeInteger(parseInt(src[i], 10))) d[i] = parseInt(src[i], 10);
-        }
-        return d;
-    },
-    role: validator.checkRole,
-    penaltyRules: (penaltyRules) => {
-        try {
-            penaltyRules = yaml.safeLoad(penaltyRules);
-        } catch (e) {
-            throw new ValidationError('penalty_rules', 'parse error');
-        }
-        assert(typeof penaltyRules === 'object', new ValidationError('penalty_rules', 'invalid format'));
-        return penaltyRules;
-    },
-    yaml: (input) => {
-        yaml.safeLoad(input);
-        return input;
-    },
-};
+// eslint-disable-next-line no-shadow
+export enum Types { String, Int, UnsignedInt, Float, ObjectID, Boolean, Date, Time }
 
-async function prepare() {
+const Tools: Array<[Converter, Validator, boolean?]> = [
+    [(v) => v.toString(), null],
+    [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
+    [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
+    [(v) => parseFloat(v), (v) => {
+        const t = parseFloat(v);
+        return t && !Number.isNaN(t) && !Number.isFinite(t);
+    }],
+    [ObjectID, ObjectID.isValid],
+    [(v) => !!v, null, true],
+    [
+        (v) => {
+            const d = v.split('-');
+            assert(d.length === 3);
+            return `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
+        },
+        (v) => {
+            const d = v.split('-');
+            assert(d.length === 3);
+            return moment(`${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`).isValid();
+        }],
+    [
+        (v) => {
+            const t = v.split(':');
+            assert(t.length === 2);
+            return `${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`;
+        },
+        (v) => {
+            const t = v.split(':');
+            assert(t.length === 2);
+            return moment(`${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
+        },
+    ],
+];
+
+export function param(name: string): MethodDecorator;
+export function param(name: string, type: Types, validate: Validator): MethodDecorator;
+export function param(name: string, type?: Types, isOptional?: boolean): MethodDecorator;
+export function param(
+    name: string, type: Types, validate: null, convert: Converter
+): MethodDecorator;
+export function param(
+    name: string, type: Types, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function param(
+    name: string, type: Types, isOptional?: boolean, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function param(
+    name: string, ...args: Array<Types | boolean | Converter | Validator>
+)
+export function param(...args: any): MethodDecorator {
+    let cursor = 0;
+    let v: ParamOption = null;
+    let isValidate = true;
+    const d: ParamOption[] = [];
+    while (cursor <= args.length) {
+        if (typeof args[cursor] === 'string') {
+            v = { name: args[cursor] };
+            d.push(v);
+            isValidate = true;
+        } else if (typeof args[cursor] === 'number') {
+            const type = args[cursor];
+            if (Tools[type]) {
+                if (Tools[type][0]) d[d.length - 1].convert = Tools[type][0];
+                if (Tools[type][1]) d[d.length - 1].validate = Tools[type][1];
+                if (Tools[type][2]) d[d.length - 1].isOptional = Tools[type][2];
+            }
+        } else if (typeof args[cursor] === 'boolean') d[d.length - 1].isOptional = args[cursor];
+        else if (!isValidate) {
+            const I = args[cursor];
+            if (typeof I.constructor === 'function') {
+                d[d.length - 1].convert = (val: any) => new I(val);
+            } else d[d.length - 1].convert = I;
+            isValidate = false;
+        } else d[d.length - 1].validate = args[cursor];
+        cursor++;
+    }
+    for (let i = 0; i < d.length; i++) {
+        d[i].isOptional = d[i].isOptional || false;
+    }
+    return function desc(target: any, funcName: string, obj: any) {
+        if (!target.__param) target.__param = {};
+        if (!target.__param[funcName]) {
+            target.__param[funcName] = [{ name: 'domainId', type: 'string' }];
+            const originalMethod = obj.value;
+            obj.value = function func(rawArgs: any) {
+                const c = [];
+                const arglist: ParamOption[] = this.__param[funcName];
+                for (const item of arglist) {
+                    if (!item.isOptional || rawArgs[item.name]) {
+                        if (!rawArgs[item.name]) throw new ValidationError(item.name);
+                        if (item.validate) {
+                            if (!item.validate(rawArgs[item.name])) {
+                                throw new ValidationError(item.name);
+                            }
+                        }
+                        // @ts-ignore
+                        if (item.convert) c.push(item.convert(rawArgs[item.name]));
+                        else c.push(rawArgs[item.name]);
+                    } else c.push(undefined);
+                }
+                return originalMethod.call(this, ...c);
+            };
+        }
+        target.__param[funcName].splice(1, 0, ...d);
+        return obj;
+    };
+}
+
+export async function prepare() {
     server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
     app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
@@ -126,7 +179,7 @@ async function prepare() {
     }));
 }
 
-const HandlerMixin = (Class) => class extends Class {
+const HandlerMixin = (Class: IConstructor) => class extends Class {
     async renderHTML(name: string, context: any): Promise<string> {
         if (enableLog) console.time(name);
         this.hasPerm = (perm) => this.user.hasPerm(perm);
@@ -247,9 +300,8 @@ export const Handler = HandlerMixin(class {
 
     user: any;
 
-    constructor(ctx: Koa.Context, args: any) {
+    constructor(ctx: Koa.Context) {
         this.ctx = ctx;
-        this.args = args;
         this.request = {
             host: ctx.request.host,
             hostname: ctx.request.hostname,
@@ -435,10 +487,12 @@ async function handle(ctx, HandlerClass, checker) {
     const args = {
         domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
     };
-    const h = new HandlerClass(ctx, args);
+    const h = new HandlerClass(ctx);
+    h.args = args;
+    h.domainId = args.domainId;
     try {
         const method = ctx.method.toLowerCase();
-        let operation;
+        let operation: string;
         if (method === 'post' && ctx.request.body.operation) {
             operation = `_${ctx.request.body.operation}`
                 .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
@@ -457,19 +511,6 @@ async function handle(ctx, HandlerClass, checker) {
             }
         } else if (typeof h[method] !== 'function') {
             throw new MethodNotAllowedError(method);
-        }
-
-        let checking = '';
-        try {
-            for (const key in validate) {
-                checking = key;
-                if (args[key]) {
-                    args[key] = validate[key](args[key], key);
-                }
-            }
-        } catch (e) {
-            if (e instanceof ValidationError) throw e;
-            throw new ValidationError(`Argument ${checking} check failed`);
         }
 
         if (h._prepare) await h._prepare(args);
@@ -511,7 +552,7 @@ const Checker = (permPrivChecker) => {
     };
 };
 
-export function Route(name, route, RouteHandler, ...permPrivChecker) {
+export function Route(name: string, route: string, RouteHandler: IHandler, ...permPrivChecker) {
     const checker = Checker(permPrivChecker);
     router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
     router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
@@ -527,6 +568,8 @@ export const ConnectionHandler = HandlerMixin(class {
     }
 
     session: any
+
+    args: any
 
     user: any
 
@@ -569,11 +612,6 @@ export const ConnectionHandler = HandlerMixin(class {
     }
 });
 
-interface IConnectionHandler {
-    // @ts-ignore
-    new(conn: sockjs.Connection): ConnectionHandler;
-}
-
 export function Connection(
     name: string, prefix: string,
     RouteConnHandler: IConnectionHandler,
@@ -588,18 +626,7 @@ export function Connection(
             h.args = args;
             await h.init(args);
             checker.call(h);
-            let checking = '';
-            try {
-                for (const key in validate) {
-                    checking = key;
-                    if (args[key]) {
-                        args[key] = validate[key](args[key], key);
-                    }
-                }
-            } catch (e) {
-                if (e instanceof ValidationError) throw e;
-                throw new ValidationError(`Argument ${checking} check failed`);
-            }
+
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             if (h.message) {
@@ -623,11 +650,6 @@ export function Middleware(middleware: Koa.Middleware) {
     app.use(middleware);
 }
 
-export function Validate(key: string, func: Function) {
-    if (validate[key]) validate[key].push(func);
-    else validate[key] = [func];
-}
-
 export async function start() {
     const [disableLog, port] = await system.getMany(['server.log', 'server.port']);
     if (!disableLog) {
@@ -640,7 +662,5 @@ export async function start() {
 }
 
 global.Hydro.service.server = {
-    Handler, ConnectionHandler, Route, Connection, Middleware, Validate, prepare, start,
+    param, Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
 };
-
-export default global.Hydro.service.server;

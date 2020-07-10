@@ -9,16 +9,19 @@ import * as user from '../model/user';
 import paginate from '../lib/paginate';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Connection, ConnectionHandler,
+    Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 
 const RecordHandler = contest.ContestHandlerMixin(Handler);
 
 class RecordListHandler extends RecordHandler {
-    async get({
-        domainId, page = 1, pid, tid, uidOrName,
-    }) {
+    @param('page', Types.UnsignedInt, true)
+    @param('pid', Types.String, true)
+    @param('tid', Types.ObjectID, true)
+    @param('uidOrName', Types.String, true)
+    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string) {
         this.response.template = 'record_main.html';
+        if (tid) tid = new ObjectID(tid);
         const q: any = { tid, hidden: false };
         if (uidOrName) {
             q.$or = [
@@ -54,7 +57,8 @@ class RecordListHandler extends RecordHandler {
 }
 
 class RecordDetailHandler extends RecordHandler {
-    async get({ domainId, rid }) {
+    @param('rid', Types.ObjectID)
+    async get(domainId: string, rid: ObjectID) {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
         if (rdoc.tid) {
@@ -84,7 +88,8 @@ class RecordDetailHandler extends RecordHandler {
 }
 
 class RecordRejudgeHandler extends Handler {
-    async post({ domainId, rid }) {
+    @param('rid', Types.ObjectID)
+    async post(domainId: string, rid: ObjectID) {
         this.checkPerm(PERM.PERM_REJUDGE);
         const rdoc = await record.get(domainId, rid);
         if (rdoc) await record.rejudge(domainId, rid);
@@ -95,10 +100,11 @@ class RecordRejudgeHandler extends Handler {
 const RecordConnectionHandler = contest.ContestHandlerMixin(ConnectionHandler);
 
 class RecordMainConnectionHandler extends RecordConnectionHandler {
-    async prepare({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async prepare(domainId: string, tid: ObjectID) {
         this.domainId = domainId;
         if (tid) {
-            const tdoc = await contest.get(domainId, tid, -1);
+            const tdoc = await contest.get(domainId, new ObjectID(tid), -1);
             if (this.canShowRecord(tdoc)) this.tid = tid;
             else {
                 this.close();
@@ -137,7 +143,8 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
 }
 
 class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(ConnectionHandler) {
-    async prepare({ domainId, rid }) {
+    @param('rid', Types.ObjectID)
+    async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
         if (rdoc.tid) {
             const tdoc = await contest.get(domainId, rdoc.tid, -1);

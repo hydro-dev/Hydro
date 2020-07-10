@@ -1,6 +1,8 @@
 import superagent from 'superagent';
 import moment from 'moment-timezone';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 import * as user from '../model/user';
 import * as token from '../model/token';
 import * as record from '../model/record';
@@ -8,6 +10,7 @@ import * as problem from '../model/problem';
 import * as task from '../model/task';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
+import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
 import * as misc from '../lib/misc';
 import {
@@ -27,9 +30,10 @@ class UserLoginHandler extends Handler {
         this.response.template = 'user_login.html';
     }
 
-    async post({
-        domainId, uname, password, rememberme = false,
-    }) {
+    @param('uname', Types.String)
+    @param('password', Types.String)
+    @param('rememberme', Types.Boolean, true)
+    async post(domainId: string, uname: string, password: string, rememberme = false) {
         const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new LoginError(uname);
         udoc.checkPassword(password);
@@ -56,7 +60,8 @@ class UserRegisterHandler extends Handler {
         this.response.template = 'user_register.html';
     }
 
-    async post({ mail }) {
+    @param('mail', Types.String, isEmail)
+    async post(domainId: string, mail: string) {
         if (await user.getByEmail('system', mail, true)) throw new UserAlreadyExistError(mail);
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
@@ -85,9 +90,14 @@ class UserRegisterWithCodeHandler extends Handler {
         this.response.body = { mail };
     }
 
-    async post({
-        code, password, verifyPassword, uname,
-    }) {
+    @param('password', Types.String, isPassword)
+    @param('verifyPassword', Types.String)
+    @param('uname', Types.String, isUname)
+    @param('code', Types.String)
+    async post(
+        domainId: string, password: string, verifyPassword: string,
+        uname: string, code: string,
+    ) {
         const { mail } = await token.get(code, token.TYPE_REGISTRATION);
         if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
@@ -107,7 +117,8 @@ class UserLostPassHandler extends Handler {
         this.response.template = 'user_lostpass.html';
     }
 
-    async post({ mail }) {
+    @param('mail', Types.String, isEmail)
+    async post(domainId: string, mail: string) {
         if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
@@ -130,7 +141,10 @@ class UserLostPassWithCodeHandler extends Handler {
         this.response.body = { uname: udoc.uname };
     }
 
-    async post({ code, password, verifyPassword }) {
+    @param('code', Types.String)
+    @param('password', Types.String, isPassword)
+    @param('verifyPassword', Types.String)
+    async post(domainId: string, code: string, password: string, verifyPassword: string) {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
@@ -141,7 +155,8 @@ class UserLostPassWithCodeHandler extends Handler {
 }
 
 class UserDetailHandler extends Handler {
-    async get({ domainId, uid }) {
+    @param('uid', Types.Int)
+    async get(domainId: string, uid: number) {
         const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(domainId, uid, true);
         const sdoc = await token.getMostRecentSessionByUid(uid);
@@ -178,7 +193,9 @@ class UserDeleteHandler extends Handler {
 }
 
 class UserSearchHandler extends Handler {
-    async get({ domainId, q, exactMatch = false }) {
+    @param('q', Types.String)
+    @param('exectMatch', Types.Boolean, true)
+    async get(domainId: string, q: string, exactMatch = false) {
         let udocs;
         if (exactMatch) udocs = [];
         else udocs = await user.getPrefixList(q, 20);

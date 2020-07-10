@@ -9,6 +9,11 @@ Hydro 的界面基于 Vijos 二次开发。
 
 如果您认为本项目有价值，欢迎 star 。  
 
+## 联系我们
+
+QQ [3402182471](tencent://AddContact/?uin=3402182471&subcmd=all)  
+Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
+
 ## 鸣谢
 
 排名不分先后，按照链接字典序  

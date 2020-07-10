@@ -31,6 +31,8 @@ const Err = (name: string, ...info: Array<IHydroError | Function | string | numb
 export class HydroError extends Error {
     params: any[];
 
+    code: number;
+
     constructor(...params: any[]) {
         super();
         this.params = params;
@@ -39,11 +41,6 @@ export class HydroError extends Error {
     // eslint-disable-next-line class-methods-use-this
     msg() {
         return 'HydroError';
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    code() {
-        return 500;
     }
 }
 

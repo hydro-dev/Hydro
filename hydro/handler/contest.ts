@@ -1,10 +1,12 @@
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
+import { isSafeInteger } from 'lodash';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError,
 } from '../error';
+import { isContent, isTitle } from '../lib/validator';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -13,12 +15,16 @@ import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as user from '../model/user';
 import * as system from '../model/system';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 
 const ContestHandler = contest.ContestHandlerMixin(Handler);
 
 class ContestListHandler extends ContestHandler {
-    async get({ domainId, rule = 0, page = 1 }) {
+    @param('rule', Types.String, true)
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, rule = '', page = 1) {
         this.response.template = 'contest_main.html';
         let tdocs;
         let qs;
@@ -47,15 +53,14 @@ class ContestListHandler extends ContestHandler {
 }
 
 class ContestDetailHandler extends ContestHandler {
-    async _prepare({ domainId, tid }) {
-        this.tdoc = await contest.get(domainId, tid);
-    }
-
-    async get({ domainId, page = 1 }) {
+    @param('tid', Types.ObjectID)
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, tid: ObjectID, page = 1) {
+        const tdoc = await contest.get(domainId, tid);
         this.response.template = 'contest_detail.html';
         const [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(domainId, this.tdoc.docId, this.user._id),
-            problem.getList(domainId, this.tdoc.pids, true),
+            contest.getStatus(domainId, tdoc.docId, this.user._id),
+            problem.getList(domainId, tdoc.pids, true),
         ]);
         const psdict = {};
         let rdict = {};
@@ -63,7 +68,7 @@ class ContestDetailHandler extends ContestHandler {
         if (tsdoc) {
             attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
-            if (this.canShowRecord(this.tdoc)) {
+            if (this.canShowRecord(tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
                 rdict = await record.getList(domainId, q);
@@ -71,26 +76,29 @@ class ContestDetailHandler extends ContestHandler {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         } else attended = false;
-        const udict = await user.getList(domainId, [this.tdoc.owner]);
+        const udict = await user.getList(domainId, [tdoc.owner]);
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
-            [this.tdoc.title, null, null, true],
+            [tdoc.title, null, null, true],
         ];
         this.response.body = {
-            path, tdoc: this.tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
+            path, tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
         };
     }
 
-    async postAttend({ domainId }) {
-        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        await contest.attend(domainId, this.tdoc.docId, this.user._id);
+    @param('tid', Types.ObjectID)
+    async postAttend(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (contest.isDone(tdoc)) throw new ContestNotLiveError(tid);
+        await contest.attend(domainId, tid, this.user._id);
         this.back();
     }
 }
 
-class ContestScoreboardHandler extends ContestDetailHandler {
-    async get({ domainId, tid }) {
+class ContestScoreboardHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         const [tdoc, rows, udict] = await this.getScoreboard(domainId, tid);
         const path = [
             ['Hydro', 'homepage'],
@@ -105,8 +113,10 @@ class ContestScoreboardHandler extends ContestDetailHandler {
     }
 }
 
-class ContestScoreboardDownloadHandler extends ContestDetailHandler {
-    async get({ domainId, tid, ext }) {
+class ContestScoreboardDownloadHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    @param('ext', Types.String)
+    async get(domainId: string, tid: ObjectID, ext: string) {
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
@@ -117,8 +127,10 @@ class ContestScoreboardDownloadHandler extends ContestDetailHandler {
     }
 }
 
-class ContestEditHandler extends ContestDetailHandler {
-    async prepare() {
+class ContestEditHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    async prepare(domainId: string, tid: ObjectID) {
+        this.tdoc = await contest.get(domainId, tid);
         if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         else this.checkPerm(PERM.PERM_EDIT_CONTEST_SELF);
     }
@@ -149,9 +161,22 @@ class ContestEditHandler extends ContestDetailHandler {
         };
     }
 
-    async post({
-        domainId, beginAtDate, beginAtTime, duration, title, content, rule, pids, rated = false,
-    }) {
+    @param('beginAtDate', Types.Date)
+    @param('beginAtTime', Types.Time)
+    @param('duration', Types.Float)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('rule', Types.String)
+    @param('pids', Types.String)
+    @param('rated', Types.Boolean, true)
+    async post(
+        domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
+        title: string, content: string, rule: string, _pids: string, rated = false,
+    ) {
+        let pids = _pids.split(',').map((i) => {
+            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
+            return i;
+        });
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
@@ -172,8 +197,10 @@ class ContestEditHandler extends ContestDetailHandler {
     }
 }
 
-class ContestProblemHandler extends ContestDetailHandler {
-    async prepare({ domainId, tid, pid }) {
+class ContestProblemHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    async prepare(domainId: string, tid: ObjectID, pid: number) {
         [this.tdoc, this.pdoc] = await Promise.all([
             contest.get(domainId, tid),
             problem.get(domainId, pid, this.user._id),
@@ -193,12 +220,11 @@ class ContestProblemHandler extends ContestDetailHandler {
         }
     }
 
-    // @ts-ignore
-    async get({ tid }) {
+    async get() {
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
-            [this.tdoc.title, 'contest_detail', { tid }, true],
+            [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
             [this.pdoc.title, null, null, true],
         ];
         this.response.body = {
@@ -213,7 +239,9 @@ class ContestProblemHandler extends ContestDetailHandler {
 }
 
 class ContestProblemSubmitHandler extends ContestProblemHandler {
-    async get({ domainId, tid, pid }) {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    async prepare(domainId: string, tid: ObjectID, pid: number) {
         let rdocs = [];
         if (this.canShowRecord(this.tdoc)) {
             rdocs = await record.getUserInProblemMulti(
@@ -240,9 +268,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         };
     }
 
-    async post({
-        domainId, tid, lang, code,
-    }) {
+    @param('tid', Types.ObjectID)
+    @param('lang', Types.String)
+    @param('code', Types.String)
+    async post(domainId: string, tid: ObjectID, lang: string, code: string) {
         await this.limitRate('add_record', 60, 100);
         const rid = await record.add(domainId, {
             pid: this.pdoc.docId,
@@ -263,8 +292,9 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     }
 }
 
-class ContestCodeHandler extends ContestDetailHandler {
-    async get({ domainId, tid }) {
+class ContestCodeHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         }
@@ -313,9 +343,22 @@ class ContestCreateHandler extends ContestHandler {
         };
     }
 
-    async post({
-        domainId, title, content, rule, beginAtDate, beginAtTime, duration, pids, rated = false,
-    }) {
+    @param('beginAtDate', Types.Date)
+    @param('beginAtTime', Types.Time)
+    @param('duration', Types.Float)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('rule', Types.String)
+    @param('pids', Types.String)
+    @param('rated', Types.Boolean, true)
+    async post(
+        domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
+        title: string, content: string, rule: string, _pids: string, rated = false,
+    ) {
+        let pids = _pids.split(',').map((i) => {
+            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
+            return i;
+        });
         const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAt.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');

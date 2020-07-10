@@ -2,11 +2,14 @@ import yaml from 'js-yaml';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
+import { isSafeInteger } from 'lodash';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
 } from '../error';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 import { PERM } from '../model/builtin';
 import * as system from '../model/system';
 import * as user from '../model/user';
@@ -16,6 +19,7 @@ import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
+import { isTitle, isContent } from '../lib/validator';
 
 const HomeworkHandler = contest.ContestHandlerMixin(Handler);
 
@@ -43,7 +47,9 @@ class HomeworkMainHandler extends HomeworkHandler {
 }
 
 class HomeworkDetailHandler extends HomeworkHandler {
-    async get({ domainId, tid, page = 1 }) {
+    @param('tid', Types.ObjectID)
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, tid: ObjectID, page = 1) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         const [tsdoc, pdict] = await Promise.all([
             contest.getStatus(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK),
@@ -86,7 +92,8 @@ class HomeworkDetailHandler extends HomeworkHandler {
         };
     }
 
-    async postAttend({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async postAttend(domainId: string, tid: ObjectID) {
         this.checkPerm(PERM.PERM_ATTEND_HOMEWORK);
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         if (contest.isDone(tdoc)) throw new HomeworkNotLiveError(tdoc.docId);
@@ -96,7 +103,9 @@ class HomeworkDetailHandler extends HomeworkHandler {
 }
 
 class HomeworkDetailProblemHandler extends HomeworkHandler {
-    async prepare({ domainId, tid, pid }) {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    async prepare(domainId: string, tid: ObjectID, pid: number) {
         this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         [this.tdoc, this.pdoc, this.tsdoc] = await Promise.all([
             contest.get(domainId, tid, document.TYPE_HOMEWORK),
@@ -105,7 +114,9 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         ]);
     }
 
-    async get({ domainId, tid, pid }) {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    async get(domainId: string, tid: ObjectID, pid: number) {
         const udoc = await user.getById(domainId, this.tdoc.owner);
         const attended = this.tsdoc && this.tsdoc.attend === 1;
         if (!contest.isDone(this.tdoc)) {
@@ -127,7 +138,9 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
 }
 
 class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
-    async get({ domainId, tid, pid }) {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    async get(domainId: string, tid: ObjectID, pid: number) {
         const udoc = await user.getById(domainId, this.tdoc.owner);
         const attended = this.tsdoc && this.tsdoc.attend === 1;
         if (!attended) throw new HomeworkNotAttendedError(tid);
@@ -150,9 +163,11 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         };
     }
 
-    async post({
-        domainId, tid, pid, code, lang,
-    }) {
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
+    @param('code', Types.String)
+    @param('lang', Types.String)
+    async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
         this.limitRate('add_record', 60, 100);
         const tsdoc = await contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK);
         if (!tsdoc.attend) throw new HomeworkNotAttendedError(tid);
@@ -191,38 +206,44 @@ class HomeworkCreateHandler extends HomeworkHandler {
         };
     }
 
-    async post({
-        domainId, title, content, beginAtDate, beginAtTime,
-        penaltySinceDate, penaltySinceTime, extensionDays,
-        penaltyRules, pids, rated = false,
-    }) {
-        let beginAt;
-        let penaltySince;
-        try {
-            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        } catch (e) {
-            throw new ValidationError('beginAtDate', 'beginAtTime');
-        }
-        try {
-            penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
-        } catch (e) {
-            throw new ValidationError('endAtDate', 'endAtTime');
-        }
+    @param('beginAtDate', Types.Date)
+    @param('beginAtTime', Types.Time)
+    @param('penaltySinceDate', Types.Date)
+    @param('penaltySinceTime', Types.Time)
+    @param('extensionDays', Types.Float)
+    @param('penaltyRules', Types.String)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('pids', Types.String)
+    @param('rated', Types.Boolean, true)
+    async post(
+        domainId: string, beginAtDate: string, beginAtTime: string,
+        penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
+        penaltyRules: string, title: string, content: string, _pids: string, rated = false,
+    ) {
+        const pids = _pids.split(',').map((i) => {
+            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
+            return i;
+        });
+        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
+        if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
+        const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
+        if (!penaltySince.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        penaltySince = penaltySince.toDate();
         await this.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
             'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-            { penaltySince, penaltyRules }, document.TYPE_HOMEWORK);
+            { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
         this.response.redirect = this.url('homework_detail', { tid });
     }
 }
 
 class HomeworkEditHandler extends HomeworkHandler {
-    async get({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
@@ -251,11 +272,26 @@ class HomeworkEditHandler extends HomeworkHandler {
         };
     }
 
-    async post({
-        domainId, title, content, beginAtDate, beginAtTime,
-        penaltySinceDate, penaltySinceTime, extensionDays,
-        penaltyRules, pids, tid,
-    }) {
+    @param('tid', Types.ObjectID)
+    @param('beginAtDate', Types.Date)
+    @param('beginAtTime', Types.Time)
+    @param('penaltySinceDate', Types.Date)
+    @param('penaltySinceTime', Types.Time)
+    @param('extensionDays', Types.Float)
+    @param('penaltyRules', Types.String)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('pids', Types.String)
+    @param('rated', Types.Boolean, true)
+    async post(
+        domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
+        penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
+        penaltyRules: string, title: string, content: string, _pids: string, rated = false,
+    ) {
+        const pids = _pids.split(',').map((i) => {
+            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
+            return i;
+        });
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
@@ -278,7 +314,7 @@ class HomeworkEditHandler extends HomeworkHandler {
         endAt = endAt.toDate();
         penaltySince = penaltySince.toDate();
         await contest.edit(domainId, tid, {
-            title, content, beginAt, endAt, pids, penaltySince, penaltyRules,
+            title, content, beginAt, endAt, pids, penaltySince, penaltyRules, rated,
         }, document.TYPE_HOMEWORK);
         if (tdoc.beginAt !== beginAt
             || tdoc.endAt !== endAt
@@ -292,7 +328,8 @@ class HomeworkEditHandler extends HomeworkHandler {
 }
 
 class HomeworkScoreboardHandler extends HomeworkHandler {
-    async get({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         const [tdoc, rows, udict] = await this.getScoreboard(
             domainId, tid, false, document.TYPE_HOMEWORK,
         );
@@ -310,9 +347,11 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
 }
 
 class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
-    async get({ domainId, tid, ext }) {
+    @param('tid', Types.ObjectID)
+    @param('ext', Types.String)
+    async get(domainId: string, tid: ObjectID, ext: string) {
         const getContent = {
-            csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
+            csv: (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
@@ -322,7 +361,8 @@ class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
 }
 
 class HomeworkCodeHandler extends HomeworkHandler {
-    async get({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(

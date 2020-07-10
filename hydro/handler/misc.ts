@@ -1,17 +1,23 @@
+import { ObjectID } from 'mongodb';
 import { PRIV } from '../model/builtin';
 import * as file from '../model/file';
 import * as user from '../model/user';
 import * as markdown from '../lib/markdown';
 import * as db from '../service/db';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 
 const coll = db.collection('status');
 
 class FileDownloadHandler extends Handler {
-    async get({ docId, secret, name }) {
+    @param('fileId', Types.ObjectID)
+    @param('secret', Types.String)
+    @param('name', Types.String, true)
+    async get(domainId: string, fileId: ObjectID, secret: string, name: string) {
         if (name) name = Buffer.from(name, 'base64').toString();
-        this.response.attachment(name || docId);
-        this.response.body = await file.getWithSecret(docId, secret);
+        this.response.attachment(name || fileId);
+        this.response.body = await file.getWithSecret(fileId, secret);
     }
 }
 
@@ -48,7 +54,8 @@ class StatusUpdateHandler extends Handler {
 }
 
 class SwitchLanguageHandler extends Handler {
-    async get({ lang }) {
+    @param('lang', Types.String)
+    async get(domainId: string, lang: string) {
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             await user.setById(this.user._id, { viewLang: lang });
         } else this.session.viewLang = lang;
@@ -71,8 +78,8 @@ class SockToken extends Handler {
 }
 
 export async function apply() {
-    Route('file_download', '/fs/:docId/:secret', FileDownloadHandler);
-    Route('file_download_with_name', '/fs/:docId/:name/:secret', FileDownloadHandler);
+    Route('file_download', '/fs/:fileId/:secret', FileDownloadHandler);
+    Route('file_download_with_name', '/fs/:fileId/:name/:secret', FileDownloadHandler);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);

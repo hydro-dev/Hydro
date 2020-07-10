@@ -511,9 +511,11 @@ export const ContestHandlerMixin = (c) => class extends c {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async verifyProblems(domainId: string, pids: number[]) {
-        await problem.getList(domainId, pids, true);
-        return pids;
+    async verifyProblems(domainId: string, pids: Array<number | string>) {
+        const pdict = await problem.getList(domainId, pids, true);
+        const _pids: Set<number> = new Set();
+        for (const i in pdict) _pids.add(pdict[i].docId);
+        return Array.from(_pids);
     }
 };
 

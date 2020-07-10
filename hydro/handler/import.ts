@@ -4,7 +4,10 @@ import os from 'os';
 import { ValidationError } from '../error';
 import * as problem from '../model/problem';
 import { PERM } from '../model/builtin';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
+import { isPid } from '../lib/validator';
 
 class ProblemImportHandler extends Handler {
     async prepare() {
@@ -22,9 +25,11 @@ class ProblemImportHandler extends Handler {
         };
     }
 
-    async post({
-        domainId, url, pid, hidden, remoteType,
-    }) {
+    @param('url', Types.String)
+    @param('pid', Types.String, isPid)
+    @param('hidden', Types.Boolean)
+    @param('remoteType', Types.String)
+    async post(domainId: string, url: string, pid: string, hidden = false, remoteType: string) {
         if (typeof global.Hydro.lib[`import.${remoteType}`] !== 'function') {
             throw new ValidationError('remoteType');
         }

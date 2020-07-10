@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { ObjectID } from 'mongodb';
 import { ValidationError, ProblemNotFoundError } from '../error';
+import { isTitle, isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as problem from '../model/problem';
@@ -8,7 +9,9 @@ import * as builtin from '../model/builtin';
 import * as training from '../model/training';
 import * as user from '../model/user';
 import * as system from '../model/system';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 
 async function _parseDagJson(domainId, dag) {
     const parsed = [];
@@ -51,8 +54,8 @@ async function _parseDagJson(domainId, dag) {
 }
 
 class TrainingMainHandler extends Handler {
-    async get({ domainId, sort, page }) {
-        const qs = sort ? 'sort={0}'.format(sort) : '';
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, page = 1) {
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId).sort('_id', 1),
             page,
@@ -84,13 +87,14 @@ class TrainingMainHandler extends Handler {
         ];
         this.response.template = 'training_main.html';
         this.response.body = {
-            tdocs, page, tpcount, qs, tsdict, tdict, path,
+            tdocs, page, tpcount, tsdict, tdict, path,
         };
     }
 }
 
 class TrainingDetailHandler extends Handler {
-    async get({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
         const pids = training.getPids(tdoc);
         const [owner, pdict] = await Promise.all([
@@ -141,7 +145,8 @@ class TrainingDetailHandler extends Handler {
         };
     }
 
-    async postEnroll({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async postEnroll(domainId: string, tid: ObjectID) {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
         const tdoc = await training.get(domainId, tid);
         await training.enroll(domainId, tdoc.docId, this.user._id);
@@ -160,10 +165,15 @@ class TrainingCreateHandler extends Handler {
         this.response.body = { page_name: 'training_create', path };
     }
 
-    async post({
-        domainId, title, content, dag, description,
-    }) {
-        dag = await _parseDagJson(domainId, dag);
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('dag', Types.String, isContent)
+    @param('description', Types.String, isDescription)
+    async post(
+        domainId: string, title: string, content: string,
+        _dag: string, description: string,
+    ) {
+        const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti(domainId, {
@@ -189,7 +199,8 @@ class TrainingCreateHandler extends Handler {
 }
 
 class TrainingEditHandler extends Handler {
-    async prepare({ domainId, tid }) {
+    @param('tid', Types.ObjectID)
+    async prepare(domainId: string, tid: ObjectID) {
         this.tdoc = await training.get(domainId, tid);
         if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
@@ -209,10 +220,17 @@ class TrainingEditHandler extends Handler {
         };
     }
 
-    async post({
-        domainId, tid, title, content, dag, description,
-    }) {
-        dag = await _parseDagJson(domainId, dag);
+    @param('tid', Types.ObjectID)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('dag', Types.String, isContent)
+    @param('description', Types.String, isDescription)
+    async post(
+        domainId: string, tid: ObjectID,
+        title: string, content: string,
+        _dag: string, description: string,
+    ) {
+        const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti(domainId, {

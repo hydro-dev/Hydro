@@ -1,8 +1,12 @@
 import { NotFoundError } from '../error';
-import { Route, Handler } from '../service/server';
+import {
+    Route, Handler, Types, param,
+} from '../service/server';
 
 class WikiHandler extends Handler {
-    async get({ category = 'wiki', page }) {
+    @param('category', Types.String, true)
+    @param('page', Types.String)
+    async get(domainId: string, category = 'wiki', page: string) {
         if (!global.Hydro.wiki[category]) throw new NotFoundError(category);
         if (!global.Hydro.wiki[category][page]) throw new NotFoundError(category, page);
         const contents = global.Hydro.wiki[category][page];
