@@ -19,8 +19,7 @@ jobs:
         path: .uibuild
     - run: |
         yarn
-        yarn build
-        yarn pack:production
+        yarn build:production
     - uses: actions/upload-artifact@v1
       with:
         name: app.js
