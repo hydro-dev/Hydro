@@ -2,20 +2,24 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 
-import './declare';
+import './interface';
 import cluster from 'cluster';
 import { argv } from 'yargs';
 
 global.Hydro = {
     stat: { reqCount: 0 },
     handler: {},
+    // @ts-ignore
     service: {},
+    // @ts-ignore
     model: {},
     script: {},
+    // @ts-ignore
     lib: {},
     wiki: {},
     template: {},
     ui: {},
+    // @ts-ignore
     error: {},
     locales: {},
 };

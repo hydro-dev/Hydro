@@ -1,8 +1,8 @@
 import { GridFSBucket } from 'mongodb';
 import { db } from './db';
 
-const exp = new GridFSBucket(db);
+export const fs = new GridFSBucket(db);
 
-global.Hydro.service.gridfs = exp;
+global.Hydro.service.gridfs = fs;
 
-export default exp;
+export default fs;

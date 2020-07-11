@@ -1,8 +1,9 @@
 import moment from 'moment-timezone';
 import * as builtin from './builtin';
+import { Setting as _Setting } from '../interface';
 
 const countries = moment.tz.countries();
-const tzs = new Set();
+const tzs: Set<string> = new Set();
 for (const country of countries) {
     const tz = moment.tz.zonesForCountry(country);
     for (const t of tz) tzs.add(t);
@@ -25,40 +26,40 @@ export const DOMAIN_SETTINGS_BY_KEY = {};
 export const SYSTEM_SETTINGS_BY_KEY = {};
 
 export const Setting = (
-    family, key, range = null,
-    value = null, type = 'text', name = '',
+    family: string, key: string, range: Array<[string, string]> | { [key: string]: string } = null,
+    value: any = null, type = 'text', name = '',
     desc = '', flag = 0,
-) => ({
+): _Setting => ({
     family, key, range, value, type, name, desc, flag,
 });
 
-export const PreferenceSetting = (...settings) => {
+export const PreferenceSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
         PREFERENCE_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
-export const AccountSetting = (...settings) => {
+export const AccountSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
         ACCOUNT_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
-export const DomainUserSetting = (...settings) => {
+export const DomainUserSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
         DOMAIN_USER_SETTINGS.push(setting);
         DOMAIN_USER_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
-export const DomainSetting = (...settings) => {
+export const DomainSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
         DOMAIN_SETTINGS.push(setting);
         DOMAIN_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
-export const SystemSetting = (...settings) => {
+export const SystemSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
         SYSTEM_SETTINGS.push(setting);
         SYSTEM_SETTINGS_BY_KEY[setting.key] = setting;
@@ -69,7 +70,7 @@ PreferenceSetting(
     // TODO generate by global.Hydro.locales
     Setting('setting_display', 'viewLang', builtin.VIEW_LANGS.map((i) => [i.code, i.name]),
         'zh_CN', 'select', 'UI Language'),
-    Setting('setting_display', 'timezone', timezones,
+    Setting('setting_display', 'timezone', timezones as [string, string][],
         'Asia/Shanghai', 'select', 'Timezone'),
     Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS,
         null, 'select', 'Default Code Language'),

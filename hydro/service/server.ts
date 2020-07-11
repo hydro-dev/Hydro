@@ -138,12 +138,13 @@ export function param(...args: any): MethodDecorator {
     }
     return function desc(target: any, funcName: string, obj: any) {
         if (!target.__param) target.__param = {};
-        if (!target.__param[funcName]) {
-            target.__param[funcName] = [{ name: 'domainId', type: 'string' }];
+        if (!target.__param[target.constructor.name]) target.__param[target.constructor.name] = {};
+        if (!target.__param[target.constructor.name][funcName]) {
+            target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string' }];
             const originalMethod = obj.value;
             obj.value = function func(rawArgs: any) {
                 const c = [];
-                const arglist: ParamOption[] = this.__param[funcName];
+                const arglist: ParamOption[] = this.__param[target.constructor.name][funcName];
                 for (const item of arglist) {
                     if (!item.isOptional || rawArgs[item.name]) {
                         if (!rawArgs[item.name]) throw new ValidationError(item.name);
@@ -160,7 +161,7 @@ export function param(...args: any): MethodDecorator {
                 return originalMethod.call(this, ...c);
             };
         }
-        target.__param[funcName].splice(1, 0, ...d);
+        target.__param[target.constructor.name][funcName].splice(1, 0, ...d);
         return obj;
     };
 }

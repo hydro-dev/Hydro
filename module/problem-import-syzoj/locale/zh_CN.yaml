@@ -1,8 +1,0 @@
-Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
-problem.import.problem_description: '## 题目描述'
-problem.import.input_format: '## 输入格式'
-problem.import.output_format: '## 输出格式'
-problem.import.hint: '## 提示'
-problem.import.limit_and_hint: '## 限制'
-problem.import.additional_file: '## 附加文件'
-import: 导入

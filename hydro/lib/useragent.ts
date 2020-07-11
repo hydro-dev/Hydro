@@ -9,4 +9,3 @@ export function icon(str: string) {
 }
 
 global.Hydro.lib.useragent = { parse, icon };
-export default { parse, icon };

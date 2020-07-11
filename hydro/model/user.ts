@@ -304,6 +304,7 @@ export function ensureIndexes() {
 }
 
 global.Hydro.model.user = {
+    User,
     changePassword,
     create,
     getByEmail,

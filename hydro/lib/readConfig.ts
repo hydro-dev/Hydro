@@ -17,4 +17,5 @@ async function readConfig(filePath: string) {
 }
 
 global.Hydro.lib.readConfig = readConfig;
+
 export default readConfig;

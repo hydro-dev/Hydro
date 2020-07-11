@@ -98,7 +98,6 @@ export const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', Do
 export const InvalidOperationError = Err('InvalidOperationError', MethodNotAllowedError);
 
 global.Hydro.error = {
-    Err,
     HydroError,
     BadRequestError,
     BlacklistedError,

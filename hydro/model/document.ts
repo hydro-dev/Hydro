@@ -417,5 +417,3 @@ global.Hydro.model.document = {
     TYPE_FILE,
     TYPE_TRAINING,
 };
-
-export default global.Hydro.model.document;

@@ -63,6 +63,12 @@ problem_statistics: Problem Statistics
 problem_submit: Problem Submit
 problem-category-delim: '|'
 problem-subcategory-delim: ', '
+problem.import.additional_file: '## Additional Files'
+problem.import.hint: '## Hint'
+problem.import.input_format: '## Input Format'
+problem.import.limit_and_hint: '## Limits'
+problem.import.output_format: '## Output Format'
+problem.import.problem_description: '## Description'
 ranking: Ranking
 record_detail: Record Detail
 record_main: Judging Queue

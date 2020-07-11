@@ -1,11 +1,11 @@
-const assert = require('assert');
+import assert from 'assert';
+import superagent from 'superagent';
+import download from './download';
+import { ValidationError, RemoteOnlineJudgeError } from '../error';
 
-const { download } = global.Hydro.lib;
-const { superagent } = global.nodeModules;
-const { ValidationError, RemoteOnlineJudgeError } = global.Hydro.error;
+const RE_SYZOJ = /https?:\/\/([a-zA-Z0-9.]+)\/problem\/([0-9]+)\/?/i;
 
-async function syzoj(url, handler) {
-    const RE_SYZOJ = /https?:\/\/([a-zA-Z0-9.]+)\/problem\/([0-9]+)\/?/i;
+export async function syzoj(url: string, handler: any) {
     assert(url.match(RE_SYZOJ), new ValidationError('url'));
     if (!url.endsWith('/')) url += '/';
     const [, host, pid] = RE_SYZOJ.exec(url);
@@ -68,4 +68,4 @@ async function syzoj(url, handler) {
     return [pdoc, r];
 }
 
-global.Hydro.lib['import.syzoj'] = module.exports = syzoj;
+global.Hydro.lib['import.syzoj'] = syzoj;

@@ -3,25 +3,9 @@ import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
+import { Pdoc } from '../interface';
 import { ProblemNotFoundError } from '../error';
 import readConfig from '../lib/readConfig';
-
-export interface Pdoc {
-    _id: ObjectID
-    domainId: string
-    docId: number
-    pid: string
-    owner: number
-    title: string
-    content: string
-    nSubmit: number
-    nAccept: number
-    tag: string[]
-    category: string[],
-    data: ObjectID | null
-    hidden: boolean
-    config: string
-}
 
 export const pdocHidden: Pdoc = {
     _id: new ObjectID(),
@@ -180,6 +164,7 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
 }
 
 global.Hydro.model.problem = {
+    pdocHidden,
     add,
     inc,
     get,

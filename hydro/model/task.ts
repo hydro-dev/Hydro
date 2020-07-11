@@ -4,12 +4,6 @@ import * as db from '../service/db';
 
 const coll = db.collection('task');
 
-export interface Task {
-    _id: ObjectID,
-    count: number,
-    executeAfter: number,
-}
-
 export async function add(task: any) {
     const t = { ...task };
     if (typeof t.executeAfter === 'object') t.executeAfter = t.executeAfter.getTime();

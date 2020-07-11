@@ -337,7 +337,9 @@ hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
 Images: 图片
+Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
+import: 导入
 In 1 day: 一天后
 In 1 month: 一个月后
 In 1 week: 一周后
@@ -516,6 +518,12 @@ problem_submit: 递交代码
 problem-category-delim: '|'
 problem-subcategory-delim: 、
 Problem: 题目
+problem.import.additional_file: '## 附加文件'
+problem.import.hint: '## 提示'
+problem.import.input_format: '## 输入格式'
+problem.import.limit_and_hint: '## 限制'
+problem.import.output_format: '## 输出格式'
+problem.import.problem_description: '## 题目描述'
 Problems Sets: 题库
 Problems: 题目
 Profile Background Image: 背景图片

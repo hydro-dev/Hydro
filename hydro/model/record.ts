@@ -1,44 +1,14 @@
 import _ from 'lodash';
 import yaml from 'js-yaml';
-import { ObjectID, FilterQuery } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
+import { Rdoc, TestCase } from '../interface';
 import { RecordNotFoundError } from '../error';
 import * as db from '../service/db';
 
 const coll = db.collection('record');
-
-export interface TestCase {
-    time: number,
-    memory: number,
-    status: number,
-    message: string,
-}
-
-export interface Rdoc {
-    _id: ObjectID,
-    domainId: string,
-    pid: ObjectID
-    uid: number,
-    lang: string,
-    code: string,
-    score: number,
-    memory: number,
-    time: number,
-    judgeTexts: string[],
-    compilerTexts: string[],
-    testCases: TestCase[],
-    rejudged: boolean,
-    judger: string,
-    judgeAt: Date,
-    status: number,
-    type: string,
-    hidden: boolean,
-    input?: string,
-    tid?: ObjectID,
-    ttype?: number,
-}
 
 export interface RdocBase {
     _id?: ObjectID,
@@ -119,7 +89,7 @@ export async function add(domainId: string, data: RdocBase, addTask = true) {
     return res.insertedId;
 }
 
-export async function get(domainId: string, _id: ObjectID) {
+export async function get(domainId: string, _id: ObjectID): Promise<Rdoc> {
     const rdoc = await coll.findOne({ domainId, _id });
     if (!rdoc) throw new RecordNotFoundError(_id);
     return rdoc;
@@ -132,7 +102,7 @@ export function getMulti(domainId: string, query: any) {
 export async function update(
     domainId: string, _id: ObjectID,
     $set: any = {}, $push: any = {}, $unset: any = {},
-) {
+): Promise<Rdoc> {
     const $update: any = {};
     if ($set && Object.keys($set).length) $update.$set = $set;
     if ($push && Object.keys($push).length) $update.$push = $push;
@@ -157,11 +127,13 @@ export function reset(domainId: string, rid: ObjectID) {
     });
 }
 
-export function count<T>(domainId: string, query: FilterQuery<T>) {
+export function count(domainId: string, query: any) {
     return coll.find({ domainId, ...query }).count();
 }
 
-export async function getList(domainId: string, rids: ObjectID[], showHidden = false) {
+export async function getList(
+    domainId: string, rids: ObjectID[], showHidden = false,
+): Promise<{ [key: string]: Rdoc }> {
     const r = {};
     for (const rid of rids) {
         // eslint-disable-next-line no-await-in-loop
@@ -184,7 +156,7 @@ export function getUserInProblemMulti(
     return coll.find({ domainId, uid, pid });
 }
 
-export function getByUid(domainId: string, uid: number) {
+export function getByUid(domainId: string, uid: number): Promise<Rdoc[]> {
     return coll.find({ domainId, uid }).toArray();
 }
 

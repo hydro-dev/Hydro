@@ -56,7 +56,7 @@ export function size(s, base = 1) {
     return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);
 }
 
-export function _digit2(number: number) {
+function _digit2(number: number) {
     if (number < 10) return `0${number}`;
     return number.toString();
 }

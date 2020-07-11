@@ -222,6 +222,7 @@ global.Hydro.model.discussion = {
     setStar,
     getStatus,
     addNode,
+    getNode,
     getNodes,
     getVnode,
     getListVnodes,

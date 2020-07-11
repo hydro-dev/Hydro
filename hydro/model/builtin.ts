@@ -609,6 +609,7 @@ export const USER_GENDER_ICONS = {
 };
 
 global.Hydro.model.builtin = {
+    Permission,
     PERM,
     PERMS,
     PERMS_BY_FAMILY,

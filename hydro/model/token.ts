@@ -90,6 +90,7 @@ global.Hydro.model.token = {
     TYPE_CSRF_TOKEN,
     TYPE_OAUTH,
     TYPE_REGISTRATION,
+    TYPE_LOSTPASS,
 
     ensureIndexes,
     add,

@@ -531,7 +531,7 @@ export function getMulti(domainId: string, query = {}, type = document.TYPE_CONT
     return document.getMulti(domainId, type, query);
 }
 
-export function _getStatusJournal(tsdoc) {
+function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }
 

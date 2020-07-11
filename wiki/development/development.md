@@ -63,14 +63,14 @@ class CustomHandler extends Handler {
         // this.checkPerm(), this.user.hasPerm(), this.user.hasPriv(), etc.
     }
 
-    async get({ username, password }) {
+    async get(){
+        this.response.template = 'user_login.html';
+    }
+
+    async post({ username, password }) {
         const udoc = await user.getByUname(username);
         udoc.checkPassword(password);
         this.response.body = { udoc };
-    }
-
-    async post() {
-        // 当提交表单时会执行该函数
     }
 
     async postConfirm() {
@@ -82,7 +82,7 @@ async function apply() {
     Route('/route/:username', CustomHandler);
 }
 
-global.Hydro.handler.handlerName = module.exports = apply;
+global.Hydro.handler.handlerName = apply;
 ```
 
 在路由中定义所有的函数应均为异步函数，支持的函数如下：
@@ -92,31 +92,7 @@ prepare, get, post, post[Operation], cleanup
 具体流程如下：
 
 先执行 prepare(args) （如果存在）
-args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参数，并对以下字段进行了校验：  
-
-|   Key    |      Type        |
-|:--------:|:----------------:|
-| content  |      string      |
-|  title   |      string      |
-|   uid    |    number(int)   |
-| password |      string      |
-|   mail   |   string(mail)   |
-|  uname   |      string      |
-|   page   |    number(int)   |
-| duration |   number(float)  |
-|   role   |      string      |
-|  roles   |     string[]     |
-|   pids   |      string      |
-|   tid    | mongodb.ObjectID |
-|   rid    | mongodb.ObjectID |
-|   did    | mongodb.ObjectID |
-|   drid   | mongodb.ObjectID |
-|  drrid   | mongodb.ObjectID |
-|   psid   | mongodb.ObjectID |
-|  psrid   | mongodb.ObjectID |
-|  docId   | mongodb.ObjectID |
-| mongoId  | mongodb.ObjectID |
-
+args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参数，  
 再执行 prepare(args) （如果存在）  
 检查请求类型：
 
@@ -139,6 +115,43 @@ args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参
 
 应当提供 `apply` 函数，并与定义的 Handler 一同挂载到 `global.Hydro.handler[模块名]` 位置。  
 `apply` 函数将在初始化阶段被调用。  
+
+### 表单验证
+
+若使用 Typescript 开发插件，可使用 Hydro 提供的验证工具。  
+
+`@param` 会修改 arguments，首个参数为请求所在的 domainId，剩余参数为指定的内容。  
+
+```ts
+const { Handler, Route, Types, param } = global.Hydro.service.server;
+const { user, builtin } = global.Hydro.model;
+
+class CustomHandler extends Handler {
+    async prepare() {
+        this.checkPriv(builtin.PRIV.PRIV_USER_PROFILE);
+    }
+
+    async get(){
+        this.response.template = 'user_login.html';
+    }
+
+    @param('username', Types.String)
+    @param('password', Types.String)
+    async post(domainId:string, username:string, password:string) {
+        const udoc = await user.getByUname(username);
+        udoc.checkPassword(password);
+        this.response.body = { udoc };
+    }
+}
+
+export async function apply() {
+    Route('/route/:username', CustomHandler);
+}
+
+global.Hydro.handler.handlerName = apply;
+```
+
+若使用 Javascript 开发插件，则可使用 `global.Hydro.lib.validator` 中提供的相关工具。
 
 # Service | service
 

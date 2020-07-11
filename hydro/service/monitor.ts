@@ -3,7 +3,7 @@ import * as sysinfo from '../lib/sysinfo';
 
 const coll = db.collection('status');
 
-async function update() {
+export async function update() {
     const [mid, $set] = await sysinfo.update();
     await coll.updateOne(
         { mid, type: 'server' },
@@ -13,7 +13,7 @@ async function update() {
     global.Hydro.stat.reqCount = 0;
 }
 
-async function postInit() {
+export async function postInit() {
     const info = await sysinfo.get();
     await coll.updateOne(
         { mid: info.mid, type: 'server' },
@@ -23,6 +23,4 @@ async function postInit() {
     setInterval(update, 60 * 1000);
 }
 
-global.Hydro.service.monitor = { postInit };
-
-export default { postInit };
+global.Hydro.service.monitor = { update, postInit };

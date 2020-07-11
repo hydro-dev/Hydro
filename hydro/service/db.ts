@@ -19,6 +19,4 @@ export function collection(c: string) {
     return db.collection(c);
 }
 
-global.Hydro.service.db = { collection };
-
-export default { collection };
+global.Hydro.service.db = { collection, db };

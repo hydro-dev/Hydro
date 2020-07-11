@@ -43,5 +43,3 @@ export function publish(event, payload, isMaster = true) {
 global.Hydro.service.bus = {
     subscribe, unsubscribe, publish,
 };
-
-export default global.Hydro.service.bus;
