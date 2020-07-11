@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const path = require('path');
 const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const { root } = require('./utils');
@@ -20,9 +19,6 @@ const build = async (type) => {
             new webpack.ProgressPlugin(),
             new FriendlyErrorsPlugin({
                 clearConsole: false,
-            }),
-            new webpack.ProvidePlugin({
-                saslprep: path.resolve(__dirname, 'node_modules/saslprep/index.js'),
             }),
         ],
     };

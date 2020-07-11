@@ -662,5 +662,5 @@ export async function start() {
 }
 
 global.Hydro.service.server = {
-    param, Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
+    Types, param, Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
 };
