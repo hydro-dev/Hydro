@@ -375,6 +375,7 @@ class ContestCreateHandler extends ContestHandler {
 }
 
 export async function apply() {
+    Route('contest_create', '/contest/create', ContestCreateHandler, PERM.PERM_CREATE_CONTEST);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
@@ -383,7 +384,6 @@ export async function apply() {
     Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_create', '/contest/create', ContestCreateHandler, PERM.PERM_CREATE_CONTEST);
 }
 
 global.Hydro.handler.contest = apply;

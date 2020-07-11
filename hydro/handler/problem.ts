@@ -403,10 +403,6 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         };
     }
 
-    async post({ domainId, psid }) {
-        if (psid) this.psdoc = await solution.get(domainId, new ObjectID(psid));
-    }
-
     @param('content', Types.String, isContent)
     async postSubmit(domainId: string, content: string) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM_SOLUTION);
@@ -415,17 +411,21 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     }
 
     @param('content', Types.String, isContent)
-    async postEditSolution(domainId: string, content: string) {
-        if (this.psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
+    @param('psid', Types.ObjectID)
+    async postEditSolution(domainId: string, content: string, psid: ObjectID) {
+        let psdoc = await solution.get(domainId, psid);
+        if (psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_SELF);
-        const psdoc = await solution.edit(domainId, this.psdoc.docId, content);
+        psdoc = await solution.edit(domainId, this.psdoc.docId, content);
         this.back({ psdoc });
     }
 
-    async postDeleteSolution({ domainId }) {
-        if (this.psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
+    @param('psid', Types.ObjectID)
+    async postDeleteSolution(domainId: string, psid: ObjectID) {
+        const psdoc = await solution.get(domainId, psid);
+        if (psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_SELF);
-        await solution.del(domainId, this.psdoc.docId);
+        await solution.del(domainId, psdoc.docId);
         this.back();
     }
 
@@ -471,16 +471,16 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    async postUpvote({ domainId }) {
-        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.user._id, 1);
-        this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
-        this.back();
+    @param('psid', Types.ObjectID)
+    async postUpvote(domainId: string, psid: ObjectID) {
+        const [psdoc, pssdoc] = await solution.vote(domainId, psid, this.user._id, 1);
+        this.back({ vote: psdoc.vote, user_vote: pssdoc.vote });
     }
 
-    async postDownvote({ domainId }) {
-        const [psdoc, pssdoc] = await solution.vote(domainId, this.psdoc.docId, this.user._id, -1);
-        this.response.body = { vote: psdoc.vote, user_vote: pssdoc.vote };
-        this.back();
+    @param('psid', Types.ObjectID)
+    async postDownvote(domainId: string, psid: ObjectID) {
+        const [psdoc, pssdoc] = await solution.vote(domainId, psid, this.user._id, -1);
+        this.back({ vote: psdoc.vote, user_vote: pssdoc.vote });
     }
 }
 

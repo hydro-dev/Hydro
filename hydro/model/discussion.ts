@@ -15,7 +15,7 @@ export const typeDisplay = {
 };
 
 export function add(
-    domainId: string, parentType: number, parentId: ObjectID,
+    domainId: string, parentType: number, parentId: ObjectID | number | string,
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean = false,
 ) {

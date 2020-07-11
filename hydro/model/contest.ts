@@ -51,7 +51,7 @@ const acm = {
             if (!j.accept) naccept[j.pid]++;
         }
         function _time(jdoc) {
-            const real = jdoc.rid.generationTime - Math.floor(tdoc.begin_at / 1000);
+            const real = jdoc.rid.generationTime - Math.floor(tdoc.beginAt / 1000);
             const penalty = 20 * 60 * naccept[jdoc.pid];
             return real + penalty;
         }
@@ -73,23 +73,27 @@ const acm = {
             { type: 'solved_problems', value: _('Solved Problems') },
         ];
         if (isExport) {
-            columns.push({ type: 'total_time', value: _('Total Time (Seconds)') });
-            columns.push({ type: 'total_time_str', value: _('Total Time') });
+            columns.push(
+                { type: 'total_time', value: _('Total Time (Seconds)') },
+                { type: 'total_time_str', value: _('Total Time') },
+            );
         }
         for (const i in tdoc.pids) {
             if (isExport) {
-                columns.push({
-                    type: 'problem_flag',
-                    value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
-                });
-                columns.push({
-                    type: 'problem_time',
-                    value: '#{0} {1}'.format(i + 1, _('Time (Seconds)')),
-                });
-                columns.push({
-                    type: 'problem_time_str',
-                    value: '#{0} {1}'.format(i + 1, _('Time')),
-                });
+                columns.push(
+                    {
+                        type: 'problem_flag',
+                        value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
+                    },
+                    {
+                        type: 'problem_time',
+                        value: '#{0} {1}'.format(i + 1, _('Time (Seconds)')),
+                    },
+                    {
+                        type: 'problem_time_str',
+                        value: '#{0} {1}'.format(i + 1, _('Time')),
+                    },
+                );
             } else {
                 columns.push({
                     type: 'problem_detail',

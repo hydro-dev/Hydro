@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const yaml = require('js-yaml');
+const argv = require('yargs-parser')(process.argv.slice(2));
 const { root, ignoreFailure, rmdir } = require('./utils');
 const template = require('./template');
 const hack = require('./hack');
@@ -84,4 +85,7 @@ async function build(type) {
     fs.writeFileSync(root('.build/install.js'), `global.Hydro="${d}"; ${installer}`);
 }
 
-module.exports = build;
+build(argv.development ? 'development' : 'production').catch((e) => {
+    console.error(e);
+    process.exit(1);
+});

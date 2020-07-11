@@ -1,16 +1,33 @@
+import fs from 'fs';
+import path from 'path';
 import nunjucks from 'nunjucks';
 import * as markdown from './markdown';
 import { STATUS, PERM, PRIV } from '../model/builtin';
 import * as misc from './misc';
 
-function Loader() { }
-Loader.prototype.getSource = function getSource(name) {
-    if (!global.Hydro.template[name]) throw new Error(`Cannot get template ${name}`);
-    return {
-        src: global.Hydro.template[name],
-        path: name,
-    };
-};
+class Loader extends nunjucks.Loader {
+    // eslint-disable-next-line class-methods-use-this
+    getSource(name: string) {
+        if (!process.env.debug) {
+            if (!global.Hydro.template[name]) throw new Error(`Cannot get template ${name}`);
+            return {
+                src: global.Hydro.template[name],
+                path: name,
+                noCache: false,
+            };
+        }
+        let fullpath = null;
+        const base = path.join(process.cwd(), 'templates');
+        const p = path.resolve(base, name);
+        if (fs.existsSync(p)) fullpath = p;
+        if (!fullpath) throw new Error(`Cannot get template ${name}`);
+        return {
+            src: fs.readFileSync(fullpath, 'utf-8'),
+            path: fullpath,
+            noCache: true,
+        };
+    }
+}
 
 class Nunjucks extends nunjucks.Environment {
     constructor() {

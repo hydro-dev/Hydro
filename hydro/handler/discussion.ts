@@ -1,4 +1,5 @@
 import { ObjectID } from 'mongodb';
+import { isSafeInteger } from 'lodash';
 import { DiscussionNotFoundError, DocumentNotFoundError } from '../error';
 import paginate from '../lib/paginate';
 import * as system from '../model/system';
@@ -87,17 +88,23 @@ class DiscussionMainHandler extends Handler {
 }
 
 class DiscussionNodeHandler extends DiscussionHandler {
-    async get({
-        domainId, type, name, page = 1,
-    }) {
-        if (ObjectID.isValid(name)) name = new ObjectID(name);
+    @param('type', Types.String)
+    @param('name', Types.String)
+    @param('page', Types.UnsignedInt, true)
+    async get(domainId: string, type: string, _name: string, page = 1) {
+        let name: ObjectID | string | number;
+        if (ObjectID.isValid(_name)) name = new ObjectID(_name);
+        else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
+        else name = _name;
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name }),
             page,
             await system.get('DISCUSSION_PER_PAGE'),
         );
+        const uids = ddocs.map((ddoc) => ddoc.owner);
+        uids.push(this.vnode.owner);
         const [udict, vnodes] = await Promise.all([
-            user.getList(domainId, ddocs.map((ddoc) => ddoc.owner)),
+            user.getList(domainId, uids),
             discussion.getNodes(domainId),
         ]);
         const path = [
@@ -105,7 +112,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
             ['discussion_main', 'discussion_main'],
             [this.vnode.title, null, true],
         ];
-        const vndict = { [typeMapper[type]]: { [name]: this.vnode } };
+        const vndict = { [typeMapper[type]]: { [name.toString()]: this.vnode } };
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
             ddocs,
@@ -138,11 +145,20 @@ class DiscussionCreateHandler extends DiscussionHandler {
         this.response.body = { path, vnode: this.vnode };
     }
 
-    async post({
-        domainId, type, name, title, content, highlight,
-    }) {
+    @param('type', Types.String)
+    @param('name', Types.String)
+    @param('title', Types.String, isTitle)
+    @param('content', Types.String, isContent)
+    @param('highlight', Types.Boolean, true)
+    async post(
+        domainId: string, type: string, _name: string,
+        title: string, content: string, highlight = false,
+    ) {
         this.limitRate('add_discussion', 3600, 30);
-        if (ObjectID.isValid(name)) name = new ObjectID(name);
+        let name: ObjectID | string | number;
+        if (ObjectID.isValid(_name)) name = new ObjectID(_name);
+        else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
+        else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         const did = await discussion.add(
             domainId, typeMapper[type], name, this.user._id,

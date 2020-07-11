@@ -1,4 +1,5 @@
 import yaml from 'js-yaml';
+import { ObjectID } from 'mongodb';
 import { parseTimeMS, parseMemoryMB } from '../utils';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
@@ -8,7 +9,7 @@ import * as user from '../model/user';
 import * as task from '../model/task';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Connection, ConnectionHandler,
+    Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 
 async function _postJudge(rdoc) {
@@ -36,6 +37,8 @@ async function _postJudge(rdoc) {
 }
 
 export async function next(body) {
+    if (body.rid) body.rid = new ObjectID(body.rid);
+    if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: any = {};
     const $push: any = {};
@@ -66,6 +69,8 @@ export async function next(body) {
 }
 
 export async function end(body) {
+    if (body.rid) body.rid = new ObjectID(body.rid);
+    if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: any = {};
     const $push: any = {};
@@ -92,9 +97,17 @@ export async function end(body) {
 }
 
 class PretestHandler extends Handler {
-    async post({
-        domainId, pid, code, lang, time = '1s', memory = '256m', input = '',
-    }) {
+    @param('pid', Types.UnsignedInt, true)
+    @param('code', Types.String)
+    @param('lang', Types.String)
+    @param('time', Types.String, true)
+    @param('memory', Types.String, true)
+    @param('input', Types.String, true)
+    async post(
+        domainId: string, pid = 0,
+        code: string, lang: string,
+        time = '1s', memory = '256m', input = '',
+    ) {
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc.config) {
@@ -104,7 +117,7 @@ class PretestHandler extends Handler {
             }
         }
         const rid = await record.add(domainId, {
-            pid: pid || String.random(16),
+            pid,
             uid: this.user._id,
             type: 'run',
             time: parseTimeMS(time),

@@ -4,7 +4,9 @@
 
 import './interface';
 import cluster from 'cluster';
-import { argv } from 'yargs';
+import parse from 'yargs-parser';
+
+const argv = parse(process.argv.slice(2));
 
 global.Hydro = {
     stat: { reqCount: 0 },
@@ -25,7 +27,10 @@ global.Hydro = {
 };
 global.onDestory = [];
 
-if (argv.debug) console.log(process.argv);
+if (argv.debug) {
+    console.log(process.argv);
+    process.env.debug = 'enable';
+}
 
 async function terminate() {
     for (const task of global.onDestory) {

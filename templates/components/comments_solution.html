@@ -41,7 +41,7 @@
     <div class="media__body top no-heading">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
-          {{ user.render_inline(udoc) }}
+          {{ user.render_inline(handler.user) }}
         </div>
       </div>
       <div class="hasjs--hide">
@@ -67,7 +67,7 @@
             <div class="media__body top no-heading">
               <div class="clearfix">
                 <div class="supplementary dczcomments__supplementary">
-                  {{ user.render_inline(udoc, badge=false) }}
+                  {{ user.render_inline(handler.user, badge=false) }}
                 </div>
               </div>
               <div class="commentbox-placeholder"></div>
@@ -115,22 +115,22 @@
         <div class="dczcomments__operations nojs--hide">
         {% if handler.user.hasPerm(reply_post_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
-            data-form="{{ {operation: reply_post_op, psrid: doc._id}|json }}"
+            data-form="{{ {operation: reply_post_op, psid: doc._id}|json }}"
           ><span class="icon icon-reply"></span></a>
         {% endif %}
         {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_edit_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
-            data-form="{{ {operation: comment_edit_op, psrid: doc._id}|json }}"
+            data-form="{{ {operation: comment_edit_op, psid: doc._id}|json }}"
           ><span class="icon icon-edit"></span></a>
         {% endif %}
         {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_delete_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
-            data-form="{{ {operation: comment_delete_op, psrid: doc._id}|json }}"
+            data-form="{{ {operation: comment_delete_op, psid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>
         {% endif %}
         </div>
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ url('problem_solution_raw', pid=doc.pid, psid=doc._id) }}">
+      <div class="typo" data-emoji-enabled data-raw-url="{{ url('problem_solution_raw', pid=doc.parentId, psid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
@@ -160,7 +160,7 @@
                 {% endif %}
                 </div>
               </div>
-              <div class="typo" data-emoji-enabled data-raw-url="{{ url('problem_solution_reply_raw', pid=doc.pid, psid=doc._id, psrid=rdoc._id) }}">
+              <div class="typo" data-emoji-enabled data-raw-url="{{ url('problem_solution_reply_raw', pid=doc.parentId, psid=doc._id, psrid=rdoc._id) }}">
                 {{ rdoc['content']|markdown|safe }}
               </div>
               <div class="commentbox-edit-target"></div>

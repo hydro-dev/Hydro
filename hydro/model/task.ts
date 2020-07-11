@@ -28,20 +28,19 @@ export function del(_id: ObjectID) {
 export async function getFirst(query: any) {
     const q = { ...query };
     q.executeAfter = q.executeAfter || { $lt: new Date().getTime() };
-    const res = await coll.find(q).sort('_id', 1).limit(1).toArray();
-    if (res.length) {
-        await coll.deleteOne({ _id: res[0]._id });
-        if (res[0].interval) {
+    const res = await coll.findOneAndDelete(q);
+    if (res.value) {
+        if (res.value.interval) {
             await coll.insertOne({
-                ...res[0], executeAfter: moment().add(...res[0].interval).toDate(),
+                ...res.value, executeAfter: moment().add(...res.value.interval).toDate(),
             });
         }
-        return res[0];
+        return res.value;
     }
     return null;
 }
 
-export async function consume(query, cb: Function) {
+export async function consume(query: any, cb: Function) {
     let isRunning = false;
     const interval = setInterval(async () => {
         if (isRunning) return;

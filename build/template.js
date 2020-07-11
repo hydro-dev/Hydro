@@ -24,27 +24,6 @@ const build = (dirOrObject) => {
             templates[i] = template;
         }
     } else templates = dirOrObject;
-    for (const i in templates) {
-        if (i.endsWith('.html') && !global.DEBUG && !templates[i].includes('No Compression')) {
-            templates[i] = templates[i]
-                .trim()
-                .replace(/ *\n */gmi, ' ')
-                .replace(/, /gmi, ',')
-                .replace(/%} {%/gmi, '%}{%')
-                .replace(/ %}/gmi, '%}')
-                .replace(/{% /gmi, '{%')
-                .replace(/> </gmi, '><')
-                .replace(/}} </gmi, '}}<')
-                .replace(/> {{/gmi, '>{{')
-                .replace(/{{ /gmi, '{{')
-                .replace(/ }}/gmi, '}}')
-                .replace(/%} </gmi, '%}<')
-                .replace(/> {%/gmi, '>{%')
-                .replace(/= /gmi, '=')
-                .replace(/ =/gmi, '=')
-                .trim();
-        }
-    }
     return templates;
 };
 

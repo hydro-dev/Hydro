@@ -25,16 +25,6 @@ module.exports = {
             console.error('Cannot hack sockjs');
         }
     },
-    yargs: () => {
-        const p = require.resolve('yargs');
-        const file = fs.readFileSync(p).toString().split('\n');
-        if (file[12].includes('const argv = yargs(processArgs, cwd, require)')) {
-            file[12] = 'const argv = yargs(processArgs, cwd)';
-            fs.writeFileSync(p, file.join('\n'));
-        } else if (!file[12].includes('const argv = yargs(processArgs, cwd)')) {
-            console.error('Cannot hack yargs');
-        }
-    },
     saslprep: () => {
         const q = require.resolve('saslprep');
         const mem = path.join(path.dirname(q), 'code-points.mem');
@@ -46,6 +36,16 @@ module.exports = {
             fs.writeFileSync(p, file.join('\n'));
         } else if (!file[7].includes('Buffer.from')) {
             console.error('Cannot hack saslprep');
+        }
+    },
+    ftp: () => {
+        const p = require.resolve('ftp/lib/connection');
+        const file = fs.readFileSync(p).toString().split('\n');
+        if (file[51].includes('new Buffer')) {
+            file[51] = file[51].replace('new Buffer', 'Buffer.from');
+            fs.writeFileSync(p, file.join('\n'));
+        } else if (!file[51].includes('Buffer.from')) {
+            console.error('Cannot hack ftp');
         }
     },
 };

@@ -27,7 +27,7 @@ export default function (env = {}) {
   }
 
   function babelLoader() {
-    let cacheDirectory = root('.cache/babel');
+    let cacheDirectory = root('../.cache/babel');
     try {
       fs.ensureDirSync(cacheDirectory);
     } catch (ignored) {
@@ -173,7 +173,7 @@ export default function (env = {}) {
         patterns: [
           { from: root('static') },
           { from: root('node_modules/emojify.js/dist/images/basic'), to: 'img/emoji/' },
-        ]
+        ],
       }),
 
       // Options are provided by LoaderOptionsPlugin until webpack#3136 is fixed
