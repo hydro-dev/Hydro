@@ -116,6 +116,7 @@ SystemSetting(
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
     Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
+    Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header'),
     Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
     Setting('setting_ui', 'ui.header', null, null, 'text', 'Header Logo'),
     Setting('setting_ui', 'ui.headerBackground', null, null, 'text', 'Header Background'),

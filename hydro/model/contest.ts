@@ -390,8 +390,10 @@ export async function edit(
     return await document.set(domainId, type, tid, $set);
 }
 
-export async function get(domainId: string, tid: ObjectID, type = document.TYPE_CONTEST) {
-    let tdoc;
+export async function get(
+    domainId: string, tid: ObjectID, type = document.TYPE_CONTEST,
+) {
+    let tdoc: Tdoc;
     if (type === -1) {
         tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
         if (!tdoc) tdoc = await document.get(domainId, document.TYPE_HOMEWORK, tid);
@@ -535,7 +537,7 @@ export function getMulti(domainId: string, query = {}, type = document.TYPE_CONT
 
 export async function getAndListStatus(
     domainId: string, tid: ObjectID, docType = document.TYPE_CONTEST,
-) {
+): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
     const tdoc = await get(domainId, tid, docType);
     const tsdocs = await document.getMultiStatus(domainId, docType, { docId: tid })

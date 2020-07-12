@@ -2,10 +2,12 @@
 import { ObjectID, GridFSBucket } from 'mongodb';
 import fs from 'fs';
 
+export type Dict<T> = { [key: string]: T };
+
 export interface Setting {
     family: string,
     key: string,
-    range: Array<[string, string]> | { [key: string]: string },
+    range: Array<[string, string]> | Dict<string>,
     value: any,
     type: string,
     name: string,
@@ -51,7 +53,8 @@ export interface Pdoc {
     nAccept: number,
     tag: string[],
     category: string[],
-    data?: ObjectID,
+    // ObjectID for built-in files, string for other source (RemoteJudge, etc.)
+    data?: ObjectID | string,
     hidden: boolean,
     config: string,
 }
@@ -108,15 +111,21 @@ export interface Tdoc {
     domainId: string,
     docId: ObjectID,
     docType: number,
+    owner: number,
     beginAt: Date,
     endAt: Date,
-    penaltySince?: Date,
-    penaltyRules?: PenaltyRules,
     attend: number,
     title: string,
     content: string,
     rule: string,
     pids: number[],
+
+    // For homework
+    penaltySince?: Date,
+    penaltyRules?: PenaltyRules,
+
+    // For training
+    dag: any
 }
 
 interface ContestStat {

@@ -50,19 +50,23 @@ Array.isDiff = function isDiff(a, b) {
 };
 
 Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
-    let h = this.getHours();
-    if (h < 10) h = `0${h}`;
-    let m = this.getMinutes();
+    let m = this.getMonth() + 1;
     if (m < 10) m = `0${m}`;
-    let s = this.getSeconds();
-    if (s < 10) s = `0${s}`;
+    let d = this.getDate();
+    if (d < 10) d = `0${d}`;
+    let H = this.getHours();
+    if (H < 10) H = `0${H}`;
+    let M = this.getMinutes();
+    if (M < 10) M = `0${M}`;
+    let S = this.getSeconds();
+    if (S < 10) S = `0${S}`;
     return fmt
         .replace('%Y', this.getFullYear())
-        .replace('%m', this.getMonth() + 1)
-        .replace('%d', this.getDate())
-        .replace('%H', h)
-        .replace('%M', m)
-        .replace('%S', s);
+        .replace('%m', m)
+        .replace('%d', d)
+        .replace('%H', H)
+        .replace('%M', M)
+        .replace('%S', S);
 };
 
 Math.sum = function sum(...args) {

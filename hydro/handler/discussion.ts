@@ -21,6 +21,14 @@ export const typeMapper = {
 };
 
 class DiscussionHandler extends Handler {
+    ddoc?: any;
+
+    drdoc?: any;
+
+    drrdoc?: any;
+
+    vnode?: any;
+
     async _prepare({
         domainId, type, name, did, drid, drrid,
     }) {

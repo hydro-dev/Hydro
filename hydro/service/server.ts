@@ -31,10 +31,11 @@ const app = new Koa();
 let server;
 const router = new Router();
 
-interface IConstructor {
-    // @ts-ignore
-    new(value: any): any;
+// TODO fix this ugly hack
+interface H {
+    [key: string]: any,
 }
+
 interface IHandler {
     // @ts-ignore
     new(ctx: Koa.Context): Handler;
@@ -44,7 +45,7 @@ interface IConnectionHandler {
     new(conn: sockjs.Connection): ConnectionHandler;
 }
 type MethodDecorator = (target: any, name: string, obj: any) => any;
-type Converter = IConstructor | ((value: any) => any);
+type Converter = (value: any) => any;
 type Validator = (value: any) => boolean;
 interface ParamOption {
     name: string,
@@ -64,7 +65,7 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
         const t = parseFloat(v);
         return t && !Number.isNaN(t) && !Number.isFinite(t);
     }],
-    [ObjectID, ObjectID.isValid],
+    [(v) => new ObjectID(v), ObjectID.isValid],
     [(v) => !!v, null, true],
     [
         (v) => {
@@ -105,36 +106,28 @@ export function param(
 ): MethodDecorator;
 export function param(
     name: string, ...args: Array<Types | boolean | Converter | Validator>
-)
-export function param(...args: any): MethodDecorator {
+): MethodDecorator;
+export function param(name: string, ...args: any): MethodDecorator {
     let cursor = 0;
-    let v: ParamOption = null;
+    const v: ParamOption = { name };
     let isValidate = true;
-    const d: ParamOption[] = [];
-    while (cursor <= args.length) {
-        if (typeof args[cursor] === 'string') {
-            v = { name: args[cursor] };
-            d.push(v);
-            isValidate = true;
-        } else if (typeof args[cursor] === 'number') {
+    while (cursor < args.length) {
+        if (typeof args[cursor] === 'number') {
             const type = args[cursor];
             if (Tools[type]) {
-                if (Tools[type][0]) d[d.length - 1].convert = Tools[type][0];
-                if (Tools[type][1]) d[d.length - 1].validate = Tools[type][1];
-                if (Tools[type][2]) d[d.length - 1].isOptional = Tools[type][2];
+                if (Tools[type][0]) v.convert = Tools[type][0];
+                if (Tools[type][1]) v.validate = Tools[type][1];
+                if (Tools[type][2]) v.isOptional = Tools[type][2];
             }
-        } else if (typeof args[cursor] === 'boolean') d[d.length - 1].isOptional = args[cursor];
-        else if (!isValidate) {
-            const I = args[cursor];
-            if (typeof I.constructor === 'function') {
-                d[d.length - 1].convert = (val: any) => new I(val);
-            } else d[d.length - 1].convert = I;
+        } else if (typeof args[cursor] === 'boolean') v.isOptional = args[cursor];
+        else if (isValidate) {
+            if (args[cursor] !== null) v.validate = args[cursor];
             isValidate = false;
-        } else d[d.length - 1].validate = args[cursor];
+        } else {
+            const I = args[cursor];
+            v.convert = I;
+        }
         cursor++;
-    }
-    for (let i = 0; i < d.length; i++) {
-        d[i].isOptional = d[i].isOptional || false;
     }
     return function desc(target: any, funcName: string, obj: any) {
         if (!target.__param) target.__param = {};
@@ -153,7 +146,6 @@ export function param(...args: any): MethodDecorator {
                                 throw new ValidationError(item.name);
                             }
                         }
-                        // @ts-ignore
                         if (item.convert) c.push(item.convert(rawArgs[item.name]));
                         else c.push(rawArgs[item.name]);
                     } else c.push(undefined);
@@ -161,7 +153,7 @@ export function param(...args: any): MethodDecorator {
                 return originalMethod.call(this, ...c);
             };
         }
-        target.__param[target.constructor.name][funcName].splice(1, 0, ...d);
+        target.__param[target.constructor.name][funcName].splice(1, 0, v);
         return obj;
     };
 }
@@ -180,11 +172,80 @@ export async function prepare() {
     }));
 }
 
-const HandlerMixin = (Class: IConstructor) => class extends Class {
+export class Handler {
+    UIContext: any;
+
+    args: any;
+
+    ctx: Koa.Context;
+
+    request: {
+        host: string,
+        hostname: string,
+        ip: string,
+        headers: any,
+        cookies: any,
+        body: any,
+        files: any,
+        query: any,
+        path: string,
+        params: any,
+        referer: any,
+        json: boolean,
+    };
+
+    response: {
+        body: any,
+        type: string,
+        status: number,
+        template: string | undefined,
+        redirect: string | undefined,
+        disposition: string | undefined,
+        attachment: (name: string) => void,
+    };
+
+    session: any;
+
+    csrfToken: string;
+
+    user: any;
+
+    constructor(ctx: Koa.Context) {
+        this.ctx = ctx;
+        this.request = {
+            host: ctx.request.host,
+            hostname: ctx.request.hostname,
+            ip: ctx.request.ip,
+            headers: ctx.request.headers,
+            cookies: ctx.cookies,
+            body: ctx.request.body,
+            files: ctx.request.files,
+            query: ctx.query,
+            path: ctx.path,
+            params: ctx.params,
+            referer: ctx.request.headers.referer || '/',
+            json: (ctx.request.headers.accept || '').includes('application/json'),
+        };
+        this.response = {
+            body: {},
+            type: '',
+            status: null,
+            template: null,
+            redirect: null,
+            attachment: (name) => ctx.attachment(name),
+            disposition: null,
+        };
+        this.UIContext = {
+            cdn_prefix: '/',
+            url_prefix: '/',
+        };
+        this.session = {};
+    }
+
     async renderHTML(name: string, context: any): Promise<string> {
         if (enableLog) console.time(name);
-        this.hasPerm = (perm) => this.user.hasPerm(perm);
         // FIXME fix this ugly hack
+        // @ts-ignore
         this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
         const res = await render(name, Object.assign(context, {
             handler: this,
@@ -261,77 +322,6 @@ const HandlerMixin = (Class: IConstructor) => class extends Class {
         }
         return res;
     }
-};
-
-export const Handler = HandlerMixin(class {
-    UIContext: any;
-
-    args: any;
-
-    ctx: Koa.Context;
-
-    request: {
-        host: string,
-        hostname: string,
-        ip: string,
-        headers: any,
-        cookies: any,
-        body: any,
-        files: any,
-        query: any,
-        path: string,
-        params: any,
-        referer: any,
-        json: boolean,
-    };
-
-    response: {
-        body: any,
-        type: string,
-        status: number,
-        template: string | undefined,
-        redirect: string | undefined,
-        disposition: string | undefined,
-        attachment: (name: string) => void,
-    };
-
-    session: any;
-
-    csrfToken: string;
-
-    user: any;
-
-    constructor(ctx: Koa.Context) {
-        this.ctx = ctx;
-        this.request = {
-            host: ctx.request.host,
-            hostname: ctx.request.hostname,
-            ip: ctx.request.ip,
-            headers: ctx.request.headers,
-            cookies: ctx.cookies,
-            body: ctx.request.body,
-            files: ctx.request.files,
-            query: ctx.query,
-            path: ctx.path,
-            params: ctx.params,
-            referer: ctx.request.headers.referer || '/',
-            json: (ctx.request.headers.accept || '').includes('application/json'),
-        };
-        this.response = {
-            body: {},
-            type: '',
-            status: null,
-            template: null,
-            redirect: null,
-            attachment: (name) => ctx.attachment(name),
-            disposition: null,
-        };
-        this.UIContext = {
-            cdn_prefix: '/',
-            url_prefix: '/',
-        };
-        this.session = {};
-    }
 
     async render(name: string, context: any) {
         // @ts-ignore
@@ -339,7 +329,7 @@ export const Handler = HandlerMixin(class {
         this.response.type = 'text/html';
     }
 
-    back(body: any) {
+    back(body?: any) {
         this.response.body = body || this.response.body || {};
         this.response.redirect = this.request.headers.referer || '/';
     }
@@ -371,6 +361,8 @@ export const Handler = HandlerMixin(class {
     }
 
     async init({ domainId }) {
+        const xff = await system.get('server.xff');
+        if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
         await Promise.all([
             this.getSession(),
             this.getBdoc(),
@@ -481,7 +473,7 @@ export const Handler = HandlerMixin(class {
         };
         await this.finish().catch(() => { });
     }
-});
+}
 
 async function handle(ctx, HandlerClass, checker) {
     global.Hydro.stat.reqCount++;
@@ -553,13 +545,13 @@ const Checker = (permPrivChecker) => {
     };
 };
 
-export function Route(name: string, route: string, RouteHandler: IHandler, ...permPrivChecker) {
+export function Route(name: string, route: string, RouteHandler: any, ...permPrivChecker) {
     const checker = Checker(permPrivChecker);
     router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
     router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
 
-export const ConnectionHandler = HandlerMixin(class {
+export class ConnectionHandler {
     conn: sockjs.Connection;
 
     request: {
@@ -587,7 +579,88 @@ export const ConnectionHandler = HandlerMixin(class {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
-    send(data: JSON) {
+    async renderHTML(name: string, context: any): Promise<string> {
+        if (enableLog) console.time(name);
+        // FIXME fix this ugly hack
+        // @ts-ignore
+        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
+        const res = await render(name, Object.assign(context, {
+            handler: this,
+            // @ts-ignore
+            url: (...args) => this.url(...args),
+            _: (str: string) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
+            user: this.user,
+        }));
+        if (enableLog) console.timeEnd(name);
+        return res;
+    }
+
+    async limitRate(op, periodSecs, maxOperations) {
+        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
+    }
+
+    translate(str) {
+        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
+    }
+
+    renderTitle(str) {
+        return `${this.translate(str)} - Hydro`;
+    }
+
+    checkPerm(...args) {
+        for (const i in args) {
+            if (args[i] instanceof Array) {
+                let p = false;
+                for (const j in args) {
+                    if (this.user.hasPerm(args[i][j])) {
+                        p = true;
+                        break;
+                    }
+                }
+                if (!p) throw new PermissionError([args[i]]);
+            } else if (!this.user.hasPerm(args[i])) {
+                throw new PermissionError([[args[i]]]);
+            }
+        }
+    }
+
+    checkPriv(...args) {
+        for (const i in args) {
+            if (args[i] instanceof Array) {
+                let p = false;
+                for (const j in args) {
+                    if (this.user.hasPriv(args[i][j])) {
+                        p = true;
+                        break;
+                    }
+                }
+                if (!p) throw new PrivilegeError([args[i]]);
+            } else if (!this.user.hasPriv(args[i])) {
+                throw new PrivilegeError([[args[i]]]);
+            }
+        }
+    }
+
+    url(name, kwargs = {}) {
+        let res = '#';
+        const args: any = { ...kwargs };
+        try {
+            if (this.args.domainId !== 'system') {
+                name += '_with_domainId';
+                args.domainId = args.domainId || this.args.domainId;
+            }
+            const { anchor, query } = args;
+            if (query) res = router.url(name, args, { query });
+            else res = router.url(name, args);
+            if (anchor) return `${res}#${anchor}`;
+        } catch (e) {
+            console.error(e.message);
+            console.log(name, args);
+        }
+        return res;
+    }
+
+    send(data: any) {
         this.conn.write(JSON.stringify(data));
     }
 
@@ -611,17 +684,17 @@ export const ConnectionHandler = HandlerMixin(class {
         this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
-});
+}
 
 export function Connection(
     name: string, prefix: string,
-    RouteConnHandler: IConnectionHandler,
+    RouteConnHandler: any,
     ...permPrivChecker: Array<number | string | Function>
 ) {
     const sock = sockjs.createServer({ prefix });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
-        const h = new RouteConnHandler(conn);
+        const h: H = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;

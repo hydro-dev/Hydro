@@ -278,7 +278,7 @@ export const BUILTIN_USERS = [
         regip: '127.0.0.1',
         loginat: new Date(0),
         loginip: '127.0.0.1',
-        priv: PRIV.PRIV_NONE,
+        priv: PRIV.PRIV_REGISTER_USER,
     },
     {
         _id: 1,

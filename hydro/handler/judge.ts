@@ -155,6 +155,8 @@ class JudgeHandler extends Handler {
 }
 
 class JudgeConnectionHandler extends ConnectionHandler {
+    processing: any;
+
     async message(msg) {
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {

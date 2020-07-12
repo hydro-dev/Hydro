@@ -15,6 +15,7 @@ function set(key, value) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
         const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
         if (s.flag & setting.FLAG_DISABLED) return undefined;
+        if (s.flag & setting.FLAG_SECRET && !value) return undefined;
         if (s.type === 'boolean') {
             if (value === 'on') return true;
             return false;
@@ -48,6 +49,8 @@ class SystemMainHandler extends SystemHandler {
 }
 
 class SystemCheckConnHandler extends ConnectionHandler {
+    id: any;
+
     async prepare() {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await this.check();
@@ -61,7 +64,7 @@ class SystemCheckConnHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        check.cancel(this.token);
+        check.cancel(this.id);
     }
 }
 

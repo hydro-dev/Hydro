@@ -19,8 +19,13 @@ import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
 } from '../error';
+import { Pdoc, Udoc, Rdoc } from '../interface';
 
-const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
+const parseCategory = (value: string) => {
+    if (!value) return [];
+    console.log(value);
+    return flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
+};
 const parsePid = (value: string) => (isSafeInteger(value) ? parseInt(value, 10) : value);
 
 class ProblemHandler extends Handler {
@@ -99,7 +104,7 @@ class ProblemMainHandler extends ProblemHandler {
 
 class ProblemCategoryHandler extends ProblemHandler {
     @param('page', Types.UnsignedInt, true)
-    @param('category', Types.String, parseCategory)
+    @param('category', Types.String, null, parseCategory)
     async get(domainId: string, page = 1, category: string[]) {
         this.response.template = 'problem_main.html';
         const q: any = { $and: [] };
@@ -136,7 +141,7 @@ class ProblemCategoryHandler extends ProblemHandler {
 
 class ProblemRandomHandler extends ProblemHandler {
     @param('category', Types.String, true, null, parseCategory)
-    async get(domainId: string, category: string[]) {
+    async get(domainId: string, category: string[] = []) {
         const q: any = category.length ? { $and: [] } : {};
         for (const name of category) {
             if (name) {
@@ -157,31 +162,32 @@ class ProblemRandomHandler extends ProblemHandler {
 }
 
 class ProblemDetailHandler extends ProblemHandler {
+    pdoc: Pdoc;
+
+    udoc: Udoc;
+
     @param('pid', Types.String, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
-        if (pid) {
-            this.pdoc = await problem.get(domainId, pid, this.user._id);
-            if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
-                this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            }
-            if (this.pdoc) this.udoc = await user.getById(domainId, this.pdoc.owner);
+        this.pdoc = await problem.get(domainId, pid, this.user._id, true);
+        if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
+            this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
+        this.udoc = await user.getById(domainId, this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
-            title: (this.pdoc || {}).title || '',
+            title: this.pdoc.title,
+            path: [
+                ['Hydro', 'homepage'],
+                ['problem_main', 'problem_main'],
+                [this.pdoc.title, null, true],
+            ],
         };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async get(...args: any) {
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['problem_main', 'problem_main'],
-            [this.pdoc.title, null, true],
-        ];
-    }
+    // eslint-disable-next-line
+    async get(...args: any[]) { }
 }
 
 class ProblemSubmitHandler extends ProblemDetailHandler {
@@ -234,6 +240,10 @@ class ProblemPretestHandler extends ProblemDetailHandler {
 }
 
 class ProblemPretestConnectionHandler extends ConnectionHandler {
+    pid: string;
+
+    domainId: string;
+
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
         this.pid = pid;
@@ -242,7 +252,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(data) {
-        const rdoc = data.value;
+        const rdoc: Rdoc = data.value;
         if (
             rdoc.uid !== this.user._id
             || rdoc.pid.toString() !== this.pid
@@ -339,23 +349,25 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
     }
 
     async get() {
+        let md5;
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
             const f = await file.getMeta(this.pdoc.data);
-            this.md5 = f.md5;
+            md5 = f.md5;
         }
-        this.response.body.md5 = this.md5;
+        this.response.body.md5 = md5;
     }
 
     async post({ domainId }) {
+        let md5;
         if (!this.request.files.file) throw new BadRequestError();
         await problem.setTestdata(
             domainId, this.pdoc.docId, this.request.files.file.path,
         );
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {
             const f = await file.getMeta(this.pdoc.data);
-            this.md5 = f.md5;
+            md5 = f.md5;
         }
-        this.response.body.md5 = this.md5;
+        this.response.body.md5 = md5;
     }
 }
 
@@ -368,7 +380,7 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
         }
         if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
         else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
-        this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
+        else this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
     }
 }
 
@@ -416,7 +428,7 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         let psdoc = await solution.get(domainId, psid);
         if (psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_SELF);
-        psdoc = await solution.edit(domainId, this.psdoc.docId, content);
+        psdoc = await solution.edit(domainId, psdoc.docId, content);
         this.back({ psdoc });
     }
 

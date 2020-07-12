@@ -147,10 +147,10 @@ class HomeSecurityHandler extends Handler {
         const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
             await system.get('changemail_token_expire_seconds'),
-            { uid: this.udoc._id, mail },
+            { uid: this.user._id, mail },
         );
         await mail.sendMail(mail, 'Change Email', 'user_changemail_mail.html', {
-            url: this.url('user_changemail_with_code', { code }), uname: this.udoc.uname,
+            url: this.url('user_changemail_with_code', { code }), uname: this.user.uname,
         });
         this.response.template = 'user_changemail_mail_sent.html';
     }

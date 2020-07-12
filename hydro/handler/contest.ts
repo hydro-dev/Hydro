@@ -155,8 +155,8 @@ class ContestEditHandler extends ContestHandler {
             duration,
             path,
             pids: this.tdoc.pids.join(','),
-            date_text: `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`,
-            time_text: `${dt.getHours()}:${dt.getMinutes()}`,
+            date_text: dt.format('%Y-%m-%d'),
+            time_text: dt.format('%H:%M'),
             page_name: 'contest_edit',
         };
     }
@@ -337,8 +337,8 @@ class ContestCreateHandler extends ContestHandler {
             rules,
             path,
             page_name: 'contest_create',
-            date_text: `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`,
-            time_text: `${dt.getHours()}:${dt.getMinutes()}`,
+            date_text: dt.format('%Y-%m-%d'),
+            time_text: dt.format('%M:%S'),
             pids: '1000, 1001',
         };
     }

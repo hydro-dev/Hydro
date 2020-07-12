@@ -60,6 +60,8 @@ class DomainCreateHandler extends Handler {
 }
 
 class ManageHandler extends Handler {
+    domain: any;
+
     async prepare({ domainId }) {
         this.checkPerm(PERM.PERM_EDIT_DOMAIN);
         this.domain = await domain.get(domainId);

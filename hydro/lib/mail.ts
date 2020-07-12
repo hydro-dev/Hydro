@@ -1,13 +1,6 @@
 import nodemailer from 'nodemailer';
+import { SendMailError } from '../error';
 
-const { SendMailError } = require('../error');
-
-/**
- * @param {string} to
- * @param {string} subject
- * @param {string} text
- * @param {string} html
- */
 // eslint-disable-next-line import/prefer-default-export
 export async function sendMail(to: string, subject: string, text: string, html: string) {
     let t: unknown;

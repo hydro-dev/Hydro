@@ -12,6 +12,7 @@ import * as system from '../model/system';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import { Tdoc } from '../interface';
 
 async function _parseDagJson(domainId, dag) {
     const parsed = [];
@@ -199,6 +200,8 @@ class TrainingCreateHandler extends Handler {
 }
 
 class TrainingEditHandler extends Handler {
+    tdoc: Tdoc;
+
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
         this.tdoc = await training.get(domainId, tid);

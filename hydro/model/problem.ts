@@ -1,4 +1,4 @@
-import { ObjectID, FilterQuery } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
@@ -47,8 +47,6 @@ export async function get(
 ): Promise<Pdoc> {
     if (typeof pid !== 'number') {
         if (!Number.isNaN(parseInt(pid, 10))) pid = parseInt(pid, 10);
-        else if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-        else return null;
     }
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
@@ -87,11 +85,11 @@ export function inc(domainId: string, _id: number, field: string, n: number) {
     return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
 
-export function count<T>(domainId: string, query: FilterQuery<T>) {
+export function count(domainId: string, query: any) {
     return document.count(domainId, document.TYPE_PROBLEM, query);
 }
 
-export async function random<T>(domainId: string, query: FilterQuery<T>) {
+export async function random(domainId: string, query: any) {
     const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
     const pcount = await cursor.count();
     if (pcount) {
