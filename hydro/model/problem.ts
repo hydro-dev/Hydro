@@ -3,7 +3,7 @@ import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
-import { Pdoc } from '../interface';
+import { Pdoc, Pdict } from '../interface';
 import { ProblemNotFoundError } from '../error';
 import readConfig from '../lib/readConfig';
 
@@ -103,7 +103,7 @@ export async function random<T>(domainId: string, query: FilterQuery<T>) {
 export async function getList(
     domainId: string, pids: Array<number | string>,
     getHidden = false, doThrow = true,
-) {
+): Promise<Pdict> {
     pids = Array.from(new Set(pids));
     const r = {};
     const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };

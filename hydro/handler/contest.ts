@@ -200,7 +200,7 @@ class ContestEditHandler extends ContestHandler {
 class ContestProblemHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
-    async prepare(domainId: string, tid: ObjectID, pid: number) {
+    async _prepare(domainId: string, tid: ObjectID, pid: number) {
         [this.tdoc, this.pdoc] = await Promise.all([
             contest.get(domainId, tid),
             problem.get(domainId, pid, this.user._id),

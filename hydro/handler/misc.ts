@@ -1,5 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { PRIV } from '../model/builtin';
+import * as system from '../model/system';
 import * as file from '../model/file';
 import * as user from '../model/user';
 import * as markdown from '../lib/markdown';
@@ -77,6 +78,18 @@ class SockToken extends Handler {
     }
 }
 
+class UiSettingsHandler extends Handler {
+    async get() {
+        const [
+            header, nav, headerBackground,
+        ] = await system.getMany([
+            'ui.header', 'ui.nav', 'ui.headerBackground',
+        ]);
+        this.response.body = await this.renderHTML('extra.css', { header, nav, headerBackground });
+        this.response.type = 'text/css';
+    }
+}
+
 export async function apply() {
     Route('file_download', '/fs/:fileId/:secret', FileDownloadHandler);
     Route('file_download_with_name', '/fs/:fileId/:name/:secret', FileDownloadHandler);
@@ -85,6 +98,7 @@ export async function apply() {
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     Route('markdown', '/markdown', MarkdownHandler);
     Route('token', '/token', SockToken);
+    Route('ui', '/extra.css', UiSettingsHandler);
 }
 
 apply.updateStatus = function updateStatus(args) {

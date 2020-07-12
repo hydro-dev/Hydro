@@ -13,21 +13,51 @@ export interface Setting {
     flag: number,
 }
 
+export interface Udoc {
+    udoc: () => any,
+    dudoc: () => any,
+    _id: number,
+    mail: string,
+    uname: string,
+    salt: () => string,
+    hash: () => string,
+    hashType: string,
+    priv: number,
+    regat: Date,
+    loginat: Date,
+    perm: string,
+    role: string,
+    regip: () => string,
+    loginip: () => string,
+    hasPerm: (perm: string) => boolean,
+    hasPriv: (priv: number) => boolean,
+    checkPassword: (password: string) => void,
+    [key: string]: any,
+}
+
+export interface Udict {
+    [key: number]: Udoc,
+}
+
 export interface Pdoc {
-    _id: ObjectID
-    domainId: string
-    docId: number
-    pid: string
-    owner: number
-    title: string
-    content: string
-    nSubmit: number
-    nAccept: number
-    tag: string[]
+    _id: ObjectID,
+    domainId: string,
+    docId: number,
+    pid: string,
+    owner: number,
+    title: string,
+    content: string,
+    nSubmit: number,
+    nAccept: number,
+    tag: string[],
     category: string[],
-    data: ObjectID | null
-    hidden: boolean
-    config: string
+    data?: ObjectID,
+    hidden: boolean,
+    config: string,
+}
+
+export interface Pdict {
+    [key: string]: Pdoc,
 }
 
 export interface TestCase {
@@ -61,6 +91,55 @@ export interface Rdoc {
     stderr?: string,
     tid?: ObjectID,
     ttype?: number,
+}
+
+export interface ScoreboardNode {
+    type: string,
+    value: string,
+    raw?: any,
+}
+
+export interface PenaltyRules {
+    [key: string]: number,
+}
+
+export interface Tdoc {
+    _id: ObjectID,
+    domainId: string,
+    docId: ObjectID,
+    docType: number,
+    beginAt: Date,
+    endAt: Date,
+    penaltySince?: Date,
+    penaltyRules?: PenaltyRules,
+    attend: number,
+    title: string,
+    content: string,
+    rule: string,
+    pids: number[],
+}
+
+interface ContestStat {
+    detail: any,
+    [key: string]: any,
+}
+
+export interface ContestRule {
+    TEXT: string,
+    check: (args: any) => any,
+    statusSort: any,
+    showScoreboard: (tdoc: Tdoc, now: Date) => boolean,
+    showRecord: (tdoc: Tdoc, now: Date) => boolean,
+    stat: (tdoc: Tdoc, journal: any[]) => ContestStat,
+    scoreboard: (
+        isExport: boolean, _: (s: string) => string,
+        tdoc: Tdoc, rankedTsdocs: any[] | Generator<any>, udict: Udict, pdict: Pdict
+    ) => ScoreboardNode[][],
+    rank: (tsdocs: any[]) => any[] | Generator<any>,
+}
+
+export interface ContestRules {
+    [key: string]: ContestRule,
 }
 
 export type ProblemImporter = (url: string, handler: any) =>

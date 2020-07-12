@@ -14,15 +14,15 @@
       <table class="data-table">
         <colgroup>
         {%- for column in rows[0] -%}
-          <col class="col--{{ column['type'] }}">
+          <col class="col--{{ column.type }}">
         {%- endfor -%}
         </colgroup>
         <thead>
           <tr>
           {%- for column in rows[0] -%}
-            <th class="col--{{ column['type'] }}">
+            <th class="col--{{ column.type }}">
             {% if column.type == 'problem_detail' %}
-              <a href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=column.raw._id) }}" data-tooltip="{{ column['raw']['title'] }}">{{ column['value'] }}</a>
+              <a href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=column.raw) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
             {% else %}
               {{ column.value }}
             {% endif %}
@@ -36,7 +36,7 @@
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}">
               {% if column.type == 'user' %}
-                {{ user.render_inline(column.raw, badge=false) }}
+                {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
                 <a href="{{ url('record_detail', rid=column.raw) }}">{{ column.value }}</a>
               {% else %}

@@ -112,8 +112,8 @@ export async function update(
     return res.value;
 }
 
-export function reset(domainId: string, rid: ObjectID) {
-    return update(domainId, rid, {
+export function reset(domainId: string, rid: ObjectID, isRejudge: boolean) {
+    const upd: any = {
         score: 0,
         status: STATUS.STATUS_WAITING,
         time: 0,
@@ -123,8 +123,9 @@ export function reset(domainId: string, rid: ObjectID) {
         compilerTexts: [],
         judgeAt: null,
         judger: null,
-        rejudged: true,
-    });
+    };
+    if (isRejudge) upd.rejudged = true;
+    return update(domainId, rid, upd);
 }
 
 export function count(domainId: string, query: any) {
@@ -176,7 +177,7 @@ export async function judge(domainId: string, rid: ObjectID) {
 }
 
 export async function rejudge(domainId: string, rid: ObjectID) {
-    await reset(domainId, rid);
+    await reset(domainId, rid, true);
     const rdoc = await get(domainId, rid);
     const pdoc = await problem.get(domainId, rdoc.pid);
     await task.add({

@@ -62,7 +62,7 @@ class UserRegisterHandler extends Handler {
 
     @param('mail', Types.String, isEmail)
     async post(domainId: string, mail: string) {
-        if (await user.getByEmail('system', mail, true)) throw new UserAlreadyExistError(mail);
+        if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
@@ -158,7 +158,8 @@ class UserDetailHandler extends Handler {
     @param('uid', Types.Int)
     async get(domainId: string, uid: number) {
         const isSelfProfile = this.user._id === uid;
-        const udoc = await user.getById(domainId, uid, true);
+        const udoc = await user.getById(domainId, uid);
+        if (!udoc) throw new UserNotFoundError(uid);
         const sdoc = await token.getMostRecentSessionByUid(uid);
         const rdocs = await record.getByUid(domainId, uid);
         const pdict = await problem.getList(
@@ -310,7 +311,7 @@ class OauthCallbackHandler extends Handler {
         if (args.type === 'github') r = await this.github(args);
         else if (args.type === 'google') r = await this.google(args);
         else throw new UserFacingError('Oauth type');
-        const udoc = await user.getByEmail('system', r.email, true);
+        const udoc = await user.getByEmail('system', r.email);
         if (udoc) {
             this.session.uid = udoc._id;
         } else {

@@ -44,7 +44,7 @@ export async function run({ username = '', password = '' } = {}) {
     await Promise.all(tasks);
     await domain.add('system', 0, 'Hydro', true);
     if (username && password) {
-        const udoc = await user.getById('system', -1, false);
+        const udoc = await user.getById('system', -1);
         if (!udoc) {
             await user.create({
                 uid: -1,

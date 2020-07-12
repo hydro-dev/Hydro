@@ -376,7 +376,7 @@ export const Handler = HandlerMixin(class {
             this.getBdoc(),
         ]);
         [this.user] = await Promise.all([
-            user.getById(domainId, this.session.uid, true),
+            user.getById(domainId, this.session.uid),
             this.getCsrfToken(),
         ]);
     }

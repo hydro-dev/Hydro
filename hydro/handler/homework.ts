@@ -7,6 +7,7 @@ import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
 } from '../error';
+import { PenaltyRules } from '../interface';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -21,6 +22,12 @@ import * as document from '../model/document';
 import paginate from '../lib/paginate';
 import { isTitle, isContent } from '../lib/validator';
 
+const validatePenaltyRules = (input: string) => {
+    const s = yaml.safeLoad(input);
+    return s;
+};
+const convertPenaltyRules = validatePenaltyRules;
+
 const HomeworkHandler = contest.ContestHandlerMixin(Handler);
 
 class HomeworkMainHandler extends HomeworkHandler {
@@ -28,7 +35,7 @@ class HomeworkMainHandler extends HomeworkHandler {
         const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK).toArray();
         const calendar = [];
         for (const tdoc of tdocs) {
-            const cal = { ...tdoc, url: `/homework/${tdoc.docId}` };
+            const cal = { ...tdoc, url: this.url('homework_detail', { tid: tdoc.docId }) };
             if (contest.isExtended(tdoc) || contest.isDone(tdoc)) {
                 cal.endAt = tdoc.endAt;
                 cal.penaltySince = tdoc.penaltySince;
@@ -211,7 +218,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
     @param('penaltySinceDate', Types.Date)
     @param('penaltySinceTime', Types.Time)
     @param('extensionDays', Types.Float)
-    @param('penaltyRules', Types.String)
+    @param('penaltyRules', Types.String, validatePenaltyRules, convertPenaltyRules)
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('pids', Types.String)
@@ -219,7 +226,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
-        penaltyRules: string, title: string, content: string, _pids: string, rated = false,
+        penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
         const pids = _pids.split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
@@ -278,7 +285,7 @@ class HomeworkEditHandler extends HomeworkHandler {
     @param('penaltySinceDate', Types.Date)
     @param('penaltySinceTime', Types.Time)
     @param('extensionDays', Types.Float)
-    @param('penaltyRules', Types.String)
+    @param('penaltyRules', Types.String, validatePenaltyRules, convertPenaltyRules)
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('pids', Types.String)
@@ -330,6 +337,7 @@ class HomeworkEditHandler extends HomeworkHandler {
 class HomeworkScoreboardHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
+        console.log(123);
         const [tdoc, rows, udict] = await this.getScoreboard(
             domainId, tid, false, document.TYPE_HOMEWORK,
         );

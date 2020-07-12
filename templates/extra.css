@@ -1,0 +1,10 @@
+/* {% if header %} */
+.header__logo {
+    background: url({{ header }}) !important
+}
+/* {% endif %} */
+/* {% if headerBackground %} */
+.header {
+    background: url({{ headerBackground }}) !important
+}
+/* {% endif %} */

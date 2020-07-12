@@ -1,6 +1,7 @@
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError,
+    UserNotFoundError,
 } from '../error';
 import * as bus from '../service/bus';
 import {
@@ -141,7 +142,7 @@ class HomeSecurityHandler extends Handler {
     async postChangeMail({ domainId, currentPassword, mail }) {
         this.limitRate('send_mail', 3600, 30);
         this.user.checkPassword(currentPassword);
-        const udoc = await user.getByEmail(domainId, mail, true);
+        const udoc = await user.getByEmail(domainId, mail);
         if (udoc) throw new UserAlreadyExistError(mail);
         const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
@@ -212,7 +213,7 @@ class UserChangemailWithCodeHandler extends Handler {
         if (!tdoc || tdoc.uid !== this.user._id) {
             throw new InvalidTokenError(code);
         }
-        const udoc = await user.getByEmail(domainId, tdoc.mail, true);
+        const udoc = await user.getByEmail(domainId, tdoc.mail);
         if (udoc) throw new UserAlreadyExistError(tdoc.mail);
         await Promise.all([
             user.setEmail(this.user._id, tdoc.mail),
@@ -253,6 +254,7 @@ class HomeMessagesHandler extends Handler {
 
     async postSend({ uid, content }) {
         const udoc = await user.getById('system', uid);
+        if (!udoc) throw new UserNotFoundError(uid);
         const mdoc = await message.send(this.user._id, uid, content);
         // TODO(twd2): improve here: projection
         if (this.user._id !== uid) {
@@ -262,6 +264,7 @@ class HomeMessagesHandler extends Handler {
     }
 
     async postDeleteMessage({ messageId }) {
+        // TODO limitations
         await message.del(messageId);
         this.back();
     }

@@ -7,34 +7,18 @@ import {
 } from '../error';
 import * as document from './document';
 import { PERM } from './builtin';
+import {
+    Tdoc, ContestRule, ContestRules,
+    Udict, ScoreboardNode,
+} from '../interface';
 import * as validator from '../lib/validator';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
 
-interface Column {
-    type: string,
-    value: string,
-    raw?: any
-}
-
-export interface Tdoc {
-    _id: ObjectID,
-    domainId: string,
-    docId: ObjectID,
-    docType: number,
-    beginAt: Date,
-    endAt: Date,
-    penaltySince?: Date,
-    attend: number,
-    title: string,
-    content: string,
-    rule: string,
-    pids: number[]
-}
-
-const acm = {
+const acm: ContestRule = {
     TEXT: 'ACM/ICPC',
     check: () => { },
+    statusSort: { accept: -1, time: 1 },
     showScoreboard: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat: (tdoc, journal: any[]) => {
@@ -47,17 +31,18 @@ const acm = {
             if (tdoc.pids.includes(j.pid)
                 && !(effective[j.pid] && effective[j.pid].accept)) {
                 effective[j.pid] = j;
+                if (!j.accept) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
             }
-            if (!j.accept) naccept[j.pid]++;
         }
         function _time(jdoc) {
-            const real = jdoc.rid.generationTime - Math.floor(tdoc.beginAt / 1000);
+            const real = jdoc.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 20 * 60 * naccept[jdoc.pid];
             return real + penalty;
         }
-        for (const j in effective) {
+        for (const key in effective) {
+            const j = effective[key];
             detail.push({
-                ...effective[j], naccept: naccept[effective[j].pid], time: _time(effective[j]),
+                ...j, naccept: naccept[j.pid], time: _time(j),
             });
         }
         for (const d of detail) {
@@ -66,8 +51,8 @@ const acm = {
         }
         return { accept, time, detail };
     },
-    scoreboard(isExport: boolean, _: (s: string) => string, tdoc, rankedTsdocs, udict, pdict) {
-        const columns: Column[] = [
+    scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
+        const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
             { type: 'solved_problems', value: _('Solved Problems') },
@@ -78,40 +63,41 @@ const acm = {
                 { type: 'total_time_str', value: _('Total Time') },
             );
         }
-        for (const i in tdoc.pids) {
+        for (let i = 1; i <= tdoc.pids.length; i++) {
+            const pid = tdoc.pids[i - 1];
             if (isExport) {
                 columns.push(
                     {
                         type: 'problem_flag',
-                        value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
+                        value: '#{0} {1}'.format(i, pdict[pid].title),
                     },
                     {
                         type: 'problem_time',
-                        value: '#{0} {1}'.format(i + 1, _('Time (Seconds)')),
+                        value: '#{0} {1}'.format(i, _('Time (Seconds)')),
                     },
                     {
                         type: 'problem_time_str',
-                        value: '#{0} {1}'.format(i + 1, _('Time')),
+                        value: '#{0} {1}'.format(i, _('Time')),
                     },
                 );
             } else {
                 columns.push({
                     type: 'problem_detail',
-                    value: '#{0}'.format(i + 1),
-                    raw: pdict[tdoc.pids[i]],
+                    value: '#{0}'.format(i),
+                    raw: pid,
                 });
             }
         }
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            if (tdoc.detail) {
-                for (const item of tsdoc.journal) tsddict[item.pid] = item;
+            if (tsdoc.detail) {
+                for (const item of tsdoc.detail) tsddict[item.pid] = item;
             }
             const row = [];
             row.push(
                 { type: 'string', value: rank },
-                { type: 'user', value: udict[tsdoc.uid].uname, raw: udict[tsdoc.uid] },
+                { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
                 { type: 'string', value: tsdoc.accept || 0 },
             );
             if (isExport) {
@@ -121,17 +107,17 @@ const acm = {
                 );
             }
             for (const pid of tdoc.pids) {
-                let rdoc;
+                let rid;
                 let colAccepted;
                 let colTime;
                 let colTimeStr;
-                if ((tsddict[pid] || {}).accept) {
-                    rdoc = tsddict[pid].rid;
+                if (tsddict[pid]?.accept) {
+                    rid = tsddict[pid].rid;
                     colAccepted = _('Accepted');
                     colTime = tsddict[pid].time;
-                    colTimeStr = colTime;
+                    colTimeStr = misc.formatSeconds(colTime);
                 } else {
-                    rdoc = null;
+                    rid = null;
                     colAccepted = '-';
                     colTime = '-';
                     colTimeStr = '-';
@@ -144,20 +130,21 @@ const acm = {
                     row.push({
                         type: 'record',
                         value: '{0}\n{1}'.format(colAccepted, colTimeStr),
-                        raw: rdoc,
+                        raw: rid,
                     });
                 }
-                rows.push(row);
             }
+            rows.push(row);
         }
         return rows;
     },
-    rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
+    rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
 };
 
-const oi = {
+const oi: ContestRule = {
     TEXT: 'OI',
     check: () => { },
+    statusSort: { score: -1 },
     stat: (tdoc, journal) => {
         const detail = {};
         let score = 0;
@@ -176,50 +163,55 @@ const oi = {
         return now > tdoc.endAt;
     },
     scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
-        const columns: Column[] = [
+        const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
             { type: 'total_score', value: _('Total Score') },
         ];
-        for (const i in tdoc.pids) {
+        for (let i = 1; i <= tdoc.pids.length; i++) {
             if (isExport) {
                 columns.push({
                     type: 'problem_score',
-                    value: '#{0} {1}'.format(i + 1, pdict[tdoc.pids[i]].title),
+                    value: '#{0} {1}'.format(i, pdict[tdoc.pids[i - 1]].title),
                 });
             } else {
                 columns.push({
                     type: 'problem_detail',
-                    value: '#{0}'.format(i + 1),
-                    raw: pdict[tdoc.pids[i]],
+                    value: '#{0}'.format(i),
+                    raw: tdoc.pids[i - 1],
                 });
             }
         }
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            if (tsdoc.journal) { for (const item of tsdoc.journal) tsddict[item.pid] = item; }
+            if (tsdoc.journal) {
+                for (const item of tsdoc.journal) tsddict[item.pid] = item;
+            }
             const row = [];
-            row.push({ type: 'string', value: rank });
-            row.push({ type: 'user', value: udict[tsdoc.uid].uname, raw: udict[tsdoc.uid] });
-            row.push({ type: 'string', value: tsdoc.score || 0 });
+            row.push(
+                { type: 'string', value: rank },
+                { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
+                { type: 'string', value: tsdoc.score || 0 },
+            );
             for (const pid of tdoc.pids) {
                 row.push({
                     type: 'record',
-                    value: (tsddict[pid] || {}).score || '-',
-                    raw: (tsddict[pid] || {}).rid || null,
+                    value: tsddict[pid]?.score || '-',
+                    raw: tsddict[pid]?.rid || null,
                 });
             }
             rows.push(row);
         }
         return rows;
     },
-    rank: (tdocs) => ranked(tdocs, (a, b) => a.score === b.score),
+    rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
 };
 
-const homework = {
+const homework: ContestRule = {
     TEXT: 'Assignment',
     check: () => { },
+    statusSort: { penaltyScore: -1, time: 1 },
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
@@ -233,6 +225,7 @@ const homework = {
             const real = jdoc.rid.generationTime - tdoc.beginAt.getTime() / 1000;
             return Math.floor(real);
         }
+
         function penaltyScore(jdoc) {
             const { score } = jdoc;
             const exceedSeconds = Math.floor(
@@ -266,7 +259,7 @@ const homework = {
     showScoreboard: () => true,
     showRecord: () => true,
     scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
-        const columns: Column[] = [
+        const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
             { type: 'total_score', value: _('Score') },
@@ -278,32 +271,32 @@ const homework = {
             );
         }
         columns.push({ type: 'total_time_str', value: _('Total Time') });
-        for (const index in tdoc.pids) {
-            const pid = tdoc.pids[index];
+        for (let i = 1; i <= tdoc.pids.length; i++) {
+            const pid = tdoc.pids[i - 1];
             if (isExport) {
                 columns.push(
                     {
                         type: 'problem_score',
-                        value: '#{0} {1}'.format(index + 1, pdict[pid].title),
+                        value: '#{0} {1}'.format(i, pdict[pid].title),
                     },
                     {
                         type: 'problem_original_score',
-                        value: '#{0} {1}'.format(index + 1, _('Original Score')),
+                        value: '#{0} {1}'.format(i, _('Original Score')),
                     },
                     {
                         type: 'problem_time',
-                        value: '#{0} {1}'.format(index + 1, _('Time (Seconds)')),
+                        value: '#{0} {1}'.format(i, _('Time (Seconds)')),
                     },
                     {
                         type: 'problem_time_str',
-                        value: '#{0} {1}'.format(index + 1, _('Time')),
+                        value: '#{0} {1}'.format(i, _('Time')),
                     },
                 );
             } else {
                 columns.push({
                     type: 'problem_detail',
-                    value: '#{0}'.format(index + 1),
-                    raw: pdict[pid],
+                    value: '#{0}'.format(i),
+                    raw: pid,
                 });
             }
         }
@@ -318,7 +311,7 @@ const homework = {
                 {
                     type: 'user',
                     value: udict[tsdoc.uid].uname,
-                    raw: udict[tsdoc.uid],
+                    raw: tsdoc.uid,
                 },
                 {
                     type: 'string',
@@ -331,10 +324,10 @@ const homework = {
             }
             row.push({ type: 'string', value: misc.formatSeconds(tsdoc.time || 0) });
             for (const pid of tdoc.pids) {
-                const rdoc = (tsddict[pid] || {}).rid;
-                const colScore = (tsddict[pid] || {}).penaltyScore || '-';
-                const colOriginalScore = (tsddict[pid] || {}).score || '-';
-                const colTime = (tsddict[pid] || {}).time || '-';
+                const rid = tsddict[pid]?.rid;
+                const colScore = tsddict[pid]?.penaltyScore || '-';
+                const colOriginalScore = tsddict[pid]?.score || '-';
+                const colTime = tsddict[pid]?.time || '-';
                 const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime || 0) : '-';
                 if (isExport) {
                     row.push(
@@ -347,7 +340,7 @@ const homework = {
                     row.push({
                         type: 'record',
                         value: '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
-                        raw: rdoc,
+                        raw: rid,
                     });
                 }
             }
@@ -358,9 +351,13 @@ const homework = {
     rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
 };
 
-export const RULES = {
+export const RULES: ContestRules = {
     acm, oi, homework,
 };
+
+function _getStatusJournal(tsdoc) {
+    return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
+}
 
 export function add(
     domainId: string, title: string, content: string, owner: number,
@@ -407,11 +404,14 @@ export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
     accept = false, score = 0, type = document.TYPE_CONTEST,
 ) {
-    await get(domainId, tid, type);
+    const tdoc = await get(domainId, tid, type);
     const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
         rid, pid, accept, score,
     });
     if (!tsdoc.attend) throw new ContestNotAttendedError(tid, uid);
+    const journal = _getStatusJournal(tsdoc);
+    const stats = RULES[tdoc.rule].stat(tdoc, journal);
+    return await document.revSetStatus(domainId, type, tid, uid, tsdoc.rev, { journal, ...stats });
 }
 
 export function getStatus(
@@ -498,13 +498,11 @@ export const ContestHandlerMixin = (c) => class extends c {
     async getScoreboard(
         domainId: string, tid: ObjectID,
         isExport = false, docType = document.TYPE_CONTEST,
-    ) {
+    ): Promise<[Tdoc, ScoreboardNode[][], Udict]> {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType)
-            .sort(RULES[tdoc.rule].statusSort).toArray();
-        const uids = [];
-        for (const tsdoc of tsdocs) uids.push(tsdoc.uid);
+        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).toArray();
+        const uids = tsdocs.map((tsdoc) => tsdoc.uid);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, uids),
             problem.getList(domainId, tdoc.pids, true),
@@ -533,10 +531,6 @@ export function count(domainId: string, query: any, type = document.TYPE_CONTEST
 
 export function getMulti(domainId: string, query = {}, type = document.TYPE_CONTEST) {
     return document.getMulti(domainId, type, query);
-}
-
-function _getStatusJournal(tsdoc) {
-    return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }
 
 export async function getAndListStatus(

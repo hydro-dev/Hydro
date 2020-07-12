@@ -307,11 +307,10 @@ export async function revSetStatus(
     };
     const update = { $set: args, $inc: { rev: 1 } };
     if (returnDoc) {
-        const res = await coll.findOneAndUpdate(filter, update, { returnOriginal: false });
+        const res = await collStatus.findOneAndUpdate(filter, update, { returnOriginal: false });
         return res.value;
     }
-    const res = await coll.updateOne(filter, update);
-    return res;
+    return await collStatus.updateOne(filter, update);
 }
 
 export async function ensureIndexes() {
