@@ -1,8 +1,8 @@
-import * as document from './document';
 import * as system from './system';
 import * as token from './token';
 import * as setting from './setting';
-import { BUILTIN_ROLES, BUILTIN_USERS, PRIV } from './builtin';
+import * as domain from './domain';
+import { BUILTIN_USERS, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
@@ -100,22 +100,12 @@ export class User implements Udoc {
     }
 }
 
-export async function getInDomain(domainId: string, udoc: User) {
-    let dudoc = await document.getStatus(domainId, document.TYPE_DOMAIN_USER, 0, udoc._id);
-    dudoc = dudoc || {};
-    if (udoc._id === 1) dudoc.role = 'guest';
-    if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
-    const p = await document.get(domainId, document.TYPE_DOMAIN_USER, dudoc.role || 'default');
-    dudoc.perm = p ? p.content : BUILTIN_ROLES[dudoc.role || 'default'].perm;
-    return dudoc;
-}
-
 export async function getById(domainId: string, _id: number): Promise<Udoc | null> {
     const udoc = _id === 0 || _id === 1
         ? BUILTIN_USERS[_id]
         : await coll.findOne({ _id });
     if (!udoc) return null;
-    const dudoc = await getInDomain(domainId, udoc);
+    const dudoc = await domain.getDomainUser(domainId, udoc);
     return new User(udoc, dudoc);
 }
 
@@ -140,7 +130,7 @@ export async function getByUname(
         if (ignoreMissing) return null;
         throw new UserNotFoundError(uname);
     }
-    const dudoc = await getInDomain(domainId, udoc);
+    const dudoc = await domain.getDomainUser(domainId, udoc);
     return new User(udoc, dudoc);
 }
 
@@ -152,7 +142,7 @@ export async function getByEmail(domainId: string, mail: string): Promise<Udoc |
             ? BUILTIN_USERS[1]
             : await coll.findOne({ mailLower });
     if (!udoc) return null;
-    const dudoc = await getInDomain(domainId, udoc);
+    const dudoc = await domain.getDomainUser(domainId, udoc);
     return new User(udoc, dudoc);
 }
 
@@ -184,18 +174,6 @@ export async function inc(_id: number, field: string, n = 1) {
     udoc[field] = udoc[field] + n || n;
     await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
     return udoc;
-}
-
-export function setInDomain(domainId: string, uid: number, params: any) {
-    return document.setStatus(domainId, document.TYPE_DOMAIN_USER, 0, uid, params);
-}
-
-export async function incDomain(domainId: string, uid: number, field: string, n = 1) {
-    // @ts-ignore
-    const dudoc = await getInDomain(domainId, { _id: uid });
-    dudoc[field] = dudoc[field] + n || n;
-    await setInDomain(domainId, uid, { [field]: dudoc[field] });
-    return dudoc;
 }
 
 export async function create({
@@ -230,10 +208,6 @@ export function getMulti(params) {
     return coll.find(params);
 }
 
-export function setMultiInDomain(domainId: string, query: any, params: any) {
-    return document.setMultiStatus(domainId, document.TYPE_DOMAIN_USER, query, params);
-}
-
 export async function getPrefixList(prefix: string, limit = 50) {
     prefix = prefix.toLowerCase();
     const $regex = new RegExp(`\\A\\Q${prefix}\\E`, 'gmi');
@@ -243,55 +217,6 @@ export async function getPrefixList(prefix: string, limit = 50) {
 
 export function setPriv(uid: number, priv: number) {
     return coll.findOneAndUpdate({ _id: uid }, { $set: priv }, { returnOriginal: false });
-}
-
-export function setRole(domainId: string, uid: number, role: string) {
-    return document.setStatus(domainId, document.TYPE_DOMAIN_USER, 0, uid, { role });
-}
-
-export function setRoles(domainId: string, roles: any) {
-    const tasks = [];
-    for (const role in roles) {
-        tasks.push(document.set(
-            domainId, document.TYPE_DOMAIN_USER, role, { content: roles[role] },
-        ));
-    }
-    return Promise.all(tasks);
-}
-
-export async function getRoles(domainId: string) {
-    const docs = await document.getMulti(domainId, document.TYPE_DOMAIN_USER).sort('_id', 1).toArray();
-    const roles = [];
-    const r = [];
-    for (const doc of docs) {
-        roles.push({ _id: doc.docId, perm: doc.content });
-        r.push(doc.docId);
-    }
-    for (const role in BUILTIN_ROLES) {
-        if (!r.includes(role)) {
-            roles.push({ _id: role, perm: BUILTIN_ROLES[role].perm });
-        }
-    }
-    return roles;
-}
-
-export function getRole(domainId: string, name: string) {
-    return document.get(domainId, document.TYPE_DOMAIN_USER, name);
-}
-
-export function getMultiInDomain(domainId: string, query: any = {}) {
-    return document.getMultiStatus(domainId, document.TYPE_DOMAIN_USER, query);
-}
-
-export function addRole(domainId: string, name: string, permission: string) {
-    return document.add(domainId, permission, 1, document.TYPE_DOMAIN_USER, name);
-}
-
-export function deleteRoles(domainId: string, roles) {
-    return Promise.all([
-        document.deleteMulti(domainId, document.TYPE_DOMAIN_USER, { docId: { $in: roles } }),
-        document.deleteMultiStatus(domainId, document.TYPE_DOMAIN_USER, { role: { $in: roles } }),
-    ]);
 }
 
 export function ban(uid: number) {
@@ -317,23 +242,12 @@ global.Hydro.model.user = {
     getByUname,
     getMulti,
     inc,
-    incDomain,
     setById,
     setEmail,
     setPassword,
-    setInDomain,
-    setMultiInDomain,
-    getMultiInDomain,
     getPrefixList,
     setPriv,
-    setRole,
-    setRoles,
-    getRole,
     getList,
-    getRoles,
-    getInDomain,
-    addRole,
-    deleteRoles,
     ban,
     ensureIndexes,
 };

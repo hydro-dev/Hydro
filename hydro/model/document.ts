@@ -7,7 +7,6 @@ type DocID = ObjectID | string | number;
 const coll = db.collection('document');
 const collStatus = db.collection('document.status');
 
-export const TYPE_DOMAIN_USER = 0;
 export const TYPE_PROBLEM = 10;
 export const TYPE_PROBLEM_SOLUTION = 11;
 export const TYPE_PROBLEM_LIST = 12;
@@ -52,14 +51,14 @@ export async function set(domainId: string, docType: number, docId: DocID, args:
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $set: args },
-        { returnOriginal: false },
+        { returnOriginal: false, upsert: true },
     );
     return res.value;
 }
 
 export function deleteOne(domainId: string, docType: number, docId: DocID) {
     return Promise.all([
-        coll.deleteMany({ domainId, docType, docId }),
+        collStatus.deleteMany({ domainId, docType, docId }),
         coll.deleteOne({ domainId, docType, docId }),
     ]);
 }
@@ -205,6 +204,10 @@ export function getStatus(domainId: string, docType: number, docId: DocID, uid: 
 
 export function getMultiStatus(domainId: string, docType: number, args: any) {
     return collStatus.find({ ...args, docType, domainId });
+}
+
+export function getMultiStatusWithoutDomain(docType: number, args: any) {
+    return collStatus.find({ ...args, docType });
 }
 
 export async function setStatus(
@@ -388,6 +391,7 @@ global.Hydro.model.document = {
     get,
     getMulti,
     getMultiStatus,
+    getMultiStatusWithoutDomain,
     getStatus,
     getSub,
     inc,
@@ -404,7 +408,6 @@ global.Hydro.model.document = {
     setMultiStatus,
     setSub,
 
-    TYPE_DOMAIN_USER,
     TYPE_CONTEST,
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,

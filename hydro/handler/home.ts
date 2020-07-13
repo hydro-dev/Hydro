@@ -24,7 +24,9 @@ import * as discussion from '../model/discussion';
 import * as token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
-import { isContent, isPassword, isEmail } from '../lib/validator';
+import {
+    isContent, isPassword, isEmail, isTitle,
+} from '../lib/validator';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -133,7 +135,7 @@ class HomeSecurityHandler extends Handler {
             ['home_security', null],
         ];
         this.response.template = 'home_security.html';
-        this.response.body = { sessions, geoipProvider: (geoip || {}).provider, path };
+        this.response.body = { sessions, geoipProvider: geoip?.provider, path };
         if (useragent) this.response.body.icon = useragent.icon;
     }
 
@@ -210,7 +212,8 @@ class HomeSettingsHandler extends Handler {
     async post(args: any) {
         const $set = {};
         for (const key in args) {
-            if (setting.SETTINGS_BY_KEY[key] && !setting.SETTINGS_BY_KEY[key].disabled) {
+            if (setting.SETTINGS_BY_KEY[key]
+                && !(setting.SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
                 $set[key] = args[key];
             }
         }
@@ -233,6 +236,41 @@ class UserChangemailWithCodeHandler extends Handler {
             token.del(code, token.TYPE_CHANGEMAIL),
         ]);
         this.response.redirect = this.url('home_security');
+    }
+}
+
+class HomeDomainHandler extends Handler {
+    async get() {
+        const dudict = await domain.getDictUserByDomainId(this.user._id);
+        const dids = Object.keys(dudict);
+        const ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
+        const canManage = {};
+        for (const ddoc of ddocs) {
+            // eslint-disable-next-line no-await-in-loop
+            const udoc = await user.getById(ddoc._id, this.user._id);
+            canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)
+                || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+        }
+        this.response.template = 'home_domain.html';
+        this.response.body = { ddocs, dudict, canManage };
+    }
+}
+
+class HomeDomainCreateHandler extends Handler {
+    async get() {
+        this.response.body = 'home_domain_create.html';
+    }
+
+    @param('id', Types.String)
+    @param('name', Types.String, isTitle)
+    @param('bulletin', Types.String, isContent)
+    @param('gravatar', Types.String, isEmail, true)
+    async post(_: string, id: string, name: string, bulletin: string, gravatar: string) {
+        gravatar = gravatar || this.user.gravatar || this.user.mail || 'guest@hydro.local';
+        const domainId = await domain.add(id, this.user._id, name, bulletin);
+        await domain.edit(domainId, { gravatar });
+        this.response.redirect = this.url('domain_manage', { domainId });
+        this.response.body = { domainId };
     }
 }
 
@@ -324,6 +362,8 @@ async function apply() {
     Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);
     Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PRIV.PRIV_USER_PROFILE);
+    Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
+    Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
     Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
     Route('home_file', '/home/file', HomeFileHandler, PRIV.PRIV_USER_PROFILE);
     Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);

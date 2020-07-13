@@ -9,7 +9,7 @@ import { STATUS, PRIV } from '../model/builtin';
 export const description = 'Delete a user';
 
 const collDocument = db.collection('document');
-const collStatus = db.collection('document.status');
+const collDomainUser = db.collection('domain.user');
 const collRecord = db.collection('record');
 
 const $unset = {
@@ -75,7 +75,7 @@ export async function run({
 }) {
     await deleteRecord(uid);
     await deleteDiscussion(uid);
-    await collStatus.deleteMany({ uid, docType: document.TYPE_DOMAIN_USER });
+    await collDomainUser.deleteMany({ uid });
     const uname = String.random(32);
     await user.setById(uid, {
         uname,

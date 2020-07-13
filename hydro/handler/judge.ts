@@ -5,7 +5,7 @@ import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
-import * as user from '../model/user';
+import * as domain from '../model/domain';
 import * as task from '../model/task';
 import * as bus from '../service/bus';
 import {
@@ -29,7 +29,7 @@ async function _postJudge(rdoc) {
         if (accept && !rdoc.rejudged) {
             tasks.push(
                 problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1),
-                user.incDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1),
+                domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1),
             );
         }
     }

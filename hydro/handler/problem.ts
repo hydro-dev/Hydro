@@ -7,6 +7,7 @@ import {
 import * as file from '../model/file';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
+import * as domain from '../model/domain';
 import * as user from '../model/user';
 import * as solution from '../model/solution';
 import * as system from '../model/system';
@@ -219,7 +220,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         const rid = await record.add(domainId, {
             uid: this.user._id, lang, code, pid: this.pdoc.docId,
         }, true);
-        await user.incDomain(domainId, this.user._id, 'nSubmit');
+        await domain.incUserInDomain(domainId, this.user._id, 'nSubmit');
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }

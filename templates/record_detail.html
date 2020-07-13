@@ -3,7 +3,7 @@
 {% block content %}
 <script>
   var Context = {
-    'socketUrl': "/record-detail-conn?rid={{ rdoc._id }}&token={{ handler.csrfToken }}"
+    'socketUrl': "/record-detail-conn?rid={{ rdoc._id }}&token={{ handler.UIContext.token }}"
   };
 </script>
 <div class="row">

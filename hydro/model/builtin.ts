@@ -85,7 +85,7 @@ export const PERM = {
     PERM_ADMIN: '',
 };
 
-export const Permission = (family, key, desc) => ({ family, key, desc });
+export const Permission = (family: string, key: string, desc: string) => ({ family, key, desc });
 
 export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW, 'View this domain'),
@@ -298,9 +298,9 @@ export const BUILTIN_USERS = [
 ];
 
 export const BUILTIN_ROLES = {
-    guest: { perm: PERM.PERM_BASIC },
-    default: { perm: PERM.PERM_DEFAULT },
-    admin: { perm: PERM.PERM_ADMIN },
+    guest: PERM.PERM_BASIC,
+    default: PERM.PERM_DEFAULT,
+    admin: PERM.PERM_ADMIN,
 };
 
 export const DEFAULT_NODES = {

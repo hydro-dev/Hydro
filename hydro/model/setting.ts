@@ -1,7 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import moment from 'moment-timezone';
 import * as builtin from './builtin';
-import { Setting as _Setting } from '../interface';
+import { Setting as _Setting, Dict } from '../interface';
+
+type SettingDict = Dict<_Setting>;
 
 const countries = moment.tz.countries();
 const tzs: Set<string> = new Set();
@@ -10,6 +12,11 @@ for (const country of countries) {
     for (const t of tz) tzs.add(t);
 }
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
+const langRange: Dict<string> = {};
+
+for (const lang in global.Hydro.locales) {
+    langRange[lang] = global.Hydro.locales[lang].__langname;
+}
 
 export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
@@ -21,13 +28,13 @@ export const DOMAIN_SETTINGS: _Setting[] = [];
 export const DOMAIN_USER_SETTINGS: _Setting[] = [];
 export const SYSTEM_SETTINGS: _Setting[] = [];
 export const SETTINGS: _Setting[] = [];
-export const SETTINGS_BY_KEY = {};
-export const DOMAIN_USER_SETTINGS_BY_KEY = {};
-export const DOMAIN_SETTINGS_BY_KEY = {};
-export const SYSTEM_SETTINGS_BY_KEY = {};
+export const SETTINGS_BY_KEY: SettingDict = {};
+export const DOMAIN_USER_SETTINGS_BY_KEY: SettingDict = {};
+export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
+export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
 export const Setting = (
-    family: string, key: string, range: Array<[string, string]> | { [key: string]: string } = null,
+    family: string, key: string, range: Array<[string, string]> | Dict<string> = null,
     value: any = null, type = 'text', name = '',
     desc = '', flag = 0,
 ): _Setting => ({
@@ -68,8 +75,7 @@ export const SystemSetting = (...settings: _Setting[]) => {
 };
 
 PreferenceSetting(
-    // TODO generate by global.Hydro.locales
-    Setting('setting_display', 'viewLang', builtin.VIEW_LANGS.map((i) => [i.code, i.name]),
+    Setting('setting_display', 'viewLang', langRange,
         'zh_CN', 'select', 'UI Language'),
     Setting('setting_display', 'timeZone', timezones as [string, string][],
         'Asia/Shanghai', 'select', 'Timezone'),
@@ -99,10 +105,10 @@ DomainSetting(
     Setting('setting_domain', 'name', null, 'New domain', 'text', 'name'),
     Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
-    Setting('storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN & FLAG_DISABLED),
-    Setting('storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN & FLAG_DISABLED),
-    Setting('storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN & FLAG_DISABLED),
-    Setting('storage', 'rating', null, 1500, 'number', 'rating', null, FLAG_HIDDEN & FLAG_DISABLED),
+    Setting('storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('storage', 'rating', null, 1500, 'number', 'rating', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 SystemSetting(
@@ -112,6 +118,7 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', null, false, 'boolean', 'SSL'),
+    Setting('setting_db', 'db.ver', null, 1, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_server', 'server.worker', null, 1, 'number', 'Server Workers Number'),
     Setting('setting_server', 'server.hostname', null, null, 'text', 'Server Hostname'),
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
@@ -119,6 +126,10 @@ SystemSetting(
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header'),
     Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
+    Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
+    Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
+    Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
     Setting('setting_ui', 'ui.header_logo', null, '/components/header/header-logo.png', 'text', 'Header Logo'),
     Setting('setting_ui', 'ui.header_logo_2x', null, '/components/header/header-logo@2x.png', 'text', 'Header Logo@2x'),
     Setting('setting_ui', 'ui.header_background', null, '/components/header/header-background.png', 'text', 'Header Background'),

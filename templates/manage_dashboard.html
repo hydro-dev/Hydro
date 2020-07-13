@@ -3,7 +3,7 @@
 {% block manage_content %}
 <script>
   var Context = {
-    'socketUrl': "/manage/check-conn?token={{ handler.csrfToken }}"
+    'socketUrl': "/manage/check-conn?token={{ handler.UIContext.token }}"
   };
 </script>
 <div class="section">

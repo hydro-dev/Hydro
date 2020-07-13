@@ -1,20 +1,18 @@
-import { RoleAlreadyExistError, ValidationError, PermissionError } from '../error';
+import { RoleAlreadyExistError, ValidationError } from '../error';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
-import * as system from '../model/system';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import { PERM, PERMS_BY_FAMILY } from '../model/builtin';
 import paginate from '../lib/paginate';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-import { isTitle, isUname } from '../lib/validator';
 
 class DomainRankHandler extends Handler {
     @param('page', Types.UnsignedInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
-            user.getMultiInDomain(domainId).sort({ rating: -1 }),
+            domain.getMultiInDomain(domainId).sort({ rating: -1 }),
             page,
             100,
         );
@@ -31,31 +29,6 @@ class DomainRankHandler extends Handler {
         this.response.body = {
             udocs, upcount, ucount, page, path,
         };
-    }
-}
-
-class DomainCreateHandler extends Handler {
-    async prepare() {
-        if (this.user.priv !== 1) {
-            if (!await system.get('user.create_domain')) throw new PermissionError('domain_create');
-        }
-    }
-
-    async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain_create', null],
-        ];
-        this.response.body = { path };
-        this.response.template = 'domain_create.html';
-    }
-
-    @param('id', Types.String, isUname)
-    @param('name', Types.String, isTitle)
-    async post(domainId: string, id: string, name: string) {
-        await domain.add(id, this.user._id, name);
-        this.response.body = { domainId: id };
-        this.response.redirect = this.url('homepage', { domainId: id });
     }
 }
 
@@ -105,13 +78,13 @@ class DomainUserHandler extends ManageHandler {
     async get({ domainId }) {
         const rudocs = {};
         const [dudocs, roles] = await Promise.all([
-            user.getMultiInDomain(domainId, {
+            domain.getMultiInDomain(domainId, {
                 $and: [
                     { role: { $ne: 'default' } },
                     { role: { $ne: null } },
                 ],
             }).toArray(),
-            user.getRoles(domainId),
+            domain.getRoles(domainId),
         ]);
         const uids = dudocs.map((dudoc) => dudoc.uid);
         const udict = await user.getList(domainId, uids);
@@ -133,14 +106,14 @@ class DomainUserHandler extends ManageHandler {
     }
 
     async postSetUser({ domainId, uid, role }) {
-        await user.setRole(domainId, uid, role);
+        await domain.setUserRole(domainId, uid, role);
         this.back();
     }
 }
 
 class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
-        const roles = await user.getRoles(domainId);
+        const roles = await domain.getRoles(domainId);
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],
@@ -159,14 +132,14 @@ class DomainPermissionHandler extends ManageHandler {
                 roles[role] = this.request.body[role].join('');
             }
         }
-        await user.setRoles(domainId, roles);
+        await domain.setRoles(domainId, roles);
         this.back();
     }
 }
 
 class DomainRoleHandler extends ManageHandler {
     async get({ domainId }) {
-        const roles = await user.getRoles(domainId);
+        const roles = await domain.getRoles(domainId);
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],
@@ -177,12 +150,11 @@ class DomainRoleHandler extends ManageHandler {
     }
 
     async postAdd({ domainId, role }) {
-        const [r, u] = await Promise.all([
-            user.getRole(domainId, role),
-            user.getRole(domainId, 'default'),
-        ]);
-        if (r) throw new RoleAlreadyExistError(role);
-        await user.addRole(domainId, role, u.perm);
+        const roles = await domain.getRoles(this.domain);
+        const rdict: any = {};
+        for (const r of roles) rdict[r._id] = r.perm;
+        if (rdict[role]) throw new RoleAlreadyExistError(role);
+        await domain.addRole(domainId, role, rdict.default.perm);
         this.back();
     }
 
@@ -192,14 +164,13 @@ class DomainRoleHandler extends ManageHandler {
                 throw new ValidationError('role');
             }
         }
-        await user.deleteRoles(domainId, roles);
+        await domain.deleteRoles(domainId, roles);
         this.back();
     }
 }
 
 export async function apply() {
     Route('ranking', '/ranking', DomainRankHandler);
-    Route('domain_create', '/domain/create', DomainCreateHandler);
     Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
     Route('domain_edit', '/domain/edit', DomainEditHandler);
     Route('domain_user', '/domain/user', DomainUserHandler);

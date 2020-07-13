@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import * as domain from '../model/domain';
 import * as contest from '../model/contest';
-import * as user from '../model/user';
 import rating from '../lib/rating';
 import { STATUS } from '../model/builtin';
 
@@ -27,7 +26,7 @@ export async function run({ domainId, isSub = false }, report) {
         }
         return true;
     }
-    await user.setMultiInDomain(domainId, {}, { rating: 1500 });
+    await domain.setMultiUserInDomain(domainId, {}, { rating: 1500 });
     const contests = await contest.getMulti(domainId, { rated: true }).sort('endAt', -1).toArray();
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
     const udict = {};
@@ -60,7 +59,7 @@ export async function run({ domainId, isSub = false }, report) {
     }
     const tasks = [];
     for (const uid in udict) {
-        tasks.push(user.setInDomain(domainId, parseInt(uid, 10), { rating: udict[uid] }));
+        tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rating: udict[uid] }));
     }
     await Promise.all(tasks);
     return true;
