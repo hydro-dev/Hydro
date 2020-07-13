@@ -4,7 +4,7 @@ import * as db from '../service/db';
 const coll = db.collection('token');
 
 export const TYPE_SESSION = 0;
-export const TYPE_CSRF_TOKEN = 1;
+export const TYPE_TOKEN = 1;
 export const TYPE_REGISTRATION = 2;
 export const TYPE_CHANGEMAIL = 3;
 export const TYPE_OAUTH = 4;
@@ -62,7 +62,9 @@ export async function del(tokenId: string, tokenType: number) {
     return !!result.deletedCount;
 }
 
-export async function createOrUpdate(tokenType: number, expireSeconds: number, data: object) {
+export async function createOrUpdate(
+    tokenType: number, expireSeconds: number, data: any,
+): Promise<string> {
     const d = await coll.findOne({ tokenType, ...data });
     if (!d) {
         const res = await add(tokenType, expireSeconds, data);
@@ -87,7 +89,7 @@ export function delByUid(uid: number) {
 global.Hydro.model.token = {
     TYPE_SESSION,
     TYPE_CHANGEMAIL,
-    TYPE_CSRF_TOKEN,
+    TYPE_TOKEN,
     TYPE_OAUTH,
     TYPE_REGISTRATION,
     TYPE_LOSTPASS,

@@ -1,14 +1,17 @@
+import { ObjectID } from 'mongodb';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError,
     UserNotFoundError,
+    PermissionError,
 } from '../error';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler,
+    Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
 import * as misc from '../lib/misc';
 import md5 from '../lib/md5';
+import * as mail from '../lib/mail';
 import * as contest from '../model/contest';
 import * as message from '../model/message';
 import * as document from '../model/document';
@@ -21,6 +24,7 @@ import * as discussion from '../model/discussion';
 import * as token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
+import { isContent, isPassword, isEmail } from '../lib/validator';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -133,29 +137,38 @@ class HomeSecurityHandler extends Handler {
         if (useragent) this.response.body.icon = useragent.icon;
     }
 
-    async postChangePassword({ current, password, verifyPassword }) {
+    @param('current', Types.String)
+    @param('password', Types.String, isPassword)
+    @param('verifyPassword', Types.String)
+    async postChangePassword(current: string, password: string, verifyPassword: string) {
         if (password !== verifyPassword) throw new VerifyPasswordError();
         await user.changePassword(this.user._id, current, password);
         this.back();
     }
 
-    async postChangeMail({ domainId, currentPassword, mail }) {
+    @param('currentPassword', Types.String)
+    @param('mail', Types.String, isEmail)
+    async postChangeMail(domainId: string, currentPassword: string, email: string) {
         this.limitRate('send_mail', 3600, 30);
         this.user.checkPassword(currentPassword);
-        const udoc = await user.getByEmail(domainId, mail);
-        if (udoc) throw new UserAlreadyExistError(mail);
+        const udoc = await user.getByEmail(domainId, email);
+        if (udoc) throw new UserAlreadyExistError(email);
         const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
             await system.get('changemail_token_expire_seconds'),
-            { uid: this.user._id, mail },
+            { uid: this.user._id, email },
         );
-        await mail.sendMail(mail, 'Change Email', 'user_changemail_mail.html', {
-            url: this.url('user_changemail_with_code', { code }), uname: this.user.uname,
+        const m = await this.renderHTML('user_changemail_mail.html', {
+            path: `home/changeMail/${code}`,
+            uname: this.user.uname,
+            url_prefix: await system.get('server.url'),
         });
+        await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m);
         this.response.template = 'user_changemail_mail_sent.html';
     }
 
-    async postDeleteToken({ tokenDigest }) {
+    @param('tokenDigest', Types.String)
+    async postDeleteToken(domainId: string, tokenDigest: string) {
         const sessions = await token.getSessionListByUid(this.user._id);
         for (const session of sessions) {
             if (tokenDigest === md5(session._id)) {
@@ -174,9 +187,8 @@ class HomeSecurityHandler extends Handler {
 }
 
 class HomeSettingsHandler extends Handler {
-    async get({ category }) {
-        // eslint-disable-next-line prefer-destructuring
-        category = category[0]; // Category would be splitted into array
+    @param('category', Types.String)
+    async get(domainId: string, category: string) {
         const path = [
             ['Hydro', 'homepage'],
             [`home_${category}`, null],
@@ -195,7 +207,7 @@ class HomeSettingsHandler extends Handler {
         } else throw new NotFoundError();
     }
 
-    async post(args) {
+    async post(args: any) {
         const $set = {};
         for (const key in args) {
             if (setting.SETTINGS_BY_KEY[key] && !setting.SETTINGS_BY_KEY[key].disabled) {
@@ -208,15 +220,16 @@ class HomeSettingsHandler extends Handler {
 }
 
 class UserChangemailWithCodeHandler extends Handler {
-    async get({ domainId, code }) {
+    @param('code', Types.String)
+    async get(domainId: string, code: string) {
         const tdoc = await token.get(code, token.TYPE_CHANGEMAIL);
         if (!tdoc || tdoc.uid !== this.user._id) {
             throw new InvalidTokenError(code);
         }
-        const udoc = await user.getByEmail(domainId, tdoc.mail);
-        if (udoc) throw new UserAlreadyExistError(tdoc.mail);
+        const udoc = await user.getByEmail(domainId, tdoc.email);
+        if (udoc) throw new UserAlreadyExistError(tdoc.email);
         await Promise.all([
-            user.setEmail(this.user._id, tdoc.mail),
+            user.setEmail(this.user._id, tdoc.email),
             token.del(code, token.TYPE_CHANGEMAIL),
         ]);
         this.response.redirect = this.url('home_security');
@@ -252,20 +265,24 @@ class HomeMessagesHandler extends Handler {
         this.response.template = 'home_messages.html';
     }
 
-    async postSend({ uid, content }) {
+    @param('uid', Types.Int)
+    @param('content', Types.String, isContent)
+    async postSend(domainId: string, uid: number, content: string) {
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
         const mdoc = await message.send(this.user._id, uid, content);
         // TODO(twd2): improve here: projection
         if (this.user._id !== uid) {
-            await bus.publish(`user_message-${uid}`, { mdoc, udoc });
+            bus.publish(`user_message-${uid}`, { mdoc, udoc });
         }
         this.back({ mdoc, udoc });
     }
 
-    async postDeleteMessage({ messageId }) {
-        // TODO limitations
-        await message.del(messageId);
+    @param('messageId', Types.ObjectID)
+    async postDeleteMessage(domainId: string, messageId: ObjectID) {
+        const msg = await message.get(messageId);
+        if ([msg.from, msg.to].includes(this.user._id)) await message.del(messageId);
+        else throw new PermissionError();
         this.back();
     }
 }

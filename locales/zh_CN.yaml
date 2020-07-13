@@ -41,6 +41,7 @@ __langname: 简体中文
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
 (None): (无)
+(Not changed): 未更改
 Aborted: 已放弃
 About Hydro: 关于 Hydro
 About Markdown: 关于 Markdown
@@ -337,9 +338,10 @@ hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
 Images: 图片
+Import from: 导入自
 Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
-import: 导入
+Import: 导入
 In 1 day: 一天后
 In 1 month: 一个月后
 In 1 week: 一周后
@@ -378,6 +380,7 @@ Last Submit At: 最后递交于
 Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
+Leave blank to use numeric pid.: 留空来使用数字题号。
 Limitations: 限制
 Links: 链接
 List View: 列表视图
@@ -388,6 +391,8 @@ Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
 Login to Submit: 登录后递交
+Login with Github: 使用 Github 登录
+Login with Google: 使用 Google 登录
 Login: 登录
 Logout All Sessions: 注销所有会话
 Logout This Session: 注销该会话
@@ -639,6 +644,7 @@ Sorry, there is no problem in the problem set: 题库中没有题目
 Sorry, there is no training plan.: 目前没有训练计划。
 Sorry: 对不起
 Sort by: 排序
+Source type: 来源类型
 Star Topic: 收藏讨论
 Star: 收藏
 Start at: 开始于
@@ -663,6 +669,7 @@ Technical Information: 技术信息
 Temporary session: 临时会话
 Terms of Service: 服务条款
 Test data comes from: 测试数据来自
+Testdata Config: 测试数据配置
 Text: 文本
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
@@ -681,6 +688,7 @@ This homework is not open and you cannot view problems.: 该作业还未到开�
 This homework is not open.: 该作业还未开放递交。
 This is the current session: 这是当前的会话
 This message will be presented to those whose submissions are accepted.: 这条消息将会被展示给通过此题的用户。
+This page needs JavaScript to work.: 这个页面需要 Javascript。
 This section cannot be challenged at present, so please complete the following sections first: 该章节目前不可挑战，请先完成以下章节
 This type of files are not allowed to be uploaded.: 不允许上传这种文件。
 Time (Seconds): 耗时 (秒)

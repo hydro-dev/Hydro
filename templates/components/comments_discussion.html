@@ -121,12 +121,12 @@
             data-form="{{ {operation: reply_post_op, drid: doc._id}|json }}"
           ><span class="icon icon-reply"></span></a>
         {% endif %}
-        {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_edit_perm) %}
+        {% if (handler.user.hasPerm(comment_edit_self_perm) and doc.owner == handler.user._id) or handler.user.hasPerm(comment_edit_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
             data-form="{{ {operation: comment_edit_op, drid: doc._id}|json }}"
           ><span class="icon icon-edit"></span></a>
         {% endif %}
-        {% if doc.owner == handler.state.user._id or handler.user.hasPerm(comment_delete_perm) %}
+        {% if (handler.user.hasPerm(comment_delete_self_perm) and doc.owner == handler.user._id) or handler.user.hasPerm(comment_delete_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
             data-form="{{ {operation: comment_delete_op, drid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>
@@ -139,7 +139,7 @@
       <div class="commentbox-edit-target"></div>
       <ul class="dczcomments__replies commentbox-reply-target">
       {% for rdoc in doc['reply'] %}
-        {{ reply(mode_create, udict[rdoc.owner], doc, rdoc) }}
+        {{ reply(false, udict[rdoc.owner], doc, rdoc) }}
       {% endfor %}
       </ul>
     </div>

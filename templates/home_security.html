@@ -97,7 +97,6 @@
                 <p>{{ _('Location') }}: {{ _(session.updateGeoip.display) }} ({{ session.updateIp }})</p>
                 <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
                 <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
-                <!-- {{ _('User-Agent') }}: {{ session['update_ua']['str'] }} -->
                 {% if session.isCurrent %}
                 <p class="sessionlist__current-session"><span class="icon icon-check"></span> {{ _('This is the current session') }}</p>
                 {% endif %}

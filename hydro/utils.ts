@@ -1,8 +1,10 @@
 import fs from 'fs';
+import { serialize } from 'v8';
 import cluster from 'cluster';
 import path from 'path';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
+import Lru from 'lru-cache';
 
 declare global {
     interface StringConstructor {
@@ -22,6 +24,21 @@ declare global {
         intersection: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
         union: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
     }
+}
+
+const lru = new Lru(1000);
+
+export function lrucache(target: any, funcName: string, obj: any) {
+    const originalMethod = obj.value;
+    obj.value = function func(...args: any[]) {
+        const key = serialize({ funcName, args });
+        let val = lru.get(key);
+        if (val) return val;
+        val = originalMethod.call(this, ...args);
+        lru.set(key, val);
+        return val;
+    };
+    return obj;
 }
 
 proxy(superagent);

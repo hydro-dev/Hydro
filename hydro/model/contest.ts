@@ -510,7 +510,10 @@ export const ContestHandlerMixin = (c) => class extends c {
             problem.getList(domainId, tdoc.pids, true),
         ]);
         const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
-        const rows = RULES[tdoc.rule].scoreboard(isExport, (str) => (str ? str.toString().translate(this.user.language) : ''), tdoc, rankedTsdocs, udict, pdict);
+        const rows = RULES[tdoc.rule].scoreboard(
+            isExport, this.translate.bind(this),
+            tdoc, rankedTsdocs, udict, pdict,
+        );
         return [tdoc, rows, udict];
     }
 

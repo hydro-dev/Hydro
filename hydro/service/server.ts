@@ -24,6 +24,9 @@ import {
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
 } from '../error';
+import hash from '../lib/hash.hydro';
+import { lrucache } from '../utils';
+import { Udoc } from '../interface';
 
 let enableLog = true;
 
@@ -158,6 +161,17 @@ export function param(name: string, ...args: any): MethodDecorator {
     };
 }
 
+export function requireCsrfToken(target: any, funcName: string, obj: any) {
+    const originalMethod = obj.value;
+    obj.value = async function func(...args: any[]) {
+        if (this.getCsrfToken(this.session._id) !== this.args.csrfToken) {
+            throw new CsrfTokenError(this.args.csrfToken);
+        }
+        return await originalMethod.call(this, ...args);
+    };
+    return obj;
+}
+
 export async function prepare() {
     server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
@@ -208,7 +222,7 @@ export class Handler {
 
     csrfToken: string;
 
-    user: any;
+    user: Udoc;
 
     constructor(ctx: Koa.Context) {
         this.ctx = ctx;
@@ -242,18 +256,22 @@ export class Handler {
         this.session = {};
     }
 
+    @lrucache
+    // eslint-disable-next-line class-methods-use-this
+    getCsrfToken(id: string) {
+        return hash('csrf_token', id);
+    }
+
     async renderHTML(name: string, context: any): Promise<string> {
         if (enableLog) console.time(name);
-        // FIXME fix this ugly hack
-        // @ts-ignore
-        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
-        const res = await render(name, Object.assign(context, {
+        const UserContext = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
+        const res = await render(name, {
             handler: this,
-            // @ts-ignore
-            url: (...args) => this.url(...args),
-            _: (str: string) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
-            user: this.user,
-        }));
+            UserContext,
+            url: this.url.bind(this),
+            _: this.translate.bind(this),
+            ...context,
+        });
         if (enableLog) console.timeEnd(name);
         return res;
     }
@@ -262,11 +280,12 @@ export class Handler {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
-    translate(str) {
-        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
+    translate(str: string) {
+        if (!str) return '';
+        return str.toString().translate(this.user.viewLang, this.session.viewLang);
     }
 
-    renderTitle(str) {
+    renderTitle(str: string) {
         return `${this.translate(str)} - Hydro`;
     }
 
@@ -304,7 +323,7 @@ export class Handler {
         }
     }
 
-    url(name, kwargs = {}) {
+    url(name: string, kwargs = {}) {
         let res = '#';
         const args: any = { ...kwargs };
         try {
@@ -324,7 +343,6 @@ export class Handler {
     }
 
     async render(name: string, context: any) {
-        // @ts-ignore
         this.response.body = await this.renderHTML(name, context);
         this.response.type = 'text/html';
     }
@@ -352,14 +370,6 @@ export class Handler {
         if (bdoc) throw new BlacklistedError(this.request.ip);
     }
 
-    async getCsrfToken() {
-        this.csrfToken = await token.createOrUpdate(token.TYPE_CSRF_TOKEN, 600, {
-            path: this.request.path,
-            uid: this.session.uid,
-        });
-        this.UIContext.csrfToken = this.csrfToken;
-    }
-
     async init({ domainId }) {
         const xff = await system.get('server.xff');
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
@@ -367,15 +377,13 @@ export class Handler {
             this.getSession(),
             this.getBdoc(),
         ]);
-        [this.user] = await Promise.all([
+        [this.user, this.UIContext.token] = await Promise.all([
             user.getById(domainId, this.session.uid),
-            this.getCsrfToken(),
+            token.createOrUpdate(
+                token.TYPE_TOKEN, 300, { uid: this.session.uid },
+            ),
         ]);
-    }
-
-    async checkCsrfToken(csrfToken: any) {
-        const sdoc = await token.get(csrfToken, token.TYPE_CSRF_TOKEN, false);
-        if (!sdoc || sdoc.uid !== this.user._id) throw new CsrfTokenError(csrfToken);
+        this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
     }
 
     async finish() {
@@ -494,7 +502,6 @@ async function handle(ctx, HandlerClass, checker) {
         await h.init(args);
         if (checker) checker.call(h);
         if (method === 'post') {
-            await h.checkCsrfToken(args.csrfToken);
             if (operation) {
                 if (typeof h[`post${operation}`] !== 'function') {
                     throw new InvalidOperationError(operation);
@@ -580,18 +587,11 @@ export class ConnectionHandler {
     }
 
     async renderHTML(name: string, context: any): Promise<string> {
-        if (enableLog) console.time(name);
-        // FIXME fix this ugly hack
-        // @ts-ignore
-        this._user = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
         const res = await render(name, Object.assign(context, {
             handler: this,
-            // @ts-ignore
-            url: (...args) => this.url(...args),
-            _: (str: string) => (str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : ''),
-            user: this.user,
+            url: this.url.bind(this),
+            _: this.translate.bind(this),
         }));
-        if (enableLog) console.timeEnd(name);
         return res;
     }
 
@@ -675,7 +675,7 @@ export class ConnectionHandler {
 
     async init({ domainId }) {
         try {
-            this.session = await token.get(this.request.params.token, token.TYPE_CSRF_TOKEN, true);
+            this.session = await token.get(this.request.params.token, token.TYPE_TOKEN, true);
         } catch (e) {
             this.session = { uid: 0 };
         }
@@ -736,5 +736,14 @@ export async function start() {
 }
 
 global.Hydro.service.server = {
-    Types, param, Handler, ConnectionHandler, Route, Connection, Middleware, prepare, start,
+    Types,
+    param,
+    requireCsrfToken,
+    Handler,
+    ConnectionHandler,
+    Route,
+    Connection,
+    Middleware,
+    prepare,
+    start,
 };

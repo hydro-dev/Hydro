@@ -4,7 +4,7 @@ declare global {
     interface String {
         format: (...args: Array<any>) => string;
         rawformat: (object: any) => string;
-        translate: (language: string | undefined) => string;
+        translate: (...languages: string[]) => string;
     }
 }
 
@@ -35,9 +35,12 @@ String.prototype.rawformat = function rawFormat(object) {
     return [res[0], object, res[1]].join();
 };
 
-String.prototype.translate = function translate(language = 'zh_CN') {
-    if (locales[language]) {
-        if (locales[language][this] !== undefined) return locales[language][this];
+String.prototype.translate = function translate(...languages: string[]) {
+    if (languages.length == 0) languages = ['zh_CN'];
+    for (const language of languages) {
+        if (locales[language]) {
+            if (locales[language][this] !== undefined) return locales[language][this];
+        }
     }
     return this;
 };
