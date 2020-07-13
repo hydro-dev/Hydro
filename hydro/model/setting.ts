@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import moment from 'moment-timezone';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
@@ -14,12 +15,12 @@ export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
 export const FLAG_SECRET = 4;
 
-export const PREFERENCE_SETTINGS = [];
-export const ACCOUNT_SETTINGS = [];
-export const DOMAIN_SETTINGS = [];
-export const DOMAIN_USER_SETTINGS = [];
-export const SYSTEM_SETTINGS = [];
-export const SETTINGS = [];
+export const PREFERENCE_SETTINGS: _Setting[] = [];
+export const ACCOUNT_SETTINGS: _Setting[] = [];
+export const DOMAIN_SETTINGS: _Setting[] = [];
+export const DOMAIN_USER_SETTINGS: _Setting[] = [];
+export const SYSTEM_SETTINGS: _Setting[] = [];
+export const SETTINGS: _Setting[] = [];
 export const SETTINGS_BY_KEY = {};
 export const DOMAIN_USER_SETTINGS_BY_KEY = {};
 export const DOMAIN_SETTINGS_BY_KEY = {};
@@ -70,7 +71,7 @@ PreferenceSetting(
     // TODO generate by global.Hydro.locales
     Setting('setting_display', 'viewLang', builtin.VIEW_LANGS.map((i) => [i.code, i.name]),
         'zh_CN', 'select', 'UI Language'),
-    Setting('setting_display', 'timezone', timezones as [string, string][],
+    Setting('setting_display', 'timeZone', timezones as [string, string][],
         'Asia/Shanghai', 'select', 'Timezone'),
     Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS,
         null, 'select', 'Default Code Language'),
@@ -118,9 +119,14 @@ SystemSetting(
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header'),
     Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
-    Setting('setting_ui', 'ui.header', null, null, 'text', 'Header Logo'),
-    Setting('setting_ui', 'ui.headerBackground', null, null, 'text', 'Header Background'),
-    Setting('setting_ui', 'ui.nav', null, null, 'text', 'Nav Logo'),
+    Setting('setting_ui', 'ui.header_logo', null, '/components/header/header-logo.png', 'text', 'Header Logo'),
+    Setting('setting_ui', 'ui.header_logo_2x', null, '/components/header/header-logo@2x.png', 'text', 'Header Logo@2x'),
+    Setting('setting_ui', 'ui.header_background', null, '/components/header/header-background.png', 'text', 'Header Background'),
+    Setting('setting_ui', 'ui.header_background_2x', null, '/components/header/header-background.png', 'text', 'Header Logo@2x'),
+    Setting('setting_ui', 'ui.nav_logo_light', null, '/components/navigation/nav-logo-small_light.png', 'text', 'Nav Logo(Light)'),
+    Setting('setting_ui', 'ui.nav_logo_dark', null, '/components/navigation/nav-logo-small_dark.png', 'text', 'Nav Logo(Dark)'),
+    Setting('setting_ui', 'ui.nav_logo_light_2x', null, '/components/navigation/nav-logo-small@2x_light.png', 'text', 'Nav Logo@2x(Light)'),
+    Setting('setting_ui', 'ui.nav_logo_dark_2x', null, '/components/navigation/nav-logo-small@2x_dark.png', 'text', 'Nav Logo@2x(Dark)'),
     Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
     Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret', null, FLAG_SECRET),
     Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID', null),
@@ -133,6 +139,19 @@ SystemSetting(
     Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'number', 'Solutions per Page'),
     Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'number', 'Training per Page'),
     Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'number', 'Reply per Page'),
+);
+
+global.Hydro.postInit.push(
+    async () => {
+        for (const setting of SYSTEM_SETTINGS) {
+            if (setting.value) {
+                const current = await global.Hydro.model.system.get(setting.key);
+                if (current === null || current === '') {
+                    await global.Hydro.model.system.set(setting.key, setting.value);
+                }
+            }
+        }
+    },
 );
 
 global.Hydro.model.setting = {

@@ -52,6 +52,9 @@ export async function load() {
     }
     for (const i of builtinScript) require(`../script/${i}`);
     await script(pending, fail, active);
+    for (const postInit of global.Hydro.postInit) {
+        await postInit();
+    }
     pending = [];
     await server.start();
     setInterval(() => {

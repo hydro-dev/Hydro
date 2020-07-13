@@ -30,7 +30,7 @@
     var _htmlNode = document.documentElement;
     _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
     var UiContext = {{ handler.UIContext|json|safe }};
-    var UserContext = {{ currentUser|json|safe }};
+    var UserContext = {{ UserContext|json|safe }};
   </script>
   {% endif %}
 </head>

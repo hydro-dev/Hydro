@@ -1,10 +1,54 @@
-/* {% if header %} */
+/* {% if header_logo %} */
+
 .header__logo {
-    background: url({{ header }}) !important
+    background: url({{header_logo}})
 }
+
 /* {% endif %} */
-/* {% if headerBackground %} */
+
+/* {% if header_background %} */
+
 .header {
-    background: url({{ headerBackground }}) !important
+    background: url({{header_background}})
 }
+
 /* {% endif %} */
+
+/* {% if nav_logo_light %} */
+
+.nav__logo, .header--mobile__domain.is--system {
+    background-image: url({{nav_logo_light}})
+}
+
+/* {% endif %} */
+
+/* {% if nav_logo_dark %} */
+
+.nav.floating .nav__logo, .nojs .nav .nav__logo {
+    background-image: url({{nav_logo_dark}}) !important
+}
+
+/* {% endif %} */
+
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx), only screen and (min-resolution: 144dpi) {
+    /* {% if header_2x %} */
+    .header__logo {
+        background-image: url({{header_2x}})
+    }
+    /* {% endif %} */
+    /* {% if header_background_2x %} */
+    .header {
+        background-image: url({{header_background_2x}})
+    }
+    /* {% endif %} */
+    /* {% if nav_logo_light_2x %} */
+    .nav__logo, .header--mobile__domain.is--system {
+        background-image: url({{nav_logo_light_2x}}) !important
+    }
+    /* {% endif %} */
+    /* {% if nav_logo_dark_2x %} */
+    .nav.floating .nav__logo, .nojs .nav .nav__logo, .header--mobile__domain.is--system {
+        background-image: url({{nav_logo_dark_2x}}) !important
+    }
+    /* {% endif %} */
+}

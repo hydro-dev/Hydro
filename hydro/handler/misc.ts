@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ObjectID } from 'mongodb';
 import { PRIV } from '../model/builtin';
 import * as system from '../model/system';
@@ -74,18 +75,33 @@ class MarkdownHandler extends Handler {
 
 class SockToken extends Handler {
     async get() {
-        this.response.body = { token: this.csrfToken };
+        this.response.body = { token: this.UIContext.token };
     }
 }
 
 class UiSettingsHandler extends Handler {
     async get() {
         const [
-            header, nav, headerBackground,
+            header_logo, header_logo_2x,
+            nav_logo_dark, nav_logo_light,
+            nav_logo_dark_2x, nav_logo_light_2x,
+            header_background, header_background_2x,
         ] = await system.getMany([
-            'ui.header', 'ui.nav', 'ui.headerBackground',
+            'ui.header_logo', 'ui.header_logo_2x',
+            'ui.nav_logo_dark', 'ui.nav_logo_light',
+            'ui.nav_logo_dark_2x', 'ui.nav_logo_light_2x',
+            'ui.headerBackground', 'ui.headerBackground2x',
         ]);
-        this.response.body = await this.renderHTML('extra.css', { header, nav, headerBackground });
+        this.response.body = await this.renderHTML('extra.css', {
+            header_logo,
+            header_logo_2x,
+            nav_logo_dark,
+            nav_logo_light,
+            nav_logo_dark_2x,
+            nav_logo_light_2x,
+            header_background,
+            header_background_2x,
+        });
         this.response.type = 'text/css';
     }
 }

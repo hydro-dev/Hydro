@@ -59,6 +59,13 @@ export async function load(call) {
             }
         }
     }
+    for (const postInit of global.Hydro.postInit) {
+        try {
+            await postInit();
+        } catch (e) {
+            console.error(e);
+        }
+    }
     pending = [];
     return await modelSystem.get('server.worker');
 }

@@ -194,6 +194,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 class HomeworkCreateHandler extends HomeworkHandler {
     async get() {
         const beginAt = moment().add(1, 'day');
+        console.log(beginAt, beginAt.tz(this.user.timeZone));
         const penaltySince = beginAt.clone().add(7, 'days');
         const path = [
             ['Hydro', 'homepage'],

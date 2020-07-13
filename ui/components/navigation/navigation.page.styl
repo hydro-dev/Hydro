@@ -113,11 +113,10 @@
   opacity: 0
   height: rem($nav-logo-height)
   margin: rem((($nav-item-height - $nav-logo-height) / 2) 0)
-  background: url('nav-logo-small_light.png') no-repeat
+  background: no-repeat
   transition: width .3s, opacity .3s
   transition-timing-function: ease-out-cubic
   +retina()
-    background: url('nav-logo-small@2x_light.png') no-repeat
     background-size: $nav-logo-width $nav-logo-height
 
   &:hover
@@ -154,11 +153,6 @@
     &:hover
       background-color: $primary-color
       color: #FFF
-
-  .nav__logo
-    background-image: url('nav-logo-small_dark.png')
-    +retina()
-      background-image: url('nav-logo-small@2x_dark.png')
 
 .nav--shadow.floating
   box-shadow: 0 0 6px rgba(#000, 0.3)

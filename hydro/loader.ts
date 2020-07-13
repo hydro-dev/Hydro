@@ -24,6 +24,7 @@ global.Hydro = {
     // @ts-ignore
     error: {},
     locales: {},
+    postInit: [],
 };
 global.onDestory = [];
 

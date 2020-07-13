@@ -262,8 +262,15 @@ export function setRoles(domainId: string, roles: any) {
 export async function getRoles(domainId: string) {
     const docs = await document.getMulti(domainId, document.TYPE_DOMAIN_USER).sort('_id', 1).toArray();
     const roles = [];
+    const r = [];
     for (const doc of docs) {
         roles.push({ _id: doc.docId, perm: doc.content });
+        r.push(doc.docId);
+    }
+    for (const role in BUILTIN_ROLES) {
+        if (!r.includes(role)) {
+            roles.push({ _id: role, perm: BUILTIN_ROLES[role].perm });
+        }
     }
     return roles;
 }

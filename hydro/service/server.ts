@@ -95,7 +95,6 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
     ],
 ];
 
-export function param(name: string): MethodDecorator;
 export function param(name: string, type: Types, validate: Validator): MethodDecorator;
 export function param(name: string, type?: Types, isOptional?: boolean): MethodDecorator;
 export function param(
@@ -138,7 +137,7 @@ export function param(name: string, ...args: any): MethodDecorator {
         if (!target.__param[target.constructor.name][funcName]) {
             target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string' }];
             const originalMethod = obj.value;
-            obj.value = function func(rawArgs: any) {
+            obj.value = function validate(rawArgs: any) {
                 const c = [];
                 const arglist: ParamOption[] = this.__param[target.constructor.name][funcName];
                 for (const item of arglist) {
@@ -146,7 +145,7 @@ export function param(name: string, ...args: any): MethodDecorator {
                         if (!rawArgs[item.name]) throw new ValidationError(item.name);
                         if (item.validate) {
                             if (!item.validate(rawArgs[item.name])) {
-                                throw new ValidationError(item.name);
+                                throw new ValidationError(item.name, rawArgs[item.name]);
                             }
                         }
                         if (item.convert) c.push(item.convert(rawArgs[item.name]));
@@ -163,7 +162,7 @@ export function param(name: string, ...args: any): MethodDecorator {
 
 export function requireCsrfToken(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
-    obj.value = async function func(...args: any[]) {
+    obj.value = async function checkCsrfToken(...args: any[]) {
         if (this.getCsrfToken(this.session._id) !== this.args.csrfToken) {
             throw new CsrfTokenError(this.args.csrfToken);
         }

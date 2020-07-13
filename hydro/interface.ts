@@ -225,6 +225,7 @@ declare global {
                 ui: any,
                 error: typeof import('./error'),
                 locales: { [id: string]: { [key: string]: string } },
+                postInit: Function[],
             },
             nodeModules: any,
             onDestory: Function[],

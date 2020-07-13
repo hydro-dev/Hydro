@@ -33,15 +33,13 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   display: block
   width: rem($header-logo-width-real)
   height: rem($header-logo-height + $header-gap-mini + $nav-item-height)
-  background: url(header-logo.png) no-repeat
+  background: no-repeat
   background-size: rem($header-logo-width-real) rem($header-logo-height-real)
   background-position: 0 rem($header-gap-mini + $nav-item-height - ($header-logo-height-real - $header-logo-height))
   transition: transform .5s, opacity .5s
   transition-timing-function: ease-out-cubic
   transform-origin: 0 0
   opacity: 1
-  +retina()
-    background-image: url(./header-logo@2x.png)
   +mobile()
     display: inline-block
 
@@ -152,9 +150,7 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   width: $nav-logo-width    // no rem
   height: $nav-logo-height  // no rem
   margin-top: rem(10px)
-  background: url('../navigation/nav-logo-small_light.png') no-repeat
   +retina()
-    background: url('../navigation/nav-logo-small@2x_light.png') no-repeat
     background-size: $nav-logo-width $nav-logo-height // no rem
 
 .header--mobile__system

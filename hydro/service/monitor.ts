@@ -13,14 +13,16 @@ export async function update() {
     global.Hydro.stat.reqCount = 0;
 }
 
-export async function postInit() {
-    const info = await sysinfo.get();
-    await coll.updateOne(
-        { mid: info.mid, type: 'server' },
-        { $set: { ...info, updateAt: new Date(), type: 'server' } },
-        { upsert: true },
-    );
-    setInterval(update, 60 * 1000);
-}
+global.Hydro.postInit.push(
+    async () => {
+        const info = await sysinfo.get();
+        await coll.updateOne(
+            { mid: info.mid, type: 'server' },
+            { $set: { ...info, updateAt: new Date(), type: 'server' } },
+            { upsert: true },
+        );
+        setInterval(update, 60 * 1000);
+    },
+);
 
-global.Hydro.service.monitor = { update, postInit };
+global.Hydro.service.monitor = { update };
