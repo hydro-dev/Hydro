@@ -24,13 +24,10 @@ export const pdocHidden: Pdoc = {
     config: '',
 };
 
-export async function add(domainId: string, title: string, content: string, owner: number, {
-    pid = null,
-    data = null,
-    category = [],
-    tag = [],
-    hidden = false,
-}) {
+export async function add(
+    domainId: string, pid: string = null, title: string, content: string, owner: number,
+    tag: string[] = [], category: string[] = [], data: ObjectID = null, hidden = false,
+) {
     const d = await domain.inc(domainId, 'pidCounter', 1);
     if (!pid) pid = d.pidCounter.toString();
     return await document.add(

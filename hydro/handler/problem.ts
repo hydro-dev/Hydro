@@ -534,13 +534,11 @@ class ProblemCreateHandler extends Handler {
     }
 
     @param('title', Types.String, isTitle)
-    @param('pid', Types.String, isPid)
+    @param('pid', Types.String, isPid, true)
     @param('content', Types.String, isContent)
     @param('hidden', Types.Boolean)
     async post(domainId: string, title: string, pid: string, content: string, hidden = false) {
-        pid = await problem.add(domainId, title, content, this.user._id, {
-            pid, hidden,
-        });
+        pid = await problem.add(domainId, pid, title, content, this.user._id, [], [], null, hidden);
         this.response.body = { pid };
         this.response.redirect = this.url('problem_settings', { pid });
     }

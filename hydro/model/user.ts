@@ -188,7 +188,7 @@ export async function create({
             mailLower: mail.trim().toLowerCase(),
             uname,
             unameLower: uname.trim().toLowerCase(),
-            password: pwhash(password, salt),
+            hash: pwhash(password, salt),
             salt,
             hashType: 'hydro',
             regat: new Date(),

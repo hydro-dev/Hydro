@@ -8,16 +8,19 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   &.warning
     background: #ffe1a6
 
+.header__options
+  background-image: url(./header-background.png)
+  background-image: url(./header-background@2x.png)
+
 .header
   position: relative
   height: rem($header-bg-height)
-  background: #5eafca url(./header-background.png) no-repeat center top
+  background: #5eafca no-repeat center top
   background-size: cover
   transition: height .5s
   transition-timing-function: ease-out-cubic
   overflow: hidden
   +retina()
-    background-image: url(./header-background.png)
     background-size: rem($header-bg-width $header-bg-height)
 
   &.mini
@@ -28,6 +31,12 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
     height: auto !important
     .header__content
       display: none
+
+.header__logo__options
+  background-image: url(./header-logo.png)
+  background-image: url(./header-logo@2x.png)
+  background-image: url(./header-logo-summer.png)
+  background-image: url(./header-logo-summer@2x.png)
 
 .header__logo
   display: block

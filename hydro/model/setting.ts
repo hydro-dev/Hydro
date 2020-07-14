@@ -133,7 +133,7 @@ SystemSetting(
     Setting('setting_ui', 'ui.header_logo', null, '/components/header/header-logo.png', 'text', 'Header Logo'),
     Setting('setting_ui', 'ui.header_logo_2x', null, '/components/header/header-logo@2x.png', 'text', 'Header Logo@2x'),
     Setting('setting_ui', 'ui.header_background', null, '/components/header/header-background.png', 'text', 'Header Background'),
-    Setting('setting_ui', 'ui.header_background_2x', null, '/components/header/header-background.png', 'text', 'Header Logo@2x'),
+    Setting('setting_ui', 'ui.header_background_2x', null, '/components/header/header-background@2x.png', 'text', 'Header Logo@2x'),
     Setting('setting_ui', 'ui.nav_logo_light', null, '/components/navigation/nav-logo-small_light.png', 'text', 'Nav Logo(Light)'),
     Setting('setting_ui', 'ui.nav_logo_dark', null, '/components/navigation/nav-logo-small_dark.png', 'text', 'Nav Logo(Dark)'),
     Setting('setting_ui', 'ui.nav_logo_light_2x', null, '/components/navigation/nav-logo-small@2x_light.png', 'text', 'Nav Logo@2x(Light)'),
@@ -150,6 +150,10 @@ SystemSetting(
     Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'number', 'Solutions per Page'),
     Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'number', 'Training per Page'),
     Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'number', 'Reply per Page'),
+    Setting('setting_constant', 'HOMEWORK_ON_MAIN', null, 5, 'number', 'HOMEWORK_ON_MAIN'),
+    Setting('setting_constant', 'DISCUSSION_ON_MAIN', null, 20, 'number', 'DISCUSSION_ON_MAIN'),
+    Setting('setting_constant', 'CONTEST_ON_MAIN', null, 10, 'number', 'CONTEST_ON_MAIN'),
+    Setting('setting_constant', 'TRAINING_ON_MAIN', null, 10, 'number', 'TRAINING_ON_MAIN'),
 );
 
 global.Hydro.postInit.push(

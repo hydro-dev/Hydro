@@ -6,45 +6,64 @@ let autoHideTimer = null;
 
 export default class Notification {
   static success(message, duration) {
-    Notification.show({ type: 'success', message, duration });
+    return Notification.show({ type: 'success', message, duration });
   }
 
   static info(message, duration) {
-    Notification.show({ type: 'info', message, duration });
+    return Notification.show({ type: 'info', message, duration });
   }
 
   static warn(message, duration) {
-    Notification.show({ type: 'warn', message, duration });
+    return Notification.show({ type: 'warn', message, duration });
   }
 
   static error(message, duration) {
-    Notification.show({ type: 'error', message, duration });
+    return Notification.show({ type: 'error', message, duration });
   }
 
-  static show({ message, type = 'info', duration = 3000 }) {
-    if (lastNotification) {
+  static show({
+    avatar, title, message, type = 'info', duration = 3000,
+    actionButtons = [],
+  }) {
+    if (duration && lastNotification) {
       Notification.hide();
     }
-    const $n = $(tpl`<div class="notification ${type} hide">${message}</div>`)
+    const $dom = $(tpl`<div class="notification ${type} hide"></div>`);
+    if (avatar) $(tpl`<img width="64" height="64" class="avatar" src="${avatar}"></img>`).appendTo($dom);
+    if (title) $(tpl`${title} `).appendTo($dom);
+    $(tpl`${message}`).appendTo($dom);
+    actionButtons.forEach((button) => {
+      $(tpl`<button class="${button.class}">${button.name}</button>`).appendTo($dom);
+    });
+    console.log($dom);
+    const $n = $dom
       .css('z-index', zIndexManager.getNext())
       .appendTo('body');
     $n.width(); // force reflow
     $n.removeClass('hide');
-    lastNotification = $n;
-    autoHideTimer = setTimeout(Notification.hide, duration);
+    if (duration) {
+      lastNotification = $n;
+      autoHideTimer = setTimeout(Notification.hide, duration);
+    }
+    return $n;
   }
 
-  static hide() {
-    if (!lastNotification) {
-      return;
+  static hide($node) {
+    if (!$node) {
+      if (!lastNotification) {
+        return;
+      }
+      if (autoHideTimer) {
+        clearTimeout(autoHideTimer);
+        autoHideTimer = null;
+      }
+      const $n = lastNotification;
+      $n.addClass('hide');
+      setTimeout(() => $n.remove(), 200);
+      lastNotification = null;
+    } else {
+      $node.addClass('hide');
+      setTimeout(() => $node.remove(), 200);
     }
-    if (autoHideTimer) {
-      clearTimeout(autoHideTimer);
-      autoHideTimer = null;
-    }
-    const $n = lastNotification;
-    $n.addClass('hide');
-    setTimeout(() => $n.remove(), 200);
-    lastNotification = null;
   }
 }

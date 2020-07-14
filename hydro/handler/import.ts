@@ -34,9 +34,11 @@ class ProblemImportHandler extends Handler {
             throw new ValidationError('remoteType');
         }
         const [pdoc, testdata] = await global.Hydro.lib[`import.${remoteType}`](url, this);
-        if (pid) pdoc.pid = pid;
         if (hidden) pdoc.hidden = true;
-        const docId = await problem.add(domainId, pdoc.title, pdoc.content, this.user._id, pdoc);
+        const docId = await problem.add(
+            domainId, pid || pdoc.pid, pdoc.title, pdoc.content, this.user._id,
+            pdoc.tag || [], pdoc.category || [], null, pdoc.hidden,
+        );
         if (testdata) {
             const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${pid || pdoc.pid || docId}.zip`);
             const w = fs.createWriteStream(file);

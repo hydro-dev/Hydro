@@ -6,7 +6,8 @@ import pwhash from '../lib/hash.hydro';
 export const description = 'Install';
 
 export async function run({ username = '', password = '' } = {}) {
-    await domain.add('system', 0, 'Hydro', 'Hydro System');
+    const ddoc = await domain.get('system');
+    if (!ddoc) await domain.add('system', 0, 'Hydro', 'Hydro System');
     if (username && password) {
         const udoc = await user.getById('system', -1);
         if (!udoc) {

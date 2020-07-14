@@ -31,7 +31,7 @@ import {
 const { geoip, useragent } = global.Hydro.lib;
 
 class HomeHandler extends Handler {
-    async homework(domainId) {
+    async homework(domainId: string) {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
                 .sort('beginAt', -1)
@@ -46,11 +46,11 @@ class HomeHandler extends Handler {
         return [[], {}];
     }
 
-    async contest(domainId) {
+    async contest(domainId: string) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
                 .sort('beginAt', -1)
-                .limit(await system.get('CONTESTS_ON_MAIN'))
+                .limit(await system.get('CONTEST_ON_MAIN'))
                 .toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
@@ -60,11 +60,11 @@ class HomeHandler extends Handler {
         return [[], {}];
     }
 
-    async training(domainId) {
+    async training(domainId: string) {
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti(domainId)
                 .sort('_id', 1)
-                .limit(await system.get('TRAININGS_ON_MAIN'))
+                .limit(await system.get('TRAINING_ON_MAIN'))
                 .toArray();
             const tsdict = await training.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
@@ -74,10 +74,10 @@ class HomeHandler extends Handler {
         return [[], {}];
     }
 
-    async discussion(domainId): Promise<[any[], any]> {
+    async discussion(domainId: string): Promise<[any[], any]> {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti(domainId)
-                .limit(await system.get('DISCUSSIONS_ON_MAIN'))
+                .limit(await system.get('DISCUSSION_ON_MAIN'))
                 .toArray();
             const vndict = await discussion.getListVnodes(domainId, ddocs, this);
             return [ddocs, vndict];
