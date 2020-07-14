@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import moment from 'moment-timezone';
+import { Dictionary } from 'lodash';
 import * as builtin from './builtin';
-import { Setting as _Setting, Dict } from '../interface';
+import { Setting as _Setting } from '../interface';
 
-type SettingDict = Dict<_Setting>;
+type SettingDict = Dictionary<_Setting>;
 
 const countries = moment.tz.countries();
 const tzs: Set<string> = new Set();
@@ -11,8 +12,8 @@ for (const country of countries) {
     const tz = moment.tz.zonesForCountry(country);
     for (const t of tz) tzs.add(t);
 }
-const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]);
-const langRange: Dict<string> = {};
+const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
+const langRange: Dictionary<string> = {};
 
 for (const lang in global.Hydro.locales) {
     langRange[lang] = global.Hydro.locales[lang].__langname;
@@ -34,7 +35,7 @@ export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
 export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
 export const Setting = (
-    family: string, key: string, range: Array<[string, string]> | Dict<string> = null,
+    family: string, key: string, range: Array<[string, string]> | Dictionary<string> = null,
     value: any = null, type = 'text', name = '',
     desc = '', flag = 0,
 ): _Setting => ({
@@ -75,27 +76,19 @@ export const SystemSetting = (...settings: _Setting[]) => {
 };
 
 PreferenceSetting(
-    Setting('setting_display', 'viewLang', langRange,
-        'zh_CN', 'select', 'UI Language'),
-    Setting('setting_display', 'timeZone', timezones as [string, string][],
-        'Asia/Shanghai', 'select', 'Timezone'),
-    Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS,
-        null, 'select', 'Default Code Language'),
-    Setting('setting_usage', 'codeTemplate', null,
-        null, 'textarea', 'Default Code Template',
+    Setting('setting_display', 'viewLang', langRange, 'zh_CN', 'select', 'UI Language'),
+    Setting('setting_display', 'timeZone', timezones, 'Asia/Shanghai', 'select', 'Timezone'),
+    Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS, null, 'select', 'Default Code Language'),
+    Setting('setting_usage', 'codeTemplate', null, null, 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
 
 AccountSetting(
-    Setting('setting_info', 'gravatar', null,
-        null, 'text', 'Gravatar Email',
+    Setting('setting_info', 'gravatar', null, null, 'text', 'Gravatar Email',
         'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.'),
-    Setting('setting_info', 'qq', null,
-        null, 'text', 'QQ'),
-    Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE,
-        null, 'select', 'Gender'),
-    Setting('setting_info', 'bio', null,
-        null, 'markdown', 'Bio'),
+    Setting('setting_info', 'qq', null, null, 'text', 'QQ'),
+    Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE, null, 'select', 'Gender'),
+    Setting('setting_info', 'bio', null, null, 'markdown', 'Bio'),
     Setting('setting_customize', 'backgroundImage', null,
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),

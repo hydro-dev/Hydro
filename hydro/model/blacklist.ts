@@ -1,13 +1,19 @@
 import * as db from '../service/db';
+import { Bdoc } from '../interface';
 
 const coll = db.collection('blacklist');
 
-export async function add(ip: string) {
+export async function add(ip: string): Promise<Bdoc> {
     const expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
-    return coll.findOneAndUpdate({ _id: ip }, { $set: { expireAt } }, { upsert: true });
+    const res = await coll.findOneAndUpdate(
+        { _id: ip },
+        { $set: { expireAt } },
+        { upsert: true, returnOriginal: false },
+    );
+    return res.value;
 }
 
-export function get(ip: string) {
+export function get(ip: string): Promise<Bdoc> {
     return coll.findOne({ _id: ip });
 }
 

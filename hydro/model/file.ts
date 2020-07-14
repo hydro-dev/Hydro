@@ -1,9 +1,11 @@
 import { ObjectID } from 'mongodb';
 import * as fs from 'fs';
+import { Dictionary } from 'lodash';
 import { ForbiddenError, NotFoundError } from '../error';
 import * as db from '../service/db';
 import gridfs from '../service/gridfs';
 import hash from '../lib/hash.hydro';
+import { Ufdoc } from '../interface';
 
 const coll = db.collection('file');
 const collFile = db.collection('fs.files');
@@ -22,7 +24,12 @@ export async function add(
     else stream = streamOrPath;
     const w = gridfs.openUploadStream(filename);
     await coll.insertOne({
-        ...meta, _id: w.id, secret: String.random(32), owner, filename,
+        ...meta,
+        _id: w.id,
+        secret: String.random(32),
+        owner,
+        filename,
+        count: 1,
     });
     await new Promise((resolve, reject) => {
         w.on('error', reject);
@@ -42,21 +49,22 @@ export function del(_id: ObjectID) {
     ]);
 }
 
-export async function inc(_id: ObjectID) {
+export async function inc(_id: ObjectID): Promise<number> {
     const doc = await coll.findOneAndUpdate(
         { _id },
         { $inc: { count: 1 } },
         { returnOriginal: false },
     );
-    return (doc.value || {}).count;
+    return doc.value?.count;
 }
 
-export async function dec(_id: ObjectID) {
+export async function dec(_id: ObjectID): Promise<number> {
     const file = await coll.findOneAndUpdate(
         { _id },
         { $inc: { count: -1 } },
         { returnOriginal: false },
     );
+    if (!file.value) return 0;
     if (!file.value.count) await del(_id);
     return file.value.count;
 }
@@ -79,11 +87,11 @@ export async function get(_id: ObjectID) {
     return gridfs.openDownloadStream(_id);
 }
 
-export function getMeta(_id: ObjectID) {
+export function getMeta(_id: ObjectID): Promise<Ufdoc> {
     return coll.findOne({ _id });
 }
 
-export async function getMetaDict(ufids: ObjectID[]) {
+export async function getMetaDict(ufids: ObjectID[]): Promise<Dictionary<Ufdoc>> {
     const r = {};
     ufids = Array.from(new Set(ufids));
     const ufdocs = await coll.find({ _id: { $in: ufids } }).toArray();

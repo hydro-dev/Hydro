@@ -1,5 +1,5 @@
 @requireCsrfToken
-消息提醒
+为model.system添加缓存
 bug修复
 使用BigInt管理权限
 修复discussion前端权限节点显示异常

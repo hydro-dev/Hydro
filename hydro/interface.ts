@@ -1,13 +1,12 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ObjectID, GridFSBucket } from 'mongodb';
 import fs from 'fs';
-
-export type Dict<T> = { [key: string]: T };
+import { Dictionary, NumericDictionary } from 'lodash';
 
 export interface Setting {
     family: string,
     key: string,
-    range: Array<[string, string]> | Dict<string>,
+    range: Array<[string, string]> | Dictionary<string>,
     value: any,
     type: string,
     name: string,
@@ -15,7 +14,7 @@ export interface Setting {
     flag: number,
 }
 
-export interface Udoc {
+export interface Udoc extends Dictionary<any> {
     udoc: () => any,
     dudoc: () => any,
     _id: number,
@@ -34,12 +33,9 @@ export interface Udoc {
     hasPerm: (perm: string) => boolean,
     hasPriv: (priv: number) => boolean,
     checkPassword: (password: string) => void,
-    [key: string]: any,
 }
 
-export interface Udict {
-    [key: number]: Udoc,
-}
+export type Udict = NumericDictionary<Udoc>;
 
 export interface Pdoc {
     _id: ObjectID,
@@ -59,9 +55,7 @@ export interface Pdoc {
     config: string,
 }
 
-export interface Pdict {
-    [key: string]: Pdoc,
-}
+export type Pdict = Dictionary<Pdoc>;
 
 export interface TestCase {
     time: number,
@@ -102,9 +96,7 @@ export interface ScoreboardNode {
     raw?: any,
 }
 
-export interface PenaltyRules {
-    [key: string]: number,
-}
+export type PenaltyRules = Dictionary<number>;
 
 export interface Tdoc {
     _id: ObjectID,
@@ -128,9 +120,40 @@ export interface Tdoc {
     dag: any
 }
 
-interface ContestStat {
+export interface DomainDoc extends Dictionary<any> {
+    _id: string,
+    owner: number,
+    roles: Dictionary<string>,
+    gravatar: string,
+    bulletin: string,
+}
+
+// Message
+export interface Mdoc {
+    _id: ObjectID,
+    from: number,
+    to: number,
+    content: string,
+    unread: boolean,
+}
+
+// Userfile
+export interface Ufdoc {
+    _id: ObjectID,
+    secret: string,
+    md5: string,
+    owner: number,
+    size: number,
+}
+
+// Blacklist
+export interface Bdoc {
+    _id: string, // ip
+    expireAt: Date,
+}
+
+interface ContestStat extends Dictionary<any> {
     detail: any,
-    [key: string]: any,
 }
 
 export interface ContestRule {
@@ -147,9 +170,7 @@ export interface ContestRule {
     rank: (tsdocs: any[]) => any[] | Generator<any>,
 }
 
-export interface ContestRules {
-    [key: string]: ContestRule,
-}
+export type ContestRules = Dictionary<ContestRule>;
 
 export type ProblemImporter = (url: string, handler: any) =>
     Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
@@ -224,7 +245,7 @@ declare global {
                 template: { [key: string]: string },
                 ui: any,
                 error: typeof import('./error'),
-                locales: { [id: string]: { [key: string]: string } },
+                locales: Dict<Dict<string>>,
                 postInit: Function[],
             },
             nodeModules: any,

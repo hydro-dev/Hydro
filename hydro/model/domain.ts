@@ -1,5 +1,6 @@
+import { Dictionary } from 'lodash';
 import { BUILTIN_ROLES, PRIV } from './builtin';
-import { Udoc } from '../interface';
+import { Udoc, DomainDoc } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('domain');
@@ -12,11 +13,11 @@ export async function add(domainId: string, owner: number, name: string, bulleti
     return domainId;
 }
 
-export function get(domainId: string) {
+export function get(domainId: string): Promise<DomainDoc> {
     return coll.findOne({ _id: domainId });
 }
 
-export function getMany(query: any, sort: any, page: number, limit: number) {
+export function getMany(query: any, sort: any, page: number, limit: number): Promise<DomainDoc[]> {
     return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
         .toArray();
 }
@@ -29,7 +30,7 @@ export function edit(domainId: string, $set: any) {
     return coll.updateOne({ _id: domainId }, { $set });
 }
 
-export async function inc(domainId: string, field: string, n: number) {
+export async function inc(domainId: string, field: string, n: number): Promise<DomainDoc | null> {
     const res = await coll.findOneAndUpdate(
         { _id: domainId },
         { $inc: { [field]: n } },
@@ -38,7 +39,7 @@ export async function inc(domainId: string, field: string, n: number) {
     return res.value;
 }
 
-export async function getList(domainIds: string[]) {
+export async function getList(domainIds: string[]): Promise<Dictionary<DomainDoc>> {
     const r = {};
     // eslint-disable-next-line no-await-in-loop
     for (const domainId of domainIds) r[domainId] = await get(domainId);
