@@ -3,7 +3,7 @@ import { NamedPage } from 'vj/misc/PageLoader';
 import * as recordEnum from 'vj/constant/record';
 
 const page = new NamedPage('judge_playground', async () => {
-  const { default: SockJs } = await import('sockjs-client');
+  const { default: SockJs } = await import('../components/socket');
 
   const sock = new SockJs(`/judge/consume-conn?token=${UiContext.token}`);
   sock.onopen = () => {

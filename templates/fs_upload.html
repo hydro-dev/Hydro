@@ -5,19 +5,17 @@
 <p>{{ _('ID') }}: {{ fdoc['_id'] }}</p>
 <p>{{ _('Userfile doc_id') }}: {{ ufid }}</p>
 <p>{{ _('MD5') }}: {{ fdoc['md5'] }}</p>
-<p>{{ _('Secret (keep it secret)') }}: {{ fdoc['metadata']['secret'] }}</p>
-<p>{{ _('URL') }}: {{ reverse_url('fs_get', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM, secret=fdoc['metadata']['secret']) }}</p>
-<p>{{ _('Image Markdown') }}: <pre>![{{ _('Description') }}](vijos:/{{ reverse_url('fs_get', domain_id=vj4.model.builtin.DOMAIN_ID_SYSTEM, secret=fdoc['metadata']['secret']) }})</pre></p>
+<p>{{ _('URL') }}: {{ model.file.url(fdoc) }}</p>
 {% endif %}
 <form method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
 <p>
 {{ _('New file') }}:
-<input type="text" name="desc" placeholder="{{ _('Description') }}">
+<input type="text" name="title" placeholder="{{ _('Description') }}">
 <input type="file" name="file">
 <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
 </p>
-<p>{{ _('Note: file size should be less than or equal to {0}, and file type should be in {1}. Empty files are not allowed.').format(vj4.handler.fs.FILE_MAX_LENGTH|format_size, vj4.handler.fs.ALLOWED_MIMETYPE_PREFIX) }}</p>
-<p>{{ _('Usage: {0}, Quota: {1}').format(usage|format_size, quota|format_size) }}</p>
+<p>{{ _('Note: file size should be less than or equal to {0}, and file type should be in {1}. Empty files are not allowed.').format(size(FILE_MAX_LENGTH), ALLOWED_MIMETYPE_PREFIX) }}</p>
+<p>{{ _('Usage: {0}, Quota: {1}').format(size(usage), size(quota)) }}</p>
 </form>
 {% endblock %}

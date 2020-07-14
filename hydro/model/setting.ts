@@ -99,6 +99,7 @@ AccountSetting(
     Setting('setting_customize', 'backgroundImage', null,
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
+    Setting('setting_storage', 'usage', null, 0, 'number', 'Userfile Usage', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 DomainSetting(
@@ -118,7 +119,6 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', null, false, 'boolean', 'SSL'),
-    Setting('setting_db', 'db.ver', null, 1, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_server', 'server.worker', null, 1, 'number', 'Server Workers Number'),
     Setting('setting_server', 'server.hostname', null, null, 'text', 'Server Hostname'),
     Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
@@ -154,6 +154,8 @@ SystemSetting(
     Setting('setting_constant', 'DISCUSSION_ON_MAIN', null, 20, 'number', 'DISCUSSION_ON_MAIN'),
     Setting('setting_constant', 'CONTEST_ON_MAIN', null, 10, 'number', 'CONTEST_ON_MAIN'),
     Setting('setting_constant', 'TRAINING_ON_MAIN', null, 10, 'number', 'TRAINING_ON_MAIN'),
+    Setting('setting_storage', 'db.ver', null, 1, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 global.Hydro.postInit.push(

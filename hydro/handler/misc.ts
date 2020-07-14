@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import fs from 'fs';
 import { ObjectID } from 'mongodb';
 import { PRIV } from '../model/builtin';
 import * as system from '../model/system';
@@ -9,6 +10,7 @@ import * as db from '../service/db';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import { BadRequestError } from '../error';
 
 const coll = db.collection('status');
 
@@ -20,6 +22,41 @@ class FileDownloadHandler extends Handler {
         if (name) name = Buffer.from(name, 'base64').toString();
         this.response.attachment(name || fileId.toHexString());
         this.response.body = await file.getWithSecret(fileId, secret);
+    }
+}
+
+class FileUploadHandler extends Handler {
+    async getQuota() {
+        let quota = await system.get('user.quota');
+        if (this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) {
+            quota = 2 ** 63 - 1;
+        }
+        return quota;
+    }
+
+    async get() {
+        this.response.template = 'fs_upload.html';
+        this.response.body = { fdoc: null, usage: this.user.usage, quota: await this.getQuota() };
+    }
+
+    @param('title', Types.String)
+    async post(domainId: string, title: string) {
+        if (!this.request.files.file) throw new BadRequestError();
+        const quota = await this.getQuota();
+        const lfdoc = await fs.promises.stat(this.request.files.file.path);
+        let ufid: ObjectID;
+        const udoc = await user.inc(this.user._id, 'usage', lfdoc.size);
+        try {
+            ufid = await file.add(this.request.files.file.path, title, this.user._id);
+        } catch (e) {
+            await user.inc(this.user._id, 'usage', -lfdoc.size);
+            throw e;
+        }
+        const fdoc = await file.getMeta(ufid);
+        this.response.template = 'fs_upload.html';
+        this.response.body = {
+            fdoc, ufid, usage: udoc.usage, quota,
+        };
     }
 }
 
@@ -109,6 +146,7 @@ class UiSettingsHandler extends Handler {
 export async function apply() {
     Route('file_download', '/fs/:fileId/:secret', FileDownloadHandler);
     Route('file_download_with_name', '/fs/:fileId/:name/:secret', FileDownloadHandler);
+    Route('file_upload', '/fs/upload', FileUploadHandler, PRIV.PRIV_CREATE_FILE);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);

@@ -22,16 +22,18 @@ export default class Notification {
   }
 
   static show({
-    avatar, title, message, type, duration = 3000,
+    avatar, title, message, type = '', duration = 3000,
     actionButtons = [],
   }) {
     if (duration && lastNotification) {
       Notification.hide();
     }
+    if (avatar) type += ' avatar';
+    if (title) type += ' title';
     const $dom = $(tpl`<div class="notification ${type} hide"></div>`);
     if (avatar) $(tpl`<img width="64" height="64" class="avatar" src="${avatar}"></img>`).appendTo($dom);
-    if (title) $(tpl`${title} `).appendTo($dom);
-    $(tpl`${message}`).appendTo($dom);
+    if (title) $(tpl`<h2>${title}</h2>`).appendTo($dom);
+    $(tpl`<p>${message}</p>`).appendTo($dom);
     actionButtons.forEach((button) => {
       $(tpl`<button class="${button.class}" onclick="javascript:window.${button.funcName}();">${button.name}</button>`).appendTo($dom);
     });

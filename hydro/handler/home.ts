@@ -308,6 +308,7 @@ class HomeMessagesHandler extends Handler {
     async postSend(domainId: string, uid: number, content: string) {
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
+        if (udoc.gravatar) udoc.gravatar = misc.gravatar(udoc.gravatar);
         const mdoc = await message.send(this.user._id, uid, content);
         // TODO(twd2): improve here: projection
         if (this.user._id !== uid) {
@@ -330,7 +331,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
         bus.subscribe([`user_message-${this.user._id}`], this, 'onMessageReceived');
     }
 
-    async onMessageReceived(e) {
+    async onMessageReceived(e: any) {
         this.send(e.value);
     }
 
@@ -342,17 +343,17 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 class HomeFileHandler extends Handler {
     async get() {
         const ufdocs = await file.getMulti({ owner: this.user._id }).toArray();
-        const fdict = await file.getMetaDict(ufdocs.map((ufdoc) => ufdoc._id));
         this.response.template = 'home_file.html';
-        this.response.body = { ufdocs, fdict };
+        this.response.body = { ufdocs };
     }
 
-    async postDelete(ufid) {
+    @param('ufid', Types.ObjectID)
+    async postDelete(domainId: string, ufid: ObjectID) {
         const ufdoc = await file.getMeta(ufid);
         if (ufdoc.owner !== this.user._id) this.checkPriv(PRIV.PRIV_DELETE_FILE);
         else this.checkPriv(PRIV.PRIV_DELETE_FILE_SELF);
         const result = await file.del(ufdoc._id);
-        if (result) await user.inc(this.user._id, 'usage', ufdoc.length);
+        if (result) await user.inc(this.user._id, 'usage', -ufdoc.size);
         this.back();
     }
 }

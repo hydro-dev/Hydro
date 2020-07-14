@@ -13,20 +13,25 @@ function _timestamp() {
     return Math.floor(Number(new Date()) / 1000000);
 }
 
-export async function add(streamOrPath: fs.ReadStream | string, filename: string, meta = {}) {
+export async function add(
+    streamOrPath: fs.ReadStream | string, filename: string,
+    owner = 1, meta = {},
+) {
     let stream: fs.ReadStream;
     if (typeof streamOrPath === 'string') stream = fs.createReadStream(streamOrPath);
     else stream = streamOrPath;
     const w = gridfs.openUploadStream(filename);
-    await coll.insertOne({ ...meta, _id: w.id, secret: String.random(32) });
+    await coll.insertOne({
+        ...meta, _id: w.id, secret: String.random(32), owner, filename,
+    });
     await new Promise((resolve, reject) => {
         w.on('error', reject);
         w.on('finish', resolve);
         stream.pipe(w);
     });
     const c = await gridfs.find({ _id: w.id }).toArray();
-    await coll.updateOne({ _id: w.id }, { $set: { md5: c[0].md5, size: c[0].size } });
-    return w.id;
+    await coll.updateOne({ _id: w.id }, { $set: { md5: c[0].md5, size: c[0].length } });
+    return w.id as ObjectID;
 }
 
 export function del(_id: ObjectID) {
@@ -92,11 +97,24 @@ export function getMulti(query: any) {
     return coll.find(query);
 }
 
-export async function url(_id: ObjectID, name: string | undefined) {
+async function _url(_id: ObjectID, name: string | undefined) {
     const file = await coll.findOne({ _id });
     const secret = hash(file.secret, _timestamp().toString());
     if (name) return `/fs/${_id}/${Buffer.from(name).toString('base64')}/${secret}`;
     return `/fs/${_id}/${secret}`;
+}
+
+function __url(file: any, name: string | undefined) {
+    const secret = hash(file.secret, _timestamp().toString());
+    if (name) return `/fs/${file._id}/${Buffer.from(name).toString('base64')}/${secret}`;
+    return `/fs/${file._id}/${secret}`;
+}
+
+export function url(_id: ObjectID, name: string | undefined): Promise<string>;
+export function url(file: any, name: string | undefined): string;
+export function url(arg0: any, name: any) {
+    if (arg0 instanceof ObjectID) return _url(arg0, name);
+    return __url(arg0, name);
 }
 
 global.Hydro.model.file = {

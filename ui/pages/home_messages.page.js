@@ -23,7 +23,7 @@ const page = new NamedPage('home_messages', () => {
   }
 
   async function mountComponent() {
-    const { default: SockJs } = await import('sockjs-client');
+    const { default: SockJs } = await import('../components/socket');
     const { default: MessagePadApp } = await import('../components/messagepad');
     const { default: MessagePadReducer } = await import('../components/messagepad/reducers');
     const {

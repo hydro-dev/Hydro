@@ -4,8 +4,8 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('My Files') }}</h1>
     <div class="section__tools">
-    {% if handler.has_priv(vj4.model.builtin.PRIV_CREATE_FILE) %}
-      <a class="primary rounded button" href="{{ reverse_url('fs_upload') }}" target="_blank"><span class="icon icon-add"></span> {{ _('Upload File') }}</a>
+    {% if handler.user.hasPriv(model.builtin.PRIV.PRIV_CREATE_FILE) %}
+      <a class="primary rounded button" href="{{ url('file_upload') }}" target="_blank"><span class="icon icon-add"></span> {{ _('Upload File') }}</a>
     {% endif %}
       <a class="tool-button" href="{{ url('wiki', page='help', anchor='file') }}"><span class="icon icon-help"></span> {{ _("What's file?") }}</a>
     </div>
@@ -28,14 +28,12 @@
       </thead>
       <tbody>
       {% for ufdoc in ufdocs %}
-      {% with fdoc = fdict.get(ufdoc['file_id'], {}) %}
         <tr>
-          <td class="col--desc">{{ ufdoc['content'] }}</td>
-          <td class="col--length">{{ fdoc['length']|format_size if fdoc['length'] else '?' }}</td>
-          <td class="col--hash">{{ fdoc['md5']|default('?') }}</td>
-          <td class="col--action"><a class="typo-a" href="{{ handler.file_url(fdoc) if 'metadata' in fdoc else '#' }}">{{ _('Download') }}</a> · <a class="typo-a" href="#">{{ _('Code') }}</a></td>
+          <td class="col--desc">{{ ufdoc.filename }}</td>
+          <td class="col--length">{{ size(ufdoc.size) if ufdoc.size else '?' }}</td>
+          <td class="col--hash">{{ ufdoc.md5|default('?') }}</td>
+          <td class="col--action"><a class="typo-a" href="{{ model.file.url(ufdoc) }}">{{ _('Download') }}</a></td>
         </tr>
-      {% endwith %}
       {% endfor %}
       </tbody>
     </table>

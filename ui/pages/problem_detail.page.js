@@ -160,7 +160,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     if (reactLoaded) return;
     $('.loader-container').show();
 
-    const { default: SockJs } = await import('sockjs-client');
+    const { default: SockJs } = await import('../components/socket');
     const { default: ScratchpadApp } = await import('../components/scratchpad');
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const {

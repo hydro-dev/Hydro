@@ -1,7 +1,7 @@
 import { NamedPage } from 'vj/misc/PageLoader';
 
 const page = new NamedPage('manage_dashboard', async () => {
-  const { default: SockJs } = await import('sockjs-client');
+  const { default: SockJs } = await import('../components/socket');
 
   const sock = new SockJs(Context.socketUrl);
   sock.onopen = () => {
