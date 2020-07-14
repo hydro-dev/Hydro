@@ -22,7 +22,7 @@ export default class Notification {
   }
 
   static show({
-    avatar, title, message, type = 'info', duration = 3000,
+    avatar, title, message, type, duration = 3000,
     actionButtons = [],
   }) {
     if (duration && lastNotification) {
@@ -33,9 +33,8 @@ export default class Notification {
     if (title) $(tpl`${title} `).appendTo($dom);
     $(tpl`${message}`).appendTo($dom);
     actionButtons.forEach((button) => {
-      $(tpl`<button class="${button.class}">${button.name}</button>`).appendTo($dom);
+      $(tpl`<button class="${button.class}" onclick="javascript:window.${button.funcName}();">${button.name}</button>`).appendTo($dom);
     });
-    console.log($dom);
     const $n = $dom
       .css('z-index', zIndexManager.getNext())
       .appendTo('body');
