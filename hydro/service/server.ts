@@ -12,21 +12,22 @@ import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
+import { lrucache } from '../utils';
+import { Udoc, DomainDoc } from '../interface';
+import {
+    UserNotFoundError, BlacklistedError, PermissionError,
+    UserFacingError, ValidationError, PrivilegeError,
+    CsrfTokenError, InvalidOperationError, MethodNotAllowedError, NotFoundError,
+} from '../error';
 import { render } from '../lib/template';
 import * as misc from '../lib/misc';
 import * as user from '../model/user';
+import * as domain from '../model/domain';
 import * as system from '../model/system';
 import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
-import {
-    UserNotFoundError, BlacklistedError, PermissionError,
-    UserFacingError, ValidationError, PrivilegeError,
-    CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
-} from '../error';
 import hash from '../lib/hash.hydro';
-import { lrucache } from '../utils';
-import { Udoc } from '../interface';
 
 let enableLog = true;
 
@@ -145,7 +146,7 @@ export function param(name: string, ...args: any): MethodDecorator {
                         if (!rawArgs[item.name]) throw new ValidationError(item.name);
                         if (item.validate) {
                             if (!item.validate(rawArgs[item.name])) {
-                                throw new ValidationError(item.name, rawArgs[item.name]);
+                                throw new ValidationError(item.name);
                             }
                         }
                         if (item.convert) c.push(item.convert(rawArgs[item.name]));
@@ -223,6 +224,8 @@ export class Handler {
 
     user: Udoc;
 
+    domain: DomainDoc;
+
     constructor(ctx: Koa.Context) {
         this.ctx = ctx;
         this.request = {
@@ -263,7 +266,7 @@ export class Handler {
 
     async renderHTML(name: string, context: any): Promise<string> {
         if (enableLog) console.time(name);
-        const UserContext = { ...this.user, gravatar: misc.gravatar(this.user.gravatar, 128) };
+        const UserContext = { ...this.user, gravatar: misc.gravatar(this.user.gravatar || '', 128) };
         const res = await render(name, {
             handler: this,
             UserContext,
@@ -326,7 +329,7 @@ export class Handler {
         let res = '#';
         const args: any = { ...kwargs };
         try {
-            if (this.args.domainId !== 'system') {
+            if (this.args.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.args.domainId;
             }
@@ -372,14 +375,25 @@ export class Handler {
     async init({ domainId }) {
         const xff = await system.get('server.xff');
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
-        await Promise.all([
+        [this.domain] = await Promise.all([
+            domain.get(domainId),
             this.getSession(),
             this.getBdoc(),
         ]);
+        if (!this.domain) {
+            this.args.domainId = 'system';
+            [this.user, this.UIContext.token] = await Promise.all([
+                user.getById('system', this.session.uid),
+                token.createOrUpdate(
+                    token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
+                ),
+            ]);
+            throw new NotFoundError(domainId);
+        }
         [this.user, this.UIContext.token] = await Promise.all([
             user.getById(domainId, this.session.uid),
             token.createOrUpdate(
-                token.TYPE_TOKEN, 300, { uid: this.session.uid },
+                token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
             ),
         ]);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
@@ -640,11 +654,11 @@ export class ConnectionHandler {
         }
     }
 
-    url(name, kwargs = {}) {
+    url(name: string, kwargs = {}) {
         let res = '#';
         const args: any = { ...kwargs };
         try {
-            if (this.args.domainId !== 'system') {
+            if (this.args.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.args.domainId;
             }
@@ -676,8 +690,9 @@ export class ConnectionHandler {
         try {
             this.session = await token.get(this.request.params.token, token.TYPE_TOKEN, true);
         } catch (e) {
-            this.session = { uid: 0 };
+            this.session = { uid: 0, domainId: 'system' };
         }
+        this.args.domainId = this.session.domainId;
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(domainId, this.session.uid);

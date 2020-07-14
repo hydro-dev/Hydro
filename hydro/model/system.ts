@@ -10,7 +10,7 @@ export async function get(_id: string) {
     return null;
 }
 
-export async function getMany(keys: string[]): Promise<Dictionary<any>> {
+export async function getMany(keys: string[]): Promise<any[]> {
     const docs = await coll.find({ _id: { $in: keys } }).toArray();
     const dict = {};
     const res = [];

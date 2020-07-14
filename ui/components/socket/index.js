@@ -12,7 +12,7 @@ export default class Sock {
   init() {
     this.sock = new SockJS(this.url);
     this.sock.onopen = () => {
-      if (this.reconnect) Notification.warn(i18n('Reconnected to the server.'));
+      if (this.reconnect) Notification.info(i18n('Reconnected to the server.'));
       if (this.onopen) this.onopen(this.reconnect);
     };
     this.sock.onclose = (code, reason) => {

@@ -28,7 +28,7 @@ export async function add(
     domainId: string, pid: string = null, title: string, content: string, owner: number,
     tag: string[] = [], category: string[] = [], data: ObjectID = null, hidden = false,
 ) {
-    const d = await domain.inc(domainId, 'pidCounter', 1);
+    const d = await domain.inc(domainId, 'pid_counter', 1);
     if (!pid) pid = d.pidCounter.toString();
     return await document.add(
         domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null,
@@ -153,7 +153,7 @@ export function setStar(domainId: string, pid: number, uid: number, star: boolea
 export async function setTestdata(domainId: string, _id: number, filePath: string) {
     const pdoc = await get(domainId, _id);
     const config = await readConfig(filePath);
-    const id = await file.add(filePath, 'data.zip');
+    const id = await file.add(filePath, 'data.zip', 1);
     if (pdoc.data && typeof pdoc.data === 'object') file.dec(pdoc.data);
     return await edit(domainId, _id, { data: id, config });
 }

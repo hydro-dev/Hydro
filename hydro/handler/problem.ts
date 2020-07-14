@@ -361,7 +361,7 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
     async post({ domainId }) {
         let md5;
         if (!this.request.files.file) throw new BadRequestError();
-        await problem.setTestdata(
+        this.pdoc = await problem.setTestdata(
             domainId, this.pdoc.docId, this.request.files.file.path,
         );
         if (this.pdoc.data && typeof this.pdoc.data === 'object') {

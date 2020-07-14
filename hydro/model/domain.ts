@@ -13,7 +13,7 @@ export async function add(domainId: string, owner: number, name: string, bulleti
     return domainId;
 }
 
-export function get(domainId: string): Promise<DomainDoc> {
+export function get(domainId: string): Promise<DomainDoc | null> {
     return coll.findOne({ _id: domainId });
 }
 

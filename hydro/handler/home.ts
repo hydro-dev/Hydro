@@ -241,6 +241,10 @@ class UserChangemailWithCodeHandler extends Handler {
 
 class HomeDomainHandler extends Handler {
     async get() {
+        const path = [
+            ['Hydro', 'homepage'],
+            ['home_domain', null],
+        ];
         const dudict = await domain.getDictUserByDomainId(this.user._id);
         const dids = Object.keys(dudict);
         const ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
@@ -252,19 +256,27 @@ class HomeDomainHandler extends Handler {
                 || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
         }
         this.response.template = 'home_domain.html';
-        this.response.body = { ddocs, dudict, canManage };
+        this.response.body = {
+            ddocs, dudict, canManage, path,
+        };
     }
 }
 
 class HomeDomainCreateHandler extends Handler {
     async get() {
-        this.response.body = 'home_domain_create.html';
+        this.response.body = {
+            path: [
+                ['Hydro', 'homepage'],
+                ['domain_create', null],
+            ],
+        };
+        this.response.template = 'domain_create.html';
     }
 
     @param('id', Types.String)
     @param('name', Types.String, isTitle)
     @param('bulletin', Types.String, isContent)
-    @param('gravatar', Types.String, isEmail, true)
+    @param('gravatar', Types.String, true, isEmail)
     async post(_: string, id: string, name: string, bulletin: string, gravatar: string) {
         gravatar = gravatar || this.user.gravatar || this.user.mail || 'guest@hydro.local';
         const domainId = await domain.add(id, this.user._id, name, bulletin);
@@ -342,9 +354,13 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 
 class HomeFileHandler extends Handler {
     async get() {
+        const path = [
+            ['Hydro', 'homepage'],
+            ['domain_file', null],
+        ];
         const ufdocs = await file.getMulti({ owner: this.user._id }).toArray();
         this.response.template = 'home_file.html';
-        this.response.body = { ufdocs };
+        this.response.body = { ufdocs, path };
     }
 
     @param('ufid', Types.ObjectID)

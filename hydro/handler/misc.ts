@@ -127,7 +127,7 @@ class UiSettingsHandler extends Handler {
             'ui.header_logo', 'ui.header_logo_2x',
             'ui.nav_logo_dark', 'ui.nav_logo_light',
             'ui.nav_logo_dark_2x', 'ui.nav_logo_light_2x',
-            'ui.headerBackground', 'ui.headerBackground2x',
+            'ui.header_background', 'ui.header_background2x',
         ]);
         this.response.body = await this.renderHTML('extra.css', {
             header_logo,
