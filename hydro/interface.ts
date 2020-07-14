@@ -15,6 +15,22 @@ export interface Setting {
 }
 
 export interface Udoc extends Dictionary<any> {
+    _id: number,
+    mail: string,
+    mailLower: string,
+    uname: string,
+    unameLower: string,
+    salt: string,
+    hash: string,
+    hashType: string,
+    priv: number,
+    regat: Date,
+    loginat: Date,
+    regip: string,
+    loginip: string,
+}
+
+export interface User extends Dictionary<any> {
     udoc: () => any,
     dudoc: () => any,
     _id: number,
@@ -26,16 +42,16 @@ export interface Udoc extends Dictionary<any> {
     priv: number,
     regat: Date,
     loginat: Date,
-    perm: string,
+    perm: bigint,
     role: string,
     regip: () => string,
     loginip: () => string,
-    hasPerm: (perm: string) => boolean,
+    hasPerm: (perm: bigint) => boolean,
     hasPriv: (priv: number) => boolean,
     checkPassword: (password: string) => void,
 }
 
-export type Udict = NumericDictionary<Udoc>;
+export type Udict = NumericDictionary<User>;
 
 export interface Pdoc {
     _id: ObjectID,

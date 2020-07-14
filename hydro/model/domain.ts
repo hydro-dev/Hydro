@@ -8,7 +8,7 @@ const collUser = db.collection('domain.user');
 
 export async function add(domainId: string, owner: number, name: string, bulletin: string) {
     await coll.insertOne({
-        _id: domainId, owner, name, bulletin, roles: BUILTIN_ROLES,
+        _id: domainId, owner, name, bulletin, roles: {},
     });
     return domainId;
 }
@@ -50,14 +50,14 @@ export function setUserRole(domainId: string, uid: number, role: string) {
     return collUser.updateOne({ uid, domainId }, { role }, { upsert: true });
 }
 
-export async function getRoles(arg: string | any) {
-    let ddoc;
-    if (typeof arg === 'string') ddoc = get(arg);
+export async function getRoles(arg: string | DomainDoc) {
+    let ddoc: DomainDoc;
+    if (typeof arg === 'string') ddoc = await get(arg);
     else ddoc = arg;
     const roles = [];
     const r = [];
     for (const role in ddoc.roles) {
-        roles.push({ _id: role, perm: ddoc.roles[role] });
+        roles.push({ _id: role, perm: BigInt(ddoc.roles[role]) });
         r.push(role);
     }
     for (const role in BUILTIN_ROLES) {
@@ -68,18 +68,18 @@ export async function getRoles(arg: string | any) {
     return roles;
 }
 
-export async function setRoles(domainId: string, roles: any) {
+export async function setRoles(domainId: string, roles: Dictionary<bigint>) {
     const current = await get(domainId);
     for (const role in roles) {
-        current.roles[role] = roles[role];
+        current.roles[role] = roles[role].toString();
     }
-    return await coll.updateOne({ _id: domainId }, { $set: { roles: current } });
+    return await coll.updateOne({ _id: domainId }, { $set: { roles: current.roles } });
 }
 
-export async function addRole(domainId: string, name: string, permission: string) {
+export async function addRole(domainId: string, name: string, permission: bigint) {
     const current = await get(domainId);
-    current.roles[name] = permission;
-    return await coll.updateOne({ _id: domainId }, { $set: { roles: current } });
+    current.roles[name] = permission.toString();
+    return await coll.updateOne({ _id: domainId }, { $set: { roles: current.roles } });
 }
 
 export async function deleteRoles(domainId: string, roles: string[]) {
@@ -98,7 +98,9 @@ export async function getDomainUser(domainId: string, udoc: Udoc) {
     if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     dudoc.role = dudoc.role || 'default';
     const ddoc = await get(domainId);
-    dudoc.perm = ddoc.roles[dudoc.role] || BUILTIN_ROLES[dudoc.role];
+    dudoc.perm = ddoc.roles[dudoc.role]
+        ? BigInt(ddoc.roles[dudoc.role])
+        : BUILTIN_ROLES[dudoc.role];
     return dudoc;
 }
 

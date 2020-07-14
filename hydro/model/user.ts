@@ -6,19 +6,21 @@ import { BUILTIN_USERS, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
-import { Udoc, Udict } from '../interface';
+import { User as _User, Udoc, Udict } from '../interface';
 
 const coll = db.collection('user');
 
-export function setPassword(uid: number, password: string) {
+export async function setPassword(uid: number, password: string): Promise<Udoc> {
     const salt = String.random();
-    return coll.findOneAndUpdate(
+    const res = await coll.findOneAndUpdate(
         { _id: uid },
         { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
+        { returnOriginal: false },
     );
+    return res.value;
 }
 
-export class User implements Udoc {
+export class User implements _User {
     udoc: () => any;
 
     dudoc: () => any;
@@ -41,13 +43,15 @@ export class User implements Udoc {
 
     loginat: Date;
 
-    perm: string;
+    perm: bigint;
 
     role: string;
 
     regip: () => string;
 
     loginip: () => string;
+
+    [key: string]: any;
 
     constructor(udoc, dudoc) {
         this.udoc = () => udoc;
@@ -81,8 +85,8 @@ export class User implements Udoc {
         }
     }
 
-    hasPerm(p: string) {
-        return this.perm.includes(p);
+    hasPerm(p: bigint) {
+        return (this.perm & p) === p;
     }
 
     hasPriv(p: number) {
@@ -100,7 +104,7 @@ export class User implements Udoc {
     }
 }
 
-export async function getById(domainId: string, _id: number): Promise<Udoc | null> {
+export async function getById(domainId: string, _id: number): Promise<User | null> {
     const udoc = _id === 0 || _id === 1
         ? BUILTIN_USERS[_id]
         : await coll.findOne({ _id });
@@ -117,24 +121,19 @@ export async function getList(domainId: string, uids: number[]): Promise<Udict> 
     return r;
 }
 
-export async function getByUname(
-    domainId: string, uname: string, ignoreMissing = false,
-): Promise<Udoc> {
+export async function getByUname(domainId: string, uname: string): Promise<User | null> {
     const unameLower = uname.trim().toLowerCase();
     const udoc = (unameLower === 'guest')
         ? BUILTIN_USERS[0]
         : unameLower === 'hydro'
             ? BUILTIN_USERS[1]
             : await coll.findOne({ unameLower });
-    if (!udoc) {
-        if (ignoreMissing) return null;
-        throw new UserNotFoundError(uname);
-    }
+    if (!udoc) return null;
     const dudoc = await domain.getDomainUser(domainId, udoc);
     return new User(udoc, dudoc);
 }
 
-export async function getByEmail(domainId: string, mail: string): Promise<Udoc | null> {
+export async function getByEmail(domainId: string, mail: string): Promise<User | null> {
     const mailLower = mail.trim().toLowerCase();
     const udoc = (mailLower === 'guest@hydro.local')
         ? BUILTIN_USERS[0]

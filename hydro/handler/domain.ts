@@ -114,6 +114,13 @@ class DomainUserHandler extends ManageHandler {
 class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await domain.getRoles(domainId);
+        const log2 = (val: bigint) => {
+            // @ts-ignore
+            for (let i = 0n; ; i++) {
+                // @ts-ignore
+                if ((val >> i) === 0n) return parseInt(i.toString(), 10) - 1;
+            }
+        };
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],
@@ -121,7 +128,7 @@ class DomainPermissionHandler extends ManageHandler {
         ];
         this.response.template = 'domain_permission.html';
         this.response.body = {
-            roles, PERMS_BY_FAMILY, domain: this.domain, path,
+            roles, PERMS_BY_FAMILY, domain: this.domain, path, log2,
         };
     }
 
@@ -129,7 +136,11 @@ class DomainPermissionHandler extends ManageHandler {
         const roles = {};
         for (const role in this.request.body) {
             if (this.request.body[role] instanceof Array) {
-                roles[role] = this.request.body[role].join('');
+                const perms = this.request.body[role];
+                // @ts-ignore
+                roles[role] = 0n;
+                // @ts-ignore
+                for (const r of perms) roles[role] += 1n << BigInt(r);
             }
         }
         await domain.setRoles(domainId, roles);

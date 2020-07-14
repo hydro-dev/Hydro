@@ -20,7 +20,7 @@ import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
 } from '../error';
-import { Pdoc, Udoc, Rdoc } from '../interface';
+import { Pdoc, User, Rdoc } from '../interface';
 
 const parseCategory = (value: string) => {
     if (!value) return [];
@@ -165,7 +165,7 @@ class ProblemRandomHandler extends ProblemHandler {
 class ProblemDetailHandler extends ProblemHandler {
     pdoc: Pdoc;
 
-    udoc: Udoc;
+    udoc: User;
 
     @param('pid', Types.String, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
@@ -457,12 +457,9 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (!(psdoc.owner === this.user._id
-            && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF_SOLUTION))) {
-            if (!(psrdoc.owner === this.user._id
-                && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
-                this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY);
-            }
+        if (!(psrdoc.owner === this.user._id
+            && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
+            this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY);
         }
         await solution.editReply(domainId, psid, psrid, content);
         this.back();
@@ -473,12 +470,9 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
     async postDeleteReply(domainId: string, psid: ObjectID, psrid: ObjectID) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (!(psdoc.owner === this.user._id
-            && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF_SOLUTION))) {
-            if (!(psrdoc.owner === this.user._id
-                && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF))) {
-                this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
-            }
+        if (!(psrdoc.owner === this.user._id
+            && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF))) {
+            this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
         }
         await solution.delReply(domainId, psid, psrid);
         this.back();

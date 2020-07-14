@@ -82,7 +82,7 @@ class StatusHandler extends Handler {
 
 class StatusUpdateHandler extends Handler {
     async post(args) {
-        this.checkPerm(PRIV.PRIV_JUDGE);
+        this.checkPriv(PRIV.PRIV_JUDGE);
         args.type = 'judger';
         return coll.updateOne(
             { mid: args.mid, type: 'judger' },

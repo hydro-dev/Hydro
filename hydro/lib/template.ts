@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import serialize from 'serialize-javascript';
 import nunjucks from 'nunjucks';
 import * as markdown from './markdown';
 import { STATUS, PERM, PRIV } from '../model/builtin';
@@ -33,6 +34,7 @@ class Nunjucks extends nunjucks.Environment {
     constructor() {
         super(new Loader(), { autoescape: true, trimBlocks: true });
         this.addFilter('json', (self) => JSON.stringify(self), false);
+        this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
         this.addFilter('assign', (self, data) => Object.assign(self, data));
         this.addFilter('markdown', (self, safe = true) => {
             if (safe) return markdown.safe.render(self);

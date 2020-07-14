@@ -4,7 +4,7 @@ import { PERM, PRIV } from '../model/builtin';
 global.Hydro.ui.nav = [];
 
 const trueChecker = () => true;
-const Checker = (perm: string, priv: number, checker: Function = trueChecker) => (handler) => (
+const Checker = (perm: bigint, priv: number, checker: Function = trueChecker) => (handler) => (
     checker(handler)
     && (perm ? handler.user.hasPerm(perm) : true)
     && (priv ? handler.user.hasPriv(priv) : true)
@@ -12,10 +12,10 @@ const Checker = (perm: string, priv: number, checker: Function = trueChecker) =>
 
 const Item = (
     name: string, args: any, prefix: string,
-    ...permPrivChecker: Array<number | string | Function | Array<number | string>>
+    ...permPrivChecker: Array<number | bigint | Function | Array<bigint | string>>
 ) => {
     let _priv: number;
-    let _perm: string;
+    let _perm: bigint;
     let checker: Function = trueChecker;
     for (const item of permPrivChecker) {
         if (item instanceof Object && !isNull(item)) {
@@ -23,7 +23,7 @@ const Item = (
                 if (typeof item[0] === 'number') {
                     // @ts-ignore
                     _priv = item;
-                } else if (typeof item[0] === 'string') {
+                } else if (typeof item[0] === 'bigint') {
                     // @ts-ignore
                     _perm = item;
                 }
@@ -32,7 +32,7 @@ const Item = (
             }
         } else if (typeof item === 'number') {
             _priv = item;
-        } else if (typeof item === 'string') {
+        } else if (typeof item === 'bigint') {
             _perm = item;
         }
     }

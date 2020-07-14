@@ -172,9 +172,13 @@ class UserDetailHandler extends Handler {
             sdoc.updateIp = '';
             sdoc._id = '';
         }
+        const path = [
+            ['Hydro', 'homepage'],
+            ['user_detail', 'user_detail', { uid }],
+        ];
         this.response.template = 'user_detail.html';
         this.response.body = {
-            isSelfProfile, udoc, sdoc, rdocs, pdict,
+            isSelfProfile, udoc, sdoc, rdocs, pdict, path,
         };
     }
 }
@@ -321,7 +325,7 @@ class OauthCallbackHandler extends Handler {
             r.uname.push(String.random(16));
             for (const uname of r.uname) {
                 // eslint-disable-next-line no-await-in-loop
-                const nudoc = await user.getByUname('system', uname, true);
+                const nudoc = await user.getByUname('system', uname);
                 if (!nudoc) {
                     username = uname;
                     break;

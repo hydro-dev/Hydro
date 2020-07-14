@@ -8,7 +8,7 @@
           / {% if loop.index < path.length %}<a href="{{ url(c[1], c[2])|default('#') }}">{{ c[0] if c[3] else _(c[0]) }}</a>{% endif %}
         {%- endfor %}
         </div>
-        <h1 class="location-current" data-emoji-enabled>{{ path[path.length - 1][0] if path[path.length - 1][2] else _(path[path.length - 1][0]) }}</h1>
+        <h1 class="location-current" data-emoji-enabled>{{ path[path.length - 1][0] if path[path.length - 1][3] else _(path[path.length - 1][0]) }}</h1>
       </div>
       <div class="media__right">
         {% include "partials/hamburger.html" %}

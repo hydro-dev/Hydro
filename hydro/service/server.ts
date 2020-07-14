@@ -12,12 +12,14 @@ import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
+import serialize from 'serialize-javascript';
 import { lrucache } from '../utils';
-import { Udoc, DomainDoc } from '../interface';
+import { User, DomainDoc } from '../interface';
 import {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
-    CsrfTokenError, InvalidOperationError, MethodNotAllowedError, NotFoundError,
+    CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
+    NotFoundError,
 } from '../error';
 import { render } from '../lib/template';
 import * as misc from '../lib/misc';
@@ -222,7 +224,7 @@ export class Handler {
 
     csrfToken: string;
 
-    user: Udoc;
+    user: User;
 
     domain: DomainDoc;
 
@@ -266,7 +268,11 @@ export class Handler {
 
     async renderHTML(name: string, context: any): Promise<string> {
         if (enableLog) console.time(name);
-        const UserContext = { ...this.user, gravatar: misc.gravatar(this.user.gravatar || '', 128) };
+        const UserContext = {
+            ...this.user,
+            gravatar: misc.gravatar(this.user.gravatar || '', 128),
+            perm: this.user.perm.toString(),
+        };
         const res = await render(name, {
             handler: this,
             UserContext,
@@ -291,7 +297,7 @@ export class Handler {
         return `${this.translate(str)} - Hydro`;
     }
 
-    checkPerm(...args) {
+    checkPerm(...args: Array<bigint[] | bigint>) {
         for (const i in args) {
             if (args[i] instanceof Array) {
                 let p = false;
@@ -302,13 +308,14 @@ export class Handler {
                     }
                 }
                 if (!p) throw new PermissionError([args[i]]);
+                // @ts-ignore
             } else if (!this.user.hasPerm(args[i])) {
                 throw new PermissionError([[args[i]]]);
             }
         }
     }
 
-    checkPriv(...args) {
+    checkPriv(...args: Array<number[] | number>) {
         for (const i in args) {
             if (args[i] instanceof Array) {
                 let p = false;
@@ -319,6 +326,7 @@ export class Handler {
                     }
                 }
                 if (!p) throw new PrivilegeError([args[i]]);
+                // @ts-ignore
             } else if (!this.user.hasPriv(args[i])) {
                 throw new PrivilegeError([[args[i]]]);
             }
@@ -412,14 +420,16 @@ export class Handler {
     }
 
     async renderBody() {
-        if (!this.response.redirect && !this.request.json) {
-            if (this.response.body || this.response.template) {
-                if (this.request.query.noTemplate || this.request.json) return;
-                const templateName = this.request.query.template || this.response.template;
-                if (templateName) {
-                    this.response.body = this.response.body || {};
-                    await this.render(templateName, this.response.body);
-                }
+        if (this.response.type) return;
+        if (this.request.json || this.response.redirect || !this.response.template) {
+            this.response.body = serialize(this.response.body);
+            this.response.type = 'application/json';
+        } else if (this.response.body || this.response.template) {
+            if (this.request.query.noTemplate || this.request.json) return;
+            const templateName = this.request.query.template || this.response.template;
+            if (templateName) {
+                this.response.body = this.response.body || {};
+                await this.render(templateName, this.response.body);
             }
         }
     }
@@ -535,7 +545,12 @@ async function handle(ctx, HandlerClass, checker) {
         if (h.cleanup) await h.cleanup(args);
         if (h.finish) await h.finish(args);
     } catch (e) {
-        await h.onerror(e);
+        try {
+            await h.onerror(e);
+        } catch (err) {
+            h.response.code = 500;
+            h.response.body = `${err.message}\n${err.stack}`;
+        }
     }
 }
 
@@ -549,12 +564,12 @@ const Checker = (permPrivChecker) => {
                 checker = item;
             } if (typeof item[0] === 'number') {
                 priv = item;
-            } else if (typeof item[0] === 'string') {
+            } else if (typeof item[0] === 'bigint') {
                 perm = item;
             }
         } else if (typeof item === 'number') {
             priv = item;
-        } else if (typeof item === 'string') {
+        } else if (typeof item === 'bigint') {
             perm = item;
         }
     }
@@ -620,7 +635,7 @@ export class ConnectionHandler {
         return `${this.translate(str)} - Hydro`;
     }
 
-    checkPerm(...args) {
+    checkPerm(...args: Array<bigint[] | bigint>) {
         for (const i in args) {
             if (args[i] instanceof Array) {
                 let p = false;
@@ -637,7 +652,7 @@ export class ConnectionHandler {
         }
     }
 
-    checkPriv(...args) {
+    checkPriv(...args: Array<number[] | number>) {
         for (const i in args) {
             if (args[i] instanceof Array) {
                 let p = false;
@@ -703,7 +718,7 @@ export class ConnectionHandler {
 export function Connection(
     name: string, prefix: string,
     RouteConnHandler: any,
-    ...permPrivChecker: Array<number | string | Function>
+    ...permPrivChecker: Array<number | bigint | Function>
 ) {
     const sock = sockjs.createServer({ prefix });
     const checker = Checker(permPrivChecker);
