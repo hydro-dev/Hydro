@@ -6,7 +6,7 @@ import { STATUS } from '../model/builtin';
 
 export const description = 'Calculate rating of a domain, or all domains';
 
-export async function run({ domainId, isSub = false }, report) {
+export async function run({ domainId, isSub = false }, report: Function) {
     if (!domainId) {
         const domains = await domain.getMulti().toArray();
         await report({ message: `Found ${domains.length} domains` });
@@ -16,7 +16,7 @@ export async function run({ domainId, isSub = false }, report) {
             await report({
                 case: {
                     status: STATUS.STATUS_ACCEPTED,
-                    judgeText: `Domain ${i} finished`,
+                    judgeText: `Domain ${domains[i]._id} finished`,
                     time_ms: new Date().getTime() - start,
                     memory_kb: 0,
                     score: 0,

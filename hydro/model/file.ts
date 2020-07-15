@@ -69,7 +69,7 @@ export async function dec(_id: ObjectID): Promise<number> {
     return file.value.count;
 }
 
-export async function getWithSecret(_id: ObjectID, secret: string) {
+export async function getWithSecret(_id: ObjectID, secret: string, reject?: Function) {
     const file = await coll.findOne({ _id });
     if (!file) throw new NotFoundError(_id);
     const timestamp = _timestamp();
@@ -78,13 +78,23 @@ export async function getWithSecret(_id: ObjectID, secret: string) {
             throw new ForbiddenError();
         }
     }
-    return gridfs.openDownloadStream(_id);
+    const stream = gridfs.openDownloadStream(_id);
+    stream.on('error', (err) => {
+        console.error(err);
+        if (reject) reject();
+    });
+    return stream;
 }
 
-export async function get(_id: ObjectID) {
+export async function get(_id: ObjectID, reject?: Function) {
     const file = await coll.findOne({ _id });
     if (!file) throw new NotFoundError(_id);
-    return gridfs.openDownloadStream(_id);
+    const stream = gridfs.openDownloadStream(_id);
+    stream.on('error', (err) => {
+        console.error(err);
+        if (reject) reject();
+    });
+    return stream;
 }
 
 export function getMeta(_id: ObjectID): Promise<Ufdoc> {
