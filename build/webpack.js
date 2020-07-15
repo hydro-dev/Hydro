@@ -2,17 +2,16 @@
 const path = require('path');
 const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
-const { root } = require('./utils');
 
 const build = async (type) => {
     const config = {
         mode: type,
         entry: {
-            app: root('hydro/loader.ts'),
+            app: path.resolve(__dirname, '..', 'hydro', 'loader.ts'),
         },
         output: {
             filename: '[name].js',
-            path: root('.build'),
+            path: path.resolve(__dirname, '..', '.build'),
         },
         target: 'node',
         module: {

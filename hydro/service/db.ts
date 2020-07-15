@@ -2,16 +2,18 @@ import mongodb from 'mongodb';
 import * as bus from './bus';
 import options from '../options';
 
+const opts = options();
+
 let mongourl = 'mongodb://';
-if (options.username) mongourl += `${options.username}:${options.password}@`;
-mongourl += `${options.host}:${options.port}/${options.name}`;
+if (opts.username) mongourl += `${opts.username}:${opts.password}@`;
+mongourl += `${opts.host}:${opts.port}/${opts.name}`;
 
 // eslint-disable-next-line import/no-mutable-exports
 export let db: mongodb.Db = null;
 
 mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
     .then((Client) => {
-        db = Client.db(options.name);
+        db = Client.db(opts.name);
         bus.publish('system_database_connected', null);
     });
 

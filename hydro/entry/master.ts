@@ -12,10 +12,9 @@ export async function load(call) {
     require('../utils');
     require('../error');
     try {
-        require('../options');
+        require('../options').default();
     } catch (e) {
-        await call({ entry: 'setup' });
-        require('../options');
+        await call({ entry: 'setup', newProcess: true });
     }
     const bus = require('../service/bus');
     await new Promise((resolve) => {
@@ -49,7 +48,7 @@ export async function load(call) {
         const ins = require('../script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    await setting(pending, fail, modelSetting, modelSystem);
+    await setting(pending, fail, modelSetting);
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {

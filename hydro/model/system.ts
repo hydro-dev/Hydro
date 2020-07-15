@@ -1,5 +1,4 @@
 import { FindOneAndUpdateOption } from 'mongodb';
-import { Dictionary } from 'lodash';
 import * as db from '../service/db';
 
 const coll = db.collection('system');

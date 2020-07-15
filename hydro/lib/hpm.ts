@@ -7,32 +7,21 @@ import path from 'path';
 import download from './download';
 import { folderSize } from '../utils';
 
-function root(name: string) {
-    return path.resolve(process.cwd(), name);
-}
-
-const moduleRoots = [
-    root('.build/module'),
-    root('module'),
-    root(path.resolve(os.homedir(), '.hydro', 'module')),
-    root('.'),
-];
-
-let moduleRoot: string;
-for (const i of moduleRoots) {
-    if (fs.existsSync(i) && fs.statSync(i).isDirectory()) {
-        moduleRoot = i;
-        break;
-    }
-}
+const moduleRoots = Array.from(new Set([
+    path.resolve(process.cwd(), 'node_modules', '@hydrooj'),
+    path.resolve(__dirname, 'node_modules', '@hydrooj'),
+    path.resolve(os.tmpdir(), 'hydro', 'module'),
+]));
 
 export async function getInstalled() {
     const modules = [];
-    const files = fs.readdirSync(`${os.tmpdir()}/hydro/tmp`);
-    for (const file of files) {
-        const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
-        if (fs.existsSync(info)) {
-            modules.push(file);
+    for (const moduleRoot of moduleRoots) {
+        if (fs.existsSync(moduleRoot)) {
+            const files = fs.readdirSync(moduleRoot);
+            for (const file of files) {
+                const info = path.resolve(moduleRoot, file, 'package.json');
+                if (fs.existsSync(info)) modules.push(path.resolve(moduleRoot, file));
+            }
         }
     }
     return modules;
@@ -40,31 +29,31 @@ export async function getInstalled() {
 
 export async function getDetail() {
     const modules = [];
-    const files = fs.readdirSync(`${os.tmpdir()}/hydro/tmp`);
-    for (const file of files) {
-        const info = `${os.tmpdir()}/hydro/tmp/${file}/hydro.json`;
-        if (fs.existsSync(info)) {
-            const i = JSON.parse(fs.readFileSync(info).toString());
-            const size = folderSize(`${os.tmpdir()}/hydro/tmp/${file}`);
-            modules.push({
-                id: i.id,
-                version: i.version,
-                description: i.description,
-                size,
-            });
+    for (const moduleRoot of moduleRoots) {
+        if (fs.existsSync(moduleRoot)) {
+            const files = fs.readdirSync(moduleRoot);
+            for (const file of files) {
+                const info = path.resolve(moduleRoot, file, 'package.json');
+                if (fs.existsSync(info)) {
+                    const i = JSON.parse(fs.readFileSync(info).toString());
+                    const size = folderSize(path.resolve(moduleRoot, file));
+                    modules.push({
+                        id: i.name,
+                        version: i.version,
+                        description: i.description,
+                        size,
+                    });
+                }
+            }
         }
     }
     return modules;
 }
 
-export async function del(id: string) {
-    fs.unlinkSync(root(`${moduleRoot}/${id}.hydro`));
-}
-
-export function install(url: string) {
-    return download(url, root(`${moduleRoot}/${String.random(16)}.hydro`));
+export function install(url: string, name: string = '') {
+    return download(url, path.resolve(process.cwd(), `${name || String.random(16)}.hydro`));
 }
 
 global.Hydro.lib.hpm = {
-    getInstalled, getDetail, del, install,
+    getInstalled, getDetail, install,
 };

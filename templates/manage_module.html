@@ -19,7 +19,7 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('Installed Modules') }}</h1>
     <div class="section__tools">
-      <button class="primary rounded button" name="add_module"><span class="icon icon-add"></span> {{ _('Add module') }}</button>
+      <button class="primary rounded button" name="add_module"><span class="icon icon-add"></span> {{ _('Add Module') }}</button>
       <a class="tool-button" href="{{ url('wiki', page='help', anchor='module') }}"><span class="icon icon-help"></span> {{ _("What's module?") }}</a>
     </div>
   </div>
@@ -30,7 +30,6 @@
         <col class="col--desc">
         <col class="col--size">
         <col class="col--version">
-        <col class="col--action">
       </colgroup>
       <thead>
         <tr>
@@ -38,7 +37,6 @@
           <th class="col--desc">{{ _('Description') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
           <th class="col--version">{{ _('Version') }}</th>
-          <th class="col--action">{{ _('Action') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -48,15 +46,6 @@
           <td class="col--desc">{{ _(module.description|default(_('None'))) }}</td>
           <td class="col--size">{{ size(module.size) if module.size else '?' }}</td>
           <td class="col--version">{{ module.version|default('?') }}</td>
-          <td class="col--action">
-            <form method="post">
-              <input type="hidden" name="operation" value="delete">
-              <input type="hidden" name="id" value="{{ module.filename }}">
-              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-              <input type="submit" class="typo-a" value="{{ _('Delete') }}">
-            </form>
-          </td>
         </tr>
       {% endfor %}
       </tbody>

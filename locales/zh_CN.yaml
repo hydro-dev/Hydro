@@ -54,6 +54,7 @@ Accepted: 已通过
 Access Control: 访问控制
 Action: 动作
 Active Sessions: 活动会话
+Add module: 添加模块
 Add new data: 添加新数据
 Add User: 添加用户
 Add: 添加
@@ -151,6 +152,7 @@ Copy QQ Number: 复制QQ号
 Copy WeChat Account: 复制微信号
 Copy: 复制
 Copyright Complaint: 版权申诉
+CPU Info: CPU信息
 Create a contest: 创建一个比赛
 Create a Discussion: 创建一个讨论
 Create a problem: 创建一个题目
@@ -177,6 +179,7 @@ Current Email: 当前电子邮件
 Current Location: 当前位置
 Current password doesn't match.: 当前密码输入错误。
 Current Password: 当前密码
+Current Status: 当前状态
 currently offline: 目前离线
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
@@ -358,6 +361,7 @@ Inline codes: 行内代码
 Inline formulas: 行内公式
 Insert Code: 插入代码
 Insert Image: 插入图像
+Installed Modules: 已安装的模块
 Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 虽然测试数据不会被复制，但是系统会将题目的测试数据链接到原题。因此在原题的数据被改动的时候，复制后的题目的数据也会同时改动。链接后的测试数据的权限以原题为准，比如您可能依旧无法下载数据，但是评测机可以。在题目设置页面中可以通过上传新的测试数据的方式，这个数据链接会被删除，以后将使用您的新测试数据。
 Introduce must not exceed 500 characters and it will be shown in the list view.: 简介不能超过 500 个字符，将显示在列表页面中。
 Introduce: 简介
@@ -365,6 +369,7 @@ Invalid password for user {0}.: 用户 {0} 的密码错误。
 Invalid: 无效
 Invitation Code: 邀请码
 IO: 输入输出
+Is rated: 计入排名
 It works!: 它成了！
 Italic: 斜体
 Join: 加入
@@ -411,6 +416,7 @@ Manager: 管理
 Mark Green: 标绿
 Mark Yellow: 标黄
 Memory Cost: 内存占用
+Memory Info: 内存信息
 Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
@@ -445,6 +451,7 @@ No solutions so far...: 目前还没有题解...
 No Submissions: 没有递交
 No user is allowed to join this domain: 没有用户可以自助加入此域
 no_translation_warn: ''
+None: 无
 Not Attended: 未参加
 Not available: 不可用
 Not Claimed: 未认领
@@ -471,6 +478,7 @@ Ops: 运维
 Or, with automatically filled invitation code: 或者，这是可以自动填写邀请码的
 Ordered List: 有序列表
 Original Score: 原始分数
+OS Info: 系统信息
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。
@@ -478,6 +486,7 @@ pager_first: « 第一页
 pager_last: 末页 »
 pager_next: 下一页 ›
 pager_previous: ‹ 前一页
+Params: 参数
 Partic.: 参赛人数
 Password reset mail has been sent to your email.: 密码重置邮件已发送到您的电子邮箱。
 Password: 密码
@@ -580,6 +589,7 @@ required: 必填
 Reset Password or Find Username: 重置密码或找回用户名
 Reset Password: 重置密码
 Reset: 重置
+Restart: 重新启动
 Role Assignment: 角色分配
 Role has been updated to {0} for selected users.: 所选用户角色已更新为 {0}。
 Role has been updated to {0}.: 角色已更新为 {0}。
@@ -752,6 +762,7 @@ Users: 用户
 Using your Hydro universal account: 使用您的 Hydro 通用账户
 Valid for registered users who are not members of the domain: 对域外注册用户有效
 Valid for visitors: 对未登录的游客有效
+Version: 版本
 View contest scoreboard: 查看比赛成绩表
 View Contest: 查看比赛
 View contests: 查看比赛

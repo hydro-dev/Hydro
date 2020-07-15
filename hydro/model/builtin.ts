@@ -154,7 +154,7 @@ export const PERMS = [
 ];
 
 let PERM_ALL = 0n;
-for (const p in PERM) if (PERM[p]) PERM_ALL += PERM[p];
+for (const p in PERM) if (PERM[p]) PERM_ALL |= PERM[p];
 PERM.PERM_ALL = PERM_ALL;
 
 export const PERMS_BY_FAMILY = {};

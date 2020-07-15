@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 
+const name = process.argv[2];
+
 const IGNORE_CHECK = ['en'];
+const IGNORE_MISSING = [
+    '?', 'AC', 'Gravatar', 'ID', 'MD5', 'URL',
+];
 const RE_TEXT = /_\(['"]([\s\S])*?['"]\)/gmi;
 const TEMPLATE_ROOT = path.resolve(__dirname, '..', 'templates');
 const LOCALE_ROOT = path.resolve(__dirname, '..', 'locales');
@@ -36,26 +41,34 @@ function scan(folder, relative = '') {
         }
     }
 }
-
 scan(TEMPLATE_ROOT);
-
 const result = {};
-
 const locales = fs.readdirSync(LOCALE_ROOT);
-for (const locale of locales) {
-    if (!IGNORE_CHECK.includes(locale.split('.')[0])) {
-        const p = path.join(LOCALE_ROOT, locale);
-        const f = fs.readFileSync(p).toString();
-        const l = yaml.safeLoad(f);
-        for (const str in texts) {
-            if (!l[str]) {
-                if (result[str]) result[str].locale.push(locale);
-                else result[str] = { str, source: texts[str], locale: [locale] };
+if (!name) {
+    for (const locale of locales) {
+        if (!IGNORE_CHECK.includes(locale.split('.')[0])) {
+            const p = path.join(LOCALE_ROOT, locale);
+            const f = fs.readFileSync(p).toString();
+            const l = yaml.safeLoad(f);
+            for (const str in texts) {
+                if (!l[str]) {
+                    if (result[str]) result[str].locale.push(locale);
+                    else result[str] = { source: texts[str], locale: [locale] };
+                }
             }
         }
     }
+} else {
+    const p = path.join(LOCALE_ROOT, name);
+    const f = fs.readFileSync(p).toString();
+    const l = yaml.safeLoad(f);
+    for (const str in texts) {
+        if (!l[str]) {
+            result[str] = texts[str];
+        }
+    }
 }
-
+for (const str of IGNORE_MISSING) delete result[str];
 console.log(`${Object.keys(result).length} translations missing.`);
 fs.writeFileSync(path.join(__dirname, '..', '__result.json'), JSON.stringify(result, null, 2));
-console.log(`result wrote to ${path.resolve(__dirname, '..', '__result.json')}`);
+console.log(`Result wrote to ${path.resolve(__dirname, '..', '__result.json')}`);

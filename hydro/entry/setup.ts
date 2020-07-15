@@ -8,6 +8,9 @@ import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import nunjucks from 'nunjucks';
 import mongodb from 'mongodb';
+import parse from 'yargs-parser';
+
+const argv = parse(process.argv.slice(2));
 
 class Loader {
     getSource(name: string) { // eslint-disable-line class-methods-use-this
@@ -94,7 +97,7 @@ function render(name) {
     });
 }
 
-export async function load() {
+export function load() {
     const app = new Koa();
     const server = http.createServer(app.callback());
     const router = new Router();
@@ -107,55 +110,56 @@ export async function load() {
         ctx.body = await render('setup.html');
         ctx.response.type = 'text/html';
     });
-    const p = new Promise((resolve) => {
-        router.post('/', async (ctx) => {
-            const {
+    const listenPort = argv.port || 8888;
+    router.post('/', async (ctx) => {
+        const {
+            host, port, name, username, password,
+        } = ctx.request.body;
+        let mongourl = 'mongodb://';
+        if (username) mongourl += `${username}:${password}@`;
+        mongourl += `${host}:${port}/${name}`;
+        try {
+            const Database = await mongodb.MongoClient.connect(mongourl, {
+                useNewUrlParser: true, useUnifiedTopology: true,
+            });
+            const db = Database.db(name);
+            await Promise.all([
+                db.collection('system').updateOne(
+                    { _id: 'server.host' },
+                    { $set: { value: ctx.request.host } },
+                    { upsert: true },
+                ),
+                db.collection('system').updateOne(
+                    { _id: 'server.hostname' },
+                    { $set: { value: ctx.request.hostname } },
+                    { upsert: true },
+                ),
+                db.collection('system').updateOne(
+                    { _id: 'server.url' },
+                    { $set: { value: ctx.request.href } },
+                    { upsert: true },
+                ),
+                db.collection('system').updateOne(
+                    { _id: 'server.port' },
+                    { $set: { value: listenPort } },
+                    { upsert: true },
+                ),
+            ]);
+            fs.writeFileSync(path.resolve(process.cwd(), 'config.json'), JSON.stringify({
                 host, port, name, username, password,
-            } = ctx.request.body;
-            let mongourl = 'mongodb://';
-            if (username) mongourl += `${username}:${password}@`;
-            mongourl += `${host}:${port}/${name}`;
-            try {
-                const Database = await mongodb.MongoClient.connect(mongourl, {
-                    useNewUrlParser: true, useUnifiedTopology: true,
-                });
-                const db = Database.db(name);
-                await Promise.all([
-                    db.collection('system').updateOne(
-                        { _id: 'server.host' },
-                        { $set: { value: ctx.request.host } },
-                        { upsert: true },
-                    ),
-                    db.collection('system').updateOne(
-                        { _id: 'server.hostname' },
-                        { $set: { value: ctx.request.hostname } },
-                        { upsert: true },
-                    ),
-                    db.collection('system').updateOne(
-                        { _id: 'server.url' },
-                        { $set: { value: ctx.request.href } },
-                        { upsert: true },
-                    ),
-                ]);
-                fs.writeFileSync(path.resolve(process.cwd(), 'config.json'), JSON.stringify({
-                    host, port, name, username, password,
-                }));
-                ctx.redirect('/');
-                resolve();
-            } catch (e) {
-                ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
-            }
-        });
+            }));
+            ctx.body = `<h1>This page will reload in 3 secs.</h1>
+                <script>
+                setTimeout(function (){
+                    window.location.href = '/';
+                }, 3000);
+                </script>`;
+            setTimeout(() => process.exit(0), 500);
+        } catch (e) {
+            ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
+        }
     });
     app.use(router.routes()).use(router.allowedMethods());
-    server.listen(8888);
-    console.log('Server listening at: 8888');
-    await p;
-    await new Promise((resolve, reject) => {
-        server.close((err) => {
-            if (err) reject(err);
-            else resolve();
-        });
-    });
-    return 'Done! Restarting...';
+    server.listen(listenPort);
+    console.log('Server listening at:', listenPort);
 }

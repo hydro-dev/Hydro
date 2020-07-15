@@ -85,7 +85,7 @@ export default function (env = {}) {
       vj4: './Entry.js',
     },
     output: {
-      path: root('../.uibuild'),
+      path: root('../public'),
       publicPath: '/', // overwrite in entry.js
       hashFunction: 'sha1',
       hashDigest: 'hex',

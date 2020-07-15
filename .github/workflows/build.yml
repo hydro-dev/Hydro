@@ -15,8 +15,8 @@ jobs:
     - run: cd ui && yarn && yarn build:production && cd ..
     - uses: actions/upload-artifact@v1
       with:
-        name: .uibuild
-        path: .uibuild
+        name: uibuild
+        path: public
     - run: |
         yarn
         yarn build:production
@@ -26,12 +26,8 @@ jobs:
         path: .build/app.js
     - uses: actions/upload-artifact@v1
       with:
-        name: install.js
-        path: .build/install.js
-    - uses: actions/upload-artifact@v1
-      with:
-        name: module
-        path: .build/module
+        name: builtin.hydro
+        path: .build/builtin.hydro
     - uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: hydrooj/hydro:alpine

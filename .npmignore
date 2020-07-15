@@ -4,7 +4,7 @@ docker-compose.yml
 Dockerfile
 .vscode
 .github
-.uibuild
+public/
 templates
 ui
 locales

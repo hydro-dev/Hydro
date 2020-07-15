@@ -92,11 +92,6 @@ class SystemModuleHandler extends SystemHandler {
         await hpm.install(url);
         this.back();
     }
-
-    async postDelete({ id }) {
-        await hpm.del(id);
-        this.back();
-    }
 }
 
 class SystemScriptHandler extends SystemHandler {

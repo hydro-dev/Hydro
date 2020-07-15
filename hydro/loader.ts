@@ -42,7 +42,9 @@ async function terminate() {
 }
 
 async function fork(args: string[] = []) {
-    cluster.setupMaster({ args });
+    const _args = process.argv.slice(2);
+    _args.push(...args);
+    cluster.setupMaster({ args: _args });
     return cluster.fork();
 }
 
