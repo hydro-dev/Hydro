@@ -59,6 +59,15 @@ const mapDispatchToProps = (dispatch) => ({
       payload: req,
     });
   },
+  loadSubmissions() {
+    dispatch({
+      type: 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS',
+      payload: request.get(Context.getSubmissionsUrl),
+    });
+  },
+  handleClickRefresh() {
+    this.loadSubmissions();
+  },
 });
 
 @connect(mapStateToProps, mapDispatchToProps)
@@ -66,6 +75,10 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
   static contextTypes = {
     store: PropTypes.object,
   };
+
+  componentDidMount() {
+    this.props.loadSubmissions();
+  }
 
   render() {
     return (
@@ -95,6 +108,18 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
           {i18n('Submit Solution')}
           {' '}
           (F10)
+        </ToolbarButton>
+        <ToolbarButton
+          data-tooltip={i18n('Refresh Records')}
+          className="scratchpad__toolbar__refresh"
+          data-global-hotkey="alt+f"
+          onClick={() => this.props.handleClickRefresh()}
+        >
+          <Icon name="refresh" />
+          {' '}
+          {i18n('Refresh')}
+          {' '}
+          (Alt+F)
         </ToolbarButton>
         <ToolbarItem>
           <select

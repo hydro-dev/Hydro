@@ -1,44 +1,22 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Tabs, { TabPane } from 'rc-tabs';
-import TabContent from 'rc-tabs/lib/TabContent';
-import ScrollableInkTabBar from 'rc-tabs/lib/ScrollableInkTabBar';
-
+import classNames from 'classnames';
 import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
 import Icon from 'vj/components/react/IconComponent';
 import Panel from './PanelComponent';
-import PanelButton from './PanelButtonComponent';
-import ScratchpadRecordsTable from './ScratchpadRecordsTableContainer';
+import ScratchpadRecordsRow from './ScratchpadRecordsRowContainer';
 
-const mapDispatchToProps = (dispatch) => ({
-  loadSubmissions() {
-    dispatch({
-      type: 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS',
-      payload: request.get(Context.getSubmissionsUrl),
-    });
-  },
-  handleClickClose() {
-    dispatch({
-      type: 'SCRATCHPAD_UI_SET_VISIBILITY',
-      payload: {
-        uiElement: 'records',
-        visibility: false,
-      },
-    });
-  },
-  handleClickRefresh() {
-    this.loadSubmissions();
-  },
+const mapStateToProps = (state) => ({
+  rows: state.records.rows,
+  isLoading: state.ui.records.isLoading,
 });
 
-@connect(null, mapDispatchToProps)
+@connect(mapStateToProps)
 export default class ScratchpadRecordsContainer extends React.PureComponent {
-  componentDidMount() {
-    this.props.loadSubmissions();
-  }
-
   render() {
+    const cn = classNames('data-table is--full-row scratchpad__records__table', {
+      loading: this.props.isLoading,
+    });
     return (
       <Panel
         title={(
@@ -49,36 +27,19 @@ export default class ScratchpadRecordsContainer extends React.PureComponent {
           </span>
         )}
       >
-        <Tabs
-          className="scratchpad__panel-tab flex-col flex-fill"
-          activeKey="all"
-          animation="slide-horizontal"
-          renderTabBar={() => (
-            <ScrollableInkTabBar
-              extraContent={(
-                <span>
-                  <PanelButton
-                    data-tooltip={i18n('Refresh Records')}
-                    data-tooltip-pos="top right"
-                    onClick={() => this.props.handleClickRefresh()}
-                  >
-                    {i18n('Refresh')}
-                  </PanelButton>
-                  <PanelButton
-                    onClick={() => this.props.handleClickClose()}
-                  >
-                    <Icon name="close" />
-                  </PanelButton>
-                </span>
-              )}
-            />
-          )}
-          renderTabContent={() => <TabContent />}
-        >
-          <TabPane tab={<span>{i18n('All')}</span>} key="all">
-            <ScratchpadRecordsTable />
-          </TabPane>
-        </Tabs>
+        <table className={cn}>
+          <colgroup>
+            <col className="col--detail" />
+            <col className="col--memory" />
+            <col className="col--time" />
+            <col className="col--at" />
+          </colgroup>
+          <tbody>
+            {this.props.rows.map((rowId) => (
+              <ScratchpadRecordsRow key={rowId} id={rowId} />
+            ))}
+          </tbody>
+        </table>
       </Panel>
     );
   }
