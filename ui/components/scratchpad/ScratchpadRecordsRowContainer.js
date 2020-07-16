@@ -78,7 +78,7 @@ export default class ScratchpadRecordsRowContainer extends React.PureComponent {
           {shouldShowDetail(data) ? `${Math.ceil(data.memory / 1000)} MB` : '-'}
         </td>
         <td className="col--time">
-          {shouldShowDetail(data) ? `${(data.time_ms / 1000).toFixed(1)}s` : '-'}
+          {shouldShowDetail(data) ? `${(data.time / 1000).toFixed(1)}s` : '-'}
         </td>
         <td className="col--at">
           <time data-tooltip={moment(submitAt).format('YYYY-MM-DD HH:mm:ss')}>

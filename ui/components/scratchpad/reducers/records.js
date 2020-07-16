@@ -15,9 +15,19 @@ export default function reducer(state = {
   }
   case 'SCRATCHPAD_RECORDS_PUSH': {
     const { rdoc } = action.payload;
+    const rows = [...state.rows];
+    if (!rows.includes(rdoc._id)) {
+      return {
+        ...state,
+        rows: [rdoc._id, ...state.rows],
+        items: {
+          ...state.items,
+          [rdoc._id]: rdoc,
+        },
+      };
+    }
     return {
       ...state,
-      rows: [rdoc._id, ...state.rows],
       items: {
         ...state.items,
         [rdoc._id]: rdoc,

@@ -87,6 +87,8 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
     };
     for (const i of pending) {
         let p = path.resolve(i, 'setting.yaml');
+        const t = i.split(path.sep);
+        const name = t[t.length - 1];
         if (!fs.existsSync(p)) p = path.resolve(i, 'settings.yaml');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
@@ -94,7 +96,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                 for (const key in cfg) {
                     map[cfg[key].category || 'system'](
                         modelSetting.Setting(
-                            i, `${i}.${key}`, cfg[key].range, cfg[key].default,
+                            name, `${name}.${key}`, cfg[key].range, cfg[key].default,
                             cfg[key].type || 'text', cfg[key].name || key, cfg[key].desc || '',
                         ),
                     );

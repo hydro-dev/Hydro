@@ -16,7 +16,6 @@ export default function reducer(state = {
       return {
         ...state,
         output: (rdoc.stdout || '') + (rdoc.stderr || ''),
-        rid: null,
       };
     }
   }
