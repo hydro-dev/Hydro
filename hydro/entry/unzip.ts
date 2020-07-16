@@ -44,9 +44,6 @@ export async function load() {
             const files = fs.readdirSync(moduleRoot);
             for (const file of files) {
                 try {
-                    // This fixs a mistake.
-                    // Markdown-it-katex is not a hydro module but a dependency.
-                    if (file === 'markdown-it-katex') continue;
                     const modulePath = path.join(moduleRoot, file);
                     const packagejson = path.join(modulePath, 'package.json');
                     if (fs.statSync(modulePath).isFile() && file.endsWith('.hydro')) {

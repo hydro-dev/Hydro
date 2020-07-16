@@ -35,9 +35,10 @@ class RecordListHandler extends RecordHandler {
             page,
             await system.get('RECORD_PER_PAGE'),
         );
+        const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
-            problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), false, false),
+            problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false),
         ]);
         const path = [
             ['Hydro', 'homepage'],
@@ -100,7 +101,7 @@ class RecordRejudgeHandler extends Handler {
 const RecordConnectionHandler = contest.ContestHandlerMixin(ConnectionHandler);
 
 class RecordMainConnectionHandler extends RecordConnectionHandler {
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid: ObjectID) {
         this.domainId = domainId;
         if (tid) {

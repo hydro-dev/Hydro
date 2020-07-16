@@ -1,4 +1,5 @@
-{% macro render_item(icon_name, page_name, target_url, label=none) %}
+{% macro render_item(icon_name, page_name, args={}, label=none) %}
+{% set target_url = url(page_name, args) %}
 <li class="menu__item" id="menu-item-{{ page_name }}">
   <a href="{{ target_url }}" class="menu__link{% if handler.request.path == target_url %} active{% endif %}">
   {% if icon_name %}

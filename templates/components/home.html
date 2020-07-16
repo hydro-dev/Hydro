@@ -2,14 +2,14 @@
 {% macro render_sidebar() %}
 <div class="section side">
   <ol class="menu">
-    {{ sidemenu.render_item('account--circle', 'user_detail', '/user/' + handler.user._id, label='My Profile', uid=handler.user._id) }}
-    {{ sidemenu.render_item('comment--multiple', 'home_messages', '/home/messages') }}
+    {{ sidemenu.render_item('account--circle', 'user_detail', {uid:handler.user._id}, label='My Profile') }}
+    {{ sidemenu.render_item('comment--multiple', 'home_messages') }}
     <li class="menu__seperator"></li>
-    {{ sidemenu.render_item('wrench', 'home_account', '/home/settings/account') }}
-    {{ sidemenu.render_item('sliders', 'home_preference', '/home/settings/preference') }}
-    {{ sidemenu.render_item('security', 'home_security', '/home/security') }}
+    {{ sidemenu.render_item('wrench', 'home_settings', {category:'account'}) }}
+    {{ sidemenu.render_item('sliders', 'home_settings', {category:'preference'}) }}
+    {{ sidemenu.render_item('security', 'home_security') }}
     <li class="menu__seperator"></li>
-    {{ sidemenu.render_item('file', 'home_file', '/home/file') }}
+    {{ sidemenu.render_item('file', 'home_file') }}
   </ol>
 </div>
 {% endmacro %}

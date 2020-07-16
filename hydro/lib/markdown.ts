@@ -2,7 +2,6 @@ import MarkdownIt from 'markdown-it';
 import Prism from 'prismjs';
 
 // For math: $a\times b\eq 10$
-import katex from '@hydrooj/markdown-it-katex';
 // Specific image size: ![image](image.png =100x100)
 import Imsize from 'markdown-it-imsize';
 /* Footnote support.
@@ -25,6 +24,7 @@ import Container from 'markdown-it-container';
 import TOC from 'markdown-it-table-of-contents';
 
 import Anchor from 'markdown-it-anchor';
+import katex from '../markdown/katex';
 
 const md = MarkdownIt();
 

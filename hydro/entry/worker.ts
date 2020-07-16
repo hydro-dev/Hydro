@@ -56,7 +56,6 @@ export async function load() {
         }
     }
     for (const i of builtinScript) require(`../script/${i}`);
-    await wiki(pending, fail);
     await script(pending, fail, active);
     for (const postInit of global.Hydro.postInit) {
         await postInit();

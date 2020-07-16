@@ -8,4 +8,5 @@ web端运行脚本似乎异常
 SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
-在线IDE 更换颜色主题
+在线IDE 更换颜色主题, fix resize
+

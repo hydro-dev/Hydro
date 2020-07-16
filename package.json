@@ -9,12 +9,12 @@
     "node": ">=10.10"
   },
   "dependencies": {
-    "@hydrooj/markdown-it-katex": "^2.1.1",
     "adm-zip": "^0.4.16",
     "ansi_up": "^4.0.4",
     "detect-browser": "^5.1.1",
     "fs-extra": "^9.0.1",
     "js-yaml": "^3.13.1",
+    "katex": "^0.12.0",
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
     "koa-morgan": "^1.0.1",
@@ -45,6 +45,7 @@
   "devDependencies": {
     "@types/adm-zip": "^0.4.33",
     "@types/fs-extra": "^9.0.1",
+    "@types/katex": "^0.11.0",
     "@types/koa": "^2.11.3",
     "@types/koa-morgan": "^1.0.4",
     "@types/koa-router": "^7.4.1",

@@ -47,7 +47,7 @@
     <div class="section">
       <div class="section__body no-padding">
       {% if not rdocs %}
-        {% if not filter_uidOrName and not filter_pid and not filter_tid %}
+        {% if not filterUidOrName and not filterPid and not filterTid %}
         {{ nothing.render('Oh, there is no task in the queue!') }}
         {% else %}
         {{ nothing.render('Oh, there is no task that matches the filter!') }}
@@ -82,7 +82,7 @@
           {% endfor %}
           </tbody>
         </table>
-        {% if handler.user.hasPerm(perm.PERM_VIEW_JUDGE_STATISTICS) %}
+        {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) %}
         <ul class="pager">
           <li>
             <a class="pager__item next link" href="?start={{ rdocs[-1]['_id'] }}&{{ query_string }}">{{ _('pager_next') }}</a>

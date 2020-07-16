@@ -10,13 +10,14 @@ class WikiHandler extends Handler {
         if (!global.Hydro.wiki[category]) throw new NotFoundError(category);
         if (!global.Hydro.wiki[category][page]) throw new NotFoundError(category, page);
         const contents = global.Hydro.wiki[category][page];
+        const pages = Object.keys(global.Hydro.wiki[category]);
         const path = [
             ['Hydro', 'homepage'],
             [`wiki_${category}`, null],
             [`wiki_${category}_${page}`, null],
         ];
         this.response.body = {
-            path, contents, page_name: `wiki_${category}_${page}`,
+            path, contents, pages, page_name: `wiki_${category}_${page}`,
         };
         this.response.template = 'wiki.html';
     }

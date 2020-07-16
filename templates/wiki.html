@@ -17,10 +17,9 @@
   <div class="medium-3 columns"><div data-sticky="large">
     <div class="section side">
       <ol class="menu">
-        {{ sidemenu.render_item('info', 'wiki_about', '/wiki/about') }}
-        {{ sidemenu.render_item('help', 'wiki_help', '/wiki/help') }}
-        {{ sidemenu.render_item('help', 'wiki_deploy', '/wiki/deploy') }}
-        {{ sidemenu.render_item('help', 'wiki_development', '/wiki/development') }}
+        {% for page in pages %}
+          {{ sidemenu.render_item(null, 'wiki', {category:category, page:page}) }}
+        {% endfor %}
       </ol>
     </div>
   </div></div>

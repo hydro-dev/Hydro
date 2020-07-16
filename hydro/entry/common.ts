@@ -218,21 +218,22 @@ export async function wiki(pending: string[], fail: string[]) {
         const p = path.resolve(i, 'wiki');
         if (fs.existsSync(p) && fs.statSync(p).isDirectory() && !fail.includes(i)) {
             try {
-                const r = {};
                 const categories = fs.readdirSync(p);
                 for (const category of categories) {
+                    console.log('category', category);
                     if (!fs.statSync(p).isDirectory()) return;
                     const pages = fs.readdirSync(path.join(p, category));
-                    const res = {};
+                    if (!global.Hydro.wiki[category]) global.Hydro.wiki[category] = {};
+                    console.log(pages);
                     for (const page of pages) {
                         const c = fs.readFileSync(path.join(p, category, page)).toString().split('\n');
                         const pagename = page.split('.')[0];
-                        res[pagename] = [];
+                        global.Hydro.wiki[category][pagename] = [];
                         let content = null;
                         for (let j = 0; j < c.length; j++) {
                             const line = c[j];
                             if (line.startsWith('# ')) {
-                                if (content) res[pagename].push(content);
+                                if (content) global.Hydro.wiki[category][pagename].push(content);
                                 content = {};
                                 const t = line.split('# ')[1].split('|');
                                 [content.title, content.id] = t.map((q) => q.trim());
@@ -242,7 +243,6 @@ export async function wiki(pending: string[], fail: string[]) {
                             }
                         }
                     }
-                    r[category] = res;
                 }
                 console.log(`Wiki init: ${i}`);
             } catch (e) {
