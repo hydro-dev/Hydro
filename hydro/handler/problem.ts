@@ -19,6 +19,7 @@ import {
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
+    ProblemNotFoundError,
 } from '../error';
 import { Pdoc, User, Rdoc } from '../interface';
 
@@ -220,7 +221,11 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
         const rid = await record.add(domainId, {
             uid: this.user._id, lang, code, pid: this.pdoc.docId,
         }, true);
-        await domain.incUserInDomain(domainId, this.user._id, 'nSubmit');
+        const [rdoc] = await Promise.all([
+            record.get(domainId, rid),
+            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
+        ]);
+        bus.publish('record_change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -229,13 +234,14 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
 class ProblemPretestHandler extends ProblemDetailHandler {
     @param('lang', Types.String)
     @param('code', Types.String)
-    @param('input', Types.String)
-    async post(domainId: string, lang: string, code: string, input: string) {
-        this.limitRate('add_record', 60, 100);
+    @param('input', Types.String, true)
+    async post(domainId: string, lang: string, code: string, input: string = '') {
+        this.limitRate('add_record', 3600, 100);
         const rid = await record.add(domainId, {
             uid: this.user._id, lang, code, pid: this.pdoc.docId, input,
         }, true);
-        await record.judge(domainId, rid);
+        const rdoc = await record.get(domainId, rid);
+        bus.publish('record_change', rdoc);
         this.response.body = { rid };
     }
 }
@@ -247,7 +253,9 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
 
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
-        this.pid = pid;
+        const pdoc = await problem.get(domainId, pid);
+        if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
+        this.pid = pdoc.docId.toString();
         this.domainId = domainId;
         bus.subscribe(['record_change'], this, 'onRecordChange');
     }
@@ -310,11 +318,11 @@ class ProblemSettingsHandler extends ProblemManageHandler {
 
     @param('pid', Types.String, null, parsePid)
     @param('hidden', Types.Boolean)
-    @param('category', Types.String, null, parseCategory)
-    @param('tag', Types.String, null, parseCategory)
+    @param('category', Types.String, true, null, parseCategory)
+    @param('tag', Types.String, true, null, parseCategory)
     async postSetting(
         domainId: string, pid: string | number, hidden = false,
-        category: string[], tag: string[],
+        category: string[] = [], tag: string[] = [],
     ) {
         const pdoc = await problem.get(domainId, pid);
         await problem.edit(domainId, pdoc.docId, { hidden, category, tag });
@@ -554,7 +562,7 @@ export async function apply() {
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
     Route('problem_create', '/problem/create', ProblemCreateHandler);
-    Connection('problem_pretest_conn', '/p/:pid/pretest-conn', ProblemPretestConnectionHandler);
+    Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler);
 }
 
 global.Hydro.handler.problem = apply;

@@ -4,6 +4,7 @@
   var Context = {{ {
     problemId: pdoc.pid,
     postSubmitUrl: url('problem_submit', pid=pdoc.pid),
+    postPretestUrl: url('problem_pretest', pid=pdoc.pid),
     getSubmissionsUrl: url('problem_submit', pid=pdoc.pid),
     getRecordDetailUrl: url('record_detail', rid='{rid}'),
     codeLang: handler.user.codeLang,
@@ -28,13 +29,13 @@
           </blockquote>
         {% endif %}
         {% if tdoc %}
-        {% if tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST %}
+        {% if tdoc['docType'] == model.document.TYPE_CONTEST %}
         {% if model.contest.isDone(tdoc) %}
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
         {% endif %}{# handler.isDone(tdoc) #}
-        {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
+        {% endif %}{# tdoc['docType'] == model.document.TYPE_CONTEST #}
         {% endif %}{# tdoc #}
           {{ pdoc['content']|markdown|safe }}
         </div>

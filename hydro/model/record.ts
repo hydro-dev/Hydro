@@ -46,7 +46,7 @@ export interface JudgeTask {
     type?: string,
 }
 
-export async function add(domainId: string, data: RdocBase, addTask: boolean) {
+export async function add(domainId: string, data: RdocBase, addTask: boolean): Promise<ObjectID> {
     _.defaults(data, {
         status: STATUS.STATUS_WAITING,
         type: 'judge',

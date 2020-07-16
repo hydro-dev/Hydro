@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "main": "hydro/loader.ts",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "author": "masnn",
@@ -79,10 +79,10 @@
     "build": "node build --development",
     "build:development": "node build --development",
     "build:production": "node build --production",
-    "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn --ignore-optional && yarn build:production",
+    "build:all": "cd ui && yarn && yarn build:production && cd .. && yarn && yarn build:production",
     "start": "ts-node hydro/loader.ts",
     "pkg": "pkg .",
-    "lint": "eslint build hydro module tool --ext ts,js --fix",
+    "lint": "eslint build hydro tool --ext ts,js --fix",
     "snyk-protect": "snyk protect",
     "prepare": "yarn run snyk-protect"
   },

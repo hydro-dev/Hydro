@@ -11,6 +11,7 @@ import { PenaltyRules } from '../interface';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import * as bus from '../service/bus';
 import { PERM } from '../model/builtin';
 import * as system from '../model/system';
 import * as user from '../model/user';
@@ -175,7 +176,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     @param('code', Types.String)
     @param('lang', Types.String)
     async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
-        this.limitRate('add_record', 60, 100);
+        this.limitRate('add_record', 3600, 100);
         const tsdoc = await contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK);
         if (!tsdoc.attend) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
@@ -183,8 +184,12 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         const rid = await record.add(domainId, {
             pid, lang, code, uid: this.user._id, tid, hidden: true, ttype: document.TYPE_HOMEWORK,
         }, true);
-        await contest.updateStatus(domainId, tid, this.user._id,
-            rid, pid, false, 0, document.TYPE_HOMEWORK);
+        const [rdoc] = await Promise.all([
+            record.get(domainId, rid),
+            contest.updateStatus(domainId, tid, this.user._id,
+                rid, pid, false, 0, document.TYPE_HOMEWORK),
+        ]);
+        bus.publish('record_change', rdoc);
         this.response.body = { tid, rid };
         if (this.canShowRecord(this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
         else this.response.redirect = this.url('homework_detail', { tid });

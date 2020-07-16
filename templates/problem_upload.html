@@ -1,16 +1,16 @@
 {% extends 'layout/simple.html' %}
 {% block body %}
 <form method="post" enctype="multipart/form-data">
-    {% if (typeof(pdoc.data) == 'string') %}
-        <p><b>{{ _('Current dataset comes from') }} <a href="{{ pdoc.data.split('from:')[1] }}" target="_blank">{{ pdoc.data.split('from:')[1] }}</a></b></p>
-    {% else %}
-        <p>{{ _('Current dataset: {0}').format((pdoc['data'] or _('(None)')).toString()) }}</p>
-        <p>{{ _('MD5') }}: {{ md5|default(_('(None)'))) }}</p>
-    {% endif %}
-    <p>{{ _('New dataset') }}:
-        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-        <input type="file" name="file">
-        <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
-    </p>
+  {% if (typeof(pdoc.data) == 'string') %}
+    <p><b>{{ _('Current dataset comes from') }} <a href="{{ pdoc.data.split('from:')[1] }}" target="_blank">{{ pdoc.data.split('from:')[1] }}</a></b></p>
+  {% else %}
+    <p>{{ _('Current dataset: {0}').format((pdoc['data'] or _('(None)')).toString()) }}</p>
+    <p>{{ _('MD5') }}: {{ md5|default(_('(None)')) }}</p>
+  {% endif %}
+  <p>{{ _('New dataset') }}:
+    <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+    <input type="file" name="file">
+    <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
+  </p>
 </form>
 {% endblock %}

@@ -140,6 +140,7 @@ class UiSettingsHandler extends Handler {
             header_background_2x,
         });
         this.response.type = 'text/css';
+        this.ctx.set('nolog', '1');
     }
 }
 

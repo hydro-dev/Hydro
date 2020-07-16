@@ -18,6 +18,7 @@ import * as system from '../model/system';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import * as bus from '../service/bus';
 
 const ContestHandler = contest.ContestHandlerMixin(Handler);
 
@@ -281,7 +282,11 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
             lang,
             code,
         }, true);
-        await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId);
+        const [rdoc] = await Promise.all([
+            record.get(domainId, rid),
+            contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
+        ]);
+        bus.publish('record_change', rdoc);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });

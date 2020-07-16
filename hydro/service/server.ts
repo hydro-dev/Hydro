@@ -12,7 +12,7 @@ import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
-import serialize from 'serialize-javascript';
+import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import parse from 'yargs-parser';
 import { lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
@@ -23,6 +23,7 @@ import {
     NotFoundError,
 } from '../error';
 import { render } from '../lib/template';
+import hash from '../lib/hash.hydro';
 import * as misc from '../lib/misc';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
@@ -30,10 +31,8 @@ import * as system from '../model/system';
 import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
-import hash from '../lib/hash.hydro';
 
 const argv = parse(process.argv.slice(2));
-let enableLog = true;
 const app = new Koa();
 let server;
 const router = new Router();
@@ -43,14 +42,6 @@ interface H {
     [key: string]: any,
 }
 
-interface IHandler {
-    // @ts-ignore
-    new(ctx: Koa.Context): Handler;
-}
-interface IConnectionHandler {
-    // @ts-ignore
-    new(conn: sockjs.Connection): ConnectionHandler;
-}
 type MethodDecorator = (target: any, name: string, obj: any) => any;
 type Converter = (value: any) => any;
 type Validator = (value: any) => boolean;
@@ -268,7 +259,6 @@ export class Handler {
     }
 
     async renderHTML(name: string, context: any): Promise<string> {
-        if (enableLog) console.time(name);
         const UserContext = {
             ...this.user,
             gravatar: misc.gravatar(this.user.gravatar || '', 128),
@@ -281,7 +271,6 @@ export class Handler {
             _: this.translate.bind(this),
             ...context,
         });
-        if (enableLog) console.timeEnd(name);
         return res;
     }
 
@@ -406,6 +395,7 @@ export class Handler {
             ),
         ]);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
+        this.UIContext.csrfToken = this.csrfToken;
     }
 
     async finish() {
@@ -421,12 +411,23 @@ export class Handler {
     }
 
     async renderBody() {
+        if (this.response.redirect) {
+            this.response.body = this.response.body || {};
+            this.response.body.url = this.response.redirect;
+        }
         if (this.response.type) return;
-        if (this.request.json || this.response.redirect || !this.response.template) {
-            this.response.body = serialize(this.response.body);
+        if (
+            this.request.json || this.response.redirect
+            || this.request.query.noTemplate || !this.response.template) {
+            try {
+                this.response.body = JSON.stringify(this.response.body);
+            } catch (e) {
+                const opt: SerializeJSOptions = { ignoreFunction: true };
+                if (this.request.query.noTemplate) opt.space = 2;
+                this.response.body = serialize(this.response.body, opt);
+            }
             this.response.type = 'application/json';
         } else if (this.response.body || this.response.template) {
-            if (this.request.query.noTemplate || this.request.json) return;
             const templateName = this.request.query.template || this.response.template;
             if (templateName) {
                 this.response.body = this.response.body || {};
@@ -442,10 +443,6 @@ export class Handler {
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            if (this.response.redirect) {
-                this.response.body = this.response.body || {};
-                this.response.body.url = this.response.redirect;
-            }
             if (this.response.body != null) {
                 this.ctx.response.body = this.response.body;
                 this.ctx.response.status = this.response.status || 200;
@@ -757,8 +754,10 @@ export function Middleware(middleware: Koa.Middleware) {
 export async function start() {
     const [disableLog, port] = await system.getMany(['server.log', 'server.port']);
     if (!disableLog) {
-        app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
-    } else enableLog = false;
+        app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
+            skip: (req, res) => res.hasHeader('nolog'),
+        }));
+    }
     app.use(router.routes()).use(router.allowedMethods());
     Route('notfound_handler', '*', Handler);
     server.listen(argv.port || port);

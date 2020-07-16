@@ -42,7 +42,7 @@ export interface User extends Dictionary<any> {
     priv: number,
     regat: Date,
     loginat: Date,
-    perm: bigint,
+    perm: () => bigint,
     role: string,
     regip: () => string,
     loginip: () => string,

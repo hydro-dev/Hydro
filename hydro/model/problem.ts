@@ -29,7 +29,7 @@ export async function add(
     domainId: string, pid: string = null, title: string, content: string, owner: number,
     tag: string[] = [], category: string[] = [], data: ObjectID = null, hidden = false,
 ) {
-    const d = await domain.inc(domainId, 'pid_counter', 1);
+    const d = await domain.inc(domainId, 'pidCounter', 1);
     if (!pid) pid = d.pidCounter.toString();
     return await document.add(
         domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null,

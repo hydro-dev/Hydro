@@ -15,11 +15,6 @@ export default function reducer(state = {
   }
   case 'SCRATCHPAD_RECORDS_PUSH': {
     const { rdoc } = action.payload;
-    if (rdoc.uid !== UserContext._id
-      || rdoc.pid !== Context.problemId
-    ) {
-      return state;
-    }
     return {
       ...state,
       rows: [rdoc._id, ...state.rows],

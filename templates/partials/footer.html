@@ -53,8 +53,8 @@
           <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-lang">
             <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-lang">
-            {% for item in model.builtin.VIEW_LANGS %}
-              <li class="menu__item"><a class="menu__link" href="{{ url('switch_language', lang=item.code) }}">{{ item.name }}</a></li>
+            {% for k, v in model.setting.langRange %}
+              <li class="menu__item"><a class="menu__link" href="{{ url('switch_language', lang=k) }}">{{ v }}</a></li>
             {% endfor %}
             </ol>
           </li>
@@ -62,6 +62,7 @@
       </div>
       <div class="footer__extra-right">
         <ol class="clearfix">
+        <!-- TODO -->
         {% for html in model.builtin.FOOTER_EXTRA_HTMLS %}
           <li class="footer__extra-link-item">{{ html|safe }}</li>
         {% endfor %}

@@ -11,6 +11,7 @@ const IGNORE_MISSING = [
 ];
 const RE_TEMPLATE = /_\(['"]([\s\S])*?['"]\)/gmi;
 const RE_UI = /i18n\(['"]([\s\S])*?['"](,.*?)?\)/gmi;
+const RE_SETTING = /Setting\(['"]([\s\S])*?['"](,[^()]*?)\)/gmi;
 const TEMPLATE_ROOT = path.resolve(__dirname, '..', 'templates');
 const LOCALE_ROOT = path.resolve(__dirname, '..', 'locales');
 const UI_ROOT = path.resolve(__dirname, '..', 'ui');
@@ -27,6 +28,8 @@ function _(str, format) {
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const i18n = _;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const Setting = _;
 
 function scanTemplate(folder, relative = 'templates') {
     const files = fs.readdirSync(folder);
@@ -65,7 +68,7 @@ function scanUi(folder, relative = 'ui') {
                         eval(substr);
                     } catch (e) {
                         if (e.message.endsWith('is not defined')) {
-                            global[e.message.split(' ')[0]] = undefined;
+                            global[e.message.split(' ')[0]] = () => { };
                             try {
                                 eval(substr);
                             } catch (err) {
@@ -78,8 +81,27 @@ function scanUi(folder, relative = 'ui') {
         }
     }
 }
+function scanSetting() {
+    const file = path.resolve(__dirname, '..', 'hydro', 'model', 'setting.ts');
+    const content = fs.readFileSync(file).toString();
+    content.replace(RE_SETTING, (substr) => {
+        try {
+            eval(substr);
+        } catch (e) {
+            if (e.message.endsWith('is not defined')) {
+                global[e.message.split(' ')[0]] = () => { };
+                try {
+                    eval(substr);
+                } catch (err) {
+                    console.error('Cannot parse: ', substr, ' in setting');
+                }
+            } else console.error('Cannot parse: ', substr, ' in setting');
+        }
+    });
+}
 scanTemplate(TEMPLATE_ROOT);
 scanUi(UI_ROOT);
+scanSetting();
 if (!name) {
     for (const locale of locales) {
         if (!IGNORE_CHECK.includes(locale.split('.')[0])) {

@@ -22,12 +22,12 @@ clone 本项目到一个空文件夹，并进行编译：
 git clone https://github.com/hydro-dev/Hydro.git
 cd Hydro
 yarn build:all
-yarn start
+node .build/app.js
 ```
 
 注意：单个Hydro实例需要约100MB的运行内存，但在载入时可能需要较多内存（取决于安装的模块数量与大小）  
 
 Hydro 会自行初始化并监听 8888 端口。请用浏览器访问并进行相应配置。  
-数据库配置完成后，会自动创建 Root 用户。（账号 `root` ，密码 `rootroot`），请及时修改。  
+数据库配置完成后，会自动创建 Root 用户。（账号 `Root` ，密码 `rootroot`），请及时修改。  
 
 之后的进阶配置可在 管理 面板进行。

@@ -43,7 +43,7 @@ export class User implements _User {
 
     loginat: Date;
 
-    perm: bigint;
+    perm: () => bigint;
 
     role: string;
 
@@ -67,7 +67,7 @@ export class User implements _User {
         this.regip = () => udoc.regip;
         this.loginat = udoc.loginat;
         this.loginip = () => udoc.loginip;
-        this.perm = dudoc.perm;
+        this.perm = () => dudoc.perm;
         this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
@@ -86,7 +86,7 @@ export class User implements _User {
     }
 
     hasPerm(p: bigint) {
-        return (this.perm & p) === p;
+        return (this.perm() & p) === p;
     }
 
     hasPriv(p: number) {

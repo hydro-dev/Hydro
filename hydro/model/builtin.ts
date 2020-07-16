@@ -503,14 +503,6 @@ export const CATEGORIES = {
     ],
 };
 
-export const FOOTER_EXTRA_HTMLS = [];
-
-export const VIEW_LANGS = [
-    { code: 'zh_CN', name: '简体中文' },
-    { code: 'zh_TW', name: '正體中文' },
-    { code: 'en', name: 'English' },
-];
-
 export const LANG_TEXTS = {
     c: 'C',
     cc: 'C++',
@@ -623,8 +615,6 @@ global.Hydro.model.builtin = {
     BUILTIN_ROLES,
     DEFAULT_NODES,
     CATEGORIES,
-    VIEW_LANGS,
-    FOOTER_EXTRA_HTMLS,
     LANG_TEXTS,
     LANG_HIGHLIGHT_ID,
     STATUS,

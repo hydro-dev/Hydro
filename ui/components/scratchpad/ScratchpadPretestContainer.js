@@ -1,28 +1,24 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Tabs, { TabPane } from 'rc-tabs';
-import TabContent from 'rc-tabs/lib/TabContent';
-import ScrollableInkTabBar from 'rc-tabs/lib/ScrollableInkTabBar';
 
 import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
 import Panel from './PanelComponent';
-import PanelButton from './PanelButtonComponent';
-import ScratchpadPretestTabPane from './ScratchpadPretestTabPaneContainer';
+import DataInput from './DataInputComponent';
 
 const mapStateToProps = (state) => ({
-  current: state.pretest.current,
-  tabs: state.pretest.tabs,
-  meta: state.pretest.meta,
+  input: state.pretest.input,
+  output: state.pretest.output,
+  rid: state.pretest.rid,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  handleClickClose() {
+  handleDataChange(type, value) {
     dispatch({
-      type: 'SCRATCHPAD_UI_SET_VISIBILITY',
+      type: 'SCRATCHPAD_PRETEST_DATA_CHANGE',
       payload: {
-        uiElement: 'pretest',
-        visibility: false,
+        type,
+        value,
       },
     });
   },
@@ -41,32 +37,18 @@ export default class ScratchpadPretestContainer extends React.PureComponent {
           </span>
         )}
       >
-        <Tabs
-          className="scratchpad__panel-tab flex-col flex-fill"
-          activeKey={this.props.current}
-          onChange={(tabId) => this.props.handleSwitchData(tabId)}
-          animation="slide-horizontal"
-          renderTabBar={() => (
-            <ScrollableInkTabBar
-              extraContent={(
-                <span>
-                  <PanelButton
-                    onClick={() => this.props.handleClickClose()}
-                  >
-                    <Icon name="close" />
-                  </PanelButton>
-                </span>
-              )}
-            />
-          )}
-          renderTabContent={() => <TabContent />}
-        >
-          {this.props.tabs.map((tabId) => (
-            <TabPane tab={this.props.meta[tabId].title} key={tabId}>
-              <ScratchpadPretestTabPane id={tabId} />
-            </TabPane>
-          ))}
-        </Tabs>
+        <div className="flex-row flex-fill">
+          <DataInput
+            title={i18n('Input')}
+            value={this.props.input}
+            onChange={(v) => this.props.handleDataChange('input', v)}
+          />
+          <DataInput
+            title={i18n('Output')}
+            value={this.props.output}
+            onChange={(v) => this.props.handleDataChange('output', v)}
+          />
+        </div>
       </Panel>
     );
   }

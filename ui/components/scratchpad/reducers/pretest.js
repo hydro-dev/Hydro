@@ -1,41 +1,30 @@
-import { v4 as uuid } from 'uuid';
-
-const initialId = uuid();
-
 export default function reducer(state = {
-  counter: 1,
-  current: initialId,
-  tabs: [initialId],
-  meta: {
-    [initialId]: {
-      id: initialId,
-      title: '#1',
-    },
-  },
-  data: {
-    [initialId]: {
-      id: initialId,
-      title: '#1',
-      input: '',
-      output: '',
-    },
-  },
+  input: '',
+  output: '',
+  rid: null,
 }, action) {
-  switch (action.type) {
-  case 'SCRATCHPAD_PRETEST_DATA_CHANGE': {
-    const { id, type, value } = action.payload;
+  if (action.type === 'SCRATCHPAD_PRETEST_DATA_CHANGE') {
+    const { type, value } = action.payload;
     return {
       ...state,
-      data: {
-        ...state.data,
-        [id]: {
-          ...state.data[id],
-          [type]: value,
-        },
-      },
+      [type]: value,
     };
   }
-  default:
-    return state;
+  if (action.type === 'SCRATCHPAD_RECORDS_PUSH') {
+    const { rdoc } = action.payload;
+    if (rdoc._id === state.rid) {
+      return {
+        ...state,
+        output: (rdoc.stdout || '') + (rdoc.stderr || ''),
+        rid: null,
+      };
+    }
   }
+  if (action.type === 'SCRATCHPAD_POST_PRETEST_FULFILLED') {
+    return {
+      ...state,
+      rid: action.payload.rid,
+    };
+  }
+  return state;
 }

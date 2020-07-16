@@ -2,7 +2,7 @@
 const { isClass } = require('./utils');
 
 interface IHydroError {
-    new(...args: any[]): HydroError
+  new(...args: any[]): HydroError
 }
 
 const Err = (name: string, ...info: Array<IHydroError | Function | string | number>) => {
@@ -29,19 +29,19 @@ const Err = (name: string, ...info: Array<IHydroError | Function | string | numb
 };
 
 export class HydroError extends Error {
-    params: any[];
+  params: any[];
 
-    code: number;
+  code: number;
 
-    constructor(...params: any[]) {
-        super();
-        this.params = params;
-    }
+  constructor(...params: any[]) {
+      super();
+      this.params = params;
+  }
 
-    // eslint-disable-next-line class-methods-use-this
-    msg() {
-        return 'HydroError';
-    }
+  // eslint-disable-next-line class-methods-use-this
+  msg() {
+      return 'HydroError';
+  }
 }
 
 export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);
@@ -85,7 +85,7 @@ export const CsrfTokenError = Err('CsrfTokenError', ForbiddenError, 'CsrfTokenEr
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
 export const RecordNotFoundError = Err('RecordNotFoundError', NotFoundError, 'Record {0} not found.');
-export const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFoundError, 'Data of problem {1} not found.');
+export const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFoundError, 'Data of problem {0} not found.');
 export const MessageNotFoundError = Err('MessageNotFoundError', NotFoundError, 'Message {0} not found.');
 export const DocumentNotFoundError = Err('DocumentNotFoundError', NotFoundError, 'Document {2} not found.');
 

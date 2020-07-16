@@ -18,6 +18,7 @@ const mapStateToProps = (state) => ({
   pretestVisible: state.ui.pretest.visible,
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
+  isRunning: state.pretest.isRunning,
   editorLang: state.editor.lang,
 });
 
@@ -36,15 +37,11 @@ const mapDispatchToProps = (dispatch) => ({
   },
   postPretest(context) {
     const state = context.store.getState();
-    const { pretest } = state;
-    const testCases = pretest.tabs;
-    const inputs = testCases.map((tabId) => pretest.data[tabId].input);
-    const outputs = testCases.map((tabId) => pretest.data[tabId].output);
+    const { input } = state.pretest;
     const req = request.post(Context.postPretestUrl, {
       lang: state.editor.lang,
       code: state.editor.code,
-      data_input: inputs,
-      data_output: outputs,
+      input,
     });
     dispatch({
       type: 'SCRATCHPAD_POST_PRETEST',
@@ -74,7 +71,7 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
     return (
       <Toolbar>
         <ToolbarButton
-          disabled={this.props.isPosting || !this.props.pretestValid}
+          disabled={this.props.isPosting || this.props.isRunning}
           className="scratchpad__toolbar__pretest"
           onClick={() => this.props.postPretest(this.context)}
           data-global-hotkey="f9"
@@ -113,7 +110,7 @@ export default class ScratchpadToolbarContainer extends React.PureComponent {
         </ToolbarItem>
         <ToolbarSplit />
         <ToolbarButton
-          activated
+          activated={this.props.pretestVisible}
           onClick={() => this.props.togglePanel('pretest')}
           data-global-hotkey="alt+p"
           data-tooltip={`${i18n('Toggle Pretest Panel')} (Alt+P)`}

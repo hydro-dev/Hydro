@@ -13,7 +13,7 @@ for (const country of countries) {
     for (const t of tz) tzs.add(t);
 }
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
-const langRange: Dictionary<string> = {};
+export const langRange: Dictionary<string> = {};
 
 for (const lang in global.Hydro.locales) {
     langRange[lang] = global.Hydro.locales[lang].__langname;
@@ -78,8 +78,8 @@ export const SystemSetting = (...settings: _Setting[]) => {
 PreferenceSetting(
     Setting('setting_display', 'viewLang', langRange, 'zh_CN', 'select', 'UI Language'),
     Setting('setting_display', 'timeZone', timezones, 'Asia/Shanghai', 'select', 'Timezone'),
-    Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS, null, 'select', 'Default Code Language'),
-    Setting('setting_usage', 'codeTemplate', null, null, 'textarea', 'Default Code Template',
+    Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS, 'c', 'select', 'Default Code Language'),
+    Setting('setting_usage', 'codeTemplate', null, '', 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
 
@@ -87,7 +87,7 @@ AccountSetting(
     Setting('setting_info', 'gravatar', null, null, 'text', 'Gravatar Email',
         'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.'),
     Setting('setting_info', 'qq', null, null, 'text', 'QQ'),
-    Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE, null, 'select', 'Gender'),
+    Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE, builtin.USER_GENDER_OTHER, 'select', 'Gender'),
     Setting('setting_info', 'bio', null, null, 'markdown', 'Bio'),
     Setting('setting_customize', 'backgroundImage', null,
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
@@ -99,11 +99,11 @@ DomainSetting(
     Setting('setting_domain', 'name', null, 'New domain', 'text', 'name'),
     Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
-    Setting('storage', 'pid_counter', null, 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('storage', 'rating', null, 1500, 'number', 'rating', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'pidCounter', null, 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rating', null, 1500, 'number', 'rating', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 SystemSetting(
@@ -126,6 +126,7 @@ SystemSetting(
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
     Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
     Setting('setting_ui', 'ui.name', null, 'Hydro', 'text', 'Site Name'),
+    Setting('setting_ui', 'ui.footer_extra_html', null, '', 'textarea', 'Footer Extra HTML'),
     Setting('setting_ui', 'ui.header_logo', null, '/components/header/header-logo.png', 'text', 'Header Logo'),
     Setting('setting_ui', 'ui.header_logo_2x', null, '/components/header/header-logo@2x.png', 'text', 'Header Logo@2x'),
     Setting('setting_ui', 'ui.header_background', null, '/components/header/header-background.png', 'text', 'Header Background'),
@@ -168,6 +169,7 @@ global.Hydro.postInit.push(
 );
 
 global.Hydro.model.setting = {
+    langRange,
     Setting,
     PreferenceSetting,
     AccountSetting,
