@@ -31,6 +31,9 @@ const build = async (type) => {
                 },
             ],
         },
+        node: {
+            __dirname: false,
+        },
         resolve: { extensions: ['.js', '.ts'] },
         plugins: [
             new webpack.ProgressPlugin(),

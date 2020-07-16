@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 import {
-    locale, template, lib, service, model, handler, script, setting,
+    locale, template, lib, service, model, handler, script, setting, wiki, uistatic,
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } from './common';
 
@@ -13,7 +13,12 @@ export async function load() {
     require('../utils');
     require('../error');
     require('../options');
-    await Promise.all([locale(pending, fail), template(pending, fail)]);
+    await Promise.all([
+        locale(pending, fail),
+        template(pending, fail),
+        uistatic(pending, fail),
+        wiki(pending, fail),
+    ]);
     const bus = require('../service/bus');
     await new Promise((resolve) => {
         const h = () => {
@@ -51,6 +56,7 @@ export async function load() {
         }
     }
     for (const i of builtinScript) require(`../script/${i}`);
+    await wiki(pending, fail);
     await script(pending, fail, active);
     for (const postInit of global.Hydro.postInit) {
         await postInit();

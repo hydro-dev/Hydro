@@ -234,7 +234,7 @@ class ProblemPretestHandler extends ProblemDetailHandler {
         this.limitRate('add_record', 60, 100);
         const rid = await record.add(domainId, {
             uid: this.user._id, lang, code, pid: this.pdoc.docId, input,
-        });
+        }, true);
         await record.judge(domainId, rid);
         this.response.body = { rid };
     }

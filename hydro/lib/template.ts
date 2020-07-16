@@ -3,16 +3,15 @@ import path from 'path';
 import serialize from 'serialize-javascript';
 import nunjucks from 'nunjucks';
 import * as markdown from './markdown';
-import { STATUS, PERM, PRIV } from '../model/builtin';
 import * as misc from './misc';
 
 class Loader extends nunjucks.Loader {
     // eslint-disable-next-line class-methods-use-this
     getSource(name: string) {
         if (!process.env.debug) {
-            if (!global.Hydro.template[name]) throw new Error(`Cannot get template ${name}`);
+            if (!global.Hydro.ui.template[name]) throw new Error(`Cannot get template ${name}`);
             return {
-                src: global.Hydro.template[name],
+                src: global.Hydro.ui.template[name],
                 path: name,
                 noCache: false,
             };
@@ -47,18 +46,24 @@ class Nunjucks extends nunjucks.Environment {
 }
 const env = new Nunjucks();
 
-export function render(name: string, state: any): Promise<string> {
-    return new Promise((resolve, reject) => {
+export async function render(name: string, state: any): Promise<string> {
+    const cdnPrefix = await global.Hydro.model.system.get('server.cdn');
+    return await new Promise((resolve, reject) => {
         env.render(name, {
             page_name: name.split('.')[0],
             ...state,
             typeof: (o) => typeof o,
-            static_url: (str) => `/${str}`,
+            static_url: (assetName: string) => {
+                if (global.Hydro.ui.manifest[assetName]) {
+                    return `${cdnPrefix}${global.Hydro.ui.manifest[assetName]}`;
+                }
+                return `${cdnPrefix}${assetName}`;
+            },
             datetimeSpan: misc.datetimeSpan,
             paginate: misc.paginate,
-            perm: PERM,
-            PRIV,
-            STATUS,
+            perm: global.Hydro.model.builtin.PERM,
+            PRIV: global.Hydro.model.builtin.PRIV,
+            STATUS: global.Hydro.model.builtin.STATUS,
             size: misc.size,
             gravatar: misc.gravatar,
             model: global.Hydro.model,

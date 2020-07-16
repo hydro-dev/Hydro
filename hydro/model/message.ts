@@ -5,14 +5,17 @@ import * as db from '../service/db';
 const coll = db.collection('message');
 
 export const FLAG_UNREAD = 1;
-export const FLAG_NOTIFICATION = 2;
+export const FLAG_ALERT = 2;
 
-export async function send(from: number, to: number, content: string, flag: number): Promise<Mdoc> {
+export async function send(
+    from: number, to: number,
+    content: string, flag: number = FLAG_UNREAD,
+): Promise<Mdoc> {
     const res = await coll.insertOne({
-        from, to, content, flag: FLAG_UNREAD | flag,
+        from, to, content, flag,
     });
     return {
-        from, to, content, _id: res.insertedId, flag: FLAG_UNREAD | flag,
+        from, to, content, _id: res.insertedId, flag,
     };
 }
 
@@ -60,7 +63,7 @@ export function ensureIndexes() {
 
 global.Hydro.model.message = {
     FLAG_UNREAD,
-    FLAG_NOTIFICATION,
+    FLAG_ALERT,
 
     count,
     get,

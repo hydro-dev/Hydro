@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
@@ -30,20 +29,18 @@ export const builtinScript = [
     'blacklist', 'setSuperadmin', 'deleteUser',
 ];
 
-function getFiles(folder, base = '') {
+function getFiles(folder: string, base = ''): string[] {
     const files = [];
     const f = fs.readdirSync(folder);
     for (const i of f) {
-        if (!i.startsWith('.')) {
-            if (fs.statSync(path.join(folder, i)).isDirectory()) {
-                files.push(...getFiles(path.join(folder, i), path.join(base, i)));
-            } else files.push(path.join(base, i));
-        }
+        if (fs.statSync(path.join(folder, i)).isDirectory()) {
+            files.push(...getFiles(path.join(folder, i), path.join(base, i)));
+        } else files.push(path.join(base, i));
     }
-    return files;
+    return files.map((item) => item.replace(/\\/gmi, '/'));
 }
 
-export async function handler(pending, fail) {
+export async function handler(pending: string[], fail: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'handler.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
@@ -60,7 +57,7 @@ export async function handler(pending, fail) {
     }
 }
 
-export async function locale(pending, fail) {
+export async function locale(pending: string[], fail: string[]) {
     for (const i of pending) {
         let p = path.resolve(i, 'locales');
         if (!fs.existsSync(p)) p = path.resolve(i, 'locale');
@@ -82,7 +79,7 @@ export async function locale(pending, fail) {
     }
 }
 
-export async function setting(pending, fail, modelSetting: typeof import('../model/setting')) {
+export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
     const map = {
         system: modelSetting.SystemSetting,
         account: modelSetting.AccountSetting,
@@ -109,7 +106,7 @@ export async function setting(pending, fail, modelSetting: typeof import('../mod
     }
 }
 
-export async function template(pending, fail) {
+export async function template(pending: string[], fail: string[]) {
     for (const i of pending) {
         let p = path.resolve(i, 'templates');
         if (!fs.existsSync(p)) p = path.resolve(i, 'template');
@@ -117,7 +114,9 @@ export async function template(pending, fail) {
             try {
                 const files = getFiles(p);
                 for (const file of files) {
-                    global.Hydro.template[file] = fs.readFileSync(path.resolve(p, file)).toString();
+                    global.Hydro.ui.template[file] = fs.readFileSync(
+                        path.resolve(p, file),
+                    ).toString();
                 }
                 console.log(`Template init: ${i}`);
             } catch (e) {
@@ -128,7 +127,20 @@ export async function template(pending, fail) {
     }
 }
 
-export async function model(pending, fail) {
+export async function uistatic(pending: string[], fail: string[]) {
+    for (const i of pending) {
+        const p = path.resolve(i, 'public', 'static-manifest.json');
+        if (fs.existsSync(p) && fs.statSync(p).isFile() && !fail.includes(i)) {
+            try {
+                Object.assign(global.Hydro.ui.manifest, eval('require')(p));
+            } catch (e) {
+                fail.push(i);
+            }
+        }
+    }
+}
+
+export async function model(pending: string[], fail: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'model.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
@@ -145,7 +157,7 @@ export async function model(pending, fail) {
     }
 }
 
-export async function lib(pending, fail) {
+export async function lib(pending: string[], fail: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'lib.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
@@ -163,7 +175,7 @@ export async function lib(pending, fail) {
     }
 }
 
-export async function service(pending, fail) {
+export async function service(pending: string[], fail: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'service.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
@@ -181,7 +193,7 @@ export async function service(pending, fail) {
     }
 }
 
-export async function script(pending, fail, active) {
+export async function script(pending: string[], fail: string[], active: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'script.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
@@ -199,7 +211,7 @@ export async function script(pending, fail, active) {
     }
 }
 
-export async function wiki(pending, fail) {
+export async function wiki(pending: string[], fail: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'wiki');
         if (fs.existsSync(p) && fs.statSync(p).isDirectory() && !fail.includes(i)) {

@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "main": "hydro/loader.ts",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "author": "masnn",
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@hydrooj/markdown-it-katex": "^2.1.1",
-    "@types/lru-cache": "^5.1.0",
     "adm-zip": "^0.4.16",
     "ansi_up": "^4.0.4",
     "detect-browser": "^5.1.1",
@@ -51,12 +50,14 @@
     "@types/koa-router": "^7.4.1",
     "@types/koa-static-cache": "^5.1.0",
     "@types/lodash": "^4.14.157",
+    "@types/lru-cache": "^5.1.0",
     "@types/markdown-it": "^10.0.1",
     "@types/mongodb": "^3.5.25",
     "@types/node": "^14.0.22",
     "@types/nodemailer": "^6.4.0",
     "@types/nunjucks": "^3.1.3",
     "@types/prismjs": "^1.16.1",
+    "@types/serialize-javascript": "^4.0.0",
     "@types/sockjs": "^0.3.32",
     "@types/superagent": "^4.1.8",
     "@types/superagent-proxy": "^2.0.0",
@@ -93,10 +94,5 @@
       ".build/module/**"
     ]
   },
-  "snyk": true,
-  "optionalDependencies": {
-    "@hydrooj/geoip": "^1.1.1",
-    "@hydrooj/migrate-vijos": "^1.1.0",
-    "@hydrooj/pastebin": "^1.0.0"
-  }
+  "snyk": true
 }

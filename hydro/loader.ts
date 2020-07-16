@@ -19,8 +19,11 @@ global.Hydro = {
     // @ts-ignore
     lib: {},
     wiki: {},
-    template: {},
-    ui: {},
+    ui: {
+        manifest: {},
+        nav: [],
+        template: {},
+    },
     // @ts-ignore
     error: {},
     locales: {},

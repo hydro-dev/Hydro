@@ -46,7 +46,7 @@ export interface JudgeTask {
     type?: string,
 }
 
-export async function add(domainId: string, data: RdocBase, addTask = true) {
+export async function add(domainId: string, data: RdocBase, addTask: boolean) {
     _.defaults(data, {
         status: STATUS.STATUS_WAITING,
         type: 'judge',

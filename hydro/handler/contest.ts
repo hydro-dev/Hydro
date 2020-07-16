@@ -280,7 +280,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
             ttype: document.TYPE_CONTEST,
             lang,
             code,
-        });
+        }, true);
         await contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };

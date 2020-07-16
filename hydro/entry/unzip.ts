@@ -4,7 +4,8 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 
-const moduleRoots = Array.from(new Set([
+const moduleRoots = [];
+const _moduleRoots = Array.from(new Set([
     path.resolve(process.cwd(), 'node_modules', '@hydrooj'),
     path.resolve(process.cwd(), 'modules'),
     path.resolve(process.cwd(), 'module'),
@@ -16,17 +17,26 @@ const moduleRoots = Array.from(new Set([
     path.resolve(__dirname, '.build'),
     __dirname,
     path.resolve(os.homedir(), '.hydro', 'module'),
+    // TODO add npm global path
+    '/usr/local/share/.config/yarn/global/node_modules/@hydrooj',
+    path.resolve(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'global', 'node_modules', '@hydrooj'),
 ]));
+for (const moduleRoot of _moduleRoots) {
+    if (fs.existsSync(moduleRoot)) moduleRoots.push(moduleRoot);
+}
+
+if (process.env.debug) console.log('Module roots: ', moduleRoots);
 
 const moduleTemp = path.resolve(os.tmpdir(), 'hydro', 'module');
 const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
 const tmp = path.resolve(os.tmpdir(), 'hydro', '__');
 
+process.on('unhandledRejection', (e) => {
+    console.error(e);
+    process.exit(1);
+});
+
 export async function load() {
-    process.on('unhandledRejection', (e) => {
-        console.error(e);
-        process.exit(1);
-    });
     fs.ensureDirSync(moduleTemp);
     fs.ensureDirSync(publicTemp);
     for (const moduleRoot of moduleRoots) {

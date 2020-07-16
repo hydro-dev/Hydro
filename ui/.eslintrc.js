@@ -1,100 +1,101 @@
 const path = require('path');
 
 module.exports = {
-  "root": true,
-  "parser": "babel-eslint",
-  "plugins": [
-    "babel",
-    "react"
+  root: true,
+  parser: 'babel-eslint',
+  plugins: [
+    'babel',
+    'react',
   ],
-  "env": {
-    "browser": true,
-    "es6": true,
-    "jquery": true,
-    "commonjs": true
+  env: {
+    browser: true,
+    es6: true,
+    jquery: true,
+    commonjs: true,
   },
-  "extends": [
-    "airbnb"
+  extends: [
+    'airbnb',
   ],
-  "parserOptions": {
-    "sourceType": "module",
-    "ecmaVersion": 7,
-    "ecmaFeatures": {
-      "impliedStrict": true,
-      "experimentalObjectRestSpread": true,
-      "jsx": true,
-      "legacyDecorators": true
-    }
+  parserOptions: {
+    sourceType: 'module',
+    ecmaVersion: 7,
+    ecmaFeatures: {
+      impliedStrict: true,
+      experimentalObjectRestSpread: true,
+      jsx: true,
+      legacyDecorators: true,
+    },
   },
-  "settings": {
-    "import/resolver": {
-      "webpack": {
-        "config": {
-          "resolve": {
-            "alias": {
-              "vj": path.resolve(__dirname),
-            }
-          }
-        }
-      }
-    }
+  settings: {
+    'import/resolver': {
+      webpack: {
+        config: {
+          resolve: {
+            alias: {
+              vj: path.resolve(__dirname),
+            },
+          },
+        },
+      },
+    },
   },
-  "globals": {
-    "__webpack_public_path__": true,
-    "__webpack_require__": true,
-    "UiContext": true,
-    "UserContext": true,
-    "Context": true,
-    "LOCALES": true,
-    "window": true,
+  globals: {
+    __webpack_public_path__: true,
+    __webpack_require__: true,
+    UiContext: true,
+    UserContext: true,
+    Context: true,
+    LOCALES: true,
+    window: true,
   },
-  "rules": {
-    "comma-dangle": [
-      "error",
-      "always-multiline"
+  rules: {
+    'comma-dangle': [
+      'error',
+      'always-multiline',
     ],
-    "indent": [
-      "error",
+    indent: [
+      'error',
       2,
       {
-        "SwitchCase": 0
-      }
+        SwitchCase: 0,
+      },
     ],
-    "max-len": [
-      "error",
-      150
+    'max-len': [
+      'error',
+      150,
     ],
-    "quotes": "warn",
-    "func-names": "off",
-    "class-methods-use-this": "off",
-    "consistent-return": "warn",
-    "no-restricted-syntax": "warn",
-    "no-unused-vars": "warn",
-    "no-console": "off",
-    "no-continue": "off",
-    "no-mixed-operators": "off",
-    "no-plusplus": "off",
-    "no-underscore-dangle": "off",
-    "no-await-in-loop": "off",
-    "no-lonely-if": "off",
-    "import/first": "off",
-    "react/prefer-stateless-function": "off",
-    "react/self-closing-comp": "off",
-    "react/prop-types": "off",
-    "react/jsx-filename-extension": "off",
-    "react/jsx-one-expression-per-line": "off",
-    "react/no-string-refs": "off",
-    "react/require-default-props": "off",
-    "react/react-in-jsx-scope": "off",
-    "react/destructuring-assignment": "off",
-    "react/button-has-type": "off",
-    "react/forbid-prop-types": "off",
-    "jsx-a11y/no-static-element-interactions": "off",
-    "jsx-a11y/anchor-is-valid": "off",
-    "jsx-a11y/click-events-have-key-events": "off",
-    "max-classes-per-file": "off",
-    "react/jsx-props-no-spreading": "off",
-    "react/static-property-placement": "off",
-    "no-param-reassign": "off"
-  }
+    quotes: 'warn',
+    'func-names': 'off',
+    'class-methods-use-this': 'off',
+    'consistent-return': 'warn',
+    'no-restricted-syntax': 'warn',
+    'no-unused-vars': 'warn',
+    'no-console': 'off',
+    'no-continue': 'off',
+    'no-mixed-operators': 'off',
+    'no-plusplus': 'off',
+    'no-underscore-dangle': 'off',
+    'no-await-in-loop': 'off',
+    'no-lonely-if': 'off',
+    'no-param-reassign': 'off',
+    'no-bitwise': 'off',
+    'import/first': 'off',
+    'react/prefer-stateless-function': 'off',
+    'react/self-closing-comp': 'off',
+    'react/prop-types': 'off',
+    'react/jsx-filename-extension': 'off',
+    'react/jsx-one-expression-per-line': 'off',
+    'react/no-string-refs': 'off',
+    'react/require-default-props': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'react/destructuring-assignment': 'off',
+    'react/button-has-type': 'off',
+    'react/forbid-prop-types': 'off',
+    'jsx-a11y/no-static-element-interactions': 'off',
+    'jsx-a11y/anchor-is-valid': 'off',
+    'jsx-a11y/click-events-have-key-events': 'off',
+    'max-classes-per-file': 'off',
+    'react/jsx-props-no-spreading': 'off',
+    'react/static-property-placement': 'off',
+  },
 };

@@ -259,8 +259,11 @@ declare global {
                 },
                 stat: any,
                 wiki: { [category: string]: { [page: string]: any } },
-                template: { [key: string]: string },
-                ui: any,
+                ui: {
+                    manifest: Dict<string>,
+                    nav: any,
+                    template: { [key: string]: string },
+                },
                 error: typeof import('./error'),
                 locales: Dict<Dict<string>>,
                 postInit: Function[],

@@ -126,7 +126,7 @@ class PretestHandler extends Handler {
             lang,
             code,
             hidden: true,
-        });
+        }, true);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }

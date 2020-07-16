@@ -6,7 +6,7 @@ import * as system from '../model/system';
 import { STATUS, PRIV } from '../model/builtin';
 import * as record from '../model/record';
 import {
-    Route, Connection, Handler, ConnectionHandler,
+    Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
 import { validate } from '../lib/validator';
 import * as hpm from '../lib/hpm';
@@ -101,18 +101,21 @@ class SystemScriptHandler extends SystemHandler {
         this.response.body.path.push(['manage_script', null]);
     }
 
-    async post({ domainId, id, args = '{}' }) {
+    @param('id', Types.String)
+    @param('args', Types.String, true)
+    async post(domainId: string, id: string, args = '{}') {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
         args = JSON.parse(args);
         validate(global.Hydro.script[id].validate, args);
         const rid = await record.add(domainId, {
-            pid: id,
+            pid: 1,
             uid: this.user._id,
             lang: null,
             code: null,
             status: STATUS.STATUS_JUDGING,
             hidden: true,
         }, false);
+        judge.next({ domainId, rid, message: `Running script: ${id}` });
         async function report(data) {
             judge.next({ domainId, rid, ...data });
         }
@@ -125,13 +128,13 @@ class SystemScriptHandler extends SystemHandler {
                         domainId,
                         rid,
                         status: STATUS.STATUS_ACCEPTED,
-                        judge_text: ret,
+                        judge_text: ret.toString(),
                         judger: 1,
                         time_ms: time,
                         memory_kb: 0,
                     });
                 })
-                .catch((err) => {
+                .catch((err: Error) => {
                     const time = new Date().getTime() - start;
                     judge.end({
                         domainId,

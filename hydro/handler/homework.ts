@@ -182,7 +182,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid);
         const rid = await record.add(domainId, {
             pid, lang, code, uid: this.user._id, tid, hidden: true, ttype: document.TYPE_HOMEWORK,
-        });
+        }, true);
         await contest.updateStatus(domainId, tid, this.user._id,
             rid, pid, false, 0, document.TYPE_HOMEWORK);
         this.response.body = { tid, rid };

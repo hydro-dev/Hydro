@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import serialize from 'serialize-javascript';
 
 function wrap(func: Function, type: string) {
     return (...args: any) => {
@@ -12,7 +12,7 @@ function wrap(func: Function, type: string) {
                         args[i] = `${args[i].message}\n${args[i].stack}`;
                     }
                 }
-                global.Hydro.model.message.send(1, 1, yaml.dump({ time, type, args }, {}));
+                global.Hydro.model.message.send(1, 1, serialize({ time, type, args }), 0);
             } catch (e) {
                 func(e.message);
             }

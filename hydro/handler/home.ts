@@ -1,9 +1,7 @@
 import { ObjectID } from 'mongodb';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError,
-    UserNotFoundError,
-    PermissionError,
+    NotFoundError, UserNotFoundError, PermissionError,
 } from '../error';
 import * as bus from '../service/bus';
 import {
@@ -321,7 +319,7 @@ class HomeMessagesHandler extends Handler {
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
         if (udoc.gravatar) udoc.gravatar = misc.gravatar(udoc.gravatar);
-        const mdoc = await message.send(this.user._id, uid, content);
+        const mdoc = await message.send(this.user._id, uid, content, message.FLAG_UNREAD);
         // TODO(twd2): improve here: projection
         if (this.user._id !== uid) {
             bus.publish(`user_message-${uid}`, { mdoc, udoc });
@@ -340,8 +338,9 @@ class HomeMessagesHandler extends Handler {
     @param('messageId', Types.ObjectID)
     async postRead(domainId: string, messageId: ObjectID) {
         const msg = await message.get(messageId);
-        if ([msg.from, msg.to].includes(this.user._id)) await message.setFlag(messageId, message.FLAG_UNREAD);
-        else throw new PermissionError();
+        if ([msg.from, msg.to].includes(this.user._id)) {
+            await message.setFlag(messageId, message.FLAG_UNREAD);
+        } else throw new PermissionError();
         this.back();
     }
 }
