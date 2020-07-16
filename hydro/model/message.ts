@@ -4,12 +4,15 @@ import * as db from '../service/db';
 
 const coll = db.collection('message');
 
-export async function send(from: number, to: number, content: string): Promise<Mdoc> {
+export const FLAG_UNREAD = 1;
+export const FLAG_NOTIFICATION = 2;
+
+export async function send(from: number, to: number, content: string, flag: number): Promise<Mdoc> {
     const res = await coll.insertOne({
-        from, to, content, unread: true,
+        from, to, content, flag: FLAG_UNREAD | flag,
     });
     return {
-        from, to, content, unread: true, _id: res.insertedId,
+        from, to, content, _id: res.insertedId, flag: FLAG_UNREAD | flag,
     };
 }
 
@@ -25,6 +28,15 @@ export async function getMany(query: any, sort: any, page: number, limit: number
     return await coll.find(query).sort(sort)
         .skip((page - 1) * limit).limit(limit)
         .toArray();
+}
+
+export async function setFlag(messageId: ObjectID, flag: number) {
+    const result = await coll.findOneAndUpdate(
+        { _id: messageId },
+        { $bit: { flag: { xor: flag } } },
+        { returnOriginal: false },
+    );
+    return result.value;
 }
 
 export async function del(_id: ObjectID) {
@@ -47,10 +59,14 @@ export function ensureIndexes() {
 }
 
 global.Hydro.model.message = {
+    FLAG_UNREAD,
+    FLAG_NOTIFICATION,
+
     count,
     get,
     getByUser,
     del,
+    setFlag,
     getMany,
     getMulti,
     send,

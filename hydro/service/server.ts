@@ -13,6 +13,7 @@ import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import serialize from 'serialize-javascript';
+import parse from 'yargs-parser';
 import { lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
 import {
@@ -31,8 +32,8 @@ import * as token from '../model/token';
 import * as opcount from '../model/opcount';
 import hash from '../lib/hash.hydro';
 
+const argv = parse(process.argv.slice(2));
 let enableLog = true;
-
 const app = new Koa();
 let server;
 const router = new Router();
@@ -760,8 +761,8 @@ export async function start() {
     } else enableLog = false;
     app.use(router.routes()).use(router.allowedMethods());
     Route('notfound_handler', '*', Handler);
-    server.listen(port);
-    console.log('Server listening at: %s', port);
+    server.listen(argv.port || port);
+    console.log('Server listening at: %s', argv.port || port);
 }
 
 global.Hydro.service.server = {

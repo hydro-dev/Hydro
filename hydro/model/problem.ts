@@ -22,6 +22,7 @@ export const pdocHidden: Pdoc = {
     data: null,
     hidden: true,
     config: '',
+    acMsg: '',
 };
 
 export async function add(

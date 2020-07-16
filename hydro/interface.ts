@@ -69,6 +69,7 @@ export interface Pdoc {
     data?: ObjectID | string,
     hidden: boolean,
     config: string,
+    acMsg?: string,
 }
 
 export type Pdict = Dictionary<Pdoc>;
@@ -150,7 +151,7 @@ export interface Mdoc {
     from: number,
     to: number,
     content: string,
-    unread: boolean,
+    flag: number,
 }
 
 // Userfile

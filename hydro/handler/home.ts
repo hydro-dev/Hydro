@@ -336,6 +336,14 @@ class HomeMessagesHandler extends Handler {
         else throw new PermissionError();
         this.back();
     }
+
+    @param('messageId', Types.ObjectID)
+    async postRead(domainId: string, messageId: ObjectID) {
+        const msg = await message.get(messageId);
+        if ([msg.from, msg.to].includes(this.user._id)) await message.setFlag(messageId, message.FLAG_UNREAD);
+        else throw new PermissionError();
+        this.back();
+    }
 }
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {

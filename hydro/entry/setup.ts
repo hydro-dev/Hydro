@@ -141,7 +141,7 @@ export function load() {
                 ),
                 db.collection('system').updateOne(
                     { _id: 'server.port' },
-                    { $set: { value: listenPort } },
+                    { $set: { value: parseInt(listenPort, 10) } },
                     { upsert: true },
                 ),
             ]);
