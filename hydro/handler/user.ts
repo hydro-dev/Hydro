@@ -201,15 +201,15 @@ class UserSearchHandler extends Handler {
     @param('q', Types.String)
     @param('exectMatch', Types.Boolean, true)
     async get(domainId: string, q: string, exactMatch = false) {
-        let udocs;
-        if (exactMatch) udocs = [];
-        else udocs = await user.getPrefixList(q, 20);
-        const udoc = await user.getById(domainId, parseInt(q, 10));
+        let udoc = await user.getById(domainId, parseInt(q, 10));
+        const udocs = udoc ? [udoc] : [];
+        udoc = await user.getByUname(domainId, q);
         if (udoc) udocs.push(udoc);
+        udoc = await user.getByEmail(domainId, q);
+        if (udoc) udocs.push(udoc);
+        if (!exactMatch) udocs.push(...await user.getPrefixList(q, 20));
         for (const i in udocs) {
-            if (udocs[i].gravatar) {
-                udocs[i].gravatar = misc.gravatar(udocs[i].gravatar);
-            }
+            udocs[i].gravatar = misc.gravatar(udocs[i].gravatar || '');
         }
         this.response.body = udocs;
     }

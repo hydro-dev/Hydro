@@ -57,9 +57,9 @@ class SystemCheckConnHandler extends ConnectionHandler {
     }
 
     async check() {
-        const log = (payload) => this.send({ type: 'log', payload });
-        const warn = (payload) => this.send({ type: 'warn', payload });
-        const error = (payload) => this.send({ type: 'error', payload });
+        const log = (payload: any) => this.send({ type: 'log', payload });
+        const warn = (payload: any) => this.send({ type: 'warn', payload });
+        const error = (payload: any) => this.send({ type: 'error', payload });
         await check.start(log, warn, error, (id) => { this.id = id; });
     }
 
@@ -108,10 +108,10 @@ class SystemScriptHandler extends SystemHandler {
         args = JSON.parse(args);
         validate(global.Hydro.script[id].validate, args);
         const rid = await record.add(domainId, {
-            pid: 1,
+            pid: -1,
             uid: this.user._id,
-            lang: null,
-            code: null,
+            lang: '-',
+            code: id,
             status: STATUS.STATUS_JUDGING,
             hidden: true,
         }, false);
@@ -122,7 +122,7 @@ class SystemScriptHandler extends SystemHandler {
         setTimeout(() => {
             const start = new Date().getTime();
             global.Hydro.script[id].run(args, report)
-                .then((ret) => {
+                .then((ret: any) => {
                     const time = new Date().getTime() - start;
                     judge.end({
                         domainId,
@@ -146,7 +146,7 @@ class SystemScriptHandler extends SystemHandler {
                         memory_kb: 0,
                     });
                 });
-        }, 500);
+        }, 300);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -192,4 +192,4 @@ async function apply() {
     Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
 
-global.Hydro.handler.manage = module.exports = apply;
+global.Hydro.handler.manage = apply;

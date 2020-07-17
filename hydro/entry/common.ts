@@ -220,11 +220,9 @@ export async function wiki(pending: string[], fail: string[]) {
             try {
                 const categories = fs.readdirSync(p);
                 for (const category of categories) {
-                    console.log('category', category);
                     if (!fs.statSync(p).isDirectory()) return;
                     const pages = fs.readdirSync(path.join(p, category));
                     if (!global.Hydro.wiki[category]) global.Hydro.wiki[category] = {};
-                    console.log(pages);
                     for (const page of pages) {
                         const c = fs.readFileSync(path.join(p, category, page)).toString().split('\n');
                         const pagename = page.split('.')[0];

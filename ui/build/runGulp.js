@@ -4,12 +4,12 @@ import log from 'fancy-log';
 import chalk from 'chalk';
 import gulpConfig from './config/gulp';
 
-export default async function ({ watch, production }) {
+export default async function () {
   function handleError(err) {
-    log(chalk.red('Error: %s'), chalk.reset(err.toString()));
-    if (err && !watch) { process.exit(1); }
+    log(chalk.red('Error: %s'), chalk.reset(err.toString() + err.stack));
+    if (err) process.exit(1);
   }
-  const gulpTasks = gulpConfig({ watch, production, errorHandler: handleError });
+  const gulpTasks = gulpConfig({ production: true, errorHandler: handleError });
   return new Promise((resolve) => {
     const taskList = {};
 
@@ -22,9 +22,6 @@ export default async function ({ watch, production }) {
       taskList[uid] = false;
 
       if (Object.values(taskList).filter((b) => b).length === 0) {
-        if (watch) {
-          gulpTasks.watch();
-        }
         resolve();
       }
     });

@@ -64,6 +64,7 @@ export default class ScratchpadContainer extends React.PureComponent {
   handleChangeSize(uiElement, size) {
     this.props.changeUiSize(uiElement, size);
     $('#scratchpad').trigger('vjScratchpadRelayout');
+    this.props.ui.pretest.visible = !!this.props.ui.pretest.visible;
     this.forceUpdate();
   }
 

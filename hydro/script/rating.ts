@@ -23,36 +23,23 @@ function calc(udict: ND, rankedDocs: [number, number][]) {
     }
 }
 
-async function runProblem(pdoc: Pdoc, udict: ND, report: Function): Promise<void>
-async function runProblem(
-    domainId: string, pid: number, udict: ND, report: Function
-): Promise<void>
+async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>
+async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>
 async function runProblem(...arg: Array<any>) {
-    const start = new Date().getTime();
     const pdoc: Pdoc = (typeof arg[0] === 'string')
         ? await contest.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
-    const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
     // TODO maybe some other rules?
     // TODO pagination
     const psdocs = await problem.getMultiStatus(
         pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
     ).sort('rid', 1).toArray();
     const ranked = [];
-    for (const index of psdocs) {
+    for (const index in psdocs) {
         ranked.push([index + 1, psdocs[index].uid]);
     }
     calc(udict, ranked);
-    await report({
-        case: {
-            status: STATUS.STATUS_ACCEPTED,
-            judgeText: `Problem ${pdoc.title} finished`,
-            time_ms: new Date().getTime() - start,
-            memory_kb: 0,
-            score: 0,
-        },
-    });
 }
 
 async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void>
@@ -93,7 +80,7 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     await report({ message: `Found ${problems.length} problems in ${domainId}` });
     for (const i in problems) {
         const pdoc = problems[i];
-        runProblem(pdoc, udict, report);
+        runProblem(pdoc, udict);
         if (!isSub) {
             await report({
                 progress: Math.floor(((parseInt(i, 10) + 1) / problems.length) * 100),
@@ -147,4 +134,4 @@ export const validate = {
     ],
 };
 
-global.Hydro.script.recalcRating = { run, description, validate };
+global.Hydro.script.rating = { run, description, validate };

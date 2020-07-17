@@ -22,7 +22,7 @@ export default class Notification {
       .appendTo('body');
     this.$n.width(); // force reflow
     this.$n.removeClass('hide');
-    this.autoHideTimer = setTimeout(this.hide.bind(this), duration);
+    if (duration) this.autoHideTimer = setTimeout(this.hide.bind(this), duration);
   }
 
   handleClick() {

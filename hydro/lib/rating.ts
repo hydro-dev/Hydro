@@ -90,7 +90,18 @@ class RatingCalculator {
     }
 }
 
-function calculate(users: any[]) {
+interface RatingInputUser {
+    old: number,
+    uid: number,
+    rank: number,
+}
+
+interface RatingOutputUser {
+    new: number,
+    uid: number,
+}
+
+function calculate(users: RatingInputUser[]): RatingOutputUser[] {
     const calculator = new RatingCalculator(users);
     return calculator.calculate();
 }

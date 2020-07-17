@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import webpack from 'webpack';
-import fs from 'fs-extra';
+import fs from 'fs';
 
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';

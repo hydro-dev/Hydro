@@ -39,7 +39,6 @@ export default function ({ watch, production, errorHandler }) {
     .pipe(gulp.dest('misc/.iconfont'))
     .pipe(offsetMtimeAtFirstBuild());
 
-
   tasks.iconfont = () => gulp
     .src('misc/icons/*.svg')
     .pipe(plumber({ errorHandler }))

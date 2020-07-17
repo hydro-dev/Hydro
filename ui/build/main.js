@@ -7,7 +7,7 @@ import runWebpack from './runWebpack';
 async function main() {
   const dir = process.cwd();
   process.chdir(root());
-  await runGulp(argv);
+  await runGulp({});
   await runWebpack(argv);
   process.chdir(dir);
 }

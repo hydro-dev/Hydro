@@ -20,7 +20,7 @@ import {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
-    NotFoundError,
+    NotFoundError, HydroError,
 } from '../error';
 import { render } from '../lib/template';
 import hash from '../lib/hash.hydro';
@@ -169,9 +169,15 @@ export function requireCsrfToken(target: any, funcName: string, obj: any) {
 export async function prepare() {
     server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
-    app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
-        maxAge: 365 * 24 * 60 * 60,
-    }));
+    if (process.env.debug) {
+        app.use(cache(path.join(process.cwd(), 'public'), {
+            maxAge: 0,
+        }));
+    } else {
+        app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
+            maxAge: 365 * 24 * 60 * 60,
+        }));
+    }
     app.use(Body({
         multipart: true,
         formidable: {
@@ -553,8 +559,8 @@ async function handle(ctx, HandlerClass, checker) {
 }
 
 const Checker = (permPrivChecker) => {
-    let perm;
-    let priv;
+    let perm: bigint;
+    let priv: number;
     let checker = () => { };
     for (const item of permPrivChecker) {
         if (typeof item === 'object') {
@@ -694,8 +700,14 @@ export class ConnectionHandler {
         this.conn.close(code.toString(), reason);
     }
 
-    onerror(err: Error) {
+    onerror(err: HydroError) {
         console.error(err);
+        this.send({
+            error: {
+                name: err.name,
+                params: err.params || [],
+            },
+        });
         this.close(1001, err.toString());
     }
 
