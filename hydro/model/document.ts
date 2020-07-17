@@ -238,7 +238,7 @@ export async function setIfNotStatus(
         {
             domainId, docType, docId, uid, key: { $not: { $eq: ifNot } },
         },
-        { $set: { [key]: value, args } },
+        { $set: { [key]: value, ...args } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;

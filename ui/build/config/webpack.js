@@ -121,16 +121,6 @@ export default function (env = {}) {
           use: [babelLoader()],
         },
         {
-          // fix pickadate loading
-          test: /pickadate/,
-          use: [
-            {
-              loader: 'imports-loader',
-              options: { define: '>false' },
-            },
-          ],
-        },
-        {
           test: /\.styl$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader(), 'stylus-loader']
           ,

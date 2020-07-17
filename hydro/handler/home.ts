@@ -142,7 +142,8 @@ class HomeSecurityHandler extends Handler {
     @param('verifyPassword', Types.String)
     async postChangePassword(current: string, password: string, verifyPassword: string) {
         if (password !== verifyPassword) throw new VerifyPasswordError();
-        await user.changePassword(this.user._id, current, password);
+        this.user.checkPassword(current);
+        await user.setPassword(this.user._id, password);
         this.back();
     }
 

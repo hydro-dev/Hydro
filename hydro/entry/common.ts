@@ -25,8 +25,8 @@ export const builtinHandler = [
 ];
 
 export const builtinScript = [
-    'install', 'rating', 'recalcRating', 'register', 'problemStat',
-    'blacklist', 'setSuperadmin', 'deleteUser',
+    'install', 'rating', 'register', 'problemStat', 'blacklist',
+    'setSuperadmin', 'deleteUser',
 ];
 
 function getFiles(folder: string, base = ''): string[] {

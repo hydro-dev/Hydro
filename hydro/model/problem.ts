@@ -10,6 +10,7 @@ import readConfig from '../lib/readConfig';
 export const pdocHidden: Pdoc = {
     _id: new ObjectID(),
     domainId: 'system',
+    docType: document.TYPE_PROBLEM,
     docId: -1,
     pid: '',
     owner: 1,

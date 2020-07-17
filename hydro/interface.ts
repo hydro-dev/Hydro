@@ -56,6 +56,7 @@ export type Udict = NumericDictionary<User>;
 export interface Pdoc {
     _id: ObjectID,
     domainId: string,
+    docType: number,
     docId: number,
     pid: string,
     owner: number,

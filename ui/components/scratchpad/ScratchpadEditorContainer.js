@@ -30,6 +30,7 @@ export default class ScratchpadEditorContainer extends React.PureComponent {
       <MonacoEditor
         language={languageEnum.LANG_MONACO_MODES[this.props.lang]}
         theme="vs-dark"
+        class="ScratchpadMonacoEditor"
         value={this.props.code}
         options={getOptions(this.props.lang)}
         ref="editor"

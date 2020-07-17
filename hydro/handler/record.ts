@@ -50,9 +50,9 @@ class RecordListHandler extends RecordHandler {
             rdocs,
             pdict,
             udict,
-            fliterPid: pid,
-            fliterTid: tid,
-            fliterUidOrName: uidOrName,
+            filterPid: pid,
+            filterTid: tid,
+            filterUidOrName: uidOrName,
         };
     }
 }

@@ -57,6 +57,41 @@ export async function consume(query: any, cb: Function) {
     }, 100);
 }
 
+export class Consumer {
+    consuming: boolean;
+
+    running?: Promise<any>;
+
+    interval: NodeJS.Timeout;
+
+    filter: any;
+
+    func: Function;
+
+    constructor(filter: any, func: Function) {
+        this.consuming = true;
+        this.filter = filter;
+        this.func = func;
+        this.interval = setInterval(this.consume.bind(this), 100);
+    }
+
+    async consume() {
+        if (this.running || !this.consuming) return;
+        const res = await getFirst(this.filter);
+        if (res) {
+            this.running = this.func(res);
+            if (this.running instanceof Promise) await this.running;
+            this.running = null;
+        }
+    }
+
+    async destory() {
+        this.consuming = false;
+        clearInterval(this.interval);
+        if (this.running) await this.running;
+    }
+}
+
 global.Hydro.model.task = {
-    add, get, del, count, getFirst, consume,
+    Consumer, add, get, del, count, getFirst, consume,
 };

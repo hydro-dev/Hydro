@@ -156,17 +156,6 @@ export function setEmail(uid: number, mail: string) {
     return setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
 }
 
-export async function changePassword(uid: number, currentPassword: string, newPassword: string) {
-    const udoc = await getById('system', uid);
-    if (!udoc) throw new UserNotFoundError(uid);
-    udoc.checkPassword(currentPassword);
-    const salt = String.random();
-    return await coll.findOneAndUpdate(
-        { _id: udoc._id },
-        { $set: { salt, hash: pwhash(newPassword, salt), hashType: 'hydro' } },
-    );
-}
-
 export async function inc(_id: number, field: string, n = 1) {
     const udoc = await coll.findOne({ _id });
     if (!udoc) throw new UserNotFoundError(_id);
@@ -234,7 +223,6 @@ export function ensureIndexes() {
 
 global.Hydro.model.user = {
     User,
-    changePassword,
     create,
     getByEmail,
     getById,

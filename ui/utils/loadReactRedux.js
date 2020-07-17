@@ -8,7 +8,7 @@ export default async function loadReactRedux(storeReducer) {
 
   const reduxMiddlewares = [];
   reduxMiddlewares.push(reduxThunk);
-  reduxMiddlewares.push(reduxPromise());
+  reduxMiddlewares.push(reduxPromise);
 
   if (process.env.NODE_ENV !== 'production') {
     const { createLogger } = await import('redux-logger');
