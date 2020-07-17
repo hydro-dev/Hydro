@@ -106,12 +106,15 @@
     "timeago-react": "^3.0.0",
     "timeago.js": "^4.0.2",
     "uuid": "^8.2.0",
-    "vj-simplemde": "0.0.8"
+    "vj-simplemde": "0.0.8",
+    "snyk": "^1.362.1"
   },
   "scripts": {
     "build": "node build",
     "build:production": "node build --production",
-    "lint": "eslint components constant pages utils --fix"
+    "lint": "eslint components constant pages utils --fix",
+    "snyk-protect": "snyk protect",
+    "prepare": "yarn run snyk-protect"
   },
   "babel": {
     "plugins": [
@@ -206,5 +209,6 @@
       ],
       "@babel/preset-react"
     ]
-  }
+  },
+  "snyk": true
 }
