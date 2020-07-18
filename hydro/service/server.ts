@@ -700,6 +700,8 @@ export class ConnectionHandler {
         this.conn.close(code.toString(), reason);
     }
 
+    async message(message: any) { } // eslint-disable-line
+
     onerror(err: HydroError) {
         console.error(err);
         this.send({

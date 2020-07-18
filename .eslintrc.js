@@ -33,6 +33,7 @@ module.exports = {
         'no-return-await': 'off',
         'no-underscore-dangle': 'off',
         'no-unused-vars': 'off',
+        'prefer-destructuring': 'off',
     },
     settings: {
         'import/parsers': {

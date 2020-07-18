@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import { parseTimeMS, parseMemoryMB } from '../utils';
+import { JudgeResultBody, Rdoc } from '../interface';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
@@ -12,12 +13,31 @@ import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 
-async function _postJudge(rdoc) {
+interface _PostJudgeBody {
+    status: number,
+    domainId: string,
+    uid: number,
+    _id: ObjectID,
+    pid: number,
+    score: number,
+    rejudged: boolean,
+}
+
+interface PostJudgeBodyContest extends _PostJudgeBody {
+    tid: ObjectID,
+    ttype: number,
+}
+
+type PostJudgeBody = _PostJudgeBody | PostJudgeBodyContest;
+
+function _isWithContest(v: PostJudgeBody): v is PostJudgeBodyContest {
+    return !!((v as PostJudgeBodyContest).tid);
+}
+
+async function _postJudge(rdoc: PostJudgeBody) {
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    bus.publish('record_change', rdoc);
-    if (rdoc.type === 'run') return;
     const tasks = [];
-    if (rdoc.tid) {
+    if (_isWithContest(rdoc)) {
         tasks.push(
             contest.updateStatus(
                 rdoc.domainId, rdoc.tid, rdoc.uid,
@@ -36,7 +56,7 @@ async function _postJudge(rdoc) {
     await Promise.all(tasks);
 }
 
-export async function next(body) {
+export async function next(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
@@ -44,56 +64,56 @@ export async function next(body) {
     const $push: any = {};
     if (body.case) {
         const c: any = {};
-        c.memory = body.case.memory_kb || body.case.memory;
-        c.time = body.case.time_ms || body.case.time;
-        c.judgeText = body.case.judge_text || body.case.judgeText || body.case.message;
+        c.memory = body.case.memory;
+        c.time = body.case.time;
+        c.message = body.case.message;
         c.status = body.case.status;
         rdoc.testCases.push(c);
         $push.testCases = c;
     }
-    if (body.judge_text || body.message) {
-        rdoc.judgeTexts.push(body.judge_text || body.message);
-        $push.judgeTexts = body.judge_text || body.message;
+    if (body.message) {
+        rdoc.judgeTexts.push(body.message);
+        $push.judgeTexts = body.message;
     }
-    if (body.compiler_text) {
-        rdoc.compilerTexts.push(body.compiler_text);
-        $push.compilerTexts = body.compiler_text;
+    if (body.compilerText) {
+        rdoc.compilerTexts.push(body.compilerText);
+        $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
-    if (body.time_ms) $set.time = body.time_ms || body.time;
-    if (body.memory_kb) $set.memory = body.memory_kb || body.memory;
+    if (body.time) $set.time = body.time;
+    if (body.memory) $set.memory = body.memory;
     if (body.progress) $set.progress = body.progress;
     rdoc = await record.update(body.domainId, body.rid, $set, $push);
-    bus.publish('record_change', rdoc);
+    bus.publish('record_change', { rdoc, $set, $push });
 }
 
-export async function end(body) {
+export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: any = {};
     const $push: any = {};
     const $unset = { progress: '' };
-    if (body.judge_text) {
-        rdoc.judgeTexts.push(body.judge_text);
-        $push.judgeTexts = body.judge_text;
+    if (body.message) {
+        rdoc.judgeTexts.push(body.message);
+        $push.judgeTexts = body.message;
     }
-    if (body.compiler_text) {
-        rdoc.compilerTexts.push(body.compiler_text);
-        $push.compilerTexts = body.compiler_text;
+    if (body.compilerText) {
+        rdoc.compilerTexts.push(body.compilerText);
+        $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
     if (body.stdout) $set.stdout = body.stdout;
     if (body.stderr) $set.stderr = body.stderr;
-    if (body.time_ms) $set.time = body.time_ms;
-    if (body.memory_kb) $set.memory = body.memory_kb;
+    if (body.time) $set.time = body.time;
+    if (body.memory) $set.memory = body.memory;
     $set.judgeAt = new Date();
     $set.judger = body.judger;
     rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
-    rdoc = await record.update(body.domainId, body.rid, $set, $push);
+    bus.publish('record_change', { rdoc }); // trigger a full update
 }
 
 class PretestHandler extends Handler {

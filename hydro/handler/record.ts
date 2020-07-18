@@ -11,6 +11,7 @@ import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
+import { Rdoc } from '../interface';
 
 const RecordHandler = contest.ContestHandlerMixin(Handler);
 
@@ -117,8 +118,9 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
 
     async message(msg) {
         if (msg.rids instanceof Array) {
+            const rids = msg.rids.map((id: string) => new ObjectID(id));
             const rdocs = await record.getMulti(
-                this.domainId, { _id: { $in: msg.rids.map((id) => new ObjectID(id)) } },
+                this.domainId, { _id: { $in: rids } },
             ).toArray();
             for (const rdoc of rdocs) {
                 this.onRecordChange({ value: rdoc });
@@ -131,7 +133,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     }
 
     async onRecordChange(data) {
-        const rdoc = data.value;
+        const rdoc: Rdoc = data.value.rdoc;
         if (rdoc.tid && rdoc.tid.toString() !== this.tid) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
@@ -139,7 +141,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
             problem.get(this.domainId, rdoc.pid, null, false),
         ]);
         if (pdoc && pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
-        this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        else this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
 
@@ -160,12 +162,16 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     }
 
     async onRecordChange(data) {
-        const rdoc = data.value;
+        const rdoc: Rdoc = data.value.rdoc;
+        const { $set, $push } = data.value;
         if (rdoc._id.toString() !== this.rid) return;
-        this.send({
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
-            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
-        });
+        if ($set) this.send({ $set, $push });
+        else {
+            this.send({
+                status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
+                summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
+            });
+        }
     }
 
     async cleanup() {

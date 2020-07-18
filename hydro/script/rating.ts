@@ -64,9 +64,9 @@ async function runContest(...arg: Array<any>) {
     await report({
         case: {
             status: STATUS.STATUS_ACCEPTED,
-            judgeText: `Contest ${tdoc.title} finished`,
-            time_ms: new Date().getTime() - start,
-            memory_kb: 0,
+            message: `Contest ${tdoc.title} finished`,
+            time: new Date().getTime() - start,
+            memory: 0,
             score: 0,
         },
     });
@@ -115,9 +115,9 @@ export async function run({ domainId }, report: Function) {
             await report({
                 case: {
                     status: STATUS.STATUS_ACCEPTED,
-                    judgeText: `Domain ${domains[i]._id} finished`,
-                    time_ms: new Date().getTime() - start,
-                    memory_kb: 0,
+                    message: `Domain ${domains[i]._id} finished`,
+                    time: new Date().getTime() - start,
+                    memory: 0,
                     score: 0,
                 },
                 progress: Math.floor(((parseInt(i, 10) + 1) / domains.length) * 100),

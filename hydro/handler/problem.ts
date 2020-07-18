@@ -254,6 +254,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
         const pdoc = await problem.get(domainId, pid);
+        if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
         this.pid = pdoc.docId.toString();
         this.domainId = domainId;
@@ -261,12 +262,18 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(data) {
-        const rdoc: Rdoc = data.value;
+        const rdoc: Rdoc = data.value.rdoc;
         if (
             rdoc.uid !== this.user._id
             || rdoc.pid.toString() !== this.pid
             || rdoc.domainId !== this.domainId
         ) return;
+        rdoc.compilerTexts = [];
+        rdoc.judgeTexts = [];
+        // @ts-ignore
+        rdoc.testCases = rdoc.testCases.map((c) => ({
+            status: c.status,
+        }));
         if (rdoc.tid) return;
         this.send({ rdoc });
     }

@@ -128,10 +128,10 @@ class SystemScriptHandler extends SystemHandler {
                         domainId,
                         rid,
                         status: STATUS.STATUS_ACCEPTED,
-                        judge_text: ret.toString(),
+                        message: ret.toString(),
                         judger: 1,
-                        time_ms: time,
-                        memory_kb: 0,
+                        time,
+                        memory: 0,
                     });
                 })
                 .catch((err: Error) => {
@@ -140,10 +140,10 @@ class SystemScriptHandler extends SystemHandler {
                         domainId,
                         rid,
                         status: STATUS.STATUS_SYSTEM_ERROR,
-                        judge_text: `${err}\n${err.stack}`,
+                        message: `${err}\n${err.stack}`,
                         judger: 1,
-                        time_ms: time,
-                        memory_kb: 0,
+                        time,
+                        memory: 0,
                     });
                 });
         }, 300);
