@@ -13,31 +13,10 @@ import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 
-interface _PostJudgeBody {
-    status: number,
-    domainId: string,
-    uid: number,
-    _id: ObjectID,
-    pid: number,
-    score: number,
-    rejudged: boolean,
-}
-
-interface PostJudgeBodyContest extends _PostJudgeBody {
-    tid: ObjectID,
-    ttype: number,
-}
-
-type PostJudgeBody = _PostJudgeBody | PostJudgeBodyContest;
-
-function _isWithContest(v: PostJudgeBody): v is PostJudgeBodyContest {
-    return !!((v as PostJudgeBodyContest).tid);
-}
-
-async function _postJudge(rdoc: PostJudgeBody) {
+async function _postJudge(rdoc: Rdoc) {
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const tasks = [];
-    if (_isWithContest(rdoc)) {
+    if (rdoc.tid) {
         tasks.push(
             contest.updateStatus(
                 rdoc.domainId, rdoc.tid, rdoc.uid,
@@ -58,7 +37,6 @@ async function _postJudge(rdoc: PostJudgeBody) {
 
 export async function next(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
-    if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: any = {};
     const $push: any = {};
@@ -90,7 +68,6 @@ export async function next(body: JudgeResultBody) {
 
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
-    if (body.tid) body.tid = new ObjectID(body.tid);
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: any = {};
     const $push: any = {};

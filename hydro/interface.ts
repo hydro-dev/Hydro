@@ -203,7 +203,6 @@ export interface JudgeResultBody {
     domainId: string,
     rid: ObjectID,
     judger?: number,
-    tid?: ObjectID,
     progress?: number
     case?: {
         status: number,
