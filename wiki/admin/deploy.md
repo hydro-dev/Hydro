@@ -14,29 +14,24 @@
 
 Hydro 依赖于 MongoDB 与 NodeJS，您应该先安装它们。 
 
-提示：推荐使用 [nvm](https://nvm.sh/) 安装 NodeJS。  
+- 下载安装 MongoDB：[https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)  
+- 使用 nvm 安装 NodeJS：[Linux](https://nvm.sh/) [Windows](https://github.com/coreybutler/nvm-windows)  
+- 安装 yarn: `npm install yarn -g`  
+- 使用 yarn 安装 Hydro：`yarn global add hydrooj @hydrooj/ui-default`  
+- 启动 Hydro：`hydrooj`  
 
-安装 yarn：  
-
-```sh
-npm install yarn -g
-```
-
-使用 yarn 安装 Hydro：  
+可选项：pm2 守护程序  
 
 ```sh
-yarn global add hydro @hydro/ui-default
-```
-
-运行：
-
-```sh
-hydrooj
+yarn global add pm2 # 安装pm2
+pm2 startup # 开机自启
+pm2 start hydrooj # 启动 Hydro
+pm2 save # 保存
 ```
 
 注意：单个Hydro实例需要约100MB的运行内存，但在载入时可能需要较多内存（取决于安装的模块数量与大小）  
 
-Hydro 会自行初始化并监听 8888 端口。请用浏览器访问并进行相应配置。  
+Hydro 会自行初始化并监听 8888 端口（可使用 `--port=1234` 指定其他端口）。请用浏览器访问并进行相应配置。  
 数据库配置完成后，会自动创建 Root 用户。（账号 `Root` ，密码 `rootroot`），请及时修改。  
 
 之后的进阶配置可在 管理 面板进行。
