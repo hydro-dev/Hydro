@@ -13,20 +13,6 @@ const moduleRoots = Array.from(new Set([
     path.resolve(os.tmpdir(), 'hydro', 'module'),
 ]));
 
-export async function getInstalled() {
-    const modules = [];
-    for (const moduleRoot of moduleRoots) {
-        if (fs.existsSync(moduleRoot)) {
-            const files = fs.readdirSync(moduleRoot);
-            for (const file of files) {
-                const info = path.resolve(moduleRoot, file, 'package.json');
-                if (fs.existsSync(info)) modules.push(path.resolve(moduleRoot, file));
-            }
-        }
-    }
-    return modules;
-}
-
 export async function getDetail() {
     const modules = [];
     for (const moduleRoot of moduleRoots) {
@@ -55,5 +41,5 @@ export function install(url: string, name: string = '') {
 }
 
 global.Hydro.lib.hpm = {
-    getInstalled, getDetail, install,
+    getDetail, install,
 };

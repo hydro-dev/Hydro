@@ -9,4 +9,4 @@ SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
 在线IDE 更换颜色主题, fix resize
-
+better place to store config.json

@@ -246,6 +246,7 @@ export async function wiki(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Wiki Load Fail: ${i}`);
+                console.error(e);
             }
         }
     }

@@ -1,7 +1,7 @@
-import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import http from 'http';
+import fs from 'fs-extra';
 import Koa from 'koa';
 import Body from 'koa-body';
 import Router from 'koa-router';
@@ -89,7 +89,7 @@ const env = new nunjucks.Environment(new Loader(), { autoescape: true, trimBlock
 function render(name) {
     return new Promise((resolve, reject) => {
         env.render(name, {
-            _: (str) => str,
+            _: (str: string) => str,
         }, (err, res) => {
             if (err) reject(err);
             else resolve(res);
@@ -145,7 +145,8 @@ export function load() {
                     { upsert: true },
                 ),
             ]);
-            fs.writeFileSync(path.resolve(process.cwd(), 'config.json'), JSON.stringify({
+            fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
+            fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
                 host, port, name, username, password,
             }));
             ctx.body = `<h1>This page will reload in 3 secs.</h1>

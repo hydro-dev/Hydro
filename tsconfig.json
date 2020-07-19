@@ -5,12 +5,15 @@
         "outDir": "./dist/",
         "rootDir": "./hydro/",
         "moduleResolution": "node",
+        "declaration": true,
+        "sourceMap": true,
         "esModuleInterop": true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "allowJs": false
     },
     "exclude": [
         "node_modules",
-        "ui",
-        "build"
+        "dist",
+        "tool"
     ]
 }

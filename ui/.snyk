@@ -1,8 +1,0 @@
-# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.16.0
-ignore: {}
-# patches apply the minimum changes required to fix a vulnerability
-patch:
-  SNYK-JS-LODASH-567746:
-    - react-resize-detector > lodash:
-        patched: '2020-07-17T09:00:07.281Z'

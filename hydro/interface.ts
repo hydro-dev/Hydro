@@ -292,8 +292,9 @@ declare global {
                 locales: Dict<Dict<string>>,
                 postInit: Function[],
             },
-            nodeModules: any,
             onDestory: Function[],
+            addons: string[],
+            argv: any,
         }
     }
 }

@@ -1,12 +1,17 @@
+/* eslint-disable no-continue */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 
 import './interface';
+import os from 'os';
+import path from 'path';
 import cluster from 'cluster';
+import fs from 'fs-extra';
 import parse from 'yargs-parser';
+import AdmZip from 'adm-zip';
 
-const argv = parse(process.argv.slice(2));
+global.argv = parse(process.argv.slice(2));
 
 global.Hydro = {
     stat: { reqCount: 0 },
@@ -30,8 +35,9 @@ global.Hydro = {
     postInit: [],
 };
 global.onDestory = [];
+global.addons = [];
 
-if (argv.debug) {
+if (global.argv.debug) {
     console.log(process.argv);
     process.env.debug = 'enable';
 }
@@ -46,7 +52,7 @@ async function terminate() {
 
 async function fork(args: string[] = []) {
     const _args = process.argv.slice(2);
-    _args.push(...args);
+    _args.push(...args, `--addons=${Buffer.from(JSON.stringify(global.addons)).toString('base64')}`);
     cluster.setupMaster({ args: _args });
     return cluster.fork();
 }
@@ -54,7 +60,8 @@ async function fork(args: string[] = []) {
 async function entry(config: any) {
     if (config.entry) {
         if (config.newProcess) {
-            const p = await fork([`--entry=${config.entry}`]);
+            const sargv = [`--entry=${config.entry}`];
+            const p = await fork(sargv);
             await new Promise((resolve, reject) => {
                 p.on('exit', resolve);
                 p.on('error', (err: Error) => {
@@ -64,7 +71,7 @@ async function entry(config: any) {
             });
         } else {
             const loader = require(`./entry/${config.entry}`);
-            return await loader.load(entry);
+            return await loader.load(entry, global.addons);
         }
     }
     return null;
@@ -75,8 +82,9 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt: number) {
-    await fork(['--firstWorker']);
-    for (let i = 1; i < cnt; i++) await fork();
+    const sargv = [`--args=${Buffer.from(JSON.stringify(global.addons)).toString('base64')}`];
+    await fork(['--firstWorker', ...sargv]);
+    for (let i = 1; i < cnt; i++) await fork(sargv);
 }
 
 async function executeCommand(input: string) {
@@ -92,7 +100,9 @@ async function executeCommand(input: string) {
 async function messageHandler(worker: cluster.Worker, msg: any) {
     if (!msg) msg = worker;
     if (msg.event) {
-        if (msg.event === 'bus') {
+        if (msg.event === 'setAddon') {
+            global.addons = msg.addons;
+        } else if (msg.event === 'bus') {
             if (cluster.isMaster) {
                 for (const i in cluster.workers) {
                     cluster.workers[i].send(msg);
@@ -113,19 +123,61 @@ async function messageHandler(worker: cluster.Worker, msg: any) {
     }
 }
 
-async function load() {
-    global.nodeModules = {
-        'adm-zip': require('adm-zip'),
-        superagent: require('superagent'),
-        'js-yaml': require('js-yaml'),
-        mongodb: require('mongodb'),
-    };
+const moduleTemp = path.resolve(os.tmpdir(), 'hydro', 'module');
+const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
+const tmp = path.resolve(os.tmpdir(), 'hydro', '__');
+
+export function addon(addonPath: string) {
+    let modulePath = path.resolve(addonPath);
+    if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
+        try {
+            // Is a npm package
+            const packagejson = require.resolve(`${addonPath}/package.json`);
+            modulePath = path.dirname(packagejson);
+            const publicPath = path.resolve(modulePath, 'public');
+            if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
+            global.addons.push(modulePath);
+        } catch (e) {
+            throw new Error(`Addon not found: ${addonPath}`);
+        }
+    } else {
+        try {
+            // Is *.hydro module
+            const t = modulePath.split(path.sep);
+            const name = t[t.length - 1].split('.')[0];
+            const zip = new AdmZip(modulePath);
+            const targetPath = path.resolve(moduleTemp, name);
+            zip.extractAllTo(targetPath, true);
+            const content = fs.readdirSync(targetPath);
+            const ipath = path.join(targetPath, content[0]);
+            if (content.length === 1 && fs.statSync(ipath).isDirectory()) {
+                fs.moveSync(ipath, tmp);
+                fs.rmdirSync(targetPath);
+                fs.moveSync(tmp, targetPath);
+            }
+            const publicPath = path.resolve(targetPath, 'public');
+            if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
+            global.addons.push(targetPath);
+        } catch (e) {
+            console.error('Addon load fail: ', e);
+            throw e;
+        }
+    }
+}
+
+export async function load() {
+    while (!global.addons) {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 100);
+        });
+    }
+    addon(path.resolve(__dirname, '..'));
     Error.stackTraceLimit = 50;
     process.on('unhandledRejection', (e) => console.error(e));
     process.on('SIGINT', terminate);
     process.on('message', messageHandler);
     cluster.on('message', messageHandler);
-    if (cluster.isMaster || argv.startAsMaster) {
+    if (cluster.isMaster || global.argv.startAsMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', (buf) => {
@@ -139,7 +191,6 @@ async function load() {
                 executeCommand(input);
             }
         });
-        await entry({ entry: 'unzip', newProcess: true });
         const cnt = await entry({ entry: 'master' });
         console.log('Master started');
         cluster.on('exit', (worker, code, signal) => {
@@ -153,14 +204,15 @@ async function load() {
         });
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} ${worker.id} is online`);
+            worker.send({ event: 'setAddon', addons: global.addons });
         });
         await startWorker(cnt);
-    } else if (argv.entry) {
-        console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
-        await entry({ entry: argv.entry });
-        console.log(`Worker ${process.pid} Started as ${argv.entry}`);
+    } else if (global.argv.entry) {
+        console.log(`Worker ${process.pid} Starting as ${global.argv.entry}`);
+        await entry({ entry: global.argv.entry });
+        console.log(`Worker ${process.pid} Started as ${global.argv.entry}`);
     } else {
-        if (argv.firstWorker) cluster.isFirstWorker = true;
+        if (global.argv.firstWorker) cluster.isFirstWorker = true;
         else cluster.isFirstWorker = false;
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });
@@ -169,7 +221,7 @@ async function load() {
     if (global.gc) global.gc();
 }
 
-if (argv.pandora || !module.parent) {
+if (global.argv.pandora || !module.parent) {
     load().catch((e) => {
         console.error(e);
         process.exit(1);

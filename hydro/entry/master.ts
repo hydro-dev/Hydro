@@ -5,8 +5,8 @@ import {
     builtinLib, builtinHandler, builtinModel,
 } from './common';
 
-export async function load(call) {
-    let pending = await require('../lib/hpm').getInstalled();
+export async function load(call, args) {
+    let pending = args;
     const fail = [];
     require('../lib/i18n');
     require('../utils');
