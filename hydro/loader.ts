@@ -129,7 +129,7 @@ const tmp = path.resolve(os.tmpdir(), 'hydro', '__');
 
 export function addon(addonPath: string) {
     let modulePath = path.resolve(addonPath);
-    if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
+    if (modulePath.endsWith('.hydro') && !(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${addonPath}/package.json`);

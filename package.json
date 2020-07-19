@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "main": "entry.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -35,7 +35,6 @@
     "nodemailer": "^6.4.10",
     "nunjucks": "^3.2.1",
     "prismjs": "^1.20.0",
-    "saslprep": "^1.0.3",
     "serialize-javascript": "^4.0.0",
     "sockjs": "^0.3.20",
     "superagent": "^5.2.2",
@@ -70,15 +69,11 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-import": "^2.20.2",
-    "snyk": "^1.354.0",
     "typescript": "^3.9.7"
   },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "lint": "eslint build hydro tool --ext ts,js --fix",
-    "snyk-protect": "snyk protect",
-    "prepare": "yarn run snyk-protect"
-  },
-  "snyk": true
+    "lint": "eslint build hydro tool --ext ts,js --fix"
+  }
 }

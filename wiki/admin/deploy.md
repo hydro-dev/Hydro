@@ -16,13 +16,22 @@ Hydro 依赖于 MongoDB 与 NodeJS，您应该先安装它们。
 
 提示：推荐使用 [nvm](https://nvm.sh/) 安装 NodeJS。  
 
-clone 本项目到一个空文件夹，并进行编译：  
+安装 yarn：  
 
 ```sh
-git clone https://github.com/hydro-dev/Hydro.git
-cd Hydro
-yarn build:all
-node .build/app.js
+npm install yarn -g
+```
+
+使用 yarn 安装 Hydro：  
+
+```sh
+yarn global add hydro @hydro/ui-default
+```
+
+运行：
+
+```sh
+hydrooj
 ```
 
 注意：单个Hydro实例需要约100MB的运行内存，但在载入时可能需要较多内存（取决于安装的模块数量与大小）  

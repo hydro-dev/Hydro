@@ -14,12 +14,12 @@ const LOCALE_ROOT = path.resolve(__dirname, '..', 'locales');
 const texts = {};
 const result = {};
 const locales = fs.readdirSync(LOCALE_ROOT);
-let currentFile = '';
+const currentFile = 'setting.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Setting(str, format) {
     if (!texts[str]) texts[str] = [currentFile];
-    else texts[str].push(currentFile);
+    else if (!texts[str].includes(currentFile)) texts[str].push(currentFile);
 }
 
 function scanSetting() {

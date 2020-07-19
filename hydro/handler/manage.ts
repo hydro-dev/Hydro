@@ -9,7 +9,6 @@ import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
 import { validate } from '../lib/validator';
-import * as hpm from '../lib/hpm';
 
 function set(key, value) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
@@ -77,19 +76,6 @@ class SystemDashboardHandler extends SystemHandler {
     async postRestart() {
         const count = await system.get('server.worker');
         process.send({ event: 'restart', count });
-        this.back();
-    }
-}
-
-class SystemModuleHandler extends SystemHandler {
-    async get() {
-        this.response.body.path.push(['manage_module', null]);
-        this.response.body.installed = await hpm.getDetail();
-        this.response.template = 'manage_module.html';
-    }
-
-    async postInstall({ url }) {
-        await hpm.install(url);
         this.back();
     }
 }
@@ -187,7 +173,6 @@ async function apply() {
     Route('manage', '/manage', SystemMainHandler);
     Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
     Route('manage_script', '/manage/script', SystemScriptHandler);
-    Route('manage_module', '/manage/module', SystemModuleHandler);
     Route('manage_setting', '/manage/setting', SystemSettingHandler);
     Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }

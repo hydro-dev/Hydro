@@ -259,7 +259,6 @@ declare global {
                 lib: {
                     download: typeof import('./lib/download').default,
                     'hash.hydro': typeof import('./lib/hash.hydro').default,
-                    hpm: typeof import('./lib/hpm'),
                     i18n: typeof import('./lib/i18n').default,
                     'import.syzoj': typeof import('./lib/import.syzoj').syzoj,
                     jwt: typeof import('./lib/jwt'),

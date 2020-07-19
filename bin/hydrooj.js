@@ -2,15 +2,14 @@
 
 const hydro = require('../dist/loader');
 
-hydro.addon('.');
-
 try {
-    const uiDefault = require.resolve('@hydrooj/ui-default');
-    hydro.addon(uiDefault);
+    require.resolve('@hydrooj/ui-default');
 } catch (e) {
     console.error('Please also install @hydrooj/ui-default');
     process.exit(1);
 }
+
+hydro.addon('@hydrooj/ui-default');
 
 hydro.load().catch((e) => {
     console.error(e);
