@@ -12,25 +12,11 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '13.x'
-    - run: cd ui && yarn && yarn build:production && cd ..
-    - uses: actions/upload-artifact@v1
-      with:
-        name: uibuild
-        path: public
     - run: |
         yarn
-        yarn build:production
+        yarn build
+        rm -rf node_modules
     - uses: actions/upload-artifact@v1
       with:
-        name: app.js
-        path: .build/app.js
-    - uses: actions/upload-artifact@v1
-      with:
-        name: builtin.hydro
-        path: .build/builtin.hydro
-    - uses: elgohr/Publish-Docker-Github-Action@master
-      with:
-        name: hydrooj/hydro:alpine
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        dockerfile: Dockerfile
+        name: hydro
+        path: .
