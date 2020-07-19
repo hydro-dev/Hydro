@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "main": "entry.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -39,7 +39,7 @@
     "sockjs": "^0.3.20",
     "superagent": "^5.2.2",
     "superagent-proxy": "^2.0.0",
-    "systeminformation": "^4.26.5",
+    "systeminformation": "^4.26.10",
     "yargs-parser": "^18.1.3"
   },
   "devDependencies": {
@@ -65,7 +65,7 @@
     "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "^3.6.0",
     "@typescript-eslint/parser": "^3.6.0",
-    "eslint": "^7.4.0",
+    "eslint": "^7.5.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-import": "^2.20.2",
@@ -74,6 +74,6 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "lint": "eslint build hydro tool --ext ts,js --fix"
+    "lint": "eslint bin hydro tool --ext ts,js --fix"
   }
 }

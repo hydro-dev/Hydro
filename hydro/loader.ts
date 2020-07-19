@@ -129,7 +129,7 @@ const tmp = path.resolve(os.tmpdir(), 'hydro', '__');
 
 export function addon(addonPath: string) {
     let modulePath = path.resolve(addonPath);
-    if (modulePath.endsWith('.hydro') && !(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
+    if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${addonPath}/package.json`);
@@ -140,7 +140,7 @@ export function addon(addonPath: string) {
         } catch (e) {
             throw new Error(`Addon not found: ${addonPath}`);
         }
-    } else {
+    } else if (modulePath.endsWith('.hydro')) {
         try {
             // Is *.hydro module
             const t = modulePath.split(path.sep);
@@ -162,7 +162,7 @@ export function addon(addonPath: string) {
             console.error('Addon load fail: ', e);
             throw e;
         }
-    }
+    } else throw new Error(`Addon not found: ${addonPath}`);
 }
 
 export async function load() {
