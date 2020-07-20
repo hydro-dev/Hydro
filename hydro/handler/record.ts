@@ -158,7 +158,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
         }
         this.rid = rid.toString();
         bus.subscribe(['record_change'], this, 'onRecordChange');
-        this.onRecordChange({ value: rdoc });
+        this.onRecordChange({ value: { rdoc } });
     }
 
     async onRecordChange(data) {
