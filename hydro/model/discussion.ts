@@ -137,7 +137,7 @@ export function getStatus(domainId: string, did: ObjectID, uid: number) {
     return document.getStatus(domainId, document.TYPE_DISCUSSION, did, uid);
 }
 
-export function addNode(domainId: string, _id: string, category: string, args: any) {
+export function addNode(domainId: string, _id: string, category: string, args: any = {}) {
     return document.add(
         domainId, category, 1, document.TYPE_DISCUSSION_NODE,
         _id, null, null, args,

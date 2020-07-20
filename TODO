@@ -10,4 +10,3 @@ model.setting.ui.name
 pdoc.secretConfig?
 在线IDE 更换颜色主题, fix resize
 move to @hydrooj/core?
-remove koa-router
