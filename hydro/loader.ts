@@ -8,11 +8,10 @@ import os from 'os';
 import path from 'path';
 import cluster from 'cluster';
 import fs from 'fs-extra';
-import parse from 'yargs-parser';
+import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
 
-global.argv = parse(process.argv.slice(2));
-
+global.argv = argv;
 global.Hydro = {
     stat: { reqCount: 0 },
     handler: {},
@@ -23,7 +22,6 @@ global.Hydro = {
     script: {},
     // @ts-ignore
     lib: {},
-    wiki: {},
     ui: {
         manifest: {},
         nav: [],

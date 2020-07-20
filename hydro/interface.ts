@@ -281,7 +281,6 @@ declare global {
                     [key: string]: any
                 },
                 stat: any,
-                wiki: { [category: string]: { [page: string]: any } },
                 ui: {
                     manifest: Dict<string>,
                     nav: any,

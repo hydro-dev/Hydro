@@ -9,7 +9,6 @@ __*
 *.hydro
 locales
 templates
-wiki
 .vscode
 .github
 examples

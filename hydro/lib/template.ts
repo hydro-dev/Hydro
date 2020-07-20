@@ -35,10 +35,7 @@ class Nunjucks extends nunjucks.Environment {
         this.addFilter('json', (self) => JSON.stringify(self), false);
         this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
         this.addFilter('assign', (self, data) => Object.assign(self, data));
-        this.addFilter('markdown', (self, safe = true) => {
-            if (safe) return markdown.safe.render(self);
-            return markdown.unsafe.render(self);
-        });
+        this.addFilter('markdown', (self, html = false) => markdown.render(self, html));
         this.addFilter('ansi', (self) => misc.ansiToHtml(self));
         this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
         this.addFilter('bitand', (self, val) => self & val);

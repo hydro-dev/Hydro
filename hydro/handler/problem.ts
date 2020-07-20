@@ -355,7 +355,7 @@ class ProblemEditHandler extends ProblemManageHandler {
         const pid = checkPid(this.request.body.pid);
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, { title, content, pid });
-        this.back();
+        this.response.redirect = this.url('problem_detail', this.request.params.pid);
     }
 }
 

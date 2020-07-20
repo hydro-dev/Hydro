@@ -552,16 +552,6 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
-Read data of own problems: 读取自己题目的数据
-Read data of problem: 读取题目数据
-Read record codes: 读取记录的代码
-Ready (☆▽☆): 马上开始 (☆▽☆)
-Ready: 即将开始
-Recent {0} Records: 最近 {0} 条记录
-Recent Activities: 最近活动
-Recent Solutions: 最近编写的题解
-Recent Submissions: 最近递交
-Recently Created Discussions: 最近创建的讨论
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
 record_detail: 记录详情
@@ -647,13 +637,6 @@ Sign up mail has been sent to your email.: 注册邮件已经发送到您的电�
 Sign Up Now: 现在注册
 Sign Up: 注册
 Size: 大小
-Solutions Liked: 题解被赞
-Solutions: 题解
-Solve: 解决
-Solved Problems: 解决题目
-Sorry, there is no problem in the problem set: 题库中没有题目
-Sorry, there is no training plan.: 目前没有训练计划。
-Sorry, there is no user in this domain.: 对不起，此域中没有用户。
 Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
@@ -666,13 +649,6 @@ Status: 状态
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
-Submit At: 递交时间
-Submit By: 递交者
-Submit problem: 递交题目
-Submit Solution: 递交评测
-Submit Time: 递交时间
-Submit to Judge: 递交以评测
-Submit Your Code: 递交代码进行正式评测
 Submit: 递交
 Submitted: 已递交
 Support: 支持
@@ -799,7 +775,6 @@ What's domain?: 什么是域？
 What's script?: 什么是脚本？
 What's this?: 这是什么？
 Whether to show tags in the problem list.: 是否在题目列表中显示题目的标签。
-wiki_help: 帮助
 Will be used as the domain icon.: 将被用作系统图标。
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
 Write Your Comment: 发表您的评论

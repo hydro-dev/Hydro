@@ -103,10 +103,11 @@ class SwitchLanguageHandler extends Handler {
 }
 
 class MarkdownHandler extends Handler {
-    async post({ text, safe = true }) {
-        this.response.body = safe
-            ? markdown.safe.render(text)
-            : markdown.unsafe.render(text);
+    async post({ text, html = false, inline = false }) {
+        this.response.body = inline
+            ? markdown.renderInline(text, html)
+            : markdown.render(text, html);
+        this.response.type = 'text/html';
     }
 }
 

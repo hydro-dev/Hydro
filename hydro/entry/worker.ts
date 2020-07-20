@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 import {
-    locale, template, lib, service, model, handler, script, setting, wiki, uistatic,
+    locale, template, lib, service, model, handler, script, setting, uistatic,
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } from './common';
 
@@ -17,7 +17,6 @@ export async function load(call, args) {
         locale(pending, fail),
         template(pending, fail),
         uistatic(pending, fail),
-        wiki(pending, fail),
     ]);
     const bus = require('../service/bus');
     await new Promise((resolve) => {

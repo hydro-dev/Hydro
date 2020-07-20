@@ -8,9 +8,6 @@ import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import nunjucks from 'nunjucks';
 import mongodb from 'mongodb';
-import parse from 'yargs-parser';
-
-const argv = parse(process.argv.slice(2));
 
 class Loader {
     getSource(name: string) { // eslint-disable-line class-methods-use-this
@@ -110,7 +107,7 @@ export function load() {
         ctx.body = await render('setup.html');
         ctx.response.type = 'text/html';
     });
-    const listenPort = argv.port || 8888;
+    const listenPort = global.argv.port || 8888;
     router.post('/', async (ctx) => {
         const {
             host, port, name, username, password,
