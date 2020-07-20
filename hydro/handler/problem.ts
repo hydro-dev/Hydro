@@ -1,4 +1,5 @@
 import { isSafeInteger, flatten } from 'lodash';
+import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import paginate from '../lib/paginate';
 import {
@@ -175,9 +176,12 @@ class ProblemDetailHandler extends ProblemHandler {
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
+        const config: any = this.pdoc.config ? yaml.safeLoad(this.pdoc.config) : {};
         this.udoc = await user.getById(domainId, this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
+            time: config.time,
+            memory: config.memory,
             udoc: this.udoc,
             title: this.pdoc.title,
             path: [

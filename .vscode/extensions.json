@@ -1,8 +1,6 @@
 {
     "recommendations": [
         "dbaeumer.vscode-eslint",
-        "gruntfuggly.todo-tree",
-        "ronnidc.nunjucks",
-        "sysoev.language-stylus"
+        "gruntfuggly.todo-tree"
     ]
 }

@@ -9,7 +9,7 @@ const hydro = require('../dist/loader');
 fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
 const addonPath = path.resolve(os.homedir(), '.hydro', 'addon.json');
 if (!fs.existsSync(addonPath)) fs.writeFileSync(addonPath, '[]');
-const addons = JSON.parse(fs.readFileSync(addonPath).toString());
+let addons = JSON.parse(fs.readFileSync(addonPath).toString());
 
 try {
     const ui = argv.ui || '@hydrooj/ui-default';
@@ -33,6 +33,7 @@ if (argv._[0]) {
                 }
             }
         }
+        addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
     }
