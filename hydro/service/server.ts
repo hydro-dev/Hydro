@@ -59,7 +59,8 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
     [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
     [(v) => parseFloat(v), (v) => {
         const t = parseFloat(v);
-        return t && !Number.isNaN(t) && !Number.isFinite(t);
+        console.log(t);
+        return t && !Number.isNaN(t) && Number.isFinite(t);
     }],
     [(v) => new ObjectID(v), ObjectID.isValid],
     [(v) => !!v, null, true],
@@ -72,7 +73,8 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
         (v) => {
             const d = v.split('-');
             assert(d.length === 3);
-            return moment(`${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`).isValid();
+            const st = `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
+            return moment(st).isValid();
         }],
     [
         (v) => {
@@ -83,7 +85,7 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
         (v) => {
             const t = v.split(':');
             assert(t.length === 2);
-            return moment(`${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
+            return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
         },
     ],
 ];

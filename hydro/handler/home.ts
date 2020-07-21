@@ -321,10 +321,7 @@ class HomeMessagesHandler extends Handler {
         if (!udoc) throw new UserNotFoundError(uid);
         if (udoc.gravatar) udoc.gravatar = misc.gravatar(udoc.gravatar);
         const mdoc = await message.send(this.user._id, uid, content, message.FLAG_UNREAD);
-        // TODO(twd2): improve here: projection
-        if (this.user._id !== uid) {
-            bus.publish(`user_message-${uid}`, { mdoc, udoc });
-        }
+        // TODO(twd2): improve here: projection\
         this.back({ mdoc, udoc });
     }
 

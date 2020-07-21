@@ -1,6 +1,8 @@
 import { ObjectID } from 'mongodb';
+import * as user from './user';
 import { Mdoc } from '../interface';
 import * as db from '../service/db';
+import * as bus from '../service/bus';
 
 const coll = db.collection('message');
 
@@ -14,9 +16,15 @@ export async function send(
     const res = await coll.insertOne({
         from, to, content, flag,
     });
-    return {
+    const mdoc = {
         from, to, content, _id: res.insertedId, flag,
     };
+    if (from !== to) {
+        // ENHANCE domainId?
+        const udoc = await user.getById('system', to);
+        bus.publish(`user_message-${to}`, { mdoc, udoc });
+    }
+    return mdoc;
 }
 
 export async function get(_id: ObjectID): Promise<Mdoc> {

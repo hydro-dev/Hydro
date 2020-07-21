@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 import { isSafeInteger } from 'lodash';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError,
+    ContestNotAttendedError, PermissionError,
 } from '../error';
 import { isContent, isTitle } from '../lib/validator';
 import paginate from '../lib/paginate';
@@ -14,6 +14,7 @@ import * as document from '../model/document';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as user from '../model/user';
+import * as message from '../model/message';
 import * as system from '../model/system';
 import {
     Route, Handler, Types, param,
@@ -65,7 +66,7 @@ class ContestDetailHandler extends ContestHandler {
         ]);
         const psdict = {};
         let rdict = {};
-        let attended;
+        let attended: boolean;
         if (tsdoc) {
             attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
@@ -94,6 +95,35 @@ class ContestDetailHandler extends ContestHandler {
         if (contest.isDone(tdoc)) throw new ContestNotLiveError(tid);
         await contest.attend(domainId, tid, this.user._id);
         this.back();
+    }
+}
+
+class ContestBoardcastHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
+        const path = [
+            ['Hydro', 'homepage'],
+            ['contest_main', 'contest_main'],
+            [tdoc.title, 'contest_detail', { tid }, true],
+            ['contest_boardcast'],
+        ];
+        this.response.template = 'contest_boardcast.html';
+        this.response.body = path;
+    }
+
+    @param('tid', Types.ObjectID)
+    @param('content', Types.String, isContent)
+    async post(domainId: string, tid: ObjectID, content: string) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
+        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+        const uids = Array.from(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
+        await Promise.all(
+            uids.map((uid) => message.send(this.user._id, uid, content, message.FLAG_ALERT)),
+        );
+        this.response.redirect = this.url('contest_detail', { tid });
     }
 }
 
@@ -383,6 +413,7 @@ export async function apply() {
     Route('contest_create', '/contest/create', ContestCreateHandler, PERM.PERM_CREATE_CONTEST);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
