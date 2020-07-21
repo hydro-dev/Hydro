@@ -1,9 +1,8 @@
 {
     "files.autoGuessEncoding": false,
-    "files.autoSave": "onFocusChange",
     "files.encoding": "utf8",
     "files.eol": "\n",
-    "editor.detectIndentation": true,
+    "editor.detectIndentation": false,
     "editor.tabSize": 4,
     "editor.formatOnSave": true,
     "editor.renderWhitespace": "boundary"

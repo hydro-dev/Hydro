@@ -36,6 +36,37 @@ Hydro 会自行初始化并监听 8888 端口（可使用 `--port=1234` 指定�
 
 之后的进阶配置可在 管理 面板进行。
 
+## 附加组件
+
+警告：附加组件对站点所有内容具有完全的访问权限。请不要安装来历不明的组件。  
+
+#### 安装附加组件：
+
+先全局安装所需模块，再向 hydrooj 注册即可。  例：安装 @hydrooj/geoip
+
+```sh
+yarn global add @hydrooj/geoip
+hydrooj addon add @hydrooj/geoip
+```
+
+#### 附加组件列表
+
+Hydro官方目前提供了以下附加组件：
+
+| ID                     | 描述                           | 大小  |
+| ---------------------- | ------------------------------ | ----- |
+| @hydrooj/ui-default    | Hydro的默认用户界面            | ~10MB |
+| @hydrooj/geoip         | GeoIP 支持，用于显示用户登录地 | ~60MB |
+| @hydrooj/migrate-vijos | 从vijos4的自动升级工具         | <1MB  |
+| @hydrooj/hydrojudge    | 评测组件                       | ~2MB  |
+
+#### 卸载附加组件
+
+```sh
+yarn global remove @hydrooj/geoip
+hydrooj addon remove @hydrooj/geoip
+```
+
 ## 杂项
 
 [OAuth 配置](./oauth.md)

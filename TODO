@@ -1,12 +1,10 @@
 @requireCsrfToken
-为model.system添加缓存
-修复discussion前端权限节点显示异常
-web端运行脚本似乎异常
+discussion前端权限节点显示异常?
+web端运行脚本异常?
 讨论回复通知
 比赛举办者发布通知
 举报功能
 SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
-在线IDE 更换颜色主题, fix resize
 move to @hydrooj/core?
