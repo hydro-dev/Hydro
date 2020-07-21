@@ -38,6 +38,7 @@ if (argv._[0]) {
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
     }
 } else {
+    addons = Array.from(new Set(addons));
     for (const addon of addons) hydro.addon(addon);
     hydro.load().catch((e) => {
         console.error(e);
