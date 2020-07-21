@@ -9,4 +9,3 @@ ports:
   - port: 8888
     onOpen: open-preview
   - port: 27017
-    onOpen: open-mongodb

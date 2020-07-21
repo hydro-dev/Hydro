@@ -7,6 +7,8 @@ Hydro是一个高效的信息学在线测评系统。
 
 如果您认为本项目有价值，欢迎 star 。  
 
+[在 Gitpod 尝试本项目](https://gitpod.io/#https://github.com/hydro-dev/Hydro)  
+
 ## 联系我们
 
 QQ [3402182471](https://wpa.qq.com/msgrd?v=3&uin=3402182471&site=qq&menu=yes)  

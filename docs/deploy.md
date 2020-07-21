@@ -12,7 +12,7 @@
 
 # Deployment | deployment
 
-Hydro 依赖于 MongoDB 与 NodeJS，您应该先安装它们。 
+Hydro 依赖于 MongoDB 与 NodeJS>=10.10，您应该先安装它们。 
 
 - 下载安装 MongoDB：[https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)  
 - 使用 nvm 安装 NodeJS：[Linux](https://nvm.sh/) [Windows](https://github.com/coreybutler/nvm-windows)  
