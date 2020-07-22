@@ -2,9 +2,7 @@
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署，轻量，功能强大且易于扩展。  
 
-[部署说明](docs/deploy.md)  
-[附加组件开发说明](docs/addon.md)  
-[Hydro开发说明](docs/development.md)  
+[中文文档](https://hydro-dev.github.io)  
 [Hydro UI 传送门](https://github.com/hydro-dev/ui-default)  
 
 如果您认为本项目有价值，欢迎 star 。  

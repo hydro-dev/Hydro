@@ -164,9 +164,10 @@ export async function inc(_id: number, field: string, n = 1) {
     return udoc;
 }
 
-export async function create({
-    uid = null, mail, uname, password, regip = '127.0.0.1', priv = PRIV.PRIV_DEFAULT,
-}) {
+export async function create(
+    mail: string, uname: string, password: string,
+    uid: number, regip = '127.0.0.1', priv = PRIV.PRIV_DEFAULT,
+) {
     const salt = String.random();
     if (!uid) uid = await system.inc('user');
     try {

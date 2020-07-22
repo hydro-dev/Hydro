@@ -62,7 +62,7 @@ export async function add(domainId: string, data: RdocBase, addTask: boolean): P
         judgeAt: null,
     });
     const [pdoc, res] = await Promise.all([
-        problem.get(domainId, data.pid, null, false),
+        problem.get(domainId, data.pid, null),
         coll.insertOne(data),
     ]);
     if (addTask) {

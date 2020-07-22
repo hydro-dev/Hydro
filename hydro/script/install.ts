@@ -11,14 +11,7 @@ export async function run({ username = '', password = '' } = {}) {
     if (username && password) {
         const udoc = await user.getById('system', -1);
         if (!udoc) {
-            await user.create({
-                uid: -1,
-                mail: 'root@hydro.local',
-                uname: username,
-                password,
-                regip: '127.0.0.1',
-                priv: PRIV.PRIV_ALL,
-            });
+            await user.create('root@hydro.local', username, password, -1, '127.0.0.1', PRIV.PRIV_ALL);
         } else {
             const salt = String.random();
             await user.setById(-1, {

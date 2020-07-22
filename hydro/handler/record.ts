@@ -72,7 +72,7 @@ class RecordDetailHandler extends RecordHandler {
         }
         if (rdoc.type !== 'run') rdoc.stdout = rdoc.stderr = '';
         const [pdoc, udoc] = await Promise.all([
-            problem.get(domainId, rdoc.pid, null, false),
+            problem.get(domainId, rdoc.pid, null),
             user.getById(domainId, rdoc.uid),
         ]);
         this.response.body = {
@@ -138,7 +138,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.get(this.domainId, rdoc.pid, null, false),
+            problem.get(this.domainId, rdoc.pid, null),
         ]);
         if (pdoc && pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
         else this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });

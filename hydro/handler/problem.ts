@@ -172,7 +172,8 @@ class ProblemDetailHandler extends ProblemHandler {
     @param('pid', Types.String, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
-        this.pdoc = await problem.get(domainId, pid, this.user._id, true);
+        this.pdoc = await problem.get(domainId, pid, this.user._id);
+        if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }

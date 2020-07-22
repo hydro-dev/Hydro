@@ -2,13 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import serialize from 'serialize-javascript';
 import nunjucks from 'nunjucks';
+import { argv } from 'yargs';
 import * as markdown from './markdown';
 import * as misc from './misc';
 
 class Loader extends nunjucks.Loader {
     // eslint-disable-next-line class-methods-use-this
     getSource(name: string) {
-        if (!process.env.debug) {
+        if (!argv.template) {
             if (!global.Hydro.ui.template[name]) throw new Error(`Cannot get template ${name}`);
             return {
                 src: global.Hydro.ui.template[name],
@@ -17,12 +18,11 @@ class Loader extends nunjucks.Loader {
             };
         }
         let fullpath = null;
-        const base = path.join(process.cwd(), 'templates');
-        const p = path.resolve(base, name);
+        const p = path.resolve(argv.template as string, name);
         if (fs.existsSync(p)) fullpath = p;
         if (!fullpath) throw new Error(`Cannot get template ${name}`);
         return {
-            src: fs.readFileSync(fullpath, 'utf-8'),
+            src: fs.readFileSync(fullpath, 'utf-8').toString(),
             path: fullpath,
             noCache: true,
         };

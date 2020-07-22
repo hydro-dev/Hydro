@@ -102,9 +102,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
         const uid = await system.inc('user');
-        await user.create({
-            uid, uname, password, mail, regip: this.request.ip,
-        });
+        await user.create(mail, uname, password, uid, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
         this.response.redirect = this.url('homepage');
@@ -331,9 +329,10 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const uid = await user.create({
-                mail: r.email, uname: username, password: String.random(32), regip: this.request.ip,
-            });
+            const uid = await user.create(
+                r.email, username, String.random(32),
+                undefined, this.request.ip,
+            );
             const $set: any = {
                 oauth: args.type,
             };

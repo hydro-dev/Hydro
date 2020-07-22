@@ -42,7 +42,7 @@ export async function add(
 
 export async function get(
     domainId: string, pid: string | number,
-    uid: number = null, doThrow = true,
+    uid: number = null,
 ): Promise<Pdoc> {
     if (typeof pid !== 'number') {
         if (!Number.isNaN(parseInt(pid, 10))) pid = parseInt(pid, 10);
@@ -50,10 +50,7 @@ export async function get(
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
-    if (!pdoc) {
-        if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-        return null;
-    }
+    if (!pdoc) return null;
     if (uid) {
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }

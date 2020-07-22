@@ -26,16 +26,9 @@ export async function load(call, args) {
         bus.subscribe(['system_database_connected'], h);
         require('../service/db');
     });
-    for (const i of builtinLib) require(`../lib/${i}`);
-    await lib(pending, fail);
-    require('../service/gridfs');
     require('../service/monitor');
-    const server = require('../service/server');
-    await server.prepare();
-    await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     for (const i of builtinHandler) require(`../handler/${i}`);
-    await model(pending, fail);
     for (const m in global.Hydro.model) {
         if (global.Hydro.model[m].ensureIndexes) {
             await global.Hydro.model[m].ensureIndexes();

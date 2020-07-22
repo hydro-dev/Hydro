@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.9.8",
+  "version": "2.9.9",
   "main": "dist/loader.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -49,7 +49,7 @@
     "@types/koa-morgan": "^1.0.4",
     "@types/koa-router": "^7.4.1",
     "@types/koa-static-cache": "^5.1.0",
-    "@types/lodash": "^4.14.157",
+    "@types/lodash": "^4.14.158",
     "@types/lru-cache": "^5.1.0",
     "@types/markdown-it": "^10.0.1",
     "@types/mongodb": "^3.5.25",
