@@ -96,9 +96,7 @@ async function executeCommand(input: string) {
 async function messageHandler(worker: cluster.Worker, msg: any) {
     if (!msg) msg = worker;
     if (msg.event) {
-        if (msg.event === 'setAddon') {
-            global.addons = msg.addons;
-        } else if (msg.event === 'bus') {
+        if (msg.event === 'bus') {
             if (cluster.isMaster) {
                 for (const i in cluster.workers) {
                     cluster.workers[i].send(msg);
@@ -165,11 +163,6 @@ process.on('unhandledRejection', (e) => console.error(e));
 process.on('SIGINT', terminate);
 
 export async function load() {
-    while (!global.addons) {
-        await new Promise((resolve) => {
-            setTimeout(resolve, 100);
-        });
-    }
     addon(path.resolve(__dirname, '..'));
     Error.stackTraceLimit = 50;
     process.on('message', messageHandler);
@@ -201,19 +194,22 @@ export async function load() {
         });
         cluster.on('online', (worker) => {
             console.log(`Worker ${worker.process.pid} ${worker.id} is online`);
-            worker.send({ event: 'setAddon', addons: global.addons });
         });
         await startWorker(cnt);
-    } else if (argv.entry) {
-        console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
-        await entry({ entry: argv.entry });
-        console.log(`Worker ${process.pid} Started as ${argv.entry}`);
     } else {
-        if (argv.firstWorker) cluster.isFirstWorker = true;
-        else cluster.isFirstWorker = false;
-        console.log(`Worker ${process.pid} Starting`);
-        await entry({ entry: 'worker' });
-        console.log(`Worker ${process.pid} Started`);
+        global.addons = JSON.parse(Buffer.from(argv.addons as string, 'base64').toString());
+        console.log(global.addons);
+        if (argv.entry) {
+            console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
+            await entry({ entry: argv.entry });
+            console.log(`Worker ${process.pid} Started as ${argv.entry}`);
+        } else {
+            if (argv.firstWorker) cluster.isFirstWorker = true;
+            else cluster.isFirstWorker = false;
+            console.log(`Worker ${process.pid} Starting`);
+            await entry({ entry: 'worker' });
+            console.log(`Worker ${process.pid} Started`);
+        }
     }
     if (global.gc) global.gc();
 }

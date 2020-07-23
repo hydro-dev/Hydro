@@ -2,7 +2,8 @@ import { RoleAlreadyExistError, ValidationError } from '../error';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
-import { PERM, PERMS_BY_FAMILY } from '../model/builtin';
+import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
+import { gravatar } from '../lib/misc';
 import paginate from '../lib/paginate';
 import {
     Route, Handler, Types, param,
@@ -180,6 +181,17 @@ class DomainRoleHandler extends ManageHandler {
     }
 }
 
+class DomainSearchHandler extends Handler {
+    @param('q', Types.String)
+    async get(q: string) {
+        const ddocs = await domain.getPrefixSearch(q, 20);
+        for (let i = 0; i < ddocs.length; i++) {
+            ddocs[i].gravatar = ddocs[i].gravatar ? gravatar(ddocs[i].gravatar) : '/img/team_avatar.png';
+        }
+        this.response.body = ddocs;
+    }
+}
+
 export async function apply() {
     Route('ranking', '/ranking', DomainRankHandler);
     Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
@@ -187,6 +199,7 @@ export async function apply() {
     Route('domain_user', '/domain/user', DomainUserHandler);
     Route('domain_permission', '/domain/permission', DomainPermissionHandler);
     Route('domain_role', '/domain/role', DomainRoleHandler);
+    Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
 }
 
 global.Hydro.handler.domain = apply;

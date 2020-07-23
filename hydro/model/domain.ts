@@ -142,6 +142,14 @@ export async function getDictUserByDomainId(uid: number) {
     return dudict;
 }
 
+export async function getPrefixSearch(prefix: string, limit = 50) {
+    const $regex = new RegExp(prefix, 'mi');
+    const ddocs = await coll.find({
+        $or: [{ _id: { $regex } }, { name: { $regex } }],
+    }).limit(limit).toArray();
+    return ddocs;
+}
+
 global.Hydro.model.domain = {
     getRoles,
     add,
@@ -161,4 +169,5 @@ global.Hydro.model.domain = {
     incUserInDomain,
     getMultiInDomain,
     getDictUserByDomainId,
+    getPrefixSearch,
 };
