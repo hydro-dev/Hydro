@@ -2,7 +2,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-
 import './interface';
 import os from 'os';
 import path from 'path';
@@ -11,7 +10,6 @@ import fs from 'fs-extra';
 import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
 
-global.argv = argv;
 global.Hydro = {
     stat: { reqCount: 0 },
     handler: {},
@@ -35,15 +33,16 @@ global.Hydro = {
 global.onDestory = [];
 global.addons = [];
 
-if (global.argv.debug) {
+if (argv.debug) {
     console.log(process.argv);
-    process.env.debug = 'enable';
+    console.log(argv);
 }
 
 async function terminate() {
-    for (const task of global.onDestory) {
-        // eslint-disable-next-line no-await-in-loop
-        await task();
+    try {
+        for (const task of global.onDestory) await task();
+    } catch (e) {
+        process.exit(1);
     }
     process.exit(0);
 }
@@ -80,9 +79,8 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt: number) {
-    const sargv = [`--args=${Buffer.from(JSON.stringify(global.addons)).toString('base64')}`];
-    await fork(['--firstWorker', ...sargv]);
-    for (let i = 1; i < cnt; i++) await fork(sargv);
+    await fork(['--firstWorker']);
+    for (let i = 1; i < cnt; i++) await fork();
 }
 
 async function executeCommand(input: string) {
@@ -163,6 +161,9 @@ export function addon(addonPath: string) {
     } else throw new Error(`Addon not found: ${addonPath}`);
 }
 
+process.on('unhandledRejection', (e) => console.error(e));
+process.on('SIGINT', terminate);
+
 export async function load() {
     while (!global.addons) {
         await new Promise((resolve) => {
@@ -171,11 +172,9 @@ export async function load() {
     }
     addon(path.resolve(__dirname, '..'));
     Error.stackTraceLimit = 50;
-    process.on('unhandledRejection', (e) => console.error(e));
-    process.on('SIGINT', terminate);
     process.on('message', messageHandler);
     cluster.on('message', messageHandler);
-    if (cluster.isMaster || global.argv.startAsMaster) {
+    if (cluster.isMaster || argv.startAsMaster) {
         console.log(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', (buf) => {
@@ -205,12 +204,12 @@ export async function load() {
             worker.send({ event: 'setAddon', addons: global.addons });
         });
         await startWorker(cnt);
-    } else if (global.argv.entry) {
-        console.log(`Worker ${process.pid} Starting as ${global.argv.entry}`);
-        await entry({ entry: global.argv.entry });
-        console.log(`Worker ${process.pid} Started as ${global.argv.entry}`);
+    } else if (argv.entry) {
+        console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
+        await entry({ entry: argv.entry });
+        console.log(`Worker ${process.pid} Started as ${argv.entry}`);
     } else {
-        if (global.argv.firstWorker) cluster.isFirstWorker = true;
+        if (argv.firstWorker) cluster.isFirstWorker = true;
         else cluster.isFirstWorker = false;
         console.log(`Worker ${process.pid} Starting`);
         await entry({ entry: 'worker' });
@@ -219,8 +218,14 @@ export async function load() {
     if (global.gc) global.gc();
 }
 
-if (global.argv.pandora || !module.parent) {
-    load().catch((e) => {
+export async function loadCli() {
+    await entry({ entry: 'cli' });
+    return terminate();
+}
+
+if (argv.pandora || !module.parent) {
+    const func = argv._[0] === 'cli' ? load : loadCli;
+    func().catch((e) => {
         console.error(e);
         process.exit(1);
     });

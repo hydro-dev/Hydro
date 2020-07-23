@@ -2,12 +2,14 @@ import os from 'os';
 import path from 'path';
 import http from 'http';
 import fs from 'fs-extra';
-import Koa from 'koa';
+import Koa, { Context } from 'koa';
 import Body from 'koa-body';
-import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import nunjucks from 'nunjucks';
 import mongodb from 'mongodb';
+import { argv } from 'yargs';
+
+const listenPort = argv.port || 8888;
 
 class Loader {
     getSource(name: string) { // eslint-disable-line class-methods-use-this
@@ -83,7 +85,7 @@ class Loader {
 
 const env = new nunjucks.Environment(new Loader(), { autoescape: true, trimBlocks: true });
 
-function render(name) {
+function render(name: string) {
     return new Promise((resolve, reject) => {
         env.render(name, {
             _: (str: string) => str,
@@ -94,70 +96,74 @@ function render(name) {
     });
 }
 
+async function get(ctx: Context) {
+    ctx.body = await render('setup.html');
+    ctx.response.type = 'text/html';
+}
+
+async function post(ctx: Context) {
+    const {
+        host, port, name, username, password,
+    } = ctx.request.body;
+    let mongourl = 'mongodb://';
+    if (username) mongourl += `${username}:${password}@`;
+    mongourl += `${host}:${port}/${name}`;
+    try {
+        const Database = await mongodb.MongoClient.connect(mongourl, {
+            useNewUrlParser: true, useUnifiedTopology: true,
+        });
+        const db = Database.db(name);
+        await Promise.all([
+            db.collection('system').updateOne(
+                { _id: 'server.host' },
+                { $set: { value: ctx.request.host } },
+                { upsert: true },
+            ),
+            db.collection('system').updateOne(
+                { _id: 'server.hostname' },
+                { $set: { value: ctx.request.hostname } },
+                { upsert: true },
+            ),
+            db.collection('system').updateOne(
+                { _id: 'server.url' },
+                { $set: { value: ctx.request.href } },
+                { upsert: true },
+            ),
+            db.collection('system').updateOne(
+                { _id: 'server.port' },
+                { $set: { value: parseInt(listenPort as string, 10) } },
+                { upsert: true },
+            ),
+        ]);
+        fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
+        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
+            host, port, name, username, password,
+        }));
+        ctx.body = `<h1>This page will reload in 3 secs.</h1>
+            <script>
+            setTimeout(function (){
+                window.location.href = '/';
+            }, 3000);
+            </script>`;
+        setTimeout(() => process.exit(0), 500);
+    } catch (e) {
+        ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
+    }
+}
+
 export function load() {
     const app = new Koa();
     const server = http.createServer(app.callback());
-    const router = new Router();
     app.keys = ['Hydro'];
-    app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
-        maxAge: 365 * 24 * 60 * 60,
-    }));
-    app.use(Body());
-    router.get('/', async (ctx) => {
-        ctx.body = await render('setup.html');
-        ctx.response.type = 'text/html';
-    });
-    const listenPort = global.argv.port || 8888;
-    router.post('/', async (ctx) => {
-        const {
-            host, port, name, username, password,
-        } = ctx.request.body;
-        let mongourl = 'mongodb://';
-        if (username) mongourl += `${username}:${password}@`;
-        mongourl += `${host}:${port}/${name}`;
-        try {
-            const Database = await mongodb.MongoClient.connect(mongourl, {
-                useNewUrlParser: true, useUnifiedTopology: true,
-            });
-            const db = Database.db(name);
-            await Promise.all([
-                db.collection('system').updateOne(
-                    { _id: 'server.host' },
-                    { $set: { value: ctx.request.host } },
-                    { upsert: true },
-                ),
-                db.collection('system').updateOne(
-                    { _id: 'server.hostname' },
-                    { $set: { value: ctx.request.hostname } },
-                    { upsert: true },
-                ),
-                db.collection('system').updateOne(
-                    { _id: 'server.url' },
-                    { $set: { value: ctx.request.href } },
-                    { upsert: true },
-                ),
-                db.collection('system').updateOne(
-                    { _id: 'server.port' },
-                    { $set: { value: parseInt(listenPort, 10) } },
-                    { upsert: true },
-                ),
-            ]);
-            fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
-            fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
-                host, port, name, username, password,
-            }));
-            ctx.body = `<h1>This page will reload in 3 secs.</h1>
-                <script>
-                setTimeout(function (){
-                    window.location.href = '/';
-                }, 3000);
-                </script>`;
-            setTimeout(() => process.exit(0), 500);
-        } catch (e) {
-            ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
-        }
-    });
-    app.use(router.routes()).use(router.allowedMethods());
+    app
+        .use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
+            maxAge: 365 * 24 * 60 * 60,
+        }))
+        .use(Body())
+        .use((ctx) => {
+            if (ctx.request.method.toLowerCase() === 'post') return post(ctx);
+            return get(ctx);
+        });
     server.listen(listenPort);
     console.log('Server listening at:', listenPort);
 }

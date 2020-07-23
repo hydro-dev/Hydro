@@ -300,7 +300,6 @@ declare global {
             },
             onDestory: Function[],
             addons: string[],
-            argv: any,
         }
     }
 }

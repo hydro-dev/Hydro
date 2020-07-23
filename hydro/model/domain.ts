@@ -1,6 +1,6 @@
 import { Dictionary } from 'lodash';
 import { BUILTIN_ROLES, PRIV } from './builtin';
-import { Udoc, DomainDoc } from '../interface';
+import { DomainDoc } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('domain');

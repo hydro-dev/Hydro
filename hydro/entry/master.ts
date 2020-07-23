@@ -21,12 +21,11 @@ export async function load(call) {
         bus.subscribe(['system_database_connected'], h);
         require('../service/db');
     });
-    require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const modelSystem = require('../model/system');
     const dbVer = await modelSystem.get('db.ver');
     if (dbVer !== 1) {
-        const ins = require('../script/install');
+        const ins = require('../script/upgrade0_1');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
     for (const i in global.Hydro.service) {

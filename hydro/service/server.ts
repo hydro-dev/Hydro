@@ -2,7 +2,7 @@
 import assert from 'assert';
 import path from 'path';
 import os from 'os';
-import http, { Server } from 'http';
+import http from 'http';
 import moment from 'moment-timezone';
 import { isSafeInteger, Dictionary } from 'lodash';
 import { ObjectID } from 'mongodb';
@@ -776,8 +776,8 @@ export async function start() {
     }
     app.use(router.routes()).use(router.allowedMethods());
     Route('notfound_handler', '*', Handler);
-    server.listen(global.argv.port || port);
-    console.log('Server listening at: %s', global.argv.port || port);
+    server.listen(argv.port || port);
+    console.log('Server listening at: %s', argv.port || port);
 }
 
 global.Hydro.service.server = {
