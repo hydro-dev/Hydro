@@ -3,7 +3,7 @@ import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
-import { Pdoc, Pdict } from '../interface';
+import { Pdoc, Pdict, ProblemDataSource } from '../interface';
 import { ProblemNotFoundError } from '../error';
 import readConfig from '../lib/readConfig';
 
@@ -28,16 +28,16 @@ export const pdocHidden: Pdoc = {
 
 export async function add(
     domainId: string, pid: string = null, title: string, content: string, owner: number,
-    tag: string[] = [], category: string[] = [], data: ObjectID = null, hidden = false,
+    tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
 ) {
-    const d = await domain.inc(domainId, 'pidCounter', 1);
-    if (!pid) pid = d.pidCounter.toString();
+    const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
+    if (!pid) pid = pidCounter.toString();
     return await document.add(
-        domainId, content, owner, document.TYPE_PROBLEM, d.pidCounter, null, null,
+        domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null,
         {
             pid, title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
         },
-    );
+    ) as number;
 }
 
 export async function get(
@@ -153,7 +153,7 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
     const pdoc = await get(domainId, _id);
     const config = await readConfig(filePath);
     const id = await file.add(filePath, 'data.zip', 1);
-    if (pdoc.data && typeof pdoc.data === 'object') file.dec(pdoc.data);
+    if (pdoc.data instanceof ObjectID) file.del(pdoc.data);
     return await edit(domainId, _id, { data: id, config });
 }
 

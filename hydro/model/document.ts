@@ -20,6 +20,18 @@ export const TYPE_HOMEWORK = 60;
 
 export async function add(
     domainId: string, content: string, owner: number,
+    docType: number, docId: DocID,
+    parentType?: number | null, parentId?: DocID,
+    args?: any,
+): Promise<typeof docId>
+export async function add(
+    domainId: string, content: string, owner: number,
+    docType: number, docId: null,
+    parentType?: number, parentId?: DocID,
+    args?: any,
+): Promise<ObjectID>
+export async function add(
+    domainId: string, content: string, owner: number,
     docType: number, docId: DocID = null,
     parentType: number | null = null, parentId: DocID = null,
     args: any = {},

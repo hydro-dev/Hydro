@@ -8,7 +8,7 @@ import * as user from '../model/user';
 import * as markdown from '../lib/markdown';
 import * as db from '../service/db';
 import {
-    Route, Handler, Types, param,
+    Route, Handler, Types, param, multipart,
 } from '../service/server';
 import { BadRequestError } from '../error';
 
@@ -39,6 +39,7 @@ class FileUploadHandler extends Handler {
         this.response.body = { fdoc: null, usage: this.user.usage, quota: await this.getQuota() };
     }
 
+    @multipart(256 * 1024)
     @param('title', Types.String)
     async post(domainId: string, title: string) {
         if (!this.request.files.file) throw new BadRequestError();

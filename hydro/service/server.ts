@@ -2,9 +2,9 @@
 import assert from 'assert';
 import path from 'path';
 import os from 'os';
-import http from 'http';
+import http, { Server } from 'http';
 import moment from 'moment-timezone';
-import { isSafeInteger } from 'lodash';
+import { isSafeInteger, Dictionary } from 'lodash';
 import { ObjectID } from 'mongodb';
 import Koa from 'koa';
 import morgan from 'koa-morgan';
@@ -13,6 +13,7 @@ import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
+import { argv } from 'yargs';
 import { lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
 import {
@@ -32,13 +33,8 @@ import * as token from '../model/token';
 import * as opcount from '../model/opcount';
 
 const app = new Koa();
-let server;
+const server = http.createServer(app.callback());
 const router = new Router();
-
-// TODO fix this ugly hack
-interface H {
-    [key: string]: any,
-}
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
 type Converter = (value: any) => any;
@@ -155,6 +151,22 @@ export function param(name: string, ...args: any): MethodDecorator {
     };
 }
 
+export function multipart(maxSizeKiB: number): MethodDecorator {
+    return function multipartDecorator(target: any, funcName: string, obj: any) {
+        const originalMethod = obj.value;
+        obj.value = async function checkCsrfToken(...args: any[]) {
+            const body = Body({
+                multipart: true,
+                formidable: {
+                    maxFileSize: maxSizeKiB * 1024,
+                },
+            });
+            return await body.call(this.ctx, this.ctx, () => originalMethod.call(this, ...args));
+        };
+        return obj;
+    };
+}
+
 export function requireCsrfToken(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
     obj.value = async function checkCsrfToken(...args: any[]) {
@@ -167,10 +179,9 @@ export function requireCsrfToken(target: any, funcName: string, obj: any) {
 }
 
 export async function prepare() {
-    server = http.createServer(app.callback());
     app.keys = await system.get('session.keys');
-    if (process.env.debug) {
-        app.use(cache(path.join(process.cwd(), 'public'), {
+    if (argv.public) {
+        app.use(cache(argv.public, {
             maxAge: 0,
         }));
     } else {
@@ -178,12 +189,7 @@ export async function prepare() {
             maxAge: 365 * 24 * 60 * 60,
         }));
     }
-    app.use(Body({
-        multipart: true,
-        formidable: {
-            maxFileSize: 256 * 1024 * 1024,
-        },
-    }));
+    app.use(Body());
 }
 
 export class Handler {
@@ -735,7 +741,7 @@ export function Connection(
     const sock = sockjs.createServer({ prefix });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
-        const h: H = new RouteConnHandler(conn);
+        const h: Dictionary<any> = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
@@ -761,10 +767,6 @@ export function Connection(
     sock.installHandlers(server);
 }
 
-export function Middleware(middleware: Koa.Middleware) {
-    app.use(middleware);
-}
-
 export async function start() {
     const [disableLog, port] = await system.getMany(['server.log', 'server.port']);
     if (!disableLog) {
@@ -781,12 +783,12 @@ export async function start() {
 global.Hydro.service.server = {
     Types,
     param,
+    multipart,
     requireCsrfToken,
     Handler,
     ConnectionHandler,
     Route,
     Connection,
-    Middleware,
     prepare,
     start,
 };

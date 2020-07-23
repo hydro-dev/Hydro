@@ -53,6 +53,15 @@ export interface User extends Dictionary<any> {
 
 export type Udict = NumericDictionary<User>;
 
+export interface ProblemDataSource {
+    host?: string, // Empty for local
+    domainId: string,
+    pid: number,
+}
+
+// ObjectID for built-in files, ProblemDataSource for other source (RemoteJudge, etc.)
+export type ProblemData = ObjectID | ProblemDataSource;
+
 export interface Pdoc {
     _id: ObjectID,
     domainId: string,
@@ -66,8 +75,7 @@ export interface Pdoc {
     nAccept: number,
     tag: string[],
     category: string[],
-    // ObjectID for built-in files, string for other source (RemoteJudge, etc.)
-    data?: ObjectID | string,
+    data?: ProblemData,
     hidden: boolean,
     config: string,
     acMsg?: string,

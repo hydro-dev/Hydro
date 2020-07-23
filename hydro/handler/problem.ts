@@ -15,12 +15,14 @@ import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param,
+    Route, Connection, Handler, ConnectionHandler, Types, param, multipart,
 } from '../service/server';
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError,
     ProblemNotFoundError,
+    ValidationError,
+    PermissionError,
 } from '../error';
 import { Pdoc, User, Rdoc } from '../interface';
 
@@ -195,6 +197,22 @@ class ProblemDetailHandler extends ProblemHandler {
 
     // eslint-disable-next-line
     async get(...args: any[]) { }
+
+    @param('pid', Types.ObjectID)
+    @param('dest', Types.String)
+    @param('hidden', Types.Boolean)
+    async postCopy(domainId: string, pid: number, destDomainId: string, hidden = false) {
+        const udoc = await user.getById(destDomainId, this.user._id);
+        if (!udoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) {
+            throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        }
+        pid = await problem.add(
+            destDomainId, this.pdoc.pid, this.pdoc.title,
+            this.pdoc.content, this.user._id, this.pdoc.tag,
+            this.pdoc.category, { domainId, pid }, hidden,
+        );
+        this.response.redirect = this.url('problem_settings', { domainId: destDomainId, pid });
+    }
 }
 
 class ProblemSubmitHandler extends ProblemDetailHandler {
@@ -365,30 +383,27 @@ class ProblemEditHandler extends ProblemManageHandler {
 }
 
 class ProblemDataUploadHandler extends ProblemManageHandler {
-    async prepare() {
+    async get() {
+        if (this.pdoc.data instanceof ObjectID) {
+            const f = await file.getMeta(this.pdoc.data);
+            this.response.body.md5 = f.md5;
+        } else if (this.pdoc.data) {
+            this.response.body.from = this.pdoc.data;
+        }
         this.response.template = 'problem_upload.html';
     }
 
-    async get() {
-        let md5;
-        if (this.pdoc.data && typeof this.pdoc.data === 'object') {
-            const f = await file.getMeta(this.pdoc.data);
-            md5 = f.md5;
-        }
-        this.response.body.md5 = md5;
-    }
-
+    @multipart(256 * 1024)
     async post({ domainId }) {
-        let md5;
-        if (!this.request.files.file) throw new BadRequestError();
+        if (!this.request.files.file) throw new ValidationError('file');
         this.pdoc = await problem.setTestdata(
             domainId, this.pdoc.docId, this.request.files.file.path,
         );
-        if (this.pdoc.data && typeof this.pdoc.data === 'object') {
+        if (this.pdoc.data instanceof ObjectID) {
             const f = await file.getMeta(this.pdoc.data);
-            md5 = f.md5;
+            this.response.body.md5 = f.md5;
         }
-        this.response.body.md5 = md5;
+        this.response.template = 'problem_upload.html';
     }
 }
 
@@ -399,9 +414,15 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
                 this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
             } else this.checkPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
         }
-        if (!this.pdoc.data) throw new ProblemDataNotFoundError(pid);
-        else if (typeof this.pdoc.data === 'string') [, this.response.redirect] = this.pdoc.data.split('from:');
-        else this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
+        if (this.pdoc.data instanceof ObjectID) {
+            this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
+        } else if (this.pdoc.data) {
+            // Redirect?
+            this.response.redirect = this.url('problem_data', {
+                domainId: this.pdoc.domainId,
+                pid: this.pdoc.pid,
+            });
+        } else throw new ProblemDataNotFoundError(pid);
     }
 }
 
@@ -552,9 +573,12 @@ class ProblemCreateHandler extends Handler {
     @param('content', Types.String, isContent)
     @param('hidden', Types.Boolean)
     async post(domainId: string, title: string, pid: string, content: string, hidden = false) {
-        pid = await problem.add(domainId, pid, title, content, this.user._id, [], [], null, hidden);
-        this.response.body = { pid };
-        this.response.redirect = this.url('problem_settings', { pid });
+        const docId = await problem.add(
+            domainId, pid, title, content,
+            this.user._id, [], [], null, hidden,
+        );
+        this.response.body = { pid: docId };
+        this.response.redirect = this.url('problem_settings', { pid: docId });
     }
 }
 

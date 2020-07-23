@@ -37,6 +37,11 @@ export async function load(call, args) {
     for (const i of builtinModel) require(`../model/${i}`);
     for (const i of builtinHandler) require(`../handler/${i}`);
     await model(pending, fail);
+    for (const m in global.Hydro.model) {
+        if (global.Hydro.model[m].ensureIndexes) {
+            await global.Hydro.model[m].ensureIndexes();
+        }
+    }
     const modelSetting = require('../model/setting');
     await setting(pending, fail, modelSetting);
     await handler(pending, fail);

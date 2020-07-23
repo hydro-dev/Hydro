@@ -1,13 +1,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
-import {
-    lib, service, model, setting,
-    builtinLib, builtinHandler, builtinModel,
-} from './common';
+import { builtinModel } from './common';
 
-export async function load(call, args) {
-    let pending = args;
-    const fail = [];
+export async function load(call) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
@@ -28,20 +23,12 @@ export async function load(call, args) {
     });
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
-    for (const i of builtinHandler) require(`../handler/${i}`);
-    for (const m in global.Hydro.model) {
-        if (global.Hydro.model[m].ensureIndexes) {
-            await global.Hydro.model[m].ensureIndexes();
-        }
-    }
     const modelSystem = require('../model/system');
-    const modelSetting = require('../model/setting');
     const dbVer = await modelSystem.get('db.ver');
     if (dbVer !== 1) {
         const ins = require('../script/install');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    await setting(pending, fail, modelSetting);
     for (const i in global.Hydro.service) {
         if (global.Hydro.service[i].postInit) {
             try {
@@ -58,6 +45,5 @@ export async function load(call, args) {
             console.error(e);
         }
     }
-    pending = [];
     return await modelSystem.get('server.worker');
 }

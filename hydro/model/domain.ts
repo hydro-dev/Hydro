@@ -30,13 +30,13 @@ export function edit(domainId: string, $set: any) {
     return coll.updateOne({ _id: domainId }, { $set });
 }
 
-export async function inc(domainId: string, field: string, n: number): Promise<DomainDoc | null> {
+export async function inc(domainId: string, field: string, n: number): Promise<number | null> {
     const res = await coll.findOneAndUpdate(
         { _id: domainId },
         { $inc: { [field]: n } },
         { returnOriginal: false },
     );
-    return res.value;
+    return res.value.field;
 }
 
 export async function getList(domainIds: string[]): Promise<Dictionary<DomainDoc>> {
@@ -91,10 +91,14 @@ export async function deleteRoles(domainId: string, roles: string[]) {
     ]);
 }
 
-export async function getDomainUser(domainId: string, udoc: Udoc) {
+interface DomainUserArg {
+    _id: number,
+    priv: number,
+}
+export async function getDomainUser(domainId: string, udoc: DomainUserArg) {
     let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
     dudoc = dudoc || {};
-    if (udoc._id === 1) dudoc.role = 'guest';
+    if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
     if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     dudoc.role = dudoc.role || 'default';
     const ddoc = await get(domainId);
