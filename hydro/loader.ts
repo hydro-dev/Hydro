@@ -10,6 +10,8 @@ import fs from 'fs-extra';
 import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
 
+export * from './interface';
+
 global.Hydro = {
     stat: { reqCount: 0 },
     handler: {},
@@ -65,7 +67,10 @@ async function entry(config: EntryConfig) {
             const sargv = [`--entry=${config.entry}`];
             const p = await fork(sargv);
             await new Promise((resolve, reject) => {
-                p.on('exit', resolve);
+                p.on('exit', (code, signal) => {
+                    if (code === 0) resolve();
+                    else reject(signal);
+                });
                 p.on('error', (err: Error) => {
                     p.kill();
                     reject(err);

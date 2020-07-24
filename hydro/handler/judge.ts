@@ -16,11 +16,11 @@ import {
 async function _postJudge(rdoc: Rdoc) {
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const tasks = [];
-    if (rdoc.tid) {
+    if (rdoc.contest) {
         tasks.push(
             contest.updateStatus(
-                rdoc.domainId, rdoc.tid, rdoc.uid,
-                rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.ttype,
+                rdoc.domainId, rdoc.contest.tid, rdoc.uid,
+                rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
             ),
         );
     }
@@ -93,42 +93,6 @@ export async function end(body: JudgeResultBody) {
     bus.publish('record_change', { rdoc }); // trigger a full update
 }
 
-class PretestHandler extends Handler {
-    @param('pid', Types.UnsignedInt, true)
-    @param('code', Types.String)
-    @param('lang', Types.String)
-    @param('time', Types.String, true)
-    @param('memory', Types.String, true)
-    @param('input', Types.String, true)
-    async post(
-        domainId: string, pid = 0,
-        code: string, lang: string,
-        time = '1s', memory = '256m', input = '',
-    ) {
-        if (pid) {
-            const pdoc = await problem.get(domainId, pid);
-            if (pdoc.config) {
-                const config: any = yaml.safeLoad(pdoc.config);
-                if (config.time) time = config.time;
-                if (config.memory) memory = config.memory;
-            }
-        }
-        const rid = await record.add(domainId, {
-            pid,
-            uid: this.user._id,
-            type: 'run',
-            time: parseTimeMS(time),
-            memory: parseMemoryMB(memory),
-            input,
-            lang,
-            code,
-            hidden: true,
-        }, true);
-        this.response.body = { rid };
-        this.response.redirect = this.url('record_detail', { rid });
-    }
-}
-
 class JudgeHandler extends Handler {
     async get({ check = false }) {
         if (check) return;
@@ -174,7 +138,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
 }
 
 export async function apply() {
-    Route('pretest', '/pretest', PretestHandler);
     Route('judge', '/judge', JudgeHandler, builtin.PRIV.PRIV_JUDGE);
     Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }

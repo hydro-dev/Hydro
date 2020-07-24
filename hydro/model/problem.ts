@@ -5,7 +5,7 @@ import * as document from './document';
 import * as domain from './domain';
 import { Pdoc, Pdict, ProblemDataSource } from '../interface';
 import { ProblemNotFoundError } from '../error';
-import readConfig from '../lib/readConfig';
+import * as testdataConfig from '../lib/testdataConfig';
 
 export const pdocHidden: Pdoc = {
     _id: new ObjectID(),
@@ -22,7 +22,7 @@ export const pdocHidden: Pdoc = {
     category: [],
     data: null,
     hidden: true,
-    config: '',
+    config: {},
     acMsg: '',
 };
 
@@ -151,7 +151,7 @@ export function setStar(domainId: string, pid: number, uid: number, star: boolea
 
 export async function setTestdata(domainId: string, _id: number, filePath: string) {
     const pdoc = await get(domainId, _id);
-    const config = await readConfig(filePath);
+    const config = await testdataConfig.readConfig(filePath);
     const id = await file.add(filePath, 'data.zip', 1);
     if (pdoc.data instanceof ObjectID) file.del(pdoc.data);
     return await edit(domainId, _id, { data: id, config });

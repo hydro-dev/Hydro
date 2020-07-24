@@ -24,7 +24,9 @@ import {
     ValidationError,
     PermissionError,
 } from '../error';
-import { Pdoc, User, Rdoc } from '../interface';
+import {
+    Pdoc, User, Rdoc, ProblemConfig,
+} from '../interface';
 
 const parseCategory = (value: string) => {
     if (!value) return [];
@@ -179,12 +181,9 @@ class ProblemDetailHandler extends ProblemHandler {
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
-        const config: any = this.pdoc.config ? yaml.safeLoad(this.pdoc.config) : {};
         this.udoc = await user.getById(domainId, this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
-            time: config.time,
-            memory: config.memory,
             udoc: this.udoc,
             title: this.pdoc.title,
             path: [
@@ -255,14 +254,12 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.String)
     @param('code', Types.String)
     async post(domainId: string, lang: string, code: string) {
-        const rid = await record.add(domainId, {
-            uid: this.user._id, lang, code, pid: this.pdoc.docId,
-        }, true);
+        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
         ]);
-        bus.publish('record_change', rdoc);
+        bus.publish('record_change', { rdoc });
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -274,11 +271,18 @@ class ProblemPretestHandler extends ProblemDetailHandler {
     @param('input', Types.String, true)
     async post(domainId: string, lang: string, code: string, input: string = '') {
         this.limitRate('add_record', 3600, 100);
-        const rid = await record.add(domainId, {
-            uid: this.user._id, lang, code, pid: this.pdoc.docId, input,
-        }, true);
+        // TODO parseConfig
+        const rid = await record.add(
+            domainId, this.pdoc.docId, this.user._id,
+            lang, code, true,
+            {
+                input,
+                time: 1000,
+                memory: 256,
+            },
+        );
         const rdoc = await record.get(domainId, rid);
-        bus.publish('record_change', rdoc);
+        bus.publish('record_change', { rdoc });
         this.response.body = { rid };
     }
 }
@@ -311,7 +315,8 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
         rdoc.testCases = rdoc.testCases.map((c) => ({
             status: c.status,
         }));
-        if (rdoc.tid) return;
+        // TODO handle update
+        if (rdoc.contest) return;
         this.send({ rdoc });
     }
 
@@ -354,9 +359,11 @@ class ProblemSettingsHandler extends ProblemManageHandler {
 
     @param('pid', Types.String, null, parsePid)
     @param('yaml', Types.String)
-    async postConfig(domainId: string, pid: string | number, yaml: string) {
+    async postConfig(domainId: string, pid: string | number, cfg: string) {
         const pdoc = await problem.get(domainId, pid);
-        await problem.edit(domainId, pdoc.docId, { config: yaml });
+        // TODO validate
+        const config = yaml.safeLoad(cfg);
+        await problem.edit(domainId, pdoc.docId, { config });
         this.back();
     }
 

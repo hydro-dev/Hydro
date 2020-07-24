@@ -63,14 +63,13 @@ class RecordDetailHandler extends RecordHandler {
     async get(domainId: string, rid: ObjectID) {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
-        if (rdoc.tid) {
-            const tdoc = await contest.get(domainId, rdoc.tid, rdoc.ttype);
+        if (rdoc.contest) {
+            const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
             if (!this.canShowRecord(tdoc, true)) throw new PermissionError(rid);
         }
         if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
             rdoc.code = null;
         }
-        if (rdoc.type !== 'run') rdoc.stdout = rdoc.stderr = '';
         const [pdoc, udoc] = await Promise.all([
             problem.get(domainId, rdoc.pid, null),
             user.getById(domainId, rdoc.uid),
@@ -83,8 +82,6 @@ class RecordDetailHandler extends RecordHandler {
             udoc,
             rdoc,
             pdoc,
-            // TODO protect
-            showStatus: true,
         };
     }
 }
@@ -134,7 +131,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
 
     async onRecordChange(data) {
         const rdoc: Rdoc = data.value.rdoc;
-        if (rdoc.tid && rdoc.tid.toString() !== this.tid) return;
+        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
@@ -149,8 +146,8 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
-        if (rdoc.tid) {
-            const tdoc = await contest.get(domainId, rdoc.tid, -1);
+        if (rdoc.contest) {
+            const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
             if (!this.canShowRecord(tdoc)) {
                 this.close();
                 return;

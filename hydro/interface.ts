@@ -62,6 +62,66 @@ export interface ProblemDataSource {
 // ObjectID for built-in files, ProblemDataSource for other source (RemoteJudge, etc.)
 export type ProblemData = ObjectID | ProblemDataSource;
 
+export interface TestCaseConfig {
+    input: string,
+    output: string,
+    time?: number,
+    memory?: number,
+}
+
+export enum LocalProblemType {
+    Default = 'default',
+    SubmitAnswer = 'submit_answer',
+    Interactive = 'interactive',
+}
+
+export enum RemoteProblemType {
+    RemoteJudge = 'remotejudge',
+}
+
+export enum RemoteServerType {
+    vj4 = 'vj4',
+    syzoj = 'syzoj',
+}
+
+export enum SubtaskType {
+    min = 'min',
+    max = 'max',
+    sum = 'sum',
+}
+
+export interface SubtaskConfig {
+    time?: number,
+    memory?: number,
+    score?: number,
+    type?: SubtaskType,
+    cases?: TestCaseConfig[],
+}
+
+export interface LocalProblemConfig {
+    type?: LocalProblemType,
+    score?: number,
+    time?: number,
+    memory?: number,
+    checker_type?: string,
+    checker?: string,
+    interactor?: string,
+    user_extra_files?: string[],
+    judge_extra_files?: string[],
+    cases?: TestCaseConfig[],
+    subtasks?: SubtaskConfig[],
+}
+
+export interface RemoteProblemConfig {
+    type?: RemoteProblemType,
+    server_type?: RemoteServerType,
+    url?: string,
+    // TODO handle username&password storage
+    pid?: string,
+}
+
+export type ProblemConfig = LocalProblemConfig | RemoteProblemConfig;
+
 export interface Pdoc {
     _id: ObjectID,
     domainId: string,
@@ -77,7 +137,7 @@ export interface Pdoc {
     category: string[],
     data?: ProblemData,
     hidden: boolean,
-    config: string,
+    config: ProblemConfig,
     acMsg?: string,
 }
 
@@ -88,6 +148,17 @@ export interface TestCase {
     memory: number,
     status: number,
     message: string,
+}
+
+export interface PretestConfig {
+    time?: number,
+    memory?: number,
+    input: string,
+}
+
+export interface ContestInfo {
+    type: number,
+    tid: ObjectID,
 }
 
 export interface Rdoc {
@@ -107,13 +178,9 @@ export interface Rdoc {
     judger: string,
     judgeAt: Date,
     status: number,
-    type: string,
     hidden: boolean,
-    input?: string,
-    stdout?: string,
-    stderr?: string,
-    tid?: ObjectID,
-    ttype?: number,
+    config?: PretestConfig,
+    contest?: ContestInfo,
 }
 
 export interface ScoreboardNode {
@@ -279,7 +346,7 @@ declare global {
                     paginate: typeof import('./lib/paginate').default,
                     rank: typeof import('./lib/rank').default,
                     rating: typeof import('./lib/rating').default,
-                    readConfig: typeof import('./lib/readConfig').default,
+                    testdataConfig: typeof import('./lib/testdataConfig'),
                     sha1: typeof import('./lib/sha1').default,
                     sysinfo: typeof import('./lib/sysinfo'),
                     template: typeof import('./lib/template'),

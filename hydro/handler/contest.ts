@@ -304,14 +304,10 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     @param('code', Types.String)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
         await this.limitRate('add_record', 60, 100);
-        const rid = await record.add(domainId, {
-            pid: this.pdoc.docId,
-            uid: this.user._id,
-            tid: this.tdoc.docId,
-            ttype: document.TYPE_CONTEST,
-            lang,
-            code,
-        }, true);
+        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, {
+            type: document.TYPE_CONTEST,
+            tid,
+        });
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
             contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),

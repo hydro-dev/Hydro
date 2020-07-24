@@ -89,18 +89,11 @@ class SystemScriptHandler extends SystemHandler {
 
     @param('id', Types.String)
     @param('args', Types.String, true)
-    async post(domainId: string, id: string, args = '{}') {
+    async post(domainId: string, id: string, raw = '{}') {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
-        args = JSON.parse(args);
+        const args = JSON.parse(raw);
         validate(global.Hydro.script[id].validate, args);
-        const rid = await record.add(domainId, {
-            pid: -1,
-            uid: this.user._id,
-            lang: '-',
-            code: id,
-            status: STATUS.STATUS_JUDGING,
-            hidden: true,
-        }, false);
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: 'raw' });
         judge.next({ domainId, rid, message: `Running script: ${id}` });
         async function report(data) {
             judge.next({ domainId, rid, ...data });

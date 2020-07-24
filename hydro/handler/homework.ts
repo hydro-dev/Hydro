@@ -181,9 +181,10 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         if (!tsdoc.attend) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid);
-        const rid = await record.add(domainId, {
-            pid, lang, code, uid: this.user._id, tid, hidden: true, ttype: document.TYPE_HOMEWORK,
-        }, true);
+        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, {
+            type: document.TYPE_HOMEWORK,
+            tid,
+        });
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
             contest.updateStatus(domainId, tid, this.user._id,

@@ -1,17 +1,15 @@
 import { ObjectID } from 'mongodb';
 import * as user from './user';
 import * as problem from './problem';
+import * as document from './document';
+import { PERM } from './builtin';
 import {
     ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } from '../error';
-import * as document from './document';
-import { PERM } from './builtin';
 import {
-    Tdoc, ContestRule, ContestRules,
-    Udict, ScoreboardNode,
+    ContestRule, ContestRules, ScoreboardNode, Tdoc, Udict,
 } from '../interface';
-import * as validator from '../lib/validator';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
 
@@ -21,7 +19,7 @@ const acm: ContestRule = {
     statusSort: { accept: -1, time: 1 },
     showScoreboard: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat: (tdoc, journal: any[]) => {
+    stat: (tdoc, journal) => {
         const naccept = {};
         const effective = {};
         const detail = [];
@@ -156,12 +154,8 @@ const oi: ContestRule = {
         }
         return { score, detail };
     },
-    showScoreboard(tdoc, now) {
-        return now > tdoc.endAt;
-    },
-    showRecord(tdoc, now) {
-        return now > tdoc.endAt;
-    },
+    showScoreboard: (tdoc, now) => now > tdoc.endAt,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
     scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
@@ -364,8 +358,6 @@ export function add(
     rule: string, beginAt = new Date(), endAt = new Date(), pids = [],
     rated = false, data = {}, type = document.TYPE_CONTEST,
 ) {
-    validator.checkTitle(title);
-    validator.checkContent(content);
     if (!this.RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {

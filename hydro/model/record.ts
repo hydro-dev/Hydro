@@ -4,7 +4,9 @@ import { ObjectID } from 'mongodb';
 import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
-import { Rdoc, TestCase } from '../interface';
+import {
+    Rdoc, TestCase, PretestConfig, ContestInfo,
+} from '../interface';
 import { RecordNotFoundError } from '../error';
 import * as db from '../service/db';
 
@@ -46,28 +48,50 @@ export interface JudgeTask {
     type?: string,
 }
 
-export async function add(domainId: string, data: RdocBase, addTask: boolean): Promise<ObjectID> {
-    _.defaults(data, {
+export async function add(
+    domainId: string, pid: number, uid: number,
+    lang: string, code: string, addTask: boolean, contest?: ContestInfo,
+): Promise<ObjectID>
+export async function add(
+    domainId: string, pid: number, uid: number,
+    lang: string, code: string, addTask: boolean, config: PretestConfig,
+): Promise<ObjectID>
+export async function add(
+    domainId: string, pid: number, uid: number,
+    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | PretestConfig,
+) {
+    const data: Rdoc = {
         status: STATUS.STATUS_WAITING,
-        type: 'judge',
+        _id: new ObjectID(),
+        uid,
+        code,
+        lang,
+        pid,
         domainId,
         score: 0,
         time: 0,
         memory: 0,
-        hidden: false,
+        hidden: !!contestOrConfig,
         judgeTexts: [],
         compilerTexts: [],
         testCases: [],
         judger: null,
         judgeAt: null,
-    });
+        rejudged: false,
+    };
+    if ((contestOrConfig as ContestInfo).type) {
+        // is contest
+        data.contest = contestOrConfig as ContestInfo;
+    } else {
+        data.config = contestOrConfig as PretestConfig;
+    }
     const [pdoc, res] = await Promise.all([
-        problem.get(domainId, data.pid, null),
+        problem.get(domainId, pid, null),
         coll.insertOne(data),
     ]);
     if (addTask) {
         const t: any = {
-            type: data.type || 'judge',
+            type: 'judge',
             rid: res.insertedId,
             domainId,
             pid: data.pid,
@@ -78,11 +102,7 @@ export async function add(domainId: string, data: RdocBase, addTask: boolean): P
             t.data = pdoc.data;
             t.config = pdoc.config;
         } else {
-            t.config = yaml.safeDump({
-                time: data.time,
-                memory: data.memory,
-                input: data.input,
-            });
+            t.config = yaml.safeDump(contestOrConfig);
         }
         await task.add(t);
     }
