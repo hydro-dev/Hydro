@@ -64,8 +64,7 @@ interface EntryConfig {
 async function entry(config: EntryConfig) {
     if (config.entry) {
         if (config.newProcess) {
-            const sargv = [`--entry=${config.entry}`];
-            const p = await fork(sargv);
+            const p = await fork([`--entry=${config.entry}`]);
             await new Promise((resolve, reject) => {
                 p.on('exit', (code, signal) => {
                     if (code === 0) resolve();

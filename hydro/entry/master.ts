@@ -23,6 +23,7 @@ export async function load(call: Entry) {
     };
     await fs.writeFile(lockfile, JSON.stringify(context));
     global.onDestory.push(() => {
+        fs.removeSync(lockfile);
         fs.emptyDirSync(tmpdir);
     });
     require('../lib/i18n');
