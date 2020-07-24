@@ -18,12 +18,12 @@ export const TYPE_TRAINING = 40;
 export const TYPE_FILE = 50;
 export const TYPE_HOMEWORK = 60;
 
-export async function add(
+export async function add<T extends DocID>(
     domainId: string, content: string, owner: number,
-    docType: number, docId: DocID,
+    docType: number, docId: T,
     parentType?: number | null, parentId?: DocID,
     args?: any,
-): Promise<typeof docId>
+): Promise<T>
 export async function add(
     domainId: string, content: string, owner: number,
     docType: number, docId: null,

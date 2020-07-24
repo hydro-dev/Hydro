@@ -8,7 +8,7 @@ export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'markdown',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
     'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
-    'readConfig', 'logger', 'useragent',
+    'testdataConfig', 'logger', 'useragent',
 ];
 
 export const builtinModel = [
@@ -25,8 +25,9 @@ export const builtinHandler = [
 ];
 
 export const builtinScript = [
-    'install', 'rating', 'register', 'problemStat', 'blacklist',
-    'setSuperadmin', 'deleteUser',
+    'rating', 'register', 'problemStat', 'blacklist', 'setSuperadmin',
+    'deleteUser',
+    'upgrade0_1',
 ];
 
 function getFiles(folder: string, base = ''): string[] {
