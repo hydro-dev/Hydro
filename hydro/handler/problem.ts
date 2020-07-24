@@ -206,11 +206,25 @@ class ProblemDetailHandler extends ProblemHandler {
         if (!udoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) {
             throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
         }
-        pid = await problem.add(
-            destDomainId, this.pdoc.pid, this.pdoc.title,
-            this.pdoc.content, this.user._id, this.pdoc.tag,
-            this.pdoc.category, { domainId, pid }, hidden,
-        );
+        if (!this.pdoc.data) {
+            // Copy Without Data
+            pid = await problem.add(
+                destDomainId, this.pdoc.pid, this.pdoc.title,
+                this.pdoc.content, this.user._id, this.pdoc.tag,
+                this.pdoc.category, null, hidden,
+            );
+        } else if (this.pdoc.data instanceof ObjectID) {
+            // With data
+            pid = await problem.add(
+                destDomainId, this.pdoc.pid, this.pdoc.title,
+                this.pdoc.content, this.user._id, this.pdoc.tag,
+                this.pdoc.category, { domainId, pid }, hidden,
+            );
+        } else {
+            // TODO better message
+            // Data should only be copied once.
+            throw new BadRequestError('Cannot copy this problem.');
+        }
         this.response.redirect = this.url('problem_settings', { domainId: destDomainId, pid });
     }
 }
@@ -417,11 +431,24 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
         if (this.pdoc.data instanceof ObjectID) {
             this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
         } else if (this.pdoc.data) {
-            // Redirect?
-            this.response.redirect = this.url('problem_data', {
-                domainId: this.pdoc.domainId,
-                pid: this.pdoc.pid,
-            });
+            if (!this.pdoc.data.host) {
+                this.response.redirect = this.url('problem_data', {
+                    domainId: this.pdoc.data.domainId,
+                    pid: this.pdoc.data.pid,
+                });
+            } else {
+                const [scheme, raw] = this.pdoc.data.host.split('//');
+                const args = JSON.parse(Buffer.from(raw, 'base64').toString());
+                if (scheme === 'hydro') {
+                    const [secure, host, port, domainId, id] = args;
+                    this.response.redirect = `http${secure ? 's' : ''}://${host}:${port}/d/${domainId}/p/${id}/data`;
+                } else if (scheme === 'syzoj') {
+                    const [secure, host, port, id] = args;
+                    this.response.redirect = `http${secure ? 's' : ''}://${host}:${port}/problem/${id}/testdata/download`;
+                } else {
+                    throw new ProblemDataNotFoundError(pid);
+                }
+            }
         } else throw new ProblemDataNotFoundError(pid);
     }
 }

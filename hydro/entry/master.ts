@@ -1,8 +1,30 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
+import os from 'os';
+import path from 'path';
+import fs from 'fs-extra';
+import { argv } from 'yargs';
 import { builtinModel } from './common';
+import { Entry } from '../loader';
 
-export async function load(call) {
+const tmpdir = path.resolve(os.tmpdir(), 'hydro');
+const lockfile = path.resolve(tmpdir, 'lock.json');
+
+export async function load(call: Entry) {
+    if (fs.existsSync(lockfile) && !argv.ignorelock) {
+        const file = require(lockfile);
+        console.error(`Lockfile exists, pid=${file.pid}`);
+        process.exit(1);
+    }
+    const context = {
+        addons: global.addons,
+        pid: process.pid,
+        ppid: process.ppid,
+    };
+    await fs.writeFile(lockfile, JSON.stringify(context));
+    global.onDestory.push(() => {
+        fs.emptyDirSync(tmpdir);
+    });
     require('../lib/i18n');
     require('../utils');
     require('../error');

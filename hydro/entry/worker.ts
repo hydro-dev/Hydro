@@ -5,8 +5,8 @@ import {
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } from './common';
 
-export async function load(call, args) {
-    let pending = args;
+export async function load() {
+    let pending = global.addons;
     const fail = [];
     const active = [];
     require('../lib/i18n');

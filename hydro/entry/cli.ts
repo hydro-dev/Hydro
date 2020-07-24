@@ -1,10 +1,9 @@
-/* eslint-disable no-eval */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 import { argv } from 'yargs';
 import {
-    lib, service, model, script,
-    builtinLib, builtinScript, builtinModel,
+    lib, service, model,
+    builtinLib, builtinModel,
 } from './common';
 
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
@@ -45,10 +44,9 @@ async function cli() {
     return console.log(result);
 }
 
-export async function load(call, args) {
-    let pending = args;
+export async function load() {
+    const pending = global.addons;
     const fail = [];
-    const active = [];
     require('../lib/i18n');
     require('../utils');
     require('../error');
@@ -68,21 +66,6 @@ export async function load(call, args) {
     await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     await model(pending, fail);
-    for (const i in global.Hydro.service) {
-        if (global.Hydro.service[i].postInit) {
-            try {
-                await global.Hydro.service[i].postInit();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    }
-    for (const i of builtinScript) require(`../script/${i}`);
-    await script(pending, fail, active);
-    for (const postInit of global.Hydro.postInit) {
-        await postInit();
-    }
-    pending = [];
+    for (const postInit of global.Hydro.postInit) await postInit();
     await cli();
-    return { active, fail };
 }

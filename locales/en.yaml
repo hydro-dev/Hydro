@@ -54,6 +54,7 @@ perm_problem: Problems
 perm_record: Records
 perm_training: Trainings
 problem_create: Problem Create
+problem_detail: Problem Detail
 problem_edit: Problem Edit
 problem_import: Import Problem
 problem_main: Problem Set

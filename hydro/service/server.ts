@@ -767,6 +767,7 @@ export function Connection(
     sock.installHandlers(server);
 }
 
+// TODO use postInit?
 export async function start() {
     const [disableLog, port] = await system.getMany(['server.log', 'server.port']);
     if (!disableLog) {

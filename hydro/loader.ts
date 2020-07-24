@@ -54,7 +54,12 @@ async function fork(args: string[] = []) {
     return cluster.fork();
 }
 
-async function entry(config: any) {
+interface EntryConfig {
+    entry: string,
+    newProcess?: boolean,
+}
+
+async function entry(config: EntryConfig) {
     if (config.entry) {
         if (config.newProcess) {
             const sargv = [`--entry=${config.entry}`];
@@ -73,6 +78,8 @@ async function entry(config: any) {
     }
     return null;
 }
+
+export type Entry = typeof entry;
 
 async function stopWorker() {
     cluster.disconnect();
@@ -201,7 +208,7 @@ export async function load() {
         console.log(global.addons);
         if (argv.entry) {
             console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
-            await entry({ entry: argv.entry });
+            await entry({ entry: argv.entry as string });
             console.log(`Worker ${process.pid} Started as ${argv.entry}`);
         } else {
             if (argv.firstWorker) cluster.isFirstWorker = true;
