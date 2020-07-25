@@ -1,8 +1,8 @@
 import fs from 'fs';
-import { serialize } from 'v8';
 import cluster from 'cluster';
 import path from 'path';
 import * as superagent from 'superagent';
+import serialize from 'serialize-javascript';
 import proxy from 'superagent-proxy';
 import Lru from 'lru-cache';
 
@@ -147,13 +147,13 @@ const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
 const MEMORY_UNITS = { k: 0.1, m: 1, g: 1024 };
 
-export function parseTimeMS(str) {
+export function parseTimeMS(str: string) {
     const match = TIME_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing time`);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
 }
 
-export function parseMemoryMB(str) {
+export function parseMemoryMB(str: string) {
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
     return Math.floor(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);

@@ -15,8 +15,8 @@ import { sendMail } from '../lib/mail';
 import * as misc from '../lib/misc';
 import {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
-    UserNotFoundError, LoginError, SystemError,
-    BlacklistedError, UserFacingError,
+    UserNotFoundError, SystemError, BlacklistedError,
+    UserFacingError,
 } from '../error';
 
 class UserLoginHandler extends Handler {
@@ -35,7 +35,7 @@ class UserLoginHandler extends Handler {
     @param('rememberme', Types.Boolean, true)
     async post(domainId: string, uname: string, password: string, rememberme = false) {
         const udoc = await user.getByUname(domainId, uname);
-        if (!udoc) throw new LoginError(uname);
+        if (!udoc) throw new UserNotFoundError(uname);
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (udoc.priv === PRIV.PRIV_NONE) throw new BlacklistedError(uname);

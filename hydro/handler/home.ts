@@ -150,9 +150,9 @@ class HomeSecurityHandler extends Handler {
 
     @param('currentPassword', Types.String)
     @param('mail', Types.String, isEmail)
-    async postChangeMail(domainId: string, currentPassword: string, email: string) {
+    async postChangeMail(domainId: string, current: string, email: string) {
         this.limitRate('send_mail', 3600, 30);
-        this.user.checkPassword(currentPassword);
+        this.user.checkPassword(current);
         const udoc = await user.getByEmail(domainId, email);
         if (udoc) throw new UserAlreadyExistError(email);
         const [code] = await token.add(

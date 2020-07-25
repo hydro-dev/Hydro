@@ -6,12 +6,6 @@ function wrap(func: Function, type: string) {
         func(...args);
         if (global.Hydro.model.message) {
             try {
-                for (let i = 0; i <= args.length; i++) {
-                    if (args[i] instanceof Error) {
-                        // js-yaml cannot dump [object Error]
-                        args[i] = `${args[i].message}\n${args[i].stack}`;
-                    }
-                }
                 global.Hydro.model.message.send(1, 1, serialize({ time, type, args }), 0);
             } catch (e) {
                 func(e.message);

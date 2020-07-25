@@ -1,4 +1,3 @@
-import { ValidationError } from '../error';
 import * as db from '../service/db';
 
 const coll = db.collection('token');

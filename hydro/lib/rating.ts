@@ -1,11 +1,15 @@
 class User {
-    rank: any;
+    rank: number;
 
-    old: any;
+    old: number;
 
     seed: number;
 
     uid: number;
+
+    delta?: number;
+
+    new: number;
 
     constructor(rank: number, old: number, uid = 0) {
         this.rank = rank;
@@ -16,7 +20,7 @@ class User {
 }
 
 class RatingCalculator {
-    users: any;
+    users: User[];
 
     constructor(users) {
         this.users = [];
@@ -26,11 +30,11 @@ class RatingCalculator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    calP(a, b) {
+    calP(a: User, b: User) {
         return 1 / (1 + 10 ** ((b.old - a.old) / 400));
     }
 
-    getExSeed(rating, ownUser) {
+    getExSeed(rating: number, ownUser: User) {
         const exUser = new User(0.0, rating);
         let result = 1;
         for (const user of this.users) {
@@ -39,7 +43,7 @@ class RatingCalculator {
         return result;
     }
 
-    calRating(rank, user) {
+    calRating(rank: number, user: User) {
         let left = 1;
         let right = 8000;
         while (right - left > 1) {
@@ -101,10 +105,9 @@ interface RatingOutputUser {
     uid: number,
 }
 
-function calculate(users: RatingInputUser[]): RatingOutputUser[] {
+export default function calculate(users: RatingInputUser[]): RatingOutputUser[] {
     const calculator = new RatingCalculator(users);
     return calculator.calculate();
 }
 
 global.Hydro.lib.rating = calculate;
-export default calculate;

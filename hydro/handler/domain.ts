@@ -106,7 +106,9 @@ class DomainUserHandler extends ManageHandler {
         };
     }
 
-    async postSetUser({ domainId, uid, role }) {
+    @param('uid', Types.Int)
+    @param('role', Types.String)
+    async postSetUser(domainId: string, uid: number, role: string) {
         await domain.setUserRole(domainId, uid, role);
         this.back();
     }
@@ -161,7 +163,8 @@ class DomainRoleHandler extends ManageHandler {
         this.response.body = { roles, domain: this.domain, path };
     }
 
-    async postAdd({ domainId, role }) {
+    @param('role', Types.String)
+    async postAdd(domainId: string, role: string) {
         const roles = await domain.getRoles(this.domain);
         const rdict: any = {};
         for (const r of roles) rdict[r._id] = r.perm;
@@ -183,7 +186,7 @@ class DomainRoleHandler extends ManageHandler {
 
 class DomainSearchHandler extends Handler {
     @param('q', Types.String)
-    async get(q: string) {
+    async get(domainId: string, q: string) {
         const ddocs = await domain.getPrefixSearch(q, 20);
         for (let i = 0; i < ddocs.length; i++) {
             ddocs[i].gravatar = ddocs[i].gravatar ? gravatar(ddocs[i].gravatar) : '/img/team_avatar.png';

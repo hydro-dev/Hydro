@@ -4,6 +4,11 @@ import { Bdoc } from '../interface';
 const coll = db.collection('blacklist');
 
 export async function add(ip: string): Promise<Bdoc> {
+    /**
+     * Add a ip into blacklist.
+     * @param {string} ip
+     * @returns {Promise<Bdoc>}
+     */
     const expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
     const res = await coll.findOneAndUpdate(
         { _id: ip },
@@ -13,7 +18,12 @@ export async function add(ip: string): Promise<Bdoc> {
     return res.value;
 }
 
-export function get(ip: string): Promise<Bdoc> {
+export function get(ip: string): Promise<Bdoc | null> {
+    /**
+     * Get a ip, return null if not.
+     * @param {string} ip
+     * @returns {Promise<Bdoc>}
+     */
     return coll.findOne({ _id: ip });
 }
 

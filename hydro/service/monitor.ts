@@ -13,6 +13,15 @@ export async function update() {
     global.Hydro.stat.reqCount = 0;
 }
 
+export function updateJudger(args) {
+    args.type = 'judger';
+    return coll.updateOne(
+        { mid: args.mid, type: 'judger' },
+        { $set: args },
+        { upsert: true },
+    );
+}
+
 global.Hydro.postInit.push(
     async () => {
         const info = await sysinfo.get();
@@ -25,4 +34,4 @@ global.Hydro.postInit.push(
     },
 );
 
-global.Hydro.service.monitor = { update };
+global.Hydro.service.monitor = { update, updateJudger };

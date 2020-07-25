@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 import { SendMailError } from '../error';
 
-// eslint-disable-next-line import/prefer-default-export
 export async function sendMail(to: string, subject: string, text: string, html: string) {
     let t: unknown;
     try {

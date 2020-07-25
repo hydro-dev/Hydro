@@ -5,6 +5,7 @@ import * as training from './training';
 import * as document from './document';
 import { PERM } from './builtin';
 import { DocumentNotFoundError } from '../error';
+import { Ddoc, Drdoc, Drrdoc } from '../interface';
 
 export const typeDisplay = {
     [document.TYPE_PROBLEM]: 'problem',
@@ -18,7 +19,7 @@ export function add(
     domainId: string, parentType: number, parentId: ObjectID | number | string,
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean = false,
-) {
+): Promise<ObjectID> {
     return document.add(
         domainId, content, owner, document.TYPE_DISCUSSION,
         null, parentType, parentId,
@@ -33,14 +34,14 @@ export function add(
     );
 }
 
-export function get(domainId: string, did: ObjectID) {
+export function get(domainId: string, did: ObjectID): Promise<Ddoc | null> {
     return document.get(domainId, document.TYPE_DISCUSSION, did);
 }
 
 export function edit(
     domainId: string, did: ObjectID,
     title: string, content: string, highlight: boolean,
-) {
+): Promise<Ddoc | null> {
     return document.set(domainId, document.TYPE_DISCUSSION, did, { title, content, highlight });
 }
 
@@ -65,7 +66,7 @@ export function getMulti(domainId: string, query: any = {}) {
 export async function addReply(
     domainId: string, did: ObjectID, owner: number,
     content: string, ip: string,
-) {
+): Promise<Drdoc> {
     const [drdoc] = await Promise.all([
         document.add(
             domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
@@ -76,11 +77,13 @@ export async function addReply(
     return drdoc;
 }
 
-export function getReply(domainId: string, drid: ObjectID) {
+export function getReply(domainId: string, drid: ObjectID): Promise<Drdoc | null> {
     return document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
 }
 
-export async function editReply(domainId: string, drid: ObjectID, content: string) {
+export async function editReply(
+    domainId: string, drid: ObjectID, content: string,
+): Promise<Drdoc | null> {
     return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content });
 }
 
@@ -100,14 +103,14 @@ export function getMultiReply(domainId: string, did: ObjectID) {
     ).sort('_id', -1);
 }
 
-export function getListReply(domainId: string, did: ObjectID) {
+export function getListReply(domainId: string, did: ObjectID): Promise<Drdoc[]> {
     return getMultiReply(domainId, did).toArray();
 }
 
 export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
-) {
+): Promise<[Drdoc, ObjectID]> {
     let drdoc = await document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
     const sid = new ObjectID();
     [drdoc] = await Promise.all([
@@ -117,11 +120,16 @@ export async function addTailReply(
     return [drdoc, sid];
 }
 
-export function getTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
+export function getTailReply(
+    domainId: string, drid: ObjectID, drrid: ObjectID,
+): Promise<[Drdoc, Drrdoc] | [null, null]> {
+    // @ts-ignore
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
-export function editTailReply(domainId: string, drid: ObjectID, drrid: ObjectID, content: string) {
+export function editTailReply(
+    domainId: string, drid: ObjectID, drrid: ObjectID, content: string,
+): Promise<Drrdoc> {
     return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid, { content });
 }
 

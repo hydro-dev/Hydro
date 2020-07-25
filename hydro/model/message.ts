@@ -27,7 +27,7 @@ export async function send(
     return mdoc;
 }
 
-export async function get(_id: ObjectID): Promise<Mdoc> {
+export async function get(_id: ObjectID): Promise<Mdoc | null> {
     return await coll.findOne({ _id });
 }
 
@@ -41,7 +41,7 @@ export async function getMany(query: any, sort: any, page: number, limit: number
         .toArray();
 }
 
-export async function setFlag(messageId: ObjectID, flag: number) {
+export async function setFlag(messageId: ObjectID, flag: number): Promise<Mdoc | null> {
     const result = await coll.findOneAndUpdate(
         { _id: messageId },
         { $bit: { flag: { xor: flag } } },

@@ -141,7 +141,7 @@ export interface Pdoc {
     acMsg?: string,
 }
 
-export type Pdict = Dictionary<Pdoc>;
+export type Pdict = NumericDictionary<Pdoc>;
 
 export interface TestCase {
     time: number,
@@ -245,7 +245,38 @@ export interface Bdoc {
     expireAt: Date,
 }
 
-interface ContestStat extends Dictionary<any> {
+// Discussion
+export interface Ddoc {
+    _id: ObjectID,
+    docType: number,
+    docId: ObjectID,
+    owner: number,
+    title: string,
+    content: string,
+    ip: string,
+}
+
+// Discussion reply
+export interface Drdoc {
+    _id: ObjectID,
+    docType: number,
+    docId: ObjectID,
+    parentType: number,
+    parentId: ObjectID,
+    owner: number,
+    ip: string,
+    reply: Drrdoc[],
+}
+
+// Discussion Tail Reply
+export interface Drrdoc {
+    _id: ObjectID,
+    owner: number,
+    content: string,
+    ip: string,
+}
+
+export interface ContestStat extends Dictionary<any> {
     detail: any,
 }
 
@@ -330,6 +361,7 @@ declare global {
                     gridfs: GridFSBucket,
                     monitor: typeof import('./service/monitor'),
                     server: typeof import('./service/server'),
+                    [key: string]: any,
                 },
                 lib: {
                     download: typeof import('./lib/download').default,
@@ -363,9 +395,9 @@ declare global {
                 },
                 error: typeof import('./error'),
                 locales: Dict<Dict<string>>,
-                postInit: Function[],
+                postInit: Array<() => Promise<any>>,
             },
-            onDestory: Function[],
+            onDestory: Array<() => void>,
             addons: string[],
         }
     }

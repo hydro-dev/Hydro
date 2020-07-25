@@ -27,7 +27,6 @@ function decodeJWT(idToken: string) {
     }
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export function decode(idToken: string) {
     const decodedJWT = decodeJWT(idToken);
     return decodedJWT.payload;

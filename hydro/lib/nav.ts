@@ -12,7 +12,7 @@ const Checker = (perm: bigint, priv: number, checker: Function = trueChecker) =>
 
 const Item = (
     name: string, args: any, prefix: string,
-    ...permPrivChecker: Array<number | bigint | Function | Array<bigint | string>>
+    ...permPrivChecker: Array<number | bigint | Function>
 ) => {
     let _priv: number;
     let _perm: bigint;

@@ -15,7 +15,7 @@ type ND = NumericDictionary<number>
 function calc(udict: ND, rankedDocs: [number, number][]) {
     const users = [];
     for (const [rank, uid] of rankedDocs) {
-        users.push({ uid, rank, old: users[uid] || 1500 });
+        users.push({ uid, rank, old: udict[uid] || 1500 });
     }
     const rated = rating(users);
     for (const udoc of rated) {

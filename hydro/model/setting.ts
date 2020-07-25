@@ -121,7 +121,6 @@ SystemSetting(
     Setting('setting_server', 'server.cdn', null, '/', 'text', 'CDN Prefix', 'Ends with /'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
-    Setting('setting_server', 'server.log', null, false, 'boolean', 'Disable Access Log'),
     Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),

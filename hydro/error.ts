@@ -1,21 +1,24 @@
 /* eslint-disable func-names */
-const { isClass } = require('./utils');
+import { isClass } from './utils';
 
 interface IHydroError {
-  new(...args: any[]): HydroError
+    new(...args: any[]): HydroError
 }
 
-const Err = (name: string, ...info: Array<IHydroError | Function | string | number>) => {
+function isHydroError(item: any): item is IHydroError {
+    return isClass(item);
+}
+
+const Err = (name: string, ...info: Array<IHydroError | (() => string) | string | number>) => {
     let Class: IHydroError;
-    let msg;
-    let code;
+    let msg: () => string;
+    let code: number;
     for (const item of info) {
         if (typeof item === 'number') {
             code = item;
         } else if (typeof item === 'string') {
             msg = function () { return item; };
-        } else if (isClass(item)) {
-            // @ts-ignore
+        } else if (isHydroError(item)) {
             Class = item;
         } else if (typeof item === 'function') {
             msg = item;
@@ -29,19 +32,19 @@ const Err = (name: string, ...info: Array<IHydroError | Function | string | numb
 };
 
 export class HydroError extends Error {
-  params: any[];
+    params: any[];
 
-  code: number;
+    code: number;
 
-  constructor(...params: any[]) {
-      super();
-      this.params = params;
-  }
+    constructor(...params: any[]) {
+        super();
+        this.params = params;
+    }
 
-  // eslint-disable-next-line class-methods-use-this
-  msg() {
-      return 'HydroError';
-  }
+    // eslint-disable-next-line class-methods-use-this
+    msg() {
+        return 'HydroError';
+    }
 }
 
 export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);

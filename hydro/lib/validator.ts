@@ -67,22 +67,8 @@ function _validate(scheme: any, arg: any, base: string): void {
     }
 }
 
-function descriptor(scheme: any): Function {
-    return function desc(target: any, name: string, obj: any) {
-        const originalMethod = obj.value;
-        obj.value = function func(...args: any[]) {
-            _validate(scheme, args[0], '');
-            return originalMethod.call(this, ...args);
-        };
-        return obj;
-    };
-}
-
-export function validate(scheme: any): Function;
-export function validate(scheme: any, arg: any): void;
-export function validate(...args: any[]): any {
-    if (args.length === 1) return descriptor(args[0]);
-    return _validate(args[0], args[1], '');
+export function validate(scheme: any, arg: any) {
+    return _validate(scheme, arg, '');
 }
 
 export const isTitle = (s) => s && s.length < 64;

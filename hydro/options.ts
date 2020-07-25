@@ -8,5 +8,12 @@ export default function load() {
     if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.json');
     if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.hydro', 'config.json');
     if (!fs.existsSync(f)) f = path.resolve('/config/config.json');
-    return JSON.parse(fs.readFileSync(f).toString());
+    let result: any = {};
+    try {
+        result = JSON.parse(fs.readFileSync(f).toString());
+    } catch (e) {
+        console.error('Cannot read config file', e);
+        result = {};
+    }
+    return result;
 }

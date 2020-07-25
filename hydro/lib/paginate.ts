@@ -1,6 +1,9 @@
+import { Cursor } from 'mongodb';
 import { ValidationError } from '../error';
 
-async function paginate(cursor: import('mongodb').Cursor, page: number, pageSize: number): Promise<[any[], number, number]> {
+export default async function paginate(
+    cursor: Cursor, page: number, pageSize: number,
+): Promise<[any[], number, number]> {
     if (page <= 0) throw new ValidationError('page');
     const [count, pageDocs] = await Promise.all([
         cursor.count(),
@@ -11,4 +14,3 @@ async function paginate(cursor: import('mongodb').Cursor, page: number, pageSize
 }
 
 global.Hydro.lib.paginate = paginate;
-export default paginate;

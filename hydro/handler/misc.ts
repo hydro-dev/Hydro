@@ -158,13 +158,4 @@ export async function apply() {
     Route('ui', '/extra.css', UiSettingsHandler);
 }
 
-apply.updateStatus = function updateStatus(args) {
-    args.type = 'judger';
-    return coll.updateOne(
-        { mid: args.mid, type: 'judger' },
-        { $set: args },
-        { upsert: true },
-    );
-};
-
 global.Hydro.handler.misc = apply;

@@ -77,7 +77,7 @@ export function edit(domainId: string, _id: number, $set: any): Promise<Pdoc> {
     return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
 }
 
-export function inc(domainId: string, _id: number, field: string, n: number) {
+export function inc(domainId: string, _id: number, field: string, n: number): Promise<Pdoc> {
     return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
 
@@ -85,7 +85,7 @@ export function count(domainId: string, query: any) {
     return document.count(domainId, document.TYPE_PROBLEM, query);
 }
 
-export async function random(domainId: string, query: any) {
+export async function random(domainId: string, query: any): Promise<string | null> {
     const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
     const pcount = await cursor.count();
     if (pcount) {
@@ -100,16 +100,18 @@ export async function getList(
 ): Promise<Pdict> {
     pids = Array.from(new Set(pids));
     const r = {};
+    const l = {};
     const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
     if (!getHidden) q.hidden = false;
     const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q).toArray();
     for (const pdoc of pdocs) {
         r[pdoc.docId] = pdoc;
-        r[pdoc.pid] = pdoc;
+        l[pdoc.pid] = pdoc;
     }
+    // TODO enhance
     if (pdocs.length !== pids.length) {
         for (const pid of pids) {
-            if (!r[pid]) {
+            if (!(r[pid] || l[pid])) {
                 if (doThrow) {
                     throw new ProblemNotFoundError(domainId, pid);
                 } else {

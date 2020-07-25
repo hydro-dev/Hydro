@@ -1,19 +1,20 @@
 import AnsiUp from 'ansi_up';
+import { ObjectID } from 'mongodb';
 import md5 from './md5';
 
 const AU = new AnsiUp();
 
-export function ansiToHtml(str) {
+export function ansiToHtml(str: string) {
     return AU.ansi_to_html(str);
 }
 
-export function gravatar(email, s = 32) {
+export function gravatar(email: string, s = 32) {
     return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${s}`;
 }
 
-export function datetimeSpan(dt, relative = true, format = '%Y-%m-%d %H:%M:%S') {
+export function datetimeSpan(dt: Date | ObjectID, relative = true, format = '%Y-%m-%d %H:%M:%S') {
     if (!dt) return 'DATETIME_SPAN_ERROR';
-    if (dt.generationTime) dt = new Date(dt.generationTime * 1000);
+    if (dt instanceof ObjectID) dt = new Date(dt.generationTime * 1000);
     else if (typeof dt === 'number' || typeof dt === 'string') dt = new Date(dt);
     return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(
         relative ? ' relative' : '',
@@ -22,9 +23,10 @@ export function datetimeSpan(dt, relative = true, format = '%Y-%m-%d %H:%M:%S') 
     );
 }
 
-export function* paginate(page, numPages) {
-    const radius = 2; let first; let
-        last;
+export function* paginate(page: number, numPages: number) {
+    const radius = 2;
+    let first: number;
+    let last: number;
     if (page > 1) {
         yield ['first', 1];
         yield ['previous', page - 1];
@@ -45,7 +47,7 @@ export function* paginate(page, numPages) {
     yield ['last', numPages];
 }
 
-export function size(s, base = 1) {
+export function size(s: number, base = 1) {
     s *= base;
     const unit = 1024;
     const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
@@ -53,12 +55,11 @@ export function size(s, base = 1) {
         if (s < unit) return '{0} {1}'.format(Math.round(s * 10) / 10, unitName);
         s /= unit;
     }
-    return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);
+    return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
 function _digit2(number: number) {
-    if (number < 10) return `0${number}`;
-    return number.toString();
+    return number < 10 ? `0${number}` : number.toString();
 }
 
 export function formatSeconds(_seconds = '0') {
