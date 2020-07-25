@@ -83,7 +83,8 @@ class UserRegisterHandler extends Handler {
 }
 
 class UserRegisterWithCodeHandler extends Handler {
-    async get({ code }) {
+    @param('code', Types.String)
+    async get(domainId: string, code: string) {
         this.response.template = 'user_register_with_code.html';
         const { mail } = await token.get(code, token.TYPE_REGISTRATION);
         if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
@@ -95,14 +96,13 @@ class UserRegisterWithCodeHandler extends Handler {
     @param('uname', Types.String, isUname)
     @param('code', Types.String)
     async post(
-        domainId: string, password: string, verifyPassword: string,
+        domainId: string, password: string, verify: string,
         uname: string, code: string,
     ) {
         const { mail } = await token.get(code, token.TYPE_REGISTRATION);
         if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
-        if (password !== verifyPassword) throw new VerifyPasswordError();
-        const uid = await system.inc('user');
-        await user.create(mail, uname, password, uid, this.request.ip);
+        if (password !== verify) throw new VerifyPasswordError();
+        const uid = await user.create(mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
         this.response.redirect = this.url('homepage');

@@ -19,8 +19,9 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
     }
 }
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
-global.Hydro.model.opcount = { inc, ensureIndexes };
+global.Hydro.postInit.push(ensureIndexes);
+global.Hydro.model.opcount = { inc };

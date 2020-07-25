@@ -328,7 +328,7 @@ export async function revSetStatus(
     return await collStatus.updateOne(filter, update);
 }
 
-export async function ensureIndexes() {
+async function ensureIndexes() {
     await coll.createIndex({ domainId: 1, docType: 1, docId: 1 }, { unique: true });
     await coll.createIndex({
         domainId: 1, docType: 1, owner: 1, docId: -1,
@@ -390,6 +390,7 @@ export async function ensureIndexes() {
     }, { sparse: true });
 }
 
+global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.document = {
     add,
     addToSet,
@@ -399,7 +400,6 @@ global.Hydro.model.document = {
     deleteMultiStatus,
     deleteOne,
     deleteSub,
-    ensureIndexes,
     get,
     getMulti,
     getMultiStatus,

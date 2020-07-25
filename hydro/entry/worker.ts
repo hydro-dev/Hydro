@@ -37,11 +37,6 @@ export async function load() {
     for (const i of builtinModel) require(`../model/${i}`);
     for (const i of builtinHandler) require(`../handler/${i}`);
     await model(pending, fail);
-    for (const m in global.Hydro.model) {
-        if (global.Hydro.model[m].ensureIndexes) {
-            await global.Hydro.model[m].ensureIndexes();
-        }
-    }
     const modelSetting = require('../model/setting');
     await setting(pending, fail, modelSetting);
     await handler(pending, fail);
@@ -50,20 +45,9 @@ export async function load() {
     }
     const notfound = require('../handler/notfound');
     await notfound.apply();
-    for (const i in global.Hydro.service) {
-        if (global.Hydro.service[i].postInit) {
-            try {
-                await global.Hydro.service[i].postInit();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    }
     for (const i of builtinScript) require(`../script/${i}`);
     await script(pending, fail, active);
-    for (const postInit of global.Hydro.postInit) {
-        await postInit();
-    }
+    for (const postInit of global.Hydro.postInit) await postInit();
     pending = [];
     await server.start();
     setInterval(() => {

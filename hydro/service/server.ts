@@ -210,7 +210,7 @@ export class Handler {
         query: any,
         path: string,
         params: any,
-        referer: any,
+        referer: string,
         json: boolean,
     };
 
@@ -218,9 +218,9 @@ export class Handler {
         body: any,
         type: string,
         status: number,
-        template: string | undefined,
-        redirect: string | undefined,
-        disposition: string | undefined,
+        template?: string,
+        redirect?: string,
+        disposition?: string,
         attachment: (name: string) => void,
     };
 
@@ -286,7 +286,7 @@ export class Handler {
         return res;
     }
 
-    async limitRate(op, periodSecs, maxOperations) {
+    async limitRate(op: string, periodSecs: number, maxOperations: number) {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
@@ -299,40 +299,14 @@ export class Handler {
         return `${this.translate(str)} - Hydro`;
     }
 
-    checkPerm(...args: Array<bigint[] | bigint>) {
-        for (const i in args) {
-            if (args[i] instanceof Array) {
-                let p = false;
-                for (const j in args) {
-                    if (this.user.hasPerm(args[i][j])) {
-                        p = true;
-                        break;
-                    }
-                }
-                if (!p) throw new PermissionError([args[i]]);
-                // @ts-ignore
-            } else if (!this.user.hasPerm(args[i])) {
-                throw new PermissionError([[args[i]]]);
-            }
-        }
+    checkPerm(...args: bigint[]) {
+        // @ts-ignore
+        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
     }
 
-    checkPriv(...args: Array<number[] | number>) {
-        for (const i in args) {
-            if (args[i] instanceof Array) {
-                let p = false;
-                for (const j in args) {
-                    if (this.user.hasPriv(args[i][j])) {
-                        p = true;
-                        break;
-                    }
-                }
-                if (!p) throw new PrivilegeError([args[i]]);
-                // @ts-ignore
-            } else if (!this.user.hasPriv(args[i])) {
-                throw new PrivilegeError([[args[i]]]);
-            }
-        }
+    checkPriv(...args: number[]) {
+        // @ts-ignore
+        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
     }
 
     url(name: string, kwargs = {}) {
@@ -373,7 +347,7 @@ export class Handler {
 
     async getSession() {
         const sid = this.request.cookies.get('sid');
-        this.session = await token.get(sid, token.TYPE_SESSION, false);
+        this.session = await token.get(sid, token.TYPE_SESSION);
         if (!this.session) this.session = { uid: 0 };
     }
 
@@ -416,7 +390,10 @@ export class Handler {
         } catch (error) {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             if (this.request.json) this.response.body = { error };
-            else await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error });
+            else {
+                await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error })
+                    .catch(() => { });
+            }
         }
         await this.putResponse();
         await this.saveCookie();
@@ -720,11 +697,8 @@ export class ConnectionHandler {
     }
 
     async init({ domainId }) {
-        try {
-            this.session = await token.get(this.request.params.token, token.TYPE_TOKEN, true);
-        } catch (e) {
-            this.session = { uid: 0, domainId: 'system' };
-        }
+        this.session = await token.get(this.request.params.token, token.TYPE_TOKEN);
+        this.session = this.session || { uid: 0, domainId: 'system' };
         this.args.domainId = this.session.domainId;
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);

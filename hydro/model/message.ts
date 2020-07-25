@@ -62,13 +62,14 @@ export function getMulti(uid: number) {
     return coll.find({ $or: [{ from: uid }, { to: uid }] });
 }
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return Promise.all([
         coll.createIndex({ to: 1, _id: -1 }),
         coll.createIndex({ from: 1, _id: -1 }),
     ]);
 }
 
+global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.message = {
     FLAG_UNREAD,
     FLAG_ALERT,
@@ -81,5 +82,4 @@ global.Hydro.model.message = {
     getMany,
     getMulti,
     send,
-    ensureIndexes,
 };

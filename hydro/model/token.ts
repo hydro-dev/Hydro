@@ -10,7 +10,7 @@ export const TYPE_CHANGEMAIL = 3;
 export const TYPE_OAUTH = 4;
 export const TYPE_LOSTPASS = 5;
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return Promise.all([
         coll.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true }),
         coll.createIndex('expireAt', { expireAfterSeconds: 0 }),
@@ -31,9 +31,8 @@ export async function add(tokenType: number, expireSeconds: number, data: any) {
     return [str, res.ops[0]];
 }
 
-export async function get(tokenId: string, tokenType: number, doThrow = true) {
+export async function get(tokenId: string, tokenType: number) {
     const res = await coll.findOne({ _id: tokenId, tokenType });
-    if (!res && doThrow) throw new ValidationError('token');
     return res;
 }
 
@@ -86,6 +85,7 @@ export function delByUid(uid: number) {
     return coll.deleteMany({ uid });
 }
 
+global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.token = {
     TYPE_SESSION,
     TYPE_CHANGEMAIL,
@@ -94,7 +94,6 @@ global.Hydro.model.token = {
     TYPE_REGISTRATION,
     TYPE_LOSTPASS,
 
-    ensureIndexes,
     add,
     createOrUpdate,
     get,

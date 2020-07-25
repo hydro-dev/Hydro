@@ -21,10 +21,9 @@ export function del(ip: string) {
     return coll.deleteOne({ _id: ip });
 }
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
-global.Hydro.model.blacklist = {
-    add, get, del, ensureIndexes,
-};
+global.Hydro.postInit.push(ensureIndexes);
+global.Hydro.model.blacklist = { add, get, del };

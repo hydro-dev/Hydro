@@ -85,12 +85,18 @@ export class User implements _User {
         }
     }
 
-    hasPerm(p: bigint) {
-        return (this.perm() & p) === p;
+    hasPerm(...perm: bigint[]) {
+        for (const i in perm) {
+            if ((this.perm() & perm[i]) === perm[i]) return true;
+        }
+        return false;
     }
 
-    hasPriv(p: number) {
-        return !!(this.priv & p);
+    hasPriv(...priv: number[]) {
+        for (const i in priv) {
+            if ((this.priv & priv[i]) === priv[i]) return true;
+        }
+        return false;
     }
 
     checkPassword(password: string) {
@@ -215,13 +221,14 @@ export function ban(uid: number) {
     ]);
 }
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return Promise.all([
         coll.createIndex('unameLower', { unique: true }),
         coll.createIndex('mailLower', { sparse: true }),
     ]);
 }
 
+global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.user = {
     User,
     create,
@@ -237,5 +244,4 @@ global.Hydro.model.user = {
     setPriv,
     getList,
     ban,
-    ensureIndexes,
 };

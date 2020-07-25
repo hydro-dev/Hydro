@@ -80,31 +80,17 @@ export async function add(
         rejudged: false,
     };
     if ((contestOrConfig as ContestInfo).type) {
-        // is contest
         data.contest = contestOrConfig as ContestInfo;
     } else {
         data.config = contestOrConfig as PretestConfig;
     }
-    const [pdoc, res] = await Promise.all([
-        problem.get(domainId, pid, null),
-        coll.insertOne(data),
-    ]);
+    const res = await coll.insertOne(data);
     if (addTask) {
-        const t: any = {
+        await task.add({
             type: 'judge',
             rid: res.insertedId,
             domainId,
-            pid: data.pid,
-            lang: data.lang,
-            code: data.code,
-        };
-        if (t.type === 'judge') {
-            t.data = pdoc.data;
-            t.config = pdoc.config;
-        } else {
-            t.config = yaml.safeDump(contestOrConfig);
-        }
-        await task.add(t);
+        });
     }
     return res.insertedId;
 }

@@ -135,13 +135,14 @@ export function url(arg0: any, name: any) {
     return __url(arg0, name);
 }
 
-export function ensureIndexes() {
+function ensureIndexes() {
     return Promise.all([
         collChunk.createIndex({ files_id: 1, n: 1 }, { unique: true }),
         collFile.createIndex({ md5: 1 }),
     ]);
 }
 
+global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.file = {
-    add, get, del, inc, dec, getMeta, getWithSecret, getMulti, getMetaDict, url, ensureIndexes,
+    add, get, del, inc, dec, getMeta, getWithSecret, getMulti, getMetaDict, url,
 };
