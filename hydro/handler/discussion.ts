@@ -137,11 +137,6 @@ class DiscussionNodeHandler extends DiscussionHandler {
 }
 
 class DiscussionCreateHandler extends DiscussionHandler {
-    async prepare() {
-        this.checkPriv(PRIV.PRIV_USER_PROFILE);
-        this.checkPerm(PERM.PERM_CREATE_DISCUSSION);
-    }
-
     async get({ type, name }) {
         const path = [
             ['Hydro', 'homepage'],
@@ -193,9 +188,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         uids.push(this.ddoc.owner);
         for (const drdoc of drdocs) {
             if (drdoc.reply) {
-                for (const drrdoc of drdocs) {
-                    uids.push(drrdoc.owner);
-                }
+                drdocs.forEach((drrdoc) => uids.push(drrdoc.owner));
             }
         }
         const udict = await user.getList(domainId, uids);
@@ -236,14 +229,23 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID)
     @param('content', Types.String, isContent)
     async postEditReply(domainId: string, drid: ObjectID, content: string) {
-        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY);
+        if (!(this.ddoc.owner === this.user._id
+            && this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION))) {
+            if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY);
+            else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        }
         await discussion.editReply(domainId, drid, content);
         this.back();
     }
 
     @param('drid', Types.ObjectID)
     async postDeleteReply(domainId: string, drid: ObjectID) {
-        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+        if (!(this.ddoc.owner === this.user._id
+            && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
+            if (this.drdoc.owner !== this.user._id) {
+                this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+            } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
+        }
         await discussion.delReply(domainId, drid);
         this.back();
     }
@@ -320,6 +322,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         domainId: string, did: ObjectID, title: string, content: string, highlight = false,
     ) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
+        else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (highlight && !this.ddoc.highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         await discussion.edit(domainId, did, title, content, highlight);
         this.response.body = { did };
@@ -329,6 +332,7 @@ class DiscussionEditHandler extends DiscussionHandler {
     @param('did', Types.ObjectID)
     async postDelete(domainId: string, did: ObjectID) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
+        else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         await discussion.del(domainId, did);
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
         this.response.redirect = this.url('discussion_node', {
@@ -346,7 +350,7 @@ export async function apply() {
     Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
     Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
     Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
-    Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler);
+    Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler, PRIV.PRIV_USER_PROFILE, PERM.PERM_CREATE_DISCUSSION);
 }
 
 global.Hydro.handler.discussion = apply;

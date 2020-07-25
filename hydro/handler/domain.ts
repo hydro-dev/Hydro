@@ -193,7 +193,7 @@ class DomainSearchHandler extends Handler {
 }
 
 export async function apply() {
-    Route('ranking', '/ranking', DomainRankHandler);
+    Route('ranking', '/ranking', DomainRankHandler, PERM.PERM_VIEW_RANKING);
     Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
     Route('domain_edit', '/domain/edit', DomainEditHandler);
     Route('domain_user', '/domain/user', DomainUserHandler);

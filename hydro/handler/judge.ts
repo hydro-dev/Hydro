@@ -1,6 +1,4 @@
-import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
-import { parseTimeMS, parseMemoryMB } from '../utils';
 import { JudgeResultBody, Rdoc } from '../interface';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
@@ -10,7 +8,7 @@ import * as domain from '../model/domain';
 import * as task from '../model/task';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Connection, ConnectionHandler, Types, param,
+    Route, Handler, Connection, ConnectionHandler,
 } from '../service/server';
 
 async function _postJudge(rdoc: Rdoc) {

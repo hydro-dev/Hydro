@@ -144,7 +144,8 @@ class HomeSecurityHandler extends Handler {
         if (password !== verify) throw new VerifyPasswordError();
         this.user.checkPassword(current);
         await user.setPassword(this.user._id, password);
-        this.back();
+        await token.delByUid(this.user._id);
+        this.response.redirect = this.url('user_login');
     }
 
     @param('currentPassword', Types.String)

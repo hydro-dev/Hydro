@@ -59,7 +59,7 @@ class SystemCheckConnHandler extends ConnectionHandler {
         const log = (payload: any) => this.send({ type: 'log', payload });
         const warn = (payload: any) => this.send({ type: 'warn', payload });
         const error = (payload: any) => this.send({ type: 'error', payload });
-        await check.start(log, warn, error, (id) => { this.id = id; });
+        await check.start(this, log, warn, error, (id) => { this.id = id; });
     }
 
     async cleanup() {

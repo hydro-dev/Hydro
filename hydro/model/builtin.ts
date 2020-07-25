@@ -1,4 +1,7 @@
 // @ts-nocheck
+
+import { Udoc } from '../interface';
+
 /* Why nocheck?
  * BitInt requires at least ES2020, but we can't use it as
  * NodeJS doesn't support some of this new features.
@@ -83,10 +86,10 @@ export const PERM = {
     PERM_VIEW_RANKING: 1n << 50n,
 
     // Placeholder
-    PERM_ALL: 0n,
+    PERM_ALL: -1n,
     PERM_BASIC: 0n,
     PERM_DEFAULT: 0n,
-    PERM_ADMIN: 0n,
+    PERM_ADMIN: -1n,
 };
 
 export const Permission = (family: string, key: BigInt, desc: string) => ({ family, key, desc });
@@ -152,10 +155,6 @@ export const PERMS = [
     Permission('perm_training', PERM.PERM_EDIT_TRAINING_SELF, 'Edit own training plans'),
     Permission('perm_ranking', PERM.PERM_VIEW_RANKING, 'View ranking'),
 ];
-
-let PERM_ALL = 0n;
-for (const p in PERM) if (PERM[p]) PERM_ALL |= PERM[p];
-PERM.PERM_ALL = PERM_ALL;
 
 export const PERMS_BY_FAMILY = {};
 for (const p of PERMS) {
@@ -268,7 +267,7 @@ export const LEVELS = [
     [1, 100],
 ];
 
-export const BUILTIN_USERS = [
+export const BUILTIN_USERS: Udoc[] = [
     {
         _id: 0,
         mail: 'Guest@hydro.local',
