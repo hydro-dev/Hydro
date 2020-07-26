@@ -1,6 +1,12 @@
 import { isSafeInteger, flatten } from 'lodash';
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
+import {
+    NoProblemError, ProblemDataNotFoundError, BadRequestError,
+    SolutionNotFoundError, ProblemNotFoundError, ValidationError,
+    PermissionError,
+} from '../error';
+import { Pdoc, User, Rdoc } from '../interface';
 import paginate from '../lib/paginate';
 import {
     checkPid, isTitle, isContent, isPid,
@@ -17,16 +23,6 @@ import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, Types, param, multipart,
 } from '../service/server';
-import {
-    NoProblemError, ProblemDataNotFoundError, BadRequestError,
-    SolutionNotFoundError,
-    ProblemNotFoundError,
-    ValidationError,
-    PermissionError,
-} from '../error';
-import {
-    Pdoc, User, Rdoc, ProblemConfig,
-} from '../interface';
 
 const parseCategory = (value: string) => {
     if (!value) return [];

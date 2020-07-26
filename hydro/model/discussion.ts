@@ -111,13 +111,15 @@ export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
 ): Promise<[Drdoc, ObjectID]> {
-    let drdoc = await document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
-    const sid = new ObjectID();
-    [drdoc] = await Promise.all([
-        document.push(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', content, owner, { ip }),
-        document.set(domainId, document.TYPE_DISCUSSION, drdoc.parentId, { updateAt: new Date() }),
-    ]);
-    return [drdoc, sid];
+    const [drdoc, subId] = await document.push(
+        domainId, document.TYPE_DISCUSSION_REPLY, drid,
+        'reply', content, owner, { ip },
+    );
+    await document.set(
+        domainId, document.TYPE_DISCUSSION, drdoc.parentId,
+        { updateAt: new Date() },
+    );
+    return [drdoc, subId];
 }
 
 export function getTailReply(

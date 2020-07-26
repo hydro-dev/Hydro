@@ -199,7 +199,7 @@ class ContestEditHandler extends ContestHandler {
     @param('content', Types.String, isContent)
     @param('rule', Types.String)
     @param('pids', Types.String)
-    @param('rated', Types.Boolean, true)
+    @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
@@ -381,7 +381,7 @@ class ContestCreateHandler extends ContestHandler {
     @param('content', Types.String, isContent)
     @param('rule', Types.String)
     @param('pids', Types.String)
-    @param('rated', Types.Boolean, true)
+    @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,

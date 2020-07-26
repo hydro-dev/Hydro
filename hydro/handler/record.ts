@@ -91,7 +91,10 @@ class RecordRejudgeHandler extends Handler {
     async post(domainId: string, rid: ObjectID) {
         this.checkPerm(PERM.PERM_REJUDGE);
         const rdoc = await record.get(domainId, rid);
-        if (rdoc) await record.rejudge(domainId, rid);
+        if (rdoc) {
+            await record.reset(domainId, rid, true);
+            await record.judge(domainId, rid);
+        }
         this.back();
     }
 }

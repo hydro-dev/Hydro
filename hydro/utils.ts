@@ -122,7 +122,7 @@ Set.intersection = function Intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> 
 
 export function folderSize(folderPath: string) {
     let size = 0;
-    const _next = function a(p) {
+    const _next = function a(p: string) {
         if (p) {
             const stats = fs.statSync(p);
             if (!stats.isDirectory() || stats.isSymbolicLink()) {

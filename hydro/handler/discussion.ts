@@ -152,7 +152,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
     @param('name', Types.String)
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
-    @param('highlight', Types.Boolean, true)
+    @param('highlight', Types.Boolean)
     async post(
         domainId: string, type: string, _name: string,
         title: string, content: string, highlight = false,
@@ -317,7 +317,7 @@ class DiscussionEditHandler extends DiscussionHandler {
     @param('did', Types.ObjectID)
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
-    @param('highlight', Types.Boolean, true)
+    @param('highlight', Types.Boolean)
     async postUpdate(
         domainId: string, did: ObjectID, title: string, content: string, highlight = false,
     ) {

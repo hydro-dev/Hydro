@@ -229,7 +229,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('pids', Types.String)
-    @param('rated', Types.Boolean, true)
+    @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
@@ -296,7 +296,7 @@ class HomeworkEditHandler extends HomeworkHandler {
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('pids', Types.String)
-    @param('rated', Types.Boolean, true)
+    @param('rated', Types.Boolean)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,

@@ -32,7 +32,7 @@ class UserLoginHandler extends Handler {
 
     @param('uname', Types.String)
     @param('password', Types.String)
-    @param('rememberme', Types.Boolean, true)
+    @param('rememberme', Types.Boolean)
     async post(domainId: string, uname: string, password: string, rememberme = false) {
         const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
@@ -197,7 +197,7 @@ class UserDeleteHandler extends Handler {
 
 class UserSearchHandler extends Handler {
     @param('q', Types.String)
-    @param('exectMatch', Types.Boolean, true)
+    @param('exectMatch', Types.Boolean)
     async get(domainId: string, q: string, exactMatch = false) {
         let udoc = await user.getById(domainId, parseInt(q, 10));
         const udocs = udoc ? [udoc] : [];
@@ -353,7 +353,7 @@ export async function apply() {
     Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_lostpass', '/lostpass', UserLostPassHandler);
     Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
-    Route('user_search', '/user/search', UserSearchHandler);
+    Route('user_search', '/user/search', UserSearchHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_detail', '/user/:uid', UserDetailHandler);
 }

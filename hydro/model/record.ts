@@ -1,9 +1,10 @@
 import { ObjectID } from 'mongodb';
+import { Dictionary } from 'lodash';
 import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
 import {
-    Rdoc, TestCase, PretestConfig, ContestInfo,
+    Rdoc, TestCase, PretestConfig, ContestInfo, ProblemConfig,
 } from '../interface';
 import { RecordNotFoundError } from '../error';
 import * as db from '../service/db';
@@ -46,14 +47,26 @@ export interface JudgeTask {
     type?: string,
 }
 
-export async function add(
-    domainId: string, pid: number, uid: number,
-    lang: string, code: string, addTask: boolean, contest?: ContestInfo,
-): Promise<ObjectID>
-export async function add(
-    domainId: string, pid: number, uid: number,
-    lang: string, code: string, addTask: boolean, config: PretestConfig,
-): Promise<ObjectID>
+export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
+    return await coll.findOne({ domainId, _id });
+}
+
+export async function judge(domainId: string, rid: ObjectID) {
+    const rdoc = await get(domainId, rid);
+    let config: ProblemConfig = rdoc.config;
+    if (!config) {
+        const pdoc = await problem.get(domainId, rdoc.pid);
+        config = pdoc?.config || {};
+    }
+    await task.add({
+        ...rdoc,
+        type: 'judge',
+        rid,
+        domainId,
+        config,
+    });
+}
+
 export async function add(
     domainId: string, pid: number, uid: number,
     lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | PretestConfig,
@@ -77,26 +90,16 @@ export async function add(
         judgeAt: null,
         rejudged: false,
     };
-    if ((contestOrConfig as ContestInfo).type) {
-        data.contest = contestOrConfig as ContestInfo;
-    } else {
-        data.config = contestOrConfig as PretestConfig;
+    if (contestOrConfig) {
+        if ((contestOrConfig as ContestInfo).type) {
+            data.contest = contestOrConfig as ContestInfo;
+        } else {
+            data.config = contestOrConfig as PretestConfig;
+        }
     }
     const res = await coll.insertOne(data);
-    if (addTask) {
-        await task.add({
-            type: 'judge',
-            rid: res.insertedId,
-            domainId,
-        });
-    }
+    if (addTask) await judge(domainId, res.insertedId);
     return res.insertedId;
-}
-
-export async function get(domainId: string, _id: ObjectID): Promise<Rdoc> {
-    const rdoc = await coll.findOne({ domainId, _id });
-    if (!rdoc) throw new RecordNotFoundError(_id);
-    return rdoc;
 }
 
 export function getMulti(domainId: string, query: any) {
@@ -138,7 +141,7 @@ export function count(domainId: string, query: any) {
 
 export async function getList(
     domainId: string, rids: ObjectID[], showHidden = false,
-): Promise<{ [key: string]: Rdoc }> {
+): Promise<Dictionary<Rdoc>> {
     const r = {};
     for (const rid of rids) {
         // eslint-disable-next-line no-await-in-loop
@@ -165,36 +168,6 @@ export function getByUid(domainId: string, uid: number): Promise<Rdoc[]> {
     return coll.find({ domainId, uid }).toArray();
 }
 
-export async function judge(domainId: string, rid: ObjectID) {
-    const rdoc = await get(domainId, rid);
-    const pdoc = await problem.get(domainId, rdoc.pid);
-    await task.add({
-        type: 'judge',
-        rid,
-        domainId,
-        config: pdoc.config || '',
-        pid: rdoc.pid,
-        data: pdoc.data,
-        lang: rdoc.lang,
-        code: rdoc.code,
-    });
-}
-
-export async function rejudge(domainId: string, rid: ObjectID) {
-    await reset(domainId, rid, true);
-    const rdoc = await get(domainId, rid);
-    const pdoc = await problem.get(domainId, rdoc.pid);
-    await task.add({
-        type: 'judge',
-        rid,
-        domainId,
-        pid: rdoc.pid,
-        data: pdoc.data,
-        lang: rdoc.lang,
-        code: rdoc.code,
-    });
-}
-
 global.Hydro.model.record = {
     add,
     get,
@@ -206,5 +179,4 @@ global.Hydro.model.record = {
     getUserInProblemMulti,
     getByUid,
     judge,
-    rejudge,
 };
