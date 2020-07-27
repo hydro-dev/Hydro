@@ -140,14 +140,14 @@ export function count(domainId: string, query: any) {
 }
 
 export async function getList(
-    domainId: string, rids: ObjectID[], showHidden = false,
+    domainId: string, rids: ObjectID[], showHidden: boolean,
 ): Promise<Dictionary<Rdoc>> {
     const r = {};
-    for (const rid of rids) {
-        // eslint-disable-next-line no-await-in-loop
-        const rdoc = await get(domainId, rid);
-        if (rdoc.hidden && !showHidden) r[rid.toHexString()] = null;
-        else r[rid.toHexString()] = rdoc;
+    rids = Array.from(new Set(rids));
+    const rdocs = await coll.find({ domainId, _id: { $in: rids } }).toArray();
+    for (const rdoc of rdocs) {
+        if (rdoc.hidden && !showHidden) r[rdoc._id.toHexString()] = null;
+        else r[rdoc._id.toHexString()] = rdoc;
     }
     return r;
 }

@@ -18,7 +18,7 @@ class Loader extends nunjucks.Loader {
             };
         }
         let fullpath = null;
-        const p = path.resolve(argv.template as string, name);
+        const p = path.resolve(process.cwd(), argv.template as string, name);
         if (fs.existsSync(p)) fullpath = p;
         if (!fullpath) throw new Error(`Cannot get template ${name}`);
         return {

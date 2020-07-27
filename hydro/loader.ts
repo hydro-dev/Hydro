@@ -133,7 +133,7 @@ const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
 const tmp = path.resolve(os.tmpdir(), 'hydro', '__');
 
 export function addon(addonPath: string) {
-    let modulePath = path.resolve(addonPath);
+    let modulePath = path.resolve(process.cwd(), addonPath);
     if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
             // Is a npm package

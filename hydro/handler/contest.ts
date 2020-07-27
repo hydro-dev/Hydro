@@ -73,7 +73,7 @@ class ContestDetailHandler extends ContestHandler {
             if (this.canShowRecord(tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(domainId, q);
+                rdict = await record.getList(domainId, q, true);
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }

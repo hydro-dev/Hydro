@@ -1,9 +1,11 @@
 import { ObjectID } from 'mongodb';
 import { isSafeInteger } from 'lodash';
 import { DiscussionNotFoundError, DocumentNotFoundError } from '../error';
+import { Drdoc, Mdoc } from '../interface';
 import paginate from '../lib/paginate';
 import * as system from '../model/system';
 import * as user from '../model/user';
+import * as message from '../model/message';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
 import { PERM, PRIV } from '../model/builtin';
@@ -213,6 +215,16 @@ class DiscussionDetailHandler extends DiscussionHandler {
     async postReply(domainId: string, did: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         this.limitRate('add_discussion', 3600, 30);
+        // Notify related users
+        const replies: Drdoc[] = await discussion.getMultiReply(domainId, did).toArray();
+        const uids = Array.from(new Set(replies.map((drdoc) => drdoc.owner)));
+        const tasks = uids.map((uid) => {
+            if (uid !== this.user._id) {
+                return message.send(1, uid, `Discussion update: ${domainId} ${did}`);
+            }
+            return Promise.resolve(null as Mdoc);
+        });
+        await Promise.all(tasks);
         await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
         this.back();
     }

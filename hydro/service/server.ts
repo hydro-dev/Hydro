@@ -391,8 +391,12 @@ export class Handler {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             if (this.request.json) this.response.body = { error };
             else {
-                await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error })
-                    .catch(() => { });
+                try {
+                    await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error });
+                } catch (e) {
+                    console.error(e);
+                    // this.response.body.error = {};
+                }
             }
         }
         await this.putResponse();

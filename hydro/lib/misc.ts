@@ -28,7 +28,7 @@ export function* paginate(page: number, numPages: number) {
     let first: number;
     let last: number;
     if (page > 1) {
-        yield ['first', 1];
+        if (page > 2) yield ['first', 1];
         yield ['previous', page - 1];
     }
     if (page <= radius) [first, last] = [1, Math.min(1 + radius * 2, numPages)];
@@ -43,8 +43,10 @@ export function* paginate(page: number, numPages: number) {
         else yield ['current', page];
     }
     if (last < numPages) yield ['ellipsis', 0];
-    if (page < numPages) yield ['next', page + 1];
-    yield ['last', numPages];
+    if (page < numPages) {
+        yield ['next', page + 1];
+        if (page < numPages - 1) yield ['last', numPages];
+    }
 }
 
 export function size(s: number, base = 1) {

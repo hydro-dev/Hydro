@@ -200,11 +200,10 @@ export function getNodes(domainId: string) {
 export async function getListVnodes(domainId: string, ddocs: any, handler: any) {
     const tasks = [];
     const res = {};
-    function task(ddoc) {
-        return getVnode(domainId, ddoc, handler).then((vnode) => {
-            if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
-            res[ddoc.parentType][ddoc.parentId] = vnode;
-        });
+    async function task(ddoc) {
+        const vnode = await getVnode(domainId, ddoc, handler);
+        if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
+        res[ddoc.parentType][ddoc.parentId] = vnode;
     }
     for (const ddoc of ddocs) tasks.push(task(ddoc));
     await Promise.all(tasks);

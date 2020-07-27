@@ -24,11 +24,7 @@ import {
     Route, Connection, Handler, ConnectionHandler, Types, param, multipart,
 } from '../service/server';
 
-const parseCategory = (value: string) => {
-    if (!value) return [];
-    console.log(value);
-    return flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
-};
+const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
 const parsePid = (value: string) => (isSafeInteger(value) ? parseInt(value, 10) : value);
 
 class ProblemHandler extends Handler {
