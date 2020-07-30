@@ -113,7 +113,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
                 return;
             }
         }
-        bus.subscribe(['record_change'], this, 'onRecordChange');
+        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
     }
 
     async message(msg) {
@@ -129,7 +129,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this, 'onRecordChange');
+        bus.unsubscribe(['record_change'], this.id);
     }
 
     async onRecordChange(data) {
@@ -157,7 +157,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
             }
         }
         this.rid = rid.toString();
-        bus.subscribe(['record_change'], this, 'onRecordChange');
+        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
         this.onRecordChange({ value: { rdoc } });
     }
 
@@ -175,7 +175,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this, 'onRecordChange');
+        bus.unsubscribe(['record_change'], this.id);
     }
 }
 

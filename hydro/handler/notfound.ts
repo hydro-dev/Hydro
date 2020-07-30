@@ -8,9 +8,7 @@ class NotFoundHandler extends Handler {
         throw new NotFoundError();
     }
 
-    async get() { }
-
-    async post() { }
+    all() { }
 }
 
 export async function apply() {

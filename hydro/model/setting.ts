@@ -7,7 +7,7 @@ import { Setting as _Setting } from '../interface';
 type SettingDict = Dictionary<_Setting>;
 
 const countries = moment.tz.countries();
-const tzs: Set<string> = new Set();
+const tzs = new Set();
 for (const country of countries) {
     const tz = moment.tz.zonesForCountry(country);
     for (const t of tz) tzs.add(t);
@@ -100,6 +100,10 @@ DomainSetting(
     Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
     Setting('setting_storage', 'pidCounter', null, 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
+);
+
+DomainUserSetting(
+    Setting('setting_info', 'displayName', null, null, 'string', 'display name'),
     Setting('setting_storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
@@ -121,7 +125,7 @@ SystemSetting(
     Setting('setting_server', 'server.cdn', null, '/', 'text', 'CDN Prefix', 'Ends with /'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
-    Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_HIDDEN),
     Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
     Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
@@ -130,17 +134,17 @@ SystemSetting(
     Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID', null),
     Setting('setting_oauth', 'oauth.googlesecret', null, null, 'text', 'Google Oauth Secret', null, FLAG_SECRET),
     Setting('setting_proxy', 'proxy', null, null, 'text', 'Proxy Server URL'),
-    Setting('setting_constant', 'PROBLEM_PER_PAGE', null, 100, 'number', 'Problems per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'CONTEST_PER_PAGE', null, 20, 'number', 'Contests per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'DISCUSSION_PER_PAGE', null, 50, 'number', 'Discussion per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'RECORD_PER_PAGE', null, 100, 'number', 'Record per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'SOLUTION_PER_PAGE', null, 20, 'number', 'Solutions per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'TRAINING_PER_PAGE', null, 10, 'number', 'Training per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'REPLY_PER_PAGE', null, 50, 'number', 'Reply per Page', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'HOMEWORK_ON_MAIN', null, 5, 'number', 'HOMEWORK_ON_MAIN', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'DISCUSSION_ON_MAIN', null, 20, 'number', 'DISCUSSION_ON_MAIN', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'CONTEST_ON_MAIN', null, 10, 'number', 'CONTEST_ON_MAIN', null, FLAG_HIDDEN),
-    Setting('setting_constant', 'TRAINING_ON_MAIN', null, 10, 'number', 'TRAINING_ON_MAIN', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'PROBLEM_PER_PAGE', null, 100, 'number', 'Problems per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'CONTEST_PER_PAGE', null, 20, 'number', 'Contests per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'DISCUSSION_PER_PAGE', null, 50, 'number', 'Discussion per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'RECORD_PER_PAGE', null, 100, 'number', 'Record per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'SOLUTION_PER_PAGE', null, 20, 'number', 'Solutions per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'TRAINING_PER_PAGE', null, 10, 'number', 'Training per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'REPLY_PER_PAGE', null, 50, 'number', 'Reply per Page', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'HOMEWORK_ON_MAIN', null, 5, 'number', 'HOMEWORK_ON_MAIN', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'DISCUSSION_ON_MAIN', null, 20, 'number', 'DISCUSSION_ON_MAIN', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'CONTEST_ON_MAIN', null, 10, 'number', 'CONTEST_ON_MAIN', null, FLAG_HIDDEN),
+    Setting('setting_storage', 'TRAINING_ON_MAIN', null, 10, 'number', 'TRAINING_ON_MAIN', null, FLAG_HIDDEN),
     Setting('setting_storage', 'db.ver', null, 1, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
 );

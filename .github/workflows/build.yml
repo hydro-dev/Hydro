@@ -15,11 +15,6 @@ jobs:
     - run: |
         yarn
         yarn build
-        rm -rf node_modules
-    - uses: actions/upload-artifact@v1
-      with:
-        name: hydro
-        path: .
     - uses: JS-DevTools/npm-publish@v1
       with:
         token: ${{ secrets.NPM_TOKEN }}

@@ -35,7 +35,10 @@ export async function load(call: Entry) {
     try {
         require('../options').default();
     } catch (e) {
-        await call({ entry: 'setup', newProcess: true });
+        await call({ entry: 'setup', newProcess: true }).catch((err) => {
+            console.error('Cannot start setup process.', err);
+            process.exit(1);
+        });
     }
     const bus = require('../service/bus');
     await new Promise((resolve) => {
@@ -54,21 +57,8 @@ export async function load(call: Entry) {
         const ins = require('../script/upgrade0_1');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    for (const i in global.Hydro.service) {
-        if (global.Hydro.service[i].postInit) {
-            try {
-                await global.Hydro.service[i].postInit();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    }
     for (const postInit of global.Hydro.postInit) {
-        try {
-            await postInit();
-        } catch (e) {
-            console.error(e);
-        }
+        await postInit().catch(console.error);
     }
     return await modelSystem.get('server.worker');
 }

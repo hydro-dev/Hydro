@@ -8,4 +8,3 @@ function fix(file) {
 }
 
 fix(path.resolve(__dirname, '..', 'yarn.lock'));
-fix(path.resolve(__dirname, '..', 'ui', 'yarn.lock'));

@@ -397,7 +397,7 @@ declare global {
                 locales: Dict<Dict<string>>,
                 postInit: Array<() => Promise<any>>,
             },
-            onDestory: Array<() => void>,
+            onDestory: Array<() => void | Promise<void>>,
             addons: string[],
         }
     }

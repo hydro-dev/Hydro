@@ -1,33 +1,24 @@
-import { EventEmitter } from 'events';
 import cluster from 'cluster';
 
-const bus = new EventEmitter();
+const bus = {};
 
-export function subscribe(events, handler, funcName) {
-    if (!funcName) {
-        for (const event of events) bus.on(event, handler);
-    } else {
-        handler.__bus = (...args) => {
-            handler[funcName].call(handler, ...args);
-        };
-        for (const event of events) bus.on(event, handler.__bus);
+export function subscribe(events: string[], handler: any) {
+    const id = String.random(16);
+    for (const event of events) {
+        if (!bus[event]) bus[event] = {};
+        bus[event][id] = handler;
+    }
+    return id;
+}
+
+export function unsubscribe(events: string[], id: string) {
+    for (const event of events) {
+        if (!bus[event]) bus[event] = {};
+        delete bus[event][id];
     }
 }
 
-export function unsubscribe(events, handler, funcName) {
-    if (!funcName) {
-        for (const event of events) bus.off(event, handler);
-    } else {
-        handler.__bus = (...args) => {
-            handler[funcName].call(handler, ...args);
-        };
-        // FIXME doesn't work
-        for (const event of events) bus.off(event, handler.__bus);
-        delete handler.__bus;
-    }
-}
-
-export function publish(event, payload, isMaster = true) {
+export function publish(event: string, payload: any, isMaster = true) {
     // Process forked by pm2 would also have process.send
     if (isMaster && process.send && !cluster.isMaster) {
         process.send({
@@ -36,7 +27,9 @@ export function publish(event, payload, isMaster = true) {
             payload,
         });
     } else {
-        bus.emit(event, { value: payload, event });
+        if (!bus[event]) bus[event] = {};
+        const funcs = Object.keys(bus[event]);
+        Promise.all(funcs.map((func) => bus[event][func]()));
     }
 }
 

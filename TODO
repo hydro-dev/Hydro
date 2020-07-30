@@ -1,9 +1,8 @@
 @requireCsrfToken
 discussion前端权限节点显示异常?
-web端运行脚本异常?
-讨论回复通知
 举报功能
 SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
 move to @hydrooj/core?
+message.markAsRead

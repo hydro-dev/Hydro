@@ -284,6 +284,8 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
 
     domainId: string;
 
+    id: string;
+
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
         const pdoc = await problem.get(domainId, pid);
@@ -291,7 +293,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
         if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
         this.pid = pdoc.docId.toString();
         this.domainId = domainId;
-        bus.subscribe(['record_change'], this, 'onRecordChange');
+        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
     }
 
     async onRecordChange(data) {
@@ -313,7 +315,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this, 'onRecordChange');
+        bus.unsubscribe(['record_change'], this.id);
     }
 }
 

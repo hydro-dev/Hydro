@@ -532,7 +532,7 @@ async function handle(ctx, HandlerClass, checker) {
             } else if (typeof h.post !== 'function') {
                 throw new MethodNotAllowedError(method);
             }
-        } else if (typeof h[method] !== 'function') {
+        } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
             throw new MethodNotAllowedError(method);
         }
 
@@ -623,50 +623,25 @@ export class ConnectionHandler {
         return res;
     }
 
-    async limitRate(op, periodSecs, maxOperations) {
+    async limitRate(op: string, periodSecs: number, maxOperations: number) {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
-    translate(str) {
+    translate(str: string) {
         return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
     }
 
-    renderTitle(str) {
+    renderTitle(str: string) {
         return `${this.translate(str)} - Hydro`;
     }
 
-    checkPerm(...args: Array<bigint[] | bigint>) {
-        for (const i in args) {
-            if (args[i] instanceof Array) {
-                let p = false;
-                for (const j in args) {
-                    if (this.user.hasPerm(args[i][j])) {
-                        p = true;
-                        break;
-                    }
-                }
-                if (!p) throw new PermissionError([args[i]]);
-            } else if (!this.user.hasPerm(args[i])) {
-                throw new PermissionError([[args[i]]]);
-            }
-        }
+    checkPerm(...args: bigint[]) {
+        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
     }
 
-    checkPriv(...args: Array<number[] | number>) {
-        for (const i in args) {
-            if (args[i] instanceof Array) {
-                let p = false;
-                for (const j in args) {
-                    if (this.user.hasPriv(args[i][j])) {
-                        p = true;
-                        break;
-                    }
-                }
-                if (!p) throw new PrivilegeError([args[i]]);
-            } else if (!this.user.hasPriv(args[i])) {
-                throw new PrivilegeError([[args[i]]]);
-            }
-        }
+    checkPriv(...args: number[]) {
+        // @ts-ignore
+        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
     }
 
     url(name: string, kwargs = {}) {

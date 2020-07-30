@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.10.11",
+  "version": "2.10.12",
   "main": "dist/loader.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -69,7 +69,6 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-import": "^2.20.2",
-    "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   },
   "scripts": {

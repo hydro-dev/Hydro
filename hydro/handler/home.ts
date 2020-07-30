@@ -206,18 +206,30 @@ class HomeSettingsHandler extends Handler {
             this.response.body.settings = setting.PREFERENCE_SETTINGS;
         } else if (category === 'account') {
             this.response.body.settings = setting.ACCOUNT_SETTINGS;
+        } else if (category === 'domain') {
+            this.response.body.settings = setting.DOMAIN_USER_SETTINGS;
         } else throw new NotFoundError();
     }
 
     async post(args: any) {
         const $set = {};
-        for (const key in args) {
-            if (setting.SETTINGS_BY_KEY[key]
-                && !(setting.SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
-                $set[key] = args[key];
+        if (args.category === 'domain') {
+            for (const key in args) {
+                if (setting.DOMAIN_USER_SETTINGS_BY_KEY[key]
+                    && !(setting.DOMAIN_USER_SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
+                    $set[key] = args[key];
+                }
             }
+            await domain.setUserInDomain(args.domainId, this.user._id, $set);
+        } else {
+            for (const key in args) {
+                if (setting.SETTINGS_BY_KEY[key]
+                    && !(setting.SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
+                    $set[key] = args[key];
+                }
+            }
+            await user.setById(this.user._id, $set);
         }
-        await user.setById(this.user._id, $set);
         this.back();
     }
 }
@@ -322,7 +334,6 @@ class HomeMessagesHandler extends Handler {
         if (!udoc) throw new UserNotFoundError(uid);
         if (udoc.gravatar) udoc.gravatar = misc.gravatar(udoc.gravatar);
         const mdoc = await message.send(this.user._id, uid, content, message.FLAG_UNREAD);
-        // TODO(twd2): improve here: projection\
         this.back({ mdoc, udoc });
     }
 
@@ -345,8 +356,10 @@ class HomeMessagesHandler extends Handler {
 }
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
+    id: string;
+
     async prepare() {
-        bus.subscribe([`user_message-${this.user._id}`], this, 'onMessageReceived');
+        bus.subscribe([`user_message-${this.user._id}`], this.onMessageReceived.bind(this));
     }
 
     async onMessageReceived(e: any) {
@@ -354,7 +367,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe([`user_message-${this.user._id}`], this, 'onMessageReceived');
+        bus.unsubscribe([`user_message-${this.user._id}`], this.id);
     }
 }
 

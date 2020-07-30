@@ -2,11 +2,11 @@
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署，轻量，功能强大且易于扩展。  
 
-[中文文档](https://hydro-dev.github.io)  
+[中文文档](https://hydro.js.org/)  
 [Hydro UI 传送门](https://github.com/hydro-dev/ui-default)  
 
 如果您认为本项目有价值，欢迎 star 。  
-相关文档若说明的不够详细，请提交 Pull Request或联系开发组说明。  
+相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug和功能建议请在 Issues 提出。  
 
 [在 Gitpod 打开已配置完成的测试环境](https://gitpod.io/#https://github.com/hydro-dev/Hydro)  
