@@ -210,8 +210,13 @@ export async function getPrefixList(prefix: string, limit = 50) {
     return udocs;
 }
 
-export function setPriv(uid: number, priv: number) {
-    return coll.findOneAndUpdate({ _id: uid }, { $set: priv }, { returnOriginal: false });
+export async function setPriv(uid: number, priv: number) {
+    const udoc = await coll.findOneAndUpdate(
+        { _id: uid },
+        { $set: { priv } },
+        { returnOriginal: false },
+    );
+    return udoc.value;
 }
 
 export function ban(uid: number) {

@@ -380,6 +380,15 @@ export class Handler {
                 token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
             ),
         ]);
+        if (!this.user) {
+            this.session.uid = 0;
+            [this.user, this.UIContext.token] = await Promise.all([
+                user.getById(domainId, this.session.uid),
+                token.createOrUpdate(
+                    token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
+                ),
+            ]);
+        }
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UIContext.csrfToken = this.csrfToken;
     }

@@ -94,38 +94,35 @@ class SystemScriptHandler extends SystemHandler {
         const args = JSON.parse(raw);
         validate(global.Hydro.script[id].validate, args);
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: 'raw' });
-        judge.next({ domainId, rid, message: `Running script: ${id}` });
-        async function report(data) {
-            judge.next({ domainId, rid, ...data });
-        }
-        setTimeout(() => {
-            const start = new Date().getTime();
-            global.Hydro.script[id].run(args, report)
-                .then((ret: any) => {
-                    const time = new Date().getTime() - start;
-                    judge.end({
-                        domainId,
-                        rid,
-                        status: STATUS.STATUS_ACCEPTED,
-                        message: ret.toString(),
-                        judger: 1,
-                        time,
-                        memory: 0,
-                    });
-                })
-                .catch((err: Error) => {
-                    const time = new Date().getTime() - start;
-                    judge.end({
-                        domainId,
-                        rid,
-                        status: STATUS.STATUS_SYSTEM_ERROR,
-                        message: `${err}\n${err.stack}`,
-                        judger: 1,
-                        time,
-                        memory: 0,
-                    });
+        const report = (data) => judge.next({ domainId, rid, ...data });
+        report({ message: `Running script: ${id}` });
+        const start = new Date().getTime();
+        // Maybe async?
+        global.Hydro.script[id].run(args, report)
+            .then((ret: any) => {
+                const time = new Date().getTime() - start;
+                judge.end({
+                    domainId,
+                    rid,
+                    status: STATUS.STATUS_ACCEPTED,
+                    message: ret.toString(),
+                    judger: 1,
+                    time,
+                    memory: 0,
                 });
-        }, 300);
+            })
+            .catch((err: Error) => {
+                const time = new Date().getTime() - start;
+                judge.end({
+                    domainId,
+                    rid,
+                    status: STATUS.STATUS_SYSTEM_ERROR,
+                    message: `${err}\n${err.stack}`,
+                    judger: 1,
+                    time,
+                    memory: 0,
+                });
+            });
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
