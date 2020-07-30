@@ -23,22 +23,24 @@ function calc(udict: ND, rankedDocs: [number, number][]) {
     }
 }
 
-async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>
-async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>
-async function runProblem(...arg: Array<any>) {
+async function runProblem(pdoc: Pdoc, udict: ND, uids: number[]): Promise<void>
+async function runProblem(domainId: string, pid: number, udict: ND, uids: number[]): Promise<void>
+async function runProblem(...arg: any[]) {
     const pdoc: Pdoc = (typeof arg[0] === 'string')
         ? await contest.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
-    // TODO maybe some other rules?
-    // TODO pagination
+    const uids = (typeof arg[0] === 'string') ? arg[3] : arg[2];
     const psdocs = await problem.getMultiStatus(
-        pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
-    ).sort('rid', 1).toArray();
+        pdoc.domainId, { docId: pdoc.docId },
+    ).sort({ score: -1, _id: 1 }).toArray();
     const ranked = [];
+    const u = new Set(Array.from(uids));
     for (const index in psdocs) {
         ranked.push([index + 1, psdocs[index].uid]);
+        u.delete(psdocs[index].uid);
     }
+    u.forEach((uid) => ranked.push(psdocs.length, uid));
     calc(udict, ranked);
 }
 
@@ -46,7 +48,7 @@ async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void
 async function runContest(
     domainId: string, tid: ObjectID, udict: ND, report: Function
 ): Promise<void>
-async function runContest(...arg: Array<any>) {
+async function runContest(...arg: any[]) {
     const start = new Date().getTime();
     const tdoc: Tdoc = (typeof arg[0] === 'string')
         ? await contest.get(arg[0], arg[1], -1)
@@ -72,15 +74,34 @@ async function runContest(...arg: Array<any>) {
     });
 }
 
+async function getRelatedUsers(domainId: string) {
+    const uids: Set<number> = new Set();
+    const problems = await problem.getMulti(domainId, { hidden: false }).toArray();
+    for (const pdoc of problems) {
+        const psdocs = await problem.getMultiStatus(
+            pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
+        ).sort('rid', 1).toArray();
+        for (const psdoc of psdocs) uids.add(psdoc.uid);
+    }
+    const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
+    for (const tdoc of contests) {
+        const tsdocs = await contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
+            .sort(contest.RULES[tdoc.rule].statusSort).toArray();
+        for (const tsdoc of tsdocs) uids.add(tsdoc.uid);
+    }
+    return Array.from(uids);
+}
+
 async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     await domain.setMultiUserInDomain(domainId, {}, { rating: 1500 });
+    const uids = await getRelatedUsers(domainId);
     const udict: ND = {};
     // TODO pagination
     const problems = await problem.getMulti(domainId, { hidden: false }).toArray();
     await report({ message: `Found ${problems.length} problems in ${domainId}` });
     for (const i in problems) {
         const pdoc = problems[i];
-        runProblem(pdoc, udict);
+        await runProblem(pdoc, udict, uids);
         if (!isSub) {
             await report({
                 progress: Math.floor(((parseInt(i, 10) + 1) / problems.length) * 100),
@@ -91,7 +112,7 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
     for (const i in contests) {
         const tdoc = contests[i];
-        runContest(tdoc, udict, report);
+        await runContest(tdoc, udict, report);
         if (!isSub) {
             await report({
                 progress: Math.floor(((parseInt(i, 10) + 1) / contests.length) * 100),
