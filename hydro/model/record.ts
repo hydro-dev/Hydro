@@ -109,14 +109,20 @@ export function getMulti(domainId: string, query: any) {
 export async function update(
     domainId: string, _id: ObjectID,
     $set: any = {}, $push: any = {}, $unset: any = {},
-): Promise<Rdoc> {
+): Promise<Rdoc | null> {
     const $update: any = {};
     if ($set && Object.keys($set).length) $update.$set = $set;
     if ($push && Object.keys($push).length) $update.$push = $push;
     if ($unset && Object.keys($unset).length) $update.$unset = $unset;
-    const res = await coll.findOneAndUpdate({ domainId, _id }, $update, { returnOriginal: false });
-    if (!res.value) throw new RecordNotFoundError(_id);
-    return res.value;
+    if (Object.keys($update).length) {
+        const res = await coll.findOneAndUpdate(
+            { _id, domainId },
+            $update,
+            { returnOriginal: false },
+        );
+        return res.value;
+    }
+    return await get(domainId, _id);
 }
 
 export function reset(domainId: string, rid: ObjectID, isRejudge: boolean) {

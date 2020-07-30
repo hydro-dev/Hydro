@@ -18,6 +18,7 @@ export const pdocHidden: Pdoc = {
     content: '',
     nSubmit: 0,
     nAccept: 0,
+    difficulty: 0,
     tag: [],
     category: [],
     data: null,

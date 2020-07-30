@@ -13,7 +13,7 @@ class DomainRankHandler extends Handler {
     @param('page', Types.UnsignedInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
-            domain.getMultiInDomain(domainId).sort({ rating: -1 }),
+            domain.getMultiInDomain(domainId).sort({ rp: -1 }),
             page,
             100,
         );

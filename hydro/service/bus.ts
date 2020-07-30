@@ -29,7 +29,10 @@ export function publish(event: string, payload: any, isMaster = true) {
     } else {
         if (!bus[event]) bus[event] = {};
         const funcs = Object.keys(bus[event]);
-        Promise.all(funcs.map((func) => bus[event][func]()));
+        Promise.all(funcs.map((func) => bus[event][func]({
+            event,
+            value: payload,
+        })));
     }
 }
 

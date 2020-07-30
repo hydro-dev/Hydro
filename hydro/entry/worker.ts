@@ -31,6 +31,7 @@ export async function load() {
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);
     require('../service/gridfs');
+    require('../service/monitor');
     const server = require('../service/server');
     await server.prepare();
     await service(pending, fail);

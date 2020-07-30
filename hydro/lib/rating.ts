@@ -1,15 +1,17 @@
+// Based on https://github.com/QAQrz/Codeforces-Rating-System/blob/master/rating.py
+
 class User {
+    uid: number;
+
     rank: number;
 
     old: number;
 
-    seed: number;
-
-    uid: number;
+    seed?: number;
 
     delta?: number;
 
-    new: number;
+    new?: number;
 
     constructor(rank: number, old: number, uid = 0) {
         this.rank = rank;
@@ -22,7 +24,7 @@ class User {
 class RatingCalculator {
     users: User[];
 
-    constructor(users) {
+    constructor(users: User[]) {
         this.users = [];
         for (const user of users) {
             this.users.push(new User(user.rank, user.old, user.uid));
@@ -106,8 +108,20 @@ interface RatingOutputUser {
 }
 
 export default function calculate(users: RatingInputUser[]): RatingOutputUser[] {
+    let last_idx = 0;
+    let last_rank = 1;
+    for (let i = 1; i < users.length; i++) {
+        if (users[i].rank > last_rank) {
+            for (let j = last_idx; j < i; j++) users[j].rank = i;
+            last_idx = i;
+            last_rank = users[i].rank;
+        }
+    }
+    for (let i = last_idx; i < users.length; i++) {
+        users[i].rank = users.length;
+    }
     const calculator = new RatingCalculator(users);
-    return calculator.calculate();
+    return calculator.calculate() as RatingOutputUser[];
 }
 
 global.Hydro.lib.rating = calculate;

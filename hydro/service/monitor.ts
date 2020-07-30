@@ -1,3 +1,4 @@
+import cluster from 'cluster';
 import * as db from './db';
 import * as sysinfo from '../lib/sysinfo';
 
@@ -22,16 +23,18 @@ export function updateJudger(args) {
     );
 }
 
-global.Hydro.postInit.push(
-    async () => {
-        const info = await sysinfo.get();
-        await coll.updateOne(
-            { mid: info.mid, type: 'server' },
-            { $set: { ...info, updateAt: new Date(), type: 'server' } },
-            { upsert: true },
-        );
-        setInterval(update, 60 * 1000);
-    },
-);
+if (cluster.isMaster) {
+    global.Hydro.postInit.push(
+        async () => {
+            const info = await sysinfo.get();
+            await coll.updateOne(
+                { mid: info.mid, type: 'server' },
+                { $set: { ...info, updateAt: new Date(), type: 'server' } },
+                { upsert: true },
+            );
+            setInterval(update, 60 * 1000);
+        },
+    );
+}
 
 global.Hydro.service.monitor = { update, updateJudger };

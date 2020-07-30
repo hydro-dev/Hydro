@@ -1,4 +1,4 @@
-function* ranked(diter, equ = (a, b) => a === b) {
+function* ranked<T>(diter: T[], equ = (a: T, b: T) => a === b): Generator<[number, T], void> {
     let last = null;
     let r = 0;
     let count = 0;

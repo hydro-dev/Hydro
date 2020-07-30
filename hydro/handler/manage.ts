@@ -95,7 +95,7 @@ class SystemScriptHandler extends SystemHandler {
         validate(global.Hydro.script[id].validate, args);
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: 'raw' });
         const report = (data) => judge.next({ domainId, rid, ...data });
-        report({ message: `Running script: ${id}` });
+        report({ message: `Running script: ${id}`, status: STATUS.STATUS_JUDGING });
         const start = new Date().getTime();
         // Maybe async?
         global.Hydro.script[id].run(args, report)

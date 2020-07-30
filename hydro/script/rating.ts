@@ -1,47 +1,50 @@
 /* eslint-disable no-await-in-loop */
-import { NumericDictionary } from 'lodash';
+import { NumericDictionary, filter } from 'lodash';
 import { ObjectID } from 'mongodb';
+import { Tdoc, Pdoc } from '../interface';
 import * as domain from '../model/domain';
 import * as contest from '../model/contest';
 import * as problem from '../model/problem';
-import rating from '../lib/rating';
+import * as record from '../model/record';
 import { STATUS } from '../model/builtin';
-import { Tdoc, Pdoc } from '../interface';
+import rating from '../lib/rating';
 
-export const description = 'Calculate rating of a domain, or all domains';
+export const description = 'Calculate rp of a domain, or all domains';
 
 type ND = NumericDictionary<number>
 
 function calc(udict: ND, rankedDocs: [number, number][]) {
     const users = [];
-    for (const [rank, uid] of rankedDocs) {
-        users.push({ uid, rank, old: udict[uid] || 1500 });
+    for (const [rk, uid] of rankedDocs) {
+        users.push({ uid, rank: rk, old: udict[uid] || 1500 });
     }
+    // FIXME sum(rating.new) always less than sum(rating.old)
     const rated = rating(users);
     for (const udoc of rated) {
         udict[udoc.uid] = udoc.new;
     }
 }
 
-async function runProblem(pdoc: Pdoc, udict: ND, uids: number[]): Promise<void>
-async function runProblem(domainId: string, pid: number, udict: ND, uids: number[]): Promise<void>
+async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>
+async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>
 async function runProblem(...arg: any[]) {
     const pdoc: Pdoc = (typeof arg[0] === 'string')
-        ? await contest.get(arg[0], arg[1], -1)
+        ? await problem.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
-    const uids = (typeof arg[0] === 'string') ? arg[3] : arg[2];
     const psdocs = await problem.getMultiStatus(
-        pdoc.domainId, { docId: pdoc.docId },
-    ).sort({ score: -1, _id: 1 }).toArray();
-    const ranked = [];
-    const u = new Set(Array.from(uids));
-    for (const index in psdocs) {
-        ranked.push([index + 1, psdocs[index].uid]);
-        u.delete(psdocs[index].uid);
+        pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+    ).toArray();
+    if (!psdocs.length) return;
+    const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
+    const nAccept = filter(psdocs, (psdoc) => psdoc.status === STATUS.STATUS_ACCEPTED).length;
+    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(nAccept)) + 1);
+    for (const psdoc of psdocs) {
+        if (rdict[psdoc.rid]) {
+            const rp = rdict[psdoc.rid].score * p;
+            udict[psdoc.uid] = (udict[psdoc.uid] || 1500) + rp;
+        }
     }
-    u.forEach((uid) => ranked.push(psdocs.length, uid));
-    calc(udict, ranked);
 }
 
 async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void>
@@ -57,6 +60,7 @@ async function runContest(...arg: any[]) {
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
     const tsdocs = await contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
         .sort(contest.RULES[tdoc.rule].statusSort).toArray();
+    if (!tsdocs.length) return;
     const rankedTsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
     const ranked = [];
     for (const result of rankedTsdocs) {
@@ -74,40 +78,9 @@ async function runContest(...arg: any[]) {
     });
 }
 
-async function getRelatedUsers(domainId: string) {
-    const uids: Set<number> = new Set();
-    const problems = await problem.getMulti(domainId, { hidden: false }).toArray();
-    for (const pdoc of problems) {
-        const psdocs = await problem.getMultiStatus(
-            pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
-        ).sort('rid', 1).toArray();
-        for (const psdoc of psdocs) uids.add(psdoc.uid);
-    }
-    const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
-    for (const tdoc of contests) {
-        const tsdocs = await contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
-            .sort(contest.RULES[tdoc.rule].statusSort).toArray();
-        for (const tsdoc of tsdocs) uids.add(tsdoc.uid);
-    }
-    return Array.from(uids);
-}
-
 async function runInDomain(domainId: string, isSub: boolean, report: Function) {
-    await domain.setMultiUserInDomain(domainId, {}, { rating: 1500 });
-    const uids = await getRelatedUsers(domainId);
+    await domain.setMultiUserInDomain(domainId, {}, { rp: 1500 });
     const udict: ND = {};
-    // TODO pagination
-    const problems = await problem.getMulti(domainId, { hidden: false }).toArray();
-    await report({ message: `Found ${problems.length} problems in ${domainId}` });
-    for (const i in problems) {
-        const pdoc = problems[i];
-        await runProblem(pdoc, udict, uids);
-        if (!isSub) {
-            await report({
-                progress: Math.floor(((parseInt(i, 10) + 1) / problems.length) * 100),
-            });
-        }
-    }
     const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
     for (const i in contests) {
@@ -119,9 +92,21 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
             });
         }
     }
+    // TODO pagination
+    const problems = await problem.getMulti(domainId, { hidden: false }).toArray();
+    await report({ message: `Found ${problems.length} problems in ${domainId}` });
+    for (const i in problems) {
+        const pdoc = problems[i];
+        await runProblem(pdoc, udict);
+        if (!isSub) {
+            await report({
+                progress: Math.floor(((parseInt(i, 10) + 1) / problems.length) * 100),
+            });
+        }
+    }
     const tasks = [];
     for (const uid in udict) {
-        tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rating: udict[uid] }));
+        tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rp: udict[uid] }));
     }
     await Promise.all(tasks);
 }
@@ -144,7 +129,7 @@ export async function run({ domainId }, report: Function) {
                 progress: Math.floor(((parseInt(i, 10) + 1) / domains.length) * 100),
             });
         }
-    } else runInDomain(domainId, false, report);
+    } else await runInDomain(domainId, false, report);
     return true;
 }
 
@@ -155,4 +140,4 @@ export const validate = {
     ],
 };
 
-global.Hydro.script.rating = { run, description, validate };
+global.Hydro.script.rp = { run, description, validate };

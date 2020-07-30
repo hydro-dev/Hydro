@@ -1,5 +1,5 @@
 import { ObjectID } from 'mongodb';
-import { PermissionError } from '../error';
+import { PermissionError, RecordNotFoundError } from '../error';
 import { PERM } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
@@ -63,6 +63,7 @@ class RecordDetailHandler extends RecordHandler {
     async get(domainId: string, rid: ObjectID) {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
+        if (!rdoc) throw new RecordNotFoundError(rid);
         if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
             if (!this.canShowRecord(tdoc, true)) throw new PermissionError(rid);
@@ -71,7 +72,7 @@ class RecordDetailHandler extends RecordHandler {
             rdoc.code = null;
         }
         const [pdoc, udoc] = await Promise.all([
-            problem.get(domainId, rdoc.pid, null),
+            problem.get(domainId, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
         this.response.body = {

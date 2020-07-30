@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import serialize from 'serialize-javascript';
 import nunjucks from 'nunjucks';
+import html2text from 'html-to-text';
 import { argv } from 'yargs';
 import * as markdown from './markdown';
 import * as misc from './misc';
@@ -37,6 +38,7 @@ class Nunjucks extends nunjucks.Environment {
         this.addFilter('assign', (self, data) => Object.assign(self, data));
         this.addFilter('markdown', (self, html = false) => markdown.render(self, html));
         this.addFilter('ansi', (self) => misc.ansiToHtml(self));
+        this.addFilter('inline', (self) => html2text.fromString(self).replace(/\n/gmi, ' '));
         this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
         this.addFilter('bitand', (self, val) => self & val);
     }

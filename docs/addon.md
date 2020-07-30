@@ -35,7 +35,7 @@ Hydro的推荐架构如下：
 - handler.js: 用于处理路由
 - model.js: 数据库模型
 - lib.js: 不依赖于数据库等的库（如md5函数）
-- script.js: 可能会被用户多次使用到的脚本（如重新计算rating）
+- script.js: 可能会被用户多次使用到的脚本（如重新计算rp）
 - locale/: 翻译文件
 - template/: 页面模板
 - setting.yaml: 模块所用到的设置，格式在下方说明

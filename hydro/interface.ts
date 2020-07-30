@@ -135,6 +135,7 @@ export interface Pdoc {
     nAccept: number,
     tag: string[],
     category: string[],
+    difficulty: number,
     data?: ProblemData,
     hidden: boolean,
     config: ProblemConfig,
