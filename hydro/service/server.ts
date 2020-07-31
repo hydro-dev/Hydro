@@ -12,6 +12,7 @@ import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
+import { SetOption } from 'cookies';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
 import { lrucache } from '../utils';
@@ -365,28 +366,14 @@ export class Handler {
         ]);
         if (!this.domain) {
             this.args.domainId = 'system';
-            [this.user, this.UIContext.token] = await Promise.all([
-                user.getById('system', this.session.uid),
-                token.createOrUpdate(
-                    token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
-                ),
-            ]);
+            this.user = await user.getById('system', this.session.uid);
+            if (!this.user) this.user = await user.getById('system', 0);
             throw new NotFoundError(domainId);
         }
-        [this.user, this.UIContext.token] = await Promise.all([
-            user.getById(domainId, this.session.uid),
-            token.createOrUpdate(
-                token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
-            ),
-        ]);
+        this.user = await user.getById(domainId, this.session.uid);
         if (!this.user) {
             this.session.uid = 0;
-            [this.user, this.UIContext.token] = await Promise.all([
-                user.getById(domainId, this.session.uid),
-                token.createOrUpdate(
-                    token.TYPE_TOKEN, 600, { uid: this.session.uid, domainId },
-                ),
-            ]);
+            this.user = await user.getById(domainId, this.session.uid);
         }
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UIContext.csrfToken = this.csrfToken;
@@ -484,7 +471,10 @@ export class Handler {
                 },
             );
         }
-        const cookie: any = { secure: await system.get('session.secure') };
+        const cookie: SetOption = {
+            secure: await system.get('session.secure'),
+            httpOnly: false,
+        };
         if (this.session.save) {
             cookie.expires = this.session.expireAt;
             cookie.maxAge = expireSeconds;
@@ -492,7 +482,7 @@ export class Handler {
         this.ctx.cookies.set('sid', this.session._id, cookie);
     }
 
-    async onerror(error) {
+    async onerror(error: HydroError) {
         if (!error.msg) error.msg = () => error.message;
         console.error(error.msg(), error.params);
         console.error(error.stack);
@@ -600,6 +590,8 @@ export class ConnectionHandler {
 
     user: any
 
+    domain: DomainDoc
+
     constructor(conn: sockjs.Connection) {
         this.conn = conn;
         this.request = {
@@ -683,10 +675,24 @@ export class ConnectionHandler {
         this.close(1001, err.toString());
     }
 
-    async init({ domainId }) {
-        this.session = await token.get(this.request.params.token, token.TYPE_TOKEN);
-        this.session = this.session || { uid: 0, domainId: 'system' };
-        this.args.domainId = this.session.domainId;
+    async getSession(cookieHeader: string) {
+        const cookies: any = {};
+        const ref = cookieHeader.split(';');
+        for (let j = 0; j < ref.length; j++) {
+            const cookie = ref[j];
+            const parts = cookie.split('=');
+            cookies[parts[0].trim()] = (parts[1] || '').trim();
+        }
+        this.session = await token.get(cookies.sid || '', token.TYPE_SESSION);
+        if (!this.session) this.session = { uid: 0, domainId: 'system' };
+    }
+
+    @param('cookie', Types.String)
+    async init(domainId: string, cookie: string) {
+        [this.domain] = await Promise.all([
+            domain.get(domainId),
+            this.getSession(cookie),
+        ]);
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(domainId, this.session.uid);
@@ -699,14 +705,21 @@ export function Connection(
     RouteConnHandler: any,
     ...permPrivChecker: Array<number | bigint | Function>
 ) {
-    const sock = sockjs.createServer({ prefix });
+    const sock = sockjs.createServer({ prefix, log: (a, b) => console.log(a, b) });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
         const h: Dictionary<any> = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
+            const cookie = await new Promise((resolve) => {
+                conn.once('data', (c) => {
+                    resolve(c);
+                });
+            });
+            args.cookie = cookie;
             await h.init(args);
+            conn.write(JSON.stringify({ event: 'auth' }));
             checker.call(h);
 
             if (h._prepare) await h._prepare(args);

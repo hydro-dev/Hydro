@@ -102,12 +102,6 @@ class SwitchLanguageHandler extends Handler {
     }
 }
 
-class SockToken extends Handler {
-    async get() {
-        this.response.body = { token: this.UIContext.token };
-    }
-}
-
 class UiSettingsHandler extends Handler {
     async get() {
         const [
@@ -143,7 +137,6 @@ export async function apply() {
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('token', '/token', SockToken);
     Route('ui', '/extra.css', UiSettingsHandler);
 }
 

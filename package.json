@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.11.2",
+  "version": "2.11.3",
   "main": "dist/loader.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -12,6 +12,7 @@
   "dependencies": {
     "adm-zip": "^0.4.16",
     "ansi_up": "^4.0.4",
+    "cookies": "^0.8.0",
     "detect-browser": "^5.1.1",
     "fs-extra": "^9.0.1",
     "html-to-text": "^5.1.1",

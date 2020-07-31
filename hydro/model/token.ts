@@ -4,7 +4,6 @@ import * as db from '../service/db';
 const coll = db.collection('token');
 
 export const TYPE_SESSION = 0;
-export const TYPE_TOKEN = 1;
 export const TYPE_REGISTRATION = 2;
 export const TYPE_CHANGEMAIL = 3;
 export const TYPE_OAUTH = 4;
@@ -90,7 +89,6 @@ global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.token = {
     TYPE_SESSION,
     TYPE_CHANGEMAIL,
-    TYPE_TOKEN,
     TYPE_OAUTH,
     TYPE_REGISTRATION,
     TYPE_LOSTPASS,

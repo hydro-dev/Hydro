@@ -158,33 +158,33 @@ export function getNode(domainId: string, _id: string) {
     return document.get(domainId, document.TYPE_DISCUSSION_NODE, _id);
 }
 
-export async function getVnode(domainId: string, ddoc: any, handler: any) {
-    if (ddoc.parentType === document.TYPE_PROBLEM) {
-        const pdoc = await problem.get(domainId, ddoc.parentId);
+export async function getVnode(domainId: string, type: number, id: string, handler: any) {
+    if (type === document.TYPE_PROBLEM) {
+        const pdoc = await problem.get(domainId, id);
         if (!pdoc) return null;
         if (pdoc.hidden && handler) handler.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        return { ...pdoc, type: ddoc.parentType, id: ddoc.parentId };
+        return { ...pdoc, type, id };
     }
-    if (ddoc.parentType === document.TYPE_CONTEST) {
-        const tdoc = await contest.get(domainId, ddoc.parentId);
-        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
+    if (type === document.TYPE_CONTEST) {
+        const tdoc = await contest.get(domainId, new ObjectID(id));
+        return { ...tdoc, type, id };
     }
-    if (ddoc.parentType === document.TYPE_DISCUSSION_NODE) {
-        const ndoc = await getNode(domainId, ddoc.parentId);
+    if (type === document.TYPE_DISCUSSION_NODE) {
+        const ndoc = await getNode(domainId, id);
         return {
             ...ndoc,
-            title: ddoc.parentId,
-            type: ddoc.parentType,
-            id: ddoc.parentId,
+            title: id,
+            type,
+            id,
         };
     }
-    if (ddoc.parentType === document.TYPE_TRAINING) {
-        const tdoc = await training.get(domainId, ddoc.parentId);
-        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
+    if (type === document.TYPE_TRAINING) {
+        const tdoc = await training.get(domainId, id);
+        return { ...tdoc, type, id };
     }
-    if (ddoc.parentType === document.TYPE_HOMEWORK) {
-        const tdoc = await contest.get(domainId, ddoc.parentId, document.TYPE_HOMEWORK);
-        return { ...tdoc, type: ddoc.parentType, id: ddoc.parentId };
+    if (type === document.TYPE_HOMEWORK) {
+        const tdoc = await contest.get(domainId, new ObjectID(id), document.TYPE_HOMEWORK);
+        return { ...tdoc, type, id };
     }
     return {
         title: 'Missing Node',
@@ -201,7 +201,7 @@ export async function getListVnodes(domainId: string, ddocs: any, handler: any) 
     const tasks = [];
     const res = {};
     async function task(ddoc) {
-        const vnode = await getVnode(domainId, ddoc, handler);
+        const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId, handler);
         if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
         res[ddoc.parentType][ddoc.parentId] = vnode;
     }
