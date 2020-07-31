@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { NumericDictionary, filter } from 'lodash';
+import { NumericDictionary } from 'lodash';
 import { ObjectID } from 'mongodb';
 import { Tdoc, Pdoc } from '../interface';
 import * as domain from '../model/domain';
@@ -8,22 +8,11 @@ import * as problem from '../model/problem';
 import * as record from '../model/record';
 import { STATUS } from '../model/builtin';
 import rating from '../lib/rating';
+import paginate from '../lib/paginate';
 
 export const description = 'Calculate rp of a domain, or all domains';
 
 type ND = NumericDictionary<number>
-
-function calc(udict: ND, rankedDocs: [number, number][]) {
-    const users = [];
-    for (const [rk, uid] of rankedDocs) {
-        users.push({ uid, rank: rk, old: udict[uid] || 1500 });
-    }
-    // FIXME sum(rating.new) always less than sum(rating.old)
-    const rated = rating(users);
-    for (const udoc of rated) {
-        udict[udoc.uid] = udoc.new;
-    }
-}
 
 async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>
 async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>
@@ -32,17 +21,31 @@ async function runProblem(...arg: any[]) {
         ? await problem.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
-    const psdocs = await problem.getMultiStatus(
-        pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
-    ).toArray();
-    if (!psdocs.length) return;
-    const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
-    const nAccept = filter(psdocs, (psdoc) => psdoc.status === STATUS.STATUS_ACCEPTED).length;
+    const [, nPages] = await paginate(
+        problem.getMultiStatus(
+            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+        ),
+        1,
+        100,
+    );
+    const nAccept = await problem.getMultiStatus(
+        pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
+    ).count();
     const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(nAccept)) + 1);
-    for (const psdoc of psdocs) {
-        if (rdict[psdoc.rid]) {
-            const rp = rdict[psdoc.rid].score * p;
-            udict[psdoc.uid] = (udict[psdoc.uid] || 1500) + rp;
+    for (let page = 1; page <= nPages; page++) {
+        const [psdocs] = await paginate(
+            problem.getMultiStatus(
+                pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+            ),
+            page,
+            100,
+        );
+        const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
+        for (const psdoc of psdocs) {
+            if (rdict[psdoc.rid]) {
+                const rp = rdict[psdoc.rid].score * p;
+                udict[psdoc.uid] = (udict[psdoc.uid] || 1500) + rp;
+            }
         }
     }
 }
@@ -62,11 +65,13 @@ async function runContest(...arg: any[]) {
         .sort(contest.RULES[tdoc.rule].statusSort).toArray();
     if (!tsdocs.length) return;
     const rankedTsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
-    const ranked = [];
+    const users = [];
     for (const result of rankedTsdocs) {
-        ranked.push([result[0], result[1].uid]);
+        users.push({ uid: result[1].uid, rank: result[0], old: udict[result[1].uid] || 1500 });
     }
-    calc(udict, ranked);
+    // FIXME sum(rating.new) always less than sum(rating.old)
+    const rated = rating(users);
+    for (const udoc of rated) udict[udoc.uid] = udoc.new;
     await report({
         case: {
             status: STATUS.STATUS_ACCEPTED,
@@ -79,7 +84,6 @@ async function runContest(...arg: any[]) {
 }
 
 async function runInDomain(domainId: string, isSub: boolean, report: Function) {
-    await domain.setMultiUserInDomain(domainId, {}, { rp: 1500 });
     const udict: ND = {};
     const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
@@ -104,6 +108,7 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
             });
         }
     }
+    await domain.setMultiUserInDomain(domainId, {}, { rp: 1500 });
     const tasks = [];
     for (const uid in udict) {
         tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rp: udict[uid] }));

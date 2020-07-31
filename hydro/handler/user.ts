@@ -238,7 +238,9 @@ class OauthHandler extends Handler {
 }
 
 class OauthCallbackHandler extends Handler {
-    async github({ state, code }) {
+    @param('state', Types.String)
+    @param('code', Types.String)
+    async github(domainId: string, state: string, code: string) {
         const [appid, secret, url, proxy, s] = await Promise.all([
             system.get('oauth.githubappid'),
             system.get('oauth.githubsecret'),
@@ -272,13 +274,14 @@ class OauthCallbackHandler extends Handler {
             uname: [userInfo.body.name, userInfo.body.login],
         };
         this.response.redirect = s.redirect;
-        await token.del(s, token.TYPE_OAUTH);
+        await token.del(s._id, token.TYPE_OAUTH);
         return ret;
     }
 
-    async google({
-        code, error, state,
-    }) {
+    @param('state', Types.String)
+    @param('code', Types.String)
+    @param('error', Types.String)
+    async google(domainId: string, state: string, code: string, error: string) {
         if (error) throw new UserFacingError(error);
         const [
             [appid, secret, url, proxy],
@@ -308,9 +311,11 @@ class OauthCallbackHandler extends Handler {
         };
     }
 
-    async get(args) {
+    async get(args: any) {
         let r;
+        // @ts-ignore
         if (args.type === 'github') r = await this.github(args);
+        // @ts-ignore
         else if (args.type === 'google') r = await this.google(args);
         else throw new UserFacingError('Oauth type');
         const udoc = await user.getByEmail('system', r.email);

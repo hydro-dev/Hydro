@@ -5,7 +5,6 @@ import { PRIV } from '../model/builtin';
 import * as system from '../model/system';
 import * as file from '../model/file';
 import * as user from '../model/user';
-import * as markdown from '../lib/markdown';
 import * as db from '../service/db';
 import {
     Route, Handler, Types, param, multipart,
@@ -103,15 +102,6 @@ class SwitchLanguageHandler extends Handler {
     }
 }
 
-class MarkdownHandler extends Handler {
-    async post({ text, html = false, inline = false }) {
-        this.response.body = inline
-            ? markdown.renderInline(text, html)
-            : markdown.render(text, html);
-        this.response.type = 'text/html';
-    }
-}
-
 class SockToken extends Handler {
     async get() {
         this.response.body = { token: this.UIContext.token };
@@ -153,7 +143,6 @@ export async function apply() {
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('markdown', '/markdown', MarkdownHandler);
     Route('token', '/token', SockToken);
     Route('ui', '/extra.css', UiSettingsHandler);
 }

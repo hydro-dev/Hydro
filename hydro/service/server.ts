@@ -22,7 +22,6 @@ import {
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError,
 } from '../error';
-import { render } from '../lib/template';
 import hash from '../lib/hash.hydro';
 import * as misc from '../lib/misc';
 import * as user from '../model/user';
@@ -276,7 +275,7 @@ export class Handler {
             gravatar: misc.gravatar(this.user.gravatar || '', 128),
             perm: this.user.perm.toString(),
         };
-        const res = await render(name, {
+        const res = await global.Hydro.lib.template.render(name, {
             handler: this,
             UserContext,
             url: this.url.bind(this),
@@ -615,7 +614,7 @@ export class ConnectionHandler {
     }
 
     async renderHTML(name: string, context: any): Promise<string> {
-        const res = await render(name, Object.assign(context, {
+        const res = await global.Hydro.lib.template.render(name, Object.assign(context, {
             handler: this,
             url: this.url.bind(this),
             _: this.translate.bind(this),

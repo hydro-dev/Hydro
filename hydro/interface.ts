@@ -277,6 +277,15 @@ export interface Drrdoc {
     ip: string,
 }
 
+export interface TokenDoc {
+    _id: string,
+    tokenType: number,
+    createAt: Date,
+    updateAt: Date,
+    expireAt: Date,
+    [key: string]: any,
+}
+
 export interface ContestStat extends Dictionary<any> {
     detail: any,
 }
@@ -372,7 +381,6 @@ declare global {
                     jwt: typeof import('./lib/jwt'),
                     logger: typeof import('./lib/logger').default,
                     mail: typeof import('./lib/mail'),
-                    markdown: typeof import('./lib/markdown'),
                     md5: typeof import('./lib/md5').default,
                     misc: typeof import('./lib/misc'),
                     nav: typeof import('./lib/nav').default,
@@ -382,7 +390,6 @@ declare global {
                     testdataConfig: typeof import('./lib/testdataConfig'),
                     sha1: typeof import('./lib/sha1').default,
                     sysinfo: typeof import('./lib/sysinfo'),
-                    template: typeof import('./lib/template'),
                     'testdata.convert.ini': typeof import('./lib/testdata.convert.ini').default,
                     useragent: typeof import('./lib/useragent'),
                     validator: typeof import('./lib/validator'),

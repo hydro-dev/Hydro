@@ -6,7 +6,6 @@ import * as problem from './problem';
 import {
     Rdoc, TestCase, PretestConfig, ContestInfo, ProblemConfig,
 } from '../interface';
-import { RecordNotFoundError } from '../error';
 import * as db from '../service/db';
 
 const coll = db.collection('record');
@@ -48,7 +47,9 @@ export interface JudgeTask {
 }
 
 export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
-    return await coll.findOne({ domainId, _id });
+    const res = await coll.findOne({ _id });
+    if (res && res.domainId === domainId) return res;
+    return null;
 }
 
 export async function judge(domainId: string, rid: ObjectID) {

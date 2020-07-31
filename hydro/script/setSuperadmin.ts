@@ -1,3 +1,4 @@
+// TODO add a set_priv interface
 import * as user from '../model/user';
 import { PRIV } from '../model/builtin';
 

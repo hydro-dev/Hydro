@@ -1,3 +1,4 @@
+import { TokenDoc } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('token');
@@ -16,7 +17,9 @@ function ensureIndexes() {
     ]);
 }
 
-export async function add(tokenType: number, expireSeconds: number, data: any) {
+export async function add(
+    tokenType: number, expireSeconds: number, data: any,
+): Promise<[string, TokenDoc]> {
     const now = new Date();
     const str = String.random(32);
     const res = await coll.insertOne({
@@ -30,9 +33,8 @@ export async function add(tokenType: number, expireSeconds: number, data: any) {
     return [str, res.ops[0]];
 }
 
-export async function get(tokenId: string, tokenType: number) {
-    const res = await coll.findOne({ _id: tokenId, tokenType });
-    return res;
+export async function get(tokenId: string, tokenType: number): Promise<TokenDoc | null> {
+    return await coll.findOne({ _id: tokenId, tokenType });
 }
 
 export async function update(
@@ -73,11 +75,11 @@ export async function createOrUpdate(
 }
 
 export function getSessionListByUid(uid: number) {
-    return coll.find({ uid, tokenType: this.TYPE_SESSION }).sort('updateAt', -1).toArray();
+    return coll.find({ uid, tokenType: TYPE_SESSION }).sort('updateAt', -1).toArray();
 }
 
 export function getMostRecentSessionByUid(uid: number) {
-    return coll.findOne({ uid, tokenType: this.TYPE_SESSION }, { sort: { updateAt: -1 } });
+    return coll.findOne({ uid, tokenType: TYPE_SESSION }, { sort: { updateAt: -1 } });
 }
 
 export function delByUid(uid: number) {

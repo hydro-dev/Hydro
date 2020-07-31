@@ -3,7 +3,7 @@ import { ValidationError } from '../error';
 
 export default async function paginate(
     cursor: Cursor, page: number, pageSize: number,
-): Promise<[any[], number, number]> {
+): Promise<[any[]/* docs */, number/* numPages */, number/* count */]> {
     if (page <= 0) throw new ValidationError('page');
     const [count, pageDocs] = await Promise.all([
         cursor.count(),

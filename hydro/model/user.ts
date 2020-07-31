@@ -199,7 +199,7 @@ export async function create(
     return uid;
 }
 
-export function getMulti(params) {
+export function getMulti(params: any) {
     return coll.find(params);
 }
 
@@ -210,7 +210,7 @@ export async function getPrefixList(prefix: string, limit = 50) {
     return udocs;
 }
 
-export async function setPriv(uid: number, priv: number) {
+export async function setPriv(uid: number, priv: number): Promise<Udoc | null> {
     const udoc = await coll.findOneAndUpdate(
         { _id: uid },
         { $set: { priv } },
