@@ -5,10 +5,10 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 export const builtinLib = [
-    'jwt', 'download', 'i18n', 'mail', 'markdown',
+    'jwt', 'download', 'i18n', 'mail', 'useragent',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
-    'template', 'validator', 'nav', 'sysinfo', 'testdata.convert.ini',
-    'testdataConfig', 'logger', 'useragent',
+    'validator', 'nav', 'sysinfo', 'testdata.convert.ini', 'testdataConfig',
+    'logger',
 ];
 
 export const builtinModel = [
