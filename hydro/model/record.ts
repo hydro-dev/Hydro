@@ -171,8 +171,8 @@ export function getUserInProblemMulti(
     return coll.find({ domainId, uid, pid });
 }
 
-export function getByUid(domainId: string, uid: number): Promise<Rdoc[]> {
-    return coll.find({ domainId, uid }).toArray();
+export function getByUid(domainId: string, uid: number, limit: number): Promise<Rdoc[]> {
+    return coll.find({ domainId, uid }).limit(limit).toArray();
 }
 
 global.Hydro.model.record = {

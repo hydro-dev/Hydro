@@ -144,6 +144,17 @@ export interface Pdoc {
 
 export type Pdict = NumericDictionary<Pdoc>;
 
+export interface ProblemStatusDoc {
+    _id: ObjectID,
+    docId: number,
+    docType: number,
+    domainId: string,
+    uid: number,
+    rid?: ObjectID,
+    status?: number,
+    star?: boolean,
+}
+
 export interface TestCase {
     time: number,
     memory: number,
@@ -337,6 +348,8 @@ export interface JudgeResultBody {
     stdout?: string,
     stderr?: string,
 }
+
+export type PathComponent = [string, string, any?, boolean?];
 
 declare global {
     namespace NodeJS {

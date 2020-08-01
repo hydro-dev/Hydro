@@ -1,6 +1,11 @@
 import superagent from 'superagent';
 import moment from 'moment-timezone';
 import {
+    UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
+    UserNotFoundError, SystemError, BlacklistedError,
+    UserFacingError,
+} from '../error';
+import {
     Route, Handler, Types, param,
 } from '../service/server';
 import * as user from '../model/user';
@@ -13,11 +18,7 @@ import { PERM, PRIV } from '../model/builtin';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
 import * as misc from '../lib/misc';
-import {
-    UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
-    UserNotFoundError, SystemError, BlacklistedError,
-    UserFacingError,
-} from '../error';
+import paginate from '../lib/paginate';
 
 class UserLoginHandler extends Handler {
     async get() {
@@ -158,8 +159,15 @@ class UserDetailHandler extends Handler {
         const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(domainId, uid);
         if (!udoc) throw new UserNotFoundError(uid);
-        const sdoc = await token.getMostRecentSessionByUid(uid);
-        const rdocs = await record.getByUid(domainId, uid);
+        const [sdoc, rdocs, [pdocs, pcount]] = await Promise.all([
+            token.getMostRecentSessionByUid(uid),
+            record.getByUid(domainId, uid, 30),
+            paginate(
+                problem.getMulti(domainId, { owner: this.user._id }),
+                1,
+                100,
+            ),
+        ]);
         const pdict = await problem.getList(
             domainId, rdocs.map((rdoc) => rdoc.pid),
             this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
@@ -176,7 +184,7 @@ class UserDetailHandler extends Handler {
         ];
         this.response.template = 'user_detail.html';
         this.response.body = {
-            isSelfProfile, udoc, sdoc, rdocs, pdict, path,
+            isSelfProfile, udoc, sdoc, rdocs, pdocs, pcount, pdict, path,
         };
     }
 }

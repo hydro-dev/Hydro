@@ -1,9 +1,12 @@
 import { ObjectID } from 'mongodb';
+import { Dictionary } from 'lodash';
 import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
-import { Pdoc, Pdict, ProblemDataSource } from '../interface';
+import {
+    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc,
+} from '../interface';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
 
@@ -46,7 +49,7 @@ export async function get(
     uid: number = null,
 ): Promise<Pdoc> {
     if (typeof pid !== 'number') {
-        if (!Number.isNaN(parseInt(pid, 10))) pid = parseInt(pid, 10);
+        if (!Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
     }
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
@@ -56,14 +59,6 @@ export async function get(
         pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
     }
     return pdoc;
-}
-
-export function getMany(
-    domainId: string, query: any, sort: any, page: number, limit: number,
-): Promise<Pdoc[]> {
-    return document.getMulti(domainId, query)
-        .sort(sort).skip((page - 1) * limit).limit(limit)
-        .toArray();
 }
 
 export function getMulti(domainId: string, query: object) {
@@ -128,7 +123,7 @@ export async function getListStatus(domainId: string, uid: number, pids: number[
     const psdocs = await getMultiStatus(
         domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
     ).toArray();
-    const r = {};
+    const r: Dictionary<ProblemStatusDoc> = {};
     for (const psdoc of psdocs) r[psdoc.docId] = psdoc;
     return r;
 }
@@ -137,15 +132,11 @@ export async function updateStatus(
     domainId: string, pid: number, uid: number,
     rid: ObjectID, status: number,
 ) {
-    try {
-        await document.setIfNotStatus(
-            domainId, document.TYPE_PROBLEM, pid, uid,
-            'status', status, STATUS.STATUS_ACCEPTED, { rid },
-        );
-    } catch (e) {
-        return false;
-    }
-    return true;
+    const res = await document.setIfNotStatus(
+        domainId, document.TYPE_PROBLEM, pid, uid,
+        'status', status, STATUS.STATUS_ACCEPTED, { rid },
+    );
+    return !!res;
 }
 
 export function setStar(domainId: string, pid: number, uid: number, star: boolean) {
@@ -165,7 +156,6 @@ global.Hydro.model.problem = {
     add,
     inc,
     get,
-    getMany,
     edit,
     count,
     random,

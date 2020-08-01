@@ -37,7 +37,7 @@ class ContestListHandler extends ContestHandler {
         } else {
             if (!contest.RULES[rule]) throw new ValidationError('rule');
             tdocs = contest.getMulti(domainId, { rule }).sort({ beginAt: -1 });
-            qs = 'rule={0}'.format(rule);
+            qs = `rule=${rule}`;
         }
         // eslint-disable-next-line prefer-const
         [tdocs, tpcount] = await paginate(tdocs, page, await system.get('CONTEST_PER_PAGE'));

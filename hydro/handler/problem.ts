@@ -6,7 +6,9 @@ import {
     SolutionNotFoundError, ProblemNotFoundError, ValidationError,
     PermissionError,
 } from '../error';
-import { Pdoc, User, Rdoc } from '../interface';
+import {
+    Pdoc, User, Rdoc, PathComponent,
+} from '../interface';
 import paginate from '../lib/paginate';
 import {
     checkPid, isTitle, isContent, isPid,
@@ -62,7 +64,7 @@ class ProblemMainHandler extends ProblemHandler {
         this.response.template = 'problem_main.html';
         const query: any = {};
         let psdict = {};
-        const path: any = [
+        const path: PathComponent[] = [
             ['Hydro', 'homepage'],
             ['problem_main', null],
         ];
