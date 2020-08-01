@@ -351,6 +351,9 @@ class ProblemSettingsHandler extends ProblemManageHandler {
             [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_settings', null],
         ];
+        if (this.response.body.config) {
+            this.response.body.config = yaml.safeDump(this.response.body.config);
+        }
     }
 
     @param('pid', Types.String, null, parsePid)
@@ -386,7 +389,6 @@ class ProblemEditHandler extends ProblemManageHandler {
             [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_edit', null],
         ];
-        this.response.body.page_name = 'problem_edit';
     }
 
     @param('title', Types.String, isTitle)
@@ -395,7 +397,7 @@ class ProblemEditHandler extends ProblemManageHandler {
         const pid = checkPid(this.request.body.pid);
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, { title, content, pid });
-        this.response.redirect = this.url('problem_detail', this.request.params.pid);
+        this.response.redirect = this.url('problem_detail', { pid: this.request.params.pid });
     }
 }
 

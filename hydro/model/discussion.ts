@@ -160,6 +160,8 @@ export function getNode(domainId: string, _id: string) {
 
 export async function getVnode(domainId: string, type: number, id: string, handler: any) {
     if (type === document.TYPE_PROBLEM) {
+        // @ts-ignore
+        if (Number.isSafeInteger(parseInt(id, 10))) id = parseInt(id, 10);
         const pdoc = await problem.get(domainId, id);
         if (!pdoc) return null;
         if (pdoc.hidden && handler) handler.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);

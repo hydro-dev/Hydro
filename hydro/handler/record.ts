@@ -124,7 +124,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
                 this.domainId, { _id: { $in: rids } },
             ).toArray();
             for (const rdoc of rdocs) {
-                this.onRecordChange({ value: rdoc });
+                this.onRecordChange({ value: { rdoc } });
             }
         }
     }

@@ -14,6 +14,7 @@ export let db: mongodb.Db = null;
 mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
     .then((Client) => {
         db = Client.db(opts.name);
+        global.Hydro.service.db.db = db;
         bus.publish('system_database_connected', null);
     });
 

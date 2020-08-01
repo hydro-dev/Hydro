@@ -32,9 +32,9 @@ import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
 
-const app = new Koa();
-const server = http.createServer(app.callback());
-const router = new Router();
+export const app = new Koa();
+export const server = http.createServer(app.callback());
+export const router = new Router();
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
 type Converter = (value: any) => any;
@@ -705,7 +705,8 @@ export function Connection(
     RouteConnHandler: any,
     ...permPrivChecker: Array<number | bigint | Function>
 ) {
-    const sock = sockjs.createServer({ prefix, log: (a, b) => console.log(a, b) });
+    const log = argv.debug ? console.log : () => { };
+    const sock = sockjs.createServer({ prefix, log });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
         const h: Dictionary<any> = new RouteConnHandler(conn);
@@ -757,6 +758,9 @@ export async function start() {
 
 global.Hydro.service.server = {
     Types,
+    app,
+    server,
+    router,
     param,
     multipart,
     requireCsrfToken,
