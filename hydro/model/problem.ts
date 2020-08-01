@@ -49,7 +49,7 @@ export async function get(
     uid: number = null,
 ): Promise<Pdoc> {
     if (typeof pid !== 'number') {
-        if (!Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
+        if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
     }
     const pdoc = Number.isInteger(pid)
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
