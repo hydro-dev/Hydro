@@ -102,34 +102,6 @@ class SwitchLanguageHandler extends Handler {
     }
 }
 
-class UiSettingsHandler extends Handler {
-    async get() {
-        const [
-            header_logo, header_logo_2x,
-            nav_logo_dark, nav_logo_light,
-            nav_logo_dark_2x, nav_logo_light_2x,
-            header_background, header_background_2x,
-        ] = await system.getMany([
-            'ui.header_logo', 'ui.header_logo_2x',
-            'ui.nav_logo_dark', 'ui.nav_logo_light',
-            'ui.nav_logo_dark_2x', 'ui.nav_logo_light_2x',
-            'ui.header_background', 'ui.header_background2x',
-        ]);
-        this.response.body = await this.renderHTML('extra.css', {
-            header_logo,
-            header_logo_2x,
-            nav_logo_dark,
-            nav_logo_light,
-            nav_logo_dark_2x,
-            nav_logo_light_2x,
-            header_background,
-            header_background_2x,
-        });
-        this.response.type = 'text/css';
-        this.ctx.set('nolog', '1');
-    }
-}
-
 export async function apply() {
     Route('file_download', '/fs/:fileId/:secret', FileDownloadHandler);
     Route('file_download_with_name', '/fs/:fileId/:name/:secret', FileDownloadHandler);
@@ -137,7 +109,6 @@ export async function apply() {
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('ui', '/extra.css', UiSettingsHandler);
 }
 
 global.Hydro.handler.misc = apply;

@@ -19,8 +19,7 @@ import * as record from '../model/record';
 import * as domain from '../model/domain';
 import * as user from '../model/user';
 import * as solution from '../model/solution';
-import * as system from '../model/system';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, Types, param, multipart,
@@ -78,7 +77,7 @@ class ProblemMainHandler extends ProblemHandler {
         const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(domainId, query).sort({ pid: 1 }),
             page,
-            await system.get('PROBLEM_PER_PAGE'),
+            CONSTANT.PROBLEM_PER_PAGE,
         );
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
@@ -122,7 +121,7 @@ class ProblemCategoryHandler extends ProblemHandler {
         const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(domainId, q).sort({ pid: 1 }),
             page,
-            await system.get('PROBLEM_PER_PAGE'),
+            CONSTANT.PROBLEM_PER_PAGE,
         );
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
@@ -466,7 +465,7 @@ class ProblemSolutionHandler extends ProblemDetailHandler {
         const [psdocs, pcount, pscount] = await paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
-            await system.get('SOLUTION_PER_PAGE'),
+            CONSTANT.SOLUTION_PER_PAGE,
         );
         const uids = [this.pdoc.owner];
         const docids = [];

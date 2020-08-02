@@ -1,14 +1,15 @@
 import { ObjectID } from 'mongodb';
 import { isSafeInteger } from 'lodash';
 import { DiscussionNotFoundError, DocumentNotFoundError } from '../error';
-import { Drdoc, Mdoc } from '../interface';
+import {
+    Mdoc, Drdoc, Ddoc, Drrdoc,
+} from '../interface';
 import paginate from '../lib/paginate';
-import * as system from '../model/system';
 import * as user from '../model/user';
 import * as message from '../model/message';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -23,46 +24,45 @@ export const typeMapper = {
 };
 
 class DiscussionHandler extends Handler {
-    ddoc?: any;
+    ddoc?: Ddoc;
 
-    drdoc?: any;
+    drdoc?: Drdoc;
 
-    drrdoc?: any;
+    drrdoc?: Drrdoc;
 
     vnode?: any;
 
-    async _prepare({
-        domainId, type, name, did, drid, drrid,
-    }) {
+    @param('type', Types.String, true)
+    @param('name', Types.String, true)
+    @param('did', Types.ObjectID, true)
+    @param('drid', Types.ObjectID, true)
+    @param('drrid', Types.ObjectID, true)
+    async _prepare(
+        domainId: string, type: string, name: string,
+        did: ObjectID, drid: ObjectID, drrid: ObjectID,
+    ) {
         this.checkPerm(PERM.PERM_VIEW_DISCUSSION);
         if (did) {
-            did = new ObjectID(did);
             this.ddoc = await discussion.get(domainId, did);
             if (!this.ddoc) throw new DiscussionNotFoundError(did);
             type = discussion.typeDisplay[this.ddoc.parentType];
-            name = this.ddoc.parentId;
-            if (drid) {
-                drid = new ObjectID(drid);
+            name = this.ddoc.parentId.toString();
+            if (drrid) {
+                [this.drdoc, this.drrdoc] = await discussion.getTailReply(domainId, drid, drrid);
+                if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
+            } else if (drid) {
                 this.drdoc = await discussion.getReply(domainId, drid);
                 if (!this.drdoc) throw new DiscussionNotFoundError(drid);
                 if (!this.drdoc.parentId.equals(this.ddoc._id)) {
                     throw new DocumentNotFoundError(drid);
-                }
-                if (drrid) {
-                    drrid = new ObjectID(drrid);
-                    [, this.drrdoc] = await discussion.getTailReply(domainId, drid, drrid);
-                    if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
-                    if (!this.drrdoc.parentId.equals(this.drdoc._id)) {
-                        throw new DocumentNotFoundError(drid);
-                    }
                 }
             }
         }
         // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
-        if (ObjectID.isValid(name.toString())) name = new ObjectID(name);
-        this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this);
+        this.vnode = await discussion.getVnode(domainId, typeMapper[type], name);
+        if (this.vnode.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (this.ddoc) {
             this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
             this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
@@ -76,7 +76,7 @@ class DiscussionMainHandler extends Handler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId),
             page,
-            await system.get('DISCUSSION_PER_PAGE'),
+            CONSTANT.DISCUSSION_PER_PAGE,
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
@@ -84,7 +84,9 @@ class DiscussionMainHandler extends Handler {
             ['discussion_main', null],
         ];
         const [vndict, vnodes] = await Promise.all([
-            discussion.getListVnodes(domainId, ddocs, this),
+            discussion.getListVnodes(
+                domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
+            ),
             discussion.getNodes(domainId),
         ]);
         this.response.template = 'discussion_main_or_node.html';
@@ -106,7 +108,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name }),
             page,
-            await system.get('DISCUSSION_PER_PAGE'),
+            CONSTANT.DISCUSSION_PER_PAGE,
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(this.vnode.owner);
@@ -152,9 +154,10 @@ class DiscussionCreateHandler extends DiscussionHandler {
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('highlight', Types.Boolean)
+    @param('pin', Types.Boolean)
     async post(
         domainId: string, type: string, _name: string,
-        title: string, content: string, highlight = false,
+        title: string, content: string, highlight = false, pin = false,
     ) {
         this.limitRate('add_discussion', 3600, 30);
         let name: ObjectID | string | number;
@@ -162,9 +165,10 @@ class DiscussionCreateHandler extends DiscussionHandler {
         else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
         else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
+        if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
         const did = await discussion.add(
             domainId, typeMapper[type], name, this.user._id,
-            title, content, this.request.ip, highlight,
+            title, content, this.request.ip, highlight, pin,
         );
         this.response.body = { did };
         this.response.redirect = this.url('discussion_detail', { did });
@@ -181,7 +185,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const [drdocs, pcount, drcount] = await paginate(
             discussion.getMultiReply(domainId, did),
             page,
-            await system.get('REPLY_PER_PAGE'),
+            CONSTANT.REPLY_PER_PAGE,
         );
         const uids = drdocs.map((drdoc) => drdoc.owner);
         uids.push(this.ddoc.owner);
@@ -327,13 +331,16 @@ class DiscussionEditHandler extends DiscussionHandler {
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
     @param('highlight', Types.Boolean)
+    @param('pin', Types.Boolean)
     async postUpdate(
-        domainId: string, did: ObjectID, title: string, content: string, highlight = false,
+        domainId: string, did: ObjectID, title: string, content: string,
+        highlight = false, pin = false,
     ) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
-        if (highlight && !this.ddoc.highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
-        await discussion.edit(domainId, did, title, content, highlight);
+        if (highlight !== this.ddoc.highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
+        if (pin !== this.ddoc.pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
+        await discussion.edit(domainId, did, title, content, highlight, pin);
         this.response.body = { did };
         this.response.redirect = this.url('discussion_detail', { did });
     }

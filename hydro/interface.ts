@@ -231,6 +231,7 @@ export interface DomainDoc extends Dictionary<any> {
     roles: Dictionary<string>,
     gravatar: string,
     bulletin: string,
+    pidCounter: number,
 }
 
 // Message
@@ -262,10 +263,14 @@ export interface Ddoc {
     _id: ObjectID,
     docType: number,
     docId: ObjectID,
+    parentType: number,
+    parentId: ObjectID | number,
     owner: number,
     title: string,
     content: string,
     ip: string,
+    pin: boolean,
+    highlight: boolean,
 }
 
 // Discussion reply
@@ -277,6 +282,7 @@ export interface Drdoc {
     parentId: ObjectID,
     owner: number,
     ip: string,
+    content: string,
     reply: Drrdoc[],
 }
 

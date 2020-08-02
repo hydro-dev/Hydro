@@ -8,14 +8,13 @@ import {
 } from '../error';
 import { isContent, isTitle } from '../lib/validator';
 import paginate from '../lib/paginate';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as document from '../model/document';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as user from '../model/user';
 import * as message from '../model/message';
-import * as system from '../model/system';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -40,7 +39,7 @@ class ContestListHandler extends ContestHandler {
             qs = `rule=${rule}`;
         }
         // eslint-disable-next-line prefer-const
-        [tdocs, tpcount] = await paginate(tdocs, page, await system.get('CONTEST_PER_PAGE'));
+        [tdocs, tpcount] = await paginate(tdocs, page, CONSTANT.CONTEST_PER_PAGE);
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc.docId);
         const tsdict = await contest.getListStatus(domainId, this.user._id, tids);

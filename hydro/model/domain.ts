@@ -7,19 +7,21 @@ const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
 
 export async function add(domainId: string, owner: number, name: string, bulletin: string) {
-    await coll.insertOne({
-        _id: domainId, owner, name, bulletin, roles: {},
-    });
+    const ddoc: DomainDoc = {
+        _id: domainId,
+        owner,
+        name,
+        bulletin,
+        roles: {},
+        gravatar: '',
+        pidCounter: 0,
+    };
+    await coll.insertOne(ddoc);
     return domainId;
 }
 
 export function get(domainId: string): Promise<DomainDoc | null> {
     return coll.findOne({ _id: domainId });
-}
-
-export function getMany(query: any, sort: any, page: number, limit: number): Promise<DomainDoc[]> {
-    return coll.find(query).sort(sort).skip((page - 1) * limit).limit(limit)
-        .toArray();
 }
 
 export function getMulti(query: any = {}) {
@@ -36,7 +38,7 @@ export async function inc(domainId: string, field: string, n: number): Promise<n
         { $inc: { [field]: n } },
         { returnOriginal: false },
     );
-    return res.value.field;
+    return res.value[field];
 }
 
 export async function getList(domainIds: string[]): Promise<Dictionary<DomainDoc>> {
@@ -155,7 +157,6 @@ global.Hydro.model.domain = {
     add,
     inc,
     get,
-    getMany,
     edit,
     getMulti,
     getList,

@@ -3,7 +3,6 @@ import * as problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';
-import { PERM } from './builtin';
 import { DocumentNotFoundError } from '../error';
 import { Ddoc, Drdoc, Drrdoc } from '../interface';
 
@@ -18,7 +17,7 @@ export const typeDisplay = {
 export function add(
     domainId: string, parentType: number, parentId: ObjectID | number | string,
     owner: number, title: string, content: string,
-    ip: string | null = null, highlight: boolean = false,
+    ip: string | null = null, highlight: boolean, pin: boolean,
 ): Promise<ObjectID> {
     return document.add(
         domainId, content, owner, document.TYPE_DISCUSSION,
@@ -26,8 +25,9 @@ export function add(
         {
             title,
             ip,
-            highlight,
             nReply: 0,
+            highlight,
+            pin,
             updateAt: new Date(),
             views: 0,
         },
@@ -40,9 +40,11 @@ export function get(domainId: string, did: ObjectID): Promise<Ddoc | null> {
 
 export function edit(
     domainId: string, did: ObjectID,
-    title: string, content: string, highlight: boolean,
+    title: string, content: string, highlight: boolean, pin: boolean,
 ): Promise<Ddoc | null> {
-    return document.set(domainId, document.TYPE_DISCUSSION, did, { title, content, highlight });
+    return document.set(domainId, document.TYPE_DISCUSSION, did, {
+        title, content, highlight, pin,
+    });
 }
 
 export function del(domainId: string, did: ObjectID) {
@@ -60,7 +62,8 @@ export function count(domainId: string, query: any) {
 }
 
 export function getMulti(domainId: string, query: any = {}) {
-    return document.getMulti(domainId, document.TYPE_DISCUSSION, query).sort('updateAt', -1);
+    return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
+        .sort({ pin: -1, updateAt: -1 });
 }
 
 export async function addReply(
@@ -158,13 +161,12 @@ export function getNode(domainId: string, _id: string) {
     return document.get(domainId, document.TYPE_DISCUSSION_NODE, _id);
 }
 
-export async function getVnode(domainId: string, type: number, id: string, handler: any) {
+export async function getVnode(domainId: string, type: number, id: string) {
     if (type === document.TYPE_PROBLEM) {
         // @ts-ignore
         if (Number.isSafeInteger(parseInt(id, 10))) id = parseInt(id, 10);
         const pdoc = await problem.get(domainId, id);
         if (!pdoc) return null;
-        if (pdoc.hidden && handler) handler.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         return { ...pdoc, type, id };
     }
     if (type === document.TYPE_CONTEST) {
@@ -199,12 +201,13 @@ export function getNodes(domainId: string) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION_NODE).toArray();
 }
 
-export async function getListVnodes(domainId: string, ddocs: any, handler: any) {
+export async function getListVnodes(domainId: string, ddocs: any, getHidden: boolean) {
     const tasks = [];
     const res = {};
-    async function task(ddoc) {
-        const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId, handler);
+    async function task(ddoc: Ddoc) {
+        const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId.toString());
         if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
+        if (vnode.hidden && !getHidden) return;
         res[ddoc.parentType][ddoc.parentId] = vnode;
     }
     for (const ddoc of ddocs) tasks.push(task(ddoc));

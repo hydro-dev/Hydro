@@ -328,66 +328,40 @@ export async function revSetStatus(
     return await collStatus.updateOne(filter, update);
 }
 
+/* eslint-disable object-curly-newline */
 async function ensureIndexes() {
-    await coll.createIndex({ domainId: 1, docType: 1, docId: 1 }, { unique: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, owner: 1, docId: -1,
-    });
+    const ic = coll.createIndex.bind(coll);
+    const is = collStatus.createIndex.bind(coll);
+    const u = { unique: true };
+    const s = { sparse: true };
+    await ic({ domainId: 1, docType: 1, docId: 1 }, u);
+    await ic({ domainId: 1, docType: 1, owner: 1, docId: -1 });
     // For problem
-    await coll.createIndex({
-        domainId: 1, docType: 1, category: 1, docId: 1,
-    }, { sparse: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, hidden: 1, category: 1, docId: 1,
-    }, { sparse: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, tag: 1, docId: 1,
-    }, { sparse: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1,
-    }, { sparse: true });
+    await ic({ domainId: 1, docType: 1, category: 1, docId: 1 }, s);
+    await ic({ domainId: 1, docType: 1, hidden: 1, category: 1, docId: 1 }, s);
+    await ic({ domainId: 1, docType: 1, tag: 1, docId: 1 }, s);
+    await ic({ domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1 }, s);
     // For problem solution
-    await coll.createIndex({
-        domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1,
-    }, { sparse: true });
+    await ic({ domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, s);
     // For discussion
-    await coll.createIndex({
-        domainId: 1, docType: 1, updateAt: -1, docId: -1,
-    }, { sparse: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, parentType: 1, parentId: 1, updateAt: -1, docId: -1,
-    }, { sparse: true });
+    await ic({ domainId: 1, docType: 1, pin: -1, updateAt: -1, docId: -1 }, s);
+    await ic({ domainId: 1, docType: 1, parentType: 1, parentId: 1, updateAt: -1, docId: -1 }, s);
     // Hidden doc
-    await coll.createIndex({
-        domainId: 1, docType: 1, hidden: 1, docId: -1,
-    }, { sparse: true });
+    await ic({ domainId: 1, docType: 1, hidden: 1, docId: -1 }, s);
     // For contest
-    await coll.createIndex({ domainId: 1, docType: 1, pids: 1 }, { sparse: true });
-    await coll.createIndex({
-        domainId: 1, docType: 1, rule: 1, docId: -1,
-    }, { sparse: true });
+    await ic({ domainId: 1, docType: 1, pids: 1 }, s);
+    await ic({ domainId: 1, docType: 1, rule: 1, docId: -1 }, s);
     // For training
-    await coll.createIndex({ domainId: 1, docType: 1, 'dag.pids': 1 }, { sparse: true });
-
-    await collStatus.createIndex({
-        domainId: 1, docType: 1, uid: 1, docId: 1,
-    }, { unique: true });
+    await ic({ domainId: 1, docType: 1, 'dag.pids': 1 }, s);
+    await is({ domainId: 1, docType: 1, uid: 1, docId: 1 }, u);
     // For rp system
-    await collStatus.createIndex({
-        domainId: 1, docType: 1, docId: 1, status: 1, rid: 1, rp: 1,
-    }, { sparse: true });
+    await is({ domainId: 1, docType: 1, docId: 1, status: 1, rid: 1, rp: 1 }, s);
     // For contest rule OI
-    await collStatus.createIndex({
-        domainId: 1, docType: 1, docId: 1, score: -1,
-    }, { sparse: true });
+    await is({ domainId: 1, docType: 1, docId: 1, score: -1 }, s);
     // For contest rule ACM
-    await collStatus.createIndex({
-        domainId: 1, docType: 1, docId: 1, accept: -1, time: 1,
-    }, { sparse: true });
+    await is({ domainId: 1, docType: 1, docId: 1, accept: -1, time: 1 }, s);
     // For training
-    await collStatus.createIndex({
-        domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1,
-    }, { sparse: true });
+    await is({ domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, s);
 }
 
 global.Hydro.postInit.push(ensureIndexes);

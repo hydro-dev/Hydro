@@ -32,9 +32,9 @@ export async function load(call: Entry) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    try {
-        require('../options').default();
-    } catch (e) {
+    const config = require('../options').default();
+    if (!config) {
+        console.log('Starting setup');
         await call({ entry: 'setup', newProcess: true }).catch((err) => {
             console.error('Cannot start setup process.', err);
             process.exit(1);

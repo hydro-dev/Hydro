@@ -745,7 +745,7 @@ export function Connection(
 // TODO use postInit?
 export async function start() {
     const port = await system.get('server.port');
-    if (!argv.debug) {
+    if (argv.debug) {
         app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
             skip: (req, res) => res.hasHeader('nolog'),
         }));

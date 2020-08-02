@@ -3,12 +3,11 @@ import { ObjectID } from 'mongodb';
 import { ValidationError, ProblemNotFoundError } from '../error';
 import { isTitle, isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as training from '../model/training';
 import * as user from '../model/user';
-import * as system from '../model/system';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -58,9 +57,9 @@ class TrainingMainHandler extends Handler {
     @param('page', Types.UnsignedInt, true)
     async get(domainId: string, page = 1) {
         const [tdocs, tpcount] = await paginate(
-            training.getMulti(domainId).sort('_id', 1),
+            training.getMulti(domainId),
             page,
-            await system.get('TRAINING_PER_PAGE'),
+            CONSTANT.TRAINING_PER_PAGE,
         );
         const tids: Set<ObjectID> = new Set();
         for (const tdoc of tdocs) tids.add(tdoc.docId);

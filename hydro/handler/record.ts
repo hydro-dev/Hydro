@@ -1,10 +1,9 @@
 import { ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
-import { PERM } from '../model/builtin';
+import { PERM, CONSTANT } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as contest from '../model/contest';
-import * as system from '../model/system';
 import * as user from '../model/user';
 import paginate from '../lib/paginate';
 import * as bus from '../service/bus';
@@ -34,7 +33,7 @@ class RecordListHandler extends RecordHandler {
         const [rdocs] = await paginate(
             record.getMulti(domainId, q).sort('_id', -1),
             page,
-            await system.get('RECORD_PER_PAGE'),
+            CONSTANT.RECORD_PER_PAGE,
         );
         const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = await Promise.all([
