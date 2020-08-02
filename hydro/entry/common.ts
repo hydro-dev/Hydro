@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
+import { argv } from 'yargs';
 
 export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
@@ -53,6 +54,7 @@ export async function handler(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Handler Load Fail: ${i}`);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -75,6 +77,7 @@ export async function locale(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Locale Load Fail: ${i}`);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -104,6 +107,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                 }
             } catch (e) {
                 console.error(`Config Load Fail: ${i}`);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -125,6 +129,7 @@ export async function template(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Template Load Fail: ${i}`);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -155,6 +160,7 @@ export async function model(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Model Load Fail: ${i}`);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -172,7 +178,7 @@ export async function lib(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Lib Load Fail: ${i}`);
-                console.error(e);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -190,7 +196,7 @@ export async function service(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 console.error(`Service Load Fail: ${i}`);
-                console.error(e);
+                if (argv.debug) console.error(e);
             }
         }
     }
@@ -207,7 +213,7 @@ export async function script(pending: string[], fail: string[], active: string[]
             } catch (e) {
                 fail.push(i);
                 console.error(`Script Load Fail: ${i}`);
-                console.error(e);
+                if (argv.debug) console.error(e);
             }
         }
         active.push(i);

@@ -12,28 +12,30 @@ import AdmZip from 'adm-zip';
 
 export * from './interface';
 
-global.Hydro = {
-    stat: { reqCount: 0 },
-    handler: {},
-    // @ts-ignore
-    service: {},
-    // @ts-ignore
-    model: {},
-    script: {},
-    // @ts-ignore
-    lib: {},
-    ui: {
-        manifest: {},
-        nav: [],
-        template: {},
-    },
-    // @ts-ignore
-    error: {},
-    locales: {},
-    postInit: [],
-};
-global.onDestory = [];
-global.addons = [];
+if (!global.Hydro) {
+    global.Hydro = {
+        stat: { reqCount: 0 },
+        handler: {},
+        // @ts-ignore
+        service: {},
+        // @ts-ignore
+        model: {},
+        script: {},
+        // @ts-ignore
+        lib: {},
+        ui: {
+            manifest: {},
+            nav: [],
+            template: {},
+        },
+        // @ts-ignore
+        error: {},
+        locales: {},
+        postInit: [],
+    };
+    global.onDestory = [];
+    global.addons = [];
+}
 
 if (argv.debug) {
     console.log(process.argv);
