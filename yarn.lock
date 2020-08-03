@@ -310,14 +310,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/superagent-proxy@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@types/superagent-proxy/-/superagent-proxy-2.0.0.tgz#9dd72c2b875ab56c4e6bd42435542fb040aa75b8"
-  integrity sha512-EiC8z93IkQhTYtmQ4/g/CoXUlZRmrmfOwMkjO3/lzxEmfShaPYlkk7vtgMpFkKw8V/1g13fPwR98dZuieHeBUw==
-  dependencies:
-    "@types/superagent" "*"
-
-"@types/superagent@*", "@types/superagent@^4.1.8":
+"@types/superagent@^4.1.8":
   version "4.1.8"
   resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-4.1.8.tgz#f663dcdd24705e07fce055003ace9b824f2a51c9"
   integrity sha512-iol9KxQ7SLHatBJUiZ4uABrS4VS1frLjqPednxZz82eoCzo3Uy3TOH0p0ZIBbfBj8E/xqOtvizjBs9h7xi/l2g==
@@ -2301,7 +2294,7 @@ progress@^2.0.0:
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.3.tgz#7e8cf8d8f5b8f239c1bc68beb4eb78567d572ef8"
   integrity sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==
 
-proxy-agent@3:
+proxy-agent@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/proxy-agent/-/proxy-agent-3.1.1.tgz#7e04e06bf36afa624a1540be247b47c970bd3014"
   integrity sha512-WudaR0eTsDx33O3EJE16PjBRZWcX8GqCEeERw1W3hZJgH/F2a46g7jty6UGty6NeJ4CKQy8ds2CJPMiyeqaTvw==
@@ -2689,14 +2682,6 @@ strip-json-comments@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz#31f1281b3832630434831c310c01cccda8cbe006"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
-
-superagent-proxy@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/superagent-proxy/-/superagent-proxy-2.0.0.tgz#9f57515cd660e2e9ce55c0e6bd70f92eb07c3ee0"
-  integrity sha512-TktJma5jPdiH1BNN+reF/RMW3b8aBTCV7KlLFV0uYcREgNf3pvo7Rdt564OcFHwkGb3mYEhHuWPBhSbOwiNaYw==
-  dependencies:
-    debug "^3.1.0"
-    proxy-agent "3"
 
 superagent@^5.2.2:
   version "5.3.1"

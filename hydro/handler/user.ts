@@ -1,4 +1,3 @@
-import superagent from 'superagent';
 import moment from 'moment-timezone';
 import {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
@@ -22,12 +21,6 @@ import paginate from '../lib/paginate';
 
 class UserLoginHandler extends Handler {
     async get() {
-        const [loginWithGithub, loginWithGoogle] = await system.getMany(
-            ['oauth.githubappid', 'oauth.googleappid'],
-        );
-        this.response.body = {
-            loginWithGithub, loginWithGoogle,
-        };
         this.response.template = 'user_login.html';
     }
 
@@ -222,109 +215,16 @@ class UserSearchHandler extends Handler {
 }
 
 class OauthHandler extends Handler {
-    async github() {
-        const [appid, [state]] = await Promise.all([
-            system.get('oauth.githubappid'),
-            token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
-        ]);
-        this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
-    }
-
-    async google() {
-        const [appid, url, [state]] = await Promise.all([
-            system.get('oauth.googleappid'),
-            system.get('server.url'),
-            token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
-        ]);
-        this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=${state}`;
-    }
-
-    async get({ type }) {
-        if (type === 'github') await this.github();
-        else if (type === 'google') await this.google();
+    @param('type', Types.String)
+    async get(domainId: string, type: string) {
+        if (global.Hydro.lib[`oauth_${type}`]) await global.Hydro.lib[`oauth_${type}`].get.call(this);
     }
 }
 
 class OauthCallbackHandler extends Handler {
-    @param('state', Types.String)
-    @param('code', Types.String)
-    async github(domainId: string, state: string, code: string) {
-        const [appid, secret, url, proxy, s] = await Promise.all([
-            system.get('oauth.githubappid'),
-            system.get('oauth.githubsecret'),
-            system.get('server.url'),
-            system.get('proxy'),
-            token.get(state, token.TYPE_OAUTH),
-        ]);
-        const res = await superagent.post('https://github.com/login/oauth/access_token')
-            .proxy(proxy)
-            .send({
-                client_id: appid,
-                client_secret: secret,
-                code,
-                redirect_uri: `${url}oauth/github/callback`,
-                state,
-            })
-            .set('accept', 'application/json');
-        if (res.body.error) {
-            throw new UserFacingError(
-                res.body.error, res.body.error_description, res.body.error_uri,
-            );
-        }
-        const t = res.body.access_token;
-        const userInfo = await superagent.get('https://api.github.com/user')
-            .proxy(proxy)
-            .set('User-Agent', 'Hydro-OAuth')
-            .set('Authorization', `token ${t}`);
-        const ret = {
-            email: userInfo.body.email,
-            bio: userInfo.body.bio,
-            uname: [userInfo.body.name, userInfo.body.login],
-        };
-        this.response.redirect = s.redirect;
-        await token.del(s._id, token.TYPE_OAUTH);
-        return ret;
-    }
-
-    @param('state', Types.String)
-    @param('code', Types.String)
-    @param('error', Types.String)
-    async google(domainId: string, state: string, code: string, error: string) {
-        if (error) throw new UserFacingError(error);
-        const [
-            [appid, secret, url, proxy],
-            s,
-        ] = await Promise.all([
-            system.getMany([
-                'oauth.googleappid', 'oauth.googlesecret', 'server.url', 'proxy',
-            ]),
-            token.get(state, token.TYPE_OAUTH),
-        ]);
-        const res = await superagent.post('https://oauth2.googleapis.com/token')
-            .proxy(proxy)
-            .send({
-                client_id: appid,
-                client_secret: secret,
-                code,
-                grant_type: 'authorization_code',
-                redirect_uri: `${url}oauth/google/callback`,
-            });
-        const payload = global.Hydro.lib.jwt.decode(res.body.id_token);
-        await token.del(state, token.TYPE_OAUTH);
-        this.response.redirect = s.redirect;
-        return {
-            email: payload.email,
-            uname: [payload.given_name, payload.name, payload.family_name],
-            viewLang: payload.locale.replace('-', '_'),
-        };
-    }
-
     async get(args: any) {
         let r;
-        // @ts-ignore
-        if (args.type === 'github') r = await this.github(args);
-        // @ts-ignore
-        else if (args.type === 'google') r = await this.google(args);
+        if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback(args);
         else throw new UserFacingError('Oauth type');
         const udoc = await user.getByEmail('system', r.email);
         if (udoc) {

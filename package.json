@@ -1,6 +1,6 @@
 {
   "name": "hydrooj",
-  "version": "2.12.0",
+  "version": "2.12.1",
   "main": "dist/loader.js",
   "bin": "bin/hydrooj.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -35,11 +35,11 @@
     "nodemailer": "^6.4.10",
     "nunjucks": "^3.2.2",
     "prismjs": "^1.20.0",
+    "proxy-agent": "^3.1.1",
     "ps-list": "^7.2.0",
     "serialize-javascript": "^4.0.0",
     "sockjs": "^0.3.20",
     "superagent": "^5.2.2",
-    "superagent-proxy": "^2.0.0",
     "systeminformation": "^4.26.10",
     "yargs": "^15.4.1"
   },
@@ -64,7 +64,6 @@
     "@types/serialize-javascript": "^4.0.0",
     "@types/sockjs": "^0.3.32",
     "@types/superagent": "^4.1.8",
-    "@types/superagent-proxy": "^2.0.0",
     "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "^3.7.0",
     "@typescript-eslint/parser": "^3.7.0",

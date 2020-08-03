@@ -4,7 +4,7 @@ import path from 'path';
 import os from 'os';
 import http from 'http';
 import moment from 'moment-timezone';
-import { isSafeInteger, Dictionary } from 'lodash';
+import { isSafeInteger, Dictionary, filter } from 'lodash';
 import { ObjectID } from 'mongodb';
 import Koa from 'koa';
 import morgan from 'koa-morgan';
@@ -232,6 +232,8 @@ export class Handler {
 
     domain: DomainDoc;
 
+    loginMethods: any;
+
     constructor(ctx: Koa.Context) {
         this.ctx = ctx;
         this.request = {
@@ -377,6 +379,12 @@ export class Handler {
         }
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UIContext.csrfToken = this.csrfToken;
+        this.loginMethods = filter(Object.keys(global.Hydro.lib), (str) => str.startsWith('oauth_'))
+            .map((key) => ({
+                id: key.split('_')[1],
+                icon: global.Hydro.lib[key].icon,
+                text: global.Hydro.lib[key].text,
+            }));
     }
 
     async finish() {

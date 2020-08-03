@@ -129,11 +129,6 @@ SystemSetting(
     Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
     Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
-    Setting('setting_oauth', 'oauth.githubappid', null, null, 'text', 'Github Oauth AppID'),
-    Setting('setting_oauth', 'oauth.githubsecret', null, null, 'text', 'Github Oauth Secret', null, FLAG_SECRET),
-    Setting('setting_oauth', 'oauth.googleappid', null, null, 'text', 'Google Oauth ClientID', null),
-    Setting('setting_oauth', 'oauth.googlesecret', null, null, 'text', 'Google Oauth Secret', null, FLAG_SECRET),
-    Setting('setting_proxy', 'proxy', null, null, 'text', 'Proxy Server URL'),
     Setting('setting_storage', 'db.ver', null, 1, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
 );

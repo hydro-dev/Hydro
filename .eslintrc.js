@@ -26,6 +26,7 @@ module.exports = {
         'no-bitwise': 'off',
         'no-console': 'off',
         'no-extend-native': 'off',
+        'no-inner-declarations': 'off',
         'no-multi-assign': 'off',
         'no-nested-ternary': 'off',
         'no-param-reassign': 'off',
