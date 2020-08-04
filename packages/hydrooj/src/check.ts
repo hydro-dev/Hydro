@@ -38,17 +38,6 @@ const checks: Dictionary<CheckItem> = {
         const from = await system.get('smtp.from');
         if (!from) warn('SMTP account was not provided, email verification disabled.');
     },
-    async checkProxy(ctx, log, warn) {
-        const [github, google, proxy] = await system.getMany([
-            'oauth.githubappid', 'oauth.googleappid', 'proxy',
-        ]);
-        if (proxy) {
-            superagent.get('https://www.google.com/').timeout(10000).proxy(proxy)
-                .catch(() => warn('The proxy configured seem to be invalid.'));
-        } else if (github || google) {
-            warn('OAuth enabled. But for well-known reasons, a proxy is required.');
-        }
-    },
     async checkIpHeader(ctx, log, warn) {
         const header = await system.get('server.xff');
         if (header && !ctx.request.ip) warn('IP header seems incorrect.\nCheck dashboard>settings>server.');

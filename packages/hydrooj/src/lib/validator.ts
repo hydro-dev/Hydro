@@ -2,7 +2,7 @@
 import { ValidationError } from '../error';
 
 const RE_UID = /^-?\d+$/i;
-const RE_PID = /^([a-zA-Z]+[a-zA-Z0-9]*)|$/i;
+const RE_PID = /^[a-zA-Z]+[a-zA-Z0-9]*$/i;
 const RE_UNAME = /[^\s\u3000](.{,254}[^\s\u3000])?$/i;
 const RE_ROLE = /^[_0-9A-Za-z]{1,256}$/i;
 const RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;

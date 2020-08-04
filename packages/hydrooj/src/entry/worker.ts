@@ -6,7 +6,7 @@ import {
 } from './common';
 
 export async function load() {
-    let pending = global.addons;
+    const pending = global.addons;
     const fail = [];
     const active = [];
     require('../lib/i18n');
@@ -49,7 +49,6 @@ export async function load() {
     for (const i of builtinScript) require(`../script/${i}`);
     await script(pending, fail, active);
     for (const postInit of global.Hydro.postInit) await postInit();
-    pending = [];
     await server.start();
     setInterval(() => {
         process.send({ event: 'stat', count: global.Hydro.stat.reqCount });

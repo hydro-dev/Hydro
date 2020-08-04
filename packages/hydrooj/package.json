@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.12.1",
+    "version": "2.12.2",
     "main": "dist/loader.js",
     "bin": "bin/hydrooj.js",
     "repository": "https://github.com/hydro-dev/Hydro.git",
