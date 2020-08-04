@@ -80,7 +80,7 @@ namespace Proxy {
 }
 
 declare module 'superagent' {
-    interface Request {
+    interface SuperAgentRequest {
         proxy(url: string): this;
     }
 }

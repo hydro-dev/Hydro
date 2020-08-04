@@ -4,5 +4,4 @@ discussion前端权限节点显示异常?
 SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
-move to @hydrooj/core?
 message.markAsRead

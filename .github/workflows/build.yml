@@ -1,20 +1,39 @@
-name: Build
+name: CI
+
 on:
-  push:
-    branches: 
-    - master
+- push
+- pull_request
+
+env:
+  CI: true
+
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
+    - name: Check out
+      uses: actions/checkout@v1
+    - name: Set up Node
+      uses: actions/setup-node@v1
       with:
-        node-version: '13.x'
-    - run: |
-        yarn
-        yarn build
-    - uses: JS-DevTools/npm-publish@v1
+        node-version: 13.x
+    - name: Create .npmrc
+      run: 'echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > .npmrc'
+    - name: Install
+      run: yarn
+    - name: Build
+      run: yarn build
+    - name: Lint
+      run: yarn lint
+    - name: Unit Test
+      run: yarn jest --runInBand
+    - name: Report Coverage
+      uses: codecov/codecov-action@v1
       with:
-        token: ${{ secrets.NPM_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage/lcov.info
+        name: codecov
+    - name: Publish
+      run: node build/publish.js

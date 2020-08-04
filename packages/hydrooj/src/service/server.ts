@@ -278,6 +278,7 @@ export class Handler {
             gravatar: misc.gravatar(this.user.gravatar || '', 128),
             perm: this.user.perm.toString(),
         };
+        if (!global.Hydro.lib.template) return JSON.stringify(context);
         const res = await global.Hydro.lib.template.render(name, {
             handler: this,
             UserContext,

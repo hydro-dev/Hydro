@@ -1,19 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es2018",
+        "target": "es2019",
         "module": "commonjs",
-        "outDir": "./dist/",
-        "rootDir": "./hydro/",
+        "composite": true,
         "moduleResolution": "node",
-        "declaration": true,
-        "sourceMap": true,
-        "esModuleInterop": true,
         "experimentalDecorators": true,
-        "allowJs": false
+        "esModuleInterop": true
     },
-    "exclude": [
-        "node_modules",
-        "dist",
-        "tool"
-    ]
+    "references": [
+        { "path": "./packages/hydrooj" },
+        { "path": "./packages/login-with-github" },
+        { "path": "./packages/login-with-google" }
+    ],
 }

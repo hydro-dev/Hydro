@@ -2,8 +2,6 @@ node_modules/
 config.yaml
 config.json
 .build/
-*.build
-public/
 dist/
 .cache/
 *.cache
@@ -11,5 +9,14 @@ __*
 ui/misc/.iconfont
 ui/static/locale
 *.log
+*.d.ts
+build/*.js
+*.js.map
 *.hydro
 !.gitkeep
+tsconfig.tsbuildinfo
+yarn.lock
+
+packages/**/*.js
+packages/**/*.js.map
+packages/**/*.d.ts
