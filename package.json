@@ -7,7 +7,7 @@
     "scripts": {
         "build": "tsc -b",
         "build:watch": "tsc -b --watch",
-        "lint": "eslint packages/**/*.ts --fix",
+        "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",
         "start": "node_modules/.bin/hydrooj"

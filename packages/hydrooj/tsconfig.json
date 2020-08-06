@@ -1,14 +1,22 @@
 {
-    "extends": "../../tsconfig.base",
     "compilerOptions": {
+        "target": "es2019",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "declaration": true,
+        "sourceMap": true,
+        "composite": true,
+        "strictBindCallApply": true,
+        "experimentalDecorators": true,
         "outDir": "dist",
-        "rootDir": "src",
+        "rootDir": "src"
     },
     "include": [
-        "src",
+        "src"
     ],
     "exclude": [
-        "dist",
-        "bin"
+        "bin",
+        "dist"
     ]
 }

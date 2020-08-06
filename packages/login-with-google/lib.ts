@@ -21,7 +21,7 @@ async function callback({
     const { UserFacingError } = global.Hydro.error;
     if (error) throw new UserFacingError(error);
     const [
-        [appid, secret, url, proxy],
+        [appid, secret, url, proxyUrl],
         s,
     ] = await Promise.all([
         system.getMany([
@@ -30,7 +30,7 @@ async function callback({
         token.get(state, token.TYPE_OAUTH),
     ]);
     const res = await superagent.post('https://oauth2.googleapis.com/token')
-        .proxy(proxy)
+        .proxy(proxyUrl)
         .send({
             client_id: appid,
             client_secret: secret,

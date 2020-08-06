@@ -1,7 +1,6 @@
 // TODO check more
 
 import os from 'os';
-import superagent from 'superagent';
 import { Dictionary } from 'lodash';
 import * as system from './model/system';
 import * as db from './service/db';

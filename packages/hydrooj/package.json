@@ -3,6 +3,7 @@
     "version": "2.12.3",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
+    "typings": "dist/loader.d.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
     "license": "GPL-3.0-only",

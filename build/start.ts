@@ -5,6 +5,7 @@ import cluster from 'cluster';
 import fs from 'fs-extra';
 import { filter } from 'lodash';
 import { argv } from 'yargs';
+// @ts-ignore
 import * as hydro from 'hydrooj';
 
 if (!cluster.isMaster) {
