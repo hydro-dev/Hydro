@@ -34,9 +34,11 @@ export const DOMAIN_USER_SETTINGS_BY_KEY: SettingDict = {};
 export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
 export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
+export type SettingType = 'text' | 'number' | 'markdown' | 'password' | 'select' | 'boolean' | 'textarea';
+
 export const Setting = (
     family: string, key: string, range: Array<[string, string]> | Dictionary<string> = null,
-    value: any = null, type = 'text', name = '',
+    value: any = null, type: SettingType = 'text', name = '',
     desc = '', flag = 0,
 ): _Setting => ({
     family, key, range, value, type, name, desc, flag,
@@ -103,11 +105,12 @@ DomainSetting(
 );
 
 DomainUserSetting(
-    Setting('setting_info', 'displayName', null, null, 'string', 'display name'),
+    Setting('setting_info', 'displayName', null, null, 'text', 'display name'),
     Setting('setting_storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rp', null, 1500, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'level', null, 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 SystemSetting(

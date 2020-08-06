@@ -26,8 +26,7 @@ export const builtinHandler = [
 ];
 
 export const builtinScript = [
-    'rating', 'register', 'problemStat', 'blacklist', 'setSuperadmin',
-    'deleteUser',
+    'rating', 'register', 'problemStat', 'blacklist', 'deleteUser',
     'upgrade0_1',
 ];
 

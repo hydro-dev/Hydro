@@ -54,7 +54,7 @@ export class User implements _User {
 
     [key: string]: any;
 
-    constructor(udoc, dudoc) {
+    constructor(udoc: Udoc, dudoc) {
         this.udoc = () => udoc;
         this.dudoc = () => dudoc;
         this._id = udoc._id;
@@ -223,6 +223,16 @@ export async function setPriv(uid: number, priv: number): Promise<Udoc | null> {
     return udoc.value;
 }
 
+export async function setSuperAdmin(uid: number) {
+    await setPriv(uid, PRIV.PRIV_ALL);
+    return uid;
+}
+
+export async function setJudge(uid: number) {
+    await setPriv(uid, PRIV.PRIV_JUDGE);
+    return uid;
+}
+
 export function ban(uid: number) {
     return Promise.all([
         setPriv(uid, PRIV.PRIV_NONE),
@@ -252,5 +262,7 @@ global.Hydro.model.user = {
     getPrefixList,
     setPriv,
     getList,
+    setSuperAdmin,
+    setJudge,
     ban,
 };

@@ -9,6 +9,7 @@ import * as record from '../model/record';
 import { STATUS } from '../model/builtin';
 import rating from '../lib/rating';
 import paginate from '../lib/paginate';
+import ranked from '../lib/rank';
 
 export const description = 'Calculate rp of a domain, or all domains';
 
@@ -83,6 +84,41 @@ async function runContest(...arg: any[]) {
     });
 }
 
+export async function calcLevel(domainId: string, report: Function) {
+    const dudocs = await domain.getMultiInDomain(domainId).sort('rp', -1).toArray();
+    let last = { rp: null };
+    let rank = 0;
+    let count = 0;
+    const coll = global.Hydro.service.db.collection('domain.user');
+    let bulk = coll.initializeUnorderedBulkOp();
+    for (const dudoc of dudocs) {
+        count++;
+        if (!dudoc.rp) dudoc.rp = null;
+        if (dudoc.rp !== last.rp) rank = count;
+        bulk.find({ _id: dudoc._id }).updateOne({ $set: { rank } });
+        last = dudoc;
+        if (count % 1000 === 0) report({ message: `#${count}: Rank ${rank}` });
+        await bulk.execute();
+    }
+    if (!rank) {
+        report({ message: 'No one has rp' });
+        return;
+    }
+    const levels = global.Hydro.model.builtin.LEVELS;
+    bulk = coll.initializeUnorderedBulkOp();
+    for (let i = 0; i < levels.length; i++) {
+        report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
+        bulk.find({
+            domainId,
+            $and: [{ rank: { $lte: levels[i][1] } }, { rank: { $gt: levels[i + 1][1] } }],
+        }).update({ $set: { level: levels[i][0] } });
+    }
+    const i = levels.length - 1;
+    report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
+    bulk.find({ domainId, rank: { $lte: levels[i][1] } }).update({ $set: { level: levels[i][0] } });
+    await bulk.execute();
+}
+
 async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     const udict: ND = {};
     const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
@@ -114,6 +150,7 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
         tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rp: udict[uid] }));
     }
     await Promise.all(tasks);
+    await calcLevel(domainId, report);
 }
 
 export async function run({ domainId }, report: Function) {
