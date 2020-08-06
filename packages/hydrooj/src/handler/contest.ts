@@ -118,7 +118,7 @@ class ContestBoardcastHandler extends ContestHandler {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
-        const uids = Array.from(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
+        const uids: number[] = Array.from(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
         await Promise.all(
             uids.map((uid) => message.send(this.user._id, uid, content, message.FLAG_ALERT)),
         );
@@ -343,7 +343,7 @@ class ContestCodeHandler extends ContestHandler {
             },
         }).toArray();
         for (const rdoc of rdocs) {
-            zip.addFile(`${rnames[rdoc._id]}.${rdoc.lang}`, rdoc.code);
+            zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
         }
         await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }

@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { ObjectID, Collection } from 'mongodb';
 import * as fs from 'fs';
 import { Dictionary } from 'lodash';
 import { ForbiddenError, NotFoundError } from '../error';
@@ -7,7 +7,7 @@ import gridfs from '../service/gridfs';
 import hash from '../lib/hash.hydro';
 import { Ufdoc } from '../interface';
 
-const coll = db.collection('file');
+const coll: Collection<Ufdoc> = db.collection('file');
 const collFile = db.collection('fs.files');
 const collChunk = db.collection('fs.chunks');
 
@@ -25,11 +25,10 @@ export async function add(
     const w = gridfs.openUploadStream(filename);
     await coll.insertOne({
         ...meta,
-        _id: w.id,
+        _id: w.id as ObjectID,
         secret: String.random(32),
         owner,
         filename,
-        count: 1,
     });
     await new Promise((resolve, reject) => {
         w.on('error', reject);
@@ -37,7 +36,7 @@ export async function add(
         stream.pipe(w);
     });
     const c = await gridfs.find({ _id: w.id }).toArray();
-    await coll.updateOne({ _id: w.id }, { $set: { md5: c[0].md5, size: c[0].length } });
+    await coll.updateOne({ _id: w.id as ObjectID }, { $set: { md5: c[0].md5, size: c[0].length } });
     return w.id as ObjectID;
 }
 
@@ -47,26 +46,6 @@ export function del(_id: ObjectID) {
         collFile.deleteOne({ _id }),
         collChunk.deleteMany({ files_id: _id }),
     ]);
-}
-
-export async function inc(_id: ObjectID): Promise<number> {
-    const doc = await coll.findOneAndUpdate(
-        { _id },
-        { $inc: { count: 1 } },
-        { returnOriginal: false },
-    );
-    return doc.value?.count;
-}
-
-export async function dec(_id: ObjectID): Promise<number> {
-    const file = await coll.findOneAndUpdate(
-        { _id },
-        { $inc: { count: -1 } },
-        { returnOriginal: false },
-    );
-    if (!file.value) return 0;
-    if (!file.value.count) await del(_id);
-    return file.value.count;
 }
 
 export async function getWithSecret(_id: ObjectID, secret: string, reject?: Function) {
@@ -144,5 +123,5 @@ function ensureIndexes() {
 
 global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.file = {
-    add, get, del, inc, dec, getMeta, getWithSecret, getMulti, getMetaDict, url,
+    add, get, del, getMeta, getWithSecret, getMulti, getMetaDict, url,
 };

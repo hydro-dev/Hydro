@@ -1,8 +1,8 @@
 {
     "name": "hydrooj",
-    "version": "2.12.2",
-    "main": "dist/loader.js",
+    "version": "2.12.3",
     "bin": "bin/hydrooj.js",
+    "main": "dist/loader.js",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
     "license": "GPL-3.0-only",
@@ -40,7 +40,7 @@
         "ps-list": "^7.2.0",
         "serialize-javascript": "^4.0.0",
         "sockjs": "^0.3.20",
-        "superagent": "^5.2.2",
+        "superagent": "^5.3.1",
         "systeminformation": "^4.26.10",
         "yargs": "^15.4.1"
     },

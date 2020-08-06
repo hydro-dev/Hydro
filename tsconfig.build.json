@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.base",
+    "compilerOptions": {
+        "outDir": "build",
+        "rootDir": "build",
+    },
+    "include": [
+        "build"
+    ],
+    "exclude": [
+        "packages"
+    ]
+}

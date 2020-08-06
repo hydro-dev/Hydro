@@ -11,6 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
     - name: Check out

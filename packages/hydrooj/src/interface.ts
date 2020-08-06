@@ -247,9 +247,10 @@ export interface Mdoc {
 export interface Ufdoc {
     _id: ObjectID,
     secret: string,
-    md5: string,
+    md5?: string,
     owner: number,
-    size: number,
+    size?: number,
+    filename: string,
 }
 
 // Blacklist
@@ -357,68 +358,75 @@ export interface JudgeResultBody {
 
 export type PathComponent = [string, string, any?, boolean?];
 
+export interface Model {
+    blacklist: typeof import('./model/blacklist'),
+    builtin: typeof import('./model/builtin'),
+    contest: typeof import('./model/contest'),
+    discussion: typeof import('./model/discussion'),
+    document: typeof import('./model/document'),
+    domain: typeof import('./model/domain'),
+    file: typeof import('./model/file'),
+    message: typeof import('./model/message'),
+    opcount: typeof import('./model/opcount'),
+    problem: typeof import('./model/problem'),
+    record: typeof import('./model/record'),
+    setting: typeof import('./model/setting'),
+    solution: typeof import('./model/solution'),
+    system: typeof import('./model/system'),
+    task: typeof import('./model/task'),
+    token: typeof import('./model/token'),
+    training: typeof import('./model/training'),
+    user: typeof import('./model/user'),
+    [key: string]: any,
+}
+
+export interface Service {
+    bus: typeof import('./service/bus'),
+    db: typeof import('./service/db'),
+    gridfs: GridFSBucket,
+    monitor: typeof import('./service/monitor'),
+    server: typeof import('./service/server'),
+    [key: string]: any,
+}
+
+export interface Lib {
+    download: typeof import('./lib/download').default,
+    superagent: typeof import('./lib/superagent'),
+    'hash.hydro': typeof import('./lib/hash.hydro').default,
+    i18n: typeof import('./lib/i18n').default,
+    'import.syzoj': typeof import('./lib/import.syzoj').syzoj,
+    jwt: typeof import('./lib/jwt'),
+    logger: typeof import('./lib/logger').default,
+    mail: typeof import('./lib/mail'),
+    md5: typeof import('./lib/md5').default,
+    misc: typeof import('./lib/misc'),
+    nav: typeof import('./lib/nav').default,
+    paginate: typeof import('./lib/paginate').default,
+    rank: typeof import('./lib/rank').default,
+    rating: typeof import('./lib/rating').default,
+    testdataConfig: typeof import('./lib/testdataConfig'),
+    sha1: typeof import('./lib/sha1').default,
+    sysinfo: typeof import('./lib/sysinfo'),
+    'testdata.convert.ini': typeof import('./lib/testdata.convert.ini').default,
+    useragent: typeof import('./lib/useragent'),
+    validator: typeof import('./lib/validator'),
+    [key: string]: any
+}
+
 declare global {
     namespace NodeJS {
         interface Global {
             Hydro: {
-                model: {
-                    blacklist: typeof import('./model/blacklist'),
-                    builtin: typeof import('./model/builtin'),
-                    contest: typeof import('./model/contest'),
-                    discussion: typeof import('./model/discussion'),
-                    document: typeof import('./model/document'),
-                    domain: typeof import('./model/domain'),
-                    file: typeof import('./model/file'),
-                    message: typeof import('./model/message'),
-                    opcount: typeof import('./model/opcount'),
-                    problem: typeof import('./model/problem'),
-                    record: typeof import('./model/record'),
-                    setting: typeof import('./model/setting'),
-                    solution: typeof import('./model/solution'),
-                    system: typeof import('./model/system'),
-                    task: typeof import('./model/task'),
-                    token: typeof import('./model/token'),
-                    training: typeof import('./model/training'),
-                    user: typeof import('./model/user'),
-                    [key: string]: any,
-                },
-                handler: { [key: string]: Function },
-                script: { [key: string]: Script },
-                service: {
-                    bus: typeof import('./service/bus'),
-                    db: typeof import('./service/db'),
-                    gridfs: GridFSBucket,
-                    monitor: typeof import('./service/monitor'),
-                    server: typeof import('./service/server'),
-                    [key: string]: any,
-                },
-                lib: {
-                    download: typeof import('./lib/download').default,
-                    'hash.hydro': typeof import('./lib/hash.hydro').default,
-                    i18n: typeof import('./lib/i18n').default,
-                    'import.syzoj': typeof import('./lib/import.syzoj').syzoj,
-                    jwt: typeof import('./lib/jwt'),
-                    logger: typeof import('./lib/logger').default,
-                    mail: typeof import('./lib/mail'),
-                    md5: typeof import('./lib/md5').default,
-                    misc: typeof import('./lib/misc'),
-                    nav: typeof import('./lib/nav').default,
-                    paginate: typeof import('./lib/paginate').default,
-                    rank: typeof import('./lib/rank').default,
-                    rating: typeof import('./lib/rating').default,
-                    testdataConfig: typeof import('./lib/testdataConfig'),
-                    sha1: typeof import('./lib/sha1').default,
-                    sysinfo: typeof import('./lib/sysinfo'),
-                    'testdata.convert.ini': typeof import('./lib/testdata.convert.ini').default,
-                    useragent: typeof import('./lib/useragent'),
-                    validator: typeof import('./lib/validator'),
-                    [key: string]: any
-                },
+                model: Model,
+                handler: Dict<Function>,
+                script: Dict<Script>,
+                service: Service,
+                lib: Lib,
                 stat: any,
                 ui: {
                     manifest: Dict<string>,
+                    template: Dict<string>,
                     nav: any,
-                    template: { [key: string]: string },
                 },
                 error: typeof import('./error'),
                 locales: Dict<Dict<string>>,

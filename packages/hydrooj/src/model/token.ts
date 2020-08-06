@@ -1,7 +1,8 @@
+import { Collection } from 'mongodb';
 import { TokenDoc } from '../interface';
 import * as db from '../service/db';
 
-const coll = db.collection('token');
+const coll: Collection<TokenDoc> = db.collection('token');
 
 export const TYPE_SESSION = 0;
 export const TYPE_REGISTRATION = 2;
@@ -11,7 +12,7 @@ export const TYPE_LOSTPASS = 5;
 
 function ensureIndexes() {
     return Promise.all([
-        coll.createIndex([{ uid: 1 }, { tokenType: 1 }, { updateAt: -1 }], { sparse: true }),
+        coll.createIndex({ uid: 1, tokenType: 1, updateAt: -1 }, { sparse: true }),
         coll.createIndex('expireAt', { expireAfterSeconds: 0 }),
     ]);
 }

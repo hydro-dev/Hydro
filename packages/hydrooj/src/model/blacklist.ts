@@ -1,9 +1,10 @@
+import { Collection } from 'mongodb';
 import * as db from '../service/db';
 import { Bdoc } from '../interface';
 
-const coll = db.collection('blacklist');
+const coll: Collection<Bdoc> = db.collection('blacklist');
 
-export async function add(ip: string): Promise<Bdoc> {
+export async function add(ip: string) {
     /**
      * Add a ip into blacklist.
      * @param {string} ip
@@ -18,7 +19,7 @@ export async function add(ip: string): Promise<Bdoc> {
     return res.value;
 }
 
-export function get(ip: string): Promise<Bdoc | null> {
+export function get(ip: string) {
     /**
      * Get a ip, return null if not.
      * @param {string} ip

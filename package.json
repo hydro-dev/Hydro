@@ -31,5 +31,9 @@
         "semver": "^7.3.2",
         "ts-jest": "^26.1.4",
         "typescript": "^3.9.7"
+    },
+    "dependencies": {
+        "fs-extra": "^9.0.1",
+        "yargs": "^15.4.1"
     }
 }

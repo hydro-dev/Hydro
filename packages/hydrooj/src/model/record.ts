@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { ObjectID, Collection } from 'mongodb';
 import { Dictionary } from 'lodash';
 import { STATUS } from './builtin';
 import * as task from './task';
@@ -8,7 +8,7 @@ import {
 } from '../interface';
 import * as db from '../service/db';
 
-const coll = db.collection('record');
+const coll: Collection<Rdoc> = db.collection('record');
 
 export interface RdocBase {
     _id?: ObjectID,

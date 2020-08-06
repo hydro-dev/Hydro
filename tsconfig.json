@@ -8,8 +8,10 @@
         "esModuleInterop": true
     },
     "references": [
+        { "path": "./tsconfig.build.json" },
         { "path": "./packages/hydrooj" },
         { "path": "./packages/login-with-github" },
-        { "path": "./packages/login-with-google" }
+        { "path": "./packages/login-with-google" },
+        { "path": "./packages/migrate-vijos" },
     ],
 }

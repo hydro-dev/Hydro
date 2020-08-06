@@ -1,5 +1,8 @@
 import 'hydrooj';
-import superagent from 'superagent';
+import * as superagent from 'superagent';
+import superagentProxy from 'superagent-proxy';
+
+superagentProxy(superagent);
 
 async function get() {
     const { system, token } = global.Hydro.model;

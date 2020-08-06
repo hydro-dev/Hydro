@@ -14,9 +14,12 @@ build/*.js
 *.js.map
 *.hydro
 !.gitkeep
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 yarn.lock
 
 packages/**/*.js
+!**/bin/*.js
 packages/**/*.js.map
 packages/**/*.d.ts
+
+*.mmdb

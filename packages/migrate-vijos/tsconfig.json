@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.base",
+    "compilerOptions": {
+        "outDir": ".",
+        "rootDir": "."
+    },
+    "include": [
+        "*.ts"
+    ],
+    "exclude": []
+}

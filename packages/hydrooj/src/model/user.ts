@@ -1,3 +1,4 @@
+import { Collection } from 'mongodb';
 import * as system from './system';
 import * as token from './token';
 import * as setting from './setting';
@@ -8,7 +9,7 @@ import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
 import { User as _User, Udoc, Udict } from '../interface';
 
-const coll = db.collection('user');
+const coll: Collection<Udoc> = db.collection('user');
 
 export async function setPassword(uid: number, password: string): Promise<Udoc> {
     const salt = String.random();
@@ -203,11 +204,14 @@ export function getMulti(params: any) {
     return coll.find(params);
 }
 
-export async function getPrefixList(prefix: string, limit = 50) {
+export async function getPrefixList(domainId: string, prefix: string, limit = 50) {
     prefix = prefix.toLowerCase();
     const $regex = new RegExp(`\\A\\Q${prefix}\\E`, 'gmi');
-    const udocs = await coll.find({ unameLower: { $regex } }).limit(limit).toArray();
-    return udocs;
+    const uids = await coll.find({ unameLower: { $regex } })
+        .limit(limit).map((doc) => doc._id).toArray();
+    const users = [];
+    for (const uid of uids) users.push(getById(domainId, uid));
+    return await Promise.all(users);
 }
 
 export async function setPriv(uid: number, priv: number): Promise<Udoc | null> {

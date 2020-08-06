@@ -395,7 +395,7 @@ class HomeworkCodeHandler extends HomeworkHandler {
             },
         }).toArray();
         for (const rdoc of rdocs) {
-            zip.addFile(`${rnames[rdoc._id]}.${rdoc.lang}`, rdoc.code);
+            zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
         }
         await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }

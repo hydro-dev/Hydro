@@ -1,0 +1,24 @@
+{
+    "name": "@hydrooj/migrate-vijos",
+    "version": "1.3.3",
+    "main": "package.json",
+    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "author": "undefined <masnn0@outlook.com>",
+    "license": "MIT",
+    "scripts": {
+        "lint": "eslint lib.ts script.ts --fix",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/js-yaml": "^3.12.5",
+        "@types/mongodb": "^3.5.25",
+        "hydrooj": "2.11.5"
+    },
+    "peerDependencies": {
+        "hydrooj": "^2.11.3"
+    },
+    "dependencies": {
+        "js-yaml": "^3.14.0",
+        "mongodb": "^3.6.0"
+    }
+}

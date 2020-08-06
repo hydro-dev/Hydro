@@ -18,6 +18,7 @@ import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
 import * as misc from '../lib/misc';
 import paginate from '../lib/paginate';
+import { User } from '../interface';
 
 class UserLoginHandler extends Handler {
     async get() {
@@ -201,12 +202,12 @@ class UserSearchHandler extends Handler {
     @param('exectMatch', Types.Boolean)
     async get(domainId: string, q: string, exactMatch = false) {
         let udoc = await user.getById(domainId, parseInt(q, 10));
-        const udocs = udoc ? [udoc] : [];
+        const udocs: User[] = udoc ? [udoc] : [];
         udoc = await user.getByUname(domainId, q);
         if (udoc) udocs.push(udoc);
         udoc = await user.getByEmail(domainId, q);
         if (udoc) udocs.push(udoc);
-        if (!exactMatch) udocs.push(...await user.getPrefixList(q, 20));
+        if (!exactMatch) udocs.push(...await user.getPrefixList(domainId, q, 20));
         for (const i in udocs) {
             udocs[i].gravatar = misc.gravatar(udocs[i].gravatar || '');
         }

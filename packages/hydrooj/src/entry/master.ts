@@ -58,7 +58,10 @@ export async function load(call: Entry) {
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
     for (const postInit of global.Hydro.postInit) {
-        await postInit().catch(console.error);
+        await postInit().catch((e) => {
+            console.error('Error running postInit:', postInit.toString());
+            console.error(e);
+        });
     }
     return await modelSystem.get('server.worker');
 }
