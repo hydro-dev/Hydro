@@ -9,14 +9,13 @@
         "composite": true,
         "strictBindCallApply": true,
         "experimentalDecorators": true,
+        "outDir": "build",
+        "rootDir": "build"
     },
-    "references": [
-        { "path": "packages/hydrooj" },
-        { "path": "packages/geoip" },
-        { "path": "packages/login-with-github" },
-        { "path": "packages/login-with-google" },
-        { "path": "packages/migrate-vijos" },
-        { "path": "tsconfig.build.json" },
+    "include": [
+        "build"
     ],
-    "files": [],
+    "exclude": [
+        "packages"
+    ]
 }
