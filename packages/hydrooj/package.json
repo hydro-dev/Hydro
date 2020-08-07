@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.12.4",
+    "version": "2.12.5",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",

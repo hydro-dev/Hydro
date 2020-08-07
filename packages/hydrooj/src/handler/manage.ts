@@ -3,12 +3,15 @@ import { ValidationError } from '../error';
 import * as check from '../check';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
+import * as user from '../model/user';
 import { STATUS, PRIV } from '../model/builtin';
 import * as record from '../model/record';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
-import { validate } from '../lib/validator';
+import {
+    validate, isEmail, isUname, isPassword,
+} from '../lib/validator';
 
 function set(key, value) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
@@ -159,11 +162,44 @@ class SystemSettingHandler extends SystemHandler {
     }
 }
 
+class SystemUserImportHandler extends SystemHandler {
+    async get() {
+        this.response.body.users = [];
+        this.response.template = 'manage_user_import.html';
+    }
+
+    @param('users', Types.String)
+    @param('confirm', Types.Boolean)
+    async post(domainId: string, _users: string, confirm: boolean) {
+        const users = _users.split('\n');
+        const udocs = [];
+        const tasks = [];
+        const messages = [];
+        for (const i in users) {
+            const u = users[i];
+            const [email, username, password] = u.split(',').map((t) => t.trim());
+            if (email && username && password) {
+                if (!isEmail(email)) messages.push(`Line ${i + 1}: Invalid email.`);
+                else if (!isUname(username)) messages.push(`Line ${i + 1}: Invalid username`);
+                else if (!isPassword(password)) messages.push(`Line ${i + 1}: Invalid password`);
+                else {
+                    udocs.push({ email, username, password });
+                    if (!confirm) tasks.push(user.create(email, username, password));
+                }
+            } else messages.push(`Line ${i + 1}: Input invalid.`);
+        }
+        await Promise.all(tasks);
+        this.response.body.users = udocs;
+        this.response.body.messages = messages;
+    }
+}
+
 async function apply() {
     Route('manage', '/manage', SystemMainHandler);
     Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
     Route('manage_script', '/manage/script', SystemScriptHandler);
     Route('manage_setting', '/manage/setting', SystemSettingHandler);
+    Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
 

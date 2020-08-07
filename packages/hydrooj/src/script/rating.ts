@@ -9,7 +9,6 @@ import * as record from '../model/record';
 import { STATUS } from '../model/builtin';
 import rating from '../lib/rating';
 import paginate from '../lib/paginate';
-import ranked from '../lib/rank';
 
 export const description = 'Calculate rp of a domain, or all domains';
 
