@@ -10,6 +10,16 @@ import {
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
 
+export const SETTING_DIFFICULTY_ALGORITHM = 0;
+export const SETTING_DIFFICULTY_ADMIN = 1;
+export const SETTING_DIFFICULTY_AVERAGE = 2;
+
+export const SETTING_DIFFICULTY_RANGE = [
+    [SETTING_DIFFICULTY_ALGORITHM, 'Use algorithm calculated'],
+    [SETTING_DIFFICULTY_ADMIN, 'Use admin specificed'],
+    [SETTING_DIFFICULTY_AVERAGE, 'Use average of above'],
+];
+
 export const pdocHidden: Pdoc = {
     _id: new ObjectID(),
     domainId: 'system',
@@ -152,6 +162,11 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
 }
 
 global.Hydro.model.problem = {
+    SETTING_DIFFICULTY_ADMIN,
+    SETTING_DIFFICULTY_ALGORITHM,
+    SETTING_DIFFICULTY_AVERAGE,
+    SETTING_DIFFICULTY_RANGE,
+
     pdocHidden,
     add,
     inc,

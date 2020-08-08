@@ -4,6 +4,4 @@ SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
 message.markAsRead
-批量导入用户
 domain_join_application
-problem.difficulty_setting

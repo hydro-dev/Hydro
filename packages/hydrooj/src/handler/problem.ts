@@ -369,12 +369,23 @@ class ProblemSettingsHandler extends ProblemManageHandler {
     @param('hidden', Types.Boolean)
     @param('category', Types.String, true, null, parseCategory)
     @param('tag', Types.String, true, null, parseCategory)
+    @param('difficultySetting', Types.UnsignedInt)
+    @param('difficultyAdmin', Types.UnsignedInt, true)
     async postSetting(
         domainId: string, pid: string | number, hidden = false,
         category: string[] = [], tag: string[] = [],
+        difficultySetting: string, difficultyAdmin: number,
     ) {
         const pdoc = await problem.get(domainId, pid);
-        await problem.edit(domainId, pdoc.docId, { hidden, category, tag });
+        if (!problem.SETTING_DIFFICULTY_RANGE[difficultySetting]) {
+            throw new ValidationError('difficultySetting');
+        }
+        if (!difficultyAdmin) difficultyAdmin = null;
+        else if (difficultyAdmin < 1 || difficultyAdmin > 9) throw new ValidationError('difficultyAdmin');
+        await problem.edit(domainId, pdoc.docId, {
+            hidden, category, tag, difficultySetting, difficultyAdmin,
+        });
+        await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
         this.back();
     }
 }

@@ -165,6 +165,7 @@ class SystemSettingHandler extends SystemHandler {
 class SystemUserImportHandler extends SystemHandler {
     async get() {
         this.response.body.users = [];
+        this.response.body.path.push(['manage_user_import']);
         this.response.template = 'manage_user_import.html';
     }
 
@@ -188,7 +189,9 @@ class SystemUserImportHandler extends SystemHandler {
                 }
             } else messages.push(`Line ${i + 1}: Input invalid.`);
         }
+        messages.push(`${udocs.length} users found.`);
         await Promise.all(tasks);
+        this.response.body.path.push(['manage_user_import']);
         this.response.body.users = udocs;
         this.response.body.messages = messages;
     }

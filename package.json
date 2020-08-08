@@ -27,7 +27,7 @@
         "globby": "^11.0.1",
         "jest": "^26.2.2",
         "latest-version": "^5.1.0",
-        "ora": "^4.0.5",
+        "ora": "^5.0.0",
         "semver": "^7.3.2",
         "ts-jest": "^26.1.4",
         "typescript": "^3.9.7"

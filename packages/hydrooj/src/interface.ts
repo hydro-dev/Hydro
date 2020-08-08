@@ -135,11 +135,15 @@ export interface Pdoc {
     nAccept: number,
     tag: string[],
     category: string[],
-    difficulty: number,
     data?: ProblemData,
     hidden: boolean,
     config: ProblemConfig,
     acMsg?: string,
+
+    difficulty?: number,
+    difficultyAlgo?: number,
+    difficultyAdmin?: number,
+    difficultySetting?: number,
 }
 
 export type Pdict = NumericDictionary<Pdoc>;

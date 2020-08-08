@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.12.5",
+    "version": "2.12.6",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -35,7 +35,7 @@
         "mongodb": "^3.5.9",
         "nodemailer": "^6.4.10",
         "nunjucks": "^3.2.2",
-        "prismjs": "^1.20.0",
+        "prismjs": "^1.21.0",
         "proxy-agent": "^3.1.1",
         "ps-list": "^7.2.0",
         "serialize-javascript": "^4.0.0",
