@@ -1,4 +1,8 @@
-import { RoleAlreadyExistError, ValidationError } from '../error';
+import moment from 'moment-timezone';
+import {
+    RoleAlreadyExistError, ValidationError, DomainJoinForbiddenError,
+    DomainJoinAlreadyMemberError, InvalidJoinInvitationCodeError,
+} from '../error';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
@@ -10,7 +14,7 @@ import {
 } from '../service/server';
 
 class DomainRankHandler extends Handler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
             domain.getMultiInDomain(domainId).sort({ rp: -1 }),
@@ -184,6 +188,75 @@ class DomainRoleHandler extends ManageHandler {
     }
 }
 
+class DomainJoinApplicationsHandler extends ManageHandler {
+    async get() {
+        const r = await domain.getRoles(this.domain);
+        const roles = r.map((role) => role._id).sort();
+        const rolesWithText = roles.map((role) => [role, role]);
+        const joinSettings = domain.getJoinSettings(this.domain, roles);
+        const expirations = { ...domain.JOIN_EXPIRATION_RANGE };
+        if (!joinSettings) delete expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
+        this.response.template = 'domain_join_applications.html';
+        this.response.body = { rolesWithText, joinSettings, expirations };
+    }
+
+    @param('method', Types.UnsignedInt)
+    @param('role', Types.String, true)
+    @param('expire', Types.UnsignedInt, true)
+    @param('invitationCode', Types.String, true)
+    async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
+        const r = await domain.getRoles(this.domain);
+        const roles = r.map((rl) => rl._id);
+        const current = domain.getJoinSettings(this.domain, roles);
+        if (!domain.JOIN_METHOD_RANGE[method]) throw new ValidationError('method');
+        let joinSettings;
+        if (method === domain.JOIN_METHOD_NONE) joinSettings = null;
+        else {
+            if (!roles.includes(role)) throw new ValidationError('role');
+            if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
+            if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
+            joinSettings = { method, role };
+            if (method === domain.JOIN_METHOD_CODE) joinSettings.code = invitationCode;
+            if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) {
+                joinSettings.expire = current.expire;
+            } else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
+            else joinSettings.expire = moment().add(expire, 'hours').toDate();
+        }
+        await domain.edit(this.domain._id, { join: joinSettings });
+        this.back();
+    }
+}
+
+class DomainJoinHandler extends Handler {
+    joinSettings: any;
+
+    async prepare() {
+        const r = await domain.getRoles(this.domain);
+        const roles = r.map((role) => role._id);
+        this.joinSettings = domain.getJoinSettings(this.domain, roles);
+        if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
+        if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
+    }
+
+    // @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @param('code', Types.String, true)
+    async get(domainId: string, code: string) {
+        this.response.template = 'domain_join.html';
+        this.response.body = { joinSettings: this.joinSettings, code };
+    }
+
+    @param('code', Types.String, true)
+    async post(domainId: string, code: string) {
+        if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
+            if (this.joinSettings.code !== code) {
+                throw new InvalidJoinInvitationCodeError(this.domain._id);
+            }
+        }
+        await domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role);
+        this.response.redirect = this.url('domain_main');
+    }
+}
+
 class DomainSearchHandler extends Handler {
     @param('q', Types.String)
     async get(domainId: string, q: string) {
@@ -202,6 +275,8 @@ export async function apply() {
     Route('domain_user', '/domain/user', DomainUserHandler);
     Route('domain_permission', '/domain/permission', DomainPermissionHandler);
     Route('domain_role', '/domain/role', DomainRoleHandler);
+    Route('domain_join_applications', '/domain/join_applications', DomainJoinApplicationsHandler);
+    Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
     Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
 }
 

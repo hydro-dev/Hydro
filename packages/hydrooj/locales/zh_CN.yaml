@@ -237,6 +237,7 @@ Domain ID: 域 ID
 domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料
+domain_join_applications: 加域申请
 domain_join: 加入域
 domain_main: 首页
 domain_permission: 管理权限
@@ -408,7 +409,6 @@ Lucky: 手气不错
 manage_dashboard: 控制面板
 manage_join_applications: 加域申请
 manage_module: 管理模块
-manage_script: 脚本管理
 manage_setting: 系统设置
 manage: 管理
 Manage: 管理

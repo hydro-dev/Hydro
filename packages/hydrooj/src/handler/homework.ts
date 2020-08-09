@@ -55,7 +55,7 @@ class HomeworkMainHandler extends HomeworkHandler {
 
 class HomeworkDetailHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         const [tsdoc, pdict] = await Promise.all([

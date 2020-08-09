@@ -13,11 +13,15 @@ const lockfile = path.resolve(tmpdir, 'lock.json');
 
 export async function load(call: Entry) {
     if (fs.existsSync(lockfile) && !argv.ignorelock) {
-        const file = require(lockfile);
-        const plist = await pslist();
-        if (file.pid && plist.map((i) => i.pid).includes(file.pid)) {
-            console.error(`Lockfile exists, pid=${file.pid}`);
-            process.exit(1);
+        try {
+            const file = require(lockfile);
+            const plist = await pslist();
+            if (file.pid && plist.map((i) => i.pid).includes(file.pid)) {
+                console.error(`Lockfile exists, pid=${file.pid}`);
+                process.exit(1);
+            }
+        } catch {
+            // Invalid lockfile. ignore.
         }
     }
     const context = {

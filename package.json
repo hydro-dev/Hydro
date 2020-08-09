@@ -10,7 +10,7 @@
         "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",
-        "start": "node_modules/.bin/hydrooj"
+        "start": "node --async-stack-traces --trace-deprecation --enable-source-maps node_modules/.bin/hydrooj"
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",

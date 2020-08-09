@@ -24,7 +24,7 @@ const ContestHandler = contest.ContestHandlerMixin(Handler);
 
 class ContestListHandler extends ContestHandler {
     @param('rule', Types.String, true)
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
         this.response.template = 'contest_main.html';
         let tdocs;
@@ -55,7 +55,7 @@ class ContestListHandler extends ContestHandler {
 
 class ContestDetailHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
         const tdoc = await contest.get(domainId, tid);
         this.response.template = 'contest_detail.html';

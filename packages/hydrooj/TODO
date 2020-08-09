@@ -4,4 +4,3 @@ SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
 message.markAsRead
-domain_join_application

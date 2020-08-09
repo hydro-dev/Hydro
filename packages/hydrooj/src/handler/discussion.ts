@@ -71,7 +71,7 @@ class DiscussionHandler extends Handler {
 }
 
 class DiscussionMainHandler extends Handler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId),
@@ -99,7 +99,7 @@ class DiscussionMainHandler extends Handler {
 class DiscussionNodeHandler extends DiscussionHandler {
     @param('type', Types.String)
     @param('name', Types.String)
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, type: string, _name: string, page = 1) {
         let name: ObjectID | string | number;
         if (ObjectID.isValid(_name)) name = new ObjectID(_name);
@@ -177,7 +177,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
 
 class DiscussionDetailHandler extends DiscussionHandler {
     @param('did', Types.ObjectID)
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, did: ObjectID, page = 1) {
         const dsdoc = this.user.hasPriv(PRIV.PRIV_USER_PROFILE)
             ? await discussion.getStatus(domainId, did, this.user._id)

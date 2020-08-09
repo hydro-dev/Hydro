@@ -1,10 +1,33 @@
 import { Dictionary } from 'lodash';
+import { Collection } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
 import * as db from '../service/db';
 
-const coll = db.collection('domain');
+const coll: Collection<DomainDoc> = db.collection('domain');
 const collUser = db.collection('domain.user');
+
+export const JOIN_METHOD_NONE = 0;
+export const JOIN_METHOD_ALL = 1;
+export const JOIN_METHOD_CODE = 2;
+export const JOIN_METHOD_RANGE = {
+    [JOIN_METHOD_NONE]: 'No user is allowed to join this domain',
+    [JOIN_METHOD_ALL]: 'Any user is allowed to join this domain',
+    [JOIN_METHOD_CODE]: 'Any user is allowed to join this domain with an invitation code',
+};
+
+export const JOIN_EXPIRATION_KEEP_CURRENT = 0;
+export const JOIN_EXPIRATION_UNLIMITED = -1;
+
+export const JOIN_EXPIRATION_RANGE = {
+    [JOIN_EXPIRATION_KEEP_CURRENT]: 'Keep current expiration',
+    3: 'In 3 hours',
+    24: 'In 1 day',
+    [24 * 3]: 'In 3 days',
+    [24 * 7]: 'In 1 week',
+    [24 * 30]: 'In 1 month',
+    [JOIN_EXPIRATION_UNLIMITED]: 'Never expire',
+};
 
 export async function add(domainId: string, owner: number, name: string, bulletin: string) {
     const ddoc: DomainDoc = {
@@ -32,9 +55,11 @@ export function edit(domainId: string, $set: any) {
     return coll.updateOne({ _id: domainId }, { $set });
 }
 
-export async function inc(domainId: string, field: string, n: number): Promise<number | null> {
+export async function inc(domainId: string, field: any, n: number): Promise<number | null> {
     const res = await coll.findOneAndUpdate(
         { _id: domainId },
+        // FIXME
+        // @ts-ignore
         { $inc: { [field]: n } },
         { returnOriginal: false },
     );
@@ -52,6 +77,8 @@ export function setUserRole(domainId: string, uid: number, role: string) {
     return collUser.updateOne({ uid, domainId }, { role }, { upsert: true });
 }
 
+export async function getRoles(domainId: string): Promise<any[]>
+export async function getRoles(domain: DomainDoc): Promise<any[]>
 export async function getRoles(arg: string | DomainDoc) {
     let ddoc: DomainDoc;
     if (typeof arg === 'string') ddoc = await get(arg);
@@ -144,6 +171,15 @@ export async function getDictUserByDomainId(uid: number) {
     return dudict;
 }
 
+export function getJoinSettings(ddoc: DomainDoc, roles: string[]) {
+    if (!ddoc.join) return null;
+    const joinSettings = ddoc.join;
+    if (joinSettings.method === JOIN_METHOD_NONE) return null;
+    if (!roles.includes(joinSettings.role)) return null;
+    if (joinSettings.expire && joinSettings.expire < new Date()) return null;
+    return joinSettings;
+}
+
 export async function getPrefixSearch(prefix: string, limit = 50) {
     const $regex = new RegExp(prefix, 'mi');
     const ddocs = await coll.find({
@@ -153,6 +189,14 @@ export async function getPrefixSearch(prefix: string, limit = 50) {
 }
 
 global.Hydro.model.domain = {
+    JOIN_METHOD_NONE,
+    JOIN_METHOD_ALL,
+    JOIN_METHOD_CODE,
+    JOIN_METHOD_RANGE,
+    JOIN_EXPIRATION_KEEP_CURRENT,
+    JOIN_EXPIRATION_UNLIMITED,
+    JOIN_EXPIRATION_RANGE,
+
     getRoles,
     add,
     inc,
@@ -170,5 +214,6 @@ global.Hydro.model.domain = {
     incUserInDomain,
     getMultiInDomain,
     getDictUserByDomainId,
+    getJoinSettings,
     getPrefixSearch,
 };

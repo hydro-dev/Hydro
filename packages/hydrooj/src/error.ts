@@ -84,6 +84,9 @@ export const HomeworkNotLiveError = Err('HomeworkNotLiveError', ForbiddenError, 
 export const HomeworkNotAttendedError = Err('HomeworkNotAttendedError', ForbiddenError, "You haven't claimed this homework yet.");
 export const RoleAlreadyExistError = Err('RoleAlreadyExistError', ForbiddenError, 'This role already exists.');
 export const CsrfTokenError = Err('CsrfTokenError', ForbiddenError, 'CsrfTokenError');
+export const DomainJoinForbiddenError = Err('DomainJoinForbiddenError', ForbiddenError, 'You are not allowed to join the domain. The link is either invalid or expired.');
+export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', ForbiddenError, 'Failed to join the domain. You are already a member.');
+export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeError', ForbiddenError, 'The invitation code you provided is invalid.');
 
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
@@ -132,6 +135,9 @@ global.Hydro.error = {
     ContestNotLiveError,
     ContestScoreboardHiddenError,
     ContestAlreadyAttendedError,
+    DomainJoinAlreadyMemberError,
+    DomainJoinForbiddenError,
+    InvalidJoinInvitationCodeError,
     UserFacingError,
     SystemError,
     TrainingAlreadyEnrollError,

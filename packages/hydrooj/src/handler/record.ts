@@ -15,7 +15,7 @@ import { Rdoc } from '../interface';
 const RecordHandler = contest.ContestHandlerMixin(Handler);
 
 class RecordListHandler extends RecordHandler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     @param('pid', Types.String, true)
     @param('tid', Types.ObjectID, true)
     @param('uidOrName', Types.String, true)

@@ -54,7 +54,7 @@ async function _parseDagJson(domainId, dag) {
 }
 
 class TrainingMainHandler extends Handler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),

@@ -47,15 +47,15 @@ interface ParamOption {
 }
 
 // eslint-disable-next-line no-shadow
-export enum Types { String, Int, UnsignedInt, Float, ObjectID, Boolean, Date, Time }
+export enum Types { String, Int, UnsignedInt, PositiveInt, Float, ObjectID, Boolean, Date, Time }
 
 const Tools: Array<[Converter, Validator, boolean?]> = [
     [(v) => v.toString(), null],
     [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
+    [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
     [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
     [(v) => parseFloat(v), (v) => {
         const t = parseFloat(v);
-        console.log(t);
         return t && !Number.isNaN(t) && Number.isFinite(t);
     }],
     [(v) => new ObjectID(v), ObjectID.isValid],
@@ -117,8 +117,7 @@ export function param(name: string, ...args: any): MethodDecorator {
             if (args[cursor] !== null) v.validate = args[cursor];
             isValidate = false;
         } else {
-            const I = args[cursor];
-            v.convert = I;
+            v.convert = args[cursor];
         }
         cursor++;
     }

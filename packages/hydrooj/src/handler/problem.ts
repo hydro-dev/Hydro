@@ -57,7 +57,7 @@ class ProblemHandler extends Handler {
 }
 
 class ProblemMainHandler extends ProblemHandler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     @param('q', Types.String, true)
     async get(domainId: string, page = 1, q = '') {
         this.response.template = 'problem_main.html';
@@ -103,7 +103,7 @@ class ProblemMainHandler extends ProblemHandler {
 }
 
 class ProblemCategoryHandler extends ProblemHandler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     @param('category', Types.String, null, parseCategory)
     async get(domainId: string, page = 1, category: string[]) {
         this.response.template = 'problem_main.html';
@@ -469,7 +469,7 @@ class ProblemDataDownloadHandler extends ProblemDetailHandler {
 }
 
 class ProblemSolutionHandler extends ProblemDetailHandler {
-    @param('page', Types.UnsignedInt, true)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         this.response.template = 'problem_solution.html';
         this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);

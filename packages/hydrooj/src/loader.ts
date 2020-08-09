@@ -106,6 +106,13 @@ async function executeCommand(input: string) {
     }
 }
 
+async function reload(count = 1) {
+    console.log('Reloading');
+    await stopWorker();
+    console.log('Worker stopped');
+    await startWorker(count);
+}
+
 async function messageHandler(worker: cluster.Worker, msg: any) {
     if (!msg) msg = worker;
     if (msg.event) {
@@ -120,10 +127,7 @@ async function messageHandler(worker: cluster.Worker, msg: any) {
         } else if (msg.event === 'stat') {
             global.Hydro.stat.reqCount += msg.count;
         } else if (msg.event === 'restart') {
-            console.log('Restarting');
-            await stopWorker();
-            console.log('Worker stopped');
-            await startWorker(msg.count);
+            await reload(msg.count);
         } else if (msg.event === 'run') {
             await executeCommand(msg.command);
         }
