@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
 import path from 'path';
 import { Dictionary } from 'lodash';
 import { FormatError, SystemError } from './error';
