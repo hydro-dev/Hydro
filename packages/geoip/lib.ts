@@ -6,10 +6,18 @@ import { Reader } from 'maxmind';
 const buffer = fs.readFileSync(path.resolve(__dirname, 'GeoLite2-City.mmdb'));
 const reader = new Reader(buffer);
 
+export interface Result {
+    location?: string,
+    continent?: string,
+    country?: string,
+    city?: string,
+    display: string
+}
+
 function lookup(ip: string, locale: string) {
     const res: any = reader.get(ip);
     if (!res) return {};
-    const ret: any = {};
+    const ret: Result = { display: '' };
     if (res.location) ret.location = res.location;
     if (res.continent) ret.continent = res.continent.names[locale] || res.continent.names.en;
     if (res.country || res.registered_country) {

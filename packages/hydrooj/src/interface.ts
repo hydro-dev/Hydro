@@ -191,10 +191,11 @@ export interface Rdoc {
     compilerTexts: string[],
     testCases: TestCase[],
     rejudged: boolean,
-    judger: string,
+    judger: number,
     judgeAt: Date,
     status: number,
     hidden: boolean,
+    progress?: number,
     config?: PretestConfig,
     contest?: ContestInfo,
 }

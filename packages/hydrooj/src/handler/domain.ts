@@ -1,4 +1,5 @@
 import moment from 'moment-timezone';
+import { Dictionary } from 'lodash';
 import {
     RoleAlreadyExistError, ValidationError, DomainJoinForbiddenError,
     DomainJoinAlreadyMemberError, InvalidJoinInvitationCodeError,
@@ -170,7 +171,7 @@ class DomainRoleHandler extends ManageHandler {
     @param('role', Types.String)
     async postAdd(domainId: string, role: string) {
         const roles = await domain.getRoles(this.domain);
-        const rdict: any = {};
+        const rdict: Dictionary<any> = {};
         for (const r of roles) rdict[r._id] = r.perm;
         if (rdict[role]) throw new RoleAlreadyExistError(role);
         await domain.addRole(domainId, role, rdict.default.perm);

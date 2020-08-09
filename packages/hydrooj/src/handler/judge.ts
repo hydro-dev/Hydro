@@ -1,5 +1,5 @@
-import { ObjectID } from 'mongodb';
-import { JudgeResultBody, Rdoc } from '../interface';
+import { ObjectID, PushOperator, MatchKeysAndValues } from 'mongodb';
+import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
@@ -36,14 +36,15 @@ async function _postJudge(rdoc: Rdoc) {
 export async function next(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.domainId, body.rid);
-    const $set: any = {};
+    const $set: Partial<Rdoc> = {};
     const $push: any = {};
     if (body.case) {
-        const c: any = {};
-        c.memory = body.case.memory;
-        c.time = body.case.time;
-        c.message = body.case.message;
-        c.status = body.case.status;
+        const c: TestCase = {
+            memory: body.case.memory,
+            time: body.case.time,
+            message: body.case.message,
+            status: body.case.status,
+        };
         rdoc.testCases.push(c);
         $push.testCases = c;
     }
@@ -67,9 +68,9 @@ export async function next(body: JudgeResultBody) {
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.domainId, body.rid);
-    const $set: any = {};
+    const $set: Partial<Rdoc> = {};
     const $push: any = {};
-    const $unset = { progress: '' };
+    const $unset: { progress: '' } = { progress: '' };
     if (body.message) {
         rdoc.judgeTexts.push(body.message);
         $push.judgeTexts = body.message;
@@ -80,8 +81,6 @@ export async function end(body: JudgeResultBody) {
     }
     if (body.status) $set.status = body.status;
     if (body.score) $set.score = body.score;
-    if (body.stdout) $set.stdout = body.stdout;
-    if (body.stderr) $set.stderr = body.stderr;
     if (body.time) $set.time = body.time;
     if (body.memory) $set.memory = body.memory;
     $set.judgeAt = new Date();
