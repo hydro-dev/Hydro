@@ -102,14 +102,13 @@ async function postInit() {
             data.rid = new ObjectID(that.rid);
             data.time = data.time_ms || data.time;
             data.memory = data.memory_kb || data.memory;
-            data.message = data.judge_text || data.message;
             data.compilerText = data.compiler_text || data.compilerText;
             if (data.case) {
                 data.case = {
                     status: data.case.status,
                     time: data.case.time_ms || data.case.time,
                     memory: data.case.memory_kb || data.case.memory,
-                    message: data.judge_text || data.message || data.judgeText,
+                    message: data.message || data.judgeText,
                 };
             }
             if (id) {
@@ -213,13 +212,13 @@ async function postInit() {
                         status: STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else if (e instanceof FormatError) {
-                    this.next({ judge_text: `${e.message}\n${JSON.stringify(e.params)}` });
+                    this.next({ message: `${e.message}\n${JSON.stringify(e.params)}` });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else {
                     console.error(e);
-                    this.next({ judge_text: `${e.message}\n${e.stack}\n${JSON.stringify(e.params)}` });
+                    this.next({ message: `${e.message}\n${e.stack}\n${JSON.stringify(e.params)}` });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });

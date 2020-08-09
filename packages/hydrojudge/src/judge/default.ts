@@ -77,7 +77,7 @@ function judgeCase(c) {
                 score: 0,
                 time_ms: time_usage_ms,
                 memory_kb: memory_usage_kb,
-                judge_text: message,
+                message,
             },
             progress: Math.floor((c.id * 100) / ctx.config.count),
         }, c.id);
@@ -144,7 +144,7 @@ export const judge = async (ctx) => {
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
     await Promise.all(tasks);
     ctx.stat.done = new Date();
-    ctx.next({ judge_text: JSON.stringify(ctx.stat) });
+    ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,

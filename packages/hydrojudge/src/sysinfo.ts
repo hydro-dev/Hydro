@@ -38,10 +38,10 @@ int main(){
         },
         stat: {},
         clean: [],
-        next: () => { },
-        end: (data) => {
-            if (data.stdout) output = data.stdout;
+        next: (data) => {
+            if (data.case) output = data.case.message;
         },
+        end: () => { },
     };
     context.tmpdir = path.resolve(tmpdir(), 'hydro', 'tmp', 'sysinfo');
     fs.ensureDirSync(context.tmpdir);
@@ -52,7 +52,7 @@ int main(){
     tmpfs.umount(context.tmpdir);
     fs.removeSync(context.tmpdir);
     const a = output.split(' ');
-    return parseInt(a[a.length - 1], 10);
+    return parseInt(a[a.length - 2], 10);
 }
 
 export async function get() {
@@ -84,9 +84,18 @@ export async function get() {
     cache.flags = flags;
     cache.mid = mid;
     cache.stack = stack;
+    global.reqCount = 0;
     return {
-        mid, cpu, memory, osinfo, load, flags, CpuTemp, battery, stack,
+        mid, cpu, memory, osinfo, load, flags, CpuTemp, battery, stack, reqCount: 0,
     };
+}
+
+declare global {
+    namespace NodeJS {
+        interface Global {
+            reqCount: number,
+        }
+    }
 }
 
 export async function update() {
@@ -104,13 +113,15 @@ export async function update() {
     let battery;
     if (!Battery.hasbattery) battery = 'No battery';
     else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.ischarging ? ' Charging' : ''}`;
+    const reqCount = global.reqCount;
+    global.reqCount = 0;
     return [
         mid,
         {
-            memory, load, battery, CpuTemp,
+            memory, load, battery, CpuTemp, reqCount,
         },
         {
-            mid, cpu, memory, osinfo, load, flags, battery, CpuTemp, stack,
+            mid, cpu, memory, osinfo, load, flags, battery, CpuTemp, stack, reqCount,
         },
     ];
 }

@@ -147,7 +147,7 @@ async function readAutoCases(folder, { next }) {
         let result = await read0(folder, files, checkFile);
         if (!result.count) result = await read1(folder, files, checkFile);
         Object.assign(config, result);
-        next({ judge_text: `识别到${config.count}个测试点` });
+        next({ message: `识别到${config.count}个测试点` });
     } catch (e) {
         throw new SystemError('在自动识别测试点的过程中出现了错误。', [e]);
     }

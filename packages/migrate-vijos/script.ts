@@ -11,7 +11,7 @@ import mongodb, { ObjectID, Db, Cursor } from 'mongodb';
 const dst = global.Hydro.service.db;
 const { file, discussion, document } = global.Hydro.model;
 const { testdataConfig } = global.Hydro.lib;
-
+// TODO handle usage_userfile
 // TODO output enhancement
 const map = {};
 
@@ -398,6 +398,25 @@ async function message(src: Db, report: Function) {
     }
 }
 
+async function removeInvalidPid(src: Db, report: Function) {
+    const count = await dst.collection('document').find({ docType: 10 }).count();
+    const bulk = dst.collection('document').initializeUnorderedBulkOp();
+    await report({ progress: 1, message: `Remove pid: ${count}` });
+    const total = Math.floor(count / 50);
+    for (let i = 0; i <= total; i++) {
+        const docs = await dst.collection('document')
+            .find({ docType: 10 }).skip(i * 50).limit(50)
+            .toArray();
+        for (const doc of docs) {
+            const id = parseInt(doc.pid, 10);
+            if (Number.isSafeInteger(id)) {
+                bulk.find({ _id: doc._id }).updateOne({ $unset: { pid: '' } });
+            }
+        }
+        await bulk.execute();
+    }
+}
+
 async function task(name: string, src: Db, report: Function) {
     const count = await cursor[name](src).count();
     await report({ progress: 1, message: `${name}: ${count}` });
@@ -513,6 +532,7 @@ export async function run({
     await fixProblem(report);
     await discussionNode(src, report);
     await message(src, report);
+    await removeInvalidPid(src, report);
     return true;
 }
 

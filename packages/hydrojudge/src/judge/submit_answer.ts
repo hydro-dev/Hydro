@@ -16,7 +16,7 @@ export async function judge({
         status,
         progress: 100,
         case: {
-            status, score, time_ms: 0, memory_kb: 0, judge_text: message,
+            status, score, time_ms: 0, memory_kb: 0, message,
         },
     });
     end({

@@ -199,6 +199,11 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         if (!this.response.body.joinSettings) {
             delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
         }
+        this.response.body.path = [
+            ['Hydro', 'homepage'],
+            ['domain', null],
+            ['domain_join_applications', null],
+        ];
         this.response.template = 'domain_join_applications.html';
     }
 

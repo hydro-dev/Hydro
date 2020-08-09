@@ -326,6 +326,7 @@ export class Handler {
         } catch (e) {
             console.error(e.message);
             console.log(name, args);
+            console.log(e.stack);
         }
         return res;
     }

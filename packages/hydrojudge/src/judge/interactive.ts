@@ -39,7 +39,7 @@ function judgeCase(c) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32) message = signals[code];
             else message = `您的程序返回了 ${code}.`;
-        } else [status, score, message] = resInteractor.files.stderr.split('\n');
+        } else[status, score, message] = resInteractor.files.stderr.split('\n');
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;
@@ -51,7 +51,7 @@ function judgeCase(c) {
                 score: 0,
                 time_ms: time_usage_ms,
                 memory_kb: memory_usage_kb,
-                judge_text: message,
+                message,
             },
             progress: Math.floor((c.id * 100) / ctx.config.count),
         });
@@ -110,7 +110,7 @@ export const judge = async (ctx) => {
     }
     await Promise.all(tasks);
     ctx.stat.done = new Date();
-    ctx.next({ judge_text: JSON.stringify(ctx.stat) });
+    ctx.next({ message: JSON.stringify(ctx.stat) });
     console.log({
         status: ctx.total_status,
         score: ctx.total_score,

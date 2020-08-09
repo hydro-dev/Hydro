@@ -54,6 +54,7 @@ export async function load(call: Entry) {
         bus.subscribe(['system_database_connected'], h);
         require('../service/db');
     });
+    require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const modelSystem = require('../model/system');
     const dbVer = await modelSystem.get('db.ver');

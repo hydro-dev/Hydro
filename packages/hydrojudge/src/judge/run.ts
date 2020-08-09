@@ -48,11 +48,11 @@ export const judge = async (ctx) => {
             status,
             time_ms: time_usage_ms,
             memory_kb: memory_usage_kb,
-            judge_text: message,
+            message,
         },
     });
     ctx.stat.done = new Date();
-    ctx.next({ judge_text: JSON.stringify(ctx.stat) });
+    ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status,
         score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,

@@ -75,7 +75,7 @@ class ProblemMainHandler extends ProblemHandler {
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(domainId, query).sort({ pid: 1 }),
+            problem.getMulti(domainId, query).sort({ pid: 1, docId: 1 }),
             page,
             CONSTANT.PROBLEM_PER_PAGE,
         );
@@ -119,7 +119,7 @@ class ProblemCategoryHandler extends ProblemHandler {
         let psdict = {};
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(domainId, q).sort({ pid: 1 }),
+            problem.getMulti(domainId, q).sort({ pid: 1, docId: 1 }),
             page,
             CONSTANT.PROBLEM_PER_PAGE,
         );
@@ -190,7 +190,7 @@ class ProblemDetailHandler extends ProblemHandler {
     // eslint-disable-next-line
     async get(...args: any[]) { }
 
-    @param('pid', Types.ObjectID)
+    @param('pid', Types.UnsignedInt)
     @param('dest', Types.String)
     @param('hidden', Types.Boolean)
     async postCopy(domainId: string, pid: number, destDomainId: string, hidden = false) {

@@ -18,7 +18,7 @@ export function updateJudger(args) {
     args.type = 'judger';
     return coll.updateOne(
         { mid: args.mid, type: 'judger' },
-        { $set: args },
+        { $set: { ...args, updateAt: new Date() } },
         { upsert: true },
     );
 }
