@@ -12,6 +12,7 @@
     },
     "references": [
         { "path": "packages/hydrooj" },
+        { "path": "packages/hydrojudge" },
         { "path": "packages/geoip" },
         { "path": "packages/login-with-github" },
         { "path": "packages/login-with-google" },

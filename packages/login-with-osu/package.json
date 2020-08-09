@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/login-with-osu",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",

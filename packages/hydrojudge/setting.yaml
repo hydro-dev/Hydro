@@ -1,0 +1,93 @@
+langs:
+    type: textarea
+    category: system
+    desc: Language file settings
+    name: langs
+    default: |
+        ccWithoutO2:
+            type: compiler
+            compile: /usr/bin/g++ -Wall -o ${name} foo.cc
+            code_file: foo.cc
+            execute: ${dir}/${name}
+        c:
+            type: compiler
+            compile: /usr/bin/gcc -O2 -Wall -std=c99 -o ${name} foo.c -lm
+            code_file: foo.c
+            execute: ${dir}/${name}
+        cc:
+            type: compiler
+            compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o ${name} foo.cc -lm
+            code_file: foo.cc
+            execute: ${dir}/${name}
+        cc98:
+            type: compiler
+            compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o ${name} foo.cc -lm
+            code_file: foo.cc
+            execute: ${dir}/${name}
+        cc11:
+            type: compiler
+            compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o ${name} foo.cc -lm
+            code_file: foo.cc
+            execute: ${dir}/${name}
+        cc17:
+            type: compiler
+            compile: /usr/bin/g++ -O2 -Wall -std=c++17 -o ${name} foo.cc -lm
+            code_file: foo.cc
+            execute: ${dir}/${name}
+        pas:
+            type: compiler
+            compile: /usr/bin/fpc -O2 -o${dir}/${name} foo.pas
+            code_file: foo.pas
+            execute: ${dir}/${name}
+        java:
+            type: compiler
+            compile: /usr/bin/javac -d ${dir} -encoding utf8 ./Main.java
+            code_file: Main.java
+            execute: /usr/bin/java Main
+        py:
+            type: compiler
+            compile: /usr/bin/python -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+            code_file: foo.py
+            execute: /usr/bin/python ${name}
+        py2:
+            type: compiler
+            compile: /usr/bin/python -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+            code_file: foo.py
+            execute: /usr/bin/python ${name}
+        py3:
+            type: compiler
+            compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+            code_file: foo.py
+            execute: /usr/bin/python3 ${name}
+        php:
+            type: interpreter
+            code_file: foo.php
+            execute: /usr/bin/php ${name}
+        rs:
+            type: compiler
+            compile: /usr/bin/rustc -O -o ${dir}/${name} ${dir}/foo.rs
+            code_file: foo.rs
+            execute: ${dir}/${name}
+        hs:
+            type: compiler
+            compile: /usr/bin/ghc -O -outputdir /tmp -o ${name} foo.hs
+            code_file: foo.hs
+            execute: ${dir}/${name}
+        js:
+            type: interpreter
+            code_file: foo.js
+            execute: /usr/bin/jsc ${dir}/${name}
+        go:
+            type: compiler
+            compile: /usr/bin/go build -o ${name} foo.go
+            code_file: foo.go
+            execute: ${dir}/${name}
+        rb:
+            type: interpreter
+            code_file: foo.rb
+            execute: /usr/bin/ruby ${name}
+        cs:
+            type: compiler
+            compile: /usr/bin/mcs -optimize+ -out:${dir}/${name} ${dir}/foo.cs
+            code_file: foo.cs
+            execute: /usr/bin/mono ${name}

@@ -193,12 +193,13 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     async get() {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id).sort();
-        const rolesWithText = roles.map((role) => [role, role]);
-        const joinSettings = domain.getJoinSettings(this.domain, roles);
-        const expirations = { ...domain.JOIN_EXPIRATION_RANGE };
-        if (!joinSettings) delete expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
+        this.response.body.rolesWithText = roles.map((role) => [role, role]);
+        this.response.body.joinSettings = domain.getJoinSettings(this.domain, roles);
+        this.response.body.expirations = { ...domain.JOIN_EXPIRATION_RANGE };
+        if (!this.response.body.joinSettings) {
+            delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
+        }
         this.response.template = 'domain_join_applications.html';
-        this.response.body = { rolesWithText, joinSettings, expirations };
     }
 
     @param('method', Types.UnsignedInt)
@@ -243,7 +244,12 @@ class DomainJoinHandler extends Handler {
     @param('code', Types.String, true)
     async get(domainId: string, code: string) {
         this.response.template = 'domain_join.html';
-        this.response.body = { joinSettings: this.joinSettings, code };
+        this.response.body.joinSettings = this.joinSettings;
+        this.response.body.code = code;
+        this.response.body.path = [
+            ['Hydro', 'homepage'],
+            ['domain_join', 'domain_join', { domainId, code }],
+        ];
     }
 
     @param('code', Types.String, true)
