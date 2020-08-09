@@ -1,0 +1,21 @@
+{
+    "name": "@hydrooj/login-with-osu",
+    "version": "0.0.1",
+    "main": "package.json",
+    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "author": "undefined <masnn0@outlook.com>",
+    "license": "MIT",
+    "scripts": {
+        "lint": "eslint lib.ts --fix",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/superagent": "^4.1.8",
+        "@types/superagent-proxy": "^2.0.0"
+    },
+    "dependencies": {
+        "hydrooj": "^2.12.1",
+        "superagent": "^5.3.1",
+        "superagent-proxy": "^2.0.0"
+    }
+}

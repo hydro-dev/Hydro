@@ -1,0 +1,15 @@
+id:
+    type: text
+    category: system
+    desc: Osu OAuth AppID
+    name: id
+secret:
+    type: text
+    category: system
+    desc: Osu OAuth Secret
+    name: secret
+proxy:
+    type: text
+    category: system
+    desc: Osu OAuth Proxy
+    name: proxy
