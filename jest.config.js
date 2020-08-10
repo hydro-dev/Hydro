@@ -9,9 +9,8 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     moduleFileExtensions: ['ts', 'js', 'json'],
-    moduleNameMapper: {
-        '[\\w-]+': '<rootDir>/packages/$0/src',
-    },
+    collectCoverage: true,
+    coverageDirectory: '<rootDir>/.coverage',
     coverageProvider: 'v8',
     coverageReporters: ['text', 'lcov'],
     coveragePathIgnorePatterns: [

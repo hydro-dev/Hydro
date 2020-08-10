@@ -34,7 +34,7 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage/lcov.info
+        file: ./.coverage/lcov.info
         name: codecov
     - name: Publish
       run: node build/publish.js

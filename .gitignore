@@ -23,3 +23,5 @@ packages/**/*.js.map
 packages/**/*.d.ts
 
 *.mmdb
+
+.coverage
