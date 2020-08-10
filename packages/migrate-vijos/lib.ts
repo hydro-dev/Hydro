@@ -1,4 +1,4 @@
-import 'hydrooj';
+import { } from 'hydrooj';
 
 const { md5, sha1 } = global.Hydro.lib;
 

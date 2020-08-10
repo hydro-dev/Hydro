@@ -46,21 +46,34 @@ interface ParamOption {
     validate?: Validator,
 }
 
-// eslint-disable-next-line no-shadow
-export enum Types { String, Int, UnsignedInt, PositiveInt, Float, ObjectID, Boolean, Date, Time }
+type Type = [Converter, Validator, boolean?];
 
-const Tools: Array<[Converter, Validator, boolean?]> = [
-    [(v) => v.toString(), null],
-    [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
-    [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
-    [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
-    [(v) => parseFloat(v), (v) => {
+export interface Types {
+    String: Type,
+    Int: Type,
+    UnsignedInt: Type,
+    PositiveInt: Type,
+    Float: Type,
+    ObjectID: Type,
+    Boolean: Type,
+    Date: Type,
+    Time: Type,
+    Range: (range: Array<string | number> | Dictionary<any>) => Type,
+}
+
+export const Types: Types = {
+    String: [(v) => v.toString(), null],
+    Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
+    UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
+    PositiveInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
+    Float: [(v) => parseFloat(v), (v) => {
         const t = parseFloat(v);
         return t && !Number.isNaN(t) && Number.isFinite(t);
     }],
-    [(v) => new ObjectID(v), ObjectID.isValid],
-    [(v) => !!v, null, true],
-    [
+    // eslint-disable-next-line no-shadow
+    ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
+    Boolean: [(v) => !!v, null, true],
+    Date: [
         (v) => {
             const d = v.split('-');
             assert(d.length === 3);
@@ -71,8 +84,9 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
             assert(d.length === 3);
             const st = `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
             return moment(st).isValid();
-        }],
-    [
+        },
+    ],
+    Time: [
         (v) => {
             const t = v.split(':');
             assert(t.length === 2);
@@ -84,34 +98,51 @@ const Tools: Array<[Converter, Validator, boolean?]> = [
             return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
         },
     ],
-];
+    Range: (range) => [
+        null,
+        (v) => {
+            if (range instanceof Array) {
+                for (const item of range) {
+                    if (typeof item === 'string') {
+                        if (item === v) return true;
+                    } else if (typeof item === 'number') {
+                        if (item === parseInt(v, 10)) return true;
+                    }
+                }
+            } else {
+                for (const key in range) {
+                    if (key === v) return true;
+                }
+            }
+            return false;
+        },
+    ],
+};
 
-export function param(name: string, type: Types, validate: Validator): MethodDecorator;
-export function param(name: string, type?: Types, isOptional?: boolean): MethodDecorator;
+export function param(name: string, type: Type, validate: Validator): MethodDecorator;
+export function param(name: string, type?: Type, isOptional?: boolean): MethodDecorator;
 export function param(
-    name: string, type: Types, validate: null, convert: Converter
+    name: string, type: Type, validate: null, convert: Converter
 ): MethodDecorator;
 export function param(
-    name: string, type: Types, validate?: Validator, convert?: Converter,
+    name: string, type: Type, validate?: Validator, convert?: Converter,
 ): MethodDecorator;
 export function param(
-    name: string, type: Types, isOptional?: boolean, validate?: Validator, convert?: Converter,
+    name: string, type: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
 ): MethodDecorator;
 export function param(
-    name: string, ...args: Array<Types | boolean | Converter | Validator>
+    name: string, ...args: Array<Type | boolean | Converter | Validator>
 ): MethodDecorator;
 export function param(name: string, ...args: any): MethodDecorator {
     let cursor = 0;
     const v: ParamOption = { name };
     let isValidate = true;
     while (cursor < args.length) {
-        if (typeof args[cursor] === 'number') {
+        if (args[cursor] instanceof Array) {
             const type = args[cursor];
-            if (Tools[type]) {
-                if (Tools[type][0]) v.convert = Tools[type][0];
-                if (Tools[type][1]) v.validate = Tools[type][1];
-                if (Tools[type][2]) v.isOptional = Tools[type][2];
-            }
+            if (type[0]) v.convert = type[0];
+            if (type[1]) v.validate = type[1];
+            if (type[2]) v.isOptional = type[2];
         } else if (typeof args[cursor] === 'boolean') v.isOptional = args[cursor];
         else if (isValidate) {
             if (args[cursor] !== null) v.validate = args[cursor];

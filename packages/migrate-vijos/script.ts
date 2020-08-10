@@ -205,6 +205,7 @@ const tasks = {
         display_name: 'displayName',
         rp: null,
         rank: null,
+        userfile_usage: null,
     },
     record: async (doc) => {
         const testCases: TestCase[] = [];
@@ -417,6 +418,24 @@ async function removeInvalidPid(src: Db, report: Function) {
     }
 }
 
+async function userfileUsage(src: Db, report: Function) {
+    const count = await src.collection('domain.user').find().count();
+    const bulk = dst.collection('user').initializeUnorderedBulkOp();
+    await report({ progress: 1, message: `userfileUsage: ${count}` });
+    const total = Math.floor(count / 50);
+    for (let i = 0; i <= total; i++) {
+        const docs = await src.collection('userfileUsage')
+            .find().skip(i * 50).limit(50)
+            .toArray();
+        for (const doc of docs) {
+            if (doc.userfile_usage) {
+                bulk.find({ _id: doc.uid }).updateOne({ $set: { usage: doc.userfile_usage } });
+            }
+        }
+        await bulk.execute();
+    }
+}
+
 async function task(name: string, src: Db, report: Function) {
     const count = await cursor[name](src).count();
     await report({ progress: 1, message: `${name}: ${count}` });
@@ -532,6 +551,7 @@ export async function run({
     await fixProblem(report);
     await discussionNode(src, report);
     await message(src, report);
+    await userfileUsage(src, report);
     await removeInvalidPid(src, report);
     return true;
 }

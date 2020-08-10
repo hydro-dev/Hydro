@@ -1,7 +1,7 @@
 import { Pdoc } from '../interface';
 import * as problem from '../model/problem';
 
-export const description = 'Create a new user';
+export const description = 'Caculate the difficulty of a problem';
 
 const _CACHE_INFO = {
     last_s: 0.0,

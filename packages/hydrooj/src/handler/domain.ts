@@ -207,7 +207,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         this.response.template = 'domain_join_applications.html';
     }
 
-    @param('method', Types.UnsignedInt)
+    @param('method', Types.Range(domain.JOIN_METHOD_RANGE))
     @param('role', Types.String, true)
     @param('expire', Types.UnsignedInt, true)
     @param('invitationCode', Types.String, true)
@@ -215,7 +215,6 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((rl) => rl._id);
         const current = domain.getJoinSettings(this.domain, roles);
-        if (!domain.JOIN_METHOD_RANGE[method]) throw new ValidationError('method');
         let joinSettings;
         if (method === domain.JOIN_METHOD_NONE) joinSettings = null;
         else {
@@ -245,7 +244,6 @@ class DomainJoinHandler extends Handler {
         if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
     }
 
-    // @base.require_priv(builtin.PRIV_USER_PROFILE)
     @param('code', Types.String, true)
     async get(domainId: string, code: string) {
         this.response.template = 'domain_join.html';

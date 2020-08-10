@@ -16,6 +16,7 @@
         { "path": "packages/geoip" },
         { "path": "packages/login-with-github" },
         { "path": "packages/login-with-google" },
+        { "path": "packages/login-with-osu" },
         { "path": "packages/migrate-vijos" },
         { "path": "tsconfig.build.json" },
     ],

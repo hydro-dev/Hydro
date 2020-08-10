@@ -23,7 +23,7 @@ import * as bus from '../service/bus';
 const ContestHandler = contest.ContestHandlerMixin(Handler);
 
 class ContestListHandler extends ContestHandler {
-    @param('rule', Types.String, true)
+    @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
         this.response.template = 'contest_main.html';
@@ -34,7 +34,6 @@ class ContestListHandler extends ContestHandler {
             tdocs = contest.getMulti(domainId).sort({ beginAt: -1 });
             qs = '';
         } else {
-            if (!contest.RULES[rule]) throw new ValidationError('rule');
             tdocs = contest.getMulti(domainId, { rule }).sort({ beginAt: -1 });
             qs = `rule=${rule}`;
         }
@@ -196,7 +195,7 @@ class ContestEditHandler extends ContestHandler {
     @param('duration', Types.Float)
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
-    @param('rule', Types.String)
+    @param('rule', Types.Range(contest.RULES))
     @param('pids', Types.String)
     @param('rated', Types.Boolean)
     async post(
