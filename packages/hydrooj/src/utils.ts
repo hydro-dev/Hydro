@@ -152,7 +152,7 @@ export function parseTimeMS(str: string) {
 export function parseMemoryMB(str: string) {
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
-    return Math.floor(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
+    return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
 }
 
 export function isClass(obj: any, strict = false) {
