@@ -54,6 +54,12 @@ class Loader {
                     </div></div>
                     <div class="row"><div class="columns">
                       <label class="inverse material textbox">
+                        {{ _('Table Prefix') }}
+                        <input name="prefix" type="text" placeholder="{{ _('Leave blank if none') }}">>
+                      </label>
+                    </div></div>
+                    <div class="row"><div class="columns">
+                      <label class="inverse material textbox">
                         {{ _('Database Username') }}
                         <input name="username" type="text" placeholder="{{ _('Leave blank if none') }}">
                       </label>
@@ -103,7 +109,7 @@ async function get(ctx: Context) {
 
 async function post(ctx: Context) {
     const {
-        host, port, name, username, password,
+        host, port, name, username, password, prefix,
     } = ctx.request.body;
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
@@ -113,23 +119,24 @@ async function post(ctx: Context) {
             useNewUrlParser: true, useUnifiedTopology: true,
         });
         const db = Database.db(name);
+        const coll = prefix ? db.collection('system') : db.collection(`${prefix}.system`);
         await Promise.all([
-            db.collection('system').updateOne(
+            coll.updateOne(
                 { _id: 'server.host' },
                 { $set: { value: ctx.request.host } },
                 { upsert: true },
             ),
-            db.collection('system').updateOne(
+            coll.updateOne(
                 { _id: 'server.hostname' },
                 { $set: { value: ctx.request.hostname } },
                 { upsert: true },
             ),
-            db.collection('system').updateOne(
+            coll.updateOne(
                 { _id: 'server.url' },
                 { $set: { value: ctx.request.href } },
                 { upsert: true },
             ),
-            db.collection('system').updateOne(
+            coll.updateOne(
                 { _id: 'server.port' },
                 { $set: { value: parseInt(listenPort as string, 10) } },
                 { upsert: true },

@@ -12,6 +12,7 @@ const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 const lockfile = path.resolve(tmpdir, 'lock.json');
 
 export async function load(call: Entry) {
+    fs.ensureDirSync(tmpdir);
     if (fs.existsSync(lockfile) && !argv.ignorelock) {
         try {
             const file = require(lockfile);

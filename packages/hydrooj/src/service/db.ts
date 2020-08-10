@@ -19,6 +19,7 @@ mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopolog
     });
 
 export function collection(c: string) {
+    if (opts.prefix) return db.collection(`${opts.prefix}.${c}`);
     return db.collection(c);
 }
 
