@@ -1,13 +1,8 @@
 module.exports = {
-    globals: {
-        'ts-jest': {
-            diagnostics: {
-                warnOnly: true,
-            },
-        },
+    preset: '@shelf/jest-mongodb',
+    transform: {
+        '^.+\\.ts?$': 'ts-jest'
     },
-    preset: 'ts-jest',
-    testEnvironment: 'node',
     moduleFileExtensions: ['ts', 'js', 'json'],
     collectCoverage: true,
     coverageDirectory: '<rootDir>/.coverage',

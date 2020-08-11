@@ -25,3 +25,5 @@ packages/**/*.d.ts
 *.mmdb
 
 .coverage
+!__mocks__
+globalConfig.json

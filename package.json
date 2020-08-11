@@ -15,6 +15,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
+        "@shelf/jest-mongodb": "^1.2.2",
         "@types/cross-spawn": "^6.0.2",
         "@types/jest": "^26.0.9",
         "@types/node": "^14.0.27",
