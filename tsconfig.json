@@ -17,6 +17,7 @@
         { "path": "packages/login-with-github" },
         { "path": "packages/login-with-google" },
         { "path": "packages/login-with-osu" },
+        { "path": "packages/login-with-qq" },
         { "path": "packages/migrate-vijos" },
         { "path": "tsconfig.build.json" },
     ],

@@ -225,7 +225,7 @@ class OauthHandler extends Handler {
 class OauthCallbackHandler extends Handler {
     async get(args: any) {
         let r;
-        if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback(args);
+        if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args);
         else throw new UserFacingError('Oauth type');
         const udoc = await user.getByEmail('system', r.email);
         if (udoc) {

@@ -1,0 +1,19 @@
+{
+    "name": "@hydrooj/login-with-qq",
+    "version": "0.0.1",
+    "main": "package.json",
+    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "author": "undefined <masnn0@outlook.com>",
+    "license": "MIT",
+    "scripts": {
+        "lint": "eslint lib.ts service.ts --fix",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "hydrooj": "^2.12.1",
+        "ws": "^7.3.1"
+    },
+    "devDependencies": {
+        "@types/ws": "^7.2.6"
+    }
+}

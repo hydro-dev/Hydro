@@ -9,6 +9,7 @@ import cluster from 'cluster';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
+import { } from './utils';
 
 export * from './interface';
 

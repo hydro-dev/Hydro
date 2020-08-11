@@ -1,0 +1,15 @@
+url:
+    type: text
+    category: system
+    desc: cqhttp ws api url
+    name: url
+token:
+    type: text
+    category: system
+    desc: cqhttp token
+    name: token
+id:
+    type: text
+    category: system
+    desc: QQ account id
+    name: id

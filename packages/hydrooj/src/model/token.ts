@@ -2,7 +2,7 @@ import { Collection } from 'mongodb';
 import { TokenDoc } from '../interface';
 import * as db from '../service/db';
 
-const coll: Collection<TokenDoc> = db.collection('token');
+export const coll: Collection<TokenDoc> = db.collection('token');
 
 export const TYPE_SESSION = 0;
 export const TYPE_REGISTRATION = 2;
@@ -88,6 +88,8 @@ export function delByUid(uid: number) {
 
 global.Hydro.postInit.push(ensureIndexes);
 global.Hydro.model.token = {
+    coll,
+
     TYPE_SESSION,
     TYPE_CHANGEMAIL,
     TYPE_OAUTH,
