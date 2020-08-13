@@ -10,10 +10,6 @@ import {
 import { isPid } from '../lib/validator';
 
 class ProblemImportHandler extends Handler {
-    async prepare() {
-        this.checkPerm(PERM.PERM_CREATE_PROBLEM);
-    }
-
     async get() {
         this.response.template = 'problem_import.html';
         this.response.body = {
@@ -26,7 +22,7 @@ class ProblemImportHandler extends Handler {
     }
 
     @param('url', Types.String)
-    @param('pid', Types.String, isPid)
+    @param('pid', Types.String, true, isPid)
     @param('hidden', Types.Boolean)
     @param('remoteType', Types.String)
     async post(domainId: string, url: string, pid: string, hidden = false, remoteType: string) {
@@ -55,7 +51,7 @@ class ProblemImportHandler extends Handler {
 }
 
 export async function apply() {
-    Route('problem_import', '/problem/import', ProblemImportHandler);
+    Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
 }
 
 global.Hydro.handler.import = apply;

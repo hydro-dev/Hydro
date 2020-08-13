@@ -184,7 +184,7 @@ export async function create(
             mailLower: mail.trim().toLowerCase(),
             uname,
             unameLower: uname.trim().toLowerCase(),
-            hash: pwhash(password, salt),
+            hash: pwhash(password.toString(), salt),
             salt,
             hashType: 'hydro',
             regat: new Date(),
@@ -195,6 +195,7 @@ export async function create(
             gravatar: mail,
         });
     } catch (e) {
+        console.log(e);
         throw new UserAlreadyExistError([uid, uname, mail]);
     }
     return uid;

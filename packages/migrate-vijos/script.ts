@@ -420,19 +420,19 @@ async function removeInvalidPid(src: Db, report: Function) {
 
 async function userfileUsage(src: Db, report: Function) {
     const count = await src.collection('domain.user').find().count();
-    const bulk = dst.collection('user').initializeUnorderedBulkOp();
     await report({ progress: 1, message: `userfileUsage: ${count}` });
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
-        const docs = await src.collection('userfileUsage')
+        const docs = await src.collection('domain.user')
             .find().skip(i * 50).limit(50)
             .toArray();
+        const t = [];
         for (const doc of docs) {
             if (doc.userfile_usage) {
-                bulk.find({ _id: doc.uid }).updateOne({ $set: { usage: doc.userfile_usage } });
+                t.push(dst.collection('user').updateOne({ _id: doc.uid }, { $set: { usage: doc.userfile_usage } }));
             }
         }
-        await bulk.execute();
+        await Promise.all(t);
     }
 }
 

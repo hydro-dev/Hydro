@@ -5,99 +5,73 @@ import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import cache from 'koa-static-cache';
-import nunjucks from 'nunjucks';
 import mongodb from 'mongodb';
 import { argv } from 'yargs';
 
 const listenPort = argv.port || 8888;
 
-class Loader {
-    getSource(name: string) { // eslint-disable-line class-methods-use-this
-        return {
-            src: `
-            <!DOCTYPE html>
-            <html data-page="setup" data-layout="immersive" class="layout--immersive page--setup nojs">
-            <head>
-              <meta charset="UTF-8">
-              <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-              <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-              <meta name="msapplication-TileColor" content="#579e9a">
-              <meta name="theme-color" content="#56758f">
-              <link rel="stylesheet" media="all" href="/vj4.css">
-              <title>{{ _('Setup') }}</title>
-            </head>
-            <body>
-            <div class="slideout-panel" id="panel">
-              <div class="main">
-                <div class="row"><div class="columns">
-                <div class="immersive--content immersive--center">
-                  <h1>{{ _('Setup') }}</h1>
-                  <form method="POST">
-                    <div class="row"><div class="columns">
-                      <label class="inverse material textbox">
-                        {{ _('Database Host') }}
-                        <input name="host" type="text" value="127.0.0.1" autofocus>
-                      </label>
-                    </div></div>
-                    <div class="row"><div class="columns">
-                      <label class="inverse material textbox">
-                        {{ _('Database Port') }}
-                        <input name="port" type="number" value="27017">
-                      </label>
-                    </div></div>
-                    <div class="row"><div class="columns">
-                      <label class="inverse material textbox">
-                        {{ _('Database Name') }}
-                        <input name="name" type="text" value="hydro">
-                      </label>
-                    </div></div>
-                    <div class="row"><div class="columns">
-                      <label class="inverse material textbox">
-                        {{ _('Database Username') }}
-                        <input name="username" type="text" placeholder="{{ _('Leave blank if none') }}">
-                      </label>
-                    </div></div>
-                    <div class="row"><div class="columns">
-                      <label class="inverse material textbox">
-                        {{ _('Database Password') }}
-                        <input name="password" type="password" placeholder="{{ _('Leave blank if none') }}">
-                      </label>
-                    </div></div>
-                    <div class="row"><div class="columns">
-                      <div class="text-center">
-                        <input type="submit" value="{{ _('Confirm') }}" class="inverse expanded rounded primary button">
-                      </div>
-                    </div></div>
-                  </form>
-                </div>
-                </div></div>
-              </div>
-            </div>
-            </body>
-            </html>
-            `,
-            path: name,
-            noCache: false,
-        };
-    }
-}
-
-const env = new nunjucks.Environment(new Loader(), { autoescape: true, trimBlocks: true });
-
-function render(name: string) {
-    return new Promise((resolve, reject) => {
-        env.render(name, {
-            _: (str: string) => str,
-        }, (err, res) => {
-            if (err) reject(err);
-            else resolve(res);
-        });
-    });
-}
-
 async function get(ctx: Context) {
-    ctx.body = await render('setup.html');
+    ctx.body = `<!DOCTYPE html>
+    <html data-page="setup" data-layout="immersive" class="layout--immersive page--setup nojs">
+    <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      <meta name="msapplication-TileColor" content="#579e9a">
+      <meta name="theme-color" content="#56758f">
+      <link rel="stylesheet" media="all" href="/vj4.css">
+      <title>Setup</title>
+    </head>
+    <body>
+    <div class="slideout-panel" id="panel">
+      <div class="main">
+        <div class="row"><div class="columns">
+        <div class="immersive--content immersive--center">
+          <h1>Setup</h1>
+          <form method="POST">
+            <div class="row"><div class="columns">
+              <label class="inverse material textbox">
+                Database Host
+                <input name="host" type="text" value="127.0.0.1" autofocus>
+              </label>
+            </div></div>
+            <div class="row"><div class="columns">
+              <label class="inverse material textbox">
+                Database Port
+                <input name="port" type="number" value="27017">
+              </label>
+            </div></div>
+            <div class="row"><div class="columns">
+              <label class="inverse material textbox">
+                Database Name
+                <input name="name" type="text" value="hydro">
+              </label>
+            </div></div>
+            <div class="row"><div class="columns">
+              <label class="inverse material textbox">
+                Database Username
+                <input name="username" type="text" placeholder="Leave blank if none">
+              </label>
+            </div></div>
+            <div class="row"><div class="columns">
+              <label class="inverse material textbox">
+                Database Password
+                <input name="password" type="password" placeholder="Leave blank if none">
+              </label>
+            </div></div>
+            <div class="row"><div class="columns">
+              <div class="text-center">
+                <input type="submit" value="Confirm" class="inverse expanded rounded primary button">
+              </div>
+            </div></div>
+          </form>
+        </div>
+        </div></div>
+      </div>
+    </div>
+    </body>
+    </html>`;
     ctx.response.type = 'text/html';
 }
 

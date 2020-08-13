@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "hydrooj": "^2.12.1",
-        "superagent": "^5.3.1",
+        "superagent": "^6.0.0",
         "superagent-proxy": "^2.0.0"
     }
 }
