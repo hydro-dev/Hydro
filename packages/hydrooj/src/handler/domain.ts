@@ -18,7 +18,7 @@ class DomainRankHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
-            domain.getMultiInDomain(domainId).sort({ rp: -1 }),
+            domain.getMultiUserInDomain(domainId).sort({ rp: -1 }),
             page,
             100,
         );
@@ -84,7 +84,7 @@ class DomainUserHandler extends ManageHandler {
     async get({ domainId }) {
         const rudocs = {};
         const [dudocs, roles] = await Promise.all([
-            domain.getMultiInDomain(domainId, {
+            domain.getMultiUserInDomain(domainId, {
                 $and: [
                     { role: { $ne: 'default' } },
                     { role: { $ne: null } },

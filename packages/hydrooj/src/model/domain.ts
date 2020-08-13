@@ -141,7 +141,7 @@ export function setMultiUserInDomain(domainId: string, query: any, params: any) 
     return collUser.updateMany({ domainId, ...query }, { $set: params });
 }
 
-export function getMultiInDomain(domainId: string, query: any = {}) {
+export function getMultiUserInDomain(domainId: string, query: any = {}) {
     return collUser.find({ domainId, ...query });
 }
 
@@ -212,7 +212,7 @@ global.Hydro.model.domain = {
     setMultiUserInDomain,
     setUserInDomain,
     incUserInDomain,
-    getMultiInDomain,
+    getMultiUserInDomain,
     getDictUserByDomainId,
     getJoinSettings,
     getPrefixSearch,

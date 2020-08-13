@@ -7,5 +7,3 @@ message.markAsRead
 Handle OAuth Map   !important
 基于document的model难以lint，建议拆分
 写test!   !important
-每日签到
-rp.delta

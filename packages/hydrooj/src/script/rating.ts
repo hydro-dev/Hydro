@@ -84,7 +84,8 @@ async function runContest(...arg: any[]) {
 }
 
 export async function calcLevel(domainId: string, report: Function) {
-    const dudocs = await domain.getMultiInDomain(domainId).sort('rp', -1).toArray();
+    const dudocs = await domain.getMultiUserInDomain(domainId).sort('rp', -1).toArray();
+    if (!dudocs.length) return;
     let last = { rp: null };
     let rank = 0;
     let count = 0;
@@ -97,8 +98,8 @@ export async function calcLevel(domainId: string, report: Function) {
         bulk.find({ _id: dudoc._id }).updateOne({ $set: { rank } });
         last = dudoc;
         if (count % 1000 === 0) report({ message: `#${count}: Rank ${rank}` });
-        await bulk.execute();
     }
+    await bulk.execute();
     if (!rank) {
         report({ message: 'No one has rp' });
         return;
@@ -120,6 +121,11 @@ export async function calcLevel(domainId: string, report: Function) {
 
 async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     const udict: ND = {};
+    const deltaudict: ND = {};
+    const dudocs = await domain.getMultiUserInDomain(domainId).toArray();
+    for (const dudoc of dudocs) {
+        deltaudict[dudoc.uid] = dudoc.rpdelta || 0;
+    }
     const contests = await contest.getMulti(domainId, { rated: true }, -1).sort('endAt', -1).toArray();
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
     for (const i in contests) {
@@ -146,7 +152,11 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     await domain.setMultiUserInDomain(domainId, {}, { rp: 1500 });
     const tasks = [];
     for (const uid in udict) {
-        tasks.push(domain.setUserInDomain(domainId, parseInt(uid, 10), { rp: udict[uid] }));
+        tasks.push(
+            domain.setUserInDomain(
+                domainId, parseInt(uid, 10), { rp: udict[uid] + (deltaudict[uid] || 0) },
+            ),
+        );
     }
     await Promise.all(tasks);
     await calcLevel(domainId, report);

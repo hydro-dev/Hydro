@@ -95,6 +95,8 @@ AccountSetting(
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
     Setting('setting_storage', 'usage', null, 0, 'number', 'Userfile Usage', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'checkincnt', null, 0, 'number', 'Check In Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'lastcheckin', null, 0, 'number', 'Last checkin time', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 DomainSetting(
@@ -110,6 +112,7 @@ DomainUserSetting(
     Setting('setting_storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rp', null, 1500, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rpdelta', null, 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'level', null, 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
