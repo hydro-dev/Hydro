@@ -38,7 +38,6 @@
         "@types/adm-zip": "^0.4.33",
         "@types/fs-extra": "^9.0.1",
         "@types/js-yaml": "^3.12.5",
-        "@types/katex": "^0.11.0",
         "@types/koa": "^2.11.3",
         "@types/koa-morgan": "^1.0.4",
         "@types/koa-router": "^7.4.1",

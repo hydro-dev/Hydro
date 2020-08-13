@@ -396,7 +396,6 @@ export interface Service {
 
 export interface Lib {
     download: typeof import('./lib/download').default,
-    superagent: typeof import('./lib/superagent'),
     'hash.hydro': typeof import('./lib/hash.hydro').default,
     i18n: typeof import('./lib/i18n').default,
     'import.syzoj': typeof import('./lib/import.syzoj').syzoj,
