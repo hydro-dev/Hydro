@@ -78,8 +78,9 @@ export function getSessionListByUid(uid: number) {
     return coll.find({ uid, tokenType: TYPE_SESSION }).sort('updateAt', -1).toArray();
 }
 
-export function getMostRecentSessionByUid(uid: number) {
-    return coll.findOne({ uid, tokenType: TYPE_SESSION }, { sort: { updateAt: -1 } });
+export async function getMostRecentSessionByUid(uid: number) {
+    const res = await coll.find({ uid, tokenType: TYPE_SESSION }).sort('updateAt', -1);
+    return res[0];
 }
 
 export function delByUid(uid: number) {

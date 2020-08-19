@@ -272,7 +272,9 @@ export class Handler {
             ip: ctx.request.ip,
             headers: ctx.request.headers,
             cookies: ctx.cookies,
+            // @ts-ignore
             body: ctx.request.body,
+            // @ts-ignore
             files: ctx.request.files,
             query: ctx.query,
             path: ctx.path,
