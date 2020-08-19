@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/hydrojudge",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "main": "package.json",
     "author": "masnn",
     "os": [
@@ -12,8 +12,8 @@
         "fs-extra": "^9.0.1",
         "hydrooj": "^2.12.0",
         "js-yaml": "^3.14.0",
-        "lodash": "^4.17.19",
-        "p-queue": "^6.6.0",
+        "lodash": "^4.17.20",
+        "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
         "systeminformation": "^4.26.10"
     },

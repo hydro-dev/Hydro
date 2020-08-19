@@ -11,6 +11,7 @@ async function get() {
         system.get('server.url'),
         token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
+    // eslint-disable-next-line max-len
     this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=${state}`;
 }
 

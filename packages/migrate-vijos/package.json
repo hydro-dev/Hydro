@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "@types/js-yaml": "^3.12.5",
-        "@types/mongodb": "^3.5.25"
+        "@types/mongodb": "^3.5.26"
     },
     "dependencies": {
         "hydrooj": "^2.12.3",

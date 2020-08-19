@@ -24,6 +24,7 @@ module.exports = {
         'import/prefer-default-export': 'off',
         indent: ['warn', 4],
         'max-classes-per-file': 'off',
+        'max-len': ['warn', 150],
         'no-bitwise': 'off',
         'no-console': 'off',
         'no-extend-native': 'off',

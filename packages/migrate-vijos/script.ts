@@ -250,6 +250,7 @@ const tasks = {
         doc_id: 'docId',
         doc_type: 'docType',
         owner_uid: 'owner',
+        owner: 'owner',
         name: 'name',
         roles: {
             field: 'roles',
@@ -528,11 +529,7 @@ export async function run({
     }
     await dst.collection('system').updateOne(
         { _id: 'user' },
-        {
-            $set: {
-                value: userCounter.value,
-            },
-        },
+        { $set: { value: userCounter.value } },
         { upsert: true },
     );
     await report({ progress: 1, message: 'Collection:system done.' });

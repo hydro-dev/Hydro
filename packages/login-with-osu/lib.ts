@@ -4,6 +4,8 @@ import superagentProxy from 'superagent-proxy';
 
 superagentProxy(superagent);
 
+const BASE_URL = 'https://osu.ppy.sh/';
+
 async function get() {
     const { system, token } = global.Hydro.model;
     const [[appid, url], [state]] = await Promise.all([
@@ -13,7 +15,7 @@ async function get() {
         ]),
         token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
-    this.response.redirect = `https://osu.ppy.sh/oauth/authorize?client_id=${appid}&state=${state}&redirect_uri=${url}oauth/osu/callback&response_type=code`;
+    this.response.redirect = `${BASE_URL}oauth/authorize?client_id=${appid}&state=${state}&redirect_uri=${url}oauth/osu/callback&response_type=code`;
 }
 
 async function callback({ state, code }) {
@@ -28,7 +30,7 @@ async function callback({ state, code }) {
         ]),
         token.get(state, token.TYPE_OAUTH),
     ]);
-    const res = await superagent.post('https://osu.ppy.sh/oauth/token')
+    const res = await superagent.post(`${BASE_URL}oauth/token`)
         .proxy(proxy)
         .send({
             client_id: appid,
@@ -44,7 +46,7 @@ async function callback({ state, code }) {
         );
     }
     const t = res.body.access_token;
-    const userInfo = await superagent.get('https://osu.ppy.sh/api/v2/me')
+    const userInfo = await superagent.get(`${BASE_URL}api/v2/me`)
         .proxy(proxy)
         .set('User-Agent', 'Hydro-OAuth')
         .set('Authorization', `Bearer ${t}`);

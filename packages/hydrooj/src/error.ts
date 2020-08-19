@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable func-names */
 import { isClass } from './utils';
 
