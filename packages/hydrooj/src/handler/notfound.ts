@@ -12,7 +12,14 @@ class NotFoundHandler extends Handler {
 }
 
 export async function apply() {
-    Route('notfound', '*', NotFoundHandler);
+    Route('notfound', '/:a', NotFoundHandler);
+    Route('notfound', '/:a/:b', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c/:d', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c/:d/:e', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c/:d/:e/:f', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c/:d/:e/:f/:g', NotFoundHandler);
+    Route('notfound', '/:a/:b/:c/:d/:e/:f/:g/:h', NotFoundHandler);
 }
 
 global.Hydro.handler.notfound = apply;

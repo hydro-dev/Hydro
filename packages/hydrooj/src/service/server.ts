@@ -793,7 +793,6 @@ export async function start() {
         }));
     }
     app.use(router.routes()).use(router.allowedMethods());
-    Route('notfound_handler', '*', Handler);
     server.listen(argv.port || port);
     console.log('Server listening at: %s', argv.port || port);
 }
