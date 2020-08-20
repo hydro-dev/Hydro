@@ -14,5 +14,7 @@ export async function connect() {
 export async function dispose() {
     const db = require('hydrooj/src/service/db');
     await db.getClient().close();
+    await db.getClient2().close();
     await db.getDb().close();
+    await db.getDb2().close();
 }
