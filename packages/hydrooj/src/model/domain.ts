@@ -74,7 +74,7 @@ export async function getList(domainIds: string[]): Promise<Dictionary<DomainDoc
 }
 
 export function setUserRole(domainId: string, uid: number, role: string) {
-    return collUser.updateOne({ uid, domainId }, { role }, { upsert: true });
+    return collUser.updateOne({ uid, domainId }, { $set: { role } }, { upsert: true });
 }
 
 export async function getRoles(domainId: string): Promise<any[]>

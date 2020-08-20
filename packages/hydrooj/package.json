@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.12.19",
+    "version": "2.12.20",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -25,7 +25,7 @@
         "lodash": "^4.17.20",
         "lru-cache": "^6.0.0",
         "moment-timezone": "^0.5.31",
-        "mongodb": "^3.5.9",
+        "mongodb": "^3.6.0",
         "nodemailer": "^6.4.10",
         "ps-list": "^7.2.0",
         "serialize-javascript": "^4.0.0",

@@ -22,7 +22,7 @@ import * as solution from '../model/solution';
 import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param, multipart,
+    Route, Connection, Handler, ConnectionHandler, Types, param,
 } from '../service/server';
 
 const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
@@ -422,7 +422,6 @@ class ProblemDataUploadHandler extends ProblemManageHandler {
         this.response.template = 'problem_upload.html';
     }
 
-    @multipart(256 * 1024)
     async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
         this.pdoc = await problem.setTestdata(

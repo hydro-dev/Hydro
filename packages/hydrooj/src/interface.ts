@@ -237,6 +237,7 @@ export interface DomainDoc extends Dictionary<any> {
     gravatar: string,
     bulletin: string,
     pidCounter: number,
+    join?: any,
 }
 
 // Message

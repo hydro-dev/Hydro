@@ -60,7 +60,7 @@ export async function getWithSecret(_id: ObjectID, secret: string, reject?: Func
     const stream = gridfs.openDownloadStream(_id);
     stream.on('error', (err) => {
         console.error(err);
-        if (reject) reject();
+        if (reject) reject(err);
     });
     return stream;
 }
@@ -71,7 +71,7 @@ export async function get(_id: ObjectID, reject?: Function) {
     const stream = gridfs.openDownloadStream(_id);
     stream.on('error', (err) => {
         console.error(err);
-        if (reject) reject();
+        if (reject) reject(err);
     });
     return stream;
 }

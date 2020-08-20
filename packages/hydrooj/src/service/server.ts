@@ -1,5 +1,6 @@
 /* eslint-disable prefer-destructuring */
 import assert from 'assert';
+import { PassThrough } from 'stream';
 import path from 'path';
 import os from 'os';
 import http from 'http';
@@ -99,7 +100,16 @@ export const Types: Types = {
         },
     ],
     Range: (range) => [
-        null,
+        (v) => {
+            if (range instanceof Array) {
+                for (const item of range) {
+                    if (typeof item === 'number') {
+                        if (item === parseInt(v, 10)) return parseInt(v, 10);
+                    } else if (item === v) return v;
+                }
+            }
+            return v;
+        },
         (v) => {
             if (range instanceof Array) {
                 for (const item of range) {
@@ -181,22 +191,6 @@ export function param(name: string, ...args: any): MethodDecorator {
     };
 }
 
-export function multipart(maxSizeKiB: number): MethodDecorator {
-    return function multipartDecorator(target: any, funcName: string, obj: any) {
-        const originalMethod = obj.value;
-        obj.value = async function checkCsrfToken(...args: any[]) {
-            const body = Body({
-                multipart: true,
-                formidable: {
-                    maxFileSize: maxSizeKiB * 1024,
-                },
-            });
-            return await body.call(this.ctx, this.ctx, () => originalMethod.call(this, ...args));
-        };
-        return obj;
-    };
-}
-
 export function requireCsrfToken(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
     obj.value = async function checkCsrfToken(...args: any[]) {
@@ -219,7 +213,12 @@ export async function prepare() {
             maxAge: 365 * 24 * 60 * 60,
         }));
     }
-    app.use(Body());
+    app.use(Body({
+        multipart: true,
+        formidable: {
+            maxFileSize: 256 * 1024 * 1024,
+        },
+    }));
 }
 
 export class Handler {
@@ -251,7 +250,7 @@ export class Handler {
         template?: string,
         redirect?: string,
         disposition?: string,
-        attachment: (name: string) => void,
+        attachment: (name: string, stream?: any) => void,
     };
 
     session: any;
@@ -288,7 +287,13 @@ export class Handler {
             status: null,
             template: null,
             redirect: null,
-            attachment: (name) => ctx.attachment(name),
+            attachment: (name, stream) => {
+                ctx.attachment(name);
+                if (stream) {
+                    this.response.body = null;
+                    ctx.body = stream.pipe(new PassThrough());
+                }
+            },
             disposition: null,
         };
         this.UIContext = {
@@ -344,9 +349,13 @@ export class Handler {
         if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
     }
 
-    url(name: string, kwargs = {}) {
+    url(name: string, kwargs: any = {}) {
         let res = '#';
-        const args: any = { ...kwargs };
+        const args: any = {};
+        for (const key in kwargs) {
+            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
+            else args[key] = kwargs[key].toString();
+        }
         try {
             if (this.args.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
@@ -422,6 +431,7 @@ export class Handler {
     }
 
     async finish() {
+        if (!this.response.body) return;
         try {
             await this.renderBody();
         } catch (error) {
@@ -468,6 +478,8 @@ export class Handler {
 
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
+        console.log(this.response);
+        if (!this.response.body) return;
         if (this.response.redirect && !this.request.json) {
             this.ctx.response.type = 'application/octet-stream';
             this.ctx.response.status = 302;
@@ -677,9 +689,13 @@ export class ConnectionHandler {
         if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
     }
 
-    url(name: string, kwargs = {}) {
+    url(name: string, kwargs: any = {}) {
         let res = '#';
-        const args: any = { ...kwargs };
+        const args: any = {};
+        for (const key in kwargs) {
+            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
+            else args[key] = kwargs[key].toString();
+        }
         try {
             if (this.args.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
@@ -803,7 +819,6 @@ global.Hydro.service.server = {
     server,
     router,
     param,
-    multipart,
     requireCsrfToken,
     Handler,
     ConnectionHandler,

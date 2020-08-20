@@ -138,8 +138,8 @@ Content: 内容
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
 contest_create: 创建比赛
-contest_detail: 比赛详情
 contest_detail_problem_submit: 递交比赛题目
+contest_detail: 比赛详情
 contest_edit: 编辑比赛
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
@@ -238,6 +238,7 @@ Domain ID: 域 ID
 domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料
+domain_file: 我的文件
 domain_join_applications: 加域申请
 domain_join: 加入域
 domain_main: 首页

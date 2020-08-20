@@ -6,6 +6,7 @@ import {
 } from '../error';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
+import * as system from '../model/system';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import { gravatar } from '../lib/misc';
@@ -199,6 +200,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         if (!this.response.body.joinSettings) {
             delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
         }
+        this.response.body.url_prefix = await system.get('server.url');
         this.response.body.path = [
             ['Hydro', 'homepage'],
             ['domain', null],
@@ -207,7 +209,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         this.response.template = 'domain_join_applications.html';
     }
 
-    @param('method', Types.Range(domain.JOIN_METHOD_RANGE))
+    @param('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
     @param('role', Types.String, true)
     @param('expire', Types.UnsignedInt, true)
     @param('invitationCode', Types.String, true)

@@ -7,7 +7,7 @@ import * as file from '../model/file';
 import * as user from '../model/user';
 import * as db from '../service/db';
 import {
-    Route, Handler, Types, param, multipart,
+    Route, Handler, Types, param,
 } from '../service/server';
 import { BadRequestError } from '../error';
 
@@ -19,8 +19,8 @@ class FileDownloadHandler extends Handler {
     @param('name', Types.String, true)
     async get(domainId: string, fileId: ObjectID, secret: string, name: string) {
         if (name) name = Buffer.from(name, 'base64').toString();
-        this.response.attachment(name || fileId.toHexString());
-        this.response.body = await file.getWithSecret(fileId, secret);
+        const doc = await file.getWithSecret(fileId, secret);
+        this.response.attachment(name || fileId.toHexString(), doc);
     }
 }
 
@@ -38,7 +38,6 @@ class FileUploadHandler extends Handler {
         this.response.body = { fdoc: null, usage: this.user.usage, quota: await this.getQuota() };
     }
 
-    @multipart(256 * 1024)
     @param('title', Types.String)
     async post(domainId: string, title: string) {
         if (!this.request.files.file) throw new BadRequestError();

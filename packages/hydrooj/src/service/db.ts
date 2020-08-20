@@ -10,12 +10,19 @@ mongourl += `${opts.host}:${opts.port}/${opts.name}`;
 
 // eslint-disable-next-line import/no-mutable-exports
 export let db: mongodb.Db = null;
+// eslint-disable-next-line import/no-mutable-exports
+export let db2: mongodb.Db = null;
 
 mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
     .then((Client) => {
         db = Client.db(opts.name);
         global.Hydro.service.db.db = db;
-        bus.publish('system_database_connected', null);
+        mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true })
+            .then((Client1) => {
+                db2 = Client1.db(opts.name);
+                global.Hydro.service.db.db2 = db2;
+                bus.publish('system_database_connected', null);
+            });
     });
 
 export function collection(c: string) {
@@ -23,4 +30,4 @@ export function collection(c: string) {
     return db.collection(c);
 }
 
-global.Hydro.service.db = { collection, db };
+global.Hydro.service.db = { collection, db, db2 };
