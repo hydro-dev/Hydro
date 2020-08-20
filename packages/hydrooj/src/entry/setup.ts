@@ -78,7 +78,7 @@ async function get(ctx: Context) {
 async function post(ctx: Context) {
     const {
         host, port, name, username, password,
-        // @ts-expect-error
+        // @ts-ignore
     } = ctx.request.body;
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
