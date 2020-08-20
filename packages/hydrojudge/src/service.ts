@@ -11,13 +11,13 @@ import { homedir, tmpdir } from 'os';
 async function postInit() {
     // Only start a single daemon
     if (!cluster.isFirstWorker) return;
-    const { compilerText } = require('./src/utils');
-    const tmpfs = require('./src/tmpfs');
-    const { FormatError, CompileError, SystemError } = require('./src/error');
+    const { compilerText } = require('./utils');
+    const tmpfs = require('./tmpfs');
+    const { FormatError, CompileError, SystemError } = require('./error');
     const { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } = global.Hydro.model.builtin.STATUS;
-    const readYamlCases = require('./src/cases');
-    const judge = require('./src/judge');
-    const sysinfo = require('./src/sysinfo');
+    const readYamlCases = require('./cases');
+    const judge = require('./judge');
+    const sysinfo = require('./sysinfo');
 
     const { problem, file, task } = global.Hydro.model;
     const _judge = global.Hydro.handler.judge as any;

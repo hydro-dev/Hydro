@@ -46,6 +46,7 @@ async function callback({ state, code }) {
         .set('User-Agent', 'Hydro-OAuth')
         .set('Authorization', `token ${t}`);
     const ret = {
+        _id: `${userInfo.body.id}@github.local`,
         email: userInfo.body.email,
         bio: userInfo.body.bio,
         uname: [userInfo.body.name, userInfo.body.login],

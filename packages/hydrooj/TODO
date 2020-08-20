@@ -4,6 +4,4 @@ SETTINGS_PRIVACY.allowRegisteredUsers
 model.setting.ui.name
 pdoc.secretConfig?
 message.markAsRead
-Handle OAuth Map   !important
 基于document的model难以lint，建议拆分
-写test!   !important

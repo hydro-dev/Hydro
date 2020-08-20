@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/login-with-google",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",

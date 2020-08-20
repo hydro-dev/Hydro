@@ -20,6 +20,7 @@ async function callback({ state }) {
     const s = await token.get(state, token.TYPE_OAUTH);
     if (!s || !s.email) throw new InvalidTokenError(state);
     const ret = {
+        _id: s.email,
         email: s.email,
         bio: '',
         uname: [s.username],

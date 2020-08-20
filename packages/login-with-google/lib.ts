@@ -43,6 +43,8 @@ async function callback({
     await token.del(state, token.TYPE_OAUTH);
     this.response.redirect = s.redirect;
     return {
+        // TODO use openid
+        _id: payload.email,
         email: payload.email,
         uname: [payload.given_name, payload.name, payload.family_name],
         viewLang: payload.locale.replace('-', '_'),

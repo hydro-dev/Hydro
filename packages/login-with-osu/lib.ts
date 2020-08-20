@@ -51,6 +51,7 @@ async function callback({ state, code }) {
         .set('User-Agent', 'Hydro-OAuth')
         .set('Authorization', `Bearer ${t}`);
     const ret = {
+        _id: `${userInfo.body.id}@osu.local`,
         email: `${userInfo.body.id}@osu.local`,
         bio: '',
         uname: [userInfo.body.username],

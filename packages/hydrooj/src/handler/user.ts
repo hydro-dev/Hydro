@@ -8,6 +8,7 @@ import {
     Route, Handler, Types, param,
 } from '../service/server';
 import * as user from '../model/user';
+import * as oauth from '../model/oauth';
 import * as token from '../model/token';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
@@ -227,10 +228,9 @@ class OauthCallbackHandler extends Handler {
         let r;
         if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args);
         else throw new UserFacingError('Oauth type');
-        const udoc = await user.getByEmail('system', r.email);
-        if (udoc) {
-            this.session.uid = udoc._id;
-        } else {
+        const uid = await oauth.get(r._id);
+        if (uid) this.session.uid = uid;
+        else {
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
             r.uname = r.uname || [];
@@ -243,7 +243,7 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const uid = await user.create(
+            const _id = await user.create(
                 r.email, username, String.random(32),
                 undefined, this.request.ip,
             );
@@ -252,8 +252,11 @@ class OauthCallbackHandler extends Handler {
             };
             if (r.bio) $set.bio = r.bio;
             if (r.viewLang) $set.viewLang = r.viewLang;
-            await user.setById(uid, $set);
-            this.session.uid = uid;
+            await Promise.all([
+                user.setById(_id, $set),
+                oauth.set(r.email, _id),
+            ]);
+            this.session.uid = _id;
         }
     }
 }
