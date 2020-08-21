@@ -11,9 +11,11 @@ async function _download(url: string, path: string, retry: number) {
     return path;
 }
 
-export default function download(url: string, path?: string, retry = 3) {
+function download(url: string, path?: string, retry = 3) {
     if (path) return _download(url, path, retry);
     return superagent.get(url).retry(retry);
 }
+
+export = download;
 
 global.Hydro.lib.download = download;

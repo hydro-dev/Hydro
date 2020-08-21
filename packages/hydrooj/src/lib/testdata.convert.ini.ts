@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 
-export default function convert(ini: string) {
+function convert(ini: string) {
     const f = ini.split('\n');
     const count = parseInt(f[0], 10);
     const res = { cases: [] };
@@ -30,3 +30,4 @@ export default function convert(ini: string) {
 }
 
 global.Hydro.lib['testdata.convert.ini'] = convert;
+export = convert;

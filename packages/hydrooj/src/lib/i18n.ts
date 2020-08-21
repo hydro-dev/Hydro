@@ -1,3 +1,5 @@
+import { Dictionary } from 'lodash';
+
 const locales = {};
 
 declare global {
@@ -45,12 +47,14 @@ String.prototype.translate = function translate(...languages: string[]) {
     return this;
 };
 
-export default function load(data) {
+function load(data: Dictionary<string>) {
     for (const i in data) {
         if (!locales[i]) locales[i] = data[i];
         else locales[i] = Object.assign(locales[i], data[i]);
     }
 }
+
+export = load;
 
 global.Hydro.locales = locales;
 global.Hydro.lib.i18n = load;

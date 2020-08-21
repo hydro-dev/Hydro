@@ -38,4 +38,4 @@ const exp = new Logger();
 
 global.Hydro.lib.logger = exp;
 
-export default exp;
+export = exp;

@@ -107,7 +107,7 @@ interface RatingOutputUser {
     uid: number,
 }
 
-export default function calculate(users: RatingInputUser[]): RatingOutputUser[] {
+function calculate(users: RatingInputUser[]): RatingOutputUser[] {
     let last_idx = 0;
     let last_rank = 1;
     for (let i = 1; i < users.length; i++) {
@@ -123,5 +123,7 @@ export default function calculate(users: RatingInputUser[]): RatingOutputUser[] 
     const calculator = new RatingCalculator(users);
     return calculator.calculate() as RatingOutputUser[];
 }
+
+export = calculate;
 
 global.Hydro.lib.rating = calculate;

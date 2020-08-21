@@ -11,4 +11,4 @@ function* ranked<T>(diter: T[], equ = (a: T, b: T) => a === b): Generator<[numbe
 }
 
 global.Hydro.lib.rank = ranked;
-export default ranked;
+export = ranked;

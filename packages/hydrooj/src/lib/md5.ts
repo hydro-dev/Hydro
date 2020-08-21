@@ -130,8 +130,9 @@ function rstr2hex(input) {
     return output;
 }
 
-export default function md5(s: string) {
+function md5(s: string) {
     return rstr2hex(rstrMD5(unescape(encodeURIComponent(s))));
 }
 
+export = md5;
 global.Hydro.lib.md5 = md5;

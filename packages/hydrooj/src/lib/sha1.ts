@@ -7,4 +7,4 @@ function sha1(content: string) {
 }
 
 global.Hydro.lib.sha1 = sha1;
-export default sha1;
+export = sha1;

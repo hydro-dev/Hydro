@@ -54,4 +54,4 @@ Item('domain_dashboard', null, 'domain', PERM.PERM_EDIT_DOMAIN);
 Item('manage_dashboard', null, 'manage', PRIV.PRIV_EDIT_SYSTEM);
 
 global.Hydro.lib.nav = Item;
-export default Item;
+export = Item;

@@ -478,7 +478,6 @@ export class Handler {
 
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
-        console.log(this.response);
         if (!this.response.body) return;
         if (this.response.redirect && !this.request.json) {
             this.ctx.response.type = 'application/octet-stream';
