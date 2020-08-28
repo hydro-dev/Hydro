@@ -37,7 +37,7 @@ export async function load(call: Entry) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    const config = require('../options').default();
+    const config = require('../options')();
     if (!config) {
         console.log('Starting setup');
         await call({ entry: 'setup', newProcess: true }).catch((err) => {
