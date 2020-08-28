@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import path from 'path';
 import globby from 'globby';
 import spawn from 'cross-spawn';
@@ -38,5 +39,6 @@ export function spawnAsync(command: string) {
     const child = spawn(args[0], args.slice(1), { stdio: 'inherit' });
     return new Promise((resolve, reject) => {
         child.on('close', resolve);
+        child.on('error', reject);
     });
 }

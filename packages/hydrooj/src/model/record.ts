@@ -61,6 +61,7 @@ export async function judge(domainId: string, rid: ObjectID) {
         const pdoc = await problem.get(domainId, rdoc.pid);
         config = pdoc?.config || {};
     }
+    delete rdoc._id;
     await task.add({
         ...rdoc,
         type: 'judge',

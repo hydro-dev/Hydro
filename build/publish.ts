@@ -2,6 +2,8 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
+import fs from 'fs';
+import path from 'path';
 import { gt } from 'semver';
 import latest from 'latest-version';
 import ora from 'ora';
@@ -21,7 +23,7 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
 (async () => {
     let folders = await getWorkspaces();
     if (process.argv[2]) {
-        folders = folders.filter((path) => path.startsWith(process.argv[2]));
+        folders = folders.filter((p) => p.startsWith(process.argv[2]));
     }
 
     const spinner = ora();
@@ -36,6 +38,8 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
             if (!meta.private) {
                 const version = await latest(meta.name);
                 if (gt(meta.version, version)) {
+                    const prepublish = path.resolve(process.cwd(), 'packages', name, 'prepublish.sh');
+                    if (fs.existsSync(prepublish)) await spawnAsync(prepublish);
                     bumpMap[name] = meta.version;
                 }
             }
