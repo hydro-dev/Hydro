@@ -18,6 +18,7 @@ build/*.js
 yarn.lock
 
 packages/**/*.js
+!packages/hydrojudge/service.js
 !**/bin/*.js
 packages/**/*.js.map
 packages/**/*.d.ts

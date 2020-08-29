@@ -4,6 +4,7 @@
 /* eslint-disable import/no-dynamic-require */
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 import { gt } from 'semver';
 import latest from 'latest-version';
 import ora from 'ora';
@@ -39,11 +40,13 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
                 const version = await latest(meta.name);
                 if (gt(meta.version, version)) {
                     const prepublish = path.resolve(process.cwd(), 'packages', name, 'prepublish.sh');
-                    if (fs.existsSync(prepublish)) await spawnAsync(prepublish);
+                    if (fs.existsSync(prepublish)) spawnSync(prepublish);
                     bumpMap[name] = meta.version;
                 }
             }
-        } catch { /* pass */ }
+        } catch (e) {
+            console.error(e);
+        }
         spinner.text = `Loading workspaces (${++progress}/${folders.length})`;
     }));
     spinner.succeed();
