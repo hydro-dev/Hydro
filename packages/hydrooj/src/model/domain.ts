@@ -55,7 +55,7 @@ export function edit(domainId: string, $set: any) {
     return coll.updateOne({ _id: domainId }, { $set });
 }
 
-export async function inc(domainId: string, field: any, n: number): Promise<number | null> {
+export async function inc(domainId: string, field: keyof DomainDoc, n: number): Promise<number | null> {
     const res = await coll.findOneAndUpdate(
         { _id: domainId },
         // FIXME

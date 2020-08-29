@@ -16,6 +16,7 @@
         "src"
     ],
     "exclude": [
+        "__mocks__",
         "bin",
         "dist"
     ]

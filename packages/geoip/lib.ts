@@ -14,7 +14,7 @@ export interface Result {
     display: string
 }
 
-function lookup(ip: string, locale: string) {
+export function lookup(ip: string, locale: string): any {
     const res: any = reader.get(ip);
     if (!res) return {};
     const ret: Result = { display: '' };
@@ -25,11 +25,13 @@ function lookup(ip: string, locale: string) {
             || (res.country || res.registered_country).names.en;
     }
     if (res.city) ret.city = res.city.names[locale] || res.city.names.en;
-    ret.display = `${ret.continent} ${ret.country} ${ret.city}`;
+    ret.display = `${ret.continent} ${ret.country}${ret.city ? ` ${ret.city}` : ''}`;
     return ret;
 }
 
-global.Hydro.lib.geoip = exports = {
-    provider: '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>',
+export const provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';
+
+global.Hydro.lib.geoip = {
+    provider,
     lookup,
 };

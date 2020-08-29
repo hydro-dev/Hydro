@@ -1,5 +1,4 @@
-import 'hydrooj/src/utils';
-
+import 'hydrooj';
 jest.mock('hydrooj/src/service/db');
 
 export async function connect() {
@@ -13,8 +12,10 @@ export async function connect() {
 
 export async function dispose() {
     const db = require('hydrooj/src/service/db');
-    await db.getClient().close();
-    await db.getClient2().close();
-    await db.getDb().close();
-    await db.getDb2().close();
+    await Promise.all([
+        db.getClient().close(),
+        db.getClient2().close(),
+        db.getDb().close(),
+        db.getDb2().close(),
+    ]);
 }

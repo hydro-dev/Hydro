@@ -1,8 +1,8 @@
 import 'hydrooj';
+import 'hydrooj/src/utils';
 import md5 from 'hydrooj/src/lib/md5';
 import sha1 from 'hydrooj/src/lib/sha1';
 import pwhash from 'hydrooj/src/lib/hash.hydro';
-import 'hydrooj/src/utils';
 
 describe('crypto', () => {
     const content1 = 'twd2akioi';
