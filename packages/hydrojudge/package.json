@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/hydrojudge",
-    "version": "2.0.7",
+    "version": "2.0.9",
     "main": "package.json",
     "author": "masnn",
     "os": [

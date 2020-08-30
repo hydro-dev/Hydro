@@ -31,7 +31,4 @@ export function lookup(ip: string, locale: string): any {
 
 export const provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';
 
-global.Hydro.lib.geoip = {
-    provider,
-    lookup,
-};
+global.Hydro.lib.geoip = { provider, lookup };
