@@ -1,12 +1,12 @@
 {
     "name": "hydrooj",
-    "version": "2.12.22",
+    "version": "2.12.23",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "masnn",
-    "license": "GPL-3.0-only",
+    "license": "AGPL-3.0-only",
     "engines": {
         "node": ">=10.10"
     },

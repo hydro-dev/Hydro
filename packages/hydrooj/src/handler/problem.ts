@@ -270,8 +270,8 @@ class ProblemPretestHandler extends ProblemDetailHandler {
             lang, code, true,
             {
                 input,
-                time: 1000,
-                memory: 256,
+                time: '1s',
+                memory: '256m',
             },
         );
         const rdoc = await record.get(domainId, rid);

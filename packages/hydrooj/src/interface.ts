@@ -101,8 +101,10 @@ export interface SubtaskConfig {
 export interface LocalProblemConfig {
     type?: LocalProblemType,
     score?: number,
-    time?: number,
-    memory?: number,
+    /** ms */
+    time?: string,
+    /** Megabytes */
+    memory?: string,
     checker_type?: string,
     checker?: string,
     interactor?: string,
@@ -167,8 +169,8 @@ export interface TestCase {
 }
 
 export interface PretestConfig {
-    time?: number,
-    memory?: number,
+    time?: string,
+    memory?: string,
     input: string,
 }
 

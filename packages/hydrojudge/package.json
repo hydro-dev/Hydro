@@ -17,7 +17,7 @@
         "shell-quote": "^1.7.2",
         "systeminformation": "^4.26.10"
     },
-    "license": "GPL-3.0-only",
+    "license": "AGPL-3.0-only",
     "devDependencies": {
         "@types/bson": "^4.0.2",
         "@types/fs-extra": "^9.0.1",
