@@ -2,16 +2,14 @@
 import path from 'path';
 import os from 'os';
 import fs from 'fs-extra';
-import TurndownService from 'turndown';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
 import { LocalProblemConfig } from 'hydrooj';
+import { convertHTML } from '@hydrooj/html2md';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
 import { PERM } from 'hydrooj/dist/model/builtin';
-
-const turndownService = new TurndownService();
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -28,19 +26,19 @@ class FpsProblemImportHandler extends Handler {
             if (p.description) {
                 content.push(
                     this.translate('problem.import.problem_description'),
-                    p.description.map((i) => turndownService.turndown(i)).join('\n'),
+                    p.description.map(convertHTML).join('\n'),
                 );
             }
             if (p.input) {
                 content.push(
                     this.translate('problem.import.input_format'),
-                    p.input.map((i) => turndownService.turndown(i)).join('\n'),
+                    p.input.map(convertHTML).join('\n'),
                 );
             }
             if (p.output) {
                 content.push(
                     this.translate('problem.import.output_format'),
-                    p.output.map((i) => turndownService.turndown(i)).join('\n'),
+                    p.output.map(convertHTML).join('\n'),
                 );
             }
             if (p.sample_input) {
@@ -60,7 +58,7 @@ class FpsProblemImportHandler extends Handler {
             if (p.hint) {
                 content.push(
                     this.translate('problem.import.hint'),
-                    p.hint.map((i) => turndownService.turndown(i)).join('\n'),
+                    p.hint.map(convertHTML).join('\n'),
                 );
             }
             const config: LocalProblemConfig = {

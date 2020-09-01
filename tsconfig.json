@@ -14,6 +14,8 @@
         { "path": "packages/hydrooj" },
         { "path": "packages/hydrojudge" },
         { "path": "packages/geoip" },
+        { "path": "packages/html2md" },
+        { "path": "packages/fps-importer" },
         { "path": "packages/login-with-github" },
         { "path": "packages/login-with-google" },
         { "path": "packages/login-with-osu" },
