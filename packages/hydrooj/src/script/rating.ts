@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { NumericDictionary } from 'lodash';
-import { ObjectID } from 'mongodb';
-import { Tdoc, Pdoc } from '../interface';
+import { ObjectID, FilterQuery } from 'mongodb';
+import { Tdoc, Pdoc, Udoc } from '../interface';
 import * as domain from '../model/domain';
 import * as contest from '../model/contest';
 import * as problem from '../model/problem';
@@ -108,10 +108,12 @@ export async function calcLevel(domainId: string, report: Function) {
     bulk = coll.initializeUnorderedBulkOp();
     for (let i = 0; i < levels.length; i++) {
         report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
-        bulk.find({
+        const query: FilterQuery<Udoc> = {
             domainId,
-            $and: [{ rank: { $lte: levels[i][1] } }, { rank: { $gt: levels[i + 1][1] } }],
-        }).update({ $set: { level: levels[i][0] } });
+            $and: [{ rank: { $lte: levels[i][1] } }],
+        };
+        if (i < levels.length - 1) query.$and.push({ rank: { $gt: levels[i + 1][1] } });
+        bulk.find(query).update({ $set: { level: levels[i][0] } });
     }
     const i = levels.length - 1;
     report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });

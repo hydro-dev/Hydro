@@ -220,6 +220,7 @@ Discussion node {1} already exists.: 讨论节点 {1} 已经存在。
 Discussion node {1} not found.: 讨论节点 {1} 不存在。
 Discussion Nodes: 讨论节点
 discussion_create: 创建讨论
+discussion_detail: 讨论详情
 discussion_edit: 编辑讨论
 discussion_main: 讨论
 discussion_node: 讨论
@@ -410,6 +411,7 @@ manage_dashboard: 控制面板
 manage_join_applications: 加域申请
 manage_module: 管理模块
 manage_setting: 系统设置
+manage_user_import: 导入用户
 manage: 管理
 Manage: 管理
 Manager: 管理
@@ -625,6 +627,9 @@ setting_domain: 域设置
 setting_info_domain: 个人信息
 setting_info: 个人信息
 setting_privacy: 隐私
+setting_server: 服务器设置
+setting_session: Session 设置
+setting_smtp: SMTP 设置
 setting_usage: 使用偏好
 Settings: 设置
 Share: 分享

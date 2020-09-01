@@ -6,6 +6,7 @@ contest_edit: Contest Edit
 contest_main: Contest
 contest_scoreboard: Scoreboard
 discussion_create: Create Discussion
+discussion_detail: Discussion Detail
 discussion_edit: Discussion Edit
 discussion_main: Discussion
 discussion_node: Discussion
@@ -38,6 +39,7 @@ main: Home
 manage_module: Module Management
 manage_script: Scripts
 manage_setting: System Settings
+manage_user_import: Import Users
 manage: System Manage
 no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
 page.problem_detail.sidebar.show_category: Click to Show
@@ -80,6 +82,9 @@ setting_info_domain: Personal Info
 setting_info: Personal Info
 setting_preference: Preference
 setting_privacy: Privacy
+setting_server: Server Settings
+setting_session: Session Settings
+setting_smtp: SMTP Settings
 setting_usage: Usage Preference
 timeago_locale: en_US
 training_create: Training Create
