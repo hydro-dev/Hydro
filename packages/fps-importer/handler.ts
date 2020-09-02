@@ -24,40 +24,45 @@ class FpsProblemImportHandler extends Handler {
             const content = [];
             if (p.description) {
                 content.push(
-                    this.translate('problem.import.problem_description'),
-                    p.description.join('\n'),
+                    `<h2>${this.translate('Description')}</h2>`,
+                    ...p.description,
                 );
             }
             if (p.input) {
                 content.push(
-                    this.translate('problem.import.input_format'),
-                    p.input.join('\n'),
+                    `<h2>${this.translate('Input Format')}</h2>`,
+                    ...p.input,
                 );
             }
             if (p.output) {
                 content.push(
-                    this.translate('problem.import.output_format'),
-                    p.output.join('\n'),
+                    `<h2>${this.translate('Output Format')}</h2>`,
+                    ...p.output,
                 );
             }
             if (p.sample_input) {
-                content.push(
-                    this.translate('problem.import.sample_input'),
-                    // eslint-disable-next-line prefer-template
-                    p.sample_input.map((i: string) => ('```\n' + i + '\n```')).join('\n'),
-                );
-            }
-            if (p.sample_output) {
-                content.push(
-                    this.translate('problem.import.sample_output'),
-                    // eslint-disable-next-line prefer-template
-                    p.sample_output.map((i: string) => ('```\n' + i + '\n```')).join('\n'),
-                );
+                if (p.sample_input.length === 1) {
+                    content.push(
+                        `<h2>${this.translate('Sample Input')}</h2>`,
+                        `<pre><code>${p.sample_input[0]}</code></pre>`,
+                        `<h2>${this.translate('Sample Output')}</h2>`,
+                        `<pre><code>${p.sample_output[0]}</code></pre>`,
+                    );
+                } else {
+                    for (let i = 0; i < p.sample_input.length; i++) {
+                        content.push(
+                            `<h2>${this.translate('Sample Input')}${i + 1}</h2>`,
+                            `<pre><code>${p.sample_input[i]}</code></pre>`,
+                            `<h2>${this.translate('Sample Output')}${i + 1}</h2>`,
+                            `<pre><code>${p.sample_output[i]}</code></pre>`,
+                        );
+                    }
+                }
             }
             if (p.hint) {
                 content.push(
-                    this.translate('problem.import.hint'),
-                    p.hint.join('\n'),
+                    `<h2>${this.translate('Hint')}</h2>`,
+                    ...p.hint,
                 );
             }
             const config: LocalProblemConfig = {
