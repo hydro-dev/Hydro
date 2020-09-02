@@ -5,7 +5,6 @@ import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
 import { LocalProblemConfig } from 'hydrooj';
-import { convertHTML } from '@hydrooj/html2md';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
@@ -26,19 +25,19 @@ class FpsProblemImportHandler extends Handler {
             if (p.description) {
                 content.push(
                     this.translate('problem.import.problem_description'),
-                    p.description.map(convertHTML).join('\n'),
+                    p.description.join('\n'),
                 );
             }
             if (p.input) {
                 content.push(
                     this.translate('problem.import.input_format'),
-                    p.input.map(convertHTML).join('\n'),
+                    p.input.join('\n'),
                 );
             }
             if (p.output) {
                 content.push(
                     this.translate('problem.import.output_format'),
-                    p.output.map(convertHTML).join('\n'),
+                    p.output.join('\n'),
                 );
             }
             if (p.sample_input) {
@@ -58,7 +57,7 @@ class FpsProblemImportHandler extends Handler {
             if (p.hint) {
                 content.push(
                     this.translate('problem.import.hint'),
-                    p.hint.map(convertHTML).join('\n'),
+                    p.hint.join('\n'),
                 );
             }
             const config: LocalProblemConfig = {
@@ -79,6 +78,7 @@ class FpsProblemImportHandler extends Handler {
                 });
             });
             await problem.setTestdata(domainId, pid, file);
+            await problem.edit(domainId, pid, { html: true });
             await fs.unlink(file);
         }
         this.response.body = { count: result.fps.item.length };

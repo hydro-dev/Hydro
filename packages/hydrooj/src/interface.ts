@@ -141,11 +141,12 @@ export interface Pdoc {
     hidden: boolean,
     config: ProblemConfig,
     acMsg?: string,
+    html?: boolean,
 
     difficulty?: number,
     difficultyAlgo?: number,
     difficultyAdmin?: number,
-    difficultySetting?: number,
+    difficultySetting?: any,
 }
 
 export type Pdict = NumericDictionary<Pdoc>;

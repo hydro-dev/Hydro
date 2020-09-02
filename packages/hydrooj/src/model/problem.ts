@@ -1,5 +1,6 @@
-import { ObjectID } from 'mongodb';
+import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary } from 'lodash';
+import { safeLoad } from 'js-yaml';
 import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
@@ -29,6 +30,7 @@ export const pdocHidden: Pdoc = {
     owner: 1,
     title: '*',
     content: '',
+    html: false,
     nSubmit: 0,
     nAccept: 0,
     difficulty: 0,
@@ -75,11 +77,11 @@ export function getMulti(domainId: string, query: object) {
     return document.getMulti(domainId, document.TYPE_PROBLEM, query);
 }
 
-export function getMultiStatus(domainId: string, query: object) {
+export function getMultiStatus(domainId: string, query: FilterQuery<Pdoc>) {
     return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
 }
 
-export function edit(domainId: string, _id: number, $set: any): Promise<Pdoc> {
+export function edit(domainId: string, _id: number, $set: Partial<Pdoc>): Promise<Pdoc> {
     return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
 }
 
@@ -158,7 +160,7 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
     const config = await testdataConfig.readConfig(filePath);
     const id = await file.add(filePath, 'data.zip', 1);
     if (pdoc.data instanceof ObjectID) file.del(pdoc.data);
-    return await edit(domainId, _id, { data: id, config });
+    return await edit(domainId, _id, { data: id, config: safeLoad(config) as any });
 }
 
 global.Hydro.model.problem = {

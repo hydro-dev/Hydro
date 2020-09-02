@@ -1,5 +1,5 @@
 import { isSafeInteger, flatten } from 'lodash';
-import yaml from 'js-yaml';
+import yaml, { safeLoad } from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
@@ -360,7 +360,7 @@ class ProblemSettingsHandler extends ProblemManageHandler {
     async postConfig(domainId: string, pid: string | number, cfg: string) {
         const pdoc = await problem.get(domainId, pid);
         // TODO validate
-        const config = yaml.safeLoad(cfg);
+        const config = yaml.safeLoad(cfg) as any;
         await problem.edit(domainId, pdoc.docId, { config });
         this.back();
     }
