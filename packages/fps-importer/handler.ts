@@ -85,16 +85,16 @@ class FpsProblemImportHandler extends Handler {
                 testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[i]));
                 testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_output[i]));
             }
-            const file = path.resolve(os.tmpdir(), 'hydro', `${Math.random()}.zip`);
+            const f = path.resolve(os.tmpdir(), 'hydro', `${Math.random()}.zip`);
             await new Promise((resolve, reject) => {
-                testdata.writeZip(file, (err) => {
+                testdata.writeZip(f, (err) => {
                     if (err) reject(err);
                     resolve();
                 });
             });
-            await problem.setTestdata(domainId, pid, file);
+            await problem.setTestdata(domainId, pid, f);
             await problem.edit(domainId, pid, { html: true });
-            await fs.unlink(file);
+            await fs.unlink(f);
         }
         this.response.body = { count: result.fps.item.length };
         this.response.redirect = this.url('problem_main');
