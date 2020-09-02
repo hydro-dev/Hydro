@@ -1,5 +1,5 @@
 import { isSafeInteger, flatten } from 'lodash';
-import yaml, { safeLoad } from 'js-yaml';
+import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
