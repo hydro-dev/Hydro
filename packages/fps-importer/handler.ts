@@ -4,18 +4,28 @@ import os from 'os';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
+import { ObjectID } from 'mongodb';
 import { LocalProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
+import { streamToBuffer } from 'hydrooj/dist/utils';
+import * as file from 'hydrooj/dist/model/file';
 import { PERM } from 'hydrooj/dist/model/builtin';
 
 class FpsProblemImportHandler extends Handler {
-    async get() {
-        this.response.template = 'problem_import_fps.html';
+    @param('ufid', Types.ObjectID, true)
+    async get(domainId: string, ufid?: ObjectID) {
+        if (ufid) {
+            const stream = await file.get(ufid);
+            const buf = await streamToBuffer(stream);
+            // @ts-ignore
+            await this.post({ domainId, input: buf.toString() });
+            await file.del(ufid);
+        } else this.response.template = 'problem_import_fps.html';
     }
 
-    @param('input', Types.String)
+    @param('input', Types.String, true)
     async post(domainId: string, input: string) {
         const result = await xml2js.parseStringPromise(input);
         const problem = global.Hydro.model.problem;

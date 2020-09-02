@@ -39,7 +39,8 @@ class FileUploadHandler extends Handler {
     }
 
     @param('title', Types.String)
-    async post(domainId: string, title: string) {
+    @param('redirect', Types.String, true)
+    async post(domainId: string, title: string, redirect?: string) {
         if (!this.request.files.file) throw new BadRequestError();
         const quota = await this.getQuota();
         const lfdoc = await fs.promises.stat(this.request.files.file.path);
@@ -53,6 +54,11 @@ class FileUploadHandler extends Handler {
         }
         const fdoc = await file.getMeta(ufid);
         this.response.template = 'fs_upload.html';
+        if (redirect) {
+            this.response.redirect = redirect.includes('?')
+                ? `${redirect}&ufid=${ufid}`
+                : `${redirect}?ufid=${ufid}`;
+        }
         this.response.body = {
             fdoc, ufid, usage: udoc.usage, quota,
         };

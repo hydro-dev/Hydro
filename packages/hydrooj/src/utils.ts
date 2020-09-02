@@ -170,3 +170,12 @@ export function isClass(obj: any, strict = false) {
     }
     return false;
 }
+
+export function streamToBuffer(stream): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const buffers = [];
+        stream.on('error', reject);
+        stream.on('data', (data) => buffers.push(data));
+        stream.on('end', () => resolve(Buffer.concat(buffers)));
+    });
+}
