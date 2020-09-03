@@ -4,7 +4,7 @@ import os from 'os';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
-import { ObjectID } from 'mongodb';
+import { ObjectID } from 'bson';
 import { LocalProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
@@ -25,7 +25,7 @@ class FpsProblemImportHandler extends Handler {
         } else this.response.template = 'problem_import_fps.html';
     }
 
-    @param('input', Types.String, true)
+    @param('input', Types.String)
     async post(domainId: string, input: string) {
         const result = await xml2js.parseStringPromise(input);
         const problem = global.Hydro.model.problem;
@@ -80,10 +80,17 @@ class FpsProblemImportHandler extends Handler {
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
             const pid = await problem.add(domainId, null, p.title.join(' '), content.join('\n'), this.user._id, p.source, []);
-            testdata.addFile('config.yaml', Buffer.from(`time:${config.time}\nmemory:${config.memory}`));
-            for (let i = 0; i < p.test_input.length; i++) {
-                testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[i]));
-                testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_output[i]));
+            testdata.addFile('config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
+            if (p.test_output) {
+                for (let i = 0; i < p.test_input.length; i++) {
+                    testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[i]));
+                    testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_output[i]));
+                }
+            } else {
+                for (let i = 0; i < p.test_input.length / 2; i++) {
+                    testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[2 * i]));
+                    testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_input[2 * i + 1]));
+                }
             }
             const f = path.resolve(os.tmpdir(), 'hydro', `${Math.random()}.zip`);
             await new Promise((resolve, reject) => {

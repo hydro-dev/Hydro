@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/login-with-google",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",
@@ -13,8 +13,10 @@
         "@types/superagent": "^4.1.8",
         "@types/superagent-proxy": "^2.0.0"
     },
+    "peerDependencies": {
+        "hydrooj": "^2.12.1"
+    },
     "dependencies": {
-        "hydrooj": "^2.12.1",
         "superagent": "^6.0.0",
         "superagent-proxy": "^2.0.0"
     }

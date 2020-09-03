@@ -21,11 +21,11 @@
             </button>
           </div></div>
         </form>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" action="{{ url('file_upload') }}">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <p>{{ _('Upload file') }}:
-              <input type="text" name="title" value="FPS_IMPORT">
-              <input type="text" name="redirect" value="{{ url('problem_import_fps') }}">
+              <input type="hidden" name="title" value="FPS_IMPORT">
+              <input type="hidden" name="redirect" value="{{ url('problem_import_fps') }}">
               <input type="file" name="file">
               <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
             </p>

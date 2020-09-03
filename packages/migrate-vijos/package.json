@@ -13,8 +13,10 @@
         "@types/js-yaml": "^3.12.5",
         "@types/mongodb": "^3.5.26"
     },
+    "peerDependencies": {
+        "hydrooj": "^2.12.3"
+    },
     "dependencies": {
-        "hydrooj": "^2.12.3",
         "js-yaml": "^3.14.0",
         "mongodb": "^3.6.0"
     }
