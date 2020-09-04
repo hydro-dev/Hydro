@@ -15,7 +15,7 @@
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "systeminformation": "^4.26.10"
+        "systeminformation": "^4.27.3"
     },
     "license": "AGPL-3.0-only",
     "devDependencies": {

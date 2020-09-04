@@ -14,8 +14,9 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     plugins: ['@typescript-eslint'],
     rules: {
-        camelcase: 'off',
+        '@typescript-eslint/no-dupe-class-members': 'error',
         '@typescript-eslint/no-unused-vars': 'error',
+        camelcase: 'off',
         'global-require': 'off',
         'guard-for-in': 'off',
         'implicit-arrow-linebreak': 'off',
@@ -28,6 +29,7 @@ module.exports = {
         'max-len': ['warn', 150],
         'no-bitwise': 'off',
         'no-console': 'off',
+        'no-dupe-class-members': 'off',
         'no-extend-native': 'off',
         'no-inner-declarations': 'off',
         'no-multi-assign': 'off',

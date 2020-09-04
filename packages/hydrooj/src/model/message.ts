@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import * as user from './user';
 import { Mdoc } from '../interface';
 import * as db from '../service/db';
@@ -35,7 +35,7 @@ export async function getByUser(uid: number): Promise<Mdoc[]> {
     return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', 1).toArray();
 }
 
-export async function getMany(query: any, sort: any, page: number, limit: number): Promise<Mdoc[]> {
+export async function getMany(query: FilterQuery<Mdoc>, sort: any, page: number, limit: number): Promise<Mdoc[]> {
     return await coll.find(query).sort(sort)
         .skip((page - 1) * limit).limit(limit)
         .toArray();
@@ -54,7 +54,7 @@ export async function del(_id: ObjectID) {
     return await coll.deleteOne({ _id });
 }
 
-export function count(query: any) {
+export function count(query: FilterQuery<Mdoc> = {}) {
     return coll.find(query).count();
 }
 

@@ -73,7 +73,7 @@ export async function get(
     return pdoc;
 }
 
-export function getMulti(domainId: string, query: object) {
+export function getMulti(domainId: string, query: FilterQuery<Pdoc>) {
     return document.getMulti(domainId, document.TYPE_PROBLEM, query);
 }
 
@@ -89,11 +89,11 @@ export function inc(domainId: string, _id: number, field: string, n: number): Pr
     return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
 
-export function count(domainId: string, query: any) {
+export function count(domainId: string, query: FilterQuery<Pdoc>) {
     return document.count(domainId, document.TYPE_PROBLEM, query);
 }
 
-export async function random(domainId: string, query: any): Promise<string | null> {
+export async function random(domainId: string, query: FilterQuery<Pdoc>): Promise<string | null> {
     const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
     const pcount = await cursor.count();
     if (pcount) {

@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import * as problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
@@ -57,11 +57,11 @@ export function del(domainId: string, did: ObjectID) {
     ]);
 }
 
-export function count(domainId: string, query: any) {
+export function count(domainId: string, query: FilterQuery<Ddoc>) {
     return document.count(domainId, document.TYPE_DISCUSSION, query);
 }
 
-export function getMulti(domainId: string, query: any = {}) {
+export function getMulti(domainId: string, query: FilterQuery<Ddoc> = {}) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
         .sort({ pin: -1, updateAt: -1 });
 }
@@ -69,15 +69,15 @@ export function getMulti(domainId: string, query: any = {}) {
 export async function addReply(
     domainId: string, did: ObjectID, owner: number,
     content: string, ip: string,
-): Promise<Drdoc> {
-    const [drdoc] = await Promise.all([
+): Promise<ObjectID> {
+    const [drid] = await Promise.all([
         document.add(
             domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
             null, document.TYPE_DISCUSSION, did, { ip },
         ),
         document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: new Date() }),
     ]);
-    return drdoc;
+    return drid;
 }
 
 export function getReply(domainId: string, drid: ObjectID): Promise<Drdoc | null> {

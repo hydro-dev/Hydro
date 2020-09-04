@@ -177,6 +177,8 @@ class TrainingCreateHandler extends Handler {
         const pids = training.getPids({ dag });
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti(domainId, {
+            // TODO
+            // @ts-ignore
             $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }],
         }).sort('_id', 1).toArray();
         const existPids = pdocs.map((pdoc) => pdoc.docId);
@@ -238,6 +240,8 @@ class TrainingEditHandler extends Handler {
         const pdocs = await problem.getMulti(domainId, {
             $or: [
                 { docId: { $in: pids } },
+                // TODO
+                // @ts-ignore
                 { pid: { $in: pids } },
             ],
         }).sort('_id', 1).toArray();

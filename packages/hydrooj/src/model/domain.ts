@@ -51,7 +51,7 @@ export function getMulti(query: any = {}) {
     return coll.find(query);
 }
 
-export function edit(domainId: string, $set: any) {
+export function edit(domainId: string, $set: Partial<DomainDoc>) {
     return coll.updateOne({ _id: domainId }, { $set });
 }
 

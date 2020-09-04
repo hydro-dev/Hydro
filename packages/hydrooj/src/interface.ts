@@ -274,7 +274,7 @@ export interface Ddoc {
     docType: number,
     docId: ObjectID,
     parentType: number,
-    parentId: ObjectID | number,
+    parentId: ObjectID | number | string,
     owner: number,
     title: string,
     content: string,
