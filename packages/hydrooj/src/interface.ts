@@ -31,7 +31,7 @@ export interface Udoc extends Dictionary<any> {
 }
 
 export interface User extends Dictionary<any> {
-    udoc: () => any,
+    udoc: () => Udoc,
     dudoc: () => any,
     _id: number,
     mail: string,
@@ -211,6 +211,13 @@ export interface ScoreboardNode {
 
 export type PenaltyRules = Dictionary<number>;
 
+export interface TrainingNode {
+    _id: number,
+    title: string,
+    requireNids: number[],
+    pids: number[],
+}
+
 export interface Tdoc {
     _id: ObjectID,
     domainId: string,
@@ -230,7 +237,13 @@ export interface Tdoc {
     penaltyRules?: PenaltyRules,
 
     // For training
-    dag: any
+    description?: string,
+    dag?: TrainingNode[],
+}
+
+export interface TrainingDoc extends Tdoc {
+    description: string,
+    dag: TrainingNode[],
 }
 
 export interface DomainDoc extends Dictionary<any> {
@@ -365,7 +378,7 @@ export interface JudgeResultBody {
     stderr?: string,
 }
 
-export type PathComponent = [string, string, any?, boolean?];
+export type PathComponent = [string, string, Dictionary<any>?, boolean?];
 
 export interface Model {
     blacklist: typeof import('./model/blacklist'),

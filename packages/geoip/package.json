@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.1.11",
+    "version": "1.1.12",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",

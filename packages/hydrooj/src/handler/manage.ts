@@ -51,7 +51,7 @@ class SystemMainHandler extends SystemHandler {
 }
 
 class SystemCheckConnHandler extends ConnectionHandler {
-    id: any;
+    id: string;
 
     async prepare() {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);

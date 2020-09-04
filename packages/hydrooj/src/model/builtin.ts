@@ -533,6 +533,11 @@ export const LANG_HIGHLIGHT_ID = {
     rb: 'ruby',
 };
 
+export function registerLanguage(id: string, display: string, highlight: string) {
+    LANG_TEXTS[id] = display;
+    LANG_HIGHLIGHT_ID[id] = highlight;
+}
+
 export const STATUS = {
     STATUS_WAITING: 0,
     STATUS_ACCEPTED: 1,
@@ -618,6 +623,7 @@ export const CONSTANT = {
 
 global.Hydro.model.builtin = {
     Permission,
+    registerLanguage,
     PERM,
     PERMS,
     PERMS_BY_FAMILY,

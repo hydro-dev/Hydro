@@ -14,6 +14,7 @@ import paginate from '../lib/paginate';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import { DomainDoc } from '../interface';
 
 class DomainRankHandler extends Handler {
     @param('page', Types.PositiveInt, true)
@@ -40,7 +41,7 @@ class DomainRankHandler extends Handler {
 }
 
 class ManageHandler extends Handler {
-    domain: any;
+    domain: DomainDoc;
 
     async prepare({ domainId }) {
         this.checkPerm(PERM.PERM_EDIT_DOMAIN);

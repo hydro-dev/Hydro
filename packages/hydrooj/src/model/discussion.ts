@@ -183,7 +183,7 @@ export async function getVnode(domainId: string, type: number, id: string) {
         };
     }
     if (type === document.TYPE_TRAINING) {
-        const tdoc = await training.get(domainId, id);
+        const tdoc = await training.get(domainId, new ObjectID(id));
         return { ...tdoc, type, id };
     }
     if (type === document.TYPE_HOMEWORK) {

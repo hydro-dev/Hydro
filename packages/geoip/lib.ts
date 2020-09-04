@@ -14,7 +14,7 @@ export interface Result {
     display: string
 }
 
-export function lookup(ip: string, locale: string): any {
+export function lookup(ip: string, locale: string) {
     const res: any = reader.get(ip);
     if (!res) return {};
     const ret: Result = { display: '' };

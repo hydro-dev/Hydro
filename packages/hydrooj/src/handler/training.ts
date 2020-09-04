@@ -102,8 +102,8 @@ class TrainingDetailHandler extends Handler {
             problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)),
         ]);
         const psdict = await problem.getListStatus(domainId, this.user._id, pids);
-        const donePids = new Set();
-        const progPids = new Set();
+        const donePids = new Set<number>();
+        const progPids = new Set<number>();
         for (const pid in psdict) {
             const psdoc = psdict[pid];
             if (psdoc.status) {
@@ -114,7 +114,7 @@ class TrainingDetailHandler extends Handler {
         }
         const nsdict = {};
         const ndict = {};
-        const doneNids = new Set();
+        const doneNids = new Set<number>();
         for (const node of tdoc.dag) {
             ndict[node._id] = node;
             const totalCount = node.pids.length;
@@ -174,13 +174,9 @@ class TrainingCreateHandler extends Handler {
         _dag: string, description: string,
     ) {
         const dag = await _parseDagJson(domainId, _dag);
-        const pids = training.getPids({ dag });
+        const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
-        const pdocs = await problem.getMulti(domainId, {
-            // TODO
-            // @ts-ignore
-            $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }],
-        }).sort('_id', 1).toArray();
+        const pdocs = await problem.getMulti(domainId, { docId: { $in: pids } }).sort('_id', 1).toArray();
         const existPids = pdocs.map((pdoc) => pdoc.docId);
         const existPnames = pdocs.map((pdoc) => pdoc.pid);
         if (pids.length !== existPids.length) {
@@ -235,7 +231,7 @@ class TrainingEditHandler extends Handler {
         _dag: string, description: string,
     ) {
         const dag = await _parseDagJson(domainId, _dag);
-        const pids = training.getPids({ dag });
+        const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti(domainId, {
             $or: [

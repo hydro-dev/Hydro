@@ -1,6 +1,8 @@
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { flatten } from 'lodash';
 import * as document from './document';
 import { TrainingNotFoundError, TrainingAlreadyEnrollError } from '../error';
+import { TrainingDoc, TrainingNode } from '../interface';
 
 export function getStatus(domainId: string, tid: ObjectID, uid: number) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
@@ -34,7 +36,7 @@ export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: an
 
 export function add(
     domainId: string, title: string, content: string,
-    owner: number, dag = [], description = '',
+    owner: number, dag: TrainingNode[] = [], description = '',
 ) {
     return document.add(domainId, content, owner, document.TYPE_TRAINING, null, null, null, {
         dag,
@@ -44,24 +46,20 @@ export function add(
     });
 }
 
-export function edit(domainId: string, tid: ObjectID, $set) {
+export function edit(domainId: string, tid: ObjectID, $set: Partial<TrainingDoc>) {
     return document.set(domainId, document.TYPE_TRAINING, tid, $set);
 }
 
-export function getPids(tdoc): number[] {
-    const pids: Set<number> = new Set();
-    for (const node of tdoc.dag) {
-        for (const pid of node.pids) pids.add(pid);
-    }
-    return Array.from(pids);
+export function getPids(dag: TrainingNode[]) {
+    return Array.from(new Set(flatten(dag.map((node) => node.pids))));
 }
 
-export function isDone(node, doneNids, donePids) {
+export function isDone(node: TrainingNode, doneNids: Set<number> | number[], donePids: Set<number> | number[]) {
     return (Set.isSuperset(new Set(doneNids), new Set(node.requireNids))
         && Set.isSuperset(new Set(donePids), new Set(node.pids)));
 }
 
-export function isProgress(node, doneNids, donePids, progPids) {
+export function isProgress(node: TrainingNode, doneNids: Set<number> | number[], donePids: Set<number> | number[], progPids: Set<number> | number[]) {
     return (Set.isSuperset(new Set(doneNids), new Set(node.requireNids))
         && !Set.isSuperset(new Set(donePids), new Set(node.pids))
         && Set.intersection(
@@ -70,7 +68,7 @@ export function isProgress(node, doneNids, donePids, progPids) {
         ).size);
 }
 
-export function isOpen(node, doneNids, donePids, progPids) {
+export function isOpen(node: TrainingNode, doneNids: Set<number> | number[], donePids: Set<number> | number[], progPids: Set<number> | number[]) {
     return (Set.isSuperset(new Set(doneNids), new Set(node.requireNids))
         && !Set.isSuperset(new Set(donePids), new Set(node.pids))
         && !Set.intersection(
@@ -79,13 +77,14 @@ export function isOpen(node, doneNids, donePids, progPids) {
         ).size);
 }
 
-export const isInvalid = (node, doneNids) =>
+export const isInvalid = (node: TrainingNode, doneNids: Set<number> | number[]) =>
     !Set.isSuperset(new Set(doneNids), new Set(node.requireNids));
 
-export const count = (domainId: string, query: any) =>
-    document.count(domainId, document.TYPE_TRAINING, query);
+export async function count(domainId: string, query: FilterQuery<TrainingDoc>) {
+    return await document.count(domainId, document.TYPE_TRAINING, query);
+}
 
-export async function get(domainId, tid) {
+export async function get(domainId: string, tid: ObjectID) {
     const tdoc = await document.get(domainId, document.TYPE_TRAINING, tid);
     if (!tdoc) throw new TrainingNotFoundError(tid);
     for (const i in tdoc.dag) {
@@ -107,7 +106,7 @@ export async function getList(domainId: string, tids: ObjectID[]) {
     return r;
 }
 
-export const getMulti = (domainId: string, query: any = {}) =>
+export const getMulti = (domainId: string, query: FilterQuery<TrainingDoc> = {}) =>
     document.getMulti(domainId, document.TYPE_TRAINING, query).sort('_id', 1);
 
 global.Hydro.model.training = {
