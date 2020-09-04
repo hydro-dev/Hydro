@@ -19,8 +19,21 @@ class FpsProblemImportHandler extends Handler {
         if (ufid) {
             const stream = await file.get(ufid);
             const buf = await streamToBuffer(stream);
+            let input = buf.toString();
+            try {
+                await xml2js.parseStringPromise(input);
+            } catch (e) {
+                const zip = new AdmZip(buf);
+                const entries = zip.getEntries();
+                for (const entry of entries) {
+                    if (entry.entryName.endsWith('.xml')) {
+                        input = entry.getData().toString();
+                        break;
+                    }
+                }
+            }
             // @ts-ignore
-            await this.post({ domainId, input: buf.toString() });
+            await this.post({ domainId, input });
             await file.del(ufid);
         } else this.response.template = 'problem_import_fps.html';
     }
