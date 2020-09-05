@@ -1,4 +1,5 @@
 import 'hydrooj';
+import 'hydrooj/src/lib/i18n';
 import fs from 'fs';
 import path from 'path';
 import { Reader } from 'maxmind';
@@ -14,9 +15,9 @@ export interface Result {
     display: string
 }
 
-export function lookup(ip: string, locale: string) {
+export function lookup(ip: string, locale: string): Result {
     const res: any = reader.get(ip);
-    if (!res) return {};
+    if (!res) return { display: 'Unknown address'.translate(locale) };
     const ret: Result = { display: '' };
     if (res.location) ret.location = res.location;
     if (res.continent) ret.continent = res.continent.names[locale] || res.continent.names.en;

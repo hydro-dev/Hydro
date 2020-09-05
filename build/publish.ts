@@ -35,7 +35,7 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
     await Promise.all(folders.map(async (name) => {
         let meta: PackageJson;
         try {
-            meta = require(`../${name}/package`);
+            meta = require(`../${name}/package.json`);
             if (!meta.private) {
                 const version = await latest(meta.name);
                 if (gt(meta.version, version)) {
