@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/migrate-vijos",
-    "version": "1.3.6",
+    "version": "1.3.7",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",
@@ -14,7 +14,7 @@
         "@types/mongodb": "^3.5.27"
     },
     "peerDependencies": {
-        "hydrooj": "^2.12.3"
+        "hydrooj": "^2.13.0"
     },
     "dependencies": {
         "js-yaml": "^3.14.0",

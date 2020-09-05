@@ -24,9 +24,13 @@ if (!global.Hydro) {
         script: {},
         // @ts-ignore
         lib: {},
+        // @ts-ignore
         ui: {
             manifest: {},
-            nav: [],
+            nodes: {
+                nav: [],
+                problem_add: [],
+            },
             template: {},
         },
         // @ts-ignore

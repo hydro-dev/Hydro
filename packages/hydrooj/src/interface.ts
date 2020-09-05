@@ -101,10 +101,9 @@ export interface SubtaskConfig {
 export interface LocalProblemConfig {
     type?: LocalProblemType,
     score?: number,
-    /** ms */
     time?: string,
-    /** Megabytes */
     memory?: string,
+    filename?: string,
     checker_type?: string,
     checker?: string,
     interactor?: string,
@@ -415,13 +414,11 @@ export interface Lib {
     download: typeof import('./lib/download'),
     'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
-    'import.syzoj': typeof import('./lib/import.syzoj').syzoj,
     jwt: typeof import('./lib/jwt'),
     logger: typeof import('./lib/logger'),
     mail: typeof import('./lib/mail'),
     md5: typeof import('./lib/md5'),
     misc: typeof import('./lib/misc'),
-    nav: typeof import('./lib/nav'),
     paginate: typeof import('./lib/paginate'),
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),
@@ -434,6 +431,17 @@ export interface Lib {
     [key: string]: any
 }
 
+export interface UI {
+    manifest: Dictionary<string>,
+    template: Dictionary<string>,
+    nodes: {
+        nav: any[],
+        problem_add: any[],
+    },
+    Nav: typeof import('./lib/ui').Nav,
+    ProblemAdd: typeof import('./lib/ui').ProblemAdd,
+}
+
 declare global {
     namespace NodeJS {
         interface Global {
@@ -444,11 +452,7 @@ declare global {
                 service: Service,
                 lib: Lib,
                 stat: any,
-                ui: {
-                    manifest: Dict<string>,
-                    template: Dict<string>,
-                    nav: any,
-                },
+                ui: UI,
                 error: typeof import('./error'),
                 locales: Dict<Dict<string>>,
                 postInit: Array<() => Promise<any>>,

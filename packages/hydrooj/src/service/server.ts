@@ -807,6 +807,17 @@ export async function start() {
             skip: (req, res) => res.hasHeader('nolog'),
         }));
     }
+    app.use(async (ctx, next) => {
+        const xff = await system.get('server.xff');
+        const ip = xff ? ctx.request.headers[xff] : ctx.request.ip;
+        try {
+            await opcount.inc('global', ip, 10, 100);
+        } catch (e) {
+            ctx.status = 429;
+            return null;
+        }
+        return await next();
+    });
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.port || port);
     console.log('Server listening at: %s', argv.port || port);

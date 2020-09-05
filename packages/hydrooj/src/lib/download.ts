@@ -1,4 +1,4 @@
-import superagent from 'superagent';
+import superagent, { SuperAgentRequest } from 'superagent';
 import fs from 'fs';
 
 async function _download(url: string, path: string, retry: number) {
@@ -11,6 +11,7 @@ async function _download(url: string, path: string, retry: number) {
     return path;
 }
 
+function download(url: string): SuperAgentRequest
 function download(url: string, path?: string, retry = 3) {
     if (path) return _download(url, path, retry);
     return superagent.get(url).retry(retry);

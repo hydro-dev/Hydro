@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/login-with-qq",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",
@@ -10,7 +10,7 @@
         "build": "tsc"
     },
     "peerDependencies": {
-        "hydrooj": "^2.12.1"
+        "hydrooj": "^2.12.1||^2.13.0"
     },
     "dependencies": {
         "ws": "^7.3.1"

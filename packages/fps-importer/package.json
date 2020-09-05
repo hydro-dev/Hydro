@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/fps-importer",
-    "version": "1.0.8",
+    "version": "1.1.0",
     "description": "Import FPS problems",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -16,7 +16,7 @@
         "bson": "^4.1.0"
     },
     "peerDependencies": {
-        "hydrooj": "^2.12.22"
+        "hydrooj": "^2.13.0"
     },
     "scripts": {
         "build": "tsc",

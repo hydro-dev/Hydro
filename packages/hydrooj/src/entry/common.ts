@@ -8,7 +8,7 @@ import { argv } from 'yargs';
 export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
     'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
-    'validator', 'nav', 'sysinfo', 'testdata.convert.ini', 'testdataConfig',
+    'validator', 'ui', 'sysinfo', 'testdata.convert.ini', 'testdataConfig',
     'logger',
 ];
 
@@ -21,7 +21,7 @@ export const builtinModel = [
 
 export const builtinHandler = [
     'home', 'problem', 'record', 'judge', 'user',
-    'contest', 'training', 'discussion', 'manage', 'import',
+    'contest', 'training', 'discussion', 'manage', 'import.syzoj',
     'misc', 'homework', 'domain',
 ];
 

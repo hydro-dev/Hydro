@@ -1,4 +1,6 @@
 jest.mock('hydrooj/src/loader');
+import 'hydrooj';
+import 'hydrooj/src/lib/i18n';
 import * as lib from '@hydrooj/geoip/lib';
 
 describe('geoip', () => {
