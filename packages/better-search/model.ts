@@ -12,12 +12,12 @@ declare module 'hydrooj' {
 bus.on('document/add', async (doc) => {
     if (doc.type !== document.TYPE_PROBLEM) return;
     const pdoc = doc as Pdoc;
-    const segments = nodejieba.cut(pdoc.title);
+    const segments = nodejieba.cutForSearch(pdoc.title);
     pdoc.search = segments.join(' ');
 });
 
 bus.on('document/set', async (domainId, docType, docId, $set) => {
     if (docType !== document.TYPE_PROBLEM || !$set.title) return;
-    const segments = nodejieba.cut($set.title);
+    const segments = nodejieba.cutForSearch($set.title);
     $set.search = segments.join(' ');
 });

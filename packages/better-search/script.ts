@@ -6,7 +6,7 @@ export const description = 'Ensure index for peoblem search';
 
 export async function run() {
     await document.coll.find({ docType: document.TYPE_PROBLEM }).forEach(async (doc: Pdoc) => {
-        const segments = nodejieba.cut(doc.title);
+        const segments = nodejieba.cutForSearch(doc.title);
         await document.coll.updateOne({ _id: doc._id }, { $set: { search: segments.join(' ') } });
     });
 }
