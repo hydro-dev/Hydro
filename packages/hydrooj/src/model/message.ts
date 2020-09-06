@@ -22,7 +22,7 @@ export async function send(
     if (from !== to) {
         // ENHANCE domainId?
         const udoc = await user.getById('system', to);
-        bus.publish(`user_message-${to}`, { mdoc, udoc });
+        bus.boardcast('user/message', to, mdoc, udoc);
     }
     return mdoc;
 }
@@ -69,7 +69,7 @@ function ensureIndexes() {
     ]);
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.message = {
     FLAG_UNREAD,
     FLAG_ALERT,

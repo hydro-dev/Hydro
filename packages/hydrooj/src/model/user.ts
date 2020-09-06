@@ -5,9 +5,10 @@ import * as setting from './setting';
 import * as domain from './domain';
 import { BUILTIN_USERS, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
+import { User as _User, Udoc, Udict } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
-import { User as _User, Udoc, Udict } from '../interface';
+import * as bus from '../service/bus';
 
 const coll: Collection<Udoc> = db.collection('user');
 
@@ -248,7 +249,7 @@ function ensureIndexes() {
     ]);
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.user = {
     User,
     create,

@@ -5,6 +5,7 @@ import {
     lib, service, model,
     builtinLib, builtinModel,
 } from './common';
+import * as bus from '../service/bus';
 
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
@@ -51,13 +52,8 @@ export async function load() {
     require('../utils');
     require('../error');
     require('../options');
-    const bus = require('../service/bus');
     await new Promise((resolve) => {
-        const h = () => {
-            bus.unsubscribe(['system_database_connected'], h);
-            resolve();
-        };
-        bus.subscribe(['system_database_connected'], h);
+        bus.once('database/connect', resolve);
         require('../service/db');
     });
     for (const i of builtinLib) require(`../lib/${i}`);
@@ -66,6 +62,6 @@ export async function load() {
     await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     await model(pending, fail);
-    for (const postInit of global.Hydro.postInit) await postInit();
+    await bus.parallel('app/started');
     await cli();
 }

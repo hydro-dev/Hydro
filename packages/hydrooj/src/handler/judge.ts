@@ -62,7 +62,7 @@ export async function next(body: JudgeResultBody) {
     if (body.memory) $set.memory = body.memory;
     if (body.progress) $set.progress = body.progress;
     rdoc = await record.update(body.domainId, body.rid, $set, $push);
-    bus.publish('record_change', { rdoc, $set, $push });
+    bus.boardcast('record/change', rdoc, $set, $push);
 }
 
 export async function end(body: JudgeResultBody) {
@@ -87,7 +87,7 @@ export async function end(body: JudgeResultBody) {
     $set.judger = body.judger;
     rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
-    bus.publish('record_change', { rdoc }); // trigger a full update
+    bus.boardcast('record/change', rdoc); // trigger a full update
 }
 
 class JudgeHandler extends Handler {

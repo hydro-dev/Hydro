@@ -2,10 +2,11 @@ import { ObjectID, Collection } from 'mongodb';
 import * as fs from 'fs';
 import { Dictionary } from 'lodash';
 import { ForbiddenError, NotFoundError } from '../error';
+import { Ufdoc } from '../interface';
 import * as db from '../service/db';
+import * as bus from '../service/bus';
 import gridfs from '../service/gridfs';
 import hash from '../lib/hash.hydro';
-import { Ufdoc } from '../interface';
 
 const coll: Collection<Ufdoc> = db.collection('file');
 const collFile = db.collection('fs.files');
@@ -121,7 +122,7 @@ function ensureIndexes() {
     ]);
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.file = {
     add, get, del, getMeta, getWithSecret, getMulti, getMetaDict, url,
 };

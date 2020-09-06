@@ -310,7 +310,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
             record.get(domainId, rid),
             contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
         ]);
-        bus.publish('record_change', rdoc);
+        bus.boardcast('record/change', rdoc);
         if (!this.canShowRecord(this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });

@@ -1,6 +1,7 @@
 import { Collection } from 'mongodb';
 import { TokenDoc } from '../interface';
 import * as db from '../service/db';
+import * as bus from '../service/bus';
 
 export const coll: Collection<TokenDoc> = db.collection('token');
 
@@ -87,7 +88,7 @@ export function delByUid(uid: number) {
     return coll.deleteMany({ uid });
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.token = {
     coll,
 

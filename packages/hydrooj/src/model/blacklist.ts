@@ -1,5 +1,6 @@
 import { Collection } from 'mongodb';
 import * as db from '../service/db';
+import * as bus from '../service/bus';
 import { Bdoc } from '../interface';
 
 const coll: Collection<Bdoc> = db.collection('blacklist');
@@ -36,5 +37,5 @@ function ensureIndexes() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.blacklist = { add, get, del };

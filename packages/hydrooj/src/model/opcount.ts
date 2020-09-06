@@ -1,4 +1,5 @@
 import { OpcountExceededError } from '../error';
+import * as bus from '../service/bus';
 import * as db from '../service/db';
 
 const coll = db.collection('opcount');
@@ -23,5 +24,5 @@ function ensureIndexes() {
     return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.opcount = { inc };

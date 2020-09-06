@@ -1,4 +1,5 @@
 import { } from 'hydrooj';
+import * as bus from 'hydrooj/dist/service/bus';
 import WebSocket from 'ws';
 
 export async function postInit() {
@@ -32,4 +33,4 @@ export async function postInit() {
     });
 }
 
-global.Hydro.postInit.push(postInit);
+bus.subscribe(['app/started'], postInit);

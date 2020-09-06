@@ -3,6 +3,7 @@ import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
+import * as bus from '../service/bus';
 
 type SettingDict = Dictionary<_Setting>;
 
@@ -139,18 +140,16 @@ SystemSetting(
     Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
-global.Hydro.postInit.push(
-    async () => {
-        for (const setting of SYSTEM_SETTINGS) {
-            if (setting.value) {
-                const current = await global.Hydro.model.system.get(setting.key);
-                if (current === null || current === '') {
-                    await global.Hydro.model.system.set(setting.key, setting.value);
-                }
+bus.once('app/started', async () => {
+    for (const setting of SYSTEM_SETTINGS) {
+        if (setting.value) {
+            const current = await global.Hydro.model.system.get(setting.key);
+            if (current === null || current === '') {
+                await global.Hydro.model.system.set(setting.key, setting.value);
             }
         }
-    },
-);
+    }
+});
 
 global.Hydro.model.setting = {
     langRange,

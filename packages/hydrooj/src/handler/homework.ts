@@ -189,7 +189,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
             contest.updateStatus(domainId, tid, this.user._id,
                 rid, pid, false, 0, document.TYPE_HOMEWORK),
         ]);
-        bus.publish('record_change', rdoc);
+        bus.boardcast('record/change', rdoc);
         this.response.body = { tid, rid };
         if (this.canShowRecord(this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
         else this.response.redirect = this.url('homework_detail', { tid });

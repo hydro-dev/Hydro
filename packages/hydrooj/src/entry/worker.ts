@@ -4,6 +4,7 @@ import {
     locale, template, lib, service, model, handler, script, setting, uistatic,
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } from './common';
+import * as bus from '../service/bus';
 
 export async function load() {
     const pending = global.addons;
@@ -18,14 +19,12 @@ export async function load() {
         template(pending, fail),
         uistatic(pending, fail),
     ]);
-    const bus = require('../service/bus');
     await new Promise((resolve) => {
         const h = () => {
             console.log('Database connected');
-            bus.unsubscribe(['system_database_connected'], h);
             resolve();
         };
-        bus.subscribe(['system_database_connected'], h);
+        bus.once('database/connect', h);
         require('../service/db');
     });
     for (const i of builtinLib) require(`../lib/${i}`);
@@ -48,7 +47,7 @@ export async function load() {
     await notfound.apply();
     for (const i of builtinScript) require(`../script/${i}`);
     await script(pending, fail, active);
-    for (const postInit of global.Hydro.postInit) await postInit();
+    await bus.serial('app/started');
     await server.start();
     setInterval(() => {
         process.send({ event: 'stat', count: global.Hydro.stat.reqCount });

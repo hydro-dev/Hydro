@@ -1,11 +1,12 @@
 import assert from 'assert';
 import { ObjectID } from 'mongodb';
 import * as db from '../service/db';
+import * as bus from '../service/bus';
 
 type DocID = ObjectID | string | number;
 
-const coll = db.collection('document');
-const collStatus = db.collection('document.status');
+export const coll = db.collection('document');
+export const collStatus = db.collection('document.status');
 
 export const TYPE_PROBLEM = 10;
 export const TYPE_PROBLEM_SOLUTION = 11;
@@ -51,6 +52,7 @@ export async function add(
         doc.parentType = parentType;
         doc.parentId = parentId;
     }
+    await bus.serial('document/add', doc);
     const res = await coll.insertOne(doc);
     return docId || res.insertedId;
 }
@@ -337,6 +339,7 @@ async function ensureIndexes() {
     await ic({ domainId: 1, docType: 1, docId: 1 }, u);
     await ic({ domainId: 1, docType: 1, owner: 1, docId: -1 });
     // For problem
+    await ic({ domainId: 1, docType: 1, title: 'text' }, s);
     await ic({ domainId: 1, docType: 1, category: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, hidden: 1, category: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, tag: 1, docId: 1 }, s);
@@ -364,8 +367,11 @@ async function ensureIndexes() {
     await is({ domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, s);
 }
 
-global.Hydro.postInit.push(ensureIndexes);
+bus.once('app/started', ensureIndexes);
 global.Hydro.model.document = {
+    coll,
+    collStatus,
+
     add,
     addToSet,
     cappedIncStatus,

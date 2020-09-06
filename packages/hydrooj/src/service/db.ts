@@ -21,7 +21,7 @@ mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopolog
             .then((Client1) => {
                 db2 = Client1.db(opts.name);
                 global.Hydro.service.db.db2 = db2;
-                bus.publish('system_database_connected', null);
+                bus.parallel('database/connect', db);
             });
     });
 

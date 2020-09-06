@@ -102,6 +102,8 @@ class RecordRejudgeHandler extends Handler {
 const RecordConnectionHandler = contest.ContestHandlerMixin(ConnectionHandler);
 
 class RecordMainConnectionHandler extends RecordConnectionHandler {
+    dispose: bus.Disposable;
+
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid: ObjectID) {
         this.domainId = domainId;
@@ -113,7 +115,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
                 return;
             }
         }
-        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
+        this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
     async message(msg) {
@@ -123,17 +125,16 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
                 this.domainId, { _id: { $in: rids } },
             ).toArray();
             for (const rdoc of rdocs) {
-                this.onRecordChange({ value: { rdoc } });
+                this.onRecordChange(rdoc);
             }
         }
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this.id);
+        if (this.dispose) this.dispose();
     }
 
-    async onRecordChange(data) {
-        const rdoc: Rdoc = data.value.rdoc;
+    async onRecordChange(rdoc: Rdoc) {
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
@@ -146,6 +147,8 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
 }
 
 class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(ConnectionHandler) {
+    dispose: bus.Disposable;
+
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
@@ -157,13 +160,11 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
             }
         }
         this.rid = rid.toString();
-        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
-        this.onRecordChange({ value: { rdoc } });
+        this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
+        this.onRecordChange(rdoc);
     }
 
-    async onRecordChange(data) {
-        const rdoc: Rdoc = data.value.rdoc;
-        const { $set, $push } = data.value;
+    async onRecordChange(rdoc: Rdoc, $set?: any, $push?: any) {
         if (rdoc._id.toString() !== this.rid) return;
         if ($set) this.send({ $set, $push });
         else {
@@ -175,7 +176,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this.id);
+        if (this.dispose) this.dispose();
     }
 }
 

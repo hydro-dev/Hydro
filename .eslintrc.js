@@ -29,6 +29,7 @@ module.exports = {
         'max-len': ['warn', 150],
         'no-bitwise': 'off',
         'no-console': 'off',
+        'no-continue': 'off',
         'no-dupe-class-members': 'off',
         'no-extend-native': 'off',
         'no-inner-declarations': 'off',

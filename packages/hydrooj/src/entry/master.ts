@@ -7,6 +7,7 @@ import pslist from 'ps-list';
 import { argv } from 'yargs';
 import { builtinModel } from './common';
 import { Entry } from '../loader';
+import * as bus from '../service/bus';
 
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 const lockfile = path.resolve(tmpdir, 'lock.json');
@@ -31,9 +32,6 @@ export async function load(call: Entry) {
         ppid: process.ppid,
     };
     await fs.writeFile(lockfile, JSON.stringify(context));
-    global.onDestory.push(() => {
-        fs.removeSync(lockfile);
-    });
     require('../lib/i18n');
     require('../utils');
     require('../error');
@@ -45,14 +43,15 @@ export async function load(call: Entry) {
             process.exit(1);
         });
     }
-    const bus = require('../service/bus');
+    bus.once('app/exit', () => {
+        fs.removeSync(lockfile);
+    });
     await new Promise((resolve) => {
         const h = () => {
             console.log('Database connected');
-            bus.unsubscribe(['system_database_connected'], h);
             resolve();
         };
-        bus.subscribe(['system_database_connected'], h);
+        bus.once('database/connect', h);
         require('../service/db');
     });
     require('../service/monitor');
@@ -63,11 +62,6 @@ export async function load(call: Entry) {
         const ins = require('../script/upgrade0_1');
         await ins.run({ username: 'Root', password: 'rootroot' });
     }
-    for (const postInit of global.Hydro.postInit) {
-        await postInit().catch((e) => {
-            console.error('Error running postInit:', postInit.toString());
-            console.error(e);
-        });
-    }
+    bus.serial('app/started');
     return await modelSystem.get('server.worker');
 }

@@ -1,6 +1,6 @@
 import { isSafeInteger, flatten } from 'lodash';
 import yaml from 'js-yaml';
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError, ProblemNotFoundError, ValidationError,
@@ -61,16 +61,14 @@ class ProblemMainHandler extends ProblemHandler {
     @param('q', Types.String, true)
     async get(domainId: string, page = 1, q = '') {
         this.response.template = 'problem_main.html';
-        const query: any = {};
+        const query: FilterQuery<Pdoc> = {};
         let psdict = {};
         const path: PathComponent[] = [
             ['Hydro', 'homepage'],
             ['problem_main', null],
         ];
         if (q) {
-            q = q.toLowerCase();
-            const $regex = new RegExp(`\\A\\Q${q}\\E`, 'gmi');
-            query.title = { $regex };
+            query.$text = { $search: q };
             path.push([q, null, null, true]);
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
@@ -252,7 +250,7 @@ class ProblemSubmitHandler extends ProblemDetailHandler {
             record.get(domainId, rid),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
         ]);
-        bus.publish('record_change', { rdoc });
+        bus.boardcast('record/change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -275,7 +273,7 @@ class ProblemPretestHandler extends ProblemDetailHandler {
             },
         );
         const rdoc = await record.get(domainId, rid);
-        bus.publish('record_change', { rdoc });
+        bus.boardcast('record/change', rdoc);
         this.response.body = { rid };
     }
 }
@@ -285,7 +283,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
 
     domainId: string;
 
-    id: string;
+    dispose: bus.Disposable;
 
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
@@ -294,11 +292,10 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
         if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
         this.pid = pdoc.docId.toString();
         this.domainId = domainId;
-        this.id = bus.subscribe(['record_change'], this.onRecordChange.bind(this));
+        this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
-    async onRecordChange(data) {
-        const rdoc: Rdoc = data.value.rdoc;
+    async onRecordChange(rdoc: Rdoc) {
         if (
             rdoc.uid !== this.user._id
             || rdoc.pid.toString() !== this.pid
@@ -316,7 +313,7 @@ class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        bus.unsubscribe(['record_change'], this.id);
+        if (this.dispose) this.dispose();
     }
 }
 

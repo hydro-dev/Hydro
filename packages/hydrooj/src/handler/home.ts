@@ -25,6 +25,7 @@ import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import {
     isContent, isPassword, isEmail, isTitle,
 } from '../lib/validator';
+import { Mdoc } from '../interface';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -358,18 +359,19 @@ class HomeMessagesHandler extends Handler {
 }
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
-    id: string;
+    dispose: bus.Disposable;
 
     async prepare() {
-        bus.subscribe([`user_message-${this.user._id}`], this.onMessageReceived.bind(this));
+        this.dispose = bus.on('user/message', this.onMessageReceived.bind(this));
     }
 
-    async onMessageReceived(e: any) {
-        this.send(e.value);
+    async onMessageReceived(uid: number, e: any) {
+        if (uid !== this.user._id) return;
+        this.send(e);
     }
 
     async cleanup() {
-        bus.unsubscribe([`user_message-${this.user._id}`], this.id);
+        if (this.dispose) this.dispose();
     }
 }
 

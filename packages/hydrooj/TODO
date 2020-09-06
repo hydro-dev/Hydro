@@ -5,3 +5,4 @@ model.setting.ui.name
 pdoc.secretConfig?
 message.markAsRead
 基于document的model难以lint，建议拆分
+检查多余的索引

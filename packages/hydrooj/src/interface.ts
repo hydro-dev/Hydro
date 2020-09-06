@@ -455,9 +455,7 @@ declare global {
                 ui: UI,
                 error: typeof import('./error'),
                 locales: Dict<Dict<string>>,
-                postInit: Array<() => Promise<any>>,
             },
-            onDestory: Array<() => void | Promise<void>>,
             addons: string[],
         }
     }

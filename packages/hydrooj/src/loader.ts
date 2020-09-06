@@ -36,9 +36,7 @@ if (!global.Hydro) {
         // @ts-ignore
         error: {},
         locales: {},
-        postInit: [],
     };
-    global.onDestory = [];
     global.addons = [];
 }
 
@@ -47,9 +45,12 @@ if (argv.debug) {
     console.log(argv);
 }
 
+// eslint-disable-next-line import/first
+import * as bus from './service/bus';
+
 async function terminate() {
     try {
-        for (const task of global.onDestory) await task();
+        await bus.parallel('app/exit');
     } catch (e) {
         process.exit(1);
     }
@@ -127,7 +128,7 @@ async function messageHandler(worker: cluster.Worker, msg: any) {
                     cluster.workers[i].send(msg);
                 }
             } else {
-                global.Hydro.service.bus.publish(msg.eventName, msg.payload, false);
+                global.Hydro.service.bus.emit(msg.eventName, ...msg.payload);
             }
         } else if (msg.event === 'stat') {
             global.Hydro.stat.reqCount += msg.count;
