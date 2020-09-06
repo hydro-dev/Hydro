@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/fps-importer",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Import FPS problems",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -8,6 +8,7 @@
     "license": "AGPL-3.0-only",
     "dependencies": {
         "adm-zip": "^0.4.16",
+        "decode-html": "^2.0.0",
         "fs-extra": "^9.0.1",
         "xml2js": "^0.4.23"
     },

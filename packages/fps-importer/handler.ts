@@ -5,6 +5,8 @@ import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
 import { ObjectID } from 'bson';
+import { filter } from 'lodash';
+import decodeHTML from 'decode-html';
 import { LocalProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
@@ -14,28 +16,40 @@ import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as file from 'hydrooj/dist/model/file';
 import { PERM } from 'hydrooj/dist/model/builtin';
 
+const processing = {};
+
 class FpsProblemImportHandler extends Handler {
     @param('ufid', Types.ObjectID, true)
     async get(domainId: string, ufid?: ObjectID) {
         if (ufid) {
+            if (processing[ufid.toHexString()]) {
+                this.response.body = 'Processing';
+                return;
+            }
             const stream = await file.get(ufid);
-            const buf = await streamToBuffer(stream);
-            let input = buf.toString();
+            processing[ufid.toHexString()] = true;
             try {
-                await xml2js.parseStringPromise(input);
-            } catch (e) {
-                const zip = new AdmZip(buf);
-                const entries = zip.getEntries();
-                for (const entry of entries) {
-                    if (entry.entryName.endsWith('.xml')) {
-                        input = entry.getData().toString();
-                        break;
+                const buf = await streamToBuffer(stream);
+                let input = buf.toString();
+                try {
+                    await xml2js.parseStringPromise(input);
+                } catch (e) {
+                    const zip = new AdmZip(buf);
+                    const entries = zip.getEntries();
+                    for (const entry of entries) {
+                        if (entry.entryName.endsWith('.xml')) {
+                            input = entry.getData().toString();
+                            break;
+                        }
                     }
                 }
+                // @ts-ignore
+                await this.post({ domainId, input });
+                await file.del(ufid);
+            } catch (e) {
+                processing[ufid.toHexString()] = false;
+                throw e;
             }
-            // @ts-ignore
-            await this.post({ domainId, input });
-            await file.del(ufid);
         } else this.response.template = 'problem_import_fps.html';
     }
 
@@ -93,7 +107,9 @@ class FpsProblemImportHandler extends Handler {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
-            const pid = await problem.add(domainId, null, p.title.join(' '), content.join('\n'), this.user._id, p.source, []);
+            const title = decodeHTML(p.title.join(' '));
+            const tags = filter(p.source, (i: string) => i.trim());
+            const pid = await problem.add(domainId, null, title, content.join('\n'), this.user._id, tags, []);
             testdata.addFile('config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
