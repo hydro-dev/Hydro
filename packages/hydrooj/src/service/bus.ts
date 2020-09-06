@@ -21,8 +21,8 @@ interface EventMap {
 
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
 
-    'document/add': (doc: any) => Promise<string | void> | string | void
-    'document/set': (domainId: string, docType: number, docId: ObjectID | string | number, args: any) => Promise<string | void> | string | void
+    'document/add': (doc: any) => Promise<void> | void
+    'document/set': (domainId: string, docType: number, docId: ObjectID | string | number, $set: any) => Promise<void> | void
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
 }

@@ -25,7 +25,6 @@ import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import {
     isContent, isPassword, isEmail, isTitle,
 } from '../lib/validator';
-import { Mdoc } from '../interface';
 
 const { geoip, useragent } = global.Hydro.lib;
 
