@@ -347,8 +347,8 @@ class ProblemSettingsHandler extends ProblemManageHandler {
             [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_settings', null],
         ];
-        if (this.response.body.config) {
-            this.response.body.config = yaml.safeDump(this.response.body.config);
+        if (this.response.body.pdoc.config) {
+            this.response.body.pdoc.config = yaml.safeDump(this.response.body.pdoc.config);
         }
     }
 
