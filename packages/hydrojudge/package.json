@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/hydrojudge",
-    "version": "2.0.10",
+    "version": "2.0.11",
     "main": "package.json",
     "author": "masnn",
     "os": [
@@ -17,7 +17,7 @@
         "systeminformation": "^4.27.3"
     },
     "peerDependencies": {
-        "hydrooj": "^2.12.0||^2.13.0"
+        "hydrooj": "^2.13.3"
     },
     "license": "AGPL-3.0-only",
     "devDependencies": {
