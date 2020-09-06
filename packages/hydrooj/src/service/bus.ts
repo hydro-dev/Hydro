@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db } from 'mongodb';
+import { Db, ObjectID } from 'mongodb';
 import { Mdoc, Rdoc, User } from '../interface';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
@@ -21,7 +21,8 @@ interface EventMap {
 
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
 
-    'document/add': (doc: any) => string | void
+    'document/add': (doc: any) => Promise<string | void> | string | void
+    'document/set': (domainId: string, docType: number, docId: ObjectID | string | number, args: any) => Promise<string | void> | string | void
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
 }

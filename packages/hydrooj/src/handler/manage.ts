@@ -1,3 +1,4 @@
+import { inspect } from 'util';
 import * as judge from './judge';
 import { ValidationError } from '../error';
 import * as check from '../check';
@@ -108,7 +109,7 @@ class SystemScriptHandler extends SystemHandler {
                     domainId,
                     rid,
                     status: STATUS.STATUS_ACCEPTED,
-                    message: ret.toString(),
+                    message: inspect(ret, false, 10, true),
                     judger: 1,
                     time,
                     memory: 0,

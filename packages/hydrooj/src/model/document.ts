@@ -61,10 +61,11 @@ export function get(domainId: string, docType: number, docId: DocID) {
     return coll.findOne({ domainId, docType, docId });
 }
 
-export async function set(domainId: string, docType: number, docId: DocID, args: any) {
+export async function set(domainId: string, docType: number, docId: DocID, $set: any) {
+    await bus.parallel('document/set', domainId, docType, docId, $set);
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        { $set: args },
+        { $set },
         { returnOriginal: false, upsert: true },
     );
     return res.value;
@@ -339,7 +340,7 @@ async function ensureIndexes() {
     await ic({ domainId: 1, docType: 1, docId: 1 }, u);
     await ic({ domainId: 1, docType: 1, owner: 1, docId: -1 });
     // For problem
-    await ic({ domainId: 1, docType: 1, title: 'text' }, s);
+    await ic({ domainId: 1, docType: 1, search: 'text', title: 'text' }, s);
     await ic({ domainId: 1, docType: 1, category: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, hidden: 1, category: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, tag: 1, docId: 1 }, s);

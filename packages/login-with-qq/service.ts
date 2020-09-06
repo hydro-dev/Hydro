@@ -33,4 +33,4 @@ export async function postInit() {
     });
 }
 
-bus.subscribe(['app/started'], postInit);
+bus.once('app/started', postInit);
