@@ -1,7 +1,10 @@
 import assert from 'assert';
-import { ObjectID } from 'mongodb';
+import { ObjectID, Cursor, FilterQuery } from 'mongodb';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
+import {
+    Pdoc, Ddoc, Ufdoc, Drdoc, Tdoc, TrainingDoc, NumberKeys,
+} from '../interface';
 
 type DocID = ObjectID | string | number;
 
@@ -19,15 +22,28 @@ export const TYPE_TRAINING = 40;
 export const TYPE_FILE = 50;
 export const TYPE_HOMEWORK = 60;
 
-export async function add<T extends DocID>(
+export interface DocumentType {
+    [TYPE_PROBLEM]: Pdoc,
+    [TYPE_PROBLEM_SOLUTION]: any,
+    [TYPE_PROBLEM_LIST]: any,
+    [TYPE_DISCUSSION_NODE]: any,
+    [TYPE_DISCUSSION]: Ddoc,
+    [TYPE_DISCUSSION_REPLY]: Drdoc,
+    [TYPE_CONTEST]: Tdoc,
+    [TYPE_TRAINING]: TrainingDoc,
+    [TYPE_FILE]: Ufdoc,
+    [TYPE_HOMEWORK]: Tdoc,
+}
+
+export async function add<T extends DocID, K extends keyof DocumentType>(
     domainId: string, content: string, owner: number,
-    docType: number, docId: T,
+    docType: K, docId: DocumentType[K]['docId'],
     parentType?: number | null, parentId?: DocID,
     args?: any,
 ): Promise<T>
-export async function add(
+export async function add<K extends keyof DocumentType>(
     domainId: string, content: string, owner: number,
-    docType: number, docId: null,
+    docType: K, docId: null,
     parentType?: number, parentId?: DocID,
     args?: any,
 ): Promise<ObjectID>
@@ -57,11 +73,13 @@ export async function add(
     return docId || res.insertedId;
 }
 
-export function get(domainId: string, docType: number, docId: DocID) {
+export function get<K extends keyof DocumentType>(domainId: string, docType: K, docId: DocumentType[K]['docId']) {
     return coll.findOne({ domainId, docType, docId });
 }
 
-export async function set(domainId: string, docType: number, docId: DocID, $set: any) {
+export async function set<K extends keyof DocumentType>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'], $set: Partial<DocumentType[K]>,
+): Promise<DocumentType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set);
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -71,28 +89,36 @@ export async function set(domainId: string, docType: number, docId: DocID, $set:
     return res.value;
 }
 
-export function deleteOne(domainId: string, docType: number, docId: DocID) {
+export function deleteOne<K extends keyof DocumentType>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+) {
     return Promise.all([
         collStatus.deleteMany({ domainId, docType, docId }),
         coll.deleteOne({ domainId, docType, docId }),
     ]);
 }
 
-export function deleteMulti(domainId: string, docType: number, args: any = {}) {
-    return coll.deleteMany({ ...args, domainId, docType });
+export function deleteMulti<K extends keyof DocumentType>(
+    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+) {
+    return coll.deleteMany({ ...query, domainId, docType });
 }
 
-export function deleteMultiStatus(domainId: string, docType: number, args: any = {}) {
-    return collStatus.deleteMany({ ...args, domainId, docType });
+export function deleteMultiStatus<K extends keyof DocumentType>(
+    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+) {
+    return collStatus.deleteMany({ ...query, domainId, docType });
 }
 
-export function getMulti(domainId: string, docType: number, args: any = {}) {
-    return coll.find({ ...args, docType, domainId });
+export function getMulti<K extends keyof DocumentType>(
+    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+): Cursor<DocumentType[K]> {
+    return coll.find({ ...query, docType, domainId });
 }
 
-export async function inc(
-    domainId: string, docType: number, docId: DocID,
-    key: string, value: number,
+export async function inc<K extends keyof DocumentType>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+    key: NumberKeys<DocumentType[K]>, value: number,
 ) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -102,9 +128,11 @@ export async function inc(
     return res.value;
 }
 
-export async function incAndSet(
-    domainId: string, docType: number, docId: DocID,
-    key: string, value: number, args: any,
+type Q = NumberKeys<DocumentType[10]>
+
+export async function incAndSet<K extends keyof DocumentType>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+    key: NumberKeys<DocumentType[K]>, value: number, args: Partial<DocumentType[K]>,
 ) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -114,13 +142,15 @@ export async function incAndSet(
     return res.value;
 }
 
-export function count(domainId: string, docType: number, query: any) {
+export function count<K extends keyof DocumentType>(
+    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+) {
     return coll.find({ ...query, docType, domainId }).count();
 }
 
-export async function push(
-    domainId: string, docType: number, docId: DocID,
-    key: string, content: string, owner: number, args: any = {},
+export async function push<K extends keyof DocumentType, T extends keyof DocumentType[K]>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+    key: keyof DocumentType[K], content: string, owner: number, args: DocumentType[K][T][0] = {},
 ) {
     const _id = new ObjectID();
     const doc = await coll.findOneAndUpdate(
@@ -137,10 +167,10 @@ export async function push(
     return [doc.value, _id];
 }
 
-export async function pull(
-    domainId: string, docType: number, docId: DocID,
+export async function pull<K extends keyof DocumentType>(
+    domainId: string, docType: K, docId: DocumentType[K]['docId'],
     setKey: string, contents: string[],
-) {
+): Promise<DocumentType[K]> {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $pull: { [setKey]: { $in: contents } } },

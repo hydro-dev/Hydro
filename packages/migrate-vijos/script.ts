@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import {
-    Rdoc, TestCase, Mdoc, Drrdoc,
+    Rdoc, TestCase, Mdoc, Drrdoc, TrainingNode,
 } from 'hydrooj';
 import fs from 'fs';
 import os from 'os';
@@ -126,12 +126,12 @@ const tasks = {
         },
         attend: 'attend',
         desc: 'description',
-        enroll: 'enroll',
+        enroll: 'attend',
         rated: 'rated',
         dag: {
             field: 'dag',
             processer: (dag) => {
-                const r = [];
+                const r: TrainingNode[] = [];
                 for (const t of dag) {
                     r.push({
                         _id: t._id,

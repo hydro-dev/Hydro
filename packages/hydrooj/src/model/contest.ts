@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { ObjectID, FilterQuery } from 'mongodb';
 import * as user from './user';
 import * as problem from './problem';
 import * as document from './document';
@@ -12,6 +12,8 @@ import {
 } from '../interface';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
+
+type Type = 30 | 60;
 
 const acm: ContestRule = {
     TEXT: 'ACM/ICPC',
@@ -356,7 +358,7 @@ function _getStatusJournal(tsdoc) {
 export function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids = [],
-    rated = false, data = {}, type = document.TYPE_CONTEST,
+    rated = false, data: Partial<Tdoc> = {}, type: Type = document.TYPE_CONTEST,
 ) {
     if (!this.RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -371,7 +373,7 @@ export function add(
 
 export async function edit(
     domainId: string, tid: ObjectID,
-    $set: any, type = document.TYPE_CONTEST,
+    $set: any, type: Type = document.TYPE_CONTEST,
 ) {
     if ($set.rule) {
         if (!this.RULES[$set.rule]) throw new ValidationError('rule');
@@ -383,7 +385,7 @@ export async function edit(
 }
 
 export async function get(
-    domainId: string, tid: ObjectID, type = document.TYPE_CONTEST,
+    domainId: string, tid: ObjectID, type: Type | -1 = document.TYPE_CONTEST,
 ) {
     let tdoc: Tdoc;
     if (type === -1) {
@@ -396,7 +398,7 @@ export async function get(
 
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
-    accept = false, score = 0, type = document.TYPE_CONTEST,
+    accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     const tdoc = await get(domainId, tid, type);
     const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
@@ -427,7 +429,7 @@ export async function getListStatus(
 
 export async function attend(
     domainId: string, tid: ObjectID, uid: number,
-    type = document.TYPE_CONTEST,
+    type: Type = document.TYPE_CONTEST,
 ) {
     try {
         await document.cappedIncStatus(domainId, type, tid, uid, 'attend', 1, 0, 1);
@@ -491,7 +493,7 @@ export const ContestHandlerMixin = (c) => class extends c {
 
     async getScoreboard(
         domainId: string, tid: ObjectID,
-        isExport = false, docType = document.TYPE_CONTEST,
+        isExport = false, docType: 30 | 60 = document.TYPE_CONTEST,
     ): Promise<[Tdoc, ScoreboardNode[][], Udict]> {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
@@ -522,16 +524,18 @@ export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: an
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
 
-export function count(domainId: string, query: any, type = document.TYPE_CONTEST) {
+export function count(domainId: string, query: any, type: Type = document.TYPE_CONTEST) {
     return document.count(domainId, type, query);
 }
 
-export function getMulti(domainId: string, query = {}, type = document.TYPE_CONTEST) {
-    return document.getMulti(domainId, type, query);
+export function getMulti<K extends Type & keyof document.DocumentType>(
+    domainId: string, query: FilterQuery<document.DocumentType[K]> = {}, type?: K,
+) {
+    return document.getMulti(domainId, type || document.TYPE_CONTEST, query);
 }
 
 export async function getAndListStatus(
-    domainId: string, tid: ObjectID, docType = document.TYPE_CONTEST,
+    domainId: string, tid: ObjectID, docType: Type | -1 = document.TYPE_CONTEST,
 ): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
     const tdoc = await get(domainId, tid, docType);
@@ -540,7 +544,7 @@ export async function getAndListStatus(
     return [tdoc, tsdocs];
 }
 
-export async function recalcStatus(domainId: string, tid: ObjectID, type = document.TYPE_CONTEST) {
+export async function recalcStatus(domainId: string, tid: ObjectID, type: Type = document.TYPE_CONTEST) {
     const [tdoc, tsdocs] = await Promise.all([
         document.get(domainId, type, tid),
         document.getMultiStatus(domainId, type, { docId: tid }).toArray(),

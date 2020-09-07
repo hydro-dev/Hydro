@@ -6,7 +6,7 @@ import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
 import {
-    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc,
+    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc, NumberKeys,
 } from '../interface';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
@@ -63,7 +63,7 @@ export async function get(
     if (typeof pid !== 'number') {
         if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
     }
-    const pdoc = Number.isInteger(pid)
+    const pdoc = typeof pid === 'number'
         ? await document.get(domainId, document.TYPE_PROBLEM, pid)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
     if (!pdoc) return null;
@@ -85,7 +85,7 @@ export function edit(domainId: string, _id: number, $set: Partial<Pdoc>): Promis
     return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
 }
 
-export function inc(domainId: string, _id: number, field: string, n: number): Promise<Pdoc> {
+export function inc(domainId: string, _id: number, field: NumberKeys<Pdoc>, n: number): Promise<Pdoc> {
     return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
 

@@ -2,11 +2,11 @@ import Lru from 'lru-cache';
 import * as db from '../service/db';
 
 const coll = db.collection('system');
-const cache = new Lru({
+const cache = new Lru<string, string | number>({
     maxAge: 5000,
 });
 
-export async function get(_id: string) {
+export async function get(_id: string): Promise<string | number> {
     const res = cache.get(_id);
     if (res !== undefined) return res;
     const doc = await coll.findOne({ _id });
@@ -51,11 +51,13 @@ export async function set(_id: string, value: any) {
 export async function inc(_id: string) {
     const res = await coll.findOneAndUpdate(
         { _id },
+        // FIXME NumberKeys<>
+        // @ts-ignore
         { $inc: { value: 1 } },
         { upsert: true, returnOriginal: false },
     );
     cache.set(_id, res.value.value);
-    return res.value.value;
+    return res.value.value as number;
 }
 
 global.Hydro.model.system = {

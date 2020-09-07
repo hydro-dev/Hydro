@@ -203,7 +203,7 @@ export function requireCsrfToken(target: any, funcName: string, obj: any) {
 }
 
 export async function prepare() {
-    app.keys = await system.get('session.keys');
+    app.keys = await system.get('session.keys') as unknown as string[];
     if (argv.public) {
         app.use(cache(argv.public, {
             maxAge: 0,
@@ -402,7 +402,7 @@ export class Handler {
     }
 
     async init({ domainId }) {
-        const xff = await system.get('server.xff');
+        const xff = await system.get('server.xff') as string;
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
         [this.domain] = await Promise.all([
             domain.get(domainId),
@@ -498,8 +498,8 @@ export class Handler {
 
     async saveCookie() {
         const expireSeconds = this.session.save
-            ? await system.get('session.expire_seconds')
-            : await system.get('session.unsaved_expire_seconds');
+            ? await system.get('session.expire_seconds') as number
+            : await system.get('session.unsaved_expire_seconds') as number;
         if (this.session._id) {
             await token.update(
                 this.session._id,
@@ -525,7 +525,7 @@ export class Handler {
             );
         }
         const cookie: SetOption = {
-            secure: await system.get('session.secure'),
+            secure: !!await system.get('session.secure'),
             httpOnly: false,
         };
         if (this.session.save) {

@@ -27,7 +27,7 @@ export async function enroll(domainId: string, tid: ObjectID, uid: number) {
     } catch (e) {
         throw new TrainingAlreadyEnrollError(tid, uid);
     }
-    return await document.inc(domainId, document.TYPE_TRAINING, tid, 'enroll', 1);
+    return await document.inc(domainId, document.TYPE_TRAINING, tid, 'attend', 1);
 }
 
 export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: any) {
@@ -42,7 +42,7 @@ export function add(
         dag,
         title,
         description,
-        enroll: 0,
+        attend: 0,
     });
 }
 

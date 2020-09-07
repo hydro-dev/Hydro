@@ -13,10 +13,10 @@ import {
 } from '../service/server';
 import { Tdoc } from '../interface';
 
-async function _parseDagJson(domainId, dag) {
+async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];
     try {
-        dag = JSON.parse(dag);
+        const dag = JSON.parse(_dag);
         assert(dag instanceof Array, 'dag must be an array');
         const ids = new Set(dag.map((s) => s._id));
         assert(dag.length === ids.size, '_id must be unique');
@@ -177,16 +177,6 @@ class TrainingCreateHandler extends Handler {
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
         const pdocs = await problem.getMulti(domainId, { docId: { $in: pids } }).sort('_id', 1).toArray();
-        const existPids = pdocs.map((pdoc) => pdoc.docId);
-        const existPnames = pdocs.map((pdoc) => pdoc.pid);
-        if (pids.length !== existPids.length) {
-            for (const pid of pids) {
-                assert(
-                    existPids.includes(pid) || existPnames.includes(pid),
-                    new ProblemNotFoundError(pid),
-                );
-            }
-        }
         for (const pdoc of pdocs) {
             if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -242,11 +232,10 @@ class TrainingEditHandler extends Handler {
             ],
         }).sort('_id', 1).toArray();
         const existPids = pdocs.map((pdoc) => pdoc.docId);
-        const existPnames = pdocs.map((pdoc) => pdoc.pid);
         if (pids.length !== existPids.length) {
             for (const pid in pids) {
                 assert(
-                    existPids.includes(pid) || existPnames.includes(pid),
+                    existPids.includes(parseInt(pid, 10)),
                     new ProblemNotFoundError(pid),
                 );
             }

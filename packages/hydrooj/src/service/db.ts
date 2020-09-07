@@ -1,6 +1,7 @@
-import mongodb from 'mongodb';
+import mongodb, { Collection } from 'mongodb';
 import * as bus from './bus';
 import options from '../options';
+import { Collections } from '../interface';
 
 const opts = options();
 
@@ -25,7 +26,7 @@ mongodb.MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopolog
             });
     });
 
-export function collection(c: string) {
+export function collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
     if (opts.prefix) return db.collection(`${opts.prefix}.${c}`);
     return db.collection(c);
 }

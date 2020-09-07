@@ -3,6 +3,15 @@ import { ObjectID, GridFSBucket } from 'mongodb';
 import fs from 'fs';
 import { Dictionary, NumericDictionary } from 'lodash';
 
+export type NumberKeys<O> = {
+    [K in keyof O]: number extends O[K] ? K : never
+}[keyof O]
+
+export interface System {
+    _id: string,
+    value: string | number,
+}
+
 export interface Setting {
     family: string,
     key: string,
@@ -175,7 +184,7 @@ export interface PretestConfig {
 }
 
 export interface ContestInfo {
-    type: number,
+    type: 30 | 60,
     tid: ObjectID,
 }
 
@@ -293,6 +302,8 @@ export interface Ddoc {
     ip: string,
     pin: boolean,
     highlight: boolean,
+    updateAt: Date,
+    nReply: number,
 }
 
 // Discussion reply
@@ -378,6 +389,29 @@ export interface JudgeResultBody {
 }
 
 export type PathComponent = [string, string, Dictionary<any>?, boolean?];
+
+export interface Collections {
+    'blacklist': Bdoc,
+    'contest': Tdoc,
+    'domain': DomainDoc,
+    'domain.user': any,
+    'record': Rdoc,
+    'document': any,
+    'problem': Pdoc,
+    'user': Udoc,
+    'check': any,
+    'message': Mdoc,
+    'token': TokenDoc,
+    'file': Ufdoc,
+    'status': any,
+    'oauth': any,
+    'system': System,
+    'task': any,
+    'opcount': any,
+    'fs.chunks': any,
+    'fs.files': any,
+    'document.status': any,
+}
 
 export interface Model {
     blacklist: typeof import('./model/blacklist'),

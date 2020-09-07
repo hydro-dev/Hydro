@@ -159,7 +159,7 @@ class HomeSecurityHandler extends Handler {
         if (udoc) throw new UserAlreadyExistError(email);
         const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
-            await system.get('changemail_token_expire_seconds'),
+            await system.get('changemail_token_expire_seconds') as number,
             { uid: this.user._id, email },
         );
         const m = await this.renderHTML('user_changemail_mail.html', {

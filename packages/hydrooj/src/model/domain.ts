@@ -1,10 +1,9 @@
 import { Dictionary } from 'lodash';
-import { Collection } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
 import * as db from '../service/db';
 
-const coll: Collection<DomainDoc> = db.collection('domain');
+const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
 
 export const JOIN_METHOD_NONE = 0;
