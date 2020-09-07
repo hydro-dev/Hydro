@@ -1,12 +1,14 @@
 import Lru from 'lru-cache';
+import { NumberKeys, SystemKeys } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('system');
-const cache = new Lru<string, string | number>({
+
+const cache = new Lru<string, any>({
     maxAge: 5000,
 });
 
-export async function get(_id: string): Promise<string | number> {
+export async function get<K extends keyof SystemKeys>(_id: K): Promise<SystemKeys[K]> {
     const res = cache.get(_id);
     if (res !== undefined) return res;
     const doc = await coll.findOne({ _id });
@@ -17,6 +19,25 @@ export async function get(_id: string): Promise<string | number> {
     return null;
 }
 
+export async function getMany<
+    A extends keyof SystemKeys, B extends keyof SystemKeys,
+    >(keys: [A, B]): Promise<[SystemKeys[A], SystemKeys[B]]>
+export async function getMany<
+    A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
+    >(keys: [A, B, C]): Promise<[SystemKeys[A], SystemKeys[B], SystemKeys[C]]>
+export async function getMany<
+    A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
+    D extends keyof SystemKeys,
+    >(keys: [A, B, C, D]): Promise<[SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D]]>
+export async function getMany<
+    A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
+    D extends keyof SystemKeys, E extends keyof SystemKeys,
+    >(keys: [A, B, C, D, E]): Promise<[SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E]]>
+export async function getMany<
+    A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
+    D extends keyof SystemKeys, E extends keyof SystemKeys, F extends keyof SystemKeys,
+    >(keys: [A, B, C, D, E, F]): Promise<[SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E], SystemKeys[F]]>
+export async function getMany(keys: (keyof SystemKeys)[]): Promise<any[]>
 export async function getMany(keys: string[]): Promise<any[]> {
     const r = [];
     let success = true;
@@ -38,7 +59,7 @@ export async function getMany(keys: string[]): Promise<any[]> {
     return res;
 }
 
-export async function set(_id: string, value: any) {
+export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K]) {
     cache.set(_id, value);
     const res = await coll.findOneAndUpdate(
         { _id },
@@ -48,7 +69,7 @@ export async function set(_id: string, value: any) {
     return res.value.value;
 }
 
-export async function inc(_id: string) {
+export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
     const res = await coll.findOneAndUpdate(
         { _id },
         // FIXME NumberKeys<>
@@ -57,7 +78,7 @@ export async function inc(_id: string) {
         { upsert: true, returnOriginal: false },
     );
     cache.set(_id, res.value.value);
-    return res.value.value as number;
+    return res.value.value;
 }
 
 global.Hydro.model.system = {

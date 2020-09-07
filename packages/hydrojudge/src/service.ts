@@ -8,6 +8,12 @@ import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import { homedir, tmpdir } from 'os';
 
+declare module 'hydrooj' {
+    interface SystemKeys {
+        'hydrojudge.langs': string,
+    }
+}
+
 async function postInit() {
     // Only start a single daemon
     if (!cluster.isFirstWorker) return;

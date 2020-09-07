@@ -143,8 +143,10 @@ SystemSetting(
 bus.once('app/started', async () => {
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) {
+            // @ts-ignore
             const current = await global.Hydro.model.system.get(setting.key);
             if (current === null || current === '') {
+                // @ts-ignore
                 await global.Hydro.model.system.set(setting.key, setting.value);
             }
         }

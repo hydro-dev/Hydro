@@ -4,6 +4,14 @@ import superagentProxy from 'superagent-proxy';
 
 superagentProxy(superagent);
 
+declare module 'hydrooj' {
+    interface SystemKeys {
+        'login-with-osu.id': string,
+        'login-with-osu.secret': string,
+        'login-with-osu.proxy': string,
+    }
+}
+
 const BASE_URL = 'https://osu.ppy.sh/';
 
 async function get() {

@@ -151,10 +151,12 @@ class SystemSettingHandler extends SystemHandler {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
                     if (typeof set(`${key}.${subkey}`, args[key][subkey]) !== 'undefined') {
+                        // @ts-ignore
                         tasks.push(system.set(`${key}.${subkey}`, set(`${key}.${subkey}`, args[key][subkey])));
                     }
                 }
             } else if (typeof set(key, args[key]) !== 'undefined') {
+                // @ts-ignore
                 tasks.push(system.set(key, set(key, args[key])));
             }
         }

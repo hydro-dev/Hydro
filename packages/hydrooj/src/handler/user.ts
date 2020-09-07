@@ -62,7 +62,7 @@ class UserRegisterHandler extends Handler {
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
-            await system.get('registration_token_expire_seconds') as number,
+            await system.get('registration_token_expire_seconds'),
             { mail },
         );
         if (await system.get('smtp.user')) {
@@ -118,7 +118,7 @@ class UserLostPassHandler extends Handler {
         if (!udoc) throw new UserNotFoundError(mail);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
-            await system.get('lostpass_token_expire_seconds') as number,
+            await system.get('lostpass_token_expire_seconds'),
             { uid: udoc._id },
         );
         const m = await this.renderHTML('user_lostpass_mail', { url: `lostpass/${tid}`, uname: udoc.uname });

@@ -9,7 +9,29 @@ export type NumberKeys<O> = {
 
 export interface System {
     _id: string,
-    value: string | number,
+    value: any,
+}
+
+export interface SystemKeys {
+    'smtp.user': string,
+    'smtp.from': string,
+    'smtp.pass': string,
+    'smtp.host': string,
+    'smtp.port': number,
+    'smtp.secure': boolean,
+    'user': number,
+    'server.url': string,
+    'server.xff': string,
+    'server.worker': number,
+    'server.port': number,
+    'session.keys': string[],
+    'session.secure': boolean,
+    'session.expire_seconds': number,
+    'session.unsaved_expire_seconds': number,
+    'lostpass_token_expire_seconds': number,
+    'registration_token_expire_seconds': number,
+    'changemail_token_expire_seconds': number,
+    'user.quota': number,
 }
 
 export interface Setting {

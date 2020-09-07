@@ -12,7 +12,7 @@ export async function sendMail(to: string, subject: string, text: string, html: 
             system.get('smtp.user'),
             system.get('smtp.pass'),
             system.get('smtp.from'),
-        ]) as unknown as [string, number, boolean, string, string, string];
+        ]);
         const transporter = nodemailer.createTransport({
             host, port, secure, auth: { user, pass },
         });

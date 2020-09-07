@@ -2,6 +2,14 @@ import { } from 'hydrooj';
 import * as bus from 'hydrooj/dist/service/bus';
 import WebSocket from 'ws';
 
+declare module 'hydrooj' {
+    interface SystemKeys {
+        'login-with-qq.id': string,
+        'login-with-qq.url': string,
+        'login-with-qq.token': string,
+    }
+}
+
 export async function postInit() {
     const { system, token } = global.Hydro.model;
     const [url, accessToken] = await system.getMany(['login-with-qq.url', 'login-with-qq.token']);

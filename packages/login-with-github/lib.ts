@@ -4,6 +4,14 @@ import superagentProxy from 'superagent-proxy';
 
 superagentProxy(superagent);
 
+declare module 'hydrooj' {
+    interface SystemKeys {
+        'login-with-github.id': string,
+        'login-with-github.secret': string,
+        'login-with-github.proxy': string,
+    }
+}
+
 async function get() {
     const { system, token } = global.Hydro.model;
     const [appid, [state]] = await Promise.all([

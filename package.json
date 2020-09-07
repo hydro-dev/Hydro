@@ -10,7 +10,8 @@
         "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",
-        "start": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start"
+        "start": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start",
+        "clean": "zsh -c \"rm -r tsconfig.build.tsbuildinfo ./packages/*/tsconfig.build.tsbuildinfo ./packages/*/dist ./coverage\""
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
