@@ -437,7 +437,7 @@ async function userfileUsage(src: Db, report: Function) {
     }
 }
 
-async function task(name: string, src: Db, report: Function) {
+async function task(name: any, src: Db, report: Function) {
     const count = await cursor[name](src).count();
     await report({ progress: 1, message: `${name}: ${count}` });
     const total = Math.floor(count / 50);
@@ -534,12 +534,12 @@ export async function run({
     );
     await report({ progress: 1, message: 'Collection:system done.' });
     if (!await dst.collection('system').findOne({ _id: 'migrateVijosFs' })) {
-        const f = ['fs.files', 'fs.chunks'];
+        const f = ['fs.files', 'fs.chunks'] as any;
         for (const i of f) {
             await dst.collection(i).deleteMany({});
             await task(i, src, report);
         }
-        await dst.collection('system').insertOne({ _id: 'migrateVijosFs', value: true });
+        await dst.collection('system').insertOne({ _id: 'migrateVijosFs', value: 1 });
     }
     await dst.collection('user').deleteMany({ _id: { $nin: [0, 1] } });
     await dst.collection('message').deleteMany({});

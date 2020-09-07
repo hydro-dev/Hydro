@@ -7,7 +7,7 @@ import { compilerText } from './utils';
 export = async function compile(
     lang: string, code: string, target: string, copyIn: any, next?: Function,
 ) {
-    const LANGS = yaml.safeLoad(await global.Hydro.model.system.get('hydrojudge.langs'));
+    const LANGS = yaml.safeLoad(await global.Hydro.model.system.get('hydrojudge.langs') as string);
     if (!LANGS[lang]) throw new SystemError(`不支持的语言：${lang}`);
     const info = LANGS[lang];
     const f = {};
