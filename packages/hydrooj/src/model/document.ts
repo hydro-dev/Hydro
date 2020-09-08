@@ -22,7 +22,7 @@ export const TYPE_TRAINING = 40;
 export const TYPE_FILE = 50;
 export const TYPE_HOMEWORK = 60;
 
-export interface DocumentType {
+export interface DocType {
     [TYPE_PROBLEM]: Pdoc,
     [TYPE_PROBLEM_SOLUTION]: any,
     [TYPE_PROBLEM_LIST]: any,
@@ -35,13 +35,13 @@ export interface DocumentType {
     [TYPE_HOMEWORK]: Tdoc,
 }
 
-export async function add<T extends DocID, K extends keyof DocumentType>(
+export async function add<T extends DocID, K extends keyof DocType>(
     domainId: string, content: string, owner: number,
-    docType: K, docId: DocumentType[K]['docId'],
+    docType: K, docId: DocType[K]['docId'],
     parentType?: number | null, parentId?: DocID,
     args?: any,
 ): Promise<T>
-export async function add<K extends keyof DocumentType>(
+export async function add<K extends keyof DocType>(
     domainId: string, content: string, owner: number,
     docType: K, docId: null,
     parentType?: number, parentId?: DocID,
@@ -73,13 +73,13 @@ export async function add(
     return docId || res.insertedId;
 }
 
-export function get<K extends keyof DocumentType>(domainId: string, docType: K, docId: DocumentType[K]['docId']) {
+export function get<K extends keyof DocType>(domainId: string, docType: K, docId: DocType[K]['docId']) {
     return coll.findOne({ domainId, docType, docId });
 }
 
-export async function set<K extends keyof DocumentType>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'], $set: Partial<DocumentType[K]>,
-): Promise<DocumentType[K]> {
+export async function set<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'], $set: Partial<DocType[K]>,
+): Promise<DocType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set);
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -89,8 +89,8 @@ export async function set<K extends keyof DocumentType>(
     return res.value;
 }
 
-export function deleteOne<K extends keyof DocumentType>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+export function deleteOne<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
 ) {
     return Promise.all([
         collStatus.deleteMany({ domainId, docType, docId }),
@@ -98,27 +98,27 @@ export function deleteOne<K extends keyof DocumentType>(
     ]);
 }
 
-export function deleteMulti<K extends keyof DocumentType>(
-    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+export function deleteMulti<K extends keyof DocType>(
+    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
 ) {
     return coll.deleteMany({ ...query, domainId, docType });
 }
 
-export function deleteMultiStatus<K extends keyof DocumentType>(
-    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+export function deleteMultiStatus<K extends keyof DocType>(
+    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
 ) {
     return collStatus.deleteMany({ ...query, domainId, docType });
 }
 
-export function getMulti<K extends keyof DocumentType>(
-    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
-): Cursor<DocumentType[K]> {
+export function getMulti<K extends keyof DocType>(
+    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
+): Cursor<DocType[K]> {
     return coll.find({ ...query, docType, domainId });
 }
 
-export async function inc<K extends keyof DocumentType>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'],
-    key: NumberKeys<DocumentType[K]>, value: number,
+export async function inc<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
+    key: NumberKeys<DocType[K]>, value: number,
 ) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -128,11 +128,11 @@ export async function inc<K extends keyof DocumentType>(
     return res.value;
 }
 
-type Q = NumberKeys<DocumentType[10]>
+type Q = NumberKeys<DocType[10]>
 
-export async function incAndSet<K extends keyof DocumentType>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'],
-    key: NumberKeys<DocumentType[K]>, value: number, args: Partial<DocumentType[K]>,
+export async function incAndSet<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
+    key: NumberKeys<DocType[K]>, value: number, args: Partial<DocType[K]>,
 ) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -142,15 +142,15 @@ export async function incAndSet<K extends keyof DocumentType>(
     return res.value;
 }
 
-export function count<K extends keyof DocumentType>(
-    domainId: string, docType: K, query?: FilterQuery<DocumentType[K]>,
+export function count<K extends keyof DocType>(
+    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
 ) {
     return coll.find({ ...query, docType, domainId }).count();
 }
 
-export async function push<K extends keyof DocumentType, T extends keyof DocumentType[K]>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'],
-    key: keyof DocumentType[K], content: string, owner: number, args: DocumentType[K][T][0] = {},
+export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
+    key: keyof DocType[K], content: string, owner: number, args: DocType[K][T][0] = {},
 ) {
     const _id = new ObjectID();
     const doc = await coll.findOneAndUpdate(
@@ -167,10 +167,10 @@ export async function push<K extends keyof DocumentType, T extends keyof Documen
     return [doc.value, _id];
 }
 
-export async function pull<K extends keyof DocumentType>(
-    domainId: string, docType: K, docId: DocumentType[K]['docId'],
+export async function pull<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
     setKey: string, contents: string[],
-): Promise<DocumentType[K]> {
+): Promise<DocType[K]> {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $pull: { [setKey]: { $in: contents } } },

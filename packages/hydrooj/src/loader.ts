@@ -40,13 +40,13 @@ if (!global.Hydro) {
     global.addons = [];
 }
 
-if (argv.debug) {
-    console.log(process.argv);
-    console.log(argv);
-}
-
+// eslint-disable-next-line import/first
+import { Logger } from './logger';
 // eslint-disable-next-line import/first
 import * as bus from './service/bus';
+
+const logger = new Logger('loader');
+logger.debug('%o', argv);
 
 async function terminate() {
     try {
@@ -113,9 +113,9 @@ async function executeCommand(input: string) {
 }
 
 async function reload(count = 1) {
-    console.log('Reloading');
+    logger.info('Reloading');
     await stopWorker();
-    console.log('Worker stopped');
+    logger.info('Worker stopped');
     await startWorker(count);
 }
 
@@ -176,13 +176,13 @@ export function addon(addonPath: string) {
             if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
             global.addons.push(targetPath);
         } catch (e) {
-            console.error('Addon load fail: ', e);
+            logger.error('Addon load fail: ', e);
             throw e;
         }
     } else throw new Error(`Addon not found: ${addonPath}`);
 }
 
-process.on('unhandledRejection', (e) => console.error(e));
+process.on('unhandledRejection', logger.error);
 process.on('SIGINT', terminate);
 
 export async function load() {
@@ -191,7 +191,7 @@ export async function load() {
     process.on('message', messageHandler);
     cluster.on('message', messageHandler);
     if (cluster.isMaster || argv.startAsMaster) {
-        console.log(`Master ${process.pid} Starting`);
+        logger.info(`Master ${process.pid} Starting`);
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', (buf) => {
             const input = buf.toString();
@@ -205,33 +205,33 @@ export async function load() {
             }
         });
         const cnt = await entry({ entry: 'master' });
-        console.log('Master started');
+        logger.info('Master started');
         cluster.on('exit', (worker, code, signal) => {
-            console.log(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
+            logger.info(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
         });
         cluster.on('disconnect', (worker) => {
-            console.log(`Worker ${worker.process.pid} ${worker.id} disconnected`);
+            logger.info(`Worker ${worker.process.pid} ${worker.id} disconnected`);
         });
         cluster.on('listening', (worker, address) => {
-            console.log(`Worker ${worker.process.pid} ${worker.id} listening at `, address);
+            logger.info(`Worker ${worker.process.pid} ${worker.id} listening at `, address);
         });
         cluster.on('online', (worker) => {
-            console.log(`Worker ${worker.process.pid} ${worker.id} is online`);
+            logger.success(`Worker ${worker.process.pid} ${worker.id} is online`);
         });
         await startWorker(cnt);
     } else {
         global.addons = JSON.parse(Buffer.from(argv.addons as string, 'base64').toString());
-        console.log(global.addons);
+        logger.info('%o', global.addons);
         if (argv.entry) {
-            console.log(`Worker ${process.pid} Starting as ${argv.entry}`);
+            logger.info(`Worker ${process.pid} Starting as ${argv.entry}`);
             await entry({ entry: argv.entry as string });
-            console.log(`Worker ${process.pid} Started as ${argv.entry}`);
+            logger.success(`Worker ${process.pid} Started as ${argv.entry}`);
         } else {
             if (argv.firstWorker) cluster.isFirstWorker = true;
             else cluster.isFirstWorker = false;
-            console.log(`Worker ${process.pid} Starting`);
+            logger.info(`Worker ${process.pid} Starting`);
             await entry({ entry: 'worker' });
-            console.log(`Worker ${process.pid} Started`);
+            logger.success(`Worker ${process.pid} Started`);
         }
     }
     if (global.gc) global.gc();
@@ -245,7 +245,7 @@ export async function loadCli() {
 if (argv.pandora || !module.parent) {
     const func = argv._[0] === 'cli' ? load : loadCli;
     func().catch((e) => {
-        console.error(e);
+        logger.error(e);
         process.exit(1);
     });
 }

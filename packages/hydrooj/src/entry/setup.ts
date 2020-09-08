@@ -7,6 +7,9 @@ import Body from 'koa-body';
 import cache from 'koa-static-cache';
 import mongodb from 'mongodb';
 import { argv } from 'yargs';
+import { Logger } from '../logger';
+
+const logger = new Logger('setup');
 
 const listenPort = argv.port || 8888;
 
@@ -141,5 +144,5 @@ export function load() {
             return get(ctx);
         });
     server.listen(listenPort);
-    console.log('Server listening at:', listenPort);
+    logger.success('Server listening at: %d', listenPort);
 }

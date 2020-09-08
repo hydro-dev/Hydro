@@ -20,11 +20,7 @@ export async function load() {
         uistatic(pending, fail),
     ]);
     await new Promise((resolve) => {
-        const h = () => {
-            console.log('Database connected');
-            resolve();
-        };
-        bus.once('database/connect', h);
+        bus.once('database/connect', resolve);
         require('../service/db');
     });
     for (const i of builtinLib) require(`../lib/${i}`);

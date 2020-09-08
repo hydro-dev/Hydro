@@ -3,7 +3,9 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { argv } from 'yargs';
+import { Logger } from '../logger';
+
+const logger = new Logger('common', true);
 
 export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
@@ -46,14 +48,12 @@ export async function handler(pending: string[], fail: string[]) {
         const p = path.resolve(i, 'handler.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                console.log(`Handler init: ${i}`);
-                console.time(`Handler init: ${i}`);
+                logger.info('Handler init: %s', i);
                 eval('require')(p);
-                console.timeEnd(`Handler init: ${i}`);
             } catch (e) {
                 fail.push(i);
-                console.error(`Handler Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Handler Load Fail: %s', i);
+                logger.error('%o', e);
             }
         }
     }
@@ -72,11 +72,11 @@ export async function locale(pending: string[], fail: string[]) {
                     locales[file.split('.')[0]] = yaml.safeLoad(content);
                 }
                 global.Hydro.lib.i18n(locales);
-                console.log(`Locale init: ${i}`);
+                logger.info('Locale init: %s', i);
             } catch (e) {
                 fail.push(i);
-                console.error(`Locale Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Locale Load Fail: %s', i);
+                logger.error('%o', e);
             }
         }
     }
@@ -105,8 +105,8 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                     );
                 }
             } catch (e) {
-                console.error(`Config Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Config Load Fail: %s', i);
+                logger.error(e);
             }
         }
     }
@@ -124,11 +124,11 @@ export async function template(pending: string[], fail: string[]) {
                         path.resolve(p, file),
                     ).toString();
                 }
-                console.log(`Template init: ${i}`);
+                logger.info('Template init: %s', i);
             } catch (e) {
                 fail.push(i);
-                console.error(`Template Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Template Load Fail: %s', i);
+                logger.error(e);
             }
         }
     }
@@ -152,14 +152,12 @@ export async function model(pending: string[], fail: string[]) {
         const p = path.resolve(i, 'model.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                console.log(`Model init: ${i}`);
-                console.time(`Model init: ${i}`);
+                logger.info('Model init: %s', i);
                 eval('require')(p);
-                console.timeEnd(`Model init: ${i}`);
             } catch (e) {
                 fail.push(i);
-                console.error(`Model Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Model Load Fail: %s', i);
+                logger.error(e);
             }
         }
     }
@@ -170,14 +168,12 @@ export async function lib(pending: string[], fail: string[]) {
         const p = path.resolve(i, 'lib.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                console.log(`Lib init: ${i}`);
-                console.time(`Lib init: ${i}`);
+                logger.info('Lib init: %s', i);
                 eval('require')(p);
-                console.timeEnd(`Lib init: ${i}`);
             } catch (e) {
                 fail.push(i);
-                console.error(`Lib Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Lib Load Fail: %s', i);
+                logger.error(e);
             }
         }
     }
@@ -188,14 +184,12 @@ export async function service(pending: string[], fail: string[]) {
         const p = path.resolve(i, 'service.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                console.log(`Service init: ${i}`);
-                console.time(`Service init: ${i}`);
+                logger.info('Service init: %s', i);
                 eval('require')(p);
-                console.timeEnd(`Service init: ${i}`);
             } catch (e) {
                 fail.push(i);
-                console.error(`Service Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Service Load Fail: %s', i);
+                logger.error(e);
             }
         }
     }
@@ -206,13 +200,12 @@ export async function script(pending: string[], fail: string[], active: string[]
         const p = path.resolve(i, 'script.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                console.time(`Script init: ${i}`);
+                logger.info('Script init: %s', i);
                 eval('require')(p);
-                console.timeEnd(`Script init: ${i}`);
             } catch (e) {
                 fail.push(i);
-                console.error(`Script Load Fail: ${i}`);
-                if (argv.debug) console.error(e);
+                logger.error('Script Load Fail: %s', i);
+                logger.error(e);
             }
         }
         active.push(i);

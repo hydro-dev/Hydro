@@ -510,6 +510,7 @@ declare global {
                 stat: any,
                 ui: UI,
                 error: typeof import('./error'),
+                Logger: typeof import('./logger'),
                 locales: Dict<Dict<string>>,
             },
             addons: string[],

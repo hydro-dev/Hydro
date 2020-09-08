@@ -18,6 +18,7 @@ import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
 import { lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
+import { Logger } from '../logger';
 import {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
@@ -33,6 +34,7 @@ import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
 
+const logger = new Logger('server');
 export const app = new Koa();
 export const server = http.createServer(app.callback());
 export const router = new Router();
@@ -762,7 +764,7 @@ export function Connection(
     RouteConnHandler: any,
     ...permPrivChecker: Array<number | bigint | Function>
 ) {
-    const log = argv.debug ? console.log : () => { };
+    const log = (v: string, fmt: string, ...args: any[]) => logger.debug(fmt, ...args);
     const sock = sockjs.createServer({ prefix, log });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
@@ -792,7 +794,7 @@ export function Connection(
                 if (h.finish) await h.finish(args);
             });
         } catch (e) {
-            console.log(e);
+            logger.warn(e);
             await h.onerror(e);
         }
     });
@@ -820,7 +822,7 @@ export async function start() {
     });
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.port || port);
-    console.log('Server listening at: %s', argv.port || port);
+    logger.success('Server listening at: %d', argv.port || port);
 }
 
 global.Hydro.service.server = {

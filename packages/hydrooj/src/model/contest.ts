@@ -528,8 +528,8 @@ export function count(domainId: string, query: any, type: Type = document.TYPE_C
     return document.count(domainId, type, query);
 }
 
-export function getMulti<K extends Type & keyof document.DocumentType>(
-    domainId: string, query: FilterQuery<document.DocumentType[K]> = {}, type?: K,
+export function getMulti<K extends Type & keyof document.DocType>(
+    domainId: string, query: FilterQuery<document.DocType[K]> = {}, type?: K,
 ) {
     return document.getMulti(domainId, type || document.TYPE_CONTEST, query);
 }

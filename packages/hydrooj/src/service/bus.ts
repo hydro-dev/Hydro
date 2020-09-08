@@ -1,10 +1,14 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db, ObjectID } from 'mongodb';
+import { Db, UpdateQuery } from 'mongodb';
+import { Logger } from '../logger';
 import { Mdoc, Rdoc, User } from '../interface';
+// only typings.
+// eslint-disable-next-line import/no-cycle
+import { DocType } from '../model/document';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
-const _disposables = [];
+const logger = new Logger('bus', true);
 
 function isBailed(value: any) {
     return value !== null && value !== false && value !== undefined;
@@ -12,7 +16,7 @@ function isBailed(value: any) {
 
 export type Disposable = () => void
 
-interface EventMap {
+export interface EventMap {
     'app/started': () => void
     'app/exit': () => Promise<void> | void
     'dispose': () => void
@@ -22,15 +26,16 @@ interface EventMap {
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
 
     'document/add': (doc: any) => Promise<void> | void
-    'document/set': (domainId: string, docType: number, docId: ObjectID | string | number, $set: any) => Promise<void> | void
+    'document/set': <T extends keyof DocType>
+        (domainId: string, docType: T, docId: DocType[T], $set: UpdateQuery<DocType[T]>['$set']) => Promise<void> | void
 
-    'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
+    'record/change': (rdoc: Rdoc, $set?: UpdateQuery<Rdoc>['$set'], $push?: UpdateQuery<Rdoc>['$push']) => void
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {
     const hooks = _hooks[name] || (_hooks[name] = []);
     if (hooks.length >= 128) {
-        console.warn(
+        logger.warn(
             'max listener count (128) for event "%s" exceeded, which may be caused by a memory leak',
             name,
         );
@@ -49,23 +54,17 @@ export function removeListener<K extends keyof EventMap>(name: K, listener: Even
 
 export function addListener<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
     getHooks(name).push(listener);
-    const dispose = () => removeListener(name, listener);
-    _disposables.push(name === 'dispose' ? listener as Disposable : dispose);
-    return dispose;
+    return () => removeListener(name, listener);
 }
 
 export function prependListener<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
     getHooks(name).unshift(listener);
-    const dispose = () => removeListener(name, listener);
-    _disposables.push(name === 'dispose' ? listener as Disposable : dispose);
-    return dispose;
+    return () => removeListener(name, listener);
 }
 
 export function once<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
-    // @ts-ignore
-    const dispose = addListener(name, (...args: Parameters<EventMap[K]>) => {
+    const dispose = addListener(name, function _listener(...args: any[]) {
         dispose();
-        // @ts-ignore
         return listener.apply(this, args);
     });
     return dispose;
@@ -91,12 +90,12 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
     return parallel(name, ...args);
 }
 
-export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<ReturnType<EventMap[K]>> {
-    for (const callback of _hooks[name] || []) {
-        const result = await callback.apply(this, args);
-        if (isBailed(result)) return result;
+export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
+    logger.debug('serial: %s', name, args);
+    const hooks = Array.from(_hooks[name]);
+    for (const callback of hooks) {
+        await callback.apply(this, args);
     }
-    return null;
 }
 
 export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {

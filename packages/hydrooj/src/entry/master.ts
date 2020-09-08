@@ -47,11 +47,7 @@ export async function load(call: Entry) {
         fs.removeSync(lockfile);
     });
     await new Promise((resolve) => {
-        const h = () => {
-            console.log('Database connected');
-            resolve();
-        };
-        bus.once('database/connect', h);
+        bus.once('database/connect', resolve);
         require('../service/db');
     });
     require('../service/monitor');
