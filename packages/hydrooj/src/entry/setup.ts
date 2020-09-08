@@ -112,7 +112,7 @@ async function post(ctx: Context) {
             ),
             coll.updateOne(
                 { _id: 'server.cdn' },
-                { $set: { value: '' } },
+                { $set: { value: '/' } },
                 { upsert: true },
             ),
         ]);
