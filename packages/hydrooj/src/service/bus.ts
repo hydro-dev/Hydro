@@ -3,9 +3,8 @@ import cluster from 'cluster';
 import { Db, UpdateQuery } from 'mongodb';
 import { Logger } from '../logger';
 import { Mdoc, Rdoc, User } from '../interface';
-// only typings.
-// eslint-disable-next-line import/no-cycle
-import { DocType } from '../model/document';
+
+type DocType = import('../model/document').DocType;
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus', true);
@@ -91,15 +90,17 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
 }
 
 export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
-    logger.debug('serial: %s', name, args);
-    const hooks = Array.from(_hooks[name]);
+    logger.debug('serial: %s %o', name, args);
+    const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         await callback.apply(this, args);
     }
 }
 
 export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
-    for (const callback of _hooks[name] || []) {
+    logger.debug('bail: %s %o', name, args);
+    const hooks = Array.from(_hooks[name] || []);
+    for (const callback of hooks) {
         const result = callback.apply(this, args);
         if (isBailed(result)) return result;
     }
