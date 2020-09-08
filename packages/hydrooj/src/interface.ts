@@ -410,6 +410,13 @@ export interface JudgeResultBody {
     stderr?: string,
 }
 
+export interface Task {
+    _id: ObjectID,
+    type: string,
+    executeAfter?: Date
+    [key: string]: any
+}
+
 export type PathComponent = [string, string, Dictionary<any>?, boolean?];
 
 export interface Collections {
@@ -428,7 +435,7 @@ export interface Collections {
     'status': any,
     'oauth': any,
     'system': System,
-    'task': any,
+    'task': Task,
     'opcount': any,
     'fs.chunks': any,
     'fs.files': any,
@@ -454,7 +461,7 @@ export interface Model {
     token: typeof import('./model/token'),
     training: typeof import('./model/training'),
     user: typeof import('./model/user'),
-    [key: string]: any,
+    oauth: typeof import('./model/oauth'),
 }
 
 export interface Service {
@@ -463,7 +470,11 @@ export interface Service {
     gridfs: GridFSBucket,
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
-    [key: string]: any,
+}
+
+interface GeoIP {
+    provider: string,
+    lookup: (ip: string, locale?: string) => any,
 }
 
 export interface Lib {
@@ -484,7 +495,8 @@ export interface Lib {
     'testdata.convert.ini': typeof import('./lib/testdata.convert.ini'),
     useragent: typeof import('./lib/useragent'),
     validator: typeof import('./lib/validator'),
-    [key: string]: any
+    template?: any,
+    geoip?: GeoIP,
 }
 
 export interface UI {

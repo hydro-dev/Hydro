@@ -7,8 +7,10 @@ import pslist from 'ps-list';
 import { argv } from 'yargs';
 import { builtinModel } from './common';
 import { Entry } from '../loader';
+import { Logger } from '../logger';
 import * as bus from '../service/bus';
 
+const logger = new Logger('entry/master');
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 const lockfile = path.resolve(tmpdir, 'lock.json');
 
@@ -19,7 +21,7 @@ export async function load(call: Entry) {
             const file = require(lockfile);
             const plist = await pslist();
             if (file.pid && plist.map((i) => i.pid).includes(file.pid)) {
-                console.error(`Lockfile exists, pid=${file.pid}`);
+                logger.error(`Lockfile exists, pid=${file.pid}`);
                 process.exit(1);
             }
         } catch {
@@ -37,9 +39,9 @@ export async function load(call: Entry) {
     require('../error');
     const config = require('../options')();
     if (!config) {
-        console.log('Starting setup');
+        logger.info('Starting setup');
         await call({ entry: 'setup', newProcess: true }).catch((err) => {
-            console.error('Cannot start setup process.', err);
+            logger.error('Cannot start setup process.', err);
             process.exit(1);
         });
     }

@@ -10,6 +10,9 @@ declare module 'hydrooj' {
         'login-with-github.secret': string,
         'login-with-github.proxy': string,
     }
+    interface Lib {
+        oauth_github: typeof import('./lib'),
+    }
 }
 
 async function get() {

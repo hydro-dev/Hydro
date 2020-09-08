@@ -1,6 +1,12 @@
 import 'hydrooj';
 import TurndownService from 'turndown';
 
+declare module 'hydrooj' {
+    interface Lib {
+        convertHTML: (str: string) => string,
+    }
+}
+
 const turndownService = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',

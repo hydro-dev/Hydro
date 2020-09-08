@@ -10,6 +10,9 @@ declare module 'hydrooj' {
         'login-with-osu.secret': string,
         'login-with-osu.proxy': string,
     }
+    interface Lib {
+        oauth_osu: typeof import('./lib'),
+    }
 }
 
 const BASE_URL = 'https://osu.ppy.sh/';

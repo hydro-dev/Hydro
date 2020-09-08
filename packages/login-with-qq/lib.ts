@@ -1,6 +1,12 @@
 import 'hydrooj';
 import 'hydrooj/dist/utils';
 
+declare module 'hydrooj' {
+    interface Lib {
+        oauth_qq: typeof import('./lib'),
+    }
+}
+
 async function get() {
     const { system, token } = global.Hydro.model;
     const secret = String.random(8);

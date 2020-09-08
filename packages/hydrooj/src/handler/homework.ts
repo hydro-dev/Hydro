@@ -199,7 +199,6 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 class HomeworkCreateHandler extends HomeworkHandler {
     async get() {
         const beginAt = moment().add(1, 'day');
-        console.log(beginAt, beginAt.tz(this.user.timeZone));
         const penaltySince = beginAt.clone().add(7, 'days');
         const path = [
             ['Hydro', 'homepage'],
@@ -343,7 +342,6 @@ class HomeworkEditHandler extends HomeworkHandler {
 class HomeworkScoreboardHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
-        console.log(123);
         const [tdoc, rows, udict] = await this.getScoreboard(
             domainId, tid, false, document.TYPE_HOMEWORK,
         );
