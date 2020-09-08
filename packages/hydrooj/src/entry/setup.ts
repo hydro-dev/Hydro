@@ -110,6 +110,11 @@ async function post(ctx: Context) {
                 { $set: { value: parseInt(listenPort as string, 10) } },
                 { upsert: true },
             ),
+            coll.updateOne(
+                { _id: 'server.cdn' },
+                { $set: { value: '' } },
+                { upsert: true },
+            ),
         ]);
         fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
         fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
