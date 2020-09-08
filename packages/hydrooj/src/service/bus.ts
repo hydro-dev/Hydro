@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db, UpdateQuery } from 'mongodb';
+import { Db } from 'mongodb';
 import { Logger } from '../logger';
 import { Mdoc, Rdoc, User } from '../interface';
 
@@ -26,9 +26,9 @@ export interface EventMap {
 
     'document/add': (doc: any) => Promise<void> | void
     'document/set': <T extends keyof DocType>
-        (domainId: string, docType: T, docId: DocType[T], $set: UpdateQuery<DocType[T]>['$set']) => Promise<void> | void
+        (domainId: string, docType: T, docId: DocType[T], $set: any) => Promise<void> | void
 
-    'record/change': (rdoc: Rdoc, $set?: UpdateQuery<Rdoc>['$set'], $push?: UpdateQuery<Rdoc>['$push']) => void
+    'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {
