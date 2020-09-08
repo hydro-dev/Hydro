@@ -3,10 +3,12 @@ import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
+import { Logger } from '../logger';
 import * as bus from '../service/bus';
 
 type SettingDict = Dictionary<_Setting>;
 
+const logger = new Logger('model/setting');
 const countries = moment.tz.countries();
 const tzs = new Set();
 for (const country of countries) {
@@ -141,6 +143,7 @@ SystemSetting(
 );
 
 bus.once('app/started', async () => {
+    logger.debug('Ensuring settings');
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) {
             // @ts-ignore

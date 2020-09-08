@@ -207,13 +207,13 @@ export async function load() {
         const cnt = await entry({ entry: 'master' });
         logger.info('Master started');
         cluster.on('exit', (worker, code, signal) => {
-            logger.info(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
+            logger.warn(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
         });
         cluster.on('disconnect', (worker) => {
             logger.info(`Worker ${worker.process.pid} ${worker.id} disconnected`);
         });
         cluster.on('listening', (worker, address) => {
-            logger.info(`Worker ${worker.process.pid} ${worker.id} listening at `, address);
+            logger.success(`Worker ${worker.process.pid} ${worker.id} listening at `, address);
         });
         cluster.on('online', (worker) => {
             logger.success(`Worker ${worker.process.pid} ${worker.id} is online`);

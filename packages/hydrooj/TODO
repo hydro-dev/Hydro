@@ -6,3 +6,6 @@ pdoc.secretConfig?
 message.markAsRead
 基于document的model难以lint，建议拆分
 检查多余的索引
++hack
+评测队列优先级系统
+讨论浏览数量显示

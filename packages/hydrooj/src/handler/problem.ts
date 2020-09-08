@@ -217,6 +217,17 @@ class ProblemDetailHandler extends ProblemHandler {
         }
         this.response.redirect = this.url('problem_settings', { domainId: destDomainId, pid });
     }
+
+    @param('pid', Types.UnsignedInt)
+    async postRejudge(domainId: string, pid: number) {
+        this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
+        // TODO maybe async?
+        await record.getMulti(domainId, { pid }).forEach(async (doc) => {
+            await record.reset(domainId, doc._id, true);
+            await record.judge(domainId, doc._id);
+        });
+        this.back();
+    }
 }
 
 class ProblemSubmitHandler extends ProblemDetailHandler {
