@@ -304,10 +304,11 @@ class HomeMessagesHandler extends Handler {
     async get() {
         // TODO(iceboy): projection, pagination.
         const messages = await message.getByUser(this.user._id);
-        const udict = await user.getList('system', [
+        const uids = new Set<number>([
             ...messages.map((mdoc) => mdoc.from),
             ...messages.map((mdoc) => mdoc.to),
         ]);
+        const udict = await user.getList('system', Array.from(uids));
         // TODO(twd2): improve here:
         const parsed = {};
         for (const m of messages) {

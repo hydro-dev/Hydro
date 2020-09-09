@@ -32,30 +32,62 @@ success Saved package.json
 
 Hydro的推荐架构如下：
 
-- handler.js: 用于处理路由
-- model.js: 数据库模型
-- lib.js: 不依赖于数据库等的库（如md5函数）
-- script.js: 可能会被用户多次使用到的脚本（如重新计算rp）
+- handler.ts: 用于处理路由
+- model.ts: 数据库模型
+- lib.ts: 不依赖于数据库等的库（如md5函数）
+- script.ts: 可能会被用户多次使用到的脚本（如重新计算rp）
 - locale/: 翻译文件
 - template/: 页面模板
 - setting.yaml: 模块所用到的设置，格式在下方说明
 
+## Step3 tsconfig.json
+
+```json
+{
+    "compilerOptions": {
+        "target": "es2019",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "declaration": true,
+        "sourceMap": true,
+        "composite": true,
+        "strictBindCallApply": true,
+        "experimentalDecorators": true,
+        "outDir": ".",
+        "rootDir": "."
+    },
+    "include": [
+        "*.ts"
+    ],
+    "exclude": []
+}
+```
+
 ## Step3 model.js
 
-提示：由于模块中不便于使用 require() 引入 Hydro 的文件，可以从 global.Hydro 中取出需要的模块。  
+提示：若不便于使用 import 引入 Hydro 的文件，可以从 global.Hydro 中取出需要的模块。  
 
-```js
-const { db } = global.Hydro.service; // 数据库连接
+```ts
+import 'hydrooj';
+import * as db from 'hydrooj/dist/service/db';
+
 const coll = db.collection('paste');
 
-/**
- * 添加一个文档
- * @param {number} userId
- * @param {string} content
- * @param {boolean} isPrivate
- * @return {Promise<string>}
- */
-async function add(userId, content, isPrivate) {
+interface Paste {
+    _id: string,
+    owner: number,
+    content: string,
+    isPrivate: boolean,
+}
+
+declare module 'hydrooj' {
+    interface Collections {
+        paste: Paste,
+    }
+}
+
+export async function add(userId: number, content: string, isPrivate: boolean): Promise<string> {
     const pasteId = String.random(16); // Hydro提供了此方法，创建一个长度为16的随机字符串
     // 使用 mongodb 为数据库驱动，相关操作参照其文档
     const result = await coll.insertOne({
@@ -67,12 +99,7 @@ async function add(userId, content, isPrivate) {
     return result.insertedId; // 返回插入的文档ID
 }
 
-/**
- * 查询一个文档
- * @param {string} pasteId
- * @return {Promise<any>}
- */
-async function get(pasteId) {
+export async function get(pasteId: string): Promise<Paste> {
     return await coll.findOne({ _id: pasteId });
 }
 
@@ -111,12 +138,12 @@ args 为传入的参数集合（包括 QueryString, Body, Path）中的全部参
 应当提供 `apply` 函数，并与定义的 Handler 一同挂载到 `global.Hydro.handler[模块名]` 位置。  
 `apply` 函数将在初始化阶段被调用。  
 
-```js
-const { Route, Handler } = global.Hydro.service.server; // 注册路由所用工具
-const { PRIV } = global.Hydro.model.builtin; // 内置 Privilege 权限节点
-const pastebin = global.Hydro.model.pastebin; // 刚刚编写的pastebin模型
-const { checkContent } = global.Hydro.lib.validator; // 用于检查用户输入是否合法
-const { NotFoundError } = global.Hydro.error;
+```ts
+import { Route, Handler } from 'hydrooj/dist/service/server';
+import { PRIV } from 'hydrooj/dist/model/builtin'; // 内置 Privilege 权限节点
+import { isContent } from 'hydrooj/dist/lib/validator'; // 用于检查用户输入是否合法
+import { NotFoundError } from 'hydrooj/dist/error';
+import * as pastebin from './pastebin'; // 刚刚编写的pastebin模型
 
 // 创建新路由
 class PasteCreateHandler extends Handler {
@@ -128,8 +155,12 @@ class PasteCreateHandler extends Handler {
         this.response.template = 'paste_create.html'; // 返回此页面
     }
 
-    async post({ content, private = false }) { // 从用户提交的表单中取出content和private字段
-        checkContent(content); // 检查输入
+    // 使用 isContent 检查输入
+    @param('content', Types.String, isContent)
+    @param('private', Types.Boolean)
+    // 从用户提交的表单中取出content和private字段
+    // domainId 为固定传入参数
+    async post(domainId: string, content: string, private = false) {
         // 在HTML表单提交的多选框中，选中值为 'on'，未选中则为空，需要进行转换
         await pastebin.add(this.user._id, content, !!private);
         // 将用户重定向到创建完成的url
@@ -138,24 +169,26 @@ class PasteCreateHandler extends Handler {
 }
 
 class PasteShowHandler extends Handler {
-    async get({ id }) {
+    @param('id', Types.String)
+    async get(domainId: string, id: string) {
         const doc = await pastebin.get(id);
         if (!doc) throw new NotFoundError(id);
-        if (doc.isPrivate) {
-            if (this.user._id !== doc.owner) throw new PermissionError();
+        if (doc.isPrivate && this.user._id !== doc.owner) {
+            throw new PermissionError();
         }
         this.response.body = { doc };
         this.response.template = 'paste_show.html';
     }
 
-    async postDelete({ id }){
+    @param('id', Types.String)
+    async postDelete(domainId: string, id: string){
         // 当提交表单并存在 operation 值为 delete 时执行。
         // 本例中未实现删除功能，仅作为说明。
     }
 }
 
 // Hydro会在服务初始化完成后调用该函数。
-async function apply(){
+export async function apply(){
     // 注册一个名为 paste_create 的路由，匹配 '/paste/create'，
     // 使用PasteCreateHandler处理，访问改路由需要PRIV.PRIV_USER_PROFILE权限
     // 提示：路由匹配基于 path-to-regexp

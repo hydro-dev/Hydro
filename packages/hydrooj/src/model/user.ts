@@ -22,6 +22,23 @@ export async function setPassword(uid: number, password: string): Promise<Udoc> 
     return res.value;
 }
 
+export const defaultUser: Udoc = {
+    _id: 0,
+    uname: 'Unknown User',
+    unameLower: 'unknown user',
+    gravatar: 'unknown@hydro.local',
+    mail: 'unknown@hydro.local',
+    mailLower: 'unknown@hydro.local',
+    salt: '',
+    hash: '',
+    hashType: 'hydro',
+    priv: 0,
+    regat: new Date('2000-01-01'),
+    loginat: new Date('2000-01-01'),
+    regip: '127.0.0.1',
+    loginip: '127.0.0.1',
+};
+
 export class User implements _User {
     udoc: () => any;
 
@@ -125,7 +142,7 @@ export async function getList(domainId: string, uids: number[]): Promise<Udict> 
     const _uids = new Set(uids);
     const r = {};
     // eslint-disable-next-line no-await-in-loop
-    for (const uid of _uids) r[uid] = await getById(domainId, uid);
+    for (const uid of _uids) r[uid] = (await getById(domainId, uid)) || defaultUser;
     return r;
 }
 
@@ -252,6 +269,7 @@ function ensureIndexes() {
 bus.once('app/started', ensureIndexes);
 global.Hydro.model.user = {
     User,
+    defaultUser,
     create,
     getByEmail,
     getById,
