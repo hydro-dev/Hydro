@@ -210,6 +210,7 @@ async function postInit() {
                 tmpfs.mount(this.tmpdir, '64m');
                 console.log(`Submission: ${this.rid}`, { pid: this.pid });
                 if (this.config.input) await this.run();
+                else if (this.config.hack) await this.hack();
                 else await this.submission();
             } catch (e) {
                 if (e instanceof CompileError) {
@@ -247,6 +248,19 @@ async function postInit() {
             );
             this.stat.judge = new Date();
             await judge[this.config.type || 'default'].judge(this);
+        }
+
+        async hack() {
+            this.stat.cache_start = new Date();
+            this.folder = await cacheOpen(this.domainId, this.pid, this.data);
+            this.stat.read_cases = new Date();
+            this.config = await readYamlCases(
+                this.folder,
+                this.config,
+                { next: this.next },
+            );
+            this.stat.judge = new Date();
+            await judge.hack.judge(this);
         }
 
         async run() {

@@ -199,11 +199,17 @@ export interface TestCase {
     message: string,
 }
 
+export interface HackConfig {
+    hack: string,
+}
+
 export interface PretestConfig {
     time?: string,
     memory?: string,
     input: string,
 }
+
+export type RunConfig = HackConfig | PretestConfig;
 
 export interface ContestInfo {
     type: 30 | 60,
@@ -229,7 +235,7 @@ export interface Rdoc {
     status: number,
     hidden: boolean,
     progress?: number,
-    config?: PretestConfig,
+    config?: RunConfig,
     contest?: ContestInfo,
 }
 

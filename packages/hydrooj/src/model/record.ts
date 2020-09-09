@@ -6,7 +6,7 @@ import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
 import {
-    Rdoc, TestCase, PretestConfig, ContestInfo, ProblemConfig,
+    Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
 import * as db from '../service/db';
 
@@ -56,7 +56,7 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
 
 export async function judge(domainId: string, rid: ObjectID) {
     const rdoc = await get(domainId, rid);
-    let config: ProblemConfig = rdoc.config;
+    let config: RunConfig | ProblemConfig = rdoc.config;
     if (!config) {
         const pdoc = await problem.get(domainId, rdoc.pid);
         config = pdoc?.config || {};
@@ -73,7 +73,7 @@ export async function judge(domainId: string, rid: ObjectID) {
 
 export async function add(
     domainId: string, pid: number, uid: number,
-    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | PretestConfig,
+    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | RunConfig,
 ) {
     const data: Rdoc = {
         status: STATUS.STATUS_WAITING,
@@ -98,7 +98,7 @@ export async function add(
         if ((contestOrConfig as ContestInfo).type) {
             data.contest = contestOrConfig as ContestInfo;
         } else {
-            data.config = contestOrConfig as PretestConfig;
+            data.config = contestOrConfig as RunConfig;
         }
     }
     const res = await coll.insertOne(data);

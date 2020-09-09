@@ -2,6 +2,7 @@ import { ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
 import { PERM, CONSTANT } from '../model/builtin';
 import * as problem from '../model/problem';
+import * as file from '../model/file';
 import * as record from '../model/record';
 import * as contest from '../model/contest';
 import * as user from '../model/user';
@@ -11,6 +12,7 @@ import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 import { Rdoc } from '../interface';
+import { streamToBuffer } from '../utils';
 
 const RecordHandler = contest.ContestHandlerMixin(Handler);
 
@@ -84,8 +86,51 @@ class RecordDetailHandler extends RecordHandler {
             pdoc,
         };
     }
+
+    @param('rid', Types.ObjectID)
+    async postRejudge(domainId: string, rid: ObjectID) {
+        this.checkPerm(PERM.PERM_REJUDGE);
+        const rdoc = await record.get(domainId, rid);
+        if (rdoc) {
+            await record.reset(domainId, rid, true);
+            await record.judge(domainId, rid);
+        }
+        this.back();
+    }
 }
 
+class RecordHackHandler extends Handler {
+    @param('rid', Types.ObjectID)
+    @param('ufid', Types.ObjectID)
+    async get(domainId: string, rid: ObjectID, ufid?: ObjectID) {
+        if (ufid) {
+            const stream = await file.get(ufid);
+            const buf = await streamToBuffer(stream);
+            const input = buf.toString();
+            await this.post(domainId, rid, input);
+        } else this.response.template = 'record_hack.html';
+    }
+
+    @param('rid', Types.ObjectID)
+    @param('input', Types.String)
+    async post(domainId: string, rid: ObjectID, input: string) {
+        const rdoc = await record.get(domainId, rid);
+        if (!rdoc) throw new RecordNotFoundError(domainId, rid);
+        const newRid = await record.add(
+            domainId, rdoc.pid, this.user._id,
+            rdoc.lang, rdoc.code, true,
+            { hack: input },
+        );
+        bus.boardcast('record/change', rdoc);
+        this.response.body = { rid: newRid };
+        this.response.redirect = this.url('record_detail', { rid: newRid });
+        // TODO handle hack(modify testdata, rejudge problem)
+    }
+}
+
+/**
+ * @deprecated
+ */
 class RecordRejudgeHandler extends Handler {
     @param('rid', Types.ObjectID)
     async post(domainId: string, rid: ObjectID) {
@@ -183,6 +228,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 export async function apply() {
     Route('record_main', '/record', RecordListHandler);
     Route('record_detail', '/record/:rid', RecordDetailHandler);
+    Route('record_hack', '/record/:rid/hack', RecordHackHandler);
     Route('record_rejudge', '/record/:rid/rejudge', RecordRejudgeHandler);
     Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
     Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);

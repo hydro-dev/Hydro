@@ -170,7 +170,8 @@ export function param(name: string, ...args: any): MethodDecorator {
         if (!target.__param[target.constructor.name][funcName]) {
             target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string' }];
             const originalMethod = obj.value;
-            obj.value = function validate(rawArgs: any) {
+            obj.value = function validate(rawArgs: any, ...extra: any[]) {
+                if (typeof rawArgs === 'string' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
                 const arglist: ParamOption[] = this.__param[target.constructor.name][funcName];
                 for (const item of arglist) {

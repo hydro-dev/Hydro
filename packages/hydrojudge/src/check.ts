@@ -24,5 +24,5 @@ export async function compileChecker(checkerType: string, checker: string, copyI
     if (!checkers[checkerType]) { throw new SystemError(`未知比较器类型：${checkerType}`); }
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
-    await compile(checker.split('.')[1], file.toString(), 'checker', copyIn);
+    return await compile(checker.split('.')[1], file.toString(), 'checker', copyIn);
 }
