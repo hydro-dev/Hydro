@@ -7,8 +7,7 @@ import http from 'http';
 import moment from 'moment-timezone';
 import { isSafeInteger, Dictionary, filter } from 'lodash';
 import { ObjectID } from 'mongodb';
-import Koa from 'koa';
-import morgan from 'koa-morgan';
+import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
@@ -806,9 +805,21 @@ export function Connection(
 export async function start() {
     const port = await system.get('server.port');
     if (argv.debug) {
-        app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
-            skip: (req, res) => res.hasHeader('nolog'),
-        }));
+        app.use(async (ctx: Context, next: Function) => {
+            const startTime = new Date().getTime();
+            await next();
+            const endTime = new Date().getTime();
+            if (ctx.response.headers.nolog) return;
+            ctx._remoteAddress = ctx.request.ip;
+            const status = ctx.response.status;
+            const color = status >= 500 ? 31 // red
+                : status >= 400 ? 33 // yellow
+                    : status >= 300 ? 36 // cyan
+                        : status >= 200 ? 32 // green
+                            : 0; // no color
+            logger.debug(`\
+\x1b[0m${ctx.request.method} ${ctx.request.path} \x1b[${color}m${ctx.response.status}\x1b[0m ${endTime - startTime}ms ${ctx.response.length}\x1b[0m`);
+        });
     }
     app.use(async (ctx, next) => {
         const xff = await system.get('server.xff');
