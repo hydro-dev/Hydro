@@ -11,7 +11,7 @@
         "pub": "node build/publish",
         "jest": "node build/jest",
         "start": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start",
-        "clean": "zsh -c \"rm -r tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./coverage\""
+        "clean": "zsh -c \"rm -r tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",

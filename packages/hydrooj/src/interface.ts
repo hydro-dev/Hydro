@@ -5,6 +5,10 @@ import { Dictionary, NumericDictionary } from 'lodash';
 
 export type NumberKeys<O> = {
     [K in keyof O]: number extends O[K] ? K : never
+}[keyof O];
+
+export type ArrayKeys<O, P = any> = {
+    [K in keyof O]: P[] extends O[K] ? K : never
 }[keyof O]
 
 export interface System {
@@ -157,7 +161,7 @@ export type ProblemConfig = LocalProblemConfig | RemoteProblemConfig;
 export interface Pdoc {
     _id: ObjectID,
     domainId: string,
-    docType: number,
+    docType: 10,
     docId: number,
     pid: string,
     owner: number,
@@ -181,14 +185,21 @@ export interface Pdoc {
 
 export type Pdict = NumericDictionary<Pdoc>;
 
-export interface ProblemStatusDoc {
+export interface StatusDoc {
     _id: ObjectID,
-    docId: number,
+    docId: any,
     docType: number,
     domainId: string,
     uid: number,
+}
+
+export interface ProblemStatusDoc extends StatusDoc {
+    docId: number,
+    docType: 10,
     rid?: ObjectID,
     status?: number,
+    nSubmit?: number,
+    nAccept?: number,
     star?: boolean,
 }
 

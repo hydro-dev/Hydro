@@ -1,9 +1,7 @@
-import { Collection } from 'mongodb';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
-import { Bdoc } from '../interface';
 
-const coll: Collection<Bdoc> = db.collection('blacklist');
+const coll = db.collection('blacklist');
 
 export async function add(ip: string) {
     /**

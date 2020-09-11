@@ -43,7 +43,7 @@ const checks: Dictionary<CheckItem> = {
     },
 };
 
-export async function start(ctx, log, warn, error, cb: (id: string) => any) {
+export async function start(ctx, log, warn, error, cb: (id: string) => void) {
     const id = String.random(6);
     cb(id);
     for (const name in checks) {

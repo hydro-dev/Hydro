@@ -1,9 +1,11 @@
 import assert from 'assert';
-import { ObjectID, Cursor, FilterQuery } from 'mongodb';
+import {
+    ObjectID, Cursor, FilterQuery, UpdateQuery,
+} from 'mongodb';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
 import {
-    Pdoc, Ddoc, Ufdoc, Drdoc, Tdoc, TrainingDoc, NumberKeys,
+    Pdoc, Ddoc, Ufdoc, Drdoc, Tdoc, TrainingDoc, NumberKeys, ArrayKeys, ProblemStatusDoc,
 } from '../interface';
 
 type DocID = ObjectID | string | number;
@@ -33,6 +35,11 @@ export interface DocType {
     [TYPE_TRAINING]: TrainingDoc,
     [TYPE_FILE]: Ufdoc,
     [TYPE_HOMEWORK]: Tdoc,
+}
+
+export interface DocStatusType {
+    [TYPE_PROBLEM]: ProblemStatusDoc,
+    [key: number]: any
 }
 
 export async function add<T extends DocID, K extends keyof DocType>(
@@ -104,8 +111,8 @@ export function deleteMulti<K extends keyof DocType>(
     return coll.deleteMany({ ...query, domainId, docType });
 }
 
-export function deleteMultiStatus<K extends keyof DocType>(
-    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
+export function deleteMultiStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, query?: FilterQuery<DocStatusType[K]>,
 ) {
     return collStatus.deleteMany({ ...query, domainId, docType });
 }
@@ -127,8 +134,6 @@ export async function inc<K extends keyof DocType>(
     );
     return res.value;
 }
-
-type Q = NumberKeys<DocType[10]>
 
 export async function incAndSet<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
@@ -169,7 +174,7 @@ export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
 
 export async function pull<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
-    setKey: string, contents: string[],
+    setKey: ArrayKeys<DocType[K]>, contents: string[],
 ): Promise<DocType[K]> {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -179,10 +184,10 @@ export async function pull<K extends keyof DocType>(
     return res.value;
 }
 
-export async function deleteSub(
-    domainId: string, docType: number, docId: DocID,
-    key: string, subId: ObjectID,
-) {
+export async function deleteSub<K extends keyof DocType>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
+    key: ArrayKeys<DocType[K]>, subId: ObjectID,
+): Promise<DocType[K]> {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $pull: { [key]: { _id: subId } } },
@@ -191,10 +196,10 @@ export async function deleteSub(
     return res.value;
 }
 
-export async function getSub(
-    domainId: string, docType: number, docId: DocID,
-    key: string, subId: ObjectID,
-) {
+export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
+    domainId: string, docType: T, docId: DocType[T]['docId'],
+    key: K, subId: ObjectID,
+): Promise<[DocType[T], DocType[T][K]][0]> {
     const doc = await coll.findOne({
         domainId,
         docType,
@@ -208,10 +213,10 @@ export async function getSub(
     return [doc, null];
 }
 
-export async function setSub(
-    domainId: string, docType: number, docId: DocID,
-    key: string, subId: ObjectID, args: any,
-) {
+export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
+    domainId: string, docType: T, docId: DocType[T]['docId'],
+    key: K, subId: ObjectID, args: UpdateQuery<DocType[T][K][0]>['$set'],
+): Promise<DocType[T]> {
     const $set = {};
     for (const k in args) {
         $set[`${key}.$.${k}`] = args[k];
@@ -229,9 +234,9 @@ export async function setSub(
     return res.value;
 }
 
-export async function addToSet(
-    domainId: string, docType: number, docId: DocID,
-    setKey: string, content: string,
+export async function addToSet<T extends keyof DocType, K extends ArrayKeys<DocType[T], string>>(
+    domainId: string, docType: T, docId: DocType[T]['docId'],
+    setKey: K, content: string,
 ) {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
@@ -241,23 +246,29 @@ export async function addToSet(
     return res.value;
 }
 
-export function getStatus(domainId: string, docType: number, docId: DocID, uid: number) {
+export function getStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
+): Promise<DocStatusType[K]> {
     return collStatus.findOne({
         domainId, docType, docId, uid,
     });
 }
 
-export function getMultiStatus(domainId: string, docType: number, args: any) {
+export function getMultiStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, args: FilterQuery<DocStatusType[K]>,
+): Cursor<DocStatusType[K]> {
     return collStatus.find({ ...args, docType, domainId });
 }
 
-export function getMultiStatusWithoutDomain(docType: number, args: any) {
+export function getMultiStatusWithoutDomain<K extends keyof DocStatusType>(
+    docType: K, args: FilterQuery<DocStatusType[K]>,
+): Cursor<DocStatusType[K]> {
     return collStatus.find({ ...args, docType });
 }
 
-export async function setStatus(
-    domainId: string, docType: number, docId: DocID, uid: number, args: any,
-) {
+export async function setStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number, args: UpdateQuery<DocStatusType[K]>['$set'],
+): Promise<DocStatusType[K]> {
     const res = await collStatus.findOneAndUpdate(
         {
             domainId, docType, docId, uid,
@@ -268,7 +279,9 @@ export async function setStatus(
     return res.value;
 }
 
-export function setMultiStatus(domainId: string, docType: number, query: any, args: any) {
+export function setMultiStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, query: FilterQuery<DocStatusType[K]>, args: UpdateQuery<DocStatusType[K]>['$set'],
+) {
     return collStatus.updateMany(
         { domainId, docType, ...query },
         { $set: args },
