@@ -3,6 +3,8 @@ import { ObjectID, GridFSBucket } from 'mongodb';
 import fs from 'fs';
 import { Dictionary, NumericDictionary } from 'lodash';
 
+type document = typeof import('./model/document');
+
 export type NumberKeys<O> = {
     [K in keyof O]: number extends O[K] ? K : never
 }[keyof O];
@@ -193,6 +195,14 @@ export interface StatusDoc {
     uid: number,
 }
 
+export interface Document {
+    _id: ObjectID,
+    docId: any,
+    docType: number,
+    domainId: string,
+    owner: number,
+}
+
 export interface ProblemStatusDoc extends StatusDoc {
     docId: number,
     docType: 10,
@@ -265,12 +275,9 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export interface Tdoc {
-    _id: ObjectID,
-    domainId: string,
+export interface Tdoc extends Document {
     docId: ObjectID,
-    docType: number,
-    owner: number,
+    docType: document['TYPE_CONTEST'] | document['TYPE_HOMEWORK'] | document['TYPE_TRAINING'],
     beginAt: Date,
     endAt: Date,
     attend: number,
@@ -278,6 +285,7 @@ export interface Tdoc {
     content: string,
     rule: string,
     pids: number[],
+    rated?: boolean,
 
     // For homework
     penaltySince?: Date,
@@ -329,13 +337,11 @@ export interface Bdoc {
 }
 
 // Discussion
-export interface Ddoc {
-    _id: ObjectID,
-    docType: number,
+export interface Ddoc extends Document {
+    docType: document['TYPE_DISCUSSION'],
     docId: ObjectID,
     parentType: number,
     parentId: ObjectID | number | string,
-    owner: number,
     title: string,
     content: string,
     ip: string,
@@ -343,16 +349,15 @@ export interface Ddoc {
     highlight: boolean,
     updateAt: Date,
     nReply: number,
+    views: number,
 }
 
 // Discussion reply
-export interface Drdoc {
-    _id: ObjectID,
-    docType: number,
+export interface Drdoc extends Document {
+    docType: document['TYPE_DISCUSSION_REPLY'],
     docId: ObjectID,
-    parentType: number,
+    parentType: document['TYPE_DISCUSSION'],
     parentId: ObjectID,
-    owner: number,
     ip: string,
     content: string,
     reply: Drrdoc[],

@@ -1,3 +1,4 @@
+/* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
     ObjectID, Cursor, FilterQuery, UpdateQuery,
@@ -5,7 +6,7 @@ import {
 import * as db from '../service/db';
 import * as bus from '../service/bus';
 import {
-    Pdoc, Ddoc, Ufdoc, Drdoc, Tdoc, TrainingDoc, NumberKeys, ArrayKeys, ProblemStatusDoc,
+    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, NumberKeys, ArrayKeys, ProblemStatusDoc,
 } from '../interface';
 
 type DocID = ObjectID | string | number;
@@ -33,7 +34,7 @@ export interface DocType {
     [TYPE_DISCUSSION_REPLY]: Drdoc,
     [TYPE_CONTEST]: Tdoc,
     [TYPE_TRAINING]: TrainingDoc,
-    [TYPE_FILE]: Ufdoc,
+    [TYPE_FILE]: any,
     [TYPE_HOMEWORK]: Tdoc,
 }
 
@@ -42,17 +43,17 @@ export interface DocStatusType {
     [key: number]: any
 }
 
-export async function add<T extends DocID, K extends keyof DocType>(
+export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(
     domainId: string, content: string, owner: number,
-    docType: K, docId: DocType[K]['docId'],
-    parentType?: number | null, parentId?: DocID,
-    args?: any,
-): Promise<T>
-export async function add<K extends keyof DocType>(
+    docType: T, docId: K,
+    parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
+    args?: Partial<DocType[T]>,
+): Promise<K>
+export async function add<T extends keyof DocType>(
     domainId: string, content: string, owner: number,
-    docType: K, docId: null,
-    parentType?: number, parentId?: DocID,
-    args?: any,
+    docType: T, docId: null,
+    parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
+    args?: Partial<DocType[T]>,
 ): Promise<ObjectID>
 export async function add(
     domainId: string, content: string, owner: number,
@@ -160,13 +161,7 @@ export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
     const _id = new ObjectID();
     const doc = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        {
-            $push: {
-                [key]: {
-                    ...args, content, owner, _id,
-                },
-            },
-        },
+        { $push: { [key]: { ...args, content, owner, _id } } },
         { returnOriginal: false },
     );
     return [doc.value, _id];
@@ -215,7 +210,7 @@ export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
 
 export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
-    key: K, subId: ObjectID, args: UpdateQuery<DocType[T][K][0]>['$set'],
+    key: K, subId: DocType[T][K][0]['_id'], args: Partial<DocType[T][K][0]>,
 ): Promise<DocType[T]> {
     const $set = {};
     for (const k in args) {
@@ -246,12 +241,10 @@ export async function addToSet<T extends keyof DocType, K extends ArrayKeys<DocT
     return res.value;
 }
 
-export function getStatus<K extends keyof DocStatusType>(
+export async function getStatus<K extends keyof DocStatusType>(
     domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
 ): Promise<DocStatusType[K]> {
-    return collStatus.findOne({
-        domainId, docType, docId, uid,
-    });
+    return await collStatus.findOne({ domainId, docType, docId, uid });
 }
 
 export function getMultiStatus<K extends keyof DocStatusType>(
@@ -270,111 +263,93 @@ export async function setStatus<K extends keyof DocStatusType>(
     domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number, args: UpdateQuery<DocStatusType[K]>['$set'],
 ): Promise<DocStatusType[K]> {
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid,
-        },
+        { domainId, docType, docId, uid },
         { $set: args },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export function setMultiStatus<K extends keyof DocStatusType>(
-    domainId: string, docType: K, query: FilterQuery<DocStatusType[K]>, args: UpdateQuery<DocStatusType[K]>['$set'],
+export async function setMultiStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, query: FilterQuery<DocStatusType[K]>, args: Partial<DocStatusType[K]>,
 ) {
-    return collStatus.updateMany(
+    return await collStatus.updateMany(
         { domainId, docType, ...query },
         { $set: args },
     );
 }
 
-export async function setIfNotStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-    key: string, value: number, ifNot: any, args: any,
-) {
+export async function setIfNotStatus<T extends keyof DocStatusType, K extends keyof DocStatusType[T]>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    key: K, value: number, ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
+): Promise<DocStatusType[T]> {
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid, key: { $not: { $eq: ifNot } },
-        },
+        { domainId, docType, docId, uid, [key]: { $not: { $eq: ifNot } } },
         { $set: { [key]: value, ...args } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export async function cappedIncStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-    key: string, value: number, minValue = -1, maxValue = 1,
-) {
+export async function cappedIncStatus<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    key: NumberKeys<DocStatusType[T]>, value: number, minValue = -1, maxValue = 1,
+): Promise<DocStatusType[T]> {
     assert(value !== 0);
     const $not = value > 0 ? { $gte: maxValue } : { $lte: minValue };
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid, [key]: { $not },
-        },
+        { domainId, docType, docId, uid, [key]: { $not } },
         { $inc: { [key]: value } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export async function incStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-    key: string, value: number,
-) {
+export async function incStatus<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    key: NumberKeys<DocStatusType[T]>, value: number,
+): Promise<DocStatusType[T]> {
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid,
-        },
+        { domainId, docType, docId, uid },
         { $inc: { [key]: value } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export async function revPushStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-    key: string, value: any,
-) {
+export async function revPushStatus<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    key: ArrayKeys<DocStatusType[T]>, value: any,
+): Promise<DocStatusType[T]> {
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid,
-        },
+        { domainId, docType, docId, uid },
         { $push: { [key]: value }, $inc: { rev: 1 } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export async function revInitStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-) {
+export async function revInitStatus<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+): Promise<DocStatusType[T]> {
     const res = await collStatus.findOneAndUpdate(
-        {
-            domainId, docType, docId, uid,
-        },
+        { domainId, docType, docId, uid },
         { $inc: { rev: 1 } },
         { upsert: true, returnOriginal: false },
     );
     return res.value;
 }
 
-export async function revSetStatus(
-    domainId: string, docType: number, docId: DocID, uid: number,
-    rev: number, args: any, returnDoc = true,
-) {
-    const filter = {
-        domainId, docType, docId, uid, rev,
-    };
+export async function revSetStatus<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    rev: number, args: Partial<DocStatusType[T]>,
+): Promise<any> {
+    const filter = { domainId, docType, docId, uid, rev };
     const update = { $set: args, $inc: { rev: 1 } };
-    if (returnDoc) {
-        const res = await collStatus.findOneAndUpdate(filter, update, { returnOriginal: false });
-        return res.value;
-    }
-    return await collStatus.updateOne(filter, update);
+    const res = await collStatus.findOneAndUpdate(filter, update, { returnOriginal: false });
+    return res.value;
 }
 
-/* eslint-disable object-curly-newline */
 async function ensureIndexes() {
     const ic = coll.createIndex.bind(coll);
     const is = collStatus.createIndex.bind(coll);

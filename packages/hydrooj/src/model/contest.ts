@@ -557,7 +557,7 @@ export async function recalcStatus(domainId: string, tid: ObjectID, type: Type =
             tasks.push(
                 document.revSetStatus(
                     domainId, type, tid,
-                    tsdoc.uid, tsdoc.rev, { journal, ...stats }, false,
+                    tsdoc.uid, tsdoc.rev, { journal, ...stats },
                 ),
             );
         }
