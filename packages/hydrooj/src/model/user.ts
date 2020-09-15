@@ -102,6 +102,8 @@ export class User implements _User {
                 this[key] = setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
             }
         }
+
+        bus.serial('user/get', this);
     }
 
     hasPerm(...perm: bigint[]) {

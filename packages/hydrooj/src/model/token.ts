@@ -1,9 +1,8 @@
-import { Collection } from 'mongodb';
 import { TokenDoc } from '../interface';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
 
-export const coll: Collection<TokenDoc> = db.collection('token');
+export const coll = db.collection('token');
 
 export const TYPE_SESSION = 0;
 export const TYPE_REGISTRATION = 2;

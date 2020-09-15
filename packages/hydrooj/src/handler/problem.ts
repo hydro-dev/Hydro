@@ -72,6 +72,7 @@ class ProblemMainHandler extends ProblemHandler {
             path.push([q, null, null, true]);
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
+        await bus.serial('problem/list', query, this);
         const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(domainId, query).sort({ pid: 1, docId: 1 }),
             page,
@@ -116,6 +117,7 @@ class ProblemCategoryHandler extends ProblemHandler {
         }
         let psdict = {};
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        await bus.serial('problem/list', q, this);
         const [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(domainId, q).sort({ pid: 1, docId: 1 }),
             page,
@@ -152,6 +154,7 @@ class ProblemRandomHandler extends ProblemHandler {
             }
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        await bus.serial('problem/list', q, this);
         const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
@@ -172,6 +175,7 @@ class ProblemDetailHandler extends ProblemHandler {
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
+        await bus.serial('problem/get', this.pdoc, this);
         this.udoc = await user.getById(domainId, this.pdoc.owner);
         this.response.body = {
             pdoc: this.pdoc,
@@ -184,9 +188,6 @@ class ProblemDetailHandler extends ProblemHandler {
             ],
         };
     }
-
-    // eslint-disable-next-line
-    async get(...args: any[]) { }
 
     @param('pid', Types.UnsignedInt)
     @param('dest', Types.String)

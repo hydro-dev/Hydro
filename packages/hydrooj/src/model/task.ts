@@ -1,14 +1,18 @@
 import moment from 'moment-timezone';
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { Task } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('task');
 
-export async function add(task: any) {
-    const t = { ...task };
-    if (typeof t.executeAfter === 'object') t.executeAfter = t.executeAfter.getTime();
-    t.count = t.count || 1;
-    t.executeAfter = t.executeAfter || new Date().getTime();
+export async function add(task: Partial<Task> & { type: string }) {
+    const t: Task = {
+        ...task,
+        count: task.count || 1,
+        priority: task.priority || 1,
+        executeAfter: task.executeAfter || new Date(),
+        _id: new ObjectID(),
+    };
     const res = await coll.insertOne(t);
     return res.insertedId;
 }
@@ -17,7 +21,7 @@ export function get(_id: ObjectID) {
     return coll.findOne({ _id });
 }
 
-export function count(query: any) {
+export function count(query: FilterQuery<Task>) {
     return coll.find(query).count();
 }
 
@@ -25,9 +29,9 @@ export function del(_id: ObjectID) {
     return coll.deleteOne({ _id });
 }
 
-export async function getFirst(query: any) {
+export async function getFirst(query: FilterQuery<Task>) {
     const q = { ...query };
-    q.executeAfter = q.executeAfter || { $lt: new Date().getTime() };
+    q.executeAfter = q.executeAfter || { $lt: new Date() };
     const res = await coll.findOneAndDelete(q);
     if (res.value) {
         if (res.value.interval) {

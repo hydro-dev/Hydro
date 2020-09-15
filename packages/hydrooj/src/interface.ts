@@ -435,7 +435,8 @@ export interface JudgeResultBody {
 export interface Task {
     _id: ObjectID,
     type: string,
-    executeAfter?: Date
+    executeAfter?: Date,
+    priority: number,
     [key: string]: any
 }
 

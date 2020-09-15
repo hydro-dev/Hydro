@@ -1,8 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db } from 'mongodb';
+import { Db, FilterQuery } from 'mongodb';
 import { Logger } from '../logger';
-import { Mdoc, Rdoc, User } from '../interface';
+import {
+    Mdoc, Pdoc, Rdoc, User,
+} from '../interface';
 
 type DocType = import('../model/document').DocType;
 
@@ -14,6 +16,7 @@ function isBailed(value: any) {
 }
 
 export type Disposable = () => void
+export type VoidReturn = Promise<void> | void
 
 export interface EventMap {
     'app/started': () => void
@@ -22,11 +25,18 @@ export interface EventMap {
 
     'database/connect': (db: Db) => void
 
-    'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
+    'monitor/update': (type: 'server' | 'judger', $set: any) => VoidReturn
 
-    'document/add': (doc: any) => Promise<void> | void
+    'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
+    'user/get': (udoc: User) => void
+
+    'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>
-        (domainId: string, docType: T, docId: DocType[T], $set: any) => Promise<void> | void
+        (domainId: string, docType: T, docId: DocType[T], $set: any) => VoidReturn
+
+    'problem/edit': (doc: Pdoc) => VoidReturn
+    'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
+    'problem/get': (doc: Pdoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
 }

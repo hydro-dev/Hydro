@@ -7,19 +7,23 @@ const coll = db.collection('status');
 
 export async function update() {
     const [mid, $set] = await sysinfo.update();
+    $set.updateAt = new Date();
+    $set.reqCount = global.Hydro.stat.reqCount;
+    await bus.serial('monitor/update', 'server', $set);
     await coll.updateOne(
         { mid, type: 'server' },
-        { $set: { ...$set, updateAt: new Date(), reqCount: global.Hydro.stat.reqCount } },
+        { $set },
         { upsert: true },
     );
     global.Hydro.stat.reqCount = 0;
 }
 
-export function updateJudger(args) {
-    args.type = 'judger';
-    return coll.updateOne(
+export async function updateJudger(args) {
+    const $set = { ...args, updateAt: new Date() };
+    await bus.serial('monitor/update', 'judger', $set);
+    return await coll.updateOne(
         { mid: args.mid, type: 'judger' },
-        { $set: { ...args, updateAt: new Date() } },
+        { $set },
         { upsert: true },
     );
 }

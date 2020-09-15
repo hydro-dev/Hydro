@@ -8,7 +8,7 @@ export function getStatus(domainId: string, tid: ObjectID, uid: number) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
 }
 
-export function getMultiStatus(domainId: string, query: any) {
+export function getMultiStatus(domainId: string, query: FilterQuery<TrainingDoc>) {
     return document.getMultiStatus(domainId, document.TYPE_TRAINING, query);
 }
 
