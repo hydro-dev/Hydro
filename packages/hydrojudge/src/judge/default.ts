@@ -1,6 +1,7 @@
 import Queue from 'p-queue';
 import path from 'path';
 import fs from 'fs-extra';
+import { argv } from 'yargs';
 import { STATUS } from 'hydrooj/dist/model/builtin';
 import { CompileError } from '../error';
 import { copyInDir, parseFilename } from '../utils';
@@ -10,7 +11,7 @@ import signals from '../signals';
 import { check, compileChecker } from '../check';
 
 const Score = {
-    sum: (a, b) => (a + b),
+    sum: (a: number, b: number) => (a + b),
     max: Math.max,
     min: Math.min,
 };
@@ -144,7 +145,7 @@ export const judge = async (ctx) => {
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
     await Promise.all(tasks);
     ctx.stat.done = new Date();
-    ctx.next({ message: JSON.stringify(ctx.stat) });
+    if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,

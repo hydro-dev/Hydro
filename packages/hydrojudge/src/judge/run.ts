@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { argv } from 'yargs';
 import { STATUS } from 'hydrooj/dist/model/builtin';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -52,7 +53,7 @@ export const judge = async (ctx) => {
         },
     });
     ctx.stat.done = new Date();
-    ctx.next({ message: JSON.stringify(ctx.stat) });
+    if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status,
         score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
