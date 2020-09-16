@@ -5,14 +5,6 @@ import { Dictionary, NumericDictionary } from 'lodash';
 
 type document = typeof import('./model/document');
 
-export type NumberKeys<O> = {
-    [K in keyof O]: number extends O[K] ? K : never
-}[keyof O];
-
-export type ArrayKeys<O, P = any> = {
-    [K in keyof O]: P[] extends O[K] ? K : never
-}[keyof O]
-
 export interface System {
     _id: string,
     value: any,

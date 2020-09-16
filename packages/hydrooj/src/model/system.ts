@@ -1,5 +1,6 @@
 import Lru from 'lru-cache';
-import { NumberKeys, SystemKeys } from '../interface';
+import { NumberKeys } from '../typeutils';
+import { SystemKeys } from '../interface';
 import * as db from '../service/db';
 
 const coll = db.collection('system');

@@ -1,4 +1,6 @@
 /* eslint-disable no-await-in-loop */
+import { Udoc } from '../interface';
+import { Value } from '../typeutils';
 import * as user from '../model/user';
 import * as document from '../model/document';
 import * as setting from '../model/setting';
@@ -12,7 +14,7 @@ const collDocument = db.collection('document');
 const collDomainUser = db.collection('domain.user');
 const collRecord = db.collection('record');
 
-const $unset = {
+const $unset: Value<Partial<Udoc>> = {
     regip: '', regat: '', loginat: '', loginip: '',
 };
 for (const s of setting.PREFERENCE_SETTINGS) {

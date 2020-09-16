@@ -6,8 +6,9 @@ import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
 import {
-    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc, NumberKeys,
+    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc,
 } from '../interface';
+import { NumberKeys } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
 

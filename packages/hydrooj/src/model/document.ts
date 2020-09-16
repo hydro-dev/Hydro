@@ -3,11 +3,12 @@ import assert from 'assert';
 import {
     ObjectID, Cursor, FilterQuery, UpdateQuery,
 } from 'mongodb';
+import {
+    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, ProblemStatusDoc,
+} from '../interface';
+import { NumberKeys, ArrayKeys } from '../typeutils';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
-import {
-    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, NumberKeys, ArrayKeys, ProblemStatusDoc,
-} from '../interface';
 
 type DocID = ObjectID | string | number;
 

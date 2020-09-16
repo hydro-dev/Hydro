@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 import { Logger } from '../logger';
+import * as bus from '../service/bus';
 
 const logger = new Logger('common', true);
 
@@ -57,6 +58,7 @@ export async function handler(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/handler');
 }
 
 export async function locale(pending: string[], fail: string[]) {
@@ -80,6 +82,7 @@ export async function locale(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/locale');
 }
 
 export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
@@ -110,6 +113,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             }
         }
     }
+    await bus.serial('app/load/setting');
 }
 
 export async function template(pending: string[], fail: string[]) {
@@ -132,6 +136,7 @@ export async function template(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/template');
 }
 
 export async function uistatic(pending: string[], fail: string[]) {
@@ -161,6 +166,7 @@ export async function model(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/model');
 }
 
 export async function lib(pending: string[], fail: string[]) {
@@ -177,6 +183,7 @@ export async function lib(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/lib');
 }
 
 export async function service(pending: string[], fail: string[]) {
@@ -193,6 +200,7 @@ export async function service(pending: string[], fail: string[]) {
             }
         }
     }
+    await bus.serial('app/load/service');
 }
 
 export async function script(pending: string[], fail: string[], active: string[]) {
@@ -210,4 +218,5 @@ export async function script(pending: string[], fail: string[], active: string[]
         }
         active.push(i);
     }
+    await bus.serial('app/load/script');
 }

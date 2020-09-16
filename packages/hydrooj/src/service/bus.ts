@@ -20,8 +20,15 @@ export type VoidReturn = Promise<void> | void
 
 export interface EventMap {
     'app/started': () => void
-    'app/exit': () => Promise<void> | void
-    'dispose': () => void
+    'app/load/lib': () => VoidReturn
+    'app/load/locale': () => VoidReturn
+    'app/load/template': () => VoidReturn
+    'app/load/script': () => VoidReturn
+    'app/load/setting': () => VoidReturn
+    'app/load/model': () => VoidReturn
+    'app/load/handler': () => VoidReturn
+    'app/load/service': () => VoidReturn
+    'app/exit': () => VoidReturn
 
     'database/connect': (db: Db) => void
 

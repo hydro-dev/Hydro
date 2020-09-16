@@ -6,6 +6,7 @@ import * as domain from './domain';
 import { BUILTIN_USERS, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import { User as _User, Udoc, Udict } from '../interface';
+import { Value } from '../typeutils';
 import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
@@ -172,11 +173,11 @@ export async function getByEmail(domainId: string, mail: string): Promise<User |
     return new User(udoc, dudoc);
 }
 
-export function setById(uid: number, $set = {}, $unset = {}) {
+export async function setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>) {
     const op: any = {};
     if ($set && Object.keys($set).length) op.$set = $set;
     if ($unset && Object.keys($unset).length) op.$unset = $unset;
-    return coll.findOneAndUpdate({ _id: uid }, op);
+    return await coll.findOneAndUpdate({ _id: uid }, op);
 }
 
 export function setEmail(uid: number, mail: string) {
