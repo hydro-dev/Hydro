@@ -5,8 +5,8 @@
         "packages/*"
     ],
     "scripts": {
-        "build": "tsc -b",
-        "build:watch": "tsc -b --watch",
+        "build": "node build/prebuild.js && tsc -b",
+        "build:watch": "node build/prebuild.js && tsc -b --watch",
         "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",

@@ -1,30 +1,36 @@
+# Base
 node_modules/
-config.yaml
-config.json
+!.gitkeep
+!__mocks__
+__*
+
+# Built Files & Log
 .build/
 dist/
-.cache/
 *.cache
-__*
-ui/misc/.iconfont
-ui/static/locale
+/build/*.js
+.cache/
 *.log
 *.d.ts
-build/*.js
 *.js.map
-*.hydro
-!.gitkeep
 *.tsbuildinfo
-yarn.lock
+*.hydro
+.coverage
+globalConfig.json
 
+# Config Files
+config.yaml
+config.json
+yarn.lock
+tsconfig.json
+
+# Project Rules
+!/build/prebuild.js
+!**/bin/*.js
 packages/**/*.js
 !packages/hydrojudge/service.js
-!**/bin/*.js
 packages/**/*.js.map
 packages/**/*.d.ts
 
+# Data files
 *.mmdb
-
-.coverage
-!__mocks__
-globalConfig.json
