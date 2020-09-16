@@ -19,8 +19,8 @@ dist/
 globalConfig.json
 
 # Config Files
-config.yaml
-config.json
+/config.yaml
+/config.json
 yarn.lock
 tsconfig.json
 

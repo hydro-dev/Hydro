@@ -43,6 +43,7 @@ export interface EventMap {
 
     'problem/edit': (doc: Pdoc) => VoidReturn
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
+    'problem/setting': (update: Partial<Pdoc>, handler: any) => VoidReturn
     'problem/get': (doc: Pdoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void

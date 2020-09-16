@@ -189,6 +189,8 @@ class ProblemDetailHandler extends ProblemHandler {
         };
     }
 
+    async get(...args: any[]) { } // eslint-disable-line
+
     @param('pid', Types.UnsignedInt)
     @param('dest', Types.String)
     @param('hidden', Types.Boolean)
@@ -391,9 +393,11 @@ class ProblemSettingsHandler extends ProblemManageHandler {
         }
         if (!difficultyAdmin) difficultyAdmin = null;
         else if (difficultyAdmin < 1 || difficultyAdmin > 9) throw new ValidationError('difficultyAdmin');
-        await problem.edit(domainId, pdoc.docId, {
+        const update: Partial<Pdoc> = {
             hidden, category, tag, difficultySetting, difficultyAdmin,
-        });
+        };
+        await bus.serial('problem/setting', update, this);
+        await problem.edit(domainId, pdoc.docId, update);
         await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
         this.back();
     }
