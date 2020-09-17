@@ -21,6 +21,7 @@ module.exports = {
         'guard-for-in': 'off',
         'implicit-arrow-linebreak': 'off',
         'import/extensions': 'off',
+        'import/no-cycle': 'off',
         'import/no-extraneous-dependencies': 'off',
         'import/no-named-as-default-member': 'off',
         'import/prefer-default-export': 'off',

@@ -1,9 +1,3 @@
-# Base
-node_modules/
-!.gitkeep
-!__mocks__
-__*
-
 # Built Files & Log
 .build/
 dist/
@@ -25,12 +19,16 @@ yarn.lock
 tsconfig.json
 
 # Project Rules
-!/build/prebuild.js
-!**/bin/*.js
 packages/**/*.js
+!/build/build.js
+!**/bin/*.js
 !packages/hydrojudge/service.js
-packages/**/*.js.map
-packages/**/*.d.ts
 
 # Data files
 *.mmdb
+
+# Base
+node_modules/
+__*
+!__mocks__
+!.gitkeep

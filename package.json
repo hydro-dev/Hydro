@@ -5,12 +5,13 @@
         "packages/*"
     ],
     "scripts": {
-        "build": "node build/prebuild.js && tsc -b",
-        "build:watch": "node build/prebuild.js && tsc -b --watch",
+        "build": "node build/build.js",
+        "build:watch": "node build/build.js --watch",
         "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",
-        "start": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start",
+        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start",
+        "start": "node build/start",
         "clean": "zsh -c \"rm -r tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
     },
     "version": "1.0.0",

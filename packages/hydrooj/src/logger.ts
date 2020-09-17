@@ -1,6 +1,7 @@
 import { inspect, InspectOptions, format } from 'util';
 import { argv } from 'yargs';
 import { stderr } from 'supports-color';
+import { } from './loader';
 
 namespace Time {
     export const second = 1000;

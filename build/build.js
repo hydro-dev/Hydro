@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const child = require('child_process');
+const { argv } = require('yargs');
 
 const compilerOptionsBase = {
     target: 'es2019',
@@ -14,7 +16,10 @@ const compilerOptionsBase = {
 };
 const config = {
     compilerOptions: compilerOptionsBase,
-    references: [{ path: 'tsconfig.build.json' }],
+    references: [
+        { path: 'tsconfig.build.json' },
+        { path: 'packages/hydrooj' },
+    ],
     files: [],
 };
 const configSrc = {
@@ -47,7 +52,7 @@ const configFlat = {
 const packages = fs.readdirSync(path.resolve(process.cwd(), 'packages'));
 console.log(packages);
 for (const package of packages) {
-    config.references.push({ path: `packages/${package}` });
+    if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
     const files = fs.readdirSync(path.resolve(process.cwd(), 'packages', package));
     fs.writeFileSync(
         path.resolve(process.cwd(), 'packages', package, 'tsconfig.json'),
@@ -55,3 +60,14 @@ for (const package of packages) {
     );
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
+
+if (argv.watch) {
+    child.spawnSync('../node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
+} else {
+    let result = child.spawnSync('../node_modules/.bin/tsc -b', { stdio: 'inherit' });
+    if (result.status != 0) {
+        result = child.spawnSync('../node_modules/.bin/tsc -b', { stdio: 'inherit' });
+    }
+    console.log(result);
+    process.exit(result.status);
+}
