@@ -62,12 +62,12 @@ for (const package of packages) {
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
 
 if (argv.watch) {
-    child.spawnSync('../node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
+    child.execSync('./node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
 } else {
-    let result = child.spawnSync('../node_modules/.bin/tsc -b', { stdio: 'inherit' });
-    if (result.status != 0) {
-        result = child.spawnSync('../node_modules/.bin/tsc -b', { stdio: 'inherit' });
+    let result;
+    try {
+        result = child.execSync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
+    } catch (e) {
+        result = child.execSync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
     }
-    console.log(result);
-    process.exit(result.status);
 }
