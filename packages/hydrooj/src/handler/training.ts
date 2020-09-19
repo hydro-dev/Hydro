@@ -100,7 +100,7 @@ class TrainingDetailHandler extends Handler {
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
         await bus.serial('training/get', tdoc, this);
-        const pids = training.getPids(tdoc);
+        const pids = training.getPids(tdoc.dag);
         const [owner, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)),

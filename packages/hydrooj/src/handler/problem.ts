@@ -167,7 +167,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     udoc: User;
 
-    @param('pid', Types.String, null, parsePid)
+    @param('pid', Types.String, true, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
         this.pdoc = await problem.get(domainId, pid, this.user._id);
@@ -418,6 +418,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @param('content', Types.String, isContent)
     async post(domainId: string, title: string, content: string) {
         const $update: Partial<Pdoc> = { title, content };
+        console.log(this.request.body);
         if (this.request.body.pid) $update.pid = checkPid(this.request.body.pid);
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, $update);

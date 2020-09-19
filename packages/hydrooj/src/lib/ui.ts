@@ -37,9 +37,15 @@ export const Nav = (
     name: string, args: Dictionary<any> = {}, prefix: string,
     ...permPrivChecker: Array<number | bigint | Function>
 ) => {
-    global.Hydro.ui.nodes.nav.push({
-        name, args: args || {}, prefix, checker: buildChecker(...permPrivChecker),
-    });
+    if (name.startsWith('@@')) {
+        global.Hydro.ui.nodes.nav.splice(+name.split('@@')[1], 0, {
+            name: name.split('@@')[2], args: args || {}, prefix, checker: buildChecker(...permPrivChecker),
+        });
+    } else {
+        global.Hydro.ui.nodes.nav.push({
+            name, args: args || {}, prefix, checker: buildChecker(...permPrivChecker),
+        });
+    }
 };
 
 export const ProblemAdd = (

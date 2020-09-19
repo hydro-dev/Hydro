@@ -176,7 +176,7 @@ class DomainRoleHandler extends ManageHandler {
         const rdict: Dictionary<any> = {};
         for (const r of roles) rdict[r._id] = r.perm;
         if (rdict[role]) throw new RoleAlreadyExistError(role);
-        await domain.addRole(domainId, role, rdict.default.perm);
+        await domain.addRole(domainId, role, rdict.default);
         this.back();
     }
 
