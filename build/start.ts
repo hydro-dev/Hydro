@@ -27,7 +27,7 @@ if (!cluster.isMaster) {
     try {
         const ui = argv.ui as string || '@hydrooj/ui-default';
         require.resolve(ui);
-        addons.push(ui);
+        addons = [ui, ...addons];
     } catch (e) {
         console.error('Please also install @hydrooj/ui-default');
     }

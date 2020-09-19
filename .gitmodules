@@ -1,0 +1,3 @@
+[customize]
+path = packages/customize
+url = https://github.com/hydro-dev/customize.git

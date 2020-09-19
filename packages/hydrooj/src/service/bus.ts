@@ -3,7 +3,7 @@ import cluster from 'cluster';
 import { Db, FilterQuery } from 'mongodb';
 import { Logger } from '../logger';
 import {
-    Mdoc, Pdoc, Rdoc, User,
+    Mdoc, Pdoc, Rdoc, TrainingDoc, User,
 } from '../interface';
 
 type DocType = import('../model/document').DocType;
@@ -45,6 +45,9 @@ export interface EventMap {
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
     'problem/setting': (update: Partial<Pdoc>, handler: any) => VoidReturn
     'problem/get': (doc: Pdoc, handler: any) => VoidReturn
+
+    'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
+    'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
 }

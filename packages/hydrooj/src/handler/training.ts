@@ -1,5 +1,6 @@
 import assert from 'assert';
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { Tdoc, TrainingDoc } from '../interface';
 import { ValidationError, ProblemNotFoundError } from '../error';
 import { isTitle, isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
@@ -8,10 +9,10 @@ import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as training from '../model/training';
 import * as user from '../model/user';
+import * as bus from '../service/bus';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-import { Tdoc } from '../interface';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];
@@ -56,6 +57,8 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
 class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
+        const query: FilterQuery<TrainingDoc> = {};
+        await bus.serial('training/list', query, this);
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
@@ -96,6 +99,7 @@ class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
+        await bus.serial('training/get', tdoc, this);
         const pids = training.getPids(tdoc);
         const [owner, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
