@@ -62,7 +62,7 @@ class UserRegisterHandler extends Handler {
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
-            await system.get('registration_token_expire_seconds'),
+            await system.get('session.unsaved_expire_seconds'),
             { mail },
         );
         if (await system.get('smtp.user')) {
@@ -82,9 +82,9 @@ class UserRegisterWithCodeHandler extends Handler {
     @param('code', Types.String)
     async get(domainId: string, code: string) {
         this.response.template = 'user_register_with_code.html';
-        const { mail } = await token.get(code, token.TYPE_REGISTRATION);
-        if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
-        this.response.body = { mail };
+        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
+        if (!tdoc) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
+        this.response.body = tdoc;
     }
 
     @param('password', Types.String, isPassword)
@@ -118,7 +118,7 @@ class UserLostPassHandler extends Handler {
         if (!udoc) throw new UserNotFoundError(mail);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
-            await system.get('lostpass_token_expire_seconds'),
+            await system.get('session.unsaved_expire_seconds'),
             { uid: udoc._id },
         );
         const m = await this.renderHTML('user_lostpass_mail', { url: `lostpass/${tid}`, uname: udoc.uname });
