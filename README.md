@@ -1,4 +1,6 @@
 # Hydro
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_shield)
+
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署，轻量，功能强大且易于扩展。  
 
@@ -25,3 +27,7 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 - [criyle](https://github.com/criyle) 提供评测沙箱实现。  
 - [Vijos](https://github.com/vijos/vj4) 为 Hydro 提供了UI框架。  
 - [undefined](https://masnn.io:38443/) 项目主要开发人员。  
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_large)
