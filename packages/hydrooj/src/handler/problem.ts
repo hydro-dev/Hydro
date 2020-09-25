@@ -556,7 +556,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
         if (!(psrdoc.owner === this.user._id
             && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
-            this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY);
+            throw new PermissionError(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF);
         }
         await solution.editReply(domainId, psid, psrid, content);
         this.back();

@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { isSafeInteger } from 'lodash';
-import { DiscussionNotFoundError, DocumentNotFoundError } from '../error';
+import { DiscussionNotFoundError, DocumentNotFoundError, PermissionError } from '../error';
 import {
     Mdoc, Drdoc, Ddoc, Drrdoc,
 } from '../interface';
@@ -242,11 +242,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID)
     @param('content', Types.String, isContent)
     async postEditReply(domainId: string, drid: ObjectID, content: string) {
-        if (!(this.ddoc.owner === this.user._id
-            && this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION))) {
-            if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY);
-            else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
-        }
+        this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editReply(domainId, drid, content);
         this.back();
     }
@@ -267,7 +264,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drrid', Types.ObjectID)
     @param('content', Types.String, isContent)
     async postEditTailReply(domainId: string, drid: ObjectID, drrid: ObjectID, content: string) {
-        if (this.drdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY);
+        this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editTailReply(domainId, drid, drrid, content);
         this.back();
     }

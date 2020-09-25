@@ -10,7 +10,7 @@
         "lint": "eslint packages --ext ts --fix",
         "pub": "node build/publish",
         "jest": "node build/jest",
-        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start",
+        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug",
         "start": "node build/start",
         "clean": "zsh -c \"rm -r tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
     },

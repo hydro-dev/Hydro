@@ -1,7 +1,7 @@
 /* eslint-disable prefer-destructuring */
 import assert from 'assert';
 import { PassThrough } from 'stream';
-import path from 'path';
+import { resolve } from 'path';
 import os from 'os';
 import http from 'http';
 import moment from 'moment-timezone';
@@ -43,6 +43,7 @@ type Converter = (value: any) => any;
 type Validator = (value: any) => boolean;
 interface ParamOption {
     name: string,
+    source: 'all' | 'get' | 'post' | 'route',
     isOptional?: boolean,
     convert?: Converter,
     validate?: Validator,
@@ -130,59 +131,52 @@ export const Types: Types = {
     ],
 };
 
-export function param(name: string, type: Type, validate: Validator): MethodDecorator;
-export function param(name: string, type?: Type, isOptional?: boolean): MethodDecorator;
-export function param(
-    name: string, type: Type, validate: null, convert: Converter
-): MethodDecorator;
-export function param(
-    name: string, type: Type, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function param(
-    name: string, type: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function param(
-    name: string, ...args: Array<Type | boolean | Converter | Validator>
-): MethodDecorator;
-export function param(name: string, ...args: any): MethodDecorator {
+function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type | boolean | Validator | Converter>) {
     let cursor = 0;
-    const v: ParamOption = { name };
+    const v: ParamOption = { name, source };
     let isValidate = true;
     while (cursor < args.length) {
-        if (args[cursor] instanceof Array) {
-            const type = args[cursor];
+        const current = args[cursor];
+        if (current instanceof Array) {
+            const type = current;
             if (type[0]) v.convert = type[0];
             if (type[1]) v.validate = type[1];
             if (type[2]) v.isOptional = type[2];
-        } else if (typeof args[cursor] === 'boolean') v.isOptional = args[cursor];
+        } else if (typeof current === 'boolean') v.isOptional = current;
         else if (isValidate) {
-            if (args[cursor] !== null) v.validate = args[cursor];
+            if (current !== null) v.validate = current;
             isValidate = false;
-        } else {
-            v.convert = args[cursor];
-        }
+        } else v.convert = current;
         cursor++;
     }
-    return function desc(target: any, funcName: string, obj: any) {
+    return v;
+}
+
+function _descriptor(v: ParamOption) {
+    return function desc(this: Handler, target: any, funcName: string, obj: any) {
         if (!target.__param) target.__param = {};
         if (!target.__param[target.constructor.name]) target.__param[target.constructor.name] = {};
         if (!target.__param[target.constructor.name][funcName]) {
-            target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string' }];
+            target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string', source: 'route' }];
             const originalMethod = obj.value;
-            obj.value = function validate(rawArgs: any, ...extra: any[]) {
-                if (typeof rawArgs === 'string' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
+            obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
+                if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
                 const arglist: ParamOption[] = this.__param[target.constructor.name][funcName];
                 for (const item of arglist) {
-                    if (!item.isOptional || rawArgs[item.name]) {
-                        if (!rawArgs[item.name]) throw new ValidationError(item.name);
-                        if (item.validate) {
-                            if (!item.validate(rawArgs[item.name])) {
-                                throw new ValidationError(item.name);
-                            }
-                        }
-                        if (item.convert) c.push(item.convert(rawArgs[item.name]));
-                        else c.push(rawArgs[item.name]);
+                    const src = item.source === 'all'
+                        ? rawArgs
+                        : item.source === 'get'
+                            ? this.request.query
+                            : item.source === 'route'
+                                ? this.request.params
+                                : this.request.body;
+                    const value = src[item.name];
+                    if (!item.isOptional || value) {
+                        if (!value) throw new ValidationError(item.name);
+                        if (item.validate && !item.validate(value)) throw new ValidationError(item.name);
+                        if (item.convert) c.push(item.convert(value));
+                        else c.push(value);
                     } else c.push(undefined);
                 }
                 return originalMethod.call(this, ...c);
@@ -191,6 +185,70 @@ export function param(name: string, ...args: any): MethodDecorator {
         target.__param[target.constructor.name][funcName].splice(1, 0, v);
         return obj;
     };
+}
+
+export function get(
+    name: string, type: Type, validate: null, convert: Converter
+): MethodDecorator;
+export function get(
+    name: string, type: Type, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function get(
+    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function get(
+    name: string, ...args: Array<Type | boolean | Validator | Converter>
+): MethodDecorator;
+export function get(name: string, ...args: any): MethodDecorator {
+    return _descriptor(_buildParam(name, 'get', ...args));
+}
+
+export function post(
+    name: string, type: Type, validate: null, convert: Converter
+): MethodDecorator;
+export function post(
+    name: string, type?: Type, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function post(
+    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function post(
+    name: string, ...args: Array<Type | boolean | Converter | Validator>
+): MethodDecorator;
+export function post(name: string, ...args: any): MethodDecorator {
+    return _descriptor(_buildParam(name, 'post', ...args));
+}
+
+export function route(
+    name: string, type: Type, validate: null, convert: Converter
+): MethodDecorator;
+export function route(
+    name: string, type?: Type, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function route(
+    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function route(
+    name: string, ...args: Array<Type | boolean | Converter | Validator>
+): MethodDecorator;
+export function route(name: string, ...args: any): MethodDecorator {
+    return _descriptor(_buildParam(name, 'route', ...args));
+}
+
+export function param(
+    name: string, type: Type, validate: null, convert: Converter
+): MethodDecorator;
+export function param(
+    name: string, type?: Type, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function param(
+    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
+): MethodDecorator;
+export function param(
+    name: string, ...args: Array<Type | boolean | Converter | Validator>
+): MethodDecorator;
+export function param(name: string, ...args: any): MethodDecorator {
+    return _descriptor(_buildParam(name, 'all', ...args));
 }
 
 export function requireCsrfToken(target: any, funcName: string, obj: any) {
@@ -211,7 +269,7 @@ export async function prepare() {
             maxAge: 0,
         }));
     } else {
-        app.use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
+        app.use(cache(resolve(os.tmpdir(), 'hydro', 'public'), {
             maxAge: 365 * 24 * 60 * 60,
         }));
     }
@@ -264,6 +322,8 @@ export class Handler {
     domain: DomainDoc;
 
     loginMethods: any;
+
+    __param: Record<string, ParamOption[]>;
 
     constructor(ctx: Koa.Context) {
         this.ctx = ctx;
@@ -624,10 +684,10 @@ const Checker = (permPrivChecker) => {
     };
 };
 
-export function Route(name: string, route: string, RouteHandler: any, ...permPrivChecker) {
+export function Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
     const checker = Checker(permPrivChecker);
-    router.all(name, route, (ctx) => handle(ctx, RouteHandler, checker));
-    router.all(`${name}_with_domainId`, `/d/:domainId${route}`, (ctx) => handle(ctx, RouteHandler, checker));
+    router.all(name, path, (ctx) => handle(ctx, RouteHandler, checker));
+    router.all(`${name}_with_domainId`, `/d/:domainId${path}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
 
 export class ConnectionHandler {
@@ -772,10 +832,8 @@ export function Connection(
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
-            const cookie = await new Promise((resolve) => {
-                conn.once('data', (c) => {
-                    resolve(c);
-                });
+            const cookie = await new Promise((r) => {
+                conn.once('data', r);
             });
             args.cookie = cookie;
             await h.init(args);
@@ -842,6 +900,9 @@ global.Hydro.service.server = {
     app,
     server,
     router,
+    get,
+    post,
+    route,
     param,
     requireCsrfToken,
     Handler,

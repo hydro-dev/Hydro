@@ -140,4 +140,6 @@ export class Logger {
     }
 }
 
+// This fails in jest
+// @ts-ignore
 global.Hydro.Logger = { Logger };
