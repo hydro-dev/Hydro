@@ -76,8 +76,8 @@ export interface User extends Dictionary<any> {
     role: string,
     regip: () => string,
     loginip: () => string,
-    hasPerm: (perm: bigint) => boolean,
-    hasPriv: (priv: number) => boolean,
+    hasPerm: (...perm: bigint[]) => boolean,
+    hasPriv: (...priv: number[]) => boolean,
     checkPassword: (password: string) => void,
 }
 
