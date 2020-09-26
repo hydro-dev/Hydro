@@ -88,6 +88,8 @@ export const PERM = {
     PERM_BASIC: 0n,
     PERM_DEFAULT: 0n,
     PERM_ADMIN: -1n,
+
+    PERM_NEVER: 1n << 59n,
 };
 
 export const Permission = (family: string, key: BigInt, desc: string) => ({ family, key, desc });
@@ -237,6 +239,7 @@ export const PRIV = {
     PRIV_ALL: -1,
 
     PRIV_DEFAULT: 0,
+    PRIV_NEVER: 1 << 20,
 };
 
 PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE

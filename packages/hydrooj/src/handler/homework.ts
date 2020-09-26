@@ -128,7 +128,7 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         const attended = this.tsdoc && this.tsdoc.attend === 1;
         if (!contest.isDone(this.tdoc)) {
             if (!attended) throw new HomeworkNotAttendedError(tid);
-            if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
+            if (contest.isNotStarted(this.tdoc)) throw new HomeworkNotLiveError(tid);
         }
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
         const path = [

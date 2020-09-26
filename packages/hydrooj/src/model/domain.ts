@@ -158,14 +158,11 @@ export async function incUserInDomain(domainId: string, uid: number, field: stri
 
 export async function getDictUserByDomainId(uid: number) {
     const dudocs = await collUser.find({ uid }).toArray();
-    const ddocs = await coll.find({ owner: uid }).toArray();
     const dudict = {};
     for (const dudoc of dudocs) {
         // eslint-disable-next-line no-await-in-loop
         dudict[dudoc.domainId] = await get(dudoc.domainId);
-    }
-    for (const ddoc of ddocs) {
-        dudict[ddoc._id] = ddoc;
+        dudict[dudoc.domainId].role = dudoc.role;
     }
     return dudict;
 }

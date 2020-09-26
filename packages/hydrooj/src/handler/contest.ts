@@ -242,7 +242,7 @@ class ContestProblemHandler extends ContestHandler {
         this.response.template = 'problem_detail.html';
         if (contest.isDone(this.tdoc)) {
             if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
-            if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+            if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
         if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
             throw new ProblemNotFoundError(pid, this.tdoc.docId);
