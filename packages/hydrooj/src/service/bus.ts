@@ -31,6 +31,7 @@ export interface EventMap {
     'app/exit': () => VoidReturn
 
     'database/connect': (db: Db) => void
+    'database/config': () => void
 
     'monitor/update': (type: 'server' | 'judger', $set: any) => VoidReturn
 

@@ -34,11 +34,11 @@ const checks: Dictionary<CheckItem> = {
         }
     },
     async checkMail(ctx, log, warn) {
-        const from = await system.get('smtp.from');
+        const from = system.get('smtp.from');
         if (!from) warn('SMTP account was not provided, email verification disabled.');
     },
     async checkIpHeader(ctx, log, warn) {
-        const header = await system.get('server.xff');
+        const header = system.get('server.xff');
         if (header && !ctx.request.ip) warn('IP header seems incorrect.\nCheck dashboard>settings>server.');
     },
 };

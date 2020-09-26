@@ -26,7 +26,7 @@ class FileDownloadHandler extends Handler {
 
 class FileUploadHandler extends Handler {
     async getQuota() {
-        let quota = await system.get('user.quota');
+        let quota = system.get('user.quota');
         if (this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) {
             quota = 2 ** 63 - 1;
         }

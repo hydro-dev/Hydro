@@ -169,7 +169,7 @@ function _descriptor(v: ParamOption) {
                         : item.source === 'get'
                             ? this.request.query
                             : item.source === 'route'
-                                ? this.request.params
+                                ? { ...this.request.params, domainId: this.domainId }
                                 : this.request.body;
                     const value = src[item.name];
                     if (!item.isOptional || value) {
@@ -263,7 +263,7 @@ export function requireCsrfToken(target: any, funcName: string, obj: any) {
 }
 
 export async function prepare() {
-    app.keys = await system.get('session.keys') as unknown as string[];
+    app.keys = system.get('session.keys') as unknown as string[];
     if (argv.public) {
         app.use(cache(argv.public, {
             maxAge: 0,
@@ -285,6 +285,8 @@ export class Handler {
     UIContext: any;
 
     args: any;
+
+    domainId: string;
 
     ctx: Koa.Context;
 
@@ -398,7 +400,7 @@ export class Handler {
     }
 
     renderTitle(str: string) {
-        return `${this.translate(str)} - Hydro`;
+        return `${this.translate(str)} - ${system.get('server.name')}`;
     }
 
     checkPerm(...args: bigint[]) {
@@ -419,9 +421,9 @@ export class Handler {
             else args[key] = kwargs[key].toString();
         }
         try {
-            if (this.args.domainId !== 'system' || args.domainId) {
+            if (this.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
-                args.domainId = args.domainId || this.args.domainId;
+                args.domainId = args.domainId || this.domainId;
             }
             const { anchor, query } = args;
             if (query) res = router.url(name, args, { query });
@@ -464,7 +466,7 @@ export class Handler {
     }
 
     async init({ domainId }) {
-        const xff = await system.get('server.xff') as string;
+        const xff = system.get('server.xff') as string;
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
         [this.domain] = await Promise.all([
             domain.get(domainId),
@@ -560,8 +562,8 @@ export class Handler {
 
     async saveCookie() {
         const expireSeconds = this.session.save
-            ? await system.get('session.expire_seconds') as number
-            : await system.get('session.unsaved_expire_seconds') as number;
+            ? system.get('session.expire_seconds') as number
+            : system.get('session.unsaved_expire_seconds') as number;
         if (this.session._id) {
             await token.update(
                 this.session._id,
@@ -587,7 +589,7 @@ export class Handler {
             );
         }
         const cookie: SetOption = {
-            secure: !!await system.get('session.secure'),
+            secure: !!system.get('session.secure'),
             httpOnly: false,
         };
         if (this.session.save) {
@@ -694,18 +696,20 @@ export class ConnectionHandler {
     conn: sockjs.Connection;
 
     request: {
-        params: any
-        headers: any
-        ip: string
+        params: any;
+        headers: any;
+        ip: string;
     }
 
-    session: any
+    domainId: string;
 
-    args: any
+    session: any;
 
-    user: any
+    args: any;
 
-    domain: DomainDoc
+    user: User;
+
+    domain: DomainDoc;
 
     constructor(conn: sockjs.Connection) {
         this.conn = conn;
@@ -738,7 +742,7 @@ export class ConnectionHandler {
     }
 
     renderTitle(str: string) {
-        return `${this.translate(str)} - Hydro`;
+        return `${this.translate(str)} - ${system.get('server.name')}`;
     }
 
     checkPerm(...args: bigint[]) {
@@ -832,6 +836,7 @@ export function Connection(
         try {
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
+            h.domainId = args.domainId;
             const cookie = await new Promise((r) => {
                 conn.once('data', r);
             });
@@ -860,8 +865,8 @@ export function Connection(
 }
 
 // TODO use postInit?
-export async function start() {
-    const port = await system.get('server.port');
+export function start() {
+    const port = system.get('server.port');
     if (argv.debug) {
         app.use(async (ctx: Context, next: Function) => {
             const startTime = new Date().getTime();
@@ -880,7 +885,7 @@ export async function start() {
         });
     }
     app.use(async (ctx, next) => {
-        const xff = await system.get('server.xff');
+        const xff = system.get('server.xff');
         const ip = xff ? ctx.request.headers[xff] : ctx.request.ip;
         try {
             await opcount.inc('global', ip, 10, 100);

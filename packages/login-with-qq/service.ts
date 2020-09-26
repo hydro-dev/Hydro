@@ -12,7 +12,7 @@ declare module 'hydrooj' {
 
 export async function postInit() {
     const { system, token } = global.Hydro.model;
-    const [url, accessToken] = await system.getMany(['login-with-qq.url', 'login-with-qq.token']);
+    const [url, accessToken] = system.getMany(['login-with-qq.url', 'login-with-qq.token']);
     if (!url) return;
     const headers: Record<string, string> = {};
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;

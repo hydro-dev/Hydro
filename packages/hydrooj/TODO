@@ -12,3 +12,4 @@ message.markAsRead
 存储系统抽象化
 extend problem settings
 +oplog
+将系统设置存于本地而非数据库

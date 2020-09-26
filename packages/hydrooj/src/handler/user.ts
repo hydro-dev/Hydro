@@ -62,13 +62,13 @@ class UserRegisterHandler extends Handler {
         this.limitRate('send_mail', 3600, 30);
         const t = await token.add(
             token.TYPE_REGISTRATION,
-            await system.get('session.unsaved_expire_seconds'),
+            system.get('session.unsaved_expire_seconds'),
             { mail },
         );
-        if (await system.get('smtp.user')) {
+        if (system.get('smtp.user')) {
             const m = await this.renderHTML('user_register_mail.html', {
                 path: `register/${t[0]}`,
-                url_prefix: await system.get('server.url'),
+                url_prefix: system.get('server.url'),
             });
             await sendMail(mail, 'Sign Up', 'user_register_mail', m);
             this.response.template = 'user_register_mail_sent.html';
@@ -107,18 +107,18 @@ class UserRegisterWithCodeHandler extends Handler {
 
 class UserLostPassHandler extends Handler {
     async get() {
-        if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
+        if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         this.response.template = 'user_lostpass.html';
     }
 
     @param('mail', Types.String, isEmail)
     async post(domainId: string, mail: string) {
-        if (!await system.get('smtp.user')) throw new SystemError('Cannot send mail');
+        if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
-            await system.get('session.unsaved_expire_seconds'),
+            system.get('session.unsaved_expire_seconds'),
             { uid: udoc._id },
         );
         const m = await this.renderHTML('user_lostpass_mail', { url: `lostpass/${tid}`, uname: udoc.uname });

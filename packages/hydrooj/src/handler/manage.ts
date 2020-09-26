@@ -78,7 +78,7 @@ class SystemDashboardHandler extends SystemHandler {
     }
 
     async postRestart() {
-        const count = await system.get('server.worker');
+        const count = system.get('server.worker');
         process.send({ event: 'restart', count });
         this.back();
     }
@@ -141,7 +141,7 @@ class SystemSettingHandler extends SystemHandler {
         for (const s of this.response.body.settings) {
             // FIXME no-await-in-loop
             // eslint-disable-next-line no-await-in-loop
-            this.response.body.current[s.key] = await system.get(s.key);
+            this.response.body.current[s.key] = system.get(s.key);
         }
     }
 

@@ -18,6 +18,7 @@ export interface SystemKeys {
     'smtp.port': number,
     'smtp.secure': boolean,
     'user': number,
+    'server.name': string,
     'server.url': string,
     'server.xff': string,
     'server.worker': number,

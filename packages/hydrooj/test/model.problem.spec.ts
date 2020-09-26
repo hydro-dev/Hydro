@@ -17,6 +17,7 @@ describe('Model.Problem', () => {
 
     test('add_get', async () => {
         const pid = await problem.add(DOMAIN_ID, PNAME, TITLE, CONTENT, UID);
+        expect(pid).toBeTruthy();
         let pdoc = await problem.get(DOMAIN_ID, PNAME);
         expect(pdoc.domainId).toStrictEqual(DOMAIN_ID);
         expect(pdoc.title).toStrictEqual(TITLE);
@@ -24,13 +25,8 @@ describe('Model.Problem', () => {
         expect(pdoc.owner).toStrictEqual(UID);
         expect(pdoc.docId).toStrictEqual(pid);
         expect(pdoc.pid).toStrictEqual(PNAME);
-        pdoc = await problem.get(DOMAIN_ID, pid);
-        expect(pdoc.domainId).toStrictEqual(DOMAIN_ID);
-        expect(pdoc.title).toStrictEqual(TITLE);
-        expect(pdoc.content).toStrictEqual(CONTENT);
-        expect(pdoc.owner).toStrictEqual(UID);
-        expect(pdoc.docId).toStrictEqual(pid);
-        expect(pdoc.pid).toStrictEqual(PNAME);
+        const pdoc1 = await problem.get(DOMAIN_ID, pid);
+        expect(pdoc1).toStrictEqual(pdoc);
         const pdocs = await problem.getMulti(DOMAIN_ID, {}).toArray();
         expect(pdocs.length).toStrictEqual(1);
         expect(pdocs[0].docId).toStrictEqual(pid);

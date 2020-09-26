@@ -49,7 +49,10 @@ export async function load(call: Entry) {
         fs.removeSync(lockfile);
     });
     await new Promise((resolve) => {
-        bus.once('database/connect', resolve);
+        bus.once('database/connect', () => {
+            bus.once('database/config', resolve);
+            require('../model/system');
+        });
         require('../service/db');
     });
     require('../service/monitor');

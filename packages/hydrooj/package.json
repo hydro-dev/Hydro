@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.13.17",
+    "version": "2.13.18",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -24,15 +24,15 @@
         "lodash": "^4.17.20",
         "lru-cache": "^6.0.0",
         "moment-timezone": "^0.5.31",
-        "mongodb": "^3.6.1",
+        "mongodb": "^3.6.2",
         "nodemailer": "^6.4.10",
         "ps-list": "^7.2.0",
-        "serialize-javascript": "^4.0.0",
+        "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
         "supports-color": "^7.2.0",
-        "systeminformation": "^4.27.3",
-        "yargs": "^15.4.1"
+        "systeminformation": "^4.27.5",
+        "yargs": "^16.0.3"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.33",
@@ -49,7 +49,7 @@
         "@types/sockjs": "^0.3.32",
         "@types/superagent": "^4.1.8",
         "@types/supports-color": "^5.3.0",
-        "@types/yargs": "^15.0.5"
+        "@types/yargs": "^15.0.7"
     },
     "scripts": {
         "build": "tsc",

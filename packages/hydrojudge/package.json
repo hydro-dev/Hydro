@@ -7,14 +7,14 @@
         "linux"
     ],
     "dependencies": {
-        "axios": "^0.19.0",
+        "axios": "^0.20.0",
         "bson": "^4.1.0",
         "fs-extra": "^9.0.1",
         "js-yaml": "^3.14.0",
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "systeminformation": "^4.27.3"
+        "systeminformation": "^4.27.5"
     },
     "peerDependencies": {
         "hydrooj": "^2.13.3"
