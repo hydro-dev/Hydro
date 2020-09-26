@@ -4,7 +4,17 @@ import { Dictionary } from 'lodash';
 import { FormatError, SystemError } from './error';
 import { parseTimeMS, parseMemoryMB, ensureFile } from './utils';
 
-const RE0 = [
+interface Re0 {
+    reg: RegExp,
+    output: (a: RegExpExecArray) => string,
+    id: (a: RegExpExecArray) => number,
+}
+
+interface Re1 extends Re0 {
+    subtask: (a: RegExpExecArray) => number,
+}
+
+const RE0: Re0[] = [
     {
         reg: /^([a-z+_\-A-Z]*)([0-9]+).in$/,
         output: (a) => `${a[1] + a[2]}.out`,
@@ -25,8 +35,28 @@ const RE0 = [
         output: (a) => `output${a[2]}.txt`,
         id: (a) => parseInt(a[2], 10),
     },
+    {
+        reg: /^input\/([a-z+_\-A-Z]*)([0-9]+).in$/,
+        output: (a) => `output/${a[1] + a[2]}.out`,
+        id: (a) => parseInt(a[2], 10),
+    },
+    {
+        reg: /^input\/([a-z+_\-A-Z]*)([0-9]+).in$/,
+        output: (a) => `output/${a[1] + a[2]}.ans`,
+        id: (a) => parseInt(a[2], 10),
+    },
+    {
+        reg: /^input\/([a-z+_\-A-Z0-9]*)\.in([0-9]+)$/,
+        output: (a) => `output/${a[1]}.ou${a[2]}`,
+        id: (a) => parseInt(a[2], 10),
+    },
+    {
+        reg: /^input\/(input)([0-9]+).txt$/,
+        output: (a) => `output/output${a[2]}.txt`,
+        id: (a) => parseInt(a[2], 10),
+    },
 ];
-const RE1 = [
+const RE1: Re1[] = [
     {
         reg: /^([a-z+_\-A-Z]*)([0-9]+)-([0-9]+).in$/,
         output: (a) => `${a[1] + a[2]}-${a[3]}.out`,
@@ -35,7 +65,7 @@ const RE1 = [
     },
 ];
 
-async function read0(folder, files, checkFile) {
+async function read0(folder: string, files: string[], checkFile) {
     const cases = [];
     for (const file of files) {
         for (const REG of RE0) {
@@ -89,7 +119,7 @@ async function read0(folder, files, checkFile) {
     return config;
 }
 
-async function read1(folder, files, checkFile) {
+async function read1(folder: string, files: string[], checkFile) {
     const subtask = {};
     const subtasks = [];
     for (const file of files) {
@@ -144,6 +174,14 @@ async function readAutoCases(folder, { next }) {
     const checkFile = ensureFile(folder);
     try {
         const files = await fs.readdir(folder);
+        if (await fs.pathExists(path.resolve(folder, 'input'))) {
+            const inputs = await fs.readdir(path.resolve(folder, 'input'));
+            files.push(...inputs.map((i) => `input/${i}`));
+        }
+        if (await fs.pathExists(path.resolve(folder, 'output'))) {
+            const outputs = await fs.readdir(path.resolve(folder, 'output'));
+            files.push(...outputs.map((i) => `output/${i}`));
+        }
         let result = await read0(folder, files, checkFile);
         if (!result.count) result = await read1(folder, files, checkFile);
         Object.assign(config, result);

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import { STATUS } from 'hydrooj/dist/model/builtin';
-import { CompileError } from '../error';
+import { CompileError, SystemError } from '../error';
 import { copyInDir, parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -106,6 +106,7 @@ function judgeSubtask(subtask) {
 }
 
 export const judge = async (ctx) => {
+    if (!ctx.config.subtasks.length) throw new SystemError('没有找到测试数据');
     if (ctx.config.template) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];

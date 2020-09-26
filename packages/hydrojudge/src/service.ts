@@ -28,6 +28,8 @@ async function postInit() {
     const { problem, file, task } = global.Hydro.model;
     const _judge = global.Hydro.handler.judge as any;
     const { monitor } = global.Hydro.service;
+    const { Logger } = global.Hydro.Logger;
+    const logger = new Logger('judge');
 
     const info = await sysinfo.get();
     monitor.updateJudger(info);
@@ -85,7 +87,7 @@ async function postInit() {
 
     async function cacheOpen(domainId: string, pid: string, version: string) {
         const filePath = path.join(homedir(), '.cache', 'hydro', 'judge', domainId, pid);
-        console.log(filePath);
+        logger.debug('Cache found at %s', filePath);
         if (fs.existsSync(filePath)) {
             let ver: string;
             try {
@@ -103,7 +105,8 @@ async function postInit() {
     function getNext(that) {
         that.nextId = 1;
         that.nextWaiting = [];
-        return (data, id) => {
+        return (data, id = 0) => {
+            logger.debug('Next: %d %o', id, data);
             data.domainId = that.domainId;
             data.rid = new ObjectID(that.rid);
             data.time = data.time_ms || data.time;
@@ -143,14 +146,9 @@ async function postInit() {
             data.key = 'end';
             data.rid = new ObjectID(rid);
             data.domainId = domainId;
-            data.time = data.time_ms || data.time;
-            data.memory = data.memory_kb || data.memory;
-            console.log({
-                status: data.status,
-                score: data.score,
-                time_ms: data.time_ms,
-                memory_kb: data.memory_kb,
-            });
+            data.time = data.time_ms ?? data.time;
+            data.memory = data.memory_kb ?? data.memory;
+            logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
             _judge.end(data);
         };
     }
@@ -176,7 +174,7 @@ async function postInit() {
 
         config: any;
 
-        next: (data: any, id?: any) => void;
+        next: (data: any, id?: number) => void;
 
         end: (data: any) => void;
 
@@ -208,7 +206,7 @@ async function postInit() {
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
                 tmpfs.mount(this.tmpdir, '64m');
-                console.log(`Submission: ${this.rid}`, { pid: this.pid });
+                logger.info(`Submission: ${this.rid}`, { pid: this.pid });
                 if (this.config.input) await this.run();
                 else if (this.config.hack) await this.hack();
                 else await this.submission();
@@ -224,7 +222,7 @@ async function postInit() {
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else {
-                    console.error(e);
+                    logger.error(e);
                     this.next({ message: `${e.message}\n${e.stack}\n${JSON.stringify(e.params)}` });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
@@ -269,7 +267,7 @@ async function postInit() {
         }
     }
 
-    task.consume({ type: 'judge' }, (t) => (new JudgeTask(t)).handle().catch(console.error));
+    task.consume({ type: 'judge' }, (t) => (new JudgeTask(t)).handle().catch(logger.error));
 }
 
 global.Hydro.service.bus.once('app/started', postInit);

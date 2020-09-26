@@ -57,10 +57,10 @@ export async function next(body: JudgeResultBody) {
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
-    if (body.score) $set.score = body.score;
-    if (body.time) $set.time = body.time;
-    if (body.memory) $set.memory = body.memory;
-    if (body.progress) $set.progress = body.progress;
+    if (body.score !== undefined) $set.score = body.score;
+    if (body.time !== undefined) $set.time = body.time;
+    if (body.memory !== undefined) $set.memory = body.memory;
+    if (body.progress !== undefined) $set.progress = body.progress;
     rdoc = await record.update(body.domainId, body.rid, $set, $push);
     bus.boardcast('record/change', rdoc, $set, $push);
 }
@@ -80,11 +80,11 @@ export async function end(body: JudgeResultBody) {
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
-    if (body.score) $set.score = body.score;
-    if (body.time) $set.time = body.time;
-    if (body.memory) $set.memory = body.memory;
+    if (body.score !== undefined) $set.score = body.score;
+    if (body.time !== undefined) $set.time = body.time;
+    if (body.memory !== undefined) $set.memory = body.memory;
     $set.judgeAt = new Date();
-    $set.judger = body.judger;
+    $set.judger = body.judger ?? 1;
     rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
     bus.boardcast('record/change', rdoc); // trigger a full update

@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
 import { Db, FilterQuery } from 'mongodb';
+import { argv } from 'yargs';
 import { Logger } from '../logger';
 import {
     Mdoc, Pdoc, Rdoc, TrainingDoc, User,
@@ -112,7 +113,7 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
 }
 
 export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
-    logger.debug('serial: %s %o', name, args);
+    if (argv.showBus) logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         await callback.apply(this, args);
@@ -120,7 +121,7 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
 }
 
 export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
-    logger.debug('bail: %s %o', name, args);
+    if (argv.showBus) logger.debug('bail: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         const result = callback.apply(this, args);
