@@ -1,0 +1,21 @@
+{
+    "name": "@hydrooj/migrate-hustoj",
+    "version": "0.0.1",
+    "main": "package.json",
+    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "author": "undefined <masnn0@outlook.com>",
+    "license": "MIT",
+    "scripts": {
+        "lint": "eslint lib.ts script.ts --fix",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/mysql": "^2.15.15"
+    },
+    "peerDependencies": {
+        "hydrooj": "^2.13.5"
+    },
+    "dependencies": {
+        "mysql": "^2.18.1"
+    }
+}

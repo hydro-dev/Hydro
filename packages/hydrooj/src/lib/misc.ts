@@ -1,6 +1,6 @@
 import AnsiUp from 'ansi_up';
 import { ObjectID } from 'mongodb';
-import md5 from './md5';
+import { md5 } from './crypto';
 
 const AU = new AnsiUp();
 

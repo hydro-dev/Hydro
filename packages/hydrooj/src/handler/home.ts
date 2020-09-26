@@ -8,7 +8,7 @@ import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
 import * as misc from '../lib/misc';
-import md5 from '../lib/md5';
+import { md5 } from '../lib/crypto';
 import * as mail from '../lib/mail';
 import * as contest from '../model/contest';
 import * as message from '../model/message';
