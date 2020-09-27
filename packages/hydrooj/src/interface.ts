@@ -498,7 +498,6 @@ export interface Lib {
     'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
     jwt: typeof import('./lib/jwt'),
-    logger: typeof import('./lib/logger'),
     mail: typeof import('./lib/mail'),
     md5: typeof import('./lib/crypto').md5,
     sha1: typeof import('./lib/crypto').sha1,

@@ -10,9 +10,8 @@ const logger = new Logger('common', true);
 
 export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
-    'md5', 'misc', 'paginate', 'hash.hydro', 'rank',
+    'crypto', 'misc', 'paginate', 'hash.hydro', 'rank',
     'validator', 'ui', 'sysinfo', 'testdata.convert.ini', 'testdataConfig',
-    'logger',
 ];
 
 export const builtinModel = [

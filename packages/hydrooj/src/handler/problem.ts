@@ -418,7 +418,6 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @param('content', Types.String, isContent)
     async post(domainId: string, title: string, content: string) {
         const $update: Partial<Pdoc> = { title, content };
-        console.log(this.request.body);
         if (this.request.body.pid) $update.pid = checkPid(this.request.body.pid);
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, $update);

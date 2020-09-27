@@ -7,11 +7,13 @@ import { BUILTIN_USERS, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import { User as _User, Udoc, Udict } from '../interface';
 import { Value } from '../typeutils';
+import { Logger } from '../logger';
 import pwhash from '../lib/hash.hydro';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
 
 const coll: Collection<Udoc> = db.collection('user');
+const logger = new Logger('model/user');
 
 export async function setPassword(uid: number, password: string): Promise<Udoc> {
     const salt = String.random();
@@ -216,7 +218,7 @@ export async function create(
             gravatar: mail,
         });
     } catch (e) {
-        console.log(e);
+        logger.warn(e);
         throw new UserAlreadyExistError([uid, uname, mail]);
     }
     return uid;
