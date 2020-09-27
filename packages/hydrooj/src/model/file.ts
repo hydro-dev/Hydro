@@ -26,7 +26,7 @@ export async function add(
     const w = gridfs.openUploadStream(filename);
     await coll.insertOne({
         ...meta,
-        _id: w.id as ObjectID,
+        _id: w.id,
         secret: String.random(32),
         owner,
         filename,
@@ -37,8 +37,8 @@ export async function add(
         stream.pipe(w);
     });
     const c = await gridfs.find({ _id: w.id }).toArray();
-    await coll.updateOne({ _id: w.id as ObjectID }, { $set: { md5: c[0].md5, size: c[0].length } });
-    return w.id as ObjectID;
+    await coll.updateOne({ _id: w.id }, { $set: { md5: c[0].md5, size: c[0].length } });
+    return w.id;
 }
 
 export function del(_id: ObjectID) {

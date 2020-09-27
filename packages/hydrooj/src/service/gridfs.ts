@@ -1,8 +1,10 @@
 import { GridFSBucket } from 'mongodb';
 import { db2 } from './db';
+import { HydroFileSystem } from '../interface';
 
 const fs = new GridFSBucket(db2);
 
-global.Hydro.service.gridfs = fs;
+// @ts-ignore
+global.Hydro.service.fs = fs;
 
-export = fs;
+export = fs as HydroFileSystem;

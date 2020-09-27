@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Readable, Writable } from 'stream';
 import { ObjectID, GridFSBucket } from 'mongodb';
 import fs from 'fs';
 import { Dictionary, NumericDictionary } from 'lodash';
@@ -433,6 +434,17 @@ export interface Task {
     [key: string]: any
 }
 
+export interface UploadStream extends Writable {
+    id: ObjectID
+}
+
+export interface HydroFileSystem {
+    openUploadStream: (filename: string) => UploadStream
+    openDownloadStream: (_id: ObjectID) => Readable
+    // TODO
+    find: (...args: any[]) => any
+}
+
 export type PathComponent = [string, string, Dictionary<any>?, boolean?];
 
 export interface Collections {
@@ -483,7 +495,7 @@ export interface Model {
 export interface Service {
     bus: typeof import('./service/bus'),
     db: typeof import('./service/db'),
-    gridfs: GridFSBucket,
+    fs: HydroFileSystem,
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
 }
