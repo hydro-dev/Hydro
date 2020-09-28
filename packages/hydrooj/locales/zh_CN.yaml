@@ -262,6 +262,7 @@ Edit description of this domain: 修改此域描述
 Edit discussion replies of own discussion: 修改自己讨论中的回复
 Edit discussion replies: 修改讨论的回复
 Edit discussions: 修改讨论
+Edit domain settings: 编辑域设置
 Edit Domain: 编辑域
 Edit Homework: 编辑作业
 Edit own contests: 修改自己的比赛
@@ -346,6 +347,7 @@ hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
 Images: 图片
+Import From SYZOJ.: 从 SYZOJ 导入
 Import from: 导入自
 Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
@@ -501,6 +503,7 @@ perm_general: 一般
 perm_homework: 作业
 perm_problem_solution: 题解
 perm_problem: 题库
+perm_ranking: 排名
 perm_record: 记录
 perm_training: 训练
 Permission: 权限
@@ -703,6 +706,7 @@ Total Time: 总耗时
 Total: 总计
 Training requirement is not satisfied.: 不满足训练条件。
 training_create: 创建训练
+training_detail: 训练详情
 training_edit: 编辑训练
 training_main: 训练
 Training: 训练
@@ -765,6 +769,7 @@ View Owned Training Plans: 查看自己的训练计划
 View problem solutions: 查看题解
 View Problem: 查看题目
 View problems: 查看题目
+View ranking: 查看排名
 View this domain: 查看此域
 View training plans: 查看训练计划
 View: 查看
