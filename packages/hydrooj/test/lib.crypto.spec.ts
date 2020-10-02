@@ -1,7 +1,6 @@
 import 'hydrooj';
 import 'hydrooj/src/utils';
-import md5 from 'hydrooj/src/lib/md5';
-import sha1 from 'hydrooj/src/lib/sha1';
+import { md5, sha1 } from 'hydrooj/src/lib/crypto';
 import pwhash from 'hydrooj/src/lib/hash.hydro';
 
 describe('crypto', () => {

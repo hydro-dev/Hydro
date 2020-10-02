@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.13.22",
+    "version": "2.13.23",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -25,13 +25,13 @@
         "lru-cache": "^6.0.0",
         "moment-timezone": "^0.5.31",
         "mongodb": "^3.6.2",
-        "nodemailer": "^6.4.10",
+        "nodemailer": "^6.4.13",
         "ps-list": "^7.2.0",
         "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
         "supports-color": "^7.2.0",
-        "systeminformation": "^4.27.5",
+        "systeminformation": "^4.27.6",
         "yargs": "^16.0.3"
     },
     "devDependencies": {

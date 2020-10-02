@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Readable, Writable } from 'stream';
-import { ObjectID, GridFSBucket } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import fs from 'fs';
 import { Dictionary, NumericDictionary } from 'lodash';
 
@@ -532,9 +532,11 @@ export interface UI {
     nodes: {
         nav: any[],
         problem_add: any[],
+        user_dropdown: any[],
     },
     Nav: typeof import('./lib/ui').Nav,
     ProblemAdd: typeof import('./lib/ui').ProblemAdd,
+    UserDropdown: typeof import('./lib/ui').UserDropdown,
 }
 
 declare global {

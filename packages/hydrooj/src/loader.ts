@@ -30,6 +30,7 @@ if (!global.Hydro) {
             nodes: {
                 nav: [],
                 problem_add: [],
+                user_dropdown: [],
             },
             template: {},
         },

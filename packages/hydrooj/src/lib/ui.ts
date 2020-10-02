@@ -56,6 +56,14 @@ export const ProblemAdd = (
     });
 };
 
+export const UserDropdown = (
+    name: string, args: Dictionary<any> = {}, ...permPrivChecker: Array<number | bigint | Function>
+) => {
+    global.Hydro.ui.nodes.user_dropdown.push({
+        name, args: args || {}, checker: buildChecker(...permPrivChecker),
+    });
+};
+
 Nav('homepage', {}, 'homepage');
 Nav('problem_main', {}, 'problem', PERM.PERM_VIEW_PROBLEM);
 Nav('training_main', {}, 'training', PERM.PERM_VIEW_TRAINING);
@@ -71,3 +79,4 @@ ProblemAdd('problem_import_syzoj', {}, 'copy', 'Import From SYZOJ');
 
 global.Hydro.ui.Nav = Nav;
 global.Hydro.ui.ProblemAdd = ProblemAdd;
+global.Hydro.ui.UserDropdown = UserDropdown;
