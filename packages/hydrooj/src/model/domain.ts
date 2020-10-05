@@ -1,4 +1,5 @@
 import { Dictionary } from 'lodash';
+import { FilterQuery } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
 import * as db from '../service/db';
@@ -46,7 +47,7 @@ export function get(domainId: string): Promise<DomainDoc | null> {
     return coll.findOne({ _id: domainId });
 }
 
-export function getMulti(query: any = {}) {
+export function getMulti(query: FilterQuery<DomainDoc> = {}) {
     return coll.find(query);
 }
 

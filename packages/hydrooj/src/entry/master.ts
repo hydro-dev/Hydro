@@ -58,10 +58,14 @@ export async function load(call: Entry) {
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const modelSystem = require('../model/system');
-    const dbVer = await modelSystem.get('db.ver');
-    if (dbVer !== 1) {
-        const ins = require('../script/upgrade0_1');
-        await ins.run({ username: 'Root', password: 'rootroot' });
+    const scripts = require('../upgrade');
+    let dbVer = (await modelSystem.get('db.ver')) || 0;
+    const expected = scripts.length;
+    while (dbVer < expected) {
+        logger.info('Upgrading database: from %d to %d', dbVer, expected);
+        await scripts[dbVer]();
+        dbVer++;
+        await modelSystem.set('db.ver', dbVer);
     }
     bus.serial('app/started');
     return await modelSystem.get('server.worker');

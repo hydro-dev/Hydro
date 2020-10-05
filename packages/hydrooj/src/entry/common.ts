@@ -29,7 +29,6 @@ export const builtinHandler = [
 
 export const builtinScript = [
     'rating', 'difficulty', 'problemStat', 'blacklist', 'deleteUser',
-    'upgrade0_1',
 ];
 
 function getFiles(folder: string, base = ''): string[] {

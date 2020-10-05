@@ -121,11 +121,8 @@ export async function getList(
     if (pdocs.length !== pids.length) {
         for (const pid of pids) {
             if (!(r[pid] || l[pid])) {
-                if (doThrow) {
-                    throw new ProblemNotFoundError(domainId, pid);
-                } else {
-                    r[pid] = pdocHidden;
-                }
+                if (doThrow) throw new ProblemNotFoundError(domainId, pid);
+                else r[pid] = pdocHidden;
             }
         }
     }

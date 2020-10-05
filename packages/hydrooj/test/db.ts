@@ -6,8 +6,15 @@ export async function connect() {
         const db = require('hydrooj/src/service/db');
         db.bus.once('connect', resolve);
     });
-    const script = require('../src/script/upgrade0_1');
-    await script.run();
+    const modelSystem = require('hydrooj/src/model/system');
+    const scripts = require('hydrooj/src/upgrade');
+    let dbVer = (await modelSystem.get('db.ver')) || 0;
+    const expected = scripts.length;
+    while (dbVer < expected) {
+        await scripts[dbVer]();
+        dbVer++;
+        await modelSystem.set('db.ver', dbVer);
+    }
 }
 
 export async function dispose() {

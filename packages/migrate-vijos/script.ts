@@ -73,6 +73,7 @@ const tasks = {
                         content: r.content,
                         owner: r.owner_uid,
                         ip: r.ip,
+                        history: [],
                     };
                     res.push(drrdoc);
                 }

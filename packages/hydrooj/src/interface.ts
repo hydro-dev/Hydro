@@ -330,6 +330,11 @@ export interface Bdoc {
     expireAt: Date,
 }
 
+export interface HistoryDoc {
+    content: string,
+    time: Date,
+}
+
 // Discussion
 export interface Ddoc extends Document {
     docType: document['TYPE_DISCUSSION'],
@@ -344,6 +349,7 @@ export interface Ddoc extends Document {
     updateAt: Date,
     nReply: number,
     views: number,
+    history: HistoryDoc[],
 }
 
 // Discussion reply
@@ -355,6 +361,7 @@ export interface Drdoc extends Document {
     ip: string,
     content: string,
     reply: Drrdoc[],
+    history: HistoryDoc[],
 }
 
 // Discussion Tail Reply
@@ -363,6 +370,7 @@ export interface Drrdoc {
     owner: number,
     content: string,
     ip: string,
+    history: HistoryDoc[],
 }
 
 export interface TokenDoc {
