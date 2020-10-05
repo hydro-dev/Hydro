@@ -4,8 +4,8 @@ import * as db from '../service/db';
 
 export const coll = db.collection('oplog');
 
-export async function add(data: Partial<OplogDoc>): Promise<ObjectID> {
-    const res = await coll.insertOne(data);
+export async function add(data: Partial<OplogDoc> & { type: string }): Promise<ObjectID> {
+    const res = await coll.insertOne({ _id: new ObjectID(), ...data });
     return res.insertedId;
 }
 
