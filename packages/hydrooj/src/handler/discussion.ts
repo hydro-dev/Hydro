@@ -6,6 +6,7 @@ import {
 } from '../interface';
 import paginate from '../lib/paginate';
 import * as user from '../model/user';
+import * as oplog from '../model/oplog';
 import * as message from '../model/message';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
@@ -257,6 +258,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
         await discussion.delReply(domainId, drid);
+        await oplog.add({ ...this.drdoc, operator: this.user._id, type: 'drdoc' });
         this.back();
     }
 
@@ -275,6 +277,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     async postDeleteTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
         if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         await discussion.delTailReply(domainId, drid, drrid);
+        await oplog.add({ ...this.drrdoc, operator: this.user._id, type: 'drrdoc' });
         this.back();
     }
 
@@ -348,6 +351,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         await discussion.del(domainId, did);
+        await oplog.add({ ...this.ddoc, operator: this.user._id, type: 'ddoc' });
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
         this.response.redirect = this.url('discussion_node', {
             type: discussion.typeDisplay[this.ddoc.parentType],

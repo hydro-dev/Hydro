@@ -374,7 +374,12 @@ export interface TokenDoc {
     [key: string]: any,
 }
 
-export interface ContestStat extends Dictionary<any> {
+export interface OplogDoc extends Record<string, any> {
+    _id: ObjectID,
+    type: string,
+}
+
+export interface ContestStat extends Record<string, any> {
     detail: any,
 }
 
@@ -464,6 +469,7 @@ export interface Collections {
     'oauth': any,
     'system': System,
     'task': Task,
+    'oplog': OplogDoc,
     'opcount': any,
     'fs.chunks': any,
     'fs.files': any,
@@ -486,6 +492,7 @@ export interface Model {
     solution: typeof import('./model/solution'),
     system: typeof import('./model/system'),
     task: typeof import('./model/task'),
+    oplog: typeof import('./model/oplog'),
     token: typeof import('./model/token'),
     training: typeof import('./model/training'),
     user: typeof import('./model/user'),

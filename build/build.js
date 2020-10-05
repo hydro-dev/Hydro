@@ -52,9 +52,9 @@ const configFlat = {
 const packages = fs.readdirSync(path.resolve(process.cwd(), 'packages'));
 console.log(packages);
 for (const package of packages) {
-    if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
     const files = fs.readdirSync(path.resolve(process.cwd(), 'packages', package));
     if (!files.includes('src') && !files.map(n => n.split('.')[1]).includes('ts')) continue;
+    if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
     fs.writeFileSync(
         path.resolve(process.cwd(), 'packages', package, 'tsconfig.json'),
         files.includes('src') ? JSON.stringify(configSrc) : JSON.stringify(configFlat),
