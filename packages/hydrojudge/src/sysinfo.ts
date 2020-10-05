@@ -20,9 +20,10 @@ const cache: any = {};
 
 async function stackSize() {
     let output = '';
-    const context: any = {
-        lang: 'ccWithoutO2',
-        code: `#include <iostream>
+    try {
+        const context: any = {
+            lang: 'ccWithoutO2',
+            code: `#include <iostream>
 using namespace std;
 int i=1;
 int main(){
@@ -32,25 +33,28 @@ int main(){
     if (i>256) return 0;
     main();
 }`,
-        config: {
-            time: 3000,
-            memory: 256,
-        },
-        stat: {},
-        clean: [],
-        next: (data) => {
-            if (data.case) output = data.case.message;
-        },
-        end: () => { },
-    };
-    context.tmpdir = path.resolve(tmpdir(), 'hydro', 'tmp', 'sysinfo');
-    fs.ensureDirSync(context.tmpdir);
-    tmpfs.mount(context.tmpdir, '64m');
-    await judge(context).catch((e) => console.error(e));
-    // eslint-disable-next-line no-await-in-loop
-    for (const clean of context.clean) await clean().catch();
-    tmpfs.umount(context.tmpdir);
-    fs.removeSync(context.tmpdir);
+            config: {
+                time: 3000,
+                memory: 256,
+            },
+            stat: {},
+            clean: [],
+            next: (data) => {
+                if (data.case) output = data.case.message;
+            },
+            end: () => { },
+        };
+        context.tmpdir = path.resolve(tmpdir(), 'hydro', 'tmp', 'sysinfo');
+        fs.ensureDirSync(context.tmpdir);
+        tmpfs.mount(context.tmpdir, '64m');
+        await judge(context).catch((e) => console.error(e));
+        // eslint-disable-next-line no-await-in-loop
+        for (const clean of context.clean) await clean().catch();
+        tmpfs.umount(context.tmpdir);
+        fs.removeSync(context.tmpdir);
+    } catch (e) {
+        return -1;
+    }
     const a = output.split(' ');
     return parseInt(a[a.length - 2], 10);
 }

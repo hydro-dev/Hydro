@@ -1,11 +1,8 @@
 {
     "name": "@hydrooj/hydrojudge",
-    "version": "2.0.13",
+    "version": "2.0.14",
     "main": "package.json",
     "author": "masnn",
-    "os": [
-        "linux"
-    ],
     "dependencies": {
         "axios": "^0.20.0",
         "bson": "^4.1.0",
