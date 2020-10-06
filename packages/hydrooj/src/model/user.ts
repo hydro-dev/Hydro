@@ -3,7 +3,7 @@ import * as system from './system';
 import * as token from './token';
 import * as setting from './setting';
 import * as domain from './domain';
-import { BUILTIN_USERS, PRIV } from './builtin';
+import { BUILTIN_USERS, PERM, PRIV } from './builtin';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import { User as _User, Udoc, Udict } from '../interface';
 import { Value } from '../typeutils';
@@ -73,9 +73,11 @@ export class User implements _User {
 
     loginip: () => string;
 
+    scope: () => bigint;
+
     [key: string]: any;
 
-    constructor(udoc: Udoc, dudoc) {
+    constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
         this.udoc = () => udoc;
         this.dudoc = () => dudoc;
         this._id = udoc._id;
@@ -90,6 +92,7 @@ export class User implements _User {
         this.loginat = udoc.loginat;
         this.loginip = () => udoc.loginip;
         this.perm = () => dudoc.perm;
+        this.scope = () => scope;
         this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
@@ -111,7 +114,7 @@ export class User implements _User {
 
     hasPerm(...perm: bigint[]) {
         for (const i in perm) {
-            if ((this.perm() & perm[i]) === perm[i]) return true;
+            if ((this.perm() * this.scope() & perm[i]) === perm[i]) return true;
         }
         return false;
     }
@@ -134,13 +137,13 @@ export class User implements _User {
     }
 }
 
-export async function getById(domainId: string, _id: number): Promise<User | null> {
+export async function getById(domainId: string, _id: number, scope = PERM.PERM_ALL): Promise<User | null> {
     const udoc = _id === 0 || _id === 1
         ? BUILTIN_USERS[_id]
         : await coll.findOne({ _id });
     if (!udoc) return null;
     const dudoc = await domain.getDomainUser(domainId, udoc);
-    return new User(udoc, dudoc);
+    return new User(udoc, dudoc, scope);
 }
 
 export async function getList(domainId: string, uids: number[]): Promise<Udict> {

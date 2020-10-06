@@ -12,7 +12,7 @@
         "jest": "node build/jest",
         "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug",
         "start": "node build/start",
-        "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
+        "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./**/tscofig.json ./.coverage\""
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",

@@ -74,6 +74,7 @@ export interface User extends Dictionary<any> {
     regat: Date,
     loginat: Date,
     perm: () => bigint,
+    scope: () => bigint,
     role: string,
     regip: () => string,
     loginip: () => string,

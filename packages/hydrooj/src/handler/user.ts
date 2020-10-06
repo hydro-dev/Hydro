@@ -36,6 +36,7 @@ class UserLoginHandler extends Handler {
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (udoc.priv === PRIV.PRIV_NONE) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
+        this.session.scope = PERM.PERM_ALL;
         this.session.save = rememberme;
         this.response.redirect = this.request.referer.endsWith('/login') ? '/' : this.request.referer;
     }
@@ -48,6 +49,7 @@ class UserLogoutHandler extends Handler {
 
     async post() {
         this.session.uid = 0;
+        this.session.scope = PERM.PERM_ALL;
     }
 }
 
@@ -101,6 +103,7 @@ class UserRegisterWithCodeHandler extends Handler {
         const uid = await user.create(mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
+        this.session.scpoe = PERM.PERM_ALL;
         this.response.redirect = this.url('homepage');
     }
 }
@@ -229,8 +232,10 @@ class OauthCallbackHandler extends Handler {
         if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args);
         else throw new UserFacingError('Oauth type');
         const uid = await oauth.get(r._id);
-        if (uid) this.session.uid = uid;
-        else {
+        if (uid) {
+            this.session.uid = uid;
+            this.session.scope = PERM.PERM_ALL;
+        } else {
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
             r.uname = r.uname || [];
@@ -257,6 +262,7 @@ class OauthCallbackHandler extends Handler {
                 oauth.set(r.email, _id),
             ]);
             this.session.uid = _id;
+            this.session.scope = PERM.PERM_ALL;
         }
     }
 }

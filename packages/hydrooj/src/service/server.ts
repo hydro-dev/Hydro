@@ -32,6 +32,7 @@ import * as system from '../model/system';
 import * as blacklist from '../model/blacklist';
 import * as token from '../model/token';
 import * as opcount from '../model/opcount';
+import { PERM } from '../model/builtin';
 
 const logger = new Logger('server');
 export const app = new Koa();
@@ -479,9 +480,10 @@ export class Handler {
             if (!this.user) this.user = await user.getById('system', 0);
             throw new NotFoundError(domainId);
         }
-        this.user = await user.getById(domainId, this.session.uid);
+        this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         if (!this.user) {
             this.session.uid = 0;
+            this.session.scope = PERM.PERM_ALL;
             this.user = await user.getById(domainId, this.session.uid);
         }
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
@@ -818,7 +820,7 @@ export class ConnectionHandler {
         ]);
         const bdoc = await blacklist.get(this.request.ip);
         if (bdoc) throw new BlacklistedError(this.request.ip);
-        this.user = await user.getById(domainId, this.session.uid);
+        this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
     }
 }
