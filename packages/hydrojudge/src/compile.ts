@@ -10,6 +10,7 @@ export = async function compile(
     const LANGS = yaml.safeLoad(await global.Hydro.model.system.get('hydrojudge.langs'));
     if (!LANGS[lang]) throw new SystemError(`不支持的语言：${lang}`);
     const info = LANGS[lang];
+    target = info.target || target;
     const f = {};
     if (info.type === 'compiler') {
         copyIn[info.code_file] = { content: code };
