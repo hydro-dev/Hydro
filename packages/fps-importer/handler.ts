@@ -4,7 +4,7 @@ import os from 'os';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import xml2js from 'xml2js';
-import { ObjectID } from 'bson';
+import { ObjectID } from 'mongodb';
 import { filter } from 'lodash';
 import decodeHTML from 'decode-html';
 import { LocalProblemConfig } from 'hydrooj';
