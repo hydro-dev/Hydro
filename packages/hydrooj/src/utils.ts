@@ -179,3 +179,9 @@ export function streamToBuffer(stream): Promise<Buffer> {
         stream.on('end', () => resolve(Buffer.concat(buffers)));
     });
 }
+
+export function buildProjection(fields: string[]): Record<string, 1> {
+    const o = {};
+    for (const k of fields) o[k] = 1;
+    return o;
+}

@@ -36,7 +36,7 @@ class UserLoginHandler extends Handler {
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (udoc.priv === PRIV.PRIV_NONE) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
-        this.session.scope = PERM.PERM_ALL;
+        this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
         this.response.redirect = this.request.referer.endsWith('/login') ? '/' : this.request.referer;
     }
@@ -49,7 +49,7 @@ class UserLogoutHandler extends Handler {
 
     async post() {
         this.session.uid = 0;
-        this.session.scope = PERM.PERM_ALL;
+        this.session.scope = PERM.PERM_ALL.toString();
     }
 }
 
@@ -234,7 +234,7 @@ class OauthCallbackHandler extends Handler {
         const uid = await oauth.get(r._id);
         if (uid) {
             this.session.uid = uid;
-            this.session.scope = PERM.PERM_ALL;
+            this.session.scope = PERM.PERM_ALL.toString();
         } else {
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
@@ -262,7 +262,7 @@ class OauthCallbackHandler extends Handler {
                 oauth.set(r.email, _id),
             ]);
             this.session.uid = _id;
-            this.session.scope = PERM.PERM_ALL;
+            this.session.scope = PERM.PERM_ALL.toString();
         }
     }
 }

@@ -483,8 +483,8 @@ export class Handler {
         this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         if (!this.user) {
             this.session.uid = 0;
-            this.session.scope = PERM.PERM_ALL;
-            this.user = await user.getById(domainId, this.session.uid);
+            this.session.scope = PERM.PERM_ALL.toString();
+            this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UIContext.csrfToken = this.csrfToken;

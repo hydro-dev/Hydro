@@ -8,7 +8,7 @@ import * as domain from './domain';
 import {
     Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc,
 } from '../interface';
-import { NumberKeys } from '../typeutils';
+import { NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
 
@@ -43,6 +43,17 @@ export const pdocHidden: Pdoc = {
     acMsg: '',
 };
 
+export const PROJECTION_LIST: Projection<Pdoc> = [
+    '_id', 'domainId', 'docType', 'docId', 'pid',
+    'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
+    'tag', 'category', 'hidden',
+];
+
+export const PROJECTION_PUBLIC: Projection<Pdoc> = [
+    ...PROJECTION_LIST,
+    'content', 'html', 'data', 'config', 'acMsg',
+];
+
 export async function add(
     domainId: string, pid: string = null, title: string, content: string, owner: number,
     tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
@@ -59,13 +70,13 @@ export async function add(
 
 export async function get(
     domainId: string, pid: string | number,
-    uid: number = null,
+    uid: number = null, projection: Projection<Pdoc> = PROJECTION_PUBLIC,
 ): Promise<Pdoc> {
     if (typeof pid !== 'number') {
         if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
     }
     const pdoc = typeof pid === 'number'
-        ? await document.get(domainId, document.TYPE_PROBLEM, pid)
+        ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
         : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
     if (!pdoc) return null;
     if (uid) {
@@ -74,8 +85,8 @@ export async function get(
     return pdoc;
 }
 
-export function getMulti(domainId: string, query: FilterQuery<Pdoc>) {
-    return document.getMulti(domainId, document.TYPE_PROBLEM, query);
+export function getMulti(domainId: string, query: FilterQuery<Pdoc>, projection = PROJECTION_LIST) {
+    return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection);
 }
 
 export function getMultiStatus(domainId: string, query: FilterQuery<Pdoc>) {
@@ -162,6 +173,9 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
 }
 
 global.Hydro.model.problem = {
+    PROJECTION_LIST,
+    PROJECTION_PUBLIC,
+
     SETTING_DIFFICULTY_ADMIN,
     SETTING_DIFFICULTY_ALGORITHM,
     SETTING_DIFFICULTY_AVERAGE,

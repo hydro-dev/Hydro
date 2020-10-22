@@ -92,7 +92,7 @@ export class User implements _User {
         this.loginat = udoc.loginat;
         this.loginip = () => udoc.loginip;
         this.perm = () => dudoc.perm;
-        this.scope = () => scope;
+        this.scope = () => (typeof scope === 'string' ? BigInt(scope) : scope);
         this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
@@ -114,7 +114,7 @@ export class User implements _User {
 
     hasPerm(...perm: bigint[]) {
         for (const i in perm) {
-            if ((this.perm() * this.scope() & perm[i]) === perm[i]) return true;
+            if ((this.perm() & this.scope() & perm[i]) === perm[i]) return true;
         }
         return false;
     }

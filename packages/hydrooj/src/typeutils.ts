@@ -9,3 +9,5 @@ export type ArrayKeys<O, P = any> = {
 export type Value<O, V = ''> = {
     [K in keyof O]: V
 }
+
+export type Projection<O> = (string & keyof O)[]

@@ -6,7 +6,8 @@ import {
 import {
     Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, ProblemStatusDoc,
 } from '../interface';
-import { NumberKeys, ArrayKeys } from '../typeutils';
+import { buildProjection } from '../utils';
+import { NumberKeys, ArrayKeys, Projection } from '../typeutils';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
 
@@ -82,8 +83,12 @@ export async function add(
     return docId || res.insertedId;
 }
 
-export function get<K extends keyof DocType>(domainId: string, docType: K, docId: DocType[K]['docId']) {
-    return coll.findOne({ domainId, docType, docId });
+export async function get<K extends keyof DocType>(domainId: string, docType: K, docId: DocType[K]['docId'], projection?: Projection<DocType[K]>) {
+    let cursor = coll.find({ domainId, docType, docId }).limit(1);
+    if (projection) cursor = cursor.project(buildProjection(projection));
+    const result = await cursor.toArray();
+    if (result.length) return result[0];
+    return null;
 }
 
 export async function set<K extends keyof DocType>(
@@ -120,9 +125,11 @@ export function deleteMultiStatus<K extends keyof DocStatusType>(
 }
 
 export function getMulti<K extends keyof DocType>(
-    domainId: string, docType: K, query?: FilterQuery<DocType[K]>,
+    domainId: string, docType: K, query?: FilterQuery<DocType[K]>, projection?: Projection<DocType[K]>,
 ): Cursor<DocType[K]> {
-    return coll.find({ ...query, docType, domainId });
+    let cursor = coll.find({ ...query, docType, domainId });
+    if (projection) cursor = cursor.project(buildProjection(projection));
+    return cursor;
 }
 
 export async function inc<K extends keyof DocType>(
