@@ -38,8 +38,8 @@ export function parseFilename(filePath: string) {
     return t[t.length - 1];
 }
 
-export class Queue extends EventEmitter {
-    queue: any[];
+export class Queue<T> extends EventEmitter {
+    queue: T[];
 
     waiting: any[];
 
@@ -51,21 +51,21 @@ export class Queue extends EventEmitter {
 
     get(count = 1) {
         if (this.empty() || this.queue.length < count) {
-            return new Promise((resolve) => {
+            return new Promise<T[]>((resolve) => {
                 this.waiting.push({ count, resolve });
             });
         }
         const items = [];
         for (let i = 0; i < count; i++) { items.push(this.queue[i]); }
         this.queue = _.drop(this.queue, count);
-        return items;
+        return items as T[];
     }
 
     empty() {
         return this.queue.length === 0;
     }
 
-    push(value) {
+    push(value: T) {
         this.queue.push(value);
         if (this.waiting.length && this.waiting[0].count <= this.queue.length) {
             const items = [];

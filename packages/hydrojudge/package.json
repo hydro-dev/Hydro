@@ -11,6 +11,7 @@
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
+        "supports-color": "^7.2.0",
         "systeminformation": "^4.27.6"
     },
     "peerDependencies": {
