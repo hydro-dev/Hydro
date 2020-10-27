@@ -1,7 +1,7 @@
 // Not implemented
 import path from 'path';
 import fs from 'fs-extra';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from '../status';
 import { CompileError } from '../error';
 import { copyInDir, parseFilename } from '../utils';
 import { run } from '../sandbox';

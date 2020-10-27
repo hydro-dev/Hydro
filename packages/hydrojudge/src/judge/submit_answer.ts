@@ -1,4 +1,4 @@
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from '../status';
 import { check } from '../check';
 
 export async function judge({

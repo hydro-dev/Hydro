@@ -1,6 +1,6 @@
 import Axios from 'axios';
 import fs from 'fs-extra';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from './status';
 import { SystemError } from './error';
 import { cmd } from './utils';
 

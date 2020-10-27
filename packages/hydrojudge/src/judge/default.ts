@@ -2,7 +2,7 @@ import Queue from 'p-queue';
 import path from 'path';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from '../status';
 import { CompileError, SystemError } from '../error';
 import { copyInDir, parseFilename } from '../utils';
 import { run } from '../sandbox';

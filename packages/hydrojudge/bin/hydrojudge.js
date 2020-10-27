@@ -1,3 +1,3 @@
 #!/bin/env node
 
-require('./dist/daemon')()
+require('../dist/daemon')();

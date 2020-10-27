@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { argv } from 'yargs';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from '../status';
 import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';

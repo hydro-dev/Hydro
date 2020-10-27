@@ -1,4 +1,4 @@
-import { STATUS_TEXTS } from 'hydrooj/dist/model/builtin';
+import { STATUS_TEXTS } from './status';
 
 export class CompileError extends Error {
     stdout: string;

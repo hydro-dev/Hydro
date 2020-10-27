@@ -1,6 +1,6 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from '../status';
 import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -39,7 +39,7 @@ function judgeCase(c) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32) message = signals[code];
             else message = `您的程序返回了 ${code}.`;
-        } else [status, score, message] = resInteractor.files.stderr.split('\n');
+        } else[status, score, message] = resInteractor.files.stderr.split('\n');
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;

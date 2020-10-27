@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import * as STATUS from './status';
 import { run, del } from './sandbox';
 import { CompileError, SystemError } from './error';
 import { compilerText } from './utils';

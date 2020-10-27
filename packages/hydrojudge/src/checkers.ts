@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
-import { STATUS } from 'hydrooj/dist/model/builtin';
 import fs from 'fs-extra';
+import * as STATUS from './status';
 import { run } from './sandbox';
 import { SystemError } from './error';
 
