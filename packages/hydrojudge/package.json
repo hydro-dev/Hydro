@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.3",
+    "version": "2.1.4",
     "main": "package.json",
     "author": "masnn",
     "dependencies": {

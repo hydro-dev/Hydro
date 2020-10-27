@@ -38,10 +38,6 @@ class JudgeTask {
 
     code: string;
 
-    next: (data: any, id?: number) => void;
-
-    end: (data: any) => void;
-
     tmpdir: string;
 
     clean: Function[];
@@ -49,6 +45,10 @@ class JudgeTask {
     folder: string;
 
     config: any;
+
+    nextId = 1;
+
+    nextWaiting = [];
 
     constructor(session, request, ws: WebSocket) {
         this.stat = {};
@@ -60,6 +60,8 @@ class JudgeTask {
     }
 
     async handle() {
+        this.next = this.next.bind(this);
+        this.end = this.end.bind(this);
         this.stat.handle = new Date();
         this.tag = this.request.tag;
         this.type = this.request.type;
@@ -68,8 +70,6 @@ class JudgeTask {
         this.rid = this.request.rid;
         this.lang = this.request.lang;
         this.code = this.request.code;
-        this.next = this.getNext(this);
-        this.end = this.getEnd(this.ws, this.tag);
         this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
@@ -106,9 +106,7 @@ class JudgeTask {
 
     async doSubmission() {
         this.stat.cache_start = new Date();
-        this.folder = await this.session.cacheOpen(
-            this.domain_id, this.pid, this.next.bind(this),
-        );
+        this.folder = await this.session.cacheOpen(this.domain_id, this.pid, this.next);
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
@@ -130,40 +128,46 @@ class JudgeTask {
         await judge[this.config.type || 'default'].judge(this);
     }
 
-    getNext(that) { // eslint-disable-line class-methods-use-this
-        that.nextId = 1;
-        that.nextWaiting = [];
-        return (data, id) => {
-            data.key = 'next';
-            data.tag = that.tag;
-            if (id) {
-                if (id === that.nextId) {
-                    that.ws.send(JSON.stringify(data));
-                    that.nextId++;
-                    let t = true;
-                    while (t) {
-                        t = false;
-                        for (const i in that.nextWaiting) {
-                            if (that.nextId === that.nextWaiting[i].id) {
-                                that.ws.send(JSON.stringify(that.nextWaiting[i].data));
-                                that.nextId++;
-                                that.nextWaiting.splice(i, 1);
-                                t = true;
-                            }
+    next(data, id?: number) {
+        if (data.message !== undefined) {
+            data.judge_text = data.message;
+            delete data.message;
+        }
+        if (data.case?.message !== undefined) {
+            data.case.judge_text = data.case.message;
+            delete data.case.message;
+        }
+        data.key = 'next';
+        data.tag = this.tag;
+        if (id) {
+            if (id === this.nextId) {
+                this.ws.send(JSON.stringify(data));
+                this.nextId++;
+                let t = true;
+                while (t) {
+                    t = false;
+                    for (const i in this.nextWaiting) {
+                        if (this.nextId === this.nextWaiting[i].id) {
+                            this.ws.send(JSON.stringify(this.nextWaiting[i].data));
+                            this.nextId++;
+                            this.nextWaiting.splice(+i, 1);
+                            t = true;
                         }
                     }
-                } else that.nextWaiting.push({ data, id });
-            } else that.ws.send(JSON.stringify(data));
-        };
+                }
+            } else this.nextWaiting.push({ data, id });
+        } else this.ws.send(JSON.stringify(data));
     }
 
-    getEnd(ws, tag) { // eslint-disable-line class-methods-use-this
-        return (data) => {
-            data.key = 'end';
-            data.tag = tag;
-            log.info('Status=%d Score=%s Time=%dms Memory=%dkb', data.status, data.score, data.time_ms, data.memory_kb);
-            ws.send(JSON.stringify(data));
-        };
+    end(data) {
+        if (data.message !== undefined) {
+            data.judge_text = data.message;
+            delete data.message;
+        }
+        data.key = 'end';
+        data.tag = this.tag;
+        log.info('Status=%d Score=%s Time=%dms Memory=%dkb', data.status, data.score, data.time_ms, data.memory_kb);
+        this.ws.send(JSON.stringify(data));
     }
 }
 
@@ -190,8 +194,8 @@ export default class VJ4 {
     }
 
     async problemDataVersion(domainId: string, pid: string, retry = 3) {
-        let location;
-        let err;
+        let location: string;
+        let err: Error;
         await this.ensureLogin();
         try {
             await this.axios.get(`d/${domainId}/p/${pid}/data`, { maxRedirects: 0 });
