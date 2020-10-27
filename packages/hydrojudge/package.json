@@ -1,11 +1,11 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "main": "package.json",
     "author": "masnn",
     "dependencies": {
-        "axios": "^0.20.0",
+        "axios": "^0.21.0",
         "bson": "^4.1.0",
         "fs-extra": "^9.0.1",
         "js-yaml": "^3.14.0",
@@ -13,7 +13,7 @@
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
         "supports-color": "^7.2.0",
-        "systeminformation": "^4.27.6"
+        "systeminformation": "^4.27.11"
     },
     "peerDependencies": {
         "hydrooj": "^2.13.3"

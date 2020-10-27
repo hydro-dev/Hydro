@@ -6,7 +6,7 @@
     "author": "undefined <masnn0@outlook.com>",
     "license": "MIT",
     "dependencies": {
-        "maxmind": "^4.2.0"
+        "maxmind": "^4.3.1"
     },
     "scripts": {
         "prepublish": "./prepublish.sh"
