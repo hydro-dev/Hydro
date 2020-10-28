@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import { FormatError, SystemError } from './error';
 import { parseTimeMS, parseMemoryMB, ensureFile } from './utils';
@@ -192,7 +193,7 @@ async function readAutoCases(folder, { next }) {
     return config;
 }
 
-export = async function readYamlCases(folder: string, cfg: Dictionary<any>, args) {
+export async function readYamlCases(folder: string, cfg: Dictionary<any>, args) {
     const config: any = {
         checker_type: 'default',
         count: 0,
@@ -263,4 +264,31 @@ export = async function readYamlCases(folder: string, cfg: Dictionary<any>, args
         config.count = c.count;
     }
     return Object.assign(cfg, config);
-};
+}
+
+function convertIniConfig(ini: string) {
+    const f = ini.split('\n');
+    const count = parseInt(f[0], 10);
+    const res = { cases: [] };
+    for (let i = 1; i <= count; i++) {
+        const [input, output, time, score, memory] = f[i].split('|');
+        const cur = {
+            input: `input/${input}`, output: `output/${output}`, score: parseInt(score, 10), time: `${time}s`, memory: '128m',
+        };
+        if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
+        res.cases.push(cur);
+    }
+    return res;
+}
+
+export default async function readCases(folder: string, cfg: Record<string, any>, args) {
+    const iniConfig = path.resolve(folder, 'config.ini');
+    const yamlConfig = path.resolve(folder, 'config.yaml');
+    let config;
+    if (fs.existsSync(yamlConfig)) {
+        config = { ...yaml.safeLoad(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
+    } else if (fs.existsSync(iniConfig)) {
+        config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
+    }
+    return await readYamlCases(folder, config, args);
+}
