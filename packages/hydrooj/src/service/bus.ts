@@ -85,10 +85,13 @@ export function prependListener<K extends keyof EventMap>(name: K, listener: Eve
 }
 
 export function once<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
-    const dispose = addListener(name, function _listener(...args: any[]) {
+    let dispose;
+    function _listener(...args: any[]) {
         dispose();
         return listener.apply(this, args);
-    });
+    }
+    _listener.toString = () => `// Once \n${listener.toString()}`;
+    dispose = addListener(name, _listener);
     return dispose;
 }
 
@@ -116,6 +119,7 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
     if (argv.showBus) logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
+        if (argv.busDetail) console.log(callback.toString());
         await callback.apply(this, args);
     }
 }
