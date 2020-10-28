@@ -169,7 +169,7 @@ const checkers: Record<string, Checker> = {
                 ...config.copyIn,
             },
         });
-        if (status !== STATUS.STATUS_ACCEPTED) {
+        if (status === STATUS.STATUS_SYSTEM_ERROR) {
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
