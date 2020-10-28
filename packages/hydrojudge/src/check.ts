@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import checkers from './checkers';
 import compile from './compile';
 import { SystemError } from './error';
+import { parseFilename } from './utils';
 
 export async function check(config): Promise<[number, number, string]> {
     if (!checkers[config.checker_type]) throw new SystemError(`未知比较器类型：${config.checker_type}`);
@@ -24,5 +25,5 @@ export async function compileChecker(checkerType: string, checker: string, copyI
     if (!checkers[checkerType]) { throw new SystemError(`未知比较器类型：${checkerType}`); }
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
-    return await compile(checker.split('.')[1], file.toString(), 'checker', copyIn);
+    return await compile(parseFilename(checker).split('.')[1], file.toString(), 'checker', copyIn);
 }

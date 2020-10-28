@@ -51,7 +51,7 @@ function judgeCase(c) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 [status, score, message] = await check({
-                    copyIn: copyInDir(path.resolve(ctx.tmpdir, 'checker')),
+                    copyIn: ctx.checker.copyIn,
                     stdin: c.input,
                     stdout: c.output,
                     user_stdout: stdout,
@@ -114,7 +114,7 @@ export const judge = async (ctx) => {
         } else throw new CompileError('Language not supported by provided templates');
     }
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    [ctx.execute] = await Promise.all([
+    [ctx.execute, ctx.checker] = await Promise.all([
         (async () => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
@@ -135,6 +135,7 @@ export const judge = async (ctx) => {
             );
         })(),
     ]);
+    ctx.clean.push(ctx.checker.clean);
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];

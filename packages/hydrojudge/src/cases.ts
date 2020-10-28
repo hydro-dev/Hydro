@@ -209,7 +209,7 @@ export = async function readYamlCases(folder: string, cfg: Dictionary<any>, args
         if (typeof cfg.judge_extra_files === 'string') {
             config.judge_extra_files = [checkFile(cfg.judge_extra_files, '找不到评测额外文件 ')];
         } else if (cfg.judge_extra_files instanceof Array) {
-            for (const file in cfg.judge_extra_files) {
+            for (const file of cfg.judge_extra_files) {
                 config.judge_extra_files.push(checkFile(file, '找不到评测额外文件 '));
             }
         } else throw new FormatError('无效的 judge_extra_files 配置项');
@@ -218,7 +218,7 @@ export = async function readYamlCases(folder: string, cfg: Dictionary<any>, args
         if (typeof cfg.user_extra_files === 'string') {
             config.user_extra_files = [checkFile(cfg.user_extra_files, '找不到用户额外文件 ')];
         } else if (cfg.user_extra_files instanceof Array) {
-            for (const file in cfg.user_extra_files) {
+            for (const file of cfg.user_extra_files) {
                 config.user_extra_files.push(checkFile(file, '找不到用户额外文件 '));
             }
         } else throw new FormatError('无效的 user_extra_files 配置项');

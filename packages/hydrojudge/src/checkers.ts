@@ -19,6 +19,7 @@ const checkers: Record<string, Checker> = {
             copyIn: {
                 usrout: { src: config.user_stdout },
                 stdout: { src: config.output },
+                ...config.copyIn,
             },
         });
         let status;
@@ -70,6 +71,7 @@ const checkers: Record<string, Checker> = {
                 usrout: { src: config.user_stdout },
                 stdout: { src: config.output },
                 input: { src: config.input },
+                ...config.copyIn,
             },
         });
         const status = code ? STATUS.STATUS_WRONG_ANSWER : STATUS.STATUS_ACCEPTED;
@@ -95,6 +97,7 @@ const checkers: Record<string, Checker> = {
                 usrout: { src: config.user_stdout },
                 stdout: { src: config.output },
                 input: { src: config.input },
+                ...config.copyIn,
             },
             copyOut: ['score', 'message'],
         });
@@ -119,6 +122,7 @@ const checkers: Record<string, Checker> = {
             copyIn: {
                 usrout: { src: config.user_stdout },
                 input: { src: config.input },
+                ...config.copyIn,
             },
         });
         const st = (status === STATUS.STATUS_ACCEPTED)
@@ -146,6 +150,7 @@ const checkers: Record<string, Checker> = {
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },
                 code: { content: config.code },
+                ...config.copyIn,
             },
         });
         if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned a non-zero value', [status]);
@@ -155,17 +160,26 @@ const checkers: Record<string, Checker> = {
     },
 
     async testlib(config) {
-        const { stdout, stderr } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
+        console.log(config);
+        const { stderr, status } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
             copyIn: {
                 in: { src: config.input },
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },
+                ...config.copyIn,
             },
         });
+        if (status !== STATUS.STATUS_ACCEPTED) {
+            return {
+                status: STATUS.STATUS_SYSTEM_ERROR,
+                score: 0,
+                message: '',
+            };
+        }
         return {
-            status: stderr === 'ok \n' ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER,
-            score: stderr === 'ok \n' ? config.score : 0,
-            message: stdout,
+            status: stderr.startsWith('ok ') ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER,
+            score: stderr.startsWith('ok ') ? config.score : 0,
+            message: stderr.split(' ').splice(1).join(' '),
         };
     },
 };
