@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { argv } from 'yargs';
 import * as STATUS from '../status';
 import { CompileError, SystemError } from '../error';
-import { copyInDir, parseFilename } from '../utils';
+import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
