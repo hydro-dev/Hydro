@@ -199,7 +199,7 @@ export async function inc(_id: number, field: string, n = 1) {
 
 export async function create(
     mail: string, uname: string, password: string,
-    uid?: number, regip = '127.0.0.1', priv = PRIV.PRIV_DEFAULT,
+    uid = 0, regip = '127.0.0.1', priv = PRIV.PRIV_DEFAULT,
 ) {
     const salt = String.random();
     if (!uid) uid = await system.inc('user');

@@ -128,9 +128,9 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.secure', null, false, 'boolean', 'SSL'),
     Setting('setting_server', 'server.name', null, 'Hydro', 'text', 'Server Name'),
     Setting('setting_server', 'server.worker', null, 1, 'number', 'Server Workers Number'),
-    Setting('setting_server', 'server.hostname', null, null, 'text', 'Server Hostname'),
-    Setting('setting_server', 'server.host', null, null, 'text', 'Server Host'),
-    Setting('setting_server', 'server.url', null, null, 'text', 'Server BaseURL'),
+    Setting('setting_server', 'server.hostname', null, 'oj.undefined.moe', 'text', 'Server Hostname'),
+    Setting('setting_server', 'server.host', null, 'oj.undefined.moe', 'text', 'Server Host'),
+    Setting('setting_server', 'server.url', null, '/', 'text', 'Server BaseURL'),
     Setting('setting_server', 'server.cdn', null, '/', 'text', 'CDN Prefix', 'Ends with /'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
@@ -146,9 +146,8 @@ bus.once('app/started', async () => {
     logger.debug('Ensuring settings');
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) {
-            // @ts-ignore
-            const current = await global.Hydro.model.system.get(setting.key);
-            if (current === null || current === '') {
+            const current = await global.Hydro.service.db.collection('system').findOne({ _id: setting.key });
+            if (!current || current.value == null || current.value === '') {
                 // @ts-ignore
                 await global.Hydro.model.system.set(setting.key, setting.value);
             }
