@@ -21,7 +21,7 @@ async function postInit() {
     const tmpfs = require('./tmpfs');
     const { FormatError, CompileError, SystemError } = require('./error');
     const { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } = global.Hydro.model.builtin.STATUS;
-    const readYamlCases = require('./cases');
+    const { default: readYamlCases } = require('./cases');
     const judge = require('./judge');
     const sysinfo = require('./sysinfo');
 
