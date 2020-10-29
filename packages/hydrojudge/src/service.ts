@@ -16,7 +16,7 @@ declare module 'hydrooj/dist/interface' {
 
 async function postInit() {
     // Only start a single daemon
-    if (!cluster.isFirstWorker) return;
+    if (!global.Hydro.isFirstWorker) return;
     const { compilerText } = require('./utils');
     const tmpfs = require('./tmpfs');
     const { FormatError, CompileError, SystemError } = require('./error');

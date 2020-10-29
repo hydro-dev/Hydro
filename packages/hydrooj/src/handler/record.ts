@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
-import { PERM, CONSTANT } from '../model/builtin';
+import { PERM, CONSTANT, STATUS } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as file from '../model/file';
 import * as record from '../model/record';
@@ -97,6 +97,27 @@ class RecordDetailHandler extends RecordHandler {
         }
         this.back();
     }
+
+    @param('rid', Types.ObjectID)
+    async postCancel(domainId: string, rid: ObjectID) {
+        const rdoc = await record.get(domainId, rid);
+        if (rdoc) {
+            const $set = {
+                status: STATUS.STATUS_CANCELED,
+                score: 0,
+                time: 0,
+                memory: 0,
+                testCases: [{
+                    status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
+                }],
+            };
+            await Promise.all([
+                record.update(domainId, rid, $set),
+                bus.emit('record/change', rdoc, $set),
+            ]);
+        }
+        this.back();
+    }
 }
 
 class RecordHackHandler extends Handler {
@@ -130,11 +151,11 @@ class RecordHackHandler extends Handler {
 
 /**
  * @deprecated
+ * use RecordDetailHandler.postRejudge instead.
  */
 class RecordRejudgeHandler extends Handler {
     @param('rid', Types.ObjectID)
     async post(domainId: string, rid: ObjectID) {
-        this.checkPerm(PERM.PERM_REJUDGE);
         const rdoc = await record.get(domainId, rid);
         if (rdoc) {
             await record.reset(domainId, rid, true);

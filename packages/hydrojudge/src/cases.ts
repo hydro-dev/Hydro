@@ -281,7 +281,7 @@ function convertIniConfig(ini: string) {
     return res;
 }
 
-export default async function readCases(folder: string, cfg: Record<string, any>, args) {
+export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
     const iniConfig = path.resolve(folder, 'config.ini');
     const yamlConfig = path.resolve(folder, 'config.yaml');
     let config;

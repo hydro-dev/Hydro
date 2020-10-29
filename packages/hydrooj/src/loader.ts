@@ -228,8 +228,8 @@ export async function load() {
             await entry({ entry: argv.entry as string });
             logger.success(`Worker ${process.pid} Started as ${argv.entry}`);
         } else {
-            if (argv.firstWorker) cluster.isFirstWorker = true;
-            else cluster.isFirstWorker = false;
+            if (argv.firstWorker) global.Hydro.isFirstWorker = true;
+            else global.Hydro.isFirstWorker = false;
             logger.info(`Worker ${process.pid} Starting`);
             await entry({ entry: 'worker' });
             logger.success(`Worker ${process.pid} Started`);

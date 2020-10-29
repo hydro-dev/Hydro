@@ -569,12 +569,9 @@ declare global {
                 error: typeof import('./error'),
                 Logger: typeof import('./logger'),
                 locales: Dict<Dict<string>>,
+                isFirstWorker: boolean,
             },
             addons: string[],
         }
     }
-}
-
-declare module 'cluster' {
-    let isFirstWorker: boolean;
 }
