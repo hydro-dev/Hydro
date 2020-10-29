@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
 import path from 'path';
-import cluster from 'cluster';
 import child from 'child_process';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
