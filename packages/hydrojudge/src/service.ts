@@ -75,7 +75,7 @@ async function postInit() {
         fs.ensureDirSync(path.dirname(savePath));
         const zip = new AdmZip(tmpFilePath);
         const entries = zip.getEntries();
-        if (entries.length > 1000) throw new FormatError('Too many files');
+        if (entries.length > 256) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);

@@ -50,7 +50,7 @@ class JudgeTask {
 
     nextWaiting = [];
 
-    constructor(session, request, ws: WebSocket) {
+    constructor(session: VJ4, request, ws: WebSocket) {
         this.stat = {};
         this.stat.receive = new Date();
         this.session = session;
@@ -230,7 +230,7 @@ export default class VJ4 {
         return 'unknown';
     }
 
-    async problemData(domainId: string, pid: string, savePath, retry = 3, next?) {
+    async problemData(domainId: string, pid: string, savePath: string, retry = 3, next?) {
         log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
         await this.ensureLogin();
         if (next) next({ judge_text: '正在同步测试数据，请稍后' });
@@ -249,7 +249,7 @@ export default class VJ4 {
             fs.ensureDirSync(path.dirname(savePath));
             const zip = new AdmZip(tmpFilePath);
             const entries = zip.getEntries();
-            if (entries.length > 1000) throw new FormatError('Too many files');
+            if (entries.length > 256) throw new FormatError('Too many files');
             await new Promise((resolve, reject) => {
                 zip.extractAllToAsync(savePath, true, (e) => {
                     if (e) reject(e);
@@ -279,7 +279,7 @@ export default class VJ4 {
         fs.ensureDirSync(path.dirname(savePath));
         const zip = new AdmZip(tmpFilePath);
         const entries = zip.getEntries();
-        if (entries.length > 1000) throw new FormatError('Too many files');
+        if (entries.length > 256) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
@@ -319,7 +319,7 @@ export default class VJ4 {
         log.info(`[${this.config.host}] 已连接`);
     }
 
-    async setCookie(cookie) {
+    async setCookie(cookie: string) {
         this.config.cookie = cookie;
         this.axios = axios.create({
             baseURL: this.config.server_url,
@@ -357,7 +357,7 @@ export default class VJ4 {
         }
     }
 
-    async processData(folder) { // eslint-disable-line class-methods-use-this
+    async processData(folder: string) { // eslint-disable-line class-methods-use-this
         let files = await fs.readdir(folder);
         let ini = false;
         if (files.length <= 2) {
@@ -403,7 +403,7 @@ export default class VJ4 {
         return filePath;
     }
 
-    async retry(queue) {
+    async retry(queue: Queue<any>) {
         this.consume(queue).catch(() => {
             setTimeout(() => {
                 this.retry(queue);

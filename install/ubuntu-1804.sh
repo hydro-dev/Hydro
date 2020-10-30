@@ -6,8 +6,8 @@ db_password=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 # Basic
 echo "apt-get update"
 apt-get -qq update
-echo "apt-get install curl wget unzip gnupg -y"
-apt-get install -y curl wget unzip gnupg >/dev/null
+echo "apt-get install curl wget gnupg -y"
+apt-get install -y curl wget gnupg >/dev/null
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list
 echo "apt-get update"

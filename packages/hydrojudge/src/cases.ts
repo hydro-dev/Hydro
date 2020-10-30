@@ -293,5 +293,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     } else if (fs.existsSync(iniConfig)) {
         config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
     }
-    return await readYamlCases(folder, config, args);
+    const result = await readYamlCases(folder, config, args);
+    if (result.count > 100) throw new FormatError('测试数据组数过多，拒绝评测');
+    return result;
 }
