@@ -86,15 +86,18 @@ async function postInit() {
 
     async function cacheOpen(domainId: string, pid: string, version: string) {
         const filePath = path.join(homedir(), '.cache', 'hydro', 'judge', domainId, pid);
-        logger.debug('Cache found at %s', filePath);
         if (fs.existsSync(filePath)) {
             let ver: string;
             try {
                 ver = fs.readFileSync(path.join(filePath, 'version')).toString();
             } catch (e) { /* ignore */ }
-            if (version === ver) return filePath;
-            fs.removeSync(filePath);
+            if (version === ver) {
+                logger.debug('Cache found at %s', filePath);
+                return filePath;
+            }
+            await fs.remove(filePath);
         }
+        logger.debug('Downloading testdata to %s', filePath);
         fs.ensureDirSync(filePath);
         await problemData(domainId, pid, filePath);
         fs.writeFileSync(path.join(filePath, 'version'), version);
@@ -108,15 +111,18 @@ async function postInit() {
             logger.debug('Next: %d %o', id, data);
             data.domainId = that.domainId;
             data.rid = new ObjectID(that.rid);
-            data.time = data.time_ms || data.time;
-            data.memory = data.memory_kb || data.memory;
-            data.compilerText = data.compiler_text || data.compilerText;
+            if (data.time_ms) data.time = data.time_ms;
+            if (data.memory_kb) data.memory = data.memory_kb;
+            if (data.compiler_text) data.compilerText = data.compiler_text;
+            delete data.time_ms;
+            delete data.memory_kb;
+            delete data.compiler_text;
             if (data.case) {
                 data.case = {
                     status: data.case.status,
                     time: data.case.time_ms || data.case.time,
                     memory: data.case.memory_kb || data.case.memory,
-                    message: data.message || data.judgeText,
+                    message: data.case.message || data.case.judgeText || '',
                 };
             }
             if (id) {

@@ -42,7 +42,7 @@ export async function next(body: JudgeResultBody) {
         const c: TestCase = {
             memory: body.case.memory,
             time: body.case.time,
-            message: body.case.message,
+            message: body.case.message || '',
             status: body.case.status,
         };
         rdoc.testCases.push(c);

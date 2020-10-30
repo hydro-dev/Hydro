@@ -1,8 +1,15 @@
 # Hydro
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_shield)
 
-
 Hydro是一个高效的信息学在线测评系统。特点：易于部署，轻量，功能强大且易于扩展。  
+
+使用安装脚本（ubuntu18.04）
+
+```sh
+curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/ubuntu-1804.sh | bash
+```
+
+其他平台请参照文档手动安装。
 
 [中文文档](https://hydro.js.org/)  
 
