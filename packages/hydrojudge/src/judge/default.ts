@@ -123,7 +123,9 @@ export const judge = async (ctx) => {
             return await compile(ctx.lang, ctx.code, 'code', copyIn, ctx.next);
         })(),
         (async () => {
-            if (!ctx.config.checker_type || ctx.config.checker_type === 'default') return null;
+            if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
+                return { execute: '', copyIn: {}, clean: Promise.resolve };
+            }
             const copyIn = {};
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
@@ -135,8 +137,7 @@ export const judge = async (ctx) => {
             );
         })(),
     ]);
-    if (ctx.checker) ctx.clean.push(ctx.checker.clean);
-    ctx.clean.push(ctx.execute.clean);
+    ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = 0;

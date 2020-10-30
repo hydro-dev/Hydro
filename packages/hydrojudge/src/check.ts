@@ -22,7 +22,7 @@ export async function check(config): Promise<[number, number, string]> {
 }
 
 export async function compileChecker(checkerType: string, checker: string, copyIn: any) {
-    if (!checkers[checkerType]) { throw new SystemError(`未知比较器类型：${checkerType}`); }
+    if (!checkers[checkerType]) throw new SystemError(`未知比较器类型：${checkerType}`);
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
     return await compile(parseFilename(checker).split('.')[1], file.toString(), 'checker', copyIn);
