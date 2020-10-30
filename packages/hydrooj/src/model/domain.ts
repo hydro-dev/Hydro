@@ -2,6 +2,7 @@ import { Dictionary } from 'lodash';
 import { FilterQuery } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
+import * as bus from '../service/bus';
 import * as db from '../service/db';
 
 const coll = db.collection('domain');
@@ -39,20 +40,28 @@ export async function add(domainId: string, owner: number, name: string, bulleti
         gravatar: '',
         pidCounter: 0,
     };
+    await bus.serial('domain/create', ddoc);
     await coll.insertOne(ddoc);
     return domainId;
 }
 
-export function get(domainId: string): Promise<DomainDoc | null> {
-    return coll.findOne({ _id: domainId });
+export async function get(domainId: string): Promise<DomainDoc | null> {
+    const query: FilterQuery<DomainDoc> = { _id: domainId };
+    await bus.serial('domain/before-get', query);
+    const result = await coll.findOne(query);
+    await bus.serial('domain/get', result);
+    return result;
 }
 
 export function getMulti(query: FilterQuery<DomainDoc> = {}) {
     return coll.find(query);
 }
 
-export function edit(domainId: string, $set: Partial<DomainDoc>) {
-    return coll.updateOne({ _id: domainId }, { $set });
+export async function edit(domainId: string, $set: Partial<DomainDoc>) {
+    await bus.serial('domain/before-update', domainId, $set);
+    const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnOriginal: false });
+    await bus.serial('domain/update', domainId, $set, result.value);
+    return result.value;
 }
 
 export async function inc(domainId: string, field: keyof DomainDoc, n: number): Promise<number | null> {

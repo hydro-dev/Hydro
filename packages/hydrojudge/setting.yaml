@@ -43,6 +43,7 @@ langs:
             type: compiler
             compile: /usr/bin/javac -d ${dir} -encoding utf8 ./Main.java
             code_file: Main.java
+            target: Main.class
             execute: /usr/bin/java Main
         py:
             type: compiler

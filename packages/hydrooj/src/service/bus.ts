@@ -6,6 +6,7 @@ import { Logger } from '../logger';
 import {
     Mdoc, Pdoc, Rdoc, TrainingDoc, User,
 } from '../interface';
+import { DomainDoc } from '../loader';
 
 type DocType = import('../model/document').DocType;
 
@@ -38,6 +39,12 @@ export interface EventMap {
 
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
     'user/get': (udoc: User) => void
+
+    'domain/create': (ddoc: DomainDoc) => void
+    'domain/before-get': (query: FilterQuery<DomainDoc>) => void
+    'domain/get': (ddoc: DomainDoc) => void
+    'domain/before-update': (domainId: string, $set: Partial<DomainDoc>) => void
+    'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => void
 
     'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>
