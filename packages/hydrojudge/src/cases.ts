@@ -193,7 +193,7 @@ async function readAutoCases(folder, { next }) {
     return config;
 }
 
-export async function readYamlCases(folder: string, cfg: Dictionary<any>, args) {
+export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, args) {
     const config: any = {
         checker_type: 'default',
         count: 0,

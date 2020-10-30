@@ -187,6 +187,7 @@ async function postInit() {
             this.stat = {};
             this.stat.receive = new Date();
             this.request = request;
+            logger.debug('%o', request);
         }
 
         async handle() {

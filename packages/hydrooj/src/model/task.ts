@@ -1,8 +1,10 @@
 import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Task } from '../interface';
+import { Logger } from '../logger';
 import * as db from '../service/db';
 
+const logger = new Logger('model/task');
 const coll = db.collection('task');
 
 export async function add(task: Partial<Task> & { type: string }) {
@@ -34,6 +36,7 @@ export async function getFirst(query: FilterQuery<Task>) {
     q.executeAfter = q.executeAfter || { $lt: new Date() };
     const res = await coll.findOneAndDelete(q);
     if (res.value) {
+        logger.debug('%o', res.value);
         if (res.value.interval) {
             await coll.insertOne({
                 ...res.value, executeAfter: moment().add(...res.value.interval).toDate(),
