@@ -273,7 +273,7 @@ function convertIniConfig(ini: string) {
     for (let i = 1; i <= count; i++) {
         const [input, output, time, score, memory] = f[i].split('|');
         const cur = {
-            cases: [{ input: `input/${input}`, output: `output/${output}` }],
+            cases: [{ input: `input/${input.toLowerCase()}`, output: `output/${output.toLowerCase()}` }],
             score: parseInt(score, 10),
             time: `${time}s`,
             memory: '128m',

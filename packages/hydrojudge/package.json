@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.15",
+    "version": "2.1.16",
     "main": "package.json",
     "author": "masnn",
     "repository": "https://github.com/hydro-dev/Hydro.git",
