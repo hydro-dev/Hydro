@@ -1,11 +1,12 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.13",
+    "version": "2.1.14",
     "main": "package.json",
     "author": "masnn",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
+        "adm-zip": "^0.4.16",
         "axios": "^0.21.0",
         "bson": "^4.1.0",
         "fs-extra": "^9.0.1",

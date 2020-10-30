@@ -13,19 +13,19 @@ const EMPTY_STR = /^[ \r\n\t]*$/i;
 
 export const cmd = parse;
 
-export function parseTimeMS(str) {
+export function parseTimeMS(str: string) {
     const match = TIME_RE.exec(str);
     if (!match) throw new FormatError(str, ['error parsing time']);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
 }
 
-export function parseMemoryMB(str) {
+export function parseMemoryMB(str: string) {
     const match = MEMORY_RE.exec(str);
     if (!match) throw new FormatError(str, ['error parsing memory']);
     return Math.floor(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
 }
 
-export function sleep(timeout) {
+export function sleep(timeout: number) {
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve();
@@ -84,7 +84,7 @@ export function compilerText(stdout: string, stderr: string) {
     return ret.join('\n');
 }
 
-export function copyInDir(dir) {
+export function copyInDir(dir: string) {
     const files = {};
     if (fs.existsSync(dir)) {
         fs.readdirSync(dir).forEach((f1) => {

@@ -243,7 +243,7 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
     } else if (cfg.subtasks) {
         for (const subtask of cfg.subtasks) {
             const cases = [];
-            for (const c of subtask) {
+            for (const c of subtask.cases) {
                 config.count++;
                 cases.push({
                     input: checkFile(c.input, '找不到输入文件 '),
@@ -269,14 +269,17 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
 function convertIniConfig(ini: string) {
     const f = ini.split('\n');
     const count = parseInt(f[0], 10);
-    const res = { cases: [] };
+    const res = { subtasks: [] };
     for (let i = 1; i <= count; i++) {
         const [input, output, time, score, memory] = f[i].split('|');
         const cur = {
-            input: `input/${input}`, output: `output/${output}`, score: parseInt(score, 10), time: `${time}s`, memory: '128m',
+            cases: [{ input: `input/${input}`, output: `output/${output}` }],
+            score: parseInt(score, 10),
+            time: `${time}s`,
+            memory: '128m',
         };
         if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
-        res.cases.push(cur);
+        res.subtasks.push(cur);
     }
     return res;
 }

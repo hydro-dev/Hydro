@@ -2,10 +2,10 @@
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
 import path from 'path';
-import child from 'child_process';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import { homedir, tmpdir } from 'os';
+import AdmZip from 'adm-zip';
 
 declare module 'hydrooj/dist/interface' {
     interface SystemKeys {
@@ -73,8 +73,11 @@ async function postInit() {
             w.on('error', reject);
         });
         fs.ensureDirSync(path.dirname(savePath));
+        const zip = new AdmZip(tmpFilePath);
+        const entries = zip.getEntries();
+        if (entries.length > 1000) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
-            child.exec(`unzip ${tmpFilePath} -d ${savePath}`, (e) => {
+            zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
                 else resolve();
             });

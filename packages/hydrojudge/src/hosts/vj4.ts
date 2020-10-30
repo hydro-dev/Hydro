@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import child from 'child_process';
 import axios from 'axios';
+import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
-import { compilerText } from '../utils';
+import { compilerText, Queue } from '../utils';
 import { CACHE_DIR, TEMP_DIR } from '../config';
 import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
@@ -240,15 +240,18 @@ export default class VJ4 {
                 `${this.config.server_url}d/${domainId}/p/${pid}/data`,
                 { responseType: 'stream' },
             );
-            const w = await fs.createWriteStream(tmpFilePath);
+            const w = fs.createWriteStream(tmpFilePath);
             res.data.pipe(w);
             await new Promise((resolve, reject) => {
                 w.on('finish', resolve);
                 w.on('error', reject);
             });
             fs.ensureDirSync(path.dirname(savePath));
+            const zip = new AdmZip(tmpFilePath);
+            const entries = zip.getEntries();
+            if (entries.length > 1000) throw new FormatError('Too many files');
             await new Promise((resolve, reject) => {
-                child.exec(`unzip ${tmpFilePath} -d ${savePath}`, (e) => {
+                zip.extractAllToAsync(savePath, true, (e) => {
                     if (e) reject(e);
                     else resolve();
                 });
@@ -262,20 +265,23 @@ export default class VJ4 {
         return savePath;
     }
 
-    async recordPretestData(rid, savePath) {
+    async recordPretestData(rid: string, savePath: string) {
         log.info(`Getting pretest data: ${this.config.host}/${rid}`);
         const tmpFilePath = path.resolve(CACHE_DIR, `download_${this.config.host}_${rid}`);
         await this.ensureLogin();
         const res = await this.axios.get(`records/${rid}/data`, { responseType: 'stream' });
-        const w = await fs.createWriteStream(tmpFilePath);
+        const w = fs.createWriteStream(tmpFilePath);
         res.data.pipe(w);
         await new Promise((resolve, reject) => {
             w.on('finish', resolve);
             w.on('error', reject);
         });
         fs.ensureDirSync(path.dirname(savePath));
+        const zip = new AdmZip(tmpFilePath);
+        const entries = zip.getEntries();
+        if (entries.length > 1000) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
-            child.exec(`unzip ${tmpFilePath} -d ${savePath}`, (e) => {
+            zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
                 else resolve();
             });
@@ -285,7 +291,7 @@ export default class VJ4 {
         return savePath;
     }
 
-    async consume(queue) {
+    async consume(queue: Queue<any>) {
         log.info('正在连接 %sjudge/consume-conn', this.config.server_url);
         const res = await this.axios.get('judge/consume-conn/info');
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/consume-conn/websocket?t=${res.data.entropy}`, {
