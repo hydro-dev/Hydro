@@ -40,11 +40,11 @@ export interface EventMap {
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
     'user/get': (udoc: User) => void
 
-    'domain/create': (ddoc: DomainDoc) => void
-    'domain/before-get': (query: FilterQuery<DomainDoc>) => void
-    'domain/get': (ddoc: DomainDoc) => void
-    'domain/before-update': (domainId: string, $set: Partial<DomainDoc>) => void
-    'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => void
+    'domain/create': (ddoc: DomainDoc) => VoidReturn
+    'domain/before-get': (query: FilterQuery<DomainDoc>) => VoidReturn
+    'domain/get': (ddoc: DomainDoc) => VoidReturn
+    'domain/before-update': (domainId: string, $set: Partial<DomainDoc>) => VoidReturn
+    'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => VoidReturn
 
     'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>

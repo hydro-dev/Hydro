@@ -135,7 +135,7 @@ export const judge = async (ctx) => {
             );
         })(),
     ]);
-    ctx.clean.push(ctx.checker.clean);
+    if (ctx.checker) ctx.clean.push(ctx.checker.clean);
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
