@@ -418,7 +418,10 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @param('content', Types.String, isContent)
     async post(domainId: string, title: string, content: string) {
         const $update: Partial<Pdoc> = { title, content };
-        if (this.request.body.pid) $update.pid = checkPid(this.request.body.pid);
+        if (this.request.body.pid) {
+            if (this.request.body.pid.toString() === this.pdoc.docId.toString()) $update.pid = this.request.body.pid;
+            else $update.pid = checkPid(this.request.body.pid);
+        }
         const pdoc = await problem.get(domainId, this.request.params.pid);
         await problem.edit(domainId, pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: this.request.params.pid });
