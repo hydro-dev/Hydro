@@ -97,11 +97,11 @@ export const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFound
 export const MessageNotFoundError = Err('MessageNotFoundError', NotFoundError, 'Message {0} not found.');
 export const DocumentNotFoundError = Err('DocumentNotFoundError', NotFoundError, 'Document {2} not found.');
 
-export const ProblemNotFoundError = Err('ProblemNotFountError', DocumentNotFoundError, 'Problem {0} not found.');
-export const SolutionNotFoundError = Err('SolutionNotFoundError', DocumentNotFoundError, 'Solution {0} not found.');
-export const TrainingNotFoundError = Err('TrainingNotFoundError', DocumentNotFoundError, 'Training {0} not found.');
-export const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFoundError, 'Contest {0} not found.');
-export const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNotFoundError, 'Discussion {0} not found.');
+export const ProblemNotFoundError = Err('ProblemNotFountError', DocumentNotFoundError, 'Problem {1} not found.');
+export const SolutionNotFoundError = Err('SolutionNotFoundError', DocumentNotFoundError, 'Solution {1} not found.');
+export const TrainingNotFoundError = Err('TrainingNotFoundError', DocumentNotFoundError, 'Training {1} not found.');
+export const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFoundError, 'Contest {1} not found.');
+export const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNotFoundError, 'Discussion {1} not found.');
 export const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', DocumentNotFoundError, 'Discussion node {1} not found.');
 
 export const InvalidOperationError = Err('InvalidOperationError', MethodNotAllowedError);

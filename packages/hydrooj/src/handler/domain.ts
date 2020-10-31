@@ -222,14 +222,13 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         if (method === domain.JOIN_METHOD_NONE) joinSettings = null;
         else {
             if (!roles.includes(role)) throw new ValidationError('role');
-            if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
+            if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) joinSettings.expire = current.expire;
+            else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
+            else if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
+            else joinSettings.expire = moment().add(expire, 'hours').toDate();
             if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
             joinSettings = { method, role };
             if (method === domain.JOIN_METHOD_CODE) joinSettings.code = invitationCode;
-            if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) {
-                joinSettings.expire = current.expire;
-            } else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
-            else joinSettings.expire = moment().add(expire, 'hours').toDate();
         }
         await domain.edit(this.domain._id, { join: joinSettings });
         this.back();
