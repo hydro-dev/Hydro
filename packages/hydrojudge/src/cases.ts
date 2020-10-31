@@ -284,6 +284,15 @@ function convertIniConfig(ini: string) {
     return res;
 }
 
+function isValidConfig(config) {
+    if (config.count > 100) throw new FormatError('测试数据组数过多，拒绝评测');
+    let total_time = 0;
+    for (const subtask of config.subtasks) {
+        total_time += subtask.time_limit_ms * subtask.cases.length;
+    }
+    if (total_time > 60 * 1000) throw new FormatError('总时限超过限制60s，拒绝评测');
+}
+
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
     const iniConfig = path.resolve(folder, 'config.ini');
     const yamlConfig = path.resolve(folder, 'config.yaml');
@@ -294,6 +303,6 @@ export default async function readCases(folder: string, cfg: Record<string, any>
         config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
     }
     const result = await readYamlCases(folder, config, args);
-    if (result.count > 100) throw new FormatError('测试数据组数过多，拒绝评测');
+    isValidConfig(result);
     return result;
 }
