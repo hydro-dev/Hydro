@@ -1,0 +1,255 @@
+[I] judge 正在保存数据
+[I] judge 正在连接 https://vijos.org/judge/consume-conn
+[I] judge [vijos] 已连接
+[I] judge Status=2 Score=0 Time=12.556412ms Memory=376kb
+[I] judge Submission: vijos/system/5f9ce293f413621b7a3571f2 pid=2028
+[I] judge Getting problem data: vijos/system/2028
+[I] judge Status=2 Score=60 Time=20.646985ms Memory=380kb
+[I] judge Submission: vijos/system/5f9ce3a9f413621b7b3571f6 pid=1113
+[I] judge Status=1 Score=100 Time=10.411635ms Memory=380kb
+[I] judge Submission: vijos/system/5f9cec29f413621b7a3571f4 pid=1076
+[I] judge Getting problem data: vijos/system/1076
+[I] judge Status=1 Score=100 Time=62.536978ms Memory=6216kb
+[I] judge Submission: vijos/system/5f9cf0aff413621b7b3571f8 pid=1038
+[I] judge Getting problem data: vijos/system/1038
+[I] judge Status=1 Score=100 Time=10.087984ms Memory=376kb
+[I] judge Submission: vijos/system/5f9cf208f413621b733571f8 pid=1038
+[I] judge Status=6 Score=90 Time=18.938854ms Memory=8528kb
+[I] judge Submission: vijos/system/5f9cf392f413621b7b3571fe pid=1038
+[I] judge Status=6 Score=90 Time=18.139815ms Memory=8608kb
+[I] judge Submission: vijos/_MMD_/5f9cd210f413621b733571eb pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9cd1eef413621b7b3571e4 pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9cd1c3f413621b733571e9 pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9cd1e7f413621b7b3571e3 pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9cd1eef413621b7b3571e4 pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9cf69ef413621b7a3571f5 pid=1038
+[I] judge Status=1 Score=100 Time=11.244941ms Memory=380kb
+[I] judge Submission: vijos/system/5f9cfb3cf413621b7b3571ff pid=1022
+[I] judge Getting problem data: vijos/system/1022
+[I] judge Status=2 Score=60 Time=11.118357ms Memory=376kb
+[I] judge Submission: vijos/sdaf/5f9cfcf4f413621b7a357211 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfcfcf413621b7a357212 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfcfff413621b7a357213 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfd01f413621b7a357214 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfd03f413621b7a357215 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfd05f413621b7a357216 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/sdaf/5f9cfcf8f413621b73357203 pid=1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Getting problem data: vijos/sdaf/1000
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d0231f413621b73357205 pid=1012
+[I] judge Getting problem data: vijos/system/1012
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d0294f413621b7a357217 pid=1012
+[I] judge Status=6 Score=0 Time=52807.012113ms Memory=1912kb
+[I] judge Submission: vijos/system/5f9d02d4f413621b73357207 pid=1133
+[I] judge Status=1 Score=50 Time=8.757151ms Memory=2808kb
+[I] judge Submission: vijos/system/5f9d0409f413621b7a35721a pid=1012
+[I] judge Status=2 Score=0 Time=1054.916474ms Memory=1936kb
+[I] judge Submission: vijos/sky1231/5f9d066ff413621b73357209 pid=5b0018bad3d8a103c03e0651
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9d088df413621b7b357204 pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9d088ff413621b7a35721b pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/_MMD_/5f9d08c2f413621b7335720b pid=1010
+[I] judge Status=8 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d0c41f413621b7335720c pid=1139
+[I] judge Getting problem data: vijos/system/1139
+[I] judge Status=1 Score=99 Time=39.789921ms Memory=760kb
+[I] judge Submission: vijos/system/5f9d0e6bf413621b7b357207 pid=1104
+[I] judge Getting problem data: vijos/system/1104
+[I] judge Status=2 Score=70 Time=11.54693ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d0ec1f413621b7b357208 pid=1104
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d0f58f413621b7b35720a pid=1104
+[I] judge Status=2 Score=70 Time=12.347292ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d1046f413621b7a35721d pid=1449
+[I] judge Getting problem data: vijos/system/1449
+[I] judge Status=2 Score=10 Time=17.288859ms Memory=504kb
+[I] judge Submission: vijos/system/5f9d12ddf413621b7b35720c pid=1303
+[I] judge Getting problem data: vijos/system/1303
+[I] judge Status=3 Score=0 Time=11624.267368ms Memory=10484kb
+[I] judge Submission: vijos/system/5f9d147cf413621b7a35721e pid=1104
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d148ef413621b7b35720f pid=1104
+[I] judge Status=1 Score=100 Time=11.098989ms Memory=376kb
+[I] judge Submission: vijos/zhima/5f9d14f7f413621b7335720e pid=1257
+[I] judge Getting problem data: vijos/zhima/1257
+[I] judge Status=2 Score=50 Time=5.088863ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d1537f413621b7b357212 pid=1449
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d154bf413621b7335720f pid=1449
+[I] judge Status=1 Score=100 Time=15.150877ms Memory=380kb
+[I] judge Submission: vijos/system/5f9d15b1f413621b7a35721f pid=1449
+[I] judge Status=1 Score=100 Time=15.069185ms Memory=376kb
+[I] judge Submission: vijos/zhima5/5f9d15f2f413621b7a357220 pid=1005
+[I] judge Getting problem data: vijos/zhima5/1005
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/zhima5/5f9d1631f413621b7b357214 pid=1005
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/zhima/5f9d169ef413621b7a357223 pid=1258
+[I] judge Getting problem data: vijos/zhima/1258
+[I] judge Status=1 Score=100 Time=401.821107ms Memory=376kb
+[I] judge Submission: vijos/zhima/5f9d16e6f413621b73357211 pid=1257
+[I] judge Status=1 Score=100 Time=2.819645ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d170bf413621b7a357224 pid=1104
+[I] judge Status=2 Score=0 Time=10.041647ms Memory=384kb
+[I] judge Submission: vijos/zhima/5f9d18bff413621b7b357216 pid=1259
+[I] judge Getting problem data: vijos/zhima/1259
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/zhima/5f9d19cef413621b73357213 pid=1259
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/zhima/5f9d1a57f413621b7a357227 pid=1259
+[I] judge Status=6 Score=0 Time=2.395508ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d1b7cf413621b7b357218 pid=1303
+[I] judge Status=3 Score=0 Time=11664.612748ms Memory=10492kb
+[I] judge Submission: vijos/zhima/5f9d1c1ff413621b7b357219 pid=1261
+[I] judge Getting problem data: vijos/zhima/1261
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d1d2df413621b7b35721b pid=1342
+[I] judge Getting problem data: vijos/system/1342
+[I] judge Status=3 Score=0 Time=17553.27019ms Memory=25632kb
+[I] judge Submission: vijos/system/5f9d1e26f413621b7a35722a pid=1484
+[I] judge Getting problem data: vijos/system/1484
+[I] judge Status=2 Score=50 Time=10.619788ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d1eaaf413621b73357215 pid=1104
+[I] judge Status=1 Score=100 Time=11.909899ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d1fb8f413621b7b35721c pid=1484
+[I] judge Status=2 Score=50 Time=11.17268ms Memory=376kb
+[I] judge Submission: vijos/zhima/5f9d20acf413621b7b35721e pid=1261
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d226bf413621b73357218 pid=1484
+[I] judge Status=2 Score=50 Time=11.334528ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d2324f413621b7335721a pid=1139
+[I] judge Status=6 Score=66 Time=98.511556ms Memory=1184kb
+[I] judge Submission: vijos/system/5f9d2380f413621b7a35722d pid=1139
+[I] judge Status=6 Score=66 Time=95.505069ms Memory=1180kb
+[I] judge Submission: vijos/system/5f9d247df413621b7b35721f pid=1139
+[I] judge Status=6 Score=33 Time=97.616962ms Memory=1152kb
+[I] judge Submission: vijos/system/5f9d255bf413621b7b357220 pid=1139
+[I] judge Status=6 Score=55 Time=91.018182ms Memory=1176kb
+[I] judge Submission: vijos/system/5f9d2573f413621b7b357221 pid=1139
+[I] judge Status=6 Score=66 Time=94.425575ms Memory=1184kb
+[I] judge Submission: vijos/system/5f9d258cf413621b7b357223 pid=1484
+[I] judge Status=2 Score=0 Time=11.619752ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d25d7f413621b7335721b pid=1484
+[I] judge Status=1 Score=100 Time=10.913926ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d277af413621b7335721d pid=1303
+[I] judge Status=3 Score=0 Time=11441.552989ms Memory=10088kb
+[I] judge Submission: vijos/zhima/5f9d28b9f413621b7a357231 pid=1260
+[I] judge Getting problem data: vijos/zhima/1260
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d28d9f413621b7b357226 pid=1342
+[I] judge Status=6 Score=10 Time=36.670879ms Memory=25176kb
+[I] judge Submission: vijos/system/5f9d2939f413621b7335721f pid=1139
+[I] judge Status=6 Score=77 Time=95.389402ms Memory=1188kb
+[I] judge Submission: vijos/system/5f9d299af413621b7b357228 pid=1139
+[I] judge Status=6 Score=77 Time=97.784819ms Memory=1172kb
+[I] judge Submission: vijos/system/5f9d2a2ef413621b7b357229 pid=1011
+[I] judge Status=1 Score=100 Time=407.150017ms Memory=2532kb
+[I] judge Submission: vijos/system/5f9d2a88f413621b73357220 pid=1139
+[I] judge Status=6 Score=0 Time=95.425035ms Memory=1148kb
+[I] judge Submission: vijos/system/5f9d2aeef413621b7a357235 pid=1073
+[I] judge Getting problem data: vijos/system/1073
+[I] judge Status=2 Score=30 Time=3.792268ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d2b22f413621b73357222 pid=1011
+[I] judge Status=2 Score=40 Time=346.545625ms Memory=2520kb
+[I] judge Submission: vijos/system/5f9d2b65f413621b73357223 pid=1139
+[I] judge Status=6 Score=66 Time=95.513565ms Memory=1296kb
+[I] judge Submission: vijos/system/5f9d2bf7f413621b7a357237 pid=1139
+[I] judge Status=6 Score=66 Time=94.815962ms Memory=1196kb
+[I] judge Submission: vijos/system/5f9d2e60f413621b7a357238 pid=1139
+[I] judge Status=2 Score=88 Time=97.816686ms Memory=1172kb
+[I] judge Submission: vijos/system/5f9d2ea4f413621b7b35722d pid=1139
+[I] judge Status=1 Score=99 Time=101.725472ms Memory=1188kb
+[I] judge Submission: vijos/XLOJ/5f9d38aff413621b73357226 pid=1000
+[I] judge Getting problem data: vijos/XLOJ/1000
+[I] judge Status=1 Score=100 Time=11.081098ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d3ad6f413621b7b35722f pid=1153
+[I] judge Getting problem data: vijos/system/1153
+[I] judge Status=1 Score=100 Time=296.56813ms Memory=2928kb
+[I] judge Submission: vijos/system/5f9d3c5ff413621b73357227 pid=1038
+[I] judge Status=2 Score=80 Time=12.383109ms Memory=412kb
+[I] judge Submission: vijos/zhima3/5f9d3f95f413621b7a357239 pid=1001
+[I] judge Getting problem data: vijos/zhima3/1001
+[I] judge Status=1 Score=100 Time=8.496779ms Memory=380kb
+[I] judge Submission: vijos/zhima3/5f9d411cf413621b7a35723b pid=1002
+[I] judge Getting problem data: vijos/zhima3/1002
+[I] judge Status=2 Score=50 Time=2.83606ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d418ff413621b7a357241 pid=1848
+[I] judge Getting pretest data: vijos/5f9d418ff413621b7a357241
+[I] judge Status=1 Score=10 Time=0.643937ms Memory=248kb
+[I] judge Submission: vijos/system/5f9d41c6f413621b7a357244 pid=1848
+[I] judge Getting pretest data: vijos/5f9d41c6f413621b7a357244
+[I] judge Status=1 Score=10 Time=0.645337ms Memory=248kb
+[I] judge Submission: vijos/system/5f9d41e1f413621b7a35724a pid=1848
+[I] judge Getting pretest data: vijos/5f9d41e1f413621b7a35724a
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d41f6f413621b7335722b pid=1848
+[I] judge Getting pretest data: vijos/5f9d41f6f413621b7335722b
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/system/5f9d4212f413621b7a35724d pid=1848
+[I] judge Getting pretest data: vijos/5f9d4212f413621b7a35724d
+[I] judge Status=1 Score=10 Time=1.396925ms Memory=248kb
+[I] judge Submission: vijos/zhima3/5f9d4274f413621b7a35724f pid=1002
+[I] judge Status=2 Score=50 Time=2.598512ms Memory=376kb
+[I] judge Submission: vijos/system/5f9d42c6f413621b7a357250 pid=1848
+[I] judge Status=2 Score=0 Time=10.505713ms Memory=376kb
+[I] judge Submission: vijos/zhima3/5f9d44acf413621b7a357251 pid=1004
+[I] judge Getting problem data: vijos/zhima3/1004
+[I] judge Status=2 Score=75 Time=49.038952ms Memory=772kb
+[I] judge Submission: vijos/zhima3/5f9d455bf413621b7335722e pid=1004
+[I] judge Status=2 Score=75 Time=50.224052ms Memory=1172kb
+[I] judge Submission: vijos/zhima3/5f9d45b9f413621b7a357253 pid=1004
+[I] judge Status=6 Score=50 Time=5.278035ms Memory=376kb
+[I] judge Submission: vijos/zhima3/5f9d45eaf413621b7a357254 pid=1004
+[I] judge Status=2 Score=75 Time=73.286161ms Memory=1160kb
+[I] judge Submission: vijos/zhima3/5f9d4766f413621b7a357255 pid=1005
+[I] judge Getting problem data: vijos/zhima3/1005
+[I] judge Status=1 Score=100 Time=2.748504ms Memory=364kb
+[I] judge Submission: vijos/system/5f9d48a8f413621b73357230 pid=1133
+[I] judge Status=1 Score=50 Time=8.46346ms Memory=2808kb
+[I] judge Submission: vijos/system/5f9d49c7f413621b7b357238 pid=1000
+[I] judge Status=7 Score=0 Time=0ms Memory=0kb
+[I] judge Submission: vijos/zhima3/5f9d4a67f413621b7a357257 pid=1004
+[I] judge Status=2 Score=75 Time=50.03297ms Memory=1068kb
+[I] judge Submission: vijos/zhima3/5f9d4b14f413621b7b357239 pid=1004
+[I] judge Status=2 Score=75 Time=49.424021ms Memory=1112kb

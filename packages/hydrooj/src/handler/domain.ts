@@ -212,7 +212,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
 
     @param('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
     @param('role', Types.String, true)
-    @param('expire', Types.UnsignedInt, true)
+    @param('expire', Types.Int, true)
     @param('invitationCode', Types.String, true)
     async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
         const r = await domain.getRoles(this.domain);
@@ -222,15 +222,15 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         if (method === domain.JOIN_METHOD_NONE) joinSettings = null;
         else {
             if (!roles.includes(role)) throw new ValidationError('role');
+            if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
+            joinSettings = { method, role };
             if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) joinSettings.expire = current.expire;
             else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
             else if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
             else joinSettings.expire = moment().add(expire, 'hours').toDate();
-            if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
-            joinSettings = { method, role };
             if (method === domain.JOIN_METHOD_CODE) joinSettings.code = invitationCode;
         }
-        await domain.edit(this.domain._id, { join: joinSettings });
+        await domain.edit(domainId, { join: joinSettings });
         this.back();
     }
 }
