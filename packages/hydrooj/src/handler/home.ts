@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError, UserNotFoundError, PermissionError,
+    NotFoundError, UserNotFoundError, PermissionError, DomainAlreadyExistsError,
 } from '../error';
 import * as bus from '../service/bus';
 import {
@@ -292,10 +292,12 @@ class HomeDomainCreateHandler extends Handler {
     @param('bulletin', Types.String, isContent)
     @param('gravatar', Types.String, true, isEmail)
     async post(_: string, id: string, name: string, bulletin: string, gravatar: string) {
+        const doc = await domain.get(id);
+        if (doc) throw new DomainAlreadyExistsError(id);
         gravatar = gravatar || this.user.gravatar || this.user.mail || 'guest@hydro.local';
         const domainId = await domain.add(id, this.user._id, name, bulletin);
         await domain.edit(domainId, { gravatar });
-        this.response.redirect = this.url('domain_manage', { domainId });
+        this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
     }
 }
