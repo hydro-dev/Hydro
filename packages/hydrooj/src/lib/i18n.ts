@@ -5,6 +5,7 @@ const locales = {};
 declare global {
     interface String {
         format: (...args: Array<any>) => string;
+        formatFromArray: (args: any[]) => string;
         rawformat: (object: any) => string;
         translate: (...languages: string[]) => string;
     }
@@ -20,13 +21,17 @@ String.prototype.format = function formatStr(...args) {
                     result = result.replace(reg, args[key]);
                 }
             }
-        } else {
-            for (let i = 0; i < args.length; i++) {
-                if (args[i] !== undefined) {
-                    const reg = new RegExp(`(\\{)${i}(\\})`, 'g');
-                    result = result.replace(reg, args[i]);
-                }
-            }
+        } else return this.formatFromArray(args);
+    }
+    return result;
+};
+
+String.prototype.formatFromArray = function formatStr(args) {
+    let result = this;
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] !== undefined) {
+            const reg = new RegExp(`(\\{)${i}(\\})`, 'g');
+            result = result.replace(reg, args[i]);
         }
     }
     return result;
