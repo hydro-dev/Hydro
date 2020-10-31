@@ -1,3 +1,4 @@
+import { SYSTEM_SETTINGS } from './setting';
 import { NumberKeys } from '../typeutils';
 import { SystemKeys } from '../interface';
 import * as db from '../service/db';
@@ -56,6 +57,9 @@ export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
 }
 
 (async () => {
+    for (const setting of SYSTEM_SETTINGS) {
+        if (setting.value) cache[setting.key] = setting.value;
+    }
     const config = await coll.find({}).toArray();
     for (const i of config) cache[i._id] = i.value;
     bus.emit('database/config');
