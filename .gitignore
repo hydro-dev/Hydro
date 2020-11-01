@@ -11,6 +11,7 @@ dist/
 *.hydro
 .coverage
 globalConfig.json
+*.out
 
 # Config Files
 /config.yaml
