@@ -5,12 +5,56 @@ import { STATUS } from './builtin';
 import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
-import {
-    Pdoc, Pdict, ProblemDataSource, ProblemStatusDoc,
-} from '../interface';
+import { ProblemStatusDoc, ProblemDataSource, Pdict } from '../interface';
 import { NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
+
+export interface Pdoc {
+    _id: ObjectID
+}
+export namespace Pdoc {
+    export type Field = keyof Pdoc;
+    export const fields: Field[] = [];
+    type Getter = (docId?: number, pid?: string) => Partial<Pdoc>
+    const getters: Getter[] = [];
+    export function extend(getter: Getter) {
+        getters.push(getter);
+        fields.push(...Object.keys(getter(0, '0')) as any);
+    }
+
+    extend((docId, pid) => ({
+        _id: new ObjectID(),
+        domainId: 'system',
+        docType: document.TYPE_PROBLEM,
+        docId: docId || -1,
+        pid: pid || docId.toString(),
+        owner: 1,
+        title: '*',
+        content: '',
+        html: false,
+        nSubmit: 0,
+        nAccept: 0,
+        tag: [],
+        category: [],
+        data: null,
+        hidden: true,
+        config: {},
+        acMsg: '',
+        difficulty: 0,
+        difficultyAlgo: 0,
+        difficultyAdmin: 0,
+        difficultySetting: null,
+    }));
+
+    export function create(docId?: number, pid?: string) {
+        const result = {} as Pdoc;
+        for (const getter of getters) {
+            Object.assign(result, getter(docId, pid));
+        }
+        return result;
+    }
+}
 
 export const SETTING_DIFFICULTY_ALGORITHM = 0;
 export const SETTING_DIFFICULTY_ADMIN = 1;
@@ -22,34 +66,13 @@ export const SETTING_DIFFICULTY_RANGE = [
     [SETTING_DIFFICULTY_AVERAGE, 'Use average of above'],
 ];
 
-export const pdocHidden: Pdoc = {
-    _id: new ObjectID(),
-    domainId: 'system',
-    docType: document.TYPE_PROBLEM,
-    docId: -1,
-    pid: '',
-    owner: 1,
-    title: '*',
-    content: '',
-    html: false,
-    nSubmit: 0,
-    nAccept: 0,
-    difficulty: 0,
-    tag: [],
-    category: [],
-    data: null,
-    hidden: true,
-    config: {},
-    acMsg: '',
-};
-
-export const PROJECTION_LIST: Projection<Pdoc> = [
+export const PROJECTION_LIST: Pdoc.Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'pid',
     'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
     'tag', 'category', 'hidden',
 ];
 
-export const PROJECTION_PUBLIC: Projection<Pdoc> = [
+export const PROJECTION_PUBLIC: Pdoc.Field[] = [
     ...PROJECTION_LIST,
     'content', 'html', 'data', 'config', 'acMsg',
 ];
@@ -133,7 +156,7 @@ export async function getList(
         for (const pid of pids) {
             if (!(r[pid] || l[pid])) {
                 if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-                else r[pid] = pdocHidden;
+                else r[pid] = Pdoc.create(undefined, pid.toString());
             }
         }
     }
@@ -173,6 +196,8 @@ export async function setTestdata(domainId: string, _id: number, filePath: strin
 }
 
 global.Hydro.model.problem = {
+    Pdoc,
+
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
 
@@ -181,7 +206,6 @@ global.Hydro.model.problem = {
     SETTING_DIFFICULTY_AVERAGE,
     SETTING_DIFFICULTY_RANGE,
 
-    pdocHidden,
     add,
     inc,
     get,

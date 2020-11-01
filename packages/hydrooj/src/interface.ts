@@ -3,6 +3,7 @@ import { Readable, Writable } from 'stream';
 import { ObjectID } from 'mongodb';
 import fs from 'fs';
 import { Dictionary, NumericDictionary } from 'lodash';
+import type { Pdoc } from './model/problem';
 
 type document = typeof import('./model/document');
 
@@ -155,31 +156,32 @@ export interface RemoteProblemConfig {
 
 export type ProblemConfig = LocalProblemConfig | RemoteProblemConfig;
 
-export interface Pdoc {
-    _id: ObjectID,
-    domainId: string,
-    docType: 10,
-    docId: number,
-    pid: string,
-    owner: number,
-    title: string,
-    content: string,
-    nSubmit: number,
-    nAccept: number,
-    tag: string[],
-    category: string[],
-    data?: ProblemData,
-    hidden: boolean,
-    config: ProblemConfig,
-    acMsg?: string,
-    html?: boolean,
+declare module './model/problem' {
+    interface Pdoc {
+        domainId: string,
+        docType: 10,
+        docId: number,
+        pid: string,
+        owner: number,
+        title: string,
+        content: string,
+        nSubmit: number,
+        nAccept: number,
+        tag: string[],
+        category: string[],
+        data?: ProblemData,
+        hidden: boolean,
+        config: ProblemConfig,
+        acMsg?: string,
+        html?: boolean,
 
-    difficulty?: number,
-    difficultyAlgo?: number,
-    difficultyAdmin?: number,
-    difficultySetting?: any,
+        difficulty?: number,
+        difficultyAlgo?: number,
+        difficultyAdmin?: number,
+        difficultySetting?: any,
+    }
 }
-
+export type { Pdoc } from './model/problem';
 export type Pdict = NumericDictionary<Pdoc>;
 
 export interface StatusDoc {
