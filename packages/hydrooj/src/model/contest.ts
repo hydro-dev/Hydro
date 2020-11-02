@@ -242,7 +242,7 @@ const homework: ContestRule = {
             detail.push({
                 ...effective[j],
                 penaltyScore: penaltyScore(effective[j]),
-                time: time(j),
+                time: time(effective[j]),
             });
         }
         return {
