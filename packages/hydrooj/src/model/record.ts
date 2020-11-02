@@ -57,9 +57,11 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
 export async function judge(domainId: string, rid: ObjectID) {
     const rdoc = await get(domainId, rid);
     let config: RunConfig | ProblemConfig = rdoc.config;
-    if (!config) {
+    let data;
+    if (rdoc.pid) {
         const pdoc = await problem.get(domainId, rdoc.pid);
-        config = pdoc?.config || {};
+        if (!config) config = pdoc?.config || {};
+        data = pdoc.data;
     }
     delete rdoc._id;
     await task.add({
@@ -68,6 +70,7 @@ export async function judge(domainId: string, rid: ObjectID) {
         rid,
         domainId,
         config,
+        data,
     });
 }
 
