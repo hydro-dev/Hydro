@@ -45,7 +45,7 @@ export const PERM = {
     PERM_VIEW_DISCUSSION: 1n << 27n,
     PERM_CREATE_DISCUSSION: 1n << 28n,
     PERM_HIGHLIGHT_DISCUSSION: 1n << 29n,
-    PERM_PIN_DISCUSSION: 1n << 59n,
+    PERM_PIN_DISCUSSION: 1n << 61n,
     PERM_EDIT_DISCUSSION: 1n << 30n,
     PERM_EDIT_DISCUSSION_SELF: 1n << 31n,
     PERM_DELETE_DISCUSSION: 1n << 32n,
@@ -81,7 +81,7 @@ export const PERM = {
     PERM_EDIT_TRAINING_SELF: 1n << 49n,
 
     // Ranking
-    PERM_VIEW_RANKING: 1n << 50n,
+    PERM_VIEW_RANKING: 1n << 59n,
 
     // Placeholder
     PERM_ALL: -1n,
@@ -89,7 +89,7 @@ export const PERM = {
     PERM_DEFAULT: 0n,
     PERM_ADMIN: -1n,
 
-    PERM_NEVER: 1n << 59n,
+    PERM_NEVER: 1n << 60n,
 };
 
 export const Permission = (family: string, key: BigInt, desc: string) => ({ family, key, desc });

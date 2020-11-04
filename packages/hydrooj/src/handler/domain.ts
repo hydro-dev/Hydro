@@ -126,10 +126,7 @@ class DomainPermissionHandler extends ManageHandler {
         const roles = await domain.getRoles(domainId);
         const log2 = (val: bigint) => {
             // @ts-ignore
-            for (let i = 0n; ; i++) {
-                // @ts-ignore
-                if ((val >> i) === 0n) return parseInt(i.toString(), 10) - 1;
-            }
+            for (let i = 0n; ; i++) if (!(val >> i)) return +i.toString() - 1;
         };
         const path = [
             ['Hydro', 'homepage'],
@@ -144,14 +141,16 @@ class DomainPermissionHandler extends ManageHandler {
 
     async post({ domainId }) {
         const roles = {};
+        delete this.request.body.csrfToken;
         for (const role in this.request.body) {
-            if (this.request.body[role] instanceof Array) {
-                const perms = this.request.body[role];
-                // @ts-ignore
-                roles[role] = 0n;
-                // @ts-ignore
-                for (const r of perms) roles[role] += 1n << BigInt(r);
-            }
+            const perms = this.request.body[role] instanceof Array
+                ? this.request.body[role]
+                : [this.request.body[role]];
+            // @ts-ignore
+            roles[role] = 0n;
+            console.log(role, perms);
+            // @ts-ignore
+            for (const r of perms) roles[role] += 1n << BigInt(r);
         }
         await domain.setRoles(domainId, roles);
         this.back();
