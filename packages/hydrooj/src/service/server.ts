@@ -63,6 +63,7 @@ export interface Types {
     Date: Type,
     Time: Type,
     Range: (range: Array<string | number> | Dictionary<any>) => Type,
+    Array: Type,
 }
 
 export const Types: Types = {
@@ -130,6 +131,10 @@ export const Types: Types = {
             return false;
         },
     ],
+    Array: [(v) => {
+        if (v instanceof Array) return v;
+        return [v] || [];
+    }, null],
 };
 
 function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type | boolean | Validator | Converter>) {

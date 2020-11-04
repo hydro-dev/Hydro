@@ -179,7 +179,8 @@ class DomainRoleHandler extends ManageHandler {
         this.back();
     }
 
-    async postDelete({ domainId, roles }) {
+    @param('roles', Types.Array)
+    async postDelete(domainId: string, roles: string[]) {
         for (const role of roles) {
             if (['root', 'default', 'guest'].includes(role)) {
                 throw new ValidationError('role');
