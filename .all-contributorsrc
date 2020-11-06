@@ -1,0 +1,31 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "undefined-moe",
+      "name": "undefined",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/29992205?v=4",
+      "profile": "https://undefined.moe/",
+      "contributions": [
+        "code",
+        "content",
+        "doc",
+        "ideas",
+        "maintenance",
+        "infra",
+        "question",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "Hydro",
+  "projectOwner": "hydro-dev",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
