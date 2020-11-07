@@ -23,7 +23,6 @@ class RecordListHandler extends RecordHandler {
     @param('uidOrName', Types.String, true)
     async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string) {
         this.response.template = 'record_main.html';
-        if (tid) tid = new ObjectID(tid);
         const q: any = { tid, hidden: false };
         if (uidOrName) {
             q.$or = [
@@ -171,11 +170,11 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     dispose: bus.Disposable;
 
     @param('tid', Types.ObjectID, true)
-    async prepare(domainId: string, tid: ObjectID) {
+    async prepare(domainId: string, tid?: ObjectID) {
         this.domainId = domainId;
         if (tid) {
-            const tdoc = await contest.get(domainId, new ObjectID(tid), -1);
-            if (this.canShowRecord(tdoc)) this.tid = tid;
+            const tdoc = await contest.get(domainId, tid, -1);
+            if (this.canShowRecord(tdoc)) this.tid = tid.toHexString();
             else {
                 this.close();
                 return;

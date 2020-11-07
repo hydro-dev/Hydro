@@ -425,16 +425,21 @@ export class Handler {
     url(name: string, kwargs: any = {}) {
         let res = '#';
         const args: any = {};
+        const query: any = {};
         for (const key in kwargs) {
             if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
             else args[key] = kwargs[key].toString();
+        }
+        for (const key in kwargs.query || {}) {
+            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
+            else query[key] = kwargs.query[key].toString();
         }
         try {
             if (this.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.domainId;
             }
-            const { anchor, query } = args;
+            const { anchor } = args;
             if (query) res = router.url(name, args, { query });
             else res = router.url(name, args);
             if (anchor) return `${res}#${anchor}`;
