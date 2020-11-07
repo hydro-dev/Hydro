@@ -1,11 +1,13 @@
-import { isSafeInteger, flatten } from 'lodash';
+import { isSafeInteger, flatten, pick } from 'lodash';
 import yaml from 'js-yaml';
 import { FilterQuery, ObjectID } from 'mongodb';
+import AdmZip from 'adm-zip';
 import {
     NoProblemError, ProblemDataNotFoundError, BadRequestError,
     SolutionNotFoundError, ProblemNotFoundError, ValidationError,
     PermissionError,
 } from '../error';
+import { streamToBuffer } from '../utils';
 import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
@@ -13,6 +15,7 @@ import paginate from '../lib/paginate';
 import {
     checkPid, isTitle, isContent, isPid,
 } from '../lib/validator';
+import { ProblemAdd } from '../lib/ui';
 import * as file from '../model/file';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
@@ -230,6 +233,23 @@ export class ProblemDetailHandler extends ProblemHandler {
             await record.judge(domainId, doc._id);
         });
         this.back();
+    }
+}
+
+export class ProblemExportHandler extends ProblemDetailHandler {
+    async get() {
+        const hasPerm = (this.user._id === this.pdoc.owner && this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF))
+            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
+        const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
+        let zip: AdmZip;
+        if (hasPerm) {
+            if (this.pdoc.data instanceof ObjectID) {
+                const buf = await streamToBuffer(await file.get(this.pdoc.data));
+                zip = new AdmZip(buf);
+            } else zip = new AdmZip();
+        } else zip = new AdmZip();
+        zip.addFile('problem.json', Buffer.from(JSON.stringify(pdoc)));
+        this.response.attachment(`${this.pdoc.title}.zip`, zip.toBuffer());
     }
 }
 
@@ -615,7 +635,6 @@ export class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
 export class ProblemCreateHandler extends Handler {
     async get() {
         this.response.template = 'problem_edit.html';
-        this.checkPerm(PERM.PERM_CREATE_PROBLEM);
         this.response.body = {
             path: [
                 ['Hydro', 'homepage'],
@@ -640,11 +659,32 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
+export class ProblemImportHandler extends Handler {
+    @param('ufid', Types.ObjectID, true)
+    async get(domainId: string, ufid?: ObjectID) {
+        if (ufid) {
+            const stat = await file.getMeta(ufid);
+            if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');
+            const stream = await file.get(ufid);
+            const buf = await streamToBuffer(stream);
+            const zip = new AdmZip(buf);
+            const pdoc = JSON.parse(zip.getEntry('problem.json').getData().toString());
+            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tags, pdoc.category);
+            await problem.setTestdata(domainId, pid, buf);
+            await problem.edit(domainId, pid, { html: pdoc.html });
+            this.response.redirect = this.url('problem_detail', { pid });
+            await file.del(ufid);
+        } else this.response.template = 'problem_import.html';
+    }
+}
+
 export async function apply() {
+    ProblemAdd('problem_import', {}, 'copy', 'Import From Hydro');
     Route('problem_main', '/p', ProblemMainHandler);
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler);
     Route('problem_random', '/problem/random', ProblemRandomHandler);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler);
+    Route('problem_export', '/p/:pid/export', ProblemExportHandler);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler);
     Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);
@@ -655,7 +695,8 @@ export async function apply() {
     Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler);
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
-    Route('problem_create', '/problem/create', ProblemCreateHandler);
+    Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
+    Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler);
 }
 

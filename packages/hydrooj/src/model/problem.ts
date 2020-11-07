@@ -187,10 +187,10 @@ export function setStar(domainId: string, pid: number, uid: number, star: boolea
     return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
 }
 
-export async function setTestdata(domainId: string, _id: number, filePath: string) {
+export async function setTestdata(domainId: string, _id: number, f: string | Buffer) {
     const pdoc = await get(domainId, _id);
-    const config = await testdataConfig.readConfig(filePath);
-    const id = await file.add(filePath, 'data.zip', 1);
+    const config = await testdataConfig.readConfig(f);
+    const id = await file.add(f, 'data.zip', 1);
     if (pdoc.data instanceof ObjectID) file.del(pdoc.data);
     return await edit(domainId, _id, { data: id, config: safeLoad(config) as any });
 }

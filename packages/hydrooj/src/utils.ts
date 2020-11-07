@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Duplex } from 'stream';
 import cluster from 'cluster';
 import path from 'path';
 import serialize from 'serialize-javascript';
@@ -178,6 +179,13 @@ export function streamToBuffer(stream): Promise<Buffer> {
         stream.on('data', (data) => buffers.push(data));
         stream.on('end', () => resolve(Buffer.concat(buffers)));
     });
+}
+
+export function bufferToStream(buffer: Buffer): NodeJS.ReadableStream {
+    const stream = new Duplex();
+    stream.push(buffer);
+    stream.push(null);
+    return stream;
 }
 
 export function buildProjection(fields: string[]): Record<string, 1> {

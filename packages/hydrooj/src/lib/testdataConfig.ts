@@ -2,8 +2,8 @@ import Zip from 'adm-zip';
 import { safeLoad } from 'js-yaml';
 import { LocalProblemConfig } from '../interface';
 
-export async function readConfig(filePath: string) {
-    const data = new Zip(filePath);
+export async function readConfig(file: string | Buffer) {
+    const data = new Zip(file);
     const entries = data.getEntries();
     for (const entry of entries) {
         if (entry.name.toLowerCase() === 'config.yaml') {

@@ -357,11 +357,14 @@ export class Handler {
             status: null,
             template: null,
             redirect: null,
-            attachment: (name, stream) => {
+            attachment: (name, streamOrBuffer) => {
                 ctx.attachment(name);
-                if (stream) {
+                if (streamOrBuffer instanceof Buffer) {
                     this.response.body = null;
-                    ctx.body = stream.pipe(new PassThrough());
+                    ctx.body = streamOrBuffer;
+                } else {
+                    this.response.body = null;
+                    ctx.body = streamOrBuffer.pipe(new PassThrough());
                 }
             },
             disposition: null,

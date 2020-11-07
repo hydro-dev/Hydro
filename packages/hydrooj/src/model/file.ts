@@ -7,6 +7,7 @@ import * as db from '../service/db';
 import * as bus from '../service/bus';
 import gridfs from '../service/gridfs';
 import hash from '../lib/hash.hydro';
+import { bufferToStream } from '../utils';
 
 const coll: Collection<Ufdoc> = db.collection('file');
 const collFile = db.collection('fs.files');
@@ -17,12 +18,13 @@ function _timestamp() {
 }
 
 export async function add(
-    streamOrPath: fs.ReadStream | string, filename: string,
+    f: NodeJS.ReadableStream | Buffer | string, filename: string,
     owner = 1, meta = {},
 ) {
-    let stream: fs.ReadStream;
-    if (typeof streamOrPath === 'string') stream = fs.createReadStream(streamOrPath);
-    else stream = streamOrPath;
+    let stream: NodeJS.ReadableStream;
+    if (typeof f === 'string') stream = fs.createReadStream(f);
+    else if (f instanceof Buffer) stream = bufferToStream(f);
+    else stream = f;
     const w = gridfs.openUploadStream(filename);
     await coll.insertOne({
         ...meta,
