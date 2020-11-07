@@ -495,7 +495,7 @@ export const ContestHandlerMixin = (c) => class extends c {
     ): Promise<[Tdoc, ScoreboardNode[][], Udict]> {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).toArray();
+        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort).toArray();
         const uids = tsdocs.map((tsdoc) => tsdoc.uid);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, uids),

@@ -12,6 +12,7 @@ import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as document from '../model/document';
 import * as problem from '../model/problem';
+import * as domain from '../model/domain';
 import * as record from '../model/record';
 import * as user from '../model/user';
 import * as message from '../model/message';
@@ -308,6 +309,8 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         });
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
+            problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
+            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
         ]);
         bus.boardcast('record/change', rdoc);

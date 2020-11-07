@@ -12,6 +12,7 @@ import {
     Route, Handler, Types, param,
 } from '../service/server';
 import * as bus from '../service/bus';
+import * as domain from '../model/domain';
 import { PERM, CONSTANT } from '../model/builtin';
 import * as user from '../model/user';
 import * as contest from '../model/contest';
@@ -186,6 +187,8 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         });
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
+            problem.inc(domainId, pid, 'nSubmit', 1),
+            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             contest.updateStatus(domainId, tid, this.user._id,
                 rid, pid, false, 0, document.TYPE_HOMEWORK),
         ]);

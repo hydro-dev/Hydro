@@ -282,6 +282,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
+            problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
         ]);
         bus.boardcast('record/change', rdoc);
