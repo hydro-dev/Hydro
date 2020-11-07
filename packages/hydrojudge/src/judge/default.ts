@@ -20,7 +20,7 @@ function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
         const { filename } = ctx.config;
         const { copyIn } = ctx.execute;
-        if (ctx.config.filename) copyIn[`${filename}.in`] = { src: c.input };
+        if (filename) copyIn[`${filename}.in`] = { src: c.input };
         const copyOut = filename ? [`${filename}.out`] : [];
         const stdin = filename ? null : c.input;
         const stdout = path.resolve(ctx.tmpdir, `${c.id}.out`);

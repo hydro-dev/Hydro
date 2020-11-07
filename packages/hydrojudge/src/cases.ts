@@ -204,7 +204,6 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
     const next = args.next;
     const checkFile = ensureFile(folder);
     config.checker_type = cfg.checker_type || 'default';
-    if (cfg.filename) config.filename = cfg.filename;
     if (cfg.checker) config.checker = checkFile(cfg.checker, '找不到比较器 ');
     if (cfg.judge_extra_files) {
         if (typeof cfg.judge_extra_files === 'string') {
@@ -301,7 +300,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
         config = { ...yaml.safeLoad(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
     } else if (fs.existsSync(iniConfig)) {
         config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
-    }
+    } else config = cfg;
     const result = await readYamlCases(folder, config, args);
     isValidConfig(result);
     return result;
