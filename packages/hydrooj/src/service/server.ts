@@ -440,8 +440,7 @@ export class Handler {
                 args.domainId = args.domainId || this.domainId;
             }
             const { anchor } = args;
-            if (query) res = router.url(name, args, { query });
-            else res = router.url(name, args);
+            res = router.url(name, args, { query });
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);
@@ -563,10 +562,8 @@ export class Handler {
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            if (this.response.body != null) {
-                this.ctx.response.body = this.response.body;
-                this.ctx.response.status = this.response.status || 200;
-            }
+            this.ctx.response.body = this.response.body;
+            this.ctx.response.status = this.response.status || 200;
             this.ctx.response.type = this.request.json
                 ? 'application/json'
                 : this.response.type
@@ -683,7 +680,7 @@ const Checker = (permPrivChecker) => {
         if (typeof item === 'object') {
             if (typeof item.call !== 'undefined') {
                 checker = item;
-            } if (typeof item[0] === 'number') {
+            } else if (typeof item[0] === 'number') {
                 priv = item;
             } else if (typeof item[0] === 'bigint') {
                 perm = item;
@@ -772,18 +769,22 @@ export class ConnectionHandler {
     url(name: string, kwargs: any = {}) {
         let res = '#';
         const args: any = {};
+        const query: any = {};
         for (const key in kwargs) {
             if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
             else args[key] = kwargs[key].toString();
+        }
+        for (const key in kwargs.query || {}) {
+            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
+            else query[key] = kwargs.query[key].toString();
         }
         try {
             if (this.args.domainId !== 'system' || args.domainId) {
                 name += '_with_domainId';
                 args.domainId = args.domainId || this.args.domainId;
             }
-            const { anchor, query } = args;
-            if (query) res = router.url(name, args, { query });
-            else res = router.url(name, args);
+            const { anchor } = args;
+            res = router.url(name, args, { query });
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             console.error(e.message);

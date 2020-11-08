@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import systeminformation from 'systeminformation';
 import { tmpdir } from 'os';
+import { noop } from 'lodash';
 import { judge } from './judge/run';
 import * as tmpfs from './tmpfs';
 
@@ -49,7 +50,7 @@ int main(){
         tmpfs.mount(context.tmpdir, '64m');
         await judge(context).catch((e) => console.error(e));
         // eslint-disable-next-line no-await-in-loop
-        for (const clean of context.clean) await clean().catch();
+        for (const clean of context.clean) await clean().catch(noop);
         tmpfs.umount(context.tmpdir);
         fs.removeSync(context.tmpdir);
     } catch (e) {

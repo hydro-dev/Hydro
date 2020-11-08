@@ -13,6 +13,8 @@ const EMPTY_STR = /^[ \r\n\t]*$/i;
 
 export const cmd = parse;
 
+export function noop() { }
+
 export function parseTimeMS(str: string) {
     const match = TIME_RE.exec(str);
     if (!match) throw new FormatError(str, ['error parsing time']);

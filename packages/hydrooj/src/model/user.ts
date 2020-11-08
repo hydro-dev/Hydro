@@ -129,7 +129,7 @@ export class User implements _User {
     checkPassword(password: string) {
         const h = global.Hydro.lib[`hash.${this.hashType}`];
         if (!h) throw new Error('Unknown hash method');
-        if (!(h(password, this.salt(), this) === this.hash())) {
+        if (h(password, this.salt(), this) !== this.hash()) {
             throw new LoginError(this.uname);
         } else if (this.hashType !== 'hydro') {
             setPassword(this._id, password);

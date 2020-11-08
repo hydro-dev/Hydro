@@ -323,8 +323,8 @@ export class ProblemPretestConnectionHandler extends ConnectionHandler {
     @param('pid', Types.String)
     async prepare(domainId: string, pid: string) {
         const pdoc = await problem.get(domainId, pid);
-        if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
+        if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         this.pid = pdoc.docId.toString();
         this.domainId = domainId;
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));

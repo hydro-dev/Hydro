@@ -20,7 +20,7 @@ const statusMap = {
 };
 
 function proc({
-    execute = null,
+    execute = '',
     time_limit_ms = 16000,
     memory_limit_mb = 1024,
     process_limit = 32,

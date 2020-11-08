@@ -1,8 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Readable, Writable } from 'stream';
-import { ObjectID } from 'mongodb';
-import fs from 'fs';
-import { Dictionary, NumericDictionary } from 'lodash';
+import type { Readable, Writable } from 'stream';
+import type { ObjectID } from 'mongodb';
+import type fs from 'fs';
+import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Pdoc } from './model/problem';
 
 type document = typeof import('./model/document');

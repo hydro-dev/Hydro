@@ -6,6 +6,7 @@ import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import { homedir, tmpdir } from 'os';
 import AdmZip from 'adm-zip';
+import { noop } from 'lodash';
 
 declare module 'hydrooj/dist/interface' {
     interface SystemKeys {
@@ -83,7 +84,7 @@ async function postInit() {
             });
         });
         await fs.unlink(tmpFilePath);
-        await processData(savePath).catch();
+        await processData(savePath).catch(noop);
         return savePath;
     }
 
@@ -239,7 +240,7 @@ async function postInit() {
                 }
             }
             // eslint-disable-next-line no-await-in-loop
-            for (const clean of this.clean) await clean().catch();
+            for (const clean of this.clean) await clean().catch(noop);
             tmpfs.umount(this.tmpdir);
             fs.removeSync(this.tmpdir);
         }

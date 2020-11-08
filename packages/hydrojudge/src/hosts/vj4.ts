@@ -4,6 +4,7 @@ import axios from 'axios';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
+import { noop } from 'lodash';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
 import { compilerText, Queue } from '../utils';
@@ -99,7 +100,7 @@ class JudgeTask {
                 });
             }
         }
-        for (const clean of this.clean) await clean().catch();
+        for (const clean of this.clean) await clean().catch(noop);
         tmpfs.umount(this.tmpdir);
         fs.removeSync(this.tmpdir);
     }
@@ -257,7 +258,7 @@ export default class VJ4 {
                 });
             });
             await fs.unlink(tmpFilePath);
-            await this.processData(savePath).catch();
+            await this.processData(savePath).catch(noop);
         } catch (e) {
             if (retry) await this.problemData(domainId, pid, savePath, retry - 1);
             else throw e;

@@ -55,8 +55,8 @@ export async function getWithSecret(_id: ObjectID, secret: string, reject?: Func
     const file = await coll.findOne({ _id });
     if (!file) throw new NotFoundError(_id);
     const timestamp = _timestamp();
-    if (!(hash(file.secret, timestamp.toString()) === secret)) {
-        if (!(hash(file.secret, (timestamp - 1).toString()) === secret)) {
+    if (hash(file.secret, timestamp.toString()) !== secret) {
+        if (hash(file.secret, (timestamp - 1).toString()) !== secret) {
             throw new ForbiddenError();
         }
     }

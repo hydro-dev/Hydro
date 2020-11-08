@@ -401,7 +401,7 @@ async function message(src: Db, report: Function) {
     }
 }
 
-async function removeInvalidPid(src: Db, report: Function) {
+async function removeInvalidPid(report: Function) {
     const count = await dst.collection('document').find({ docType: 10 }).count();
     const bulk = dst.collection('document').initializeUnorderedBulkOp();
     await report({ progress: 1, message: `Remove pid: ${count}` });
@@ -550,7 +550,7 @@ export async function run({
     await discussionNode(src, report);
     await message(src, report);
     await userfileUsage(src, report);
-    await removeInvalidPid(src, report);
+    await removeInvalidPid(report);
     return true;
 }
 
