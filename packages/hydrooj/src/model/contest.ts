@@ -151,6 +151,7 @@ const oi: ContestRule = {
         for (const j of journal) {
             if (tdoc.pids.includes(j.pid)) {
                 detail[j.pid] = j;
+                if (detail[j.pid]) score -= detail[j.pid].score;
                 score += j.score;
             }
         }
@@ -193,7 +194,7 @@ const oi: ContestRule = {
             for (const pid of tdoc.pids) {
                 row.push({
                     type: 'record',
-                    value: tsddict[pid]?.score || '-',
+                    value: tsddict[pid]?.score ?? '-',
                     raw: tsddict[pid]?.rid || null,
                 });
             }
