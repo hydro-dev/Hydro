@@ -89,7 +89,7 @@ export async function add(
         score: 0,
         time: 0,
         memory: 0,
-        hidden: !!contestOrConfig,
+        hidden: false,
         judgeTexts: [],
         compilerTexts: [],
         testCases: [],
@@ -102,6 +102,7 @@ export async function add(
             data.contest = contestOrConfig as ContestInfo;
         } else {
             data.config = contestOrConfig as RunConfig;
+            data.hidden = true;
         }
     }
     const res = await coll.insertOne(data);

@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
 import { PERM, CONSTANT, STATUS } from '../model/builtin';
 import * as problem from '../model/problem';
@@ -23,14 +23,21 @@ class RecordListHandler extends RecordHandler {
     @param('uidOrName', Types.String, true)
     async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string) {
         this.response.template = 'record_main.html';
-        const q: any = { tid, hidden: false };
+        const q: FilterQuery<Rdoc> = { 'contest.tid': tid, hidden: false };
         if (uidOrName) {
-            q.$or = [
-                { unameLower: uidOrName.toLowerCase() },
-                { _id: parseInt(uidOrName, 10) },
-            ];
+            let udoc = await user.getById(domainId, +uidOrName);
+            if (udoc) q.uid = udoc._id;
+            else {
+                udoc = await user.getByUname(domainId, uidOrName);
+                if (udoc) q.uid = udoc._id;
+                else q.uid = null;
+            }
         }
-        if (pid) q.pid = pid;
+        if (pid) {
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) q.pid = pdoc.docId;
+            else q.pid = null;
+        }
         const [rdocs] = await paginate(
             record.getMulti(domainId, q).sort('_id', -1),
             page,
