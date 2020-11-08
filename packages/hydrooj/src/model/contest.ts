@@ -205,6 +205,13 @@ const oi: ContestRule = {
     rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
 };
 
+const ioi: ContestRule = {
+    ...oi,
+    TEXT: 'IOI',
+    showRecord: () => true,
+    showScoreboard: () => true,
+};
+
 const homework: ContestRule = {
     TEXT: 'Assignment',
     check: () => { },
@@ -347,7 +354,7 @@ const homework: ContestRule = {
 };
 
 export const RULES: ContestRules = {
-    acm, oi, homework,
+    acm, oi, homework, ioi,
 };
 
 function _getStatusJournal(tsdoc) {
