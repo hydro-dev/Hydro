@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.13.46",
+    "version": "2.13.47",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -31,7 +31,7 @@
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
         "supports-color": "^7.2.0",
-        "systeminformation": "^4.28.1",
+        "systeminformation": "^4.29.1",
         "yargs": "^16.0.3"
     },
     "devDependencies": {

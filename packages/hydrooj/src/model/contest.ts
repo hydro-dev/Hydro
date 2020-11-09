@@ -149,12 +149,9 @@ const oi: ContestRule = {
         const detail = {};
         let score = 0;
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)) {
-                detail[j.pid] = j;
-                if (detail[j.pid]) score -= detail[j.pid].score;
-                score += j.score;
-            }
+            if (tdoc.pids.includes(j.pid)) detail[j.pid] = j;
         }
+        for (const i in detail) score += detail[i].score;
         return { score, detail };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,

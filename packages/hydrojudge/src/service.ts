@@ -208,7 +208,7 @@ async function postInit() {
                 this.domainId = this.request.domainId;
                 this.lang = this.request.lang;
                 this.code = this.request.code;
-                this.data = this.request.data.toString();
+                this.data = (this.request.data || '').toString();
                 this.config = this.request.config;
                 this.next = getNext(this);
                 this.end = getEnd(this.domainId, this.rid);
