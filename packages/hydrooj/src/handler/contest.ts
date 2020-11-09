@@ -152,8 +152,8 @@ class ContestScoreboardDownloadHandler extends ContestHandler {
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [, rows] = await this.getScoreboard(domainId, tid, true);
-        this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
+        const [tdoc, rows] = await this.getScoreboard(domainId, tid, true);
+        this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }
 
