@@ -74,7 +74,7 @@ class JudgeTask {
         this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
-        tmpfs.mount(this.tmpdir, '64m');
+        tmpfs.mount(this.tmpdir, '256m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domain_id, this.rid, this.pid);
         try {
             if (this.type === 0) await this.doSubmission();

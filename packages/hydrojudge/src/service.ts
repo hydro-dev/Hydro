@@ -215,7 +215,7 @@ async function postInit() {
                 this.tmpdir = path.resolve(tmpdir(), 'tmp', this.rid);
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
-                tmpfs.mount(this.tmpdir, '64m');
+                tmpfs.mount(this.tmpdir, '256m');
                 logger.info(`Submission: ${this.rid}`, { pid: this.pid });
                 if (this.config.input) await this.run();
                 else if (this.config.hack) await this.hack();

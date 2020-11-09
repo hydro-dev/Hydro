@@ -47,7 +47,7 @@ int main(){
         };
         context.tmpdir = path.resolve(tmpdir(), 'hydro', 'tmp', 'sysinfo');
         fs.ensureDirSync(context.tmpdir);
-        tmpfs.mount(context.tmpdir, '64m');
+        tmpfs.mount(context.tmpdir, '32m');
         await judge(context).catch((e) => console.error(e));
         // eslint-disable-next-line no-await-in-loop
         for (const clean of context.clean) await clean().catch(noop);
