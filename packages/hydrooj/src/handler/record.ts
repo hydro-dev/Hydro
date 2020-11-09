@@ -99,7 +99,7 @@ class RecordDetailHandler extends RecordHandler {
         const rdoc = await record.get(domainId, rid);
         if (rdoc) {
             await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid);
+            await record.judge(domainId, rid, 0);
         }
         this.back();
     }
@@ -165,7 +165,7 @@ class RecordRejudgeHandler extends Handler {
         const rdoc = await record.get(domainId, rid);
         if (rdoc) {
             await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid);
+            await record.judge(domainId, rid, 0);
         }
         this.back();
     }

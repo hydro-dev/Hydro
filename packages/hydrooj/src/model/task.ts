@@ -10,8 +10,8 @@ const coll = db.collection('task');
 export async function add(task: Partial<Task> & { type: string }) {
     const t: Task = {
         ...task,
-        count: task.count || 1,
-        priority: task.priority || 1,
+        count: task.count ?? 1,
+        priority: task.priority ?? 1,
         executeAfter: task.executeAfter || new Date(),
         _id: new ObjectID(),
     };
@@ -34,7 +34,7 @@ export function del(_id: ObjectID) {
 export async function getFirst(query: FilterQuery<Task>) {
     const q = { ...query };
     q.executeAfter = q.executeAfter || { $lt: new Date() };
-    const res = await coll.findOneAndDelete(q);
+    const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
     if (res.value) {
         logger.debug('%o', res.value);
         if (res.value.interval) {

@@ -54,7 +54,7 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
     return null;
 }
 
-export async function judge(domainId: string, rid: ObjectID) {
+export async function judge(domainId: string, rid: ObjectID, priority = 1) {
     const rdoc = await get(domainId, rid);
     let config: RunConfig | ProblemConfig = rdoc.config;
     let data;
@@ -66,6 +66,7 @@ export async function judge(domainId: string, rid: ObjectID) {
     delete rdoc._id;
     await task.add({
         ...rdoc,
+        priority,
         type: 'judge',
         rid,
         domainId,
