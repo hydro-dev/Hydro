@@ -143,7 +143,8 @@ export const judge = async (ctx) => {
     ctx.total_score = 0;
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
-    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || 2 });
+    // sandbox seems cannot handle concurrent tasks with output file correctly
+    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || (ctx.config.filename ? 1 : 2) });
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
     await Promise.all(tasks);
     ctx.stat.done = new Date();

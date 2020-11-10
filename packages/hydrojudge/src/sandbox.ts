@@ -104,9 +104,7 @@ export async function run(execute, params?) {
     else ret.stdout = result.files.stdout || '';
     if (params.stderr) await fs.writeFile(params.stderr, result.files.stderr || '');
     else ret.stderr = result.files.stderr || '';
-    if (result.error) {
-        ret.error = result.error;
-    }
+    if (result.error) ret.error = result.error;
     ret.files = result.files;
     ret.fileIds = result.fileIds || {};
     return ret;
