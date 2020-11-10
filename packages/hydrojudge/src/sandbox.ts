@@ -4,7 +4,6 @@ import * as STATUS from './status';
 import { SystemError } from './error';
 import { cmd } from './utils';
 
-const fsp = fs.promises;
 const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
 const axios = Axios.create({ baseURL: 'http://localhost:5050' });
 
@@ -31,8 +30,8 @@ function proc({
         env,
         files: [
             stdin ? { src: stdin } : { content: '' },
-            { name: 'stdout', max: 1024 * 1024 * 16 },
-            { name: 'stderr', max: 1024 * 1024 * 16 },
+            { name: 'stdout', max: 1024 * 1024 * 32 },
+            { name: 'stderr', max: 1024 * 1024 * 32 },
         ],
         cpuLimit: time_limit_ms * 1000 * 1000,
         realCpuLimit: time_limit_ms * 3000 * 1000,
@@ -101,9 +100,9 @@ export async function run(execute, params?) {
         ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
     }
     result.files = result.files || {};
-    if (params.stdout) await fsp.writeFile(params.stdout, result.files.stdout || '');
+    if (params.stdout) await fs.writeFile(params.stdout, result.files.stdout || '');
     else ret.stdout = result.files.stdout || '';
-    if (params.stderr) await fsp.writeFile(params.stderr, result.files.stderr || '');
+    if (params.stderr) await fs.writeFile(params.stderr, result.files.stderr || '');
     else ret.stderr = result.files.stderr || '';
     if (result.error) {
         ret.error = result.error;

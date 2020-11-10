@@ -10,7 +10,7 @@ function convert(ini: string) {
             cases: [{ input: `input/${input}`, output: `output/${output}` }],
             score: parseInt(score, 10),
             time: `${time}s`,
-            memory: '128m',
+            memory: '256m',
         };
         if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
         res.subtasks.push(cur);
