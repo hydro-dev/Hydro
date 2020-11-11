@@ -205,7 +205,7 @@ export default class Hydro {
         setInterval(() => { this.axios.get('judge/noop'); }, 30000000);
     }
 
-    async problemDataVersion(domainId: string, pid: string, retry = 3) {
+    async problemDataVersion(domainId: string, pid: string) {
         await this.ensureLogin();
         const res = await this.axios.get(`d/${domainId}/p/${pid}`);
         const data = res.data.pdoc?.data;
