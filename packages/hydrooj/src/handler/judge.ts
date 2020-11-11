@@ -1,5 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { JudgeResultBody, Rdoc, TestCase } from '../interface';
+import { sleep } from '../utils';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
@@ -113,16 +114,32 @@ class JudgeHandler extends Handler {
 }
 
 class JudgeConnectionHandler extends ConnectionHandler {
-    processing: any;
+    processing: any = null;
+
+    async prepare() {
+        this.newTask();
+    }
+
+    async newTask() {
+        if (this.processing) return;
+        let t;
+        while (!t) {
+            // eslint-disable-next-line no-await-in-loop
+            await sleep(100);
+            // eslint-disable-next-line no-await-in-loop
+            t = await task.getFirst({ type: 'judge' });
+        }
+        this.send({ task: t });
+        this.processing = t;
+    }
 
     async message(msg) {
+        console.log(msg);
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
             await end({ judger: this.user._id, ...msg });
             this.processing = null;
-            const t = await task.getFirst({ type: 'judge' });
-            this.send({ task: t });
-            this.processing = t;
+            await this.newTask();
         }
     }
 

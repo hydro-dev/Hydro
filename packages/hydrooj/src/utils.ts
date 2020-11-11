@@ -193,3 +193,11 @@ export function buildProjection(fields: string[]): Record<string, 1> {
     for (const k of fields) o[k] = 1;
     return o;
 }
+
+export function sleep(timeout: number) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, timeout);
+    });
+}
