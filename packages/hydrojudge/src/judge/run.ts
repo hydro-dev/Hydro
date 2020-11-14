@@ -12,7 +12,7 @@ export const judge = async (ctx) => {
     ctx.execute = await compile(ctx.lang, ctx.code, 'code', {}, ctx.next);
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const { copyIn } = ctx.execute;
+    const copyIn = { ...ctx.execute.copyIn };
     const stdin = path.resolve(ctx.tmpdir, 'stdin');
     const stdout = path.resolve(ctx.tmpdir, 'stdout');
     const stderr = path.resolve(ctx.tmpdir, 'stderr');

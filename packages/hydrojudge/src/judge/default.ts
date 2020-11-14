@@ -19,7 +19,7 @@ const Score = {
 function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
         const { filename } = ctx.config;
-        const { copyIn } = ctx.execute;
+        const copyIn = { ...ctx.execute.copyIn };
         if (filename) copyIn[`${filename}.in`] = { src: c.input };
         const copyOut = filename ? [`${filename}.out`] : [];
         const stdin = filename ? null : c.input;
@@ -144,7 +144,7 @@ export const judge = async (ctx) => {
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
     // sandbox seems cannot handle concurrent tasks with output file correctly
-    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || (ctx.config.filename ? 1 : 2) });
+    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || 2 });
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
     await Promise.all(tasks);
     ctx.stat.done = new Date();
