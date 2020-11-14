@@ -59,7 +59,7 @@ export async function load(call: Entry) {
     for (const i of builtinModel) require(`../model/${i}`);
     const modelSystem = require('../model/system');
     const scripts = require('../upgrade');
-    let dbVer = (await modelSystem.get('db.ver')) || 0;
+    let dbVer = (await modelSystem.get('db.ver')) ?? 0;
     const expected = scripts.length;
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);

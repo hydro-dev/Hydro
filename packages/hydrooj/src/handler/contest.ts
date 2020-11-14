@@ -241,7 +241,7 @@ class ContestProblemHandler extends ContestHandler {
         ]);
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
         this.response.template = 'problem_detail.html';
-        if (contest.isDone(this.tdoc)) {
+        if (!contest.isDone(this.tdoc)) {
             if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
@@ -272,6 +272,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async prepare(domainId: string, tid: ObjectID, pid: number) {
+        if (contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         let rdocs = [];
         if (this.canShowRecord(this.tdoc)) {
             rdocs = await record.getUserInProblemMulti(
