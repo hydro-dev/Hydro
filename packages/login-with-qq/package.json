@@ -16,6 +16,6 @@
         "ws": "^7.4.0"
     },
     "devDependencies": {
-        "@types/ws": "^7.2.9"
+        "@types/ws": "^7.4.0"
     }
 }

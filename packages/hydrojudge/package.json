@@ -15,7 +15,7 @@
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
         "supports-color": "^7.2.0",
-        "systeminformation": "^4.29.1",
+        "systeminformation": "^4.30.1",
         "yargs": "^16.1.0"
     },
     "peerDependencies": {
@@ -24,7 +24,7 @@
     "license": "AGPL-3.0-only",
     "devDependencies": {
         "@types/bson": "^4.0.2",
-        "@types/fs-extra": "^9.0.3",
+        "@types/fs-extra": "^9.0.4",
         "@types/js-yaml": "^3.12.5",
         "@types/shell-quote": "^1.7.0"
     },
