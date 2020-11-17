@@ -78,10 +78,16 @@ class RecordDetailHandler extends RecordHandler {
         if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
             rdoc.code = null;
         }
-        const [pdoc, udoc] = await Promise.all([
+        // eslint-disable-next-line prefer-const
+        let [pdoc, udoc] = await Promise.all([
             problem.get(domainId, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
+        if (!rdoc.contest && pdoc.hidden && pdoc.owner !== this.user._id) {
+            if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
+                pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
+            }
+        }
         this.response.body = {
             path: [
                 ['Hydro', 'homepage'],
