@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import mysql from 'mysql';
 import 'hydrooj';
+import { buildContent } from 'hydrooj/dist/utils';
 
 const {
     user, problem, builtin: { PRIV },
@@ -79,20 +80,32 @@ export async function run({
         submit	int	11	Y	总提交次数
         solved	int	11	Y	解答（未用）
     */
-    const [pdocs] = await query('SELECT * FROM `problem`');
-    for (const pdoc of pdocs) {
-        const pid = await problem.add(
-            'system', `P${pdoc.problem_id}`,
-            pdoc.title, pdoc.description + pdoc.input + pdoc.output + pdoc.sample_input + pdoc.sample_output + pdoc.hint,
-            1, pdoc.source.split(' '), undefined, undefined, pdoc.defunct === 'Y',
-        );
-        const [cdoc] = await query(`SELECT * FROM 'privilege' WHERE rightstr = 'p${pdoc.problem_id}'`);
-        await problem.edit('system', pid, {
-            nAccept: pdoc.accepted,
-            nSubmit: pdoc.submit,
-            config: { time: `${pdoc.time_limit}s`, memory: `${pdoc.memory_limit}m` },
-            owner: uidMap[cdoc[0].user_id],
-        });
+    const [[pcount]] = await query('SELECT count(*) FROM `problem`');
+    const step = 50;
+    const pageCount = Math.ceil(pcount / step);
+    for (let pageId = 0; pageId < pageCount; pageId++) {
+        const [pdocs] = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
+        for (const pdoc of pdocs) {
+            const pid = await problem.add(
+                'system', `P${pdoc.problem_id}`,
+                pdoc.title, buildContent({
+                    description: pdoc.description,
+                    input: pdoc.input,
+                    output: pdoc.output,
+                    samples: [[pdoc.sample_input, pdoc.sample_output]],
+                    hint: pdoc.hint,
+                    source: pdoc.source,
+                }, 'html'),
+                1, pdoc.source.split(' '), undefined, undefined, pdoc.defunct === 'Y',
+            );
+            const [cdoc] = await query(`SELECT * FROM 'privilege' WHERE rightstr = 'p${pdoc.problem_id}'`);
+            await problem.edit('system', pid, {
+                nAccept: pdoc.accepted,
+                nSubmit: pdoc.submit,
+                config: { time: `${pdoc.time_limit}s`, memory: `${pdoc.memory_limit}m` },
+                owner: uidMap[cdoc[0].user_id],
+            });
+        }
     }
     return true;
 }

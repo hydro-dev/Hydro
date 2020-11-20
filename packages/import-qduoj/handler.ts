@@ -10,7 +10,7 @@ import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
 import { BadRequestError } from 'hydrooj/dist/error';
-import { streamToBuffer } from 'hydrooj/dist/utils';
+import { buildContent, streamToBuffer } from 'hydrooj/dist/utils';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as file from 'hydrooj/dist/model/file';
 import * as problem from 'hydrooj/dist/model/problem';
@@ -31,36 +31,14 @@ class ImportQduojHandler extends Handler {
             for (const folder of folders) {
                 const buf = await fs.readFile(path.join(tmp, folder, 'problem.json'));
                 const pdoc = JSON.parse(buf.toString());
-                const content = [
-                    ...pdoc.description?.value
-                        ? [
-                            '<h2>Description</h2>',
-                            pdoc.description.value,
-                        ] : [],
-                    ...pdoc.input_description?.value
-                        ? [
-                            '<h2>Input Description</h2>',
-                            pdoc.input_description.value,
-                        ] : [],
-                    ...pdoc.output_description?.value
-                        ? [
-                            '<h2>Output Description</h2>',
-                            pdoc.output_description.value,
-                        ] : [],
-                    ...(pdoc.samples as any[]).map((sample, i) => [
-                        `<h2>Sample Input ${i + 1}</h2><pre>`,
-                        sample.input,
-                        `</pre><h2>Sample Output ${i + 1}</h2><pre>`,
-                        sample.output,
-                        '</pre>',
-                    ].join('\n')),
-                    ...pdoc.hint?.value
-                        ? [
-                            '<h2>Hint</h2>',
-                            pdoc.hint.value,
-                        ] : [],
-                    ...pdoc.source ? ['<h2>Source</h2>', pdoc.source] : [],
-                ].join('\n');
+                const content = buildContent({
+                    description: pdoc.description?.value,
+                    input: pdoc.input_description?.value,
+                    output: pdoc.output_description?.value,
+                    samples: pdoc.samples.map((i) => [i.input, i.output]),
+                    hint: pdoc.hint?.value,
+                    source: pdoc.source?.value,
+                }, 'html');
                 const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, content, this.user._id, pdoc.tags);
                 const testdata = new AdmZip();
                 const config: LocalProblemConfig = {
