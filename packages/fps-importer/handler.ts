@@ -14,6 +14,7 @@ import {
 import { streamToBuffer } from 'hydrooj/dist/utils';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as file from 'hydrooj/dist/model/file';
+import * as solution from 'hydrooj/dist/model/solution';
 import { PERM } from 'hydrooj/dist/model/builtin';
 
 const processing = {};
@@ -116,7 +117,7 @@ class FpsProblemImportHandler extends Handler {
                     testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[i]));
                     testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_output[i]));
                 }
-            } else {
+            } else if (p.test_input) {
                 for (let i = 0; i < p.test_input.length / 2; i++) {
                     testdata.addFile(`${i + 1}.in`, Buffer.from(p.test_input[2 * i]));
                     testdata.addFile(`${i + 1}.out`, Buffer.from(p.test_input[2 * i + 1]));
@@ -131,6 +132,14 @@ class FpsProblemImportHandler extends Handler {
             });
             await problem.setTestdata(domainId, pid, f);
             await problem.edit(domainId, pid, { html: true });
+            if (p.solution) {
+                let s = '';
+                for (const sol of p.solution) {
+                    s += `**${sol.$.language}** :  \n\`\`\`\n${sol._}\n\`\`\`\n`;
+                }
+                console.log(domainId, pid, this.user._id, s);
+                await solution.add(domainId, pid, this.user._id, s);
+            }
             await fs.unlink(f);
         }
         this.response.body = { count: result.fps.item.length };

@@ -16,7 +16,7 @@
         "shell-quote": "^1.7.2",
         "supports-color": "^7.2.0",
         "systeminformation": "^4.30.1",
-        "yargs": "^16.1.0"
+        "yargs": "^16.1.1"
     },
     "peerDependencies": {
         "hydrooj": "^2.13.3"
