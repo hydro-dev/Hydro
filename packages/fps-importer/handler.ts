@@ -137,7 +137,6 @@ class FpsProblemImportHandler extends Handler {
                 for (const sol of p.solution) {
                     s += `**${sol.$.language}** :  \n\`\`\`\n${sol._}\n\`\`\`\n`;
                 }
-                console.log(domainId, pid, this.user._id, s);
                 await solution.add(domainId, pid, this.user._id, s);
             }
             await fs.unlink(f);
