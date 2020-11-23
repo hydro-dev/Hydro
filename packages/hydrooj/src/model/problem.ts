@@ -82,7 +82,6 @@ export async function add(
     tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
 ) {
     const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
-    if (!pid) pid = pidCounter.toString();
     return await document.add(
         domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null,
         {

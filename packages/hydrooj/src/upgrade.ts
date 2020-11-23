@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import * as domain from './model/domain';
 import * as document from './model/document';
+import { db } from './service/db';
 
 type UpgradeScript = () => Promise<void>;
 
@@ -28,6 +29,9 @@ const scripts: UpgradeScript[] = [
             });
             if (bulk.length) await bulk.execute();
         }
+    },
+    async function _2_3() {
+        await db.collection('document').updateMany({ pid: /^\d+$/i }, { $unset: { pid: '' } });
     },
 ];
 
