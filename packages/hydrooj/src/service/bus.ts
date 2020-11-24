@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db, FilterQuery } from 'mongodb';
+import { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import { argv } from 'yargs';
 import { Logger } from '../logger';
 import {
@@ -48,7 +48,7 @@ export interface EventMap {
 
     'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>
-        (domainId: string, docType: T, docId: DocType[T], $set: any) => VoidReturn
+        (domainId: string, docType: T, docId: DocType[T], $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>) => VoidReturn
 
     'problem/edit': (doc: Pdoc) => VoidReturn
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn

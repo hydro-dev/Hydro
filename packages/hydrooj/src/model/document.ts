@@ -1,7 +1,7 @@
 /* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
-    ObjectID, Cursor, FilterQuery, UpdateQuery,
+    ObjectID, Cursor, FilterQuery, UpdateQuery, OnlyFieldsOfType,
 } from 'mongodb';
 import {
     Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, ProblemStatusDoc,
@@ -92,12 +92,15 @@ export async function get<K extends keyof DocType>(domainId: string, docType: K,
 }
 
 export async function set<K extends keyof DocType>(
-    domainId: string, docType: K, docId: DocType[K]['docId'], $set: Partial<DocType[K]>,
+    domainId: string, docType: K, docId: DocType[K]['docId'], $set?: Partial<DocType[K]>, $unset?: OnlyFieldsOfType<DocType[K], any, true | '' | 1>,
 ): Promise<DocType[K]> {
-    await bus.parallel('document/set', domainId, docType, docId, $set);
+    await bus.parallel('document/set', domainId, docType, docId, $set, $unset);
+    const update: UpdateQuery<DocType[K]> = {};
+    if ($set) update.$set = $set;
+    if ($unset) update.$unset = $unset;
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        { $set },
+        update,
         { returnOriginal: false, upsert: true },
     );
     return res.value;

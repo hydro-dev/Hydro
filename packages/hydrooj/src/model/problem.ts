@@ -82,12 +82,11 @@ export async function add(
     tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
 ) {
     const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
-    return await document.add(
-        domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null,
-        {
-            pid, title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
-        },
-    ) as number;
+    const args: Partial<Pdoc> = {
+        title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
+    };
+    if (pid) args.pid = pid;
+    return await document.add(domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null, args);
 }
 
 export async function get(
@@ -116,7 +115,9 @@ export function getMultiStatus(domainId: string, query: FilterQuery<Pdoc>) {
 }
 
 export function edit(domainId: string, _id: number, $set: Partial<Pdoc>): Promise<Pdoc> {
-    return document.set(domainId, document.TYPE_PROBLEM, _id, $set);
+    const delpid = $set.pid === '';
+    if (delpid) delete $set.pid;
+    return document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
 }
 
 export function inc(domainId: string, _id: number, field: NumberKeys<Pdoc>, n: number): Promise<Pdoc> {

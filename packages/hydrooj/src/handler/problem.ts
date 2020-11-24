@@ -12,9 +12,7 @@ import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
 import paginate from '../lib/paginate';
-import {
-    checkPid, isTitle, isContent, isPid,
-} from '../lib/validator';
+import { isTitle, isContent, isPid } from '../lib/validator';
 import { ProblemAdd } from '../lib/ui';
 import * as file from '../model/file';
 import * as problem from '../model/problem';
@@ -25,7 +23,7 @@ import * as solution from '../model/solution';
 import { PERM, PRIV, CONSTANT } from '../model/builtin';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param,
+    Route, Connection, Handler, ConnectionHandler, Types, param, post, route,
 } from '../service/server';
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
@@ -170,7 +168,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     udoc: User;
 
-    @param('pid', Types.String, true, null, parsePid)
+    @route('pid', Types.String, true, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
         this.pdoc = await problem.get(domainId, pid, this.user._id);
@@ -437,15 +435,12 @@ export class ProblemEditHandler extends ProblemManageHandler {
 
     @param('title', Types.String, isTitle)
     @param('content', Types.String, isContent)
-    async post(domainId: string, title: string, content: string) {
-        const $update: Partial<Pdoc> = { title, content };
-        if (this.request.body.pid) {
-            if (this.request.body.pid.toString() === this.pdoc.docId.toString()) $update.pid = this.request.body.pid;
-            else $update.pid = checkPid(this.request.body.pid);
-        }
-        const pdoc = await problem.get(domainId, this.request.params.pid);
-        await problem.edit(domainId, pdoc.docId, $update);
-        this.response.redirect = this.url('problem_detail', { pid: this.request.params.pid });
+    @post('pid', Types.String, isPid, true)
+    async post(domainId: string, title: string, content: string, newPid: string = '') {
+        const $update: Partial<Pdoc> = { title, content, pid: newPid };
+        let pdoc = await problem.get(domainId, this.request.params.pid);
+        pdoc = await problem.edit(domainId, pdoc.docId, $update);
+        this.response.redirect = this.url('problem_detail', { pid: pdoc.pid || pdoc.docId });
     }
 }
 
