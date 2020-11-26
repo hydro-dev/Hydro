@@ -40,6 +40,15 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "junukwon7",
+      "name": "Junu Kwon",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/48399106?v=4",
+      "profile": "https://github.com/junukwon7",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
