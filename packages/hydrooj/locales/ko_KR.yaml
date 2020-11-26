@@ -61,7 +61,7 @@ Add User: 사용자 추가
 Add: 추가
 All {0} Contests: 전체 {0} 대회
 All Contests: 전체 대회
-All Homeworks: 전체 숙제
+All Homeworks: 전체 제
 All Submissions: 전체 제출
 All Training Plans: 전체 학습계획
 All: 전체
@@ -70,7 +70,7 @@ An error has occurred.: 문제가 발생했습니다.
 An example of dataset: 데이터셋 예시
 Any user is allowed to join this domain with an invitation code: 누구나 코드가 있으면 참여 가능
 Any user is allowed to join this domain: 누구나 참여 가능
-API: API
+#API: API
 Argument {0} is invalid.: 인자 {0}이(가) 무효입니다.
 Arguments: 인자
 At least 4 characters: 4자 이상
@@ -98,7 +98,7 @@ By signing up a Hydro universal account, you can submit code and join discussion
 By Username / UID: 사용자 이름 / UID
 Calendar View: 달력 보기
 Calendar: 달력
-Can be Extended For: Can be extended for
+Can be Extended For: '추가 접수:'
 Cancel Score: 채점 취소
 Cancel: 취소
 Categories: 분류
@@ -276,7 +276,7 @@ Edit problem solution replies: 해설 댓글 수정
 Edit problem solutions: 해설 수정
 Edit Problem: 문제 수정
 Edit problems: 문제 수정
-Edit Profile:  프로필 수정
+Edit Profile: 프로필 수정
 Edit training plans: 학습 계획 수정
 Edit: 수정
 Email Visibility: Email 공개
@@ -294,8 +294,8 @@ Evaluated difficulty: 평가된 난이도
 expand: 확장
 Expire: 만료
 Export All Code: 모든 코드 내보내기
-Export as CSV: csv로 내보내기
-Export as HTML: html로 내보내기
+Export as CSV: CSV로 내보내기
+Export as HTML: HTML로 내보내기
 Extension (days): 추가 (날짜)
 Extension Score Penalty: 추가 패널티
 Failed to join the domain. You are already a member.: 그룹 참여 실패. 이미 참여함.
@@ -315,7 +315,7 @@ Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한
 He: 그
-Help: Help
+#Help: Help maybe change in the future
 Hidden: 비공개
 Hide all tags: 모든 태그 숨기기
 Hide categorical tags: 모든 분류 태그 숨기기
@@ -372,11 +372,11 @@ Introduce: 소개
 Invalid password for user {0}.: 사용자 {0}에 대한 암호가 아닙니다.
 Invalid: 유효하지 않음
 Invitation Code: 초대 코드
-IO: IO
-Is rated: Is rated
+IO: 입출력
+#Is rated: 
 It works!: 성공!
 Italic: 기울여쓰기
-Join: Join
+Join: 참가하기
 Judge Status: 채점 현황
 judge_playground: 놀이터
 Judged At: Judged At
@@ -394,8 +394,8 @@ Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
 Limitations: 제한
 Links: 링크
 List View: 목록 보기
-Live: Live
-Live...: Live...
+#Live: Live
+#Live...: Live...
 Location: 위치
 Login to Attend Contest: 대회에 참가하려면 로그인하십시오
 Login to Claim Homework: 과제를 받으려면 로그인하십시오
@@ -442,7 +442,7 @@ New Email: 새 이메일
 New file: 새 파일
 New Password: 새 비밀번호
 New Training Plan: 새 학습 계획
-New: New
+#New: New
 No comments so far...: 아직 댓글이 없네요...
 No dataset at present.: 데이터셋 없음
 no discussion yet...: 토론 없음
@@ -477,19 +477,19 @@ Open Scratchpad: 연습장
 Open Since: '시작됨:'
 Open Source: 소스 열기
 Open: 열기
-Operating System: OS
-Ops: Ops
+Operating System: 시스템
+Ops: 앗..!
 Or, with automatically filled invitation code: 또는, 자동으로 토드를 생성
 Ordered List: 배열
 Original Score: 원래 점수
-OS Info: OS Info
+OS Info: 시스템 정보
 Owner: 소유자
 page.problem_detail.sidebar.show_category: 분류 표시
 page.training_detail.invalid_when_not_enrolled: 학습에 참여하지 않았습니다.
-pager_first: pager_first
-pager_last: pager_last
-pager_next: pager_next
-pager_previous: pager_previous
+#pager_first: pager_first
+#pager_last: pager_last
+#pager_next: pager_next
+#pager_previous: pager_previous
 Params: 파라미터
 Partic.: 부분
 Password reset mail has been sent to your email.: 비밀번호 재설정 이메일 발신 완료
@@ -671,8 +671,8 @@ Status: 결과
 Submission Statistics: 제출 결과
 Submission: 제출
 Submissions: 제출
-Submit At: Submit At
-Submit By: Submit By
+Submit At: '제출 시각:'
+Submit By: '제출 사용자:'
 Submit problem: 문제 등록
 Submit Solution: 해설 등록
 Submit Time: 제출 시각
@@ -796,7 +796,7 @@ Vote problem solutions: 문제 해설에 투표
 Vote: 투표
 We will check code similarity after this contest.: 대회 종료 후 코드 유사도 검사를 할 예정입니다.
 WeChat Visibility: WeChat 공개
-WeChat: WeChat
+#WeChat: WeChat
 Week: 주
 What is domain?: 그룹이 무엇인가요?
 What is this?: 이것이 무엇인가요?
