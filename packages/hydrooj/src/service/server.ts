@@ -498,6 +498,7 @@ export class Handler {
             this.session.scope = PERM.PERM_ALL.toString();
             this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
+        if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UIContext.csrfToken = this.csrfToken;
         this.loginMethods = filter(Object.keys(global.Hydro.lib), (str) => str.startsWith('oauth_'))
@@ -836,6 +837,7 @@ export class ConnectionHandler {
         if (bdoc) throw new BlacklistedError(this.request.ip);
         this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         if (!this.user) throw new UserNotFoundError(this.session.uid);
+        if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
     }
 }
 
