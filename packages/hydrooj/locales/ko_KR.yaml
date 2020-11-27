@@ -690,7 +690,7 @@ Their account will not be deleted and they will be with the default role.: 계�
 There are no contests...: 대회가 없습니다.
 There is no homework so far ╰(*°▽°*)╯: 과제가 없습니다. ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
-This email was sent by {0} automatically, and please do not reply directly.: {0}으로 이메일을 보냈습니다. noreply.
+This email was sent by {0} automatically, and please do not reply directly.: '{0}으로 이메일을 보냈습니다.'
 This homework is not open and you cannot view problems.: 과제를 열지 않았기에 문제를 볼 수 없습니다.
 This homework is not open.: 과제가 아직 닫혀 있습니다.
 This is the current session: 현재 세션
