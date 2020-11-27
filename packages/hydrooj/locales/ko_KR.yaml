@@ -491,7 +491,7 @@ page.training_detail.invalid_when_not_enrolled: 학습에 참여하지 않았습
 #pager_next: pager_next
 #pager_previous: pager_previous
 Params: 파라미터
-Partic.: 부분
+Partic.: 참여자
 Password reset mail has been sent to your email.: 비밀번호 재설정 이메일 발신 완료
 Password: 비밀번호
 Passwords don't match.: 비밀번호가 틀렸습니다.
