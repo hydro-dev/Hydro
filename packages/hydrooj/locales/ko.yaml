@@ -1,6 +1,7 @@
 __langname: 한국어
 '"{data}" copied to clipboard!': “{data}”복사 완료
-'{} is a moderator of this domain.': '{}가 그룹의 관리자입니다.'
+'He is a moderator of this domain.': '그룹의 관리자입니다.'
+'She is a moderator of this domain.': '그룹의 관리자입니다.'
 '{0} comments': '{0} 댓글'
 '{0} discussions': '{0} 토론'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 제한 초과：{1} 초 {2} 번'
@@ -34,7 +35,7 @@ __langname: 한국어
 'Role {1} already exists in domain {0}.': '역할 {1}이(가) 이미 {0}에 존재합니다.'
 'Solved {0} problems, RP: {1} (No. {2})': '총 {0} 문제 해결.RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 의 값 `{1}` 이 이미 존재합니다.'
-'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요.'
+'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '<a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요.'
 'Yes': 예
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 난이도가 알고리즘에 의해 정해지지 않은 경우에만 적용됩니다.
 "Splitted by ', '.": “, ”“，”으로 구분
@@ -61,7 +62,7 @@ Add User: 사용자 추가
 Add: 추가
 All {0} Contests: 전체 {0} 대회
 All Contests: 전체 대회
-All Homeworks: 전체 제
+All Homeworks: 전체 과제
 All Submissions: 전체 제출
 All Training Plans: 전체 학습계획
 All: 전체
@@ -94,7 +95,7 @@ By clicking the button, you will become a member of the domain {0}.: 이 버튼�
 By Contest: 대회
 By Problem: 문제
 By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.: Hydro 계정으로 가입하면 Hydro로 제공되는 모든 OJ를 이용하고 참여하실 수 있습니다.
-By Username / UID: 사용자 이름 / UID
+By Username / UID: 아이디
 Calendar View: 달력 보기
 Calendar: 달력
 Can be Extended For: '추가 접수'
@@ -105,7 +106,7 @@ Category: 분류
 Change Email: 이메일 변경
 Change Password: 비밀번호 변경
 Check In: 로그인
-Chinese: 중국어
+Chinese: 중국
 Choose the background image in your profile page.: 프로필 배경을 선택하십시오.
 Claim homework: 숙제 할당
 Claim Homework: 숙제 할당
@@ -131,7 +132,7 @@ Confirm deleting this reply?: 정말로 제거하시겠습니까?
 Confirm removing the selected users?: 정말로 제거하시겠습니까?
 Confirmation mail has been sent to your new email.: 확인 이메일이 전송되었습니다.
 Congratulations! Your submission is accepted.: 축하합니다! 맞았습니다!
-Contact Us: 연락하세요
+Contact Us: 연락
 Contact: 연락
 content: 매체
 Content: 매체
@@ -150,6 +151,7 @@ Copy Email: 이메일 복사
 Copy from: 복사
 Copy QQ Number: QQ 계정 복사
 Copy WeChat Account: WeChat 계정 복사
+Copt Problem: 문제 복사
 Copy: 복사
 Copyright Complaint: 저작권 항의
 CPU Info: CPU 정보
@@ -183,7 +185,7 @@ Current Status: 현재 상태
 currently offline: 오프라인
 Data of Problem {0} not found.: 문제 {0}의 데이터가 없습니다.
 Data of problem {1} not found.: 문제 {1}의 데이터가 없습니다.
-Data of record {0} not found.: 평가 {0}의 데이터가 없습니다.
+Data of record {0} not found.: 제출 {0}의 데이터가 없습니다.
 Dataset Format: 데이터셋 형식
 Dataset: 데이터셋
 Day: 일
@@ -243,6 +245,7 @@ domain_main: 그룹
 domain_permission: 그룹 권한
 domain_role: 그룹 역할
 domain_user: 그룹 구성원
+domain_join_applications: 그룹 참여 요청
 domain: 그룹
 Domain: 그룹
 Don't have an account?: 계정이 없으신가요?
@@ -311,7 +314,6 @@ Gravatar Email: Gravatar 이메일
 Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한
-He: 그
 Hidden: 비공개
 Hide all tags: 모든 태그 숨기기
 Hide categorical tags: 모든 분류 태그 숨기기
@@ -319,21 +321,21 @@ Highlight discussions: 토론 강조
 Highlight: 강조
 Hint: Hint
 Hitokoto: 히토코（ヒトコト）
-home_account: 홈 계정
-home_domain_account: 홈 그룹 계정
-home_domain_create: 홈 그룹 생성
-home_domain: 홈 그룹
-home_file: 홈 파일
-home_messages: 홈 메시지
-home_preference: 홈 설정
-home_security: 홈 보안
-homepage: 메인 페이지
+home_account: 계정
+home_domain_account: 그룹 계정
+home_domain_create: 그룹 생성
+home_domain: 그룹
+home_file: 파일
+home_messages: 메시지
+home_preference: 설정
+home_security: 보안
+homepage: 홈
 Homework Introduction: 과제 안내
 Homework scoreboard is not visible.: 과제 점수판이 비공개입니다.
-homework_create: 과제 만들디
+homework_create: 과제 만들기
 homework_detail_problem_submit: 과제 상세 문제 제출
 homework_edit: 과제 수정
-homework_main: 과제 메인
+homework_main: 과제
 homework_scoreboard: 과제 점수판
 homework_status: 과제 상황
 Homework: 관제
@@ -376,13 +378,13 @@ Judge Status: 채점 현황
 judge_playground: 놀이터
 Judged At: '채점 시각'
 Judged By: '채점자'
-Judging Queue: 채점 대기열
+Judging Queue: 채점 현황
 Keep current expiration: 만료 유지
 Language: 언어
 last active at: '마지막 활동'
 last login at: '마지막 접속'
 Last Submit At: '마지막 제출'
-Last Update At: '마지막 갱신'
+Last Update At: '마지막 활동'
 LaTeX Expressions: LaTeX 표현
 Learn More: 더 알아보기
 Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
@@ -407,6 +409,7 @@ manage_join_applications: 참여 요청 관리
 manage_module: 모듈 관리
 manage_script: 스크립트 관리
 manage_setting: 설정 관리
+manage_user_import: 사용자 불러오기
 manage: 관리
 Manage: 관리
 Manager: 관리
@@ -491,7 +494,7 @@ perm_general: 일반
 perm_homework: 과제
 perm_problem_solution: 해설
 perm_problem: 문제
-perm_record: 평가
+perm_record: 제출
 perm_training: 학습
 Permission: 권한
 Permissions: 권한
@@ -556,14 +559,15 @@ Recent Solutions: 최근 해설
 Recent Submissions: 최근 제출
 Recently Created Discussions: 최근 토론
 Recommended: 추천
-Record {0} not found.: 평가 {0}을(를) 찾을 수 없습니다.
-record_detail: 평가 세부사항
-record_main: 평가 기록
-Records: 평가
+Record {0} not found.: 제출 {0}을(를) 찾을 수 없습니다.
+record_detail: 제출 세부사항
+record_main: 제출 기록
+Records: 제출
 Refresh Records: 새로고침
 Refresh: 새로고침
 Registered at: '등록'
 Rejudge problems: 재채점
+Rejudge all submissions: 모든 제출 재채점
 Rejudge records: 재평가
 Rejudge: 재채점
 Related Discussions: 관련 토론
@@ -621,16 +625,16 @@ Service Status: 서비스 현황
 Set Role: 역할 설정
 Set Roles for Selected User: 선택 사용자 역할 설정
 Set Roles for selected users: 선택 사용자 역할 설정
+setting_storage: 설정 저장
 setting_customize: 개인 설정
 setting_display: 표시 설정
 setting_domain: 그룹 설정
 setting_info_domain: 그룹 정보 설정
 setting_info: 정보 설정
 setting_privacy: 개인정보 설정
-setting_usage: 이용 설정
+setting_usage: 언어 설정
 Settings: 설정
 Share: 공유
-She: 그녀
 Show all tags: 모든 분류 보이기
 Show MOD badge: MOD 배지 보이기
 Show: 보이기
@@ -660,7 +664,7 @@ Submission Statistics: 제출 결과
 Submission: 제출
 Submissions: 제출
 Submit At: '제출 시각'
-Submit By: '제출 사용자'
+Submit By: '아아디'
 Submit problem: 문제 등록
 Submit Solution: 해설 등록
 Submit Time: 제출 시각
@@ -731,7 +735,7 @@ Update: 갱신
 Upload File: 파일 업로드
 Upload Problem: 문제 업로드
 Upload: 업로드
-Uploaded By: '업로드한 사용자'
+Uploaded By: '아이디'
 Upvote: 좋아요
 Usage exceeded.: 사용 초과
 Use admin specificed: 관리자 사용
@@ -740,7 +744,7 @@ Use average of above: 평균 사용
 User {0} already exists.: 사용자 {0}이(가) 이미 존재합니다.
 User {0} not found.: 사용자 {0}을(를) 찾을 수 없습니다.
 User can join this domain by visiting the following URL: 다음 URL을 통해 그룹에 참여할 수 있습니다.
-User ID: 사용자 ID
+User ID: 아이디
 User will no longer be allowed to join the domain after expiration.: 만료 이후, 그룹 참가는 제한됩니다.
 user_detail: 사용자 세부사항
 user_login: 로그인
@@ -749,8 +753,8 @@ user_lostpass: 비밀번호 분실
 user_register: 회원가입
 User-defined role: 사용자 지정 역할
 User: 사용자
-Username / UID: 사용자명 / UID
-Username: 사용자명
+Username / UID: 아이디
+Username: 아이디
 Users with those roles will be removed from the domain.: 이 역할을 가진 사용자들이 그룹에서 제거될 것입니다.
 Users: 사용자
 Using your Hydro universal account: Hydro 공용 계정을 사용
