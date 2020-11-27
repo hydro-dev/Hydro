@@ -186,9 +186,9 @@ async function readAutoCases(folder, { next }) {
         let result = await read0(folder, files, checkFile);
         if (!result.count) result = await read1(folder, files, checkFile);
         Object.assign(config, result);
-        next({ message: `识别到${config.count}个测试点` });
+        next({ message: { message: 'Found {0} testcases.', params: config.count } });
     } catch (e) {
-        throw new SystemError('在自动识别测试点的过程中出现了错误。', [e]);
+        throw new SystemError('Cannot parse testdata.', [e]);
     }
     return config;
 }
@@ -204,24 +204,24 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
     const next = args.next;
     const checkFile = ensureFile(folder);
     config.checker_type = cfg.checker_type || 'default';
-    if (cfg.checker) config.checker = checkFile(cfg.checker, '找不到比较器 ');
+    if (cfg.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
     if (cfg.judge_extra_files) {
         if (typeof cfg.judge_extra_files === 'string') {
-            config.judge_extra_files = [checkFile(cfg.judge_extra_files, '找不到评测额外文件 ')];
+            config.judge_extra_files = [checkFile(cfg.judge_extra_files, 'Cannot find judge extra file {0}.')];
         } else if (cfg.judge_extra_files instanceof Array) {
             for (const file of cfg.judge_extra_files) {
-                config.judge_extra_files.push(checkFile(file, '找不到评测额外文件 '));
+                config.judge_extra_files.push(checkFile(file, 'Cannot find judge extra file {0}.'));
             }
-        } else throw new FormatError('无效的 judge_extra_files 配置项');
+        } else throw new FormatError('Invalid judge_extra_files config.');
     }
     if (cfg.user_extra_files) {
         if (typeof cfg.user_extra_files === 'string') {
-            config.user_extra_files = [checkFile(cfg.user_extra_files, '找不到用户额外文件 ')];
+            config.user_extra_files = [checkFile(cfg.user_extra_files, 'Cannot find user extra file {0}.')];
         } else if (cfg.user_extra_files instanceof Array) {
             for (const file of cfg.user_extra_files) {
-                config.user_extra_files.push(checkFile(file, '找不到用户额外文件 '));
+                config.user_extra_files.push(checkFile(file, 'Cannot find user extra file {0}.'));
             }
-        } else throw new FormatError('无效的 user_extra_files 配置项');
+        } else throw new FormatError('Invalid user_extra_files config.');
     }
     if (cfg.cases) {
         config.subtasks = [{
@@ -234,8 +234,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
         for (const c of cfg.cases) {
             config.count++;
             config.subtasks[0].cases.push({
-                input: checkFile(c.input, '找不到输入文件 '),
-                output: checkFile(c.output, '找不到输出文件 '),
+                input: checkFile(c.input, 'Cannot find input file {0}.'),
+                output: checkFile(c.output, 'Cannot find output file {0}.'),
                 id: config.count,
             });
         }
@@ -245,8 +245,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             for (const c of subtask.cases) {
                 config.count++;
                 cases.push({
-                    input: checkFile(c.input, '找不到输入文件 '),
-                    output: checkFile(c.output, '找不到输出文件 '),
+                    input: checkFile(c.input, 'Cannot find input file {0}.'),
+                    output: checkFile(c.output, 'Cannot find output file {0}.'),
                     id: config.count,
                 });
             }
@@ -284,12 +284,12 @@ function convertIniConfig(ini: string) {
 }
 
 function isValidConfig(config) {
-    if (config.count > 100) throw new FormatError('测试数据组数过多，拒绝评测');
+    if (config.count > 100) throw new FormatError('Too many testcases. Cancelled.');
     let total_time = 0;
     for (const subtask of config.subtasks) {
         total_time += subtask.time_limit_ms * subtask.cases.length;
     }
-    if (total_time > 60 * 1000) throw new FormatError('总时限超过限制60s，拒绝评测');
+    if (total_time > 60 * 1000) throw new FormatError('Total time limit longer than 60s. Cancelled.');
 }
 
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {

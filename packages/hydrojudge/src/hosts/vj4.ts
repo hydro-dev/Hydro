@@ -134,9 +134,15 @@ class JudgeTask {
             data.judge_text = data.message;
             delete data.message;
         }
+        if (data.judge_text && typeof data.judge_text !== 'string') {
+            data.judge_text = `${data.judge_text.message} ${JSON.stringify(data.judge_text.params || {})}`;
+        }
         if (data.case?.message !== undefined) {
             data.case.judge_text = data.case.message;
             delete data.case.message;
+        }
+        if (data.case?.judge_text && typeof data.case?.judge_text !== 'string') {
+            data.case.judge_text = `${data.case.judge_text.message} ${JSON.stringify(data.case.judge_text.params || {})}`;
         }
         data.key = 'next';
         data.tag = this.tag;

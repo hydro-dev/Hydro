@@ -11,7 +11,7 @@ export = async function compile(
     const LANGS = global.Hydro
         ? yaml.safeLoad(await global.Hydro.model.system.get('hydrojudge.langs'))
         : require('./config').LANGS;
-    if (!LANGS[lang]) throw new SystemError(`不支持的语言：${lang}`);
+    if (!LANGS[lang]) throw new SystemError('Unsupported language {0}.', [lang]);
     const info = LANGS[lang];
     target = info.target || target;
     const f = {};
@@ -24,7 +24,7 @@ export = async function compile(
             { copyIn, copyOutCached: [target] },
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
-        if (!fileIds[target]) throw new CompileError({ stderr: '没有找到可执行文件' });
+        if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
         if (next) next({ compiler_text: compilerText(stdout, stderr) });
         f[target] = { fileId: fileIds[target] };
         return {
@@ -36,5 +36,5 @@ export = async function compile(
             execute: info.execute, copyIn: f, clean: () => Promise.resolve(), time: info.time || 1,
         };
     }
-    throw new SystemError('Unknown language type');
+    throw new SystemError('Unknown language type.');
 }

@@ -2,11 +2,19 @@
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
 import path from 'path';
+import { argv } from 'yargs';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import { homedir, tmpdir } from 'os';
 import AdmZip from 'adm-zip';
 import { noop } from 'lodash';
+import { Logger } from 'hydrooj/dist/logger';
+import * as monitor from 'hydrooj/dist/service/monitor';
+import * as tmpfs from './tmpfs';
+import { FormatError, CompileError, SystemError } from './error';
+import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
+import { compilerText } from './utils';
+import readYamlCases from './cases';
 
 declare module 'hydrooj/dist/interface' {
     interface SystemKeys {
@@ -14,22 +22,16 @@ declare module 'hydrooj/dist/interface' {
     }
 }
 
+const logger = new Logger('judge');
+
 async function postInit() {
     // Only start a single daemon
     if (!global.Hydro.isFirstWorker) return;
-    const { compilerText } = require('./utils');
-    const tmpfs = require('./tmpfs');
-    const { FormatError, CompileError, SystemError } = require('./error');
-    const { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } = global.Hydro.model.builtin.STATUS;
-    const { default: readYamlCases } = require('./cases');
     const judge = require('./judge');
     const sysinfo = require('./sysinfo');
 
     const { problem, file, task } = global.Hydro.model;
     const _judge = global.Hydro.handler.judge as any;
-    const { monitor } = global.Hydro.service;
-    const { Logger } = global.Hydro.Logger;
-    const logger = new Logger('judge');
 
     const info = await sysinfo.get();
     monitor.updateJudger(info);
@@ -76,7 +78,7 @@ async function postInit() {
         fs.ensureDirSync(path.dirname(savePath));
         const zip = new AdmZip(tmpFilePath);
         const entries = zip.getEntries();
-        if (entries.length > 256) throw new FormatError('Too many files');
+        if (entries.length > 256) throw new FormatError('Too many files.');
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
@@ -227,13 +229,13 @@ async function postInit() {
                         status: STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else if (e instanceof FormatError) {
-                    this.next({ message: `${e.message}\n${JSON.stringify(e.params)}` });
+                    this.next({ message: { message: e.message, params: e.params } });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else {
                     logger.error(e);
-                    this.next({ message: `${e.message}\n${e.stack}\n${JSON.stringify(e.params)}` });
+                    this.next({ message: { message: e.message, params: e.params, ...argv.debug ? { stack: e.stack } : {} } });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });

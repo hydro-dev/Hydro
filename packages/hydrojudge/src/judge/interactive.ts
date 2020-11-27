@@ -30,7 +30,7 @@ function judgeCase(c) {
         ]);
         let status;
         let score = 0;
-        let message = '';
+        let message: any = '';
         if (time_usage_ms > ctxSubtask.subtask.time_limit_ms) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory_usage_kb > ctxSubtask.subtask.memory_limit_mb * 1024) {
@@ -38,7 +38,7 @@ function judgeCase(c) {
         } else if (code) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32) message = signals[code];
-            else message = `您的程序返回了 ${code}.`;
+            else message = { message: 'Your program returned {0}.', params: [code] };
         } else [status, score, message] = resInteractor.files.stderr.split('\n');
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
