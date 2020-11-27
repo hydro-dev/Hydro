@@ -70,7 +70,6 @@ An error has occurred.: 문제가 발생했습니다.
 An example of dataset: 데이터셋 예시
 Any user is allowed to join this domain with an invitation code: 누구나 코드가 있으면 참여 가능
 Any user is allowed to join this domain: 누구나 참여 가능
-#API: API
 Argument {0} is invalid.: 인자 {0}이(가) 무효입니다.
 Arguments: 인자
 At least 4 characters: 4자 이상
@@ -315,7 +314,6 @@ Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한
 He: 그
-#Help: Help maybe change in the future
 Hidden: 비공개
 Hide all tags: 모든 태그 숨기기
 Hide categorical tags: 모든 분류 태그 숨기기
@@ -373,7 +371,6 @@ Invalid password for user {0}.: 사용자 {0}에 대한 암호가 아닙니다.
 Invalid: 유효하지 않음
 Invitation Code: 초대 코드
 IO: 입출력
-#Is rated:
 It works!: 성공!
 Italic: 기울여쓰기
 Join: 참가하기
@@ -394,8 +391,6 @@ Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
 Limitations: 제한
 Links: 링크
 List View: 목록 보기
-#Live: Live
-#Live...: Live...
 Location: 위치
 Login to Attend Contest: 대회에 참가하려면 로그인하십시오
 Login to Claim Homework: 과제를 받으려면 로그인하십시오
@@ -442,7 +437,6 @@ New Email: 새 이메일
 New file: 새 파일
 New Password: 새 비밀번호
 New Training Plan: 새 학습 계획
-#New: New
 No comments so far...: 아직 댓글이 없네요...
 No dataset at present.: 데이터셋 없음
 no discussion yet...: 토론 없음
@@ -486,10 +480,6 @@ OS Info: 시스템 정보
 Owner: 소유자
 page.problem_detail.sidebar.show_category: 분류 표시
 page.training_detail.invalid_when_not_enrolled: 학습에 참여하지 않았습니다.
-#pager_first: pager_first
-#pager_last: pager_last
-#pager_next: pager_next
-#pager_previous: pager_previous
 Params: 파라미터
 Partic.: 참여자
 Password reset mail has been sent to your email.: 비밀번호 재설정 이메일 발신 완료
@@ -796,7 +786,6 @@ Vote problem solutions: 문제 해설에 투표
 Vote: 투표
 We will check code similarity after this contest.: 대회 종료 후 코드 유사도 검사를 할 예정입니다.
 WeChat Visibility: WeChat 공개
-#WeChat: WeChat
 Week: 주
 What is domain?: 그룹이 무엇인가요?
 What is this?: 이것이 무엇인가요?
