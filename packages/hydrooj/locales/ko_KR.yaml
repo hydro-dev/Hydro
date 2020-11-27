@@ -78,7 +78,7 @@ Attend contests: 대회 참가
 Attended: 참가함
 author: 저자
 Be Copied: 복사됨
-Begin at: '시작:'
+Begin at: 시작
 Begin Date: 시작 날짜
 Begin Time: 시작 시각
 Belongs to: 소유
@@ -97,7 +97,7 @@ By signing up a Hydro universal account, you can submit code and join discussion
 By Username / UID: 사용자 이름 / UID
 Calendar View: 달력 보기
 Calendar: 달력
-Can be Extended For: '추가 접수:'
+Can be Extended For: '추가 접수'
 Cancel Score: 채점 취소
 Cancel: 취소
 Categories: 분류
@@ -374,15 +374,15 @@ Italic: 기울여쓰기
 Join: 참가하기
 Judge Status: 채점 현황
 judge_playground: 놀이터
-Judged At: '채점 시각:'
-Judged By: '채점자:'
+Judged At: '채점 시각'
+Judged By: '채점자'
 Judging Queue: 채점 대기열
 Keep current expiration: 만료 유지
 Language: 언어
-last active at: '마지막 활동:'
-last login at: '마지막 접속:'
-Last Submit At: '마지막 제출:'
-Last Update At: '마지막 갱신:'
+last active at: '마지막 활동'
+last login at: '마지막 접속'
+Last Submit At: '마지막 제출'
+Last Update At: '마지막 갱신'
 LaTeX Expressions: LaTeX 표현
 Learn More: 더 알아보기
 Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
@@ -466,7 +466,7 @@ Oops, there are no results.: 결과 없음
 Oops!: 앗..!
 Open in Problem Set: 문제에서 열기
 Open Scratchpad: Editor 열기
-Open Since: '시작:'
+Open Since: '시작 시각'
 Open Source: 소스 열기
 Open: 열기
 Operating System: 시스템
@@ -648,19 +648,19 @@ Sorry, there is no problem in the problem set: 문제 모음에 문제가 없습
 Sorry, there is no training plan.: 학습 계획이 없습니다.
 Sorry, there is no user in this domain.: 그룹에 사용자가 없습니다.
 Sorry: 죄송합니다.
-Sort by: '정렬 기준:'
+Sort by: '정렬 기준'
 Source type: 소스 방식
 Star Topic: 주제 북마크
 #Star: Star
-Start at: '시작:'
+Start at: '시작 시각'
 Statistics: 분석
 Status is hidden: 결과 비공개
 Status: 결과
 Submission Statistics: 제출 결과
 Submission: 제출
 Submissions: 제출
-Submit At: '제출 시각:'
-Submit By: '제출 사용자:'
+Submit At: '제출 시각'
+Submit By: '제출 사용자'
 Submit problem: 문제 등록
 Submit Solution: 해설 등록
 Submit Time: 제출 시각
@@ -731,7 +731,7 @@ Update: 갱신
 Upload File: 파일 업로드
 Upload Problem: 문제 업로드
 Upload: 업로드
-Uploaded By: '업로드한 사용자:'
+Uploaded By: '업로드한 사용자'
 Upvote: 좋아요
 Usage exceeded.: 사용 초과
 Use admin specificed: 관리자 사용
