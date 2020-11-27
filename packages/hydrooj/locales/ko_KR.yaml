@@ -364,7 +364,8 @@ Inline formulas: 인라인 수식
 Insert Code: 코드 삽입
 Insert Image: 사진 삽입
 Installed Modules: 설치된 모듈
-Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.:
+Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 
+테스트 데이터를 직접 복사하는 대신 복사 된 문제의 테스트 데이터는 소스 문제의 테스트 데이터 (소스 테스트 데이터라고 함)에 연결됩니다. 따라서 복사 된 문제는 소스 테스트 데이터의 변경 사항을 관찰 할 수 있습니다. 복사 된 문제의 테스트 데이터에 대한 권한은 소스 테스트 데이터를 따릅니다. 예를 들어 여전히 다운로드 할 수는 없지만 심사 위원은 할 수 있습니다. 새로운 테스트 데이터를 업로드하면 링크가 끊어지고 새로운 테스트 데이터가 사용됩니다.
 Introduce must not exceed 500 characters and it will be shown in the list view.: 소개는 500자 미만이어야 합니다.
 Introduce: 소개
 Invalid password for user {0}.: 사용자 {0}에 대한 암호가 아닙니다.
