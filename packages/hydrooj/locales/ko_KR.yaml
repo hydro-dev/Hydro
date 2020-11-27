@@ -374,8 +374,8 @@ Italic: 기울여쓰기
 Join: 참가하기
 Judge Status: 채점 현황
 judge_playground: 놀이터
-Judged At: Judged At
-Judged By: Judged By
+Judged At: '채점 시각:'
+Judged By: '채점자:'
 Judging Queue: 채점 대기열
 Keep current expiration: 만료 유지
 Language: 언어
@@ -463,10 +463,10 @@ Oh, there is no task that matches the filter!: 결과 없음
 Ok: OK
 Only A-Z, a-z, 0-9 and _ are accepted: A-Z, a-z, 0-9 와 _만 허용됨
 Oops, there are no results.: 결과 없음
-Oops!: Oops!
+Oops!: 앗..!
 Open in Problem Set: 문제에서 열기
 Open Scratchpad: Editor 열기
-Open Since: '시작됨:'
+Open Since: '시작:'
 Open Source: 소스 열기
 Open: 열기
 Operating System: 시스템
@@ -543,8 +543,8 @@ QQ Group: QQ 그룹
 QQ Visibility: QQ 공개
 Quit Scratchpad: Editor 닫기
 Quote: 문구
-Rank: Rank
-ranking: Ranking
+Rank: 순위
+ranking: 순위
 Read data of own problems: 자신의 문제 데이터 읽기
 Read data of problem: 문제 데이터 읽기
 Read record codes: 점수 읽기
@@ -593,8 +593,8 @@ RP Algorithm: RP 알고리즘
 Rule: 규칙
 Run Pretest: 프리테스트 실행
 Run: 실행
-Sample Input: Sample Input
-Sample Output: Sample Output
+#Sample Input: Sample Input
+#Sample Output: Sample Output
 Save All Changes: 변경사항 저장
 Saved session: 세션 저장
 score canceled: 점수 취소됨
@@ -634,8 +634,8 @@ She: 그녀
 Show all tags: 모든 분류 보이기
 Show MOD badge: MOD 배지 보이기
 Show: 보이기
-Sign In: Sign In
-SIGN IN: SIGN IN
+Sign In: 회원가입
+SIGN IN: 회원가입
 Sign up mail has been sent to your email.: 회원가입 이메일을 보냈습니다.
 Sign Up Now: 회원가입
 Sign Up: 회원가입
@@ -651,8 +651,8 @@ Sorry: 죄송합니다.
 Sort by: '정렬 기준:'
 Source type: 소스 방식
 Star Topic: 주제 북마크
-Star: Star
-Start at: Start at
+#Star: Star
+Start at: '시작:'
 Statistics: 분석
 Status is hidden: 결과 비공개
 Status: 결과
@@ -674,7 +674,7 @@ Technical Information: 기술 정보
 Temporary session: 임시 세션
 Terms of Service: 이용 약관
 Test data comes from: Testdata 출처
-Testdata Config: Testdata Config
+Testdata Config: Testdata 설정
 Text: 본문
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 추가 접수 중입니다. 제출할 수 있지만 감점될 수 있습니다.
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 초대 코드는 64글자 미만입니다.
