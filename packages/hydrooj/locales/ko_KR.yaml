@@ -34,7 +34,7 @@ __langname: 한국어
 'Role {1} already exists in domain {0}.': '역할 {1}이(가) 이미 {0}에 존재합니다.'
 'Solved {0} problems, RP: {1} (No. {2})': '총 {0} 문제 해결.RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 의 값 `{1}` 이 이미 존재합니다.'
-'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요!'
+'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요.'
 'Yes': 예
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 난이도가 알고리즘에 의해 정해지지 않은 경우에만 적용됩니다.
 "Splitted by ', '.": “, ”“，”으로 구분
@@ -121,7 +121,6 @@ Code: 코드
 collapse: 병합
 Comment: 댓글
 Comments: 댓글
-CommonMark Syntax: CommonMark Syntax
 Compile Error: 컴파일 에러
 Compilers' Version and Parameters: 컴파일러 버전, 파라미터
 Complete: 완료
@@ -302,7 +301,6 @@ Feedback: 피드백
 Field {0} or {1} validation failed.: 항목 {0} 또는 {1} 검증 실패
 Field {0} validation failed.: 항목 {0} 검증 실패
 Filter: 필터
-Footer: Footer
 Forgot Password and/or Username: ID/PW 분실
 Forgot password or username?: ID/PW를 분실하셨나요?
 Formula blocks: 공식 블록
