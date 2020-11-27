@@ -465,7 +465,7 @@ Only A-Z, a-z, 0-9 and _ are accepted: A-Z, a-z, 0-9 와 _만 허용됨
 Oops, there are no results.: 결과 없음
 Oops!: Oops!
 Open in Problem Set: 문제에서 열기
-Open Scratchpad: 제출창
+Open Scratchpad: Editor 열기
 Open Since: '시작됨:'
 Open Source: 소스 열기
 Open: 열기
@@ -541,7 +541,7 @@ Public: 공개
 Published at: 공개됨
 QQ Group: QQ 그룹
 QQ Visibility: QQ 공개
-Quit Scratchpad: 제출창 종료
+Quit Scratchpad: Editor 닫기
 Quote: 문구
 Rank: Rank
 ranking: Ranking
