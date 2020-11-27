@@ -37,5 +37,5 @@ jobs:
         file: ./.coverage/lcov.info
         name: codecov
     - name: Publish
-      if: ${{ github.event_name == "push" }}
+      if: ${{ github.event_name == 'push' }}
       run: node build/publish.js
