@@ -4,6 +4,7 @@ import axios from 'axios';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
+import { argv } from 'yargs';
 import { noop } from 'lodash';
 import { ObjectID } from 'bson';
 import * as tmpfs from '../tmpfs';
@@ -89,14 +90,14 @@ class JudgeTask {
                     status: STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             } else if (e instanceof FormatError) {
-                this.next({ judge_text: '题目配置出现错误。请联系题目上传者。' });
-                this.next({ judge_text: `${e.message}\n${JSON.stringify(e.params)}` });
+                this.next({ judge_text: 'Testdata configuration incorrect.' });
+                this.next({ judge_text: { message: e.message, params: e.params } });
                 this.end({
                     status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             } else {
                 log.error(e);
-                this.next({ judge_text: `${e.message}\n${e.stack}\n${JSON.stringify(e.params)}` });
+                this.next({ message: { message: e.message, params: e.params, ...argv.debug ? { stack: e.stack } : {} } });
                 this.end({
                     status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });

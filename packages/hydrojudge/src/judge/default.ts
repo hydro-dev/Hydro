@@ -42,7 +42,7 @@ function judgeCase(c) {
         if (res.files[`${filename}.out`] || !fs.existsSync(stdout)) {
             fs.writeFileSync(stdout, res.files[`${filename}.out`] || '');
         }
-        let message = '';
+        let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time_usage_ms > ctxSubtask.subtask.time_limit_ms * ctx.execute.time) {
@@ -64,7 +64,7 @@ function judgeCase(c) {
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
             if (code < 32) message = signals[code];
-            else message = `您的程序返回了 ${code}.`;
+            else message = { message: 'Your program returned {0}.', params: [code] };
         }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
@@ -105,7 +105,7 @@ function judgeSubtask(subtask) {
 }
 
 export const judge = async (ctx) => {
-    if (!ctx.config.subtasks.length) throw new SystemError('没有找到测试数据');
+    if (!ctx.config.subtasks.length) throw new SystemError('Problem data not found.');
     if (ctx.config.template) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];

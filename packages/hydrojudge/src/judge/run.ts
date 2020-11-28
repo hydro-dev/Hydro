@@ -31,7 +31,7 @@ export const judge = async (ctx) => {
     const { code, time_usage_ms, memory_usage_kb } = res;
     let { status } = res;
     if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
-    let message = fs.readFileSync(stdout).toString() + fs.readFileSync(stderr).toString();
+    let message: any = fs.readFileSync(stdout).toString() + fs.readFileSync(stderr).toString();
     if (status === STATUS.STATUS_ACCEPTED) {
         if (time_usage_ms > ctx.config.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -41,7 +41,7 @@ export const judge = async (ctx) => {
     } else if (code) {
         status = STATUS.STATUS_RUNTIME_ERROR;
         if (code < 32) message += signals[code];
-        else message += `您的程序返回了 ${code}.`;
+        else message = { message: 'Your program returned {0}.', params: [code] };
     }
     ctx.next({
         status,

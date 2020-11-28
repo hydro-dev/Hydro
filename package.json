@@ -4,6 +4,7 @@
     "workspaces": [
         "packages/*"
     ],
+    "main": "package.json",
     "scripts": {
         "build": "node build/build.js",
         "build:watch": "node build/build.js --watch",

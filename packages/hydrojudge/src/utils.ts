@@ -17,13 +17,13 @@ export function noop() { }
 
 export function parseTimeMS(str: string) {
     const match = TIME_RE.exec(str);
-    if (!match) throw new FormatError(str, ['error parsing time']);
+    if (!match) throw new FormatError('Error parsing time: {0}', [str]);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
 }
 
 export function parseMemoryMB(str: string) {
     const match = MEMORY_RE.exec(str);
-    if (!match) throw new FormatError(str, ['error parsing memory']);
+    if (!match) throw new FormatError('Error parsing memory: {0}', [str]);
     return Math.floor(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
 }
 
@@ -110,9 +110,9 @@ export function restrictFile(p: string) {
 export function ensureFile(folder: string) {
     return (file: string, message: string) => {
         const f = path.join(folder, restrictFile(file));
-        if (!fs.existsSync(f)) throw new FormatError(message + file);
+        if (!fs.existsSync(f)) throw new FormatError(message, [file]);
         const stat = fs.statSync(f);
-        if (!stat.isFile()) throw new FormatError(message + file);
+        if (!stat.isFile()) throw new FormatError(message, [file]);
         return f;
     };
 }

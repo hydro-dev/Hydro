@@ -23,7 +23,7 @@ const checkers: Record<string, Checker> = {
             },
         });
         let status;
-        let message = '';
+        let message: any = '';
         if (stdout) {
             status = STATUS.STATUS_WRONG_ANSWER;
             if (config.detail) {
@@ -33,8 +33,8 @@ const checkers: Record<string, Checker> = {
                     let usr = u.substr(2, u.length - 2).trim().split(' ');
                     const t = pt[1].split('\n')[1];
                     let std = t.substr(2, t.length - 2).trim().split(' ');
-                    if (usr.length < std.length) message = '标准输出比选手输出长。';
-                    else if (usr.length > std.length) message = '选手输出比标准输出长。';
+                    if (usr.length < std.length) message = 'Standard answer longer than user output.';
+                    else if (usr.length > std.length) message = 'User output longer than standard answer.';
                     else {
                         for (const i in usr) {
                             if (usr[i] !== std[i]) {
@@ -45,7 +45,7 @@ const checkers: Record<string, Checker> = {
                         }
                         if (usr.length > 20) usr = `${usr.substring(0, 16)}...`;
                         if (std.length > 20) std = `${std.substring(0, 16)}...`;
-                        message = `读取到 ${usr} ，应为 ${std}`;
+                        message = { message: 'Read {0}, expect {1}.', params: [usr, std] };
                     }
                 } catch (e) {
                     message = stdout.substring(0, stdout.length - 1 <= 30 ? stdout.length - 1 : 30);

@@ -65,7 +65,7 @@ export async function runMultiple(execute) {
         body.cmd[1].files[1] = null;
         res = await axios.post('/run', body);
     } catch (e) {
-        throw new SystemError('Cannot connect to sandbox service');
+        throw new SystemError('Cannot connect to sandbox service.');
     }
     return res.data;
 }
@@ -86,7 +86,7 @@ export async function run(execute, params?) {
         [result] = res.data;
     } catch (e) {
         // FIXME request body larger than maxBodyLength limit
-        throw new SystemError('Cannot connect to sandbox service ', e.message);
+        throw new SystemError('Cannot connect to sandbox service.', e.message);
     }
     // FIXME: Signalled?
     const ret: any = {

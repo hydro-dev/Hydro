@@ -1,0 +1,26 @@
+'Error parsing memory: {0}': 无法解析内存：{0}
+'Error parsing time: {0}': 无法解析时间：{0}
+Cannot connect to sandbox service.: 无法连接到沙箱服务。
+Cannot find checker {0}.: 找不到比较器 {0}。
+Cannot find input file {0}.: 找不到输入文件 {0}。
+Cannot find judge extra file {0}.: 找不到评测额外文件 {0}。
+Cannot find output file {0}.: 找不到输出文件 {0}。
+Cannot find user extra file {0}.: 找不到用户额外文件 {0}。
+Cannot parse testdata.: 无法解析测试数据。
+Checker returned {0}.: 比较器返回了{0}。
+Executable file not found.: 没有找到可执行文件。
+Found {0} testcases.: 识别到 {0} 个测试点。
+Invalid judge_extra_files config.: 无效的 judge_extra_files 配置。
+Invalid user_extra_files config.: 无效的 user_extra_files 配置。
+Problem data not found.: 没有找到测试数据。
+Read {0}, expect {1}.: 读取到 {0}，应为 {1}。
+Standard answer longer than user output.: 标准输出比选手输出长。
+Testdata configuration incorrect.: 题目配置错误。
+Too many files.: 文件过多。
+Too many testcases. Cancelled.: 测试数据过多。评测取消。
+Total time limit longer than 60s. Cancelled.: 总时限超过60s。评测取消。
+Unknown checker type {0}.: 未知的比较器类型 {0}。
+Unknown language type.: 未知的语言类型。
+Unsupported language {0}.: 不支持的语言 {0}。
+User output longer than standard answer.: 选手输出比标准输出长。
+Your program returned {0}.: 您的程序返回了{0}。
