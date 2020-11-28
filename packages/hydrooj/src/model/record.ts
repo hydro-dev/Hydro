@@ -10,7 +10,7 @@ import {
 } from '../interface';
 import * as db from '../service/db';
 
-const coll: Collection<Rdoc> = db.collection('record');
+export const coll: Collection<Rdoc> = db.collection('record');
 
 export interface RdocBase {
     _id?: ObjectID,
@@ -186,6 +186,7 @@ export function getByUid(domainId: string, uid: number, limit: number): Promise<
 }
 
 global.Hydro.model.record = {
+    coll,
     add,
     get,
     getMulti,

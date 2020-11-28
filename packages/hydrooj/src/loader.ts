@@ -54,7 +54,7 @@ wtfnode.setLogger('info', logger.info.bind(logger));
 logger.debug('%o', argv);
 
 async function terminate() {
-    wtfnode.dump();
+    if (argv.debug) wtfnode.dump();
     try {
         await bus.parallel('app/exit');
     } catch (e) {

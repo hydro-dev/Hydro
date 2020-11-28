@@ -130,6 +130,7 @@ class SwitchLanguageHandler extends Handler {
     @param('lang', Types.String)
     async get(domainId: string, lang: string) {
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+            this.session.viewLang = lang;
             await user.setById(this.user._id, { viewLang: lang });
         } else this.session.viewLang = lang;
         this.back();

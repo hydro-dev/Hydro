@@ -227,7 +227,7 @@ export async function create(
     return uid;
 }
 
-export function getMulti(params: any) {
+export function getMulti(params: any = {}) {
     return coll.find(params);
 }
 
