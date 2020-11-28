@@ -228,8 +228,8 @@ Discussion: 토론
 Discussions: 토론
 Display name {1} you want to set is used by others.: 이름 {1}이(가) 공개됩니다
 Display Name: 이름
+display name: 이름
 display_name: 이름
-display name:  이름
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 풀이에 대해 토론할 경우 불이익을 받을 수 있습니다.
 Document {2} not found.: 문서 {2} 없음
 Domain {0} already exists.: 그룹 {0} 이미 존재
@@ -584,7 +584,7 @@ Reply problem solutions: 댓글 등록
 reply: 댓글
 Reply: 댓글
 Report: 신고
-required: 요구된
+required: 필수
 Reset Password or Find Username: 비밀번호 재설정 또는 ID 찾기
 Reset Password: 비밀번호 재설정
 Reset: 재설정
@@ -651,7 +651,7 @@ Solutions: 해설
 Solve: 해결
 Solved Problems: 해결한 문제
 Sorry, there is no problem in the problem set: 문제 모음에 문제가 없습니다.
-Sorry, there is no training plan.: 학습 계획이 없습니다.
+Sorry, there is no training plan.: 학습 계획 없음
 Sorry, there is no user in this domain.: 그룹에 사용자가 없습니다.
 Sorry: 죄송합니다.
 Sort by: '정렬 기준'
@@ -689,10 +689,10 @@ The link will be expired at {0}: 링크가 {0}에 만료될 것입니다.
 The role to assign when user joining the domain.: 사용자가 그룹에 참여할 때 역할
 The uploaded file is too long.: 업로드한 파일이 너무 깁니다.
 The user is already a member of the domain.: 이미 그룹에 속한 사용자입니다.
-The user is too lazy to leave something here...: 게으른 사용자네요... (´・ω・｀)
+The user is too lazy to leave something here...: 설명이 없습니다... (´・ω・｀)
 Their account will not be deleted and they will be with the default role.: 계정은 삭제되지 않을 것이고, default 역할을 가질 것입니다.
-There are no contests...: 대회가 없습니다.
-There is no homework so far ╰(*°▽°*)╯: 과제가 없습니다. ╰(*°▽°*)╯
+There are no contests...: 대회 없음
+There is no homework so far ╰(*°▽°*)╯: 과제 없음 ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
 This email was sent by {0} automatically, and please do not reply directly.: '{0}으로 이메일을 보냈습니다.'
 This homework is not open and you cannot view problems.: 과제를 열지 않았기에 문제를 볼 수 없습니다.
