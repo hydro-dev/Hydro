@@ -18,7 +18,7 @@ Standard answer longer than user output.: 출력이 짧습니다.
 Testdata configuration incorrect.: TC config 오류
 Too many files.: 파일이 너무 많습니다.
 Too many testcases. Cancelled.: TC가 너무 많습니다. 채점을 취소합니다.
-Total time limit longer than {0}s. Cancelled.: 총 시간이 {9}초를 넘습니다. 채점을 취소합니다.
+Total time limit longer than {0}s. Cancelled.: 총 시간이 {0}초를 넘습니다. 채점을 취소합니다.
 Unknown checker type {0}.: Checker 형태 {0}을(를) 식별할 수 없습니다.
 Unknown language type.: 알려지지 않은 언어.
 Unsupported language {0}.: '{0}은(는) 지원되지 않습니다.'
