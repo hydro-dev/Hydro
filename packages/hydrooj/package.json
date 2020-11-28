@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.13.58",
+    "version": "2.13.59",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -32,6 +32,7 @@
         "superagent": "^6.1.0",
         "supports-color": "^7.2.0",
         "systeminformation": "^4.30.1",
+        "wtfnode": "^0.8.4",
         "yargs": "^16.1.1"
     },
     "devDependencies": {
@@ -49,6 +50,7 @@
         "@types/sockjs": "^0.3.32",
         "@types/superagent": "^4.1.8",
         "@types/supports-color": "^7.2.0",
+        "@types/wtfnode": "^0.7.0",
         "@types/yargs": "^15.0.10"
     },
     "scripts": {

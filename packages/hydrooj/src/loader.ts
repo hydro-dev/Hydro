@@ -6,6 +6,7 @@ import './interface';
 import os from 'os';
 import path from 'path';
 import cluster from 'cluster';
+import wtfnode from 'wtfnode';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
@@ -47,9 +48,13 @@ import { Logger } from './logger';
 import * as bus from './service/bus';
 
 const logger = new Logger('loader');
+wtfnode.setLogger('error', logger.error.bind(logger));
+wtfnode.setLogger('warn', logger.warn.bind(logger));
+wtfnode.setLogger('info', logger.info.bind(logger));
 logger.debug('%o', argv);
 
 async function terminate() {
+    wtfnode.dump();
     try {
         await bus.parallel('app/exit');
     } catch (e) {
@@ -156,7 +161,7 @@ export function addon(addonPath: string) {
             if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
             global.addons.push(modulePath);
         } catch (e) {
-            throw new Error(`Addon not found: ${addonPath}`);
+            logger.error(`Addon not found: ${addonPath}`);
         }
     } else if (modulePath.endsWith('.hydro')) {
         try {
@@ -180,7 +185,7 @@ export function addon(addonPath: string) {
             logger.error('Addon load fail: ', e);
             throw e;
         }
-    } else throw new Error(`Addon not found: ${addonPath}`);
+    } else logger.error(`Addon not found: ${addonPath}`);
 }
 
 process.on('unhandledRejection', logger.error);

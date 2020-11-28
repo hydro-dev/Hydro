@@ -140,6 +140,7 @@ SystemSetting(
     Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
     Setting('setting_storage', 'db.ver', null, 0, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'installid', null, String.random(64), 'text', 'Installation ID', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 bus.once('app/started', async () => {
