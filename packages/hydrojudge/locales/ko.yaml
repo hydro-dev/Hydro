@@ -13,12 +13,12 @@ Found {0} testcases.: 총 {0}개의 TC 찾음
 Invalid judge_extra_files config.: judge_extra_files config 오류
 Invalid user_extra_files config.: user_extra_files config 오류
 Problem data not found.: 문제 데이터 없음
-Read {0}, expect {1}.: '{0}에서 다음을 예상함. {1}
+Read {0}, expect {1}.: '{0}에서 다음을 예상함. {1}'
 Standard answer longer than user output.: 출력이 짧습니다.
 Testdata configuration incorrect.: TC config 오류
 Too many files.: 파일이 너무 많습니다.
 Too many testcases. Cancelled.: TC가 너무 많습니다. 채점을 취소합니다.
-Total time limit longer than 60s. Cancelled.: 총 시간이 60초를 넘습니다. 채점을 취소합니다.
+Total time limit longer than {0}s. Cancelled.: 총 시간이 {9}초를 넘습니다. 채점을 취소합니다.
 Unknown checker type {0}.: Checker 형태 {0}을(를) 식별할 수 없습니다.
 Unknown language type.: 알려지지 않은 언어.
 Unsupported language {0}.: '{0}은(는) 지원되지 않습니다.'

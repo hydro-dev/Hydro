@@ -1,11 +1,12 @@
 import Axios from 'axios';
 import fs from 'fs-extra';
+import { argv } from 'yargs';
 import * as STATUS from './status';
 import { SystemError } from './error';
 import { cmd } from './utils';
 
 const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
-const axios = Axios.create({ baseURL: 'http://localhost:5050' });
+const axios = Axios.create({ baseURL: argv.sandbox as string || 'http://localhost:5050' });
 
 const statusMap = {
     'Time Limit Exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,

@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
+import { argv } from 'yargs';
 import { FormatError, SystemError } from './error';
 import { parseTimeMS, parseMemoryMB, ensureFile } from './utils';
 
@@ -284,12 +285,14 @@ function convertIniConfig(ini: string) {
 }
 
 function isValidConfig(config) {
-    if (config.count > 100) throw new FormatError('Too many testcases. Cancelled.');
+    if (config.count > (argv.max_testcases_count as string || 100)) throw new FormatError('Too many testcases. Cancelled.');
     let total_time = 0;
     for (const subtask of config.subtasks) {
         total_time += subtask.time_limit_ms * subtask.cases.length;
     }
-    if (total_time > 60 * 1000) throw new FormatError('Total time limit longer than 60s. Cancelled.');
+    if (total_time > (+argv.max_time_limit || 60) * 1000) {
+        throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+argv.max_time_limit || 60]);
+    }
 }
 
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {

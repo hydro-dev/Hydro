@@ -153,7 +153,7 @@ const checkers: Record<string, Checker> = {
                 ...config.copyIn,
             },
         });
-        if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned a non-zero value', [status]);
+        if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned {0}.', [status]);
         const score = parseInt(stdout, 10);
         status = score === config.score ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
         return { status, score, message: stderr };
