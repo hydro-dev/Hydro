@@ -229,6 +229,7 @@ Discussions: 토론
 Display name {1} you want to set is used by others.: 이름 {1}이(가) 공개됩니다
 Display Name: 이름
 display_name: 이름
+display name:  이름
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 풀이에 대해 토론할 경우 불이익을 받을 수 있습니다.
 Document {2} not found.: 문서 {2} 없음
 Domain {0} already exists.: 그룹 {0} 이미 존재
@@ -246,6 +247,11 @@ domain_permission: 그룹 권한
 domain_role: 그룹 역할
 domain_user: 그룹 구성원
 domain_join_applications: 그룹 참여 요청
+<<<<<<< Updated upstream
+=======
+domain: 그룹
+domain_main: 홈
+>>>>>>> Stashed changes
 domain: 그룹
 Domain: 그룹
 Don't have an account?: 계정이 없으신가요?
@@ -403,7 +409,7 @@ Logout All Sessions: 모든 세션에서 로그아웃
 Logout This Session: 이 세션에서 로그아웃
 Logout: 로그아웃
 Lost Password: 비밀번호 분실
-Lucky: 운이 좋네요!
+Lucky: 랜덤 추천
 manage_dashboard: 대시보드 관리
 manage_join_applications: 참여 요청 관리
 manage_module: 모듈 관리
@@ -461,7 +467,7 @@ Numeric PID: 문제 번호
 Oh, the user doesn't have any contributions!: 아직 기여가 없습니다.
 Oh, the user hasn't created any discussions yet!: 아직 토론을 시작하지 않았습니다.
 Oh, the user hasn't submitted yet!: 아직 제출하지 않았습니다 _(:зゝ∠)
-Oh, there is no task in the queue!: 대기열에 작업이 없습니다.
+Oh, there is no task in the queue!: 대기열이 비었습니다.
 Oh, there is no task that matches the filter!: 결과 없음
 Ok: OK
 Only A-Z, a-z, 0-9 and _ are accepted: A-Z, a-z, 0-9 와 _만 허용됨
@@ -481,6 +487,7 @@ OS Info: 시스템 정보
 Owner: 소유자
 page.problem_detail.sidebar.show_category: 분류 표시
 page.training_detail.invalid_when_not_enrolled: 학습에 참여하지 않았습니다.
+pager_next: 페이지
 Params: 파라미터
 Partic.: 참여자
 Password reset mail has been sent to your email.: 비밀번호 재설정 이메일 발신 완료
@@ -705,7 +712,7 @@ Time Cost: 시간
 Time Extension: 시간 연장
 Time: 시간
 timeago_locale: ko
-Timezone: Seoul
+Timezone: Timezone
 title: 제목
 Title: 제목
 Toggle Pretest Panel: 프리테스트
