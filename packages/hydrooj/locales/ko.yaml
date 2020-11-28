@@ -247,11 +247,6 @@ domain_permission: 그룹 권한
 domain_role: 그룹 역할
 domain_user: 그룹 구성원
 domain_join_applications: 그룹 참여 요청
-<<<<<<< Updated upstream
-=======
-domain: 그룹
-domain_main: 홈
->>>>>>> Stashed changes
 domain: 그룹
 Domain: 그룹
 Don't have an account?: 계정이 없으신가요?
