@@ -16,10 +16,11 @@ const Score = {
     min: Math.min,
 };
 
-function judgeCase(c) {
+function judgeCase(c, sid) {
     return async (ctx, ctxSubtask) => {
         if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
-            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)) {
+            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
+            || (ctxSubtask.subtask.if && ctx.failed[sid])) {
             ctx.next({
                 status: STATUS.STATUS_JUDGING,
                 case: {
@@ -99,7 +100,7 @@ function judgeCase(c) {
     };
 }
 
-function judgeSubtask(subtask) {
+function judgeSubtask(subtask, sid) {
     return async (ctx) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
@@ -111,11 +112,12 @@ function judgeSubtask(subtask) {
         };
         const cases = [];
         for (const cid in subtask.cases) {
-            cases.push(ctx.queue.add(() => judgeCase(subtask.cases[cid])(ctx, ctxSubtask)));
+            cases.push(ctx.queue.add(() => judgeCase(subtask.cases[cid], sid)(ctx, ctxSubtask)));
         }
         await Promise.all(cases);
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
-        ctx.total_score += ctxSubtask.score;
+        if (ctx.total_status !== STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
+        return ctxSubtask.score;
     };
 }
 
@@ -158,10 +160,17 @@ export const judge = async (ctx) => {
     ctx.total_score = 0;
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
-    // sandbox seems cannot handle concurrent tasks with output file correctly
     ctx.queue = new Queue({ concurrency: ctx.config.concurrency || 2 });
-    for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
-    await Promise.all(tasks);
+    ctx.failed = {};
+    for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));
+    const scores = await Promise.all(tasks);
+    for (const sid in ctx.config.subtasks) {
+        let effective = true;
+        for (const required of ctx.config.subtasks[sid].if || []) {
+            if (ctx.failed[required]) effective = false;
+        }
+        if (effective) ctx.total_score += scores[sid];
+    }
     ctx.stat.done = new Date();
     if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({

@@ -253,6 +253,7 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             }
             config.subtasks.push({
                 score: parseInt(subtask.score, 10),
+                if: subtask.if || [],
                 cases,
                 time_limit_ms: parseTimeMS(subtask.time || cfg.time),
                 memory_limit_mb: parseMemoryMB(subtask.memory || cfg.time),
