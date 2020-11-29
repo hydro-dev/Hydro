@@ -1,7 +1,6 @@
 __langname: 한국어
 '"{data}" copied to clipboard!': “{data}”복사 완료
-'He is a moderator of this domain.': '그룹의 관리자입니다.'
-'She is a moderator of this domain.': '그룹의 관리자입니다.'
+'{} is a moderator of this domain.': '{}가 그룹의 관리자입니다.'
 '{0} comments': '{0} 댓글'
 '{0} discussions': '{0} 토론'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 제한 초과：{1} 초 {2} 번'
