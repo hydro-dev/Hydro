@@ -48,6 +48,9 @@ String.prototype.translate = function translate(...languages: string[]) {
         if (locales[language]) {
             if (locales[language][this] !== undefined) return locales[language][this];
         }
+        if (locales[language.split('_')[0]]) {
+            if (locales[language.split('_')[0]][this] !== undefined) return locales[language.split('_')[0]][this];
+        }
     }
     return this;
 };

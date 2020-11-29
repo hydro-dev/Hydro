@@ -44,6 +44,7 @@ export async function feedback() {
         addons: global.addons,
         memory: inf.memory,
         osinfo: inf.osinfo,
+        cpu: inf.cpu,
         flags: inf.flags,
     }));
     axios.post('https://feedback.undefined.moe/', { payload });

@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.27",
+    "version": "2.1.28",
     "main": "package.json",
     "author": "masnn",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -14,8 +14,8 @@
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "supports-color": "^7.2.0",
-        "systeminformation": "^4.30.1",
+        "supports-color": "^8.0.0",
+        "systeminformation": "^4.30.6",
         "yargs": "^16.1.1"
     },
     "peerDependencies": {

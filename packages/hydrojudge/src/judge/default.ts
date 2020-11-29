@@ -18,6 +18,21 @@ const Score = {
 
 function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
+        if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
+            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)) {
+            ctx.next({
+                status: STATUS.STATUS_JUDGING,
+                case: {
+                    status: STATUS.STATUS_CANCELED,
+                    score: 0,
+                    time_ms: 0,
+                    memory_kb: 0,
+                    message: '',
+                },
+                progress: Math.floor((c.id * 100) / ctx.config.count),
+            }, c.id);
+            return;
+        }
         const { filename } = ctx.config;
         const copyIn = { ...ctx.execute.copyIn };
         if (filename) copyIn[`${filename}.in`] = { src: c.input };
