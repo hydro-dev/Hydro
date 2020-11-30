@@ -6,10 +6,14 @@
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署，轻量，功能强大且易于扩展。  
 
-使用安装脚本（ubuntu18.04）
+使用安装脚本（根据系统版本选择，使用root用户执行）
 
 ```sh
-curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/ubuntu-1804.sh | bash
+curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/ubuntu-1604.sh | bash # ubuntu 16.04
+curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/ubuntu-1804.sh | bash # ubuntu 18.04
+curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/ubuntu-2004.sh | bash # ubuntu 20.04
+# 下方脚本未测试有效性，请尽量避免使用
+curl -sSL https://cdn.jsdelivr.net/gh/hydro-dev/Hydro@master/install/centos-7.sh | bash # centos 7
 ```
 
 其他平台请参照文档手动安装。
