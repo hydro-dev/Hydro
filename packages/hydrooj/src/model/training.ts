@@ -14,10 +14,10 @@ export function getMultiStatus(domainId: string, query: FilterQuery<TrainingDoc>
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
     const tsdocs = await getMultiStatus(
-        domainId, { uid, tid: { $in: Array.from(new Set(tids)) } },
+        domainId, { uid, docId: { $in: Array.from(new Set(tids)) } },
     ).toArray();
     const r = {};
-    for (const tsdoc of tsdocs) r[tsdoc.pid] = tsdoc;
+    for (const tsdoc of tsdocs) r[tsdoc.docId] = tsdoc;
     return r;
 }
 

@@ -43,8 +43,9 @@ String.prototype.rawformat = function rawFormat(object) {
 };
 
 String.prototype.translate = function translate(...languages: string[]) {
-    if (languages.length === 0) languages = ['zh_CN'];
+    if (!languages.length) languages = ['zh_CN'];
     for (const language of languages) {
+        if (!language) continue;
         if (locales[language]) {
             if (locales[language][this] !== undefined) return locales[language][this];
         }
