@@ -42,8 +42,8 @@ rm /tmp/createUser.js
 echo "pm2 stop mongod"
 pm2 stop mongod >/dev/null
 pm2 del mongod >/dev/null
-echo 'pm2 start "mongod --auth"'
-pm2 start "mongod --auth"
+echo 'Starting mongodb'
+pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb
 
 # Install Compiler
 echo 'Installing g++'
@@ -55,7 +55,7 @@ echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
 wget https://github.com/criyle/go-judge/releases/download/v0.7.1/executorserver-amd64 -O /usr/bin/sandbox
 chmod +x /usr/bin/sandbox
-pm2 start "/usr/bin/sandbox"
+pm2 start sandbox
 mkdir ~/.hydro
 echo "{\"host\":\"127.0.0.1\",\"port\":\"27017\",\"name\":\"hydro\",\"username\":\"hydro\",\"password\":\"$db_password\"}" >~/.hydro/config.json
 echo '["@hydrooj/ui-default","@hydrooj/hydrojudge"]' >~/.hydro/addon.json
