@@ -4,7 +4,6 @@ import cluster from 'cluster';
 import path from 'path';
 import serialize from 'serialize-javascript';
 import Lru from 'lru-cache';
-import type { ContentNode } from './interface';
 
 declare global {
     interface StringConstructor {
