@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/migrate-hustoj",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <masnn0@outlook.com>",
@@ -13,7 +13,7 @@
         "@types/mysql": "^2.15.15"
     },
     "peerDependencies": {
-        "hydrooj": "^2.13.5"
+        "hydrooj": "^2.14.0"
     },
     "dependencies": {
         "mysql": "^2.18.1"

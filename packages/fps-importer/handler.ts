@@ -11,7 +11,8 @@ import { LocalProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
-import { buildContent, streamToBuffer } from 'hydrooj/dist/utils';
+import { streamToBuffer } from 'hydrooj/dist/utils';
+import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as file from 'hydrooj/dist/model/file';
 import * as solution from 'hydrooj/dist/model/solution';
