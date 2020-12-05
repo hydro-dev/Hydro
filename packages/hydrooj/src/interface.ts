@@ -156,6 +156,26 @@ export interface RemoteProblemConfig {
 
 export type ProblemConfig = LocalProblemConfig | RemoteProblemConfig;
 
+export interface PlainContentNode {
+    type: 'Plain',
+    subType: 'html' | 'markdown',
+    text: string,
+}
+export interface TextContentNode {
+    type: 'Text',
+    subType: 'html' | 'markdown',
+    sectionTitle: string,
+    text: string,
+}
+export interface SampleContentNode {
+    type: 'Sample',
+    text: string,
+    sectionTitle: string,
+    payload: [string, string],
+}
+export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
+export type Content = string | ContentNode[] | Record<string, ContentNode[]>
+
 declare module './model/problem' {
     interface Pdoc {
         domainId: string,
@@ -164,7 +184,7 @@ declare module './model/problem' {
         pid: string,
         owner: number,
         title: string,
-        content: string,
+        content: Content,
         nSubmit: number,
         nAccept: number,
         tag: string[],
@@ -525,6 +545,7 @@ interface GeoIP {
 
 export interface Lib {
     download: typeof import('./lib/download'),
+    buildContent: typeof import('./lib/content').buildContent,
     'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
     jwt: typeof import('./lib/jwt'),

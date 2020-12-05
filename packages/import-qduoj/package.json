@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/import-qduoj",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Import QDUOJ problem export",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -15,7 +15,7 @@
         "bson": "^4.1.0"
     },
     "peerDependencies": {
-        "hydrooj": "^2.13.0"
+        "hydrooj": "^2.14.0"
     },
     "scripts": {
         "build": "tsc",

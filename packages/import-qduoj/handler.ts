@@ -5,12 +5,12 @@ import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
-import { LocalProblemConfig } from 'hydrooj';
+import { ContentNode, LocalProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
 import { BadRequestError } from 'hydrooj/dist/error';
-import { buildContent, streamToBuffer } from 'hydrooj/dist/utils';
+import { streamToBuffer } from 'hydrooj/dist/utils';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as file from 'hydrooj/dist/model/file';
 import * as problem from 'hydrooj/dist/model/problem';
@@ -31,14 +31,53 @@ class ImportQduojHandler extends Handler {
             for (const folder of folders) {
                 const buf = await fs.readFile(path.join(tmp, folder, 'problem.json'));
                 const pdoc = JSON.parse(buf.toString());
-                const content = buildContent({
-                    description: pdoc.description?.value,
-                    input: pdoc.input_description?.value,
-                    output: pdoc.output_description?.value,
-                    samples: pdoc.samples.map((i) => [i.input, i.output]),
-                    hint: pdoc.hint?.value,
-                    source: pdoc.source?.value,
-                }, 'html');
+                const content: ContentNode[] = [];
+                if (pdoc.description?.value) {
+                    content.push({
+                        type: 'Text',
+                        subType: 'html',
+                        sectionTitle: this.translate('Description'),
+                        text: pdoc.description.value,
+                    });
+                }
+                if (pdoc.input_description?.value) {
+                    content.push({
+                        type: 'Text',
+                        subType: 'html',
+                        sectionTitle: this.translate('Input Format'),
+                        text: pdoc.input_description.value,
+                    });
+                }
+                if (pdoc.output_description?.value) {
+                    content.push({
+                        type: 'Text',
+                        subType: 'html',
+                        sectionTitle: this.translate('Output Format'),
+                        text: pdoc.output_description.value,
+                    });
+                }
+                if (pdoc.samples?.length) {
+                    content.push(...pdoc.samples.map((sample) => ({
+                        type: 'Sample',
+                        payload: [sample.input, sample.output],
+                    })));
+                }
+                if (pdoc.hint?.value) {
+                    content.push({
+                        type: 'Text',
+                        subType: 'html',
+                        sectionTitle: this.translate('Hint'),
+                        text: pdoc.hint.value,
+                    });
+                }
+                if (pdoc.source?.value) {
+                    content.push({
+                        type: 'Text',
+                        subType: 'html',
+                        sectionTitle: this.translate('Source'),
+                        text: pdoc.source.value,
+                    });
+                }
                 const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, content, this.user._id, pdoc.tags);
                 const testdata = new AdmZip();
                 const config: LocalProblemConfig = {

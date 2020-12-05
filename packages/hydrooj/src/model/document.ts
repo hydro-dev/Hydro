@@ -10,6 +10,7 @@ import { buildProjection } from '../utils';
 import { NumberKeys, ArrayKeys, Projection } from '../typeutils';
 import * as db from '../service/db';
 import * as bus from '../service/bus';
+import { Content } from '../loader';
 
 type DocID = ObjectID | string | number;
 
@@ -46,19 +47,19 @@ export interface DocStatusType {
 }
 
 export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(
-    domainId: string, content: string, owner: number,
+    domainId: string, content: Content, owner: number,
     docType: T, docId: K,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
 ): Promise<K>
 export async function add<T extends keyof DocType>(
-    domainId: string, content: string, owner: number,
+    domainId: string, content: Content, owner: number,
     docType: T, docId: null,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
 ): Promise<ObjectID>
 export async function add(
-    domainId: string, content: string, owner: number,
+    domainId: string, content: Content, owner: number,
     docType: number, docId: DocID = null,
     parentType: number | null = null, parentId: DocID = null,
     args: any = {},

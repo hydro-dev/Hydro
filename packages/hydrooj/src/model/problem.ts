@@ -6,6 +6,7 @@ import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
 import { ProblemStatusDoc, ProblemDataSource, Pdict } from '../interface';
+import { Content } from '../loader';
 import { NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import * as testdataConfig from '../lib/testdataConfig';
@@ -78,7 +79,7 @@ export const PROJECTION_PUBLIC: Pdoc.Field[] = [
 ];
 
 export async function add(
-    domainId: string, pid: string = null, title: string, content: string, owner: number,
+    domainId: string, pid: string = null, title: string, content: Content, owner: number,
     tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
 ) {
     const pidCounter = await domain.inc(domainId, 'pidCounter', 1);

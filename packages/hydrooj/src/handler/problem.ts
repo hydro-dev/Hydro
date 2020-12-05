@@ -437,6 +437,9 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @param('content', Types.String, isContent)
     @post('pid', Types.String, isPid, true)
     async post(domainId: string, title: string, content: string, newPid: string = '') {
+        try {
+            content = JSON.parse(content);
+        } catch { /* Ignore */ }
         const $update: Partial<Pdoc> = { title, content, pid: newPid };
         let pdoc = await problem.get(domainId, this.request.params.pid);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
@@ -646,6 +649,9 @@ export class ProblemCreateHandler extends Handler {
     @param('content', Types.String, isContent)
     @param('hidden', Types.Boolean)
     async post(domainId: string, title: string, pid: string, content: string, hidden = false) {
+        try {
+            content = JSON.parse(content);
+        } catch { /* Ignore */ }
         const docId = await problem.add(
             domainId, pid, title, content,
             this.user._id, [], [], null, hidden,

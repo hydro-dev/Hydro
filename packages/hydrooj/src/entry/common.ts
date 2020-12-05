@@ -12,6 +12,7 @@ export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
     'crypto', 'misc', 'paginate', 'hash.hydro', 'rank',
     'validator', 'ui', 'sysinfo', 'testdata.convert.ini', 'testdataConfig',
+    'content',
 ];
 
 export const builtinModel = [
