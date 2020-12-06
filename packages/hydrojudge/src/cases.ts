@@ -165,14 +165,13 @@ async function read1(folder: string, files: string[], checkFile) {
 }
 
 async function readAutoCases(folder, { next }) {
-    const
-        config = {
-            checker_type: 'default',
-            count: 0,
-            subtasks: [],
-            judge_extra_files: [],
-            user_extra_files: [],
-        };
+    const config = {
+        checker_type: 'default',
+        count: 0,
+        subtasks: [],
+        judge_extra_files: [],
+        user_extra_files: [],
+    };
     const checkFile = ensureFile(folder);
     try {
         const files = await fs.readdir(folder);
@@ -187,7 +186,7 @@ async function readAutoCases(folder, { next }) {
         let result = await read0(folder, files, checkFile);
         if (!result.count) result = await read1(folder, files, checkFile);
         Object.assign(config, result);
-        next({ message: { message: 'Found {0} testcases.', params: config.count } });
+        next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
         throw new SystemError('Cannot parse testdata.', [e]);
     }

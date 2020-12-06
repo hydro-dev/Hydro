@@ -4,6 +4,7 @@ import os from 'os';
 import assert from 'assert';
 import superagent from 'superagent';
 import { filter } from 'lodash';
+import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { streamToBuffer } from '../utils';
@@ -86,25 +87,28 @@ class ProblemImportSYZOJHandler extends Handler {
                         filenameList: result.body.testData.map((node) => node.filename),
                     });
                 const urls = {};
+                if (r.body.error) return;
                 for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
                 const zip = new AdmZip();
                 for (const f of result.body.testData) {
+                    const p = new PassThrough();
+                    superagent.get(urls[f.filename]).pipe(p);
                     // eslint-disable-next-line no-await-in-loop
-                    const c = await superagent.get(urls[f.filename]);
-                    // eslint-disable-next-line no-await-in-loop
-                    zip.addFile(f.filename, await streamToBuffer(c));
+                    zip.addFile(f.filename, await streamToBuffer(p));
                 }
                 await problem.setTestdata(domainId, docId, zip.toBuffer());
-                await problem.edit(domainId, docId, {
-                    config: {
-                        time: `${judge.timeLimit}ms`,
-                        memory: `${judge.memoryLimit}m`,
-                        // TODO other config
-                    },
-                });
+                if (judge) {
+                    await problem.edit(domainId, docId, {
+                        config: {
+                            time: `${judge.timeLimit}ms`,
+                            memory: `${judge.memoryLimit}m`,
+                            // TODO other config
+                        },
+                    });
+                }
             })().catch(logger.error);
-            this.response.body = { pid: pid || docId };
-            this.response.redirect = this.url('problem_settings', { pid: pid || docId });
+            this.response.body = { pid: docId };
+            this.response.redirect = this.url('problem_settings', { pid: docId });
         } else {
             const res = await superagent.get(`${url}export`);
             assert(res.status === 200, new RemoteOnlineJudgeError('Cannot connect to target server'));

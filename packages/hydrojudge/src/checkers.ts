@@ -160,7 +160,6 @@ const checkers: Record<string, Checker> = {
     },
 
     async testlib(config) {
-        console.log(config);
         const { stderr, status } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
             copyIn: {
                 in: { src: config.input },
