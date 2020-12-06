@@ -28,9 +28,7 @@ const configSrc = {
         outDir: 'dist',
         rootDir: 'src',
     },
-    include: [
-        'src',
-    ],
+    include: ['src'],
     exclude: [
         '**/__mocks__',
         'bin',
@@ -43,9 +41,7 @@ const configFlat = {
         outDir: '.',
         rootDir: '.',
     },
-    include: [
-        '*.ts',
-    ],
+    include: ['**/*.ts'],
     exclude: [],
 };
 
