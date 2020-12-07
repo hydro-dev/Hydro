@@ -77,7 +77,7 @@ class JudgeTask {
         this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
-        tmpfs.mount(this.tmpdir, '256m');
+        tmpfs.mount(this.tmpdir, '512m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
         try {
             if (this.type === 'judge') await this.doSubmission();
@@ -231,7 +231,7 @@ export default class Hydro {
             fs.ensureDirSync(path.dirname(savePath));
             const zip = new AdmZip(tmpFilePath);
             const entries = zip.getEntries();
-            if (entries.length > 256) throw new FormatError('Too many files');
+            if (entries.length > 512) throw new FormatError('Too many files');
             await new Promise((resolve, reject) => {
                 zip.extractAllToAsync(savePath, true, (e) => {
                     if (e) reject(e);

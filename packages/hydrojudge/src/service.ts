@@ -78,7 +78,7 @@ async function postInit() {
         fs.ensureDirSync(path.dirname(savePath));
         const zip = new AdmZip(tmpFilePath);
         const entries = zip.getEntries();
-        if (entries.length > 256) throw new FormatError('Too many files.');
+        if (entries.length > 512) throw new FormatError('Too many files.');
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
@@ -217,7 +217,7 @@ async function postInit() {
                 this.tmpdir = path.resolve(tmpdir(), 'tmp', this.rid);
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
-                tmpfs.mount(this.tmpdir, '256m');
+                tmpfs.mount(this.tmpdir, '512m');
                 logger.info(`Submission: ${this.rid}`, { pid: this.pid });
                 if (this.config.input) await this.run();
                 else if (this.config.hack) await this.hack();

@@ -302,7 +302,7 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
             {
                 input,
                 time: '1s',
-                memory: '256m',
+                memory: '512m',
             },
         );
         const rdoc = await record.get(domainId, rid);

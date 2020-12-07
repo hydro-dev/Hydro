@@ -78,7 +78,7 @@ export const judge = async (ctx) => {
             copyIn: execute.copyIn,
             copyOut,
             time_limit_ms: 1000,
-            memory_limit_mb: 256,
+            memory_limit_mb: 512,
         },
     );
     const { code, time_usage_ms, memory_usage_kb } = res;
@@ -90,7 +90,7 @@ export const judge = async (ctx) => {
     if (status === STATUS.STATUS_ACCEPTED) {
         if (time_usage_ms > 1000) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > 256 * 1024) {
+        } else if (memory_usage_kb > 512 * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else {
             [status, , message] = await check({

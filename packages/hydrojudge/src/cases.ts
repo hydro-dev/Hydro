@@ -87,7 +87,7 @@ async function read0(folder: string, files: string[], checkFile) {
         count: 0,
         subtasks: [{
             time_limit_ms: 1000,
-            memory_limit_mb: 256,
+            memory_limit_mb: 512,
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length),
@@ -104,7 +104,7 @@ async function read0(folder: string, files: string[], checkFile) {
     if (extra < cases.length) {
         config.subtasks.push({
             time_limit_ms: 1000,
-            memory_limit_mb: 256,
+            memory_limit_mb: 512,
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length) + 1,
@@ -133,7 +133,7 @@ async function read1(folder: string, files: string[], checkFile) {
                     if (!subtask[REG.subtask(data)]) {
                         subtask[REG.subtask(data)] = [{
                             time_limit_ms: 1000,
-                            memory_limit_mb: 256,
+                            memory_limit_mb: 512,
                             type: 'min',
                             cases: [c],
                         }];
@@ -276,7 +276,7 @@ function convertIniConfig(ini: string) {
             cases: [{ input: `input/${input.toLowerCase()}`, output: `output/${output.toLowerCase()}` }],
             score: parseInt(score, 10),
             time: `${time}s`,
-            memory: '256m',
+            memory: '512m',
         };
         if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
         res.subtasks.push(cur);
