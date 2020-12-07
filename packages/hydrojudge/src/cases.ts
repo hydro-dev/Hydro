@@ -226,8 +226,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
     if (cfg.cases) {
         config.subtasks = [{
             score: parseInt(cfg.score, 10) || Math.floor(100 / config.count),
-            time_limit_ms: parseTimeMS(cfg.time),
-            memory_limit_mb: parseMemoryMB(cfg.memory),
+            time_limit_ms: parseTimeMS(cfg.time || '1s'),
+            memory_limit_mb: parseMemoryMB(cfg.memory || '512m'),
             cases: [],
             type: 'sum',
         }];
@@ -254,8 +254,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
                 score: parseInt(subtask.score, 10),
                 if: subtask.if || [],
                 cases,
-                time_limit_ms: parseTimeMS(subtask.time || cfg.time),
-                memory_limit_mb: parseMemoryMB(subtask.memory || cfg.memory),
+                time_limit_ms: parseTimeMS(subtask.time || cfg.time || '1s'),
+                memory_limit_mb: parseMemoryMB(subtask.memory || cfg.memory || '512m'),
             });
         }
     } else {
