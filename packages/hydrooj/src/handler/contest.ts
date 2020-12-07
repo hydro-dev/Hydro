@@ -272,7 +272,7 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async prepare(domainId: string, tid: ObjectID, pid: number) {
-        if (contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         let rdocs = [];
         if (this.canShowRecord(this.tdoc)) {
             rdocs = await record.getUserInProblemMulti(
