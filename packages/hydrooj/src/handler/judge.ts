@@ -71,7 +71,7 @@ export async function end(body: JudgeResultBody) {
     let rdoc = await record.get(body.domainId, body.rid);
     const $set: Partial<Rdoc> = {};
     const $push: any = {};
-    const $unset: { progress: '' } = { progress: '' };
+    const $unset: any = { progress: '' };
     if (body.message) {
         rdoc.judgeTexts.push(body.message);
         $push.judgeTexts = body.message;
@@ -86,6 +86,7 @@ export async function end(body: JudgeResultBody) {
     if (body.memory !== undefined) $set.memory = body.memory;
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
+    await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
     bus.boardcast('record/change', rdoc); // trigger a full update
