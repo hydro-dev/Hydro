@@ -371,7 +371,7 @@ class ContestCreateHandler extends ContestHandler {
             path,
             page_name: 'contest_create',
             date_text: dt.format('%Y-%m-%d'),
-            time_text: dt.format('%M:%S'),
+            time_text: dt.format('%H:%M'),
             pids: '1000, 1001',
         };
     }
