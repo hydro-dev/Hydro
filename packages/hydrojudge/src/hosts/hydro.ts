@@ -174,12 +174,12 @@ class JudgeTask {
     }
 
     end(data) {
+        log.info('End: %o', data);
         data.key = 'end';
         data.rid = new ObjectID(this.request.rid);
         data.domainId = this.request.domainId;
         data.time = data.time_ms ?? data.time;
         data.memory = data.memory_kb ?? data.memory;
-        log.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
         this.ws.send(JSON.stringify(data));
     }
 }
