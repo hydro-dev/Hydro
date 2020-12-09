@@ -282,6 +282,7 @@ export interface ScoreboardNode {
     value: string,
     raw?: any,
 }
+export type ScoreboardRow = ScoreboardNode[] & { raw?: any };
 
 export type PenaltyRules = Dictionary<number>;
 
@@ -423,9 +424,9 @@ export interface ContestRule {
     stat: (tdoc: Tdoc, journal: any[]) => ContestStat,
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc, rankedTsdocs: any[] | Generator<any>, udict: Udict, pdict: Pdict
-    ) => ScoreboardNode[][],
-    rank: (tsdocs: any[]) => any[] | Generator<any>,
+        tdoc: Tdoc, rankedTsdocs: any[], udict: Udict, pdict: Pdict
+    ) => ScoreboardRow[],
+    rank: (tsdocs: any[]) => any[],
 }
 
 export type ContestRules = Dictionary<ContestRule>;

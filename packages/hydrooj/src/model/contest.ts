@@ -1,4 +1,5 @@
 import { ObjectID, FilterQuery } from 'mongodb';
+import { filter, sortBy } from 'lodash';
 import * as user from './user';
 import * as problem from './problem';
 import * as document from './document';
@@ -8,7 +9,7 @@ import {
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } from '../error';
 import {
-    ContestRule, ContestRules, ScoreboardNode, Tdoc, Udict,
+    ContestRule, ContestRules, ScoreboardNode, ScoreboardRow, Tdoc, Udict,
 } from '../interface';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
@@ -34,25 +35,24 @@ const acm: ContestRule = {
                 if (!j.accept) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
             }
         }
-        function _time(jdoc) {
-            const real = jdoc.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
-            const penalty = 20 * 60 * naccept[jdoc.pid];
-            return real + penalty;
-        }
         for (const key in effective) {
             const j = effective[key];
+            const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
+            const penalty = 20 * 60 * naccept[j.pid];
             detail.push({
-                ...j, naccept: naccept[j.pid], time: _time(j),
+                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
             });
         }
         for (const d of detail) {
-            accept += d.accept;
-            if (d.accept) time += d.time;
+            if (d.accept) {
+                accept += d.accept;
+                time += d.time;
+            }
         }
         return { accept, time, detail };
     },
     scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
-        const columns: ScoreboardNode[] = [
+        const columns: ScoreboardRow = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
             { type: 'solved_problems', value: _('Solved Problems') },
@@ -88,13 +88,11 @@ const acm: ContestRule = {
                 });
             }
         }
-        const rows = [columns];
+        const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            if (tsdoc.detail) {
-                for (const item of tsdoc.detail) tsddict[item.pid] = item;
-            }
-            const row = [];
+            for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
+            const row: ScoreboardRow = [];
             row.push(
                 { type: 'string', value: rank },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
@@ -134,6 +132,7 @@ const acm: ContestRule = {
                     });
                 }
             }
+            row.raw = tsdoc;
             rows.push(row);
         }
         return rows;
@@ -233,7 +232,7 @@ const homework: ContestRule = {
             if (exceedSeconds < 0) return score;
             let coefficient = 1;
             const keys = Object.keys(tdoc.penaltyRules)
-                .map((k) => parseFloat(k)).sort((a, b) => a - b);
+                .map(parseFloat).sort((a, b) => a - b);
             for (const i of keys) {
                 if (i * 3600 <= exceedSeconds) coefficient = tdoc.penaltyRules[i];
                 else break;
@@ -498,6 +497,17 @@ export const ContestHandlerMixin = (c) => class extends c {
         domainId: string, tid: ObjectID,
         isExport = false, docType: 30 | 60 = document.TYPE_CONTEST,
     ): Promise<[Tdoc, ScoreboardNode[][], Udict]> {
+        const {
+            tdoc, udict, pdict, rankedTsdocs,
+        } = await this.getRawStatus(domainId, tid, docType);
+        const rows = RULES[tdoc.rule].scoreboard(
+            isExport, this.translate.bind(this),
+            tdoc, rankedTsdocs, udict, pdict,
+        );
+        return [tdoc, rows, udict];
+    }
+
+    async getRawStatus(domainId: string, tid: ObjectID, docType: 30 | 60 = document.TYPE_CONTEST) {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
         const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort).toArray();
@@ -507,11 +517,9 @@ export const ContestHandlerMixin = (c) => class extends c {
             problem.getList(domainId, tdoc.pids, true),
         ]);
         const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
-        const rows = RULES[tdoc.rule].scoreboard(
-            isExport, this.translate.bind(this),
-            tdoc, rankedTsdocs, udict, pdict,
-        );
-        return [tdoc, rows, udict];
+        return {
+            tdoc, tsdocs, udict, pdict, rankedTsdocs,
+        };
     }
 
     // eslint-disable-next-line class-methods-use-this

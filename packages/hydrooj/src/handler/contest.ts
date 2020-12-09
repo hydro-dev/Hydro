@@ -143,6 +143,13 @@ class ContestScoreboardHandler extends ContestHandler {
     }
 }
 
+class ContestScoreboardRawHandler extends ContestHandler {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
+        this.response.body = await this.getRawStatus(domainId, tid);
+    }
+}
+
 class ContestScoreboardDownloadHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.String)
@@ -414,6 +421,7 @@ export async function apply() {
     Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_scoreboard_raw', '/contest/:tid/scoreboard/raw', ContestScoreboardRawHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
