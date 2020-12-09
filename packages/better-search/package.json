@@ -7,7 +7,7 @@
     "author": "undefined <masnn0@outlook.com>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "nodejieba": "^2.4.2"
+        "nodejieba": "^2.5.1"
     },
     "devDependencies": {},
     "peerDependencies": {

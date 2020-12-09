@@ -1,5 +1,4 @@
 import { ObjectID, FilterQuery } from 'mongodb';
-import { filter, sortBy } from 'lodash';
 import * as user from './user';
 import * as problem from './problem';
 import * as document from './document';
