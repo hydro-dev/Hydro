@@ -509,6 +509,7 @@ export const ContestHandlerMixin = (c) => class extends c {
     async getRawStatus(domainId: string, tid: ObjectID, docType: 30 | 60 = document.TYPE_CONTEST) {
         const tdoc = await get(domainId, tid, docType);
         if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
+        if (!this.canShowRecord(tdoc)) throw new ContestScoreboardHiddenError(tid);
         const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort).toArray();
         const uids = tsdocs.map((tsdoc) => tsdoc.uid);
         const [udict, pdict] = await Promise.all([

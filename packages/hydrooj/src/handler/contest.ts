@@ -271,11 +271,12 @@ class ContestProblemHandler extends ContestHandler {
             udoc: this.udoc,
             attended: this.attended,
             path,
+            page_name: 'contest_detail_problem',
         };
     }
 }
 
-class ContestProblemSubmitHandler extends ContestProblemHandler {
+class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async prepare(domainId: string, tid: ObjectID, pid: number) {
@@ -298,11 +299,11 @@ class ContestProblemSubmitHandler extends ContestProblemHandler {
         this.response.body = {
             tdoc: this.tdoc,
             pdoc: this.pdoc,
-            tsdoc: this.tsdoc,
             udoc: this.udoc,
             attended: this.attend,
             path,
             rdocs,
+            page_name: 'contest_detail_problem_submit',
         };
     }
 
@@ -424,7 +425,7 @@ export async function apply() {
     Route('contest_scoreboard_raw', '/contest/:tid/scoreboard/raw', ContestScoreboardRawHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestDetailProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
 }
 
