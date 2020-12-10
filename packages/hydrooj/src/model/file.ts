@@ -97,22 +97,22 @@ export function getMulti(query: any) {
     return coll.find(query);
 }
 
-async function _url(_id: ObjectID, name: string | undefined) {
+async function _url(_id: ObjectID, name?: string) {
     const file = await coll.findOne({ _id });
     const secret = hash(file.secret, _timestamp().toString());
-    if (name) return `/fs/${_id}/${Buffer.from(name).toString('base64')}/${secret}`;
+    if (name) return `/fs/${_id}/${Buffer.from(name).toString('base64').replace(/\//g, '~')}/${secret}`;
     return `/fs/${_id}/${secret}`;
 }
 
-function __url(file: any, name: string | undefined) {
+function __url(file: Ufdoc, name?: string) {
     const secret = hash(file.secret, _timestamp().toString());
-    if (name) return `/fs/${file._id}/${Buffer.from(name).toString('base64')}/${secret}`;
+    if (name) return `/fs/${file._id}/${Buffer.from(name).toString('base64').replace(/\//g, '~')}/${secret}`;
     return `/fs/${file._id}/${secret}`;
 }
 
-export function url(_id: ObjectID, name: string | undefined): Promise<string>;
-export function url(file: any, name: string | undefined): string;
-export function url(arg0: any, name: any) {
+export function url(_id: ObjectID, name?: string): Promise<string>;
+export function url(file: Ufdoc, name: string): string;
+export function url(arg0: ObjectID | Ufdoc, name?: string) {
     if (arg0 instanceof ObjectID) return _url(arg0, name);
     return __url(arg0, name);
 }

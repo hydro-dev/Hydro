@@ -17,8 +17,8 @@ class FileDownloadHandler extends Handler {
     @param('fileId', Types.ObjectID)
     @param('secret', Types.String)
     @param('name', Types.String, true)
-    async get(domainId: string, fileId: ObjectID, secret: string, name: string) {
-        if (name) name = Buffer.from(name, 'base64').toString();
+    async get(domainId: string, fileId: ObjectID, secret: string, name?: string) {
+        if (name) name = Buffer.from(name.replace(/~/g, '/'), 'base64').toString();
         const doc = await file.getWithSecret(fileId, secret);
         this.response.attachment(name || fileId.toHexString(), doc);
     }

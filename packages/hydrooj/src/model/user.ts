@@ -221,7 +221,7 @@ export async function create(
             gravatar: mail,
         });
     } catch (e) {
-        logger.warn(e);
+        logger.warn('%o', e);
         throw new UserAlreadyExistError([uid, uname, mail]);
     }
     return uid;

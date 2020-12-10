@@ -495,7 +495,7 @@ export const ContestHandlerMixin = (c) => class extends c {
     async getScoreboard(
         domainId: string, tid: ObjectID,
         isExport = false, docType: 30 | 60 = document.TYPE_CONTEST,
-    ): Promise<[Tdoc, ScoreboardNode[][], Udict]> {
+    ): Promise<[Tdoc, ScoreboardRow[], Udict]> {
         const {
             tdoc, udict, pdict, rankedTsdocs,
         } = await this.getRawStatus(domainId, tid, docType);

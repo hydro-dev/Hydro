@@ -148,7 +148,6 @@ class DomainPermissionHandler extends ManageHandler {
                 : [this.request.body[role]];
             // @ts-ignore
             roles[role] = 0n;
-            console.log(role, perms);
             // @ts-ignore
             for (const r of perms) roles[role] += 1n << BigInt(r);
         }

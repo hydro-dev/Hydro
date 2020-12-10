@@ -126,7 +126,7 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
     if (argv.showBus) logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
-        if (argv.busDetail) console.log(callback.toString());
+        if (argv.busDetail) logger.debug(callback.toString());
         await callback.apply(this, args);
     }
 }

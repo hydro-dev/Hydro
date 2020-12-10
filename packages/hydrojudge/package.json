@@ -6,17 +6,17 @@
     "author": "masnn",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
-        "adm-zip": "^0.4.16",
+        "adm-zip": "^0.5.1",
         "axios": "^0.21.0",
-        "bson": "^4.1.0",
+        "bson": "^4.2.2",
         "fs-extra": "^9.0.1",
-        "js-yaml": "^3.14.0",
+        "js-yaml": "^3.14.1",
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
         "supports-color": "^8.0.0",
-        "systeminformation": "^4.30.6",
-        "yargs": "^16.1.1"
+        "systeminformation": "^4.31.0",
+        "yargs": "^16.2.0"
     },
     "peerDependencies": {
         "hydrooj": "^2.13.3"

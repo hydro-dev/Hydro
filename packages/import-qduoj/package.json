@@ -7,12 +7,12 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "adm-zip": "^0.4.16",
+        "adm-zip": "^0.5.1",
         "decode-html": "^2.0.0",
         "fs-extra": "^9.0.1"
     },
     "devDependencies": {
-        "bson": "^4.1.0"
+        "bson": "^4.2.2"
     },
     "peerDependencies": {
         "hydrooj": "^2.14.0"

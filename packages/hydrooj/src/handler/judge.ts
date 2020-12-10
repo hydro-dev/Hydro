@@ -1,6 +1,7 @@
 import { ObjectID } from 'mongodb';
 import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import { sleep } from '../utils';
+import { Logger } from '../logger';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
@@ -11,6 +12,8 @@ import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler,
 } from '../service/server';
+
+const logger = new Logger('judge');
 
 async function _postJudge(rdoc: Rdoc) {
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
@@ -135,7 +138,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        console.log(msg);
+        logger.info('%o', msg);
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
             await end({ judger: this.user._id, ...msg });

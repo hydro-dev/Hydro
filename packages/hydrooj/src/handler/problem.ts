@@ -11,6 +11,7 @@ import { streamToBuffer } from '../utils';
 import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
+import { Logger } from '../logger';
 import paginate from '../lib/paginate';
 import { isTitle, isContent, isPid } from '../lib/validator';
 import { ProblemAdd } from '../lib/ui';
@@ -28,6 +29,7 @@ import {
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? parseInt(value, 10) : value);
+const logger = new Logger('problem');
 
 export class ProblemHandler extends Handler {
     async __prepare() {
@@ -226,6 +228,7 @@ export class ProblemDetailHandler extends ProblemHandler {
     async postRejudge(domainId: string, pid: number) {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         // TODO maybe async?
+        console.log(await record.getMulti(domainId, { pid }).count());
         await record.getMulti(domainId, { pid }).forEach(async (doc) => {
             await record.reset(domainId, doc._id, true);
             await record.judge(domainId, doc._id, -1);

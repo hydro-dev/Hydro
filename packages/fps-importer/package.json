@@ -7,14 +7,14 @@
     "author": "undefined <masnn0@outlook.com>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "adm-zip": "^0.4.16",
+        "adm-zip": "^0.5.1",
         "decode-html": "^2.0.0",
         "fs-extra": "^9.0.1",
         "xml2js": "^0.4.23"
     },
     "devDependencies": {
         "@types/xml2js": "^0.4.7",
-        "bson": "^4.1.0"
+        "bson": "^4.2.2"
     },
     "peerDependencies": {
         "hydrooj": "^2.14.0"

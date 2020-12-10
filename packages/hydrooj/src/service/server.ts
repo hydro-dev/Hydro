@@ -443,9 +443,9 @@ export class Handler {
             res = router.url(name, args, { query });
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
-            console.error(e.message);
-            console.log(name, args);
-            console.log(e.stack);
+            logger.warn(e.message);
+            logger.info('%s %o', name, args);
+            logger.info('%s', e.stack);
         }
         return res;
     }
@@ -790,8 +790,8 @@ export class ConnectionHandler {
             res = router.url(name, args, { query });
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
-            console.error(e.message);
-            console.log(name, args);
+            logger.error(e.message);
+            logger.info(name, args);
         }
         return res;
     }
@@ -877,7 +877,7 @@ export function Connection(
                 if (h.finish) await h.finish(args);
             });
         } catch (e) {
-            logger.warn(e);
+            logger.warn('%o', e);
             await h.onerror(e);
         }
     });
