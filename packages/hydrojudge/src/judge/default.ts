@@ -22,7 +22,6 @@ function judgeCase(c, sid) {
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || (ctxSubtask.subtask.if && ctx.failed[sid])) {
             ctx.next({
-                status: STATUS.STATUS_JUDGING,
                 case: {
                     status: STATUS.STATUS_CANCELED,
                     score: 0,
@@ -87,7 +86,6 @@ function judgeCase(c, sid) {
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({
-            status: STATUS.STATUS_JUDGING,
             case: {
                 status,
                 score: 0,
