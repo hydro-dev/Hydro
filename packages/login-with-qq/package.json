@@ -3,7 +3,7 @@
     "version": "0.0.4",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
-    "author": "undefined <masnn0@outlook.com>",
+    "author": "undefined <i@undefined.moe>",
     "license": "MIT",
     "scripts": {
         "lint": "eslint lib.ts service.ts --fix",

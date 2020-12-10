@@ -4,7 +4,7 @@
     "description": "Enhance Problem Search",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
-    "author": "undefined <masnn0@outlook.com>",
+    "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "dependencies": {
         "nodejieba": "^2.5.1"

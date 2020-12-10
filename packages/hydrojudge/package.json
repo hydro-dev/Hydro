@@ -3,7 +3,7 @@
     "bin": "bin/hydrojudge.js",
     "version": "2.1.34",
     "main": "package.json",
-    "author": "masnn",
+    "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "adm-zip": "^0.5.1",

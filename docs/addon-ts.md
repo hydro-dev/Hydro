@@ -15,7 +15,7 @@ question version (1.0.0): 0.0.1
 question description: HydroOJ的剪贴板组件
 question entry point (index.js): package.json
 question repository url: https://github.com/hydro-dev/pastebin.git
-question author: undefined <masnn0@outlook.com>
+question author: undefined <i@undefined.moe>
 question license (MIT): MIT
 question private:
 success Saved package.json

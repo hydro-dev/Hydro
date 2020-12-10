@@ -3,7 +3,7 @@
     "version": "1.1.16",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
-    "author": "undefined <masnn0@outlook.com>",
+    "author": "undefined <i@undefined.moe>",
     "license": "MIT",
     "dependencies": {
         "maxmind": "^4.3.1"
