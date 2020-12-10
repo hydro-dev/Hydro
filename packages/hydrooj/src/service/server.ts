@@ -614,8 +614,10 @@ export class Handler {
 
     async onerror(error: HydroError) {
         if (!error.msg) error.msg = () => error.message;
-        console.error(error.msg(), error.params);
-        console.error(error.stack);
+        if (!(error instanceof NotFoundError)) {
+            console.error(error.msg(), error.params);
+            console.error(error.stack);
+        }
         this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
         this.response.body = {
@@ -805,7 +807,7 @@ export class ConnectionHandler {
     async message(message: any) { } // eslint-disable-line
 
     onerror(err: HydroError) {
-        console.error(err);
+        if (!(err instanceof NotFoundError)) console.error(err);
         this.send({
             error: {
                 name: err.name,

@@ -331,13 +331,20 @@ export async function incStatus<T extends keyof DocStatusType>(
 
 export async function revPushStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
-    key: ArrayKeys<DocStatusType[T]>, value: any,
+    key: ArrayKeys<DocStatusType[T]>, value: any, id = '_id',
 ): Promise<DocStatusType[T]> {
-    const res = await collStatus.findOneAndUpdate(
-        { domainId, docType, docId, uid },
-        { $push: { [key]: value }, $inc: { rev: 1 } },
-        { upsert: true, returnOriginal: false },
+    let res = await collStatus.findOneAndUpdate(
+        { domainId, docType, docId, uid, [`${key}.${id}`]: value[id] },
+        { $set: { [`${key}.$`]: value }, $inc: { rev: 1 } },
+        { returnOriginal: false },
     );
+    if (!res.value) {
+        res = await collStatus.findOneAndUpdate(
+            { domainId, docType, docId, uid },
+            { $push: { [key]: value }, $inc: { rev: 1 } },
+            { upsert: true, returnOriginal: false },
+        );
+    }
     return res.value;
 }
 

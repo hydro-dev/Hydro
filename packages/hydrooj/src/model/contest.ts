@@ -404,7 +404,7 @@ export async function updateStatus(
     const tdoc = await get(domainId, tid, type);
     const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
         rid, pid, accept, score,
-    });
+    }, 'rid');
     if (!tsdoc.attend) throw new ContestNotAttendedError(tid, uid);
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
