@@ -1,7 +1,7 @@
 import { SYSTEM_SETTINGS } from './setting';
 import { NumberKeys } from '../typeutils';
 import { SystemKeys } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 
 const coll = db.collection('system');
@@ -56,16 +56,17 @@ export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
     return res.value.value;
 }
 
-(async () => {
+export async function runConfig() {
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) cache[setting.key] = setting.value;
     }
     const config = await coll.find({}).toArray();
     for (const i of config) cache[i._id] = i.value;
     bus.emit('database/config');
-})();
+}
 
 global.Hydro.model.system = {
+    runConfig,
     get,
     getMany,
     inc,

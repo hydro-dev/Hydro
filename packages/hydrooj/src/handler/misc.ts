@@ -5,7 +5,7 @@ import { PRIV } from '../model/builtin';
 import * as system from '../model/system';
 import * as file from '../model/file';
 import * as user from '../model/user';
-import * as db from '../service/db';
+import db from '../service/db';
 import {
     Route, Handler, Types, param,
 } from '../service/server';

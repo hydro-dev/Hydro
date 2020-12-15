@@ -1,6 +1,6 @@
 import { OpcountExceededError } from '../error';
 import * as bus from '../service/bus';
-import * as db from '../service/db';
+import db from '../service/db';
 
 const coll = db.collection('opcount');
 

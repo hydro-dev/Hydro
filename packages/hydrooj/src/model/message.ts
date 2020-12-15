@@ -1,7 +1,7 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import * as user from './user';
 import { Mdoc } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 
 const coll = db.collection('message');

@@ -4,7 +4,7 @@ import * as document from '../model/document';
 import * as discussion from '../model/discussion';
 import * as user from '../model/user';
 import * as blacklist from '../model/blacklist';
-import * as db from '../service/db';
+import db from '../service/db';
 
 export const description = 'Add blacklist by ip, uid';
 

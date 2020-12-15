@@ -27,6 +27,7 @@ module.exports = {
         'import/no-named-as-default-member': 'off',
         'import/prefer-default-export': 'off',
         indent: ['warn', 4],
+        'lines-between-class-members': ['error', 'always', { 'exceptAfterSingleLine': true }],
         'max-classes-per-file': 'off',
         'max-len': ['warn', 150],
         'no-bitwise': 'off',

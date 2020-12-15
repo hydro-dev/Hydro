@@ -2,7 +2,7 @@ import cluster from 'cluster';
 import crypto from 'crypto';
 import axios from 'axios';
 import { safeDump } from 'js-yaml';
-import * as db from './db';
+import db from './db';
 import * as bus from './bus';
 import * as sysinfo from '../lib/sysinfo';
 

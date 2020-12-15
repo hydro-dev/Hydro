@@ -8,7 +8,9 @@ import { argv } from 'yargs';
 import { builtinModel } from './common';
 import { Entry } from '../loader';
 import { Logger } from '../logger';
+import options from '../options';
 import * as bus from '../service/bus';
+import db from '../service/db';
 
 const logger = new Logger('entry/master');
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
@@ -48,13 +50,9 @@ export async function load(call: Entry) {
     bus.once('app/exit', () => {
         fs.removeSync(lockfile);
     });
-    await new Promise((resolve) => {
-        bus.once('database/connect', () => {
-            bus.once('database/config', resolve);
-            require('../model/system');
-        });
-        require('../service/db');
-    });
+    const opts = options();
+    await db.start(opts);
+    await require('../model/system').runConfig();
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const modelSystem = require('../model/system');

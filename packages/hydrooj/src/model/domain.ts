@@ -3,7 +3,7 @@ import { FilterQuery } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
 import * as bus from '../service/bus';
-import * as db from '../service/db';
+import db from '../service/db';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');

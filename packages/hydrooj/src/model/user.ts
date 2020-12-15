@@ -9,7 +9,7 @@ import { User as _User, Udoc, Udict } from '../interface';
 import { Value } from '../typeutils';
 import { Logger } from '../logger';
 import pwhash from '../lib/hash.hydro';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 
 const coll: Collection<Udoc> = db.collection('user');

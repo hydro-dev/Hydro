@@ -4,7 +4,9 @@ import {
     locale, template, lib, service, model, handler, script, setting, uistatic,
     builtinLib, builtinScript, builtinHandler, builtinModel,
 } from './common';
+import options from '../options';
 import * as bus from '../service/bus';
+import db from '../service/db';
 
 export async function load() {
     const pending = global.addons;
@@ -19,12 +21,11 @@ export async function load() {
         template(pending, fail),
         uistatic(pending, fail),
     ]);
+    const opts = options();
+    await db.start(opts);
     await new Promise((resolve) => {
-        bus.once('database/connect', () => {
-            bus.once('database/config', resolve);
-            require('../model/system');
-        });
-        require('../service/db');
+        bus.once('database/config', resolve);
+        require('../model/system');
     });
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);

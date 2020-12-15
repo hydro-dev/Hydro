@@ -1,5 +1,5 @@
 import { TokenDoc } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 
 export const coll = db.collection('token');

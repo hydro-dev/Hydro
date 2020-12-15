@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import * as domain from './model/domain';
 import * as document from './model/document';
-import { db } from './service/db';
+import db from './service/db';
 
 type UpgradeScript = () => Promise<void>;
 

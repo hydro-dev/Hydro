@@ -8,7 +8,7 @@ import {
 } from '../interface';
 import { buildProjection } from '../utils';
 import { NumberKeys, ArrayKeys, Projection } from '../typeutils';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 import { Content } from '../loader';
 

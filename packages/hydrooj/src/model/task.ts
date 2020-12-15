@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Task } from '../interface';
 import { Logger } from '../logger';
-import * as db from '../service/db';
+import db from '../service/db';
 
 const logger = new Logger('model/task');
 const coll = db.collection('task');

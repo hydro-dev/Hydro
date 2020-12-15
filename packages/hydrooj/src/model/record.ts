@@ -8,7 +8,7 @@ import * as problem from './problem';
 import {
     Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 
 export const coll: Collection<Rdoc> = db.collection('record');
 

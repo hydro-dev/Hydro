@@ -1,6 +1,6 @@
 import Lru from 'lru-cache';
 import { Collection } from 'mongodb';
-import * as db from '../service/db';
+import db from '../service/db';
 
 interface OauthMap {
     _id: string, // source openId

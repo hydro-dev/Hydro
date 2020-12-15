@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { OplogDoc } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 
 export const coll = db.collection('oplog');
 

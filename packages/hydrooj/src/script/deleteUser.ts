@@ -4,7 +4,7 @@ import { Value } from '../typeutils';
 import * as user from '../model/user';
 import * as document from '../model/document';
 import * as setting from '../model/setting';
-import * as db from '../service/db';
+import db from '../service/db';
 import paginate from '../lib/paginate';
 import { STATUS, PRIV } from '../model/builtin';
 

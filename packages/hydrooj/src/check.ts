@@ -3,7 +3,7 @@
 import os from 'os';
 import { Dictionary } from 'lodash';
 import * as system from './model/system';
-import * as db from './service/db';
+import db from './service/db';
 
 const c = {};
 

@@ -1,4 +1,4 @@
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 
 const coll = db.collection('blacklist');

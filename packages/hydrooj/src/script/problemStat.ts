@@ -1,4 +1,4 @@
-import * as db from '../service/db';
+import db from '../service/db';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
 

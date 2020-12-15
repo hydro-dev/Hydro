@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { Dictionary } from 'lodash';
 import { ForbiddenError, NotFoundError } from '../error';
 import { Ufdoc } from '../interface';
-import * as db from '../service/db';
+import db from '../service/db';
 import * as bus from '../service/bus';
 import gridfs from '../service/gridfs';
 import hash from '../lib/hash.hydro';

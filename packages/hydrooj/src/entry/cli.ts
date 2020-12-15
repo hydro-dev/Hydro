@@ -5,7 +5,9 @@ import {
     lib, service, model,
     builtinLib, builtinModel,
 } from './common';
+import options from '../options';
 import * as bus from '../service/bus';
+import db from '../service/db';
 
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
@@ -52,10 +54,8 @@ export async function load() {
     require('../utils');
     require('../error');
     require('../options');
-    await new Promise((resolve) => {
-        bus.once('database/connect', resolve);
-        require('../service/db');
-    });
+    const opts = options();
+    await db.start(opts);
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);
     require('../service/gridfs');

@@ -537,6 +537,7 @@ export interface Service {
     fs: HydroFileSystem,
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
+    storage: typeof import('./service/storage'),
 }
 
 interface GeoIP {
