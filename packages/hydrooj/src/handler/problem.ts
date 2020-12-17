@@ -1,11 +1,11 @@
 import { isSafeInteger, flatten, pick } from 'lodash';
 import yaml from 'js-yaml';
+import fs from 'fs-extra';
 import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import {
-    NoProblemError, ProblemDataNotFoundError, BadRequestError,
+    NoProblemError, BadRequestError, PermissionError,
     SolutionNotFoundError, ProblemNotFoundError, ValidationError,
-    PermissionError,
 } from '../error';
 import { streamToBuffer } from '../utils';
 import {
@@ -14,13 +14,13 @@ import {
 import paginate from '../lib/paginate';
 import { isTitle, isContent, isPid } from '../lib/validator';
 import { ProblemAdd } from '../lib/ui';
-import * as file from '../model/file';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as domain from '../model/domain';
 import * as user from '../model/user';
 import * as solution from '../model/solution';
 import { PERM, PRIV, CONSTANT } from '../model/builtin';
+import storage from '../service/storage';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, Types, param, post, route,
@@ -239,13 +239,15 @@ export class ProblemExportHandler extends ProblemDetailHandler {
         const hasPerm = (this.user._id === this.pdoc.owner && this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF))
             || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
         const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
-        let zip: AdmZip;
+        const zip = new AdmZip();
         if (hasPerm) {
-            if (this.pdoc.data instanceof ObjectID) {
-                const buf = await streamToBuffer(await file.get(this.pdoc.data));
-                zip = new AdmZip(buf);
-            } else zip = new AdmZip();
-        } else zip = new AdmZip();
+            const files = await storage.list(`problem/${this.domainId}/${this.pdoc.docId}/`, true);
+            for (const file of files) {
+                // eslint-disable-next-line no-await-in-loop
+                const buf = await streamToBuffer(storage.get(`${file.prefix}${file.name}`));
+                zip.addFile(file.name, buf);
+            }
+        }
         zip.addFile('problem.json', Buffer.from(JSON.stringify(pdoc)));
         this.response.attachment(`${this.pdoc.title}.zip`, zip.toBuffer());
     }
@@ -447,59 +449,67 @@ export class ProblemEditHandler extends ProblemManageHandler {
     }
 }
 
-export class ProblemDataUploadHandler extends ProblemManageHandler {
-    async get() {
-        if (this.pdoc.data instanceof ObjectID) {
-            const f = await file.getMeta(this.pdoc.data);
-            this.response.body.md5 = f.md5;
-        } else if (this.pdoc.data) {
-            this.response.body.from = this.pdoc.data;
-        }
-        this.response.template = 'problem_upload.html';
+export class ProblemFilesHandler extends ProblemDetailHandler {
+    @param('testdata', Types.Boolean)
+    @param('additional_file', Types.Boolean)
+    async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
+        const [testdata, additional_file] = await Promise.all([
+            getTestdata
+                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata`, true)
+                : [],
+            getAdditionalFile
+                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file`, true)
+                : [],
+        ]);
+        this.response.body.testdata = testdata;
+        this.response.body.additional_file = additional_file;
+        this.response.template = 'problem_files.html';
     }
 
-    async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
-        this.pdoc = await problem.setTestdata(
-            domainId, this.pdoc.docId, this.request.files.file.path,
-        );
-        if (this.pdoc.data instanceof ObjectID) {
-            const f = await file.getMeta(this.pdoc.data);
-            this.response.body.md5 = f.md5;
-        }
-        this.response.template = 'problem_upload.html';
-    }
-}
-
-export class ProblemDataDownloadHandler extends ProblemDetailHandler {
-    async get({ pid }) {
-        if (!this.user.hasPriv(PRIV.PRIV_JUDGE)) {
+    @post('files', Types.Array)
+    @post('type', Types.Range(['testdata', 'additional_file']), true)
+    async postGetLinks(domainId: string, files: string[], type = 'testdata') {
+        const isJudge = this.user.hasPriv(PRIV.PRIV_JUDGE);
+        if (type === 'testdata' && !isJudge) {
             if (this.user._id !== this.pdoc.owner) {
                 this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
             } else this.checkPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
         }
-        if (this.pdoc.data instanceof ObjectID) {
-            this.response.redirect = await file.url(this.pdoc.data, `${this.pdoc.title}.zip`);
-        } else if (this.pdoc.data) {
-            if (!this.pdoc.data.host) {
-                this.response.redirect = this.url('problem_data', {
-                    domainId: this.pdoc.data.domainId,
-                    pid: this.pdoc.data.pid,
-                });
-            } else {
-                const [scheme, raw] = this.pdoc.data.host.split('//');
-                const args = JSON.parse(Buffer.from(raw, 'base64').toString());
-                if (scheme === 'hydro') {
-                    const [secure, host, port, domainId, id] = args;
-                    this.response.redirect = `http${secure ? 's' : ''}://${host}:${port}/d/${domainId}/p/${id}/data`;
-                } else if (scheme === 'syzoj') {
-                    const [secure, host, port, id] = args;
-                    this.response.redirect = `http${secure ? 's' : ''}://${host}:${port}/problem/${id}/testdata/download`;
-                } else {
-                    throw new ProblemDataNotFoundError(pid);
-                }
+        const links = {};
+        for (const file of files) {
+            // eslint-disable-next-line no-await-in-loop
+            links[file] = await storage.signDownloadLink(
+                `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`,
+                file, false, isJudge ? 'judge' : 'user',
+            );
+        }
+        this.response.body.links = links;
+    }
+
+    @post('filename', Types.String)
+    @post('type', Types.String, true)
+    async postUploadFile(domainId: string, filename: string, type = 'testdata') {
+        if (!this.request.files.file) throw new ValidationError('file');
+        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
+        if (filename === 'testdata.zip') {
+            const zip = new AdmZip(this.request.files.file.path);
+            const entries = zip.getEntries();
+            for (const entry of entries) {
+                // eslint-disable-next-line no-await-in-loop
+                await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${entry.name}`, entry.getData());
             }
-        } else throw new ProblemDataNotFoundError(pid);
+        } else await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`, this.request.files.file.path);
+        this.back();
+    }
+
+    @post('files', Types.Array)
+    @post('type', Types.Range(['testdata', 'additional_file']), true)
+    async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
+        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
+        await storage.del(files.map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`));
+        this.back();
     }
 }
 
@@ -611,23 +621,18 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
 
 export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     @param('psid', Types.ObjectID)
-    async get(domainId: string, psid: ObjectID) {
+    @route('psrid', Types.ObjectID, true)
+    async get(domainId: string, psid: ObjectID, psrid?: ObjectID) {
         this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
-        const psdoc = await solution.get(domainId, psid);
+        if (psrid) {
+            const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
+            if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid, psrid);
+            this.response.body = psrdoc.content;
+        } else {
+            const psdoc = await solution.get(domainId, psid);
+            this.response.body = psdoc.content;
+        }
         this.response.type = 'text/markdown';
-        this.response.body = psdoc.content;
-    }
-}
-
-export class ProblemSolutionReplyRawHandler extends ProblemDetailHandler {
-    @param('psid', Types.ObjectID)
-    @param('psrid', Types.ObjectID)
-    async get(domainId: string, psid: ObjectID, psrid: ObjectID) {
-        this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
-        const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
-        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid, psrid);
-        this.response.type = 'text/markdown';
-        this.response.body = psrdoc.content;
     }
 }
 
@@ -662,21 +667,26 @@ export class ProblemCreateHandler extends Handler {
 }
 
 export class ProblemImportHandler extends Handler {
-    @param('ufid', Types.ObjectID, true)
-    async get(domainId: string, ufid?: ObjectID) {
-        if (ufid) {
-            const stat = await file.getMeta(ufid);
-            if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');
-            const stream = await file.get(ufid);
-            const buf = await streamToBuffer(stream);
-            const zip = new AdmZip(buf);
-            const pdoc = JSON.parse(zip.getEntry('problem.json').getData().toString());
-            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tags, pdoc.category);
-            await problem.setTestdata(domainId, pid, buf);
-            await problem.edit(domainId, pid, { html: pdoc.html });
-            this.response.redirect = this.url('problem_detail', { pid });
-            await file.del(ufid);
-        } else this.response.template = 'problem_import.html';
+    async get() {
+        this.response.template = 'problem_import.html';
+    }
+
+    async post(domainId: string) {
+        if (!this.request.files.file) throw new ValidationError('file');
+        const stat = await fs.stat(this.request.files.file.path);
+        if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');
+        const zip = new AdmZip(this.request.files.file.path);
+        const pdoc = JSON.parse(zip.getEntry('problem.json').getData().toString());
+        const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tags, pdoc.category);
+        const entries = zip.getEntries();
+        for (const entry of entries) {
+            if (entry.name.startsWith('testdata/') || entry.name.startsWith('additional_file')) {
+                // eslint-disable-next-line no-await-in-loop
+                await storage.put(`problem/${domainId}/${pid}/${entry.name}`, entry.getData());
+            }
+        }
+        await problem.edit(domainId, pid, { html: pdoc.html });
+        this.response.redirect = this.url('problem_detail', { pid });
     }
 }
 
@@ -692,11 +702,10 @@ export async function apply() {
     Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);
     Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
-    Route('problem_upload', '/p/:pid/upload', ProblemDataUploadHandler);
-    Route('problem_data', '/p/:pid/data', ProblemDataDownloadHandler);
+    Route('problem_files', '/p/:pid/files', ProblemFilesHandler);
     Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler);
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
-    Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionReplyRawHandler);
+    Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler);

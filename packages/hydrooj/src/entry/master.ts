@@ -11,6 +11,7 @@ import { Logger } from '../logger';
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import storage from '../service/storage';
 
 const logger = new Logger('entry/master');
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
@@ -52,16 +53,25 @@ export async function load(call: Entry) {
     });
     const opts = options();
     await db.start(opts);
-    await require('../model/system').runConfig();
+    const modelSystem = require('../model/system');
+    await modelSystem.runConfig();
+    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
+        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
+        'file.endPointForUser', 'file.endPointForJudge',
+    ]);
+    const sopts = {
+        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
+    };
+    await storage.start(sopts);
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
-    const modelSystem = require('../model/system');
     const scripts = require('../upgrade');
     let dbVer = (await modelSystem.get('db.ver')) ?? 0;
     const expected = scripts.length;
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
-        await scripts[dbVer]();
+        const result = await scripts[dbVer]();
+        if (!result) break;
         dbVer++;
         await modelSystem.set('db.ver', dbVer);
     }

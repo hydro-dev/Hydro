@@ -1,41 +1,88 @@
 import { Readable } from 'stream';
-import Minio, { BucketItem, ItemBucketMetadata } from 'minio';
+import { URL } from 'url';
+import { Client, BucketItem, ItemBucketMetadata } from 'minio';
 
 interface StorageOptions {
-    host?: string,
-    port?: number,
-    useSSL?: boolean,
-    accessKey?: string,
-    secretKey?: string,
-    bucket?: string,
-    region?: string,
+    endPoint: string;
+    accessKey: string;
+    secretKey: string;
+    bucket: string;
+    region?: string;
+    endPointForUser?: string;
+    endPointForJudge?: string;
 }
 
-const defaultConfig: StorageOptions = {
-    host: 'play.min.io',
-    port: 9000,
-    useSSL: true,
-    accessKey: 'Q3AM3UQ867SPQQA43P2F',
-    secretKey: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG',
-    bucket: 'hydro',
-    region: 'us-east-1',
-};
+interface MinioEndpointConfig {
+    endPoint: string;
+    port: number;
+    useSSL: boolean;
+}
+
+function parseMainEndpointUrl(endpoint: string): MinioEndpointConfig {
+    const url = new URL(endpoint);
+    const result: Partial<MinioEndpointConfig> = {};
+    if (url.pathname !== '/') throw new Error('Main MinIO endpoint URL of a sub-directory is not supported.');
+    if (url.username || url.password || url.hash || url.search) {
+        throw new Error('Authorization, search parameters and hash are not supported for main MinIO endpoint URL.');
+    }
+    if (url.protocol === 'http:') result.useSSL = false;
+    else if (url.protocol === 'https:') result.useSSL = true;
+    else {
+        throw new Error(
+            `Invalid protocol "${url.protocol}" for main MinIO endpoint URL. Only HTTP and HTTPS are supported.`,
+        );
+    }
+    result.endPoint = url.hostname;
+    result.port = url.port ? Number(url.port) : result.useSSL ? 443 : 80;
+    return result as MinioEndpointConfig;
+}
+function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) => string {
+    if (!endpoint) return (originalUrl) => originalUrl;
+    const url = new URL(endpoint);
+    if (url.hash || url.search) throw new Error('Search parameters and hash are not supported for alternative MinIO endpoint URL.');
+    if (!url.pathname.endsWith('/')) throw new Error("Alternative MinIO endpoint URL's pathname must ends with '/'.");
+    return (originalUrl) => {
+        const parsedOriginUrl = new URL(originalUrl);
+        return new URL(parsedOriginUrl.pathname.slice(1) + parsedOriginUrl.search + parsedOriginUrl.hash, url).toString();
+    };
+}
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+function encodeRFC5987ValueChars(str: string) {
+    return (
+        encodeURIComponent(str)
+            // Note that although RFC3986 reserves "!", RFC5987 does not,
+            // so we do not need to escape it
+            .replace(/['()]/g, escape) // i.e., %27 %28 %29
+            .replace(/\*/g, '%2A')
+            // The following are not required for percent-encoding per RFC5987,
+            // so we can allow for a little better readability over the wire: |`^
+            .replace(/%(?:7C|60|5E)/g, unescape)
+    );
+}
 
 class StorageService {
-    public client: Minio.Client;
+    public client: Client;
+    public error = '';
     private opts: StorageOptions;
+    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
 
     async start(opts: StorageOptions) {
-        this.opts = { ...defaultConfig, ...opts };
-        this.client = new Minio.Client({
-            endPoint: this.opts.host,
-            port: this.opts.port,
-            useSSL: this.opts.useSSL,
-            accessKey: this.opts.accessKey,
-            secretKey: this.opts.secretKey,
-        });
-        const exists = await this.client.bucketExists(this.opts.bucket);
-        if (!exists) await this.client.makeBucket(this.opts.bucket, this.opts.region);
+        try {
+            this.opts = opts;
+            this.client = new Client({
+                ...parseMainEndpointUrl(this.opts.endPoint),
+                accessKey: this.opts.accessKey,
+                secretKey: this.opts.secretKey,
+            });
+            const exists = await this.client.bucketExists(this.opts.bucket);
+            if (!exists) await this.client.makeBucket(this.opts.bucket, this.opts.region);
+            this.replaceWithAlternativeUrlFor = {
+                user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
+                judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),
+            };
+        } catch (e) {
+            this.error = e.toString();
+        }
     }
 
     async put(target: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
@@ -56,10 +103,32 @@ class StorageService {
         const stream = this.client.listObjects(this.opts.bucket, target, recursive);
         return await new Promise<BucketItem[]>((resolve, reject) => {
             const results: BucketItem[] = [];
-            stream.on('data', (result) => results.push(result));
+            stream.on('data', (result) => results.push({
+                ...result,
+                prefix: target,
+                name: result.name.split(target)[1],
+            }));
             stream.on('end', () => resolve(results));
             stream.on('error', reject);
         });
+    }
+
+    async getMeta(target: string) {
+        const result = await this.client.statObject(this.opts.bucket, target);
+        return { ...result.metaData, ...result };
+    }
+
+    async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+        const url = await this.client.presignedGetObject(
+            this.opts.bucket,
+            target,
+            noExpire ? 24 * 60 * 60 * 7 : 30 * 60,
+            filename
+                ? { 'response-content-disposition': `attachment; filename="${encodeRFC5987ValueChars(filename)}"` }
+                : {},
+        );
+        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+        return url;
     }
 }
 

@@ -10,7 +10,7 @@ import wtfnode from 'wtfnode';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import AdmZip from 'adm-zip';
-import { } from './utils';
+import './utils';
 
 export * from './interface';
 

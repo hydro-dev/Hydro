@@ -7,6 +7,7 @@ import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
+import storage from '../service/storage';
 import * as misc from '../lib/misc';
 import { md5 } from '../lib/crypto';
 import * as mail from '../lib/mail';
@@ -15,7 +16,6 @@ import * as message from '../model/message';
 import * as document from '../model/document';
 import * as system from '../model/system';
 import * as user from '../model/user';
-import * as file from '../model/file';
 import * as setting from '../model/setting';
 import * as domain from '../model/domain';
 import * as discussion from '../model/discussion';
@@ -383,18 +383,18 @@ class HomeFileHandler extends Handler {
             ['Hydro', 'homepage'],
             ['domain_file', null],
         ];
-        const ufdocs = await file.getMulti({ owner: this.user._id }).toArray();
+        const ufdocs = await storage.list(`user/${this.user._id}/`);
         this.response.template = 'home_file.html';
         this.response.body = { ufdocs, path };
     }
 
-    @param('ufid', Types.ObjectID)
-    async postDelete(domainId: string, ufid: ObjectID) {
-        const ufdoc = await file.getMeta(ufid);
-        if (ufdoc.owner !== this.user._id) this.checkPriv(PRIV.PRIV_DELETE_FILE);
+    @param('ufid', Types.String)
+    async postDelete(domainId: string, target: string) {
+        if (!target.startsWith(`user/${this.user._id}`)) this.checkPriv(PRIV.PRIV_DELETE_FILE);
         else this.checkPriv(PRIV.PRIV_DELETE_FILE_SELF);
-        const result = await file.del(ufdoc._id);
-        if (result) await user.inc(this.user._id, 'usage', -ufdoc.size);
+        const { size } = await storage.getMeta(target);
+        await storage.del(target);
+        await user.inc(this.user._id, 'usage', -size);
         this.back();
     }
 }

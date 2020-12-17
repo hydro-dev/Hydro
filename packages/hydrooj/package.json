@@ -33,6 +33,7 @@
         "superagent": "^6.1.0",
         "supports-color": "^8.0.0",
         "systeminformation": "^4.31.1",
+        "terminal-kit": "^1.44.0",
         "wtfnode": "^0.8.4",
         "yargs": "^16.2.0"
     },
@@ -52,6 +53,7 @@
         "@types/sockjs": "^0.3.32",
         "@types/superagent": "^4.1.8",
         "@types/supports-color": "^7.2.0",
+        "@types/terminal-kit": "^1.28.2",
         "@types/wtfnode": "^0.7.0",
         "@types/yargs": "^15.0.11"
     },

@@ -15,6 +15,7 @@ import { PERM } from '../model/builtin';
 import {
     Route, Handler, Types, param, post,
 } from '../service/server';
+import storage from '../service/storage';
 import { isPid } from '../lib/validator';
 import download from '../lib/download';
 
@@ -89,14 +90,13 @@ class ProblemImportSYZOJHandler extends Handler {
                 const urls = {};
                 if (r.body.error) return;
                 for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
-                const zip = new AdmZip();
                 for (const f of result.body.testData) {
                     const p = new PassThrough();
                     superagent.get(urls[f.filename]).pipe(p);
                     // eslint-disable-next-line no-await-in-loop
-                    zip.addFile(f.filename, await streamToBuffer(p));
+                    await storage.put(`problem/${domainId}/${docId}/testdata/${f.filename}`, p);
                 }
-                await problem.setTestdata(domainId, docId, zip.toBuffer());
+                // TODO additional_file
                 if (judge) {
                     await problem.edit(domainId, docId, {
                         config: {
@@ -182,7 +182,12 @@ class ProblemImportSYZOJHandler extends Handler {
                 w.on('error', reject);
                 r.pipe(w);
             });
-            await problem.setTestdata(domainId, docId, file);
+            const zip = new AdmZip(file);
+            const entries = zip.getEntries();
+            for (const entry of entries) {
+                // eslint-disable-next-line no-await-in-loop
+                await storage.put(`problem/${domainId}/${docId}/testdata/${entry.entryName}`, entry.getData());
+            }
             await problem.edit(domainId, docId, {
                 config: {
                     time: `${p.time_limit}ms`,

@@ -1,15 +1,12 @@
 import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary } from 'lodash';
-import { safeLoad } from 'js-yaml';
 import { STATUS } from './builtin';
-import * as file from './file';
 import * as document from './document';
 import * as domain from './domain';
 import { ProblemStatusDoc, ProblemDataSource, Pdict } from '../interface';
 import { Content } from '../loader';
 import { NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
-import * as testdataConfig from '../lib/testdataConfig';
 
 export interface Pdoc {
     _id: ObjectID
@@ -188,14 +185,6 @@ export function setStar(domainId: string, pid: number, uid: number, star: boolea
     return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
 }
 
-export async function setTestdata(domainId: string, _id: number, f: string | Buffer) {
-    const pdoc = await get(domainId, _id);
-    const config = await testdataConfig.readConfig(f);
-    const id = await file.add(f, 'data.zip', 1);
-    if (pdoc.data instanceof ObjectID) file.del(pdoc.data);
-    return await edit(domainId, _id, { data: id, config: safeLoad(config) as any });
-}
-
 global.Hydro.model.problem = {
     Pdoc,
 
@@ -218,6 +207,5 @@ global.Hydro.model.problem = {
     getListStatus,
     getMultiStatus,
     setStar,
-    setTestdata,
     updateStatus,
 };

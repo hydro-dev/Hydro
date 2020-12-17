@@ -1,28 +1,16 @@
 /* eslint-disable camelcase */
 import fs from 'fs';
-import { ObjectID } from 'mongodb';
+import { BadRequestError } from '../error';
 import { PRIV } from '../model/builtin';
 import * as system from '../model/system';
-import * as file from '../model/file';
 import * as user from '../model/user';
 import db from '../service/db';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-import { BadRequestError } from '../error';
+import storage from '../service/storage';
 
 const coll = db.collection('status');
-
-class FileDownloadHandler extends Handler {
-    @param('fileId', Types.ObjectID)
-    @param('secret', Types.String)
-    @param('name', Types.String, true)
-    async get(domainId: string, fileId: ObjectID, secret: string, name?: string) {
-        if (name) name = Buffer.from(name.replace(/~/g, '/'), 'base64').toString();
-        const doc = await file.getWithSecret(fileId, secret);
-        this.response.attachment(name || fileId.toHexString(), doc);
-    }
-}
 
 class FileUploadHandler extends Handler {
     async getQuota() {
@@ -44,15 +32,14 @@ class FileUploadHandler extends Handler {
         if (!this.request.files.file) throw new BadRequestError();
         const quota = await this.getQuota();
         const lfdoc = await fs.promises.stat(this.request.files.file.path);
-        let ufid: ObjectID;
+        const ufid = `user/${this.user._id}/${title}`;
         const udoc = await user.inc(this.user._id, 'usage', lfdoc.size);
         try {
-            ufid = await file.add(this.request.files.file.path, title, this.user._id);
+            await storage.put(ufid, this.request.files.file.path);
         } catch (e) {
             await user.inc(this.user._id, 'usage', -lfdoc.size);
             throw e;
         }
-        const fdoc = await file.getMeta(ufid);
         this.response.template = 'fs_upload.html';
         if (redirect) {
             this.response.redirect = redirect.includes('?')
@@ -60,7 +47,7 @@ class FileUploadHandler extends Handler {
                 : `${redirect}?ufid=${ufid}`;
         }
         this.response.body = {
-            fdoc, ufid, usage: udoc.usage, quota,
+            ufid, usage: udoc.usage, quota,
         };
     }
 }
@@ -138,8 +125,6 @@ class SwitchLanguageHandler extends Handler {
 }
 
 export async function apply() {
-    Route('file_download', '/fs/:fileId/:secret', FileDownloadHandler);
-    Route('file_download_with_name', '/fs/:fileId/:name/:secret', FileDownloadHandler);
     Route('file_upload', '/fs/upload', FileUploadHandler, PRIV.PRIV_CREATE_FILE);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);

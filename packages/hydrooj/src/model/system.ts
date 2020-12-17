@@ -60,7 +60,7 @@ export async function runConfig() {
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) cache[setting.key] = setting.value;
     }
-    const config = await coll.find({}).toArray();
+    const config = await coll.find().toArray();
     for (const i of config) cache[i._id] = i.value;
     bus.emit('database/config');
 }

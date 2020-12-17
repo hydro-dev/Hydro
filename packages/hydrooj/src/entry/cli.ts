@@ -8,6 +8,7 @@ import {
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import storage from '../service/storage';
 
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
@@ -56,6 +57,15 @@ export async function load() {
     require('../options');
     const opts = options();
     await db.start(opts);
+    const modelSystem = require('../model/system');
+    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
+        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
+        'file.endPointForUser', 'file.endPointForJudge',
+    ]);
+    const sopts = {
+        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
+    };
+    await storage.start(sopts);
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);
     require('../service/gridfs');

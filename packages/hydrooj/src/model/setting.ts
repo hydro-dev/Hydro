@@ -120,6 +120,13 @@ DomainUserSetting(
 );
 
 SystemSetting(
+    Setting('setting_file', 'file.endPoint', null, null, 'text', 'Storage engine endPoint'),
+    Setting('setting_file', 'file.accessKey', null, null, 'text', 'Storage engine accessKey'),
+    Setting('setting_file', 'file.secretKey', null, null, 'password', 'Storage engine secret', null, FLAG_SECRET),
+    Setting('setting_file', 'file.bucket', null, 'hydro', 'text', 'Storage engine bucket'),
+    Setting('setting_file', 'file.region', null, 'us-east-1', 'text', 'Storage engine region'),
+    Setting('setting_file', 'file.endPointForUser', null, null, 'text', 'EndPoint for user'),
+    Setting('setting_file', 'file.endPointForJudge', null, null, 'text', 'EndPoint for judge'),
     Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
     Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password', null, FLAG_SECRET),
     Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),

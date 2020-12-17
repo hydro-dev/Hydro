@@ -12,6 +12,13 @@ export interface System {
 }
 
 export interface SystemKeys {
+    'file.endPoint': string,
+    'file.accessKey': string,
+    'file.secretKey': string,
+    'file.bucket': string,
+    'file.region': string,
+    'file.endPointForUser': string,
+    'file.endPointForJudge': string,
     'smtp.user': string,
     'smtp.from': string,
     'smtp.pass': string,
@@ -515,7 +522,6 @@ export interface Model {
     discussion: typeof import('./model/discussion'),
     document: typeof import('./model/document'),
     domain: typeof import('./model/domain'),
-    file: typeof import('./model/file'),
     message: typeof import('./model/message'),
     opcount: typeof import('./model/opcount'),
     problem: typeof import('./model/problem'),
