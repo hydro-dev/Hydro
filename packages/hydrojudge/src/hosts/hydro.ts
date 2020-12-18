@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import axios from 'axios';
-import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
 import { argv } from 'yargs';
@@ -206,45 +205,41 @@ export default class Hydro {
         setInterval(() => { this.axios.get('judge/noop'); }, 30000000);
     }
 
-    async problemDataVersion(domainId: string, pid: string) {
-        await this.ensureLogin();
-        const res = await this.axios.get(`d/${domainId}/p/${pid}`);
-        const data = res.data.pdoc?.data;
-        if (!data) throw new FormatError(`没有找到测试数据 ${domainId}/${pid}`);
-        return data;
-    }
-
-    async problemData(domainId: string, pid: string, savePath: string, retry = 3, next?) {
-        log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
-        await this.ensureLogin();
-        if (next) next({ judge_text: '正在同步测试数据，请稍后' });
-        const tmpFilePath = path.resolve(CACHE_DIR, `download_${this.config.host}_${domainId}_${pid}`);
+    async cacheOpen(domainId: string, pid: string, files: any[], next?) {
+        const domainDir = path.join(CACHE_DIR, this.config.host, domainId);
+        const filePath = path.join(domainDir, pid); await fs.ensureDir(filePath);
+        if (!files.length) throw new SystemError('Problem data not found.');
+        let etags: Record<string, string>;
         try {
-            const t = await this.axios.get(`${this.config.server_url}d/${domainId}/p/${pid}/data`);
-            const res = await this.axios.get(t.data.url, { responseType: 'stream' });
-            const w = fs.createWriteStream(tmpFilePath);
-            res.data.pipe(w);
-            await new Promise((resolve, reject) => {
-                w.on('finish', resolve);
-                w.on('error', reject);
-            });
-            fs.ensureDirSync(path.dirname(savePath));
-            const zip = new AdmZip(tmpFilePath);
-            const entries = zip.getEntries();
-            if (entries.length > 512) throw new FormatError('Too many files');
-            await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(savePath, true, (e) => {
-                    if (e) reject(e);
-                    else resolve();
-                });
-            });
-            await fs.unlink(tmpFilePath);
-            await this.processData(savePath).catch(noop);
-        } catch (e) {
-            if (retry) await this.problemData(domainId, pid, savePath, retry - 1);
-            else throw e;
+            etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
+        } catch (e) { /* ignore */ }
+        const version = {};
+        const filenames = [];
+        for (const file of files) {
+            version[file.name] = file.etag;
+            if (etags[file.name] !== file.etag) filenames.push(file.name);
         }
-        return savePath;
+        if (filenames.length) {
+            log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
+            if (next) next({ judge_text: '正在同步测试数据，请稍后' });
+            await this.ensureLogin();
+            const res = await this.axios.post(`/d/${domainId}/p/${pid}/files`, {
+                operation: 'get_links',
+                files: filenames,
+            });
+            for (const name in res.urls) {
+                const f = await this.axios.get(res.urls[name], { responseType: 'stream' });
+                const w = fs.createWriteStream(path.join(filePath, name));
+                f.data.pipe(w);
+                await new Promise((resolve, reject) => {
+                    w.on('finish', resolve);
+                    w.on('error', reject);
+                });
+            }
+            fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
+            await this.processData(filePath).catch(noop);
+        }
+        return filePath;
     }
 
     async consume(queue: Queue<any>) {
@@ -336,28 +331,6 @@ export default class Hydro {
             files = await fs.readdir(`${folder}/output`);
             for (const i of files) await fs.rename(`${folder}/output/${i}`, `${folder}/output/${i.toLowerCase()}`);
         }
-    }
-
-    async cacheOpen(domainId: string, pid: string, next) {
-        const domainDir = path.join(CACHE_DIR, this.config.host, domainId);
-        const filePath = path.join(domainDir, pid);
-        const version = await this.problemDataVersion(domainId, pid);
-        if (fs.existsSync(filePath)) {
-            let ver;
-            try {
-                ver = fs.readFileSync(path.join(filePath, 'version')).toString();
-            } catch (e) { /* ignore */ }
-            if (version === ver) {
-                log.debug('Cache found at %s', filePath);
-                return filePath;
-            }
-            fs.removeSync(filePath);
-        }
-        log.debug('Downloading testdata to %s', filePath);
-        fs.ensureDirSync(domainDir);
-        await this.problemData(domainId, pid, filePath, 3, next);
-        fs.writeFileSync(path.join(filePath, 'version'), version);
-        return filePath;
     }
 
     async retry(queue: Queue<any>) {

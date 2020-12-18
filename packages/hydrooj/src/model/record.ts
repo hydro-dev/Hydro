@@ -9,6 +9,7 @@ import {
     Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
 import db from '../service/db';
+import storage from '../service/storage';
 
 export const coll: Collection<Rdoc> = db.collection('record');
 
@@ -57,11 +58,11 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
 export async function judge(domainId: string, rid: ObjectID, priority = 1) {
     const rdoc = await get(domainId, rid);
     let config: RunConfig | ProblemConfig = rdoc.config;
-    let data;
+    let data = [];
     if (rdoc.pid) {
         const pdoc = await problem.get(domainId, rdoc.pid);
+        data = await storage.list(`problem/${domainId}/${rdoc.pid}/testdata/`);
         if (!config) config = pdoc?.config || {};
-        data = pdoc?.data;
     }
     delete rdoc._id;
     await task.add({

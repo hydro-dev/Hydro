@@ -6,7 +6,6 @@ import { argv } from 'yargs';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import { homedir, tmpdir } from 'os';
-import AdmZip from 'adm-zip';
 import { noop } from 'lodash';
 import { Logger } from 'hydrooj/dist/logger';
 import * as monitor from 'hydrooj/dist/service/monitor';
@@ -30,7 +29,8 @@ async function postInit() {
     const judge = require('./judge');
     const sysinfo = require('./sysinfo');
 
-    const { problem, file, task } = global.Hydro.model;
+    const { task } = global.Hydro.model;
+    const { storage } = global.Hydro.service;
     const _judge = global.Hydro.handler.judge as any;
 
     const info = await sysinfo.get();
@@ -62,51 +62,23 @@ async function postInit() {
         }
     }
 
-    async function problemData(domainId: string, pid: string, savePath: string) {
-        const tmpFilePath = path.resolve(homedir(), '.cache', 'hydro', 'judge', `download_${domainId}_${pid}`);
-        const pdoc = await problem.get(domainId, pid);
-        // FIXME doesnt work on copied problems
-        // @ts-ignore
-        const data = await file.get(pdoc.data);
-        if (!data) throw new SystemError('Problem data not found.');
-        const w = fs.createWriteStream(tmpFilePath);
-        data.pipe(w);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', reject);
-        });
-        fs.ensureDirSync(path.dirname(savePath));
-        const zip = new AdmZip(tmpFilePath);
-        const entries = zip.getEntries();
-        if (entries.length > 512) throw new FormatError('Too many files.');
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(savePath, true, (e) => {
-                if (e) reject(e);
-                else resolve();
-            });
-        });
-        await fs.unlink(tmpFilePath);
-        await processData(savePath).catch(noop);
-        return savePath;
-    }
-
-    async function cacheOpen(domainId: string, pid: string, version: string) {
+    async function cacheOpen(domainId: string, pid: string, files: any[]) {
         const filePath = path.join(homedir(), '.cache', 'hydro', 'judge', domainId, pid);
-        if (fs.existsSync(filePath)) {
-            let ver: string;
-            try {
-                ver = fs.readFileSync(path.join(filePath, 'version')).toString();
-            } catch (e) { /* ignore */ }
-            if (version === ver) {
-                logger.debug('Cache found at %s', filePath);
-                return filePath;
+        await fs.ensureDir(filePath);
+        if (!files.length) throw new SystemError('Problem data not found.');
+        let etags: Record<string, string>;
+        try {
+            etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
+        } catch (e) { /* ignore */ }
+        const version = {};
+        for (const file of files) {
+            version[file.name] = file.etag;
+            if (etags[file.name] !== file.etag) {
+                await storage.get(`${file.prefix}${file.name}`, path.join(filePath, file.name));
             }
-            await fs.remove(filePath);
         }
-        logger.debug('Downloading testdata to %s', filePath);
-        fs.ensureDirSync(filePath);
-        await problemData(domainId, pid, filePath);
-        fs.writeFileSync(path.join(filePath, 'version'), version);
+        fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
+        await processData(filePath).catch(noop);
         return filePath;
     }
 
@@ -181,7 +153,7 @@ async function postInit() {
 
         code: string;
 
-        data: string;
+        data: any[];
 
         config: any;
 
