@@ -7,7 +7,9 @@ import * as bus from '../service/bus';
 const coll = db.collection('system');
 const cache: Record<string, any> = {};
 
-export function get<K extends keyof SystemKeys>(key: K): SystemKeys[K] {
+export function get<K extends keyof SystemKeys>(key: K): SystemKeys[K]
+export function get(key: string): any
+export function get(key: string): any {
     return cache[key];
 }
 
@@ -34,7 +36,9 @@ export function getMany(keys: string[]): any[] {
     return keys.map((key) => cache[key]);
 }
 
-export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K]) {
+export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K]): Promise<SystemKeys[K]>
+export async function set<K>(_id: string, value: K): Promise<K>
+export async function set(_id: string, value: any) {
     const res = await coll.findOneAndUpdate(
         { _id },
         { $set: { value } },

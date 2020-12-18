@@ -25,6 +25,7 @@ export async function load() {
     const opts = options();
     await db.start(opts);
     const modelSystem = require('../model/system');
+    await modelSystem.runConfig();
     const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
         'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
         'file.endPointForUser', 'file.endPointForJudge',

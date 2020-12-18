@@ -90,7 +90,8 @@ class StorageService {
         return await this.client.putObject(this.opts.bucket, target, file, meta);
     }
 
-    async get(target: string) {
+    async get(target: string, path?: string) {
+        if (path) return await this.client.fGetObject(this.opts.bucket, target, path);
         return await this.client.getObject(this.opts.bucket, target);
     }
 
