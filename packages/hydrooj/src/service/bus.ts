@@ -3,12 +3,11 @@ import cluster from 'cluster';
 import { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import { argv } from 'yargs';
 import { Logger } from '../logger';
-import {
+import type {
     Mdoc, Pdoc, Rdoc, TrainingDoc, User,
 } from '../interface';
-import { DomainDoc } from '../loader';
-
-type DocType = import('../model/document').DocType;
+import type { DomainDoc } from '../loader';
+import type { DocType } from '../model/document';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus', true);
@@ -31,6 +30,10 @@ export interface EventMap {
     'app/load/handler': () => VoidReturn
     'app/load/service': () => VoidReturn
     'app/exit': () => VoidReturn
+
+    'message/log': (message: string) => VoidReturn
+    'message/reload': (count: number) => VoidReturn
+    'message/run': (command: string) => VoidReturn
 
     'database/connect': (db: Db) => void
     'database/config': () => void
@@ -151,6 +154,24 @@ export function boardcast<K extends keyof EventMap>(event: K, ...payload: Parame
         });
     } else parallel(event, ...payload);
 }
+
+async function messageHandler(worker: cluster.Worker, msg: any) {
+    if (!msg) msg = worker;
+    if (msg.event) {
+        if (msg.event === 'bus') {
+            if (cluster.isMaster) {
+                for (const i in cluster.workers) {
+                    cluster.workers[i].send(msg);
+                }
+            } else global.Hydro.service.bus.emit(msg.eventName, ...msg.payload);
+        } else if (msg.event === 'stat') {
+            global.Hydro.stat.reqCount += msg.count;
+        } else await emit(msg.event, ...msg.payload);
+    }
+}
+
+process.on('message', messageHandler);
+cluster.on('message', messageHandler);
 
 global.Hydro.service.bus = {
     addListener, bail, boardcast, emit, on, off, once, parallel, prependListener, removeListener, serial,

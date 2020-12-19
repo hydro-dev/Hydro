@@ -69,23 +69,19 @@ const scripts: UpgradeScript[] = [
                 collChunk.deleteMany({ files_id: _id }),
             ]);
         }
-        terminal.clear('Changing storage engine. This may take a long time.');
+        logger.info('Changing storage engine. This may take a long time.');
         // Problem file and User file
         try {
             let savedProgress = system.get('upgrade.file.progress.domain');
             if (savedProgress) savedProgress = JSON.parse(savedProgress);
             else savedProgress = { pdocs: [] };
-            const ddocs = await domain.getMulti().toArray();
-            const totalProgress = terminal.progressBar({
-                items: ddocs.length, title: 'Domain', y: 3, eta: true,
-            });
+            const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
+            logger.info('Total found %d domains.', ddocs.length);
             for (let i = 0; i < ddocs.length; i++) {
                 const ddoc = ddocs[i];
-                totalProgress.startItem(ddoc._id);
+                logger.info('Domain %s (%d/%d)', ddoc._id, i + 1, ddocs.length);
                 const pdocs = await problem.getMulti(ddoc._id, { data: { $ne: null } }, ['domainId', 'docId', 'data', 'title']).toArray();
-                const domainProgress = terminal.progressBar({
-                    items: pdocs.length, title: 'Problems', y: 4, eta: true,
-                });
+                const domainProgress = terminal.progressBar({ items: pdocs.length, title: 'Problems', inline: true });
                 for (let j = 0; j < pdocs.length; j++) {
                     const pdoc = pdocs[j];
                     domainProgress.startItem(`${pdoc.docId}: ${pdoc.title}`);
@@ -99,7 +95,7 @@ const scripts: UpgradeScript[] = [
                             ));
                         } catch (e) {
                             if (e.toString().includes('FileNotFound')) {
-                                logger.error('\n\n\n\n\nProblem data not found %s/%s', pdoc.domainId, pdoc.docId);
+                                logger.error('Problem data not found %s/%s', pdoc.domainId, pdoc.docId);
                             } else throw e;
                         }
                         savedProgress.pdocs.push(`${pdoc.domainId}/${pdoc.docId}`);
@@ -108,9 +104,7 @@ const scripts: UpgradeScript[] = [
                     domainProgress.itemDone(`${pdoc.docId}: ${pdoc.title}`);
                 }
                 domainProgress.stop();
-                totalProgress.itemDone(ddoc._id);
             }
-            totalProgress.stop();
             const udocs = await user.getMulti().project({ _id: 1, uname: 1 }).toArray();
             const userfileProgress = terminal.progressBar({
                 items: udocs.length, title: 'Users', y: 3,
@@ -140,7 +134,7 @@ const scripts: UpgradeScript[] = [
             userfileProgress.stop();
             return true;
         } catch (e) {
-            logger.error('\n\n\n\n\n%o', e);
+            logger.error(e);
             return false;
         }
     },

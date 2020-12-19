@@ -196,9 +196,7 @@ export function buildProjection(fields: string[]): Record<string, 1> {
 
 export function sleep(timeout: number) {
     return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, timeout);
+        setTimeout(resolve, timeout);
     });
 }
 
@@ -214,9 +212,7 @@ function deepen(modifyString: (source: string) => string) {
     }
 
     return function t<T>(source: T): T {
-        if (typeof source === 'string') {
-            return modifyString(source) as any;
-        }
+        if (typeof source === 'string') return modifyString(source) as any;
         return modifyObject(source);
     };
 }
@@ -224,3 +220,24 @@ function deepen(modifyString: (source: string) => string) {
 export const camelCase = deepen((source) => source.replace(/[_-][a-z]/g, (str) => str.slice(1).toUpperCase()));
 export const paramCase = deepen((source) => source.replace(/_/g, '-').replace(/(?<!^)[A-Z]/g, (str) => `-${str.toLowerCase()}`));
 export const snakeCase = deepen((source) => source.replace(/-/g, '_').replace(/(?<!^)[A-Z]/g, (str) => `_${str.toLowerCase()}`));
+
+export namespace Time {
+    export const second = 1000;
+    export const minute = second * 60;
+    export const hour = minute * 60;
+    export const day = hour * 24;
+    export const week = day * 7;
+    export function formatTimeShort(ms: number) {
+        const abs = Math.abs(ms);
+        if (abs >= day - hour / 2) {
+            return `${Math.round(ms / day)}d`;
+        } if (abs >= hour - minute / 2) {
+            return `${Math.round(ms / hour)}h`;
+        } if (abs >= minute - second / 2) {
+            return `${Math.round(ms / minute)}m`;
+        } if (abs >= second) {
+            return `${Math.round(ms / second)}s`;
+        }
+        return `${ms}ms`;
+    }
+}

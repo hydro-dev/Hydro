@@ -1,6 +1,9 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { Logger } from './logger';
+
+const logger = new Logger('options');
 
 export = function load() {
     let f = path.resolve(process.cwd(), 'config.json');
@@ -13,7 +16,7 @@ export = function load() {
     try {
         result = JSON.parse(fs.readFileSync(f).toString());
     } catch (e) {
-        console.error('Cannot read config file', e);
+        logger.error('Cannot read config file %o', e);
         result = {};
     }
     return result;

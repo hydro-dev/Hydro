@@ -27,14 +27,12 @@
         "moment-timezone": "^0.5.32",
         "mongodb": "^3.6.3",
         "nodemailer": "^6.4.17",
-        "ps-list": "^7.2.0",
         "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
         "supports-color": "^8.0.0",
         "systeminformation": "^4.31.1",
         "terminal-kit": "^1.44.0",
-        "wtfnode": "^0.8.4",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
@@ -54,7 +52,6 @@
         "@types/superagent": "^4.1.8",
         "@types/supports-color": "^7.2.0",
         "@types/terminal-kit": "^1.28.2",
-        "@types/wtfnode": "^0.7.0",
         "@types/yargs": "^15.0.11"
     },
     "scripts": {

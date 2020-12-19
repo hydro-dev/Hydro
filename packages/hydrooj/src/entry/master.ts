@@ -3,7 +3,6 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import pslist from 'ps-list';
 import { argv } from 'yargs';
 import { builtinModel } from './common';
 import { Entry } from '../loader';
@@ -22,13 +21,11 @@ export async function load(call: Entry) {
     if (fs.existsSync(lockfile) && !argv.ignorelock) {
         try {
             const file = require(lockfile);
-            const plist = await pslist();
-            if (file.pid && plist.map((i) => i.pid).includes(file.pid)) {
-                logger.error(`Lockfile exists, pid=${file.pid}`);
-                process.exit(1);
-            }
+            process.kill(file.pid, 0);
+            logger.error(`Lockfile exists, pid=${file.pid}`);
+            process.exit(1);
         } catch {
-            // Invalid lockfile. ignore.
+            // Invalid lockfile or process not exist
         }
     }
     const context = {

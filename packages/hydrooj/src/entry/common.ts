@@ -18,8 +18,8 @@ export const builtinLib = [
 export const builtinModel = [
     'builtin', 'document', 'domain', 'blacklist', 'opcount',
     'setting', 'token', 'user', 'problem', 'record',
-    'contest', 'message', 'solution', 'training', 'file',
-    'discussion', 'system', 'oplog',
+    'contest', 'message', 'solution', 'training', 'oplog',
+    'discussion', 'system',
 ];
 
 export const builtinHandler = [
@@ -53,7 +53,7 @@ export async function handler(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 logger.error('Handler Load Fail: %s', i);
-                logger.error('%o', e);
+                logger.error(e);
             }
         }
     }
@@ -77,7 +77,7 @@ export async function locale(pending: string[], fail: string[]) {
             } catch (e) {
                 fail.push(i);
                 logger.error('Locale Load Fail: %s', i);
-                logger.error('%o', e);
+                logger.error(e);
             }
         }
     }
