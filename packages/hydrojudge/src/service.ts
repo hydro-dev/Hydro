@@ -66,7 +66,7 @@ async function postInit() {
         const filePath = path.join(homedir(), '.cache', 'hydro', 'judge', domainId, pid);
         await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
-        let etags: Record<string, string>;
+        let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
         } catch (e) { /* ignore */ }

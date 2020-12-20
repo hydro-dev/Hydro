@@ -453,12 +453,13 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
+        const canReadData = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         const [testdata, additional_file] = await Promise.all([
-            getTestdata
-                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata`, true)
+            getTestdata && canReadData
+                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/`, true)
                 : [],
             getAdditionalFile
-                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file`, true)
+                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/`, true)
                 : [],
         ]);
         this.response.body.testdata = testdata;
@@ -671,7 +672,7 @@ export class ProblemImportHandler extends Handler {
         this.response.template = 'problem_import.html';
     }
 
-    async post(domainId: string) {
+    async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
         const stat = await fs.stat(this.request.files.file.path);
         if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');

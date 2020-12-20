@@ -51,7 +51,11 @@ if (cluster.isMaster) {
     bus.on('message/log', (message) => {
         LogBox.appendLog(message);
     });
+    const history = [''];
+    let current = 0;
     ShellInput.on('submit', async (input) => {
+        history.push(input);
+        current = history.length;
         ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
         ShellInput.input.setContent('', false, false);
         if (input[0] === '@') {
@@ -60,6 +64,17 @@ if (cluster.isMaster) {
                 break;
             }
         } else bus.parallel('message/run', input);
+    });
+    ShellInput.on('key', (key) => {
+        if (key === 'UP') {
+            current--;
+            ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
+            ShellInput.input.setContent(history[current] || '', false, false);
+        } else if (key === 'DOWN') {
+            current++;
+            ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
+            ShellInput.input.setContent(history[current] || '', false, false);
+        }
     });
     terminal.on('key', (key, matches, data) => {
         if (key === 'CTRL_C') terminate();

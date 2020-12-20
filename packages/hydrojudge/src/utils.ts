@@ -109,6 +109,14 @@ export function restrictFile(p: string) {
 
 export function ensureFile(folder: string) {
     return (file: string, message: string) => {
+        // Historical issue
+        if (file.includes('/')) {
+            const f = path.join(folder, restrictFile(file.split('/')[1]));
+            if (fs.existsSync(f)) {
+                const stat = fs.statSync(f);
+                if (stat.isFile()) return f;
+            }
+        }
         const f = path.join(folder, restrictFile(file));
         if (!fs.existsSync(f)) throw new FormatError(message, [file]);
         const stat = fs.statSync(f);

@@ -18,11 +18,17 @@ export const PERM = {
     // Problem and Record
     PERM_CREATE_PROBLEM: 1n << 4n,
     PERM_EDIT_PROBLEM: 1n << 5n,
+    /**
+     * @deprecated
+     */
     PERM_EDIT_PROBLEM_SELF: 1n << 6n,
     PERM_VIEW_PROBLEM: 1n << 7n,
     PERM_VIEW_PROBLEM_HIDDEN: 1n << 8n,
     PERM_SUBMIT_PROBLEM: 1n << 9n,
     PERM_READ_PROBLEM_DATA: 1n << 10n,
+    /**
+     * @deprecated
+     */
     PERM_READ_PROBLEM_DATA_SELF: 1n << 11n,
     PERM_READ_RECORD_CODE: 1n << 12n,
     PERM_REJUDGE_PROBLEM: 1n << 13n,

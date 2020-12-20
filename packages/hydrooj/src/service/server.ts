@@ -520,7 +520,7 @@ export class Handler {
                 try {
                     await this.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { error });
                 } catch (e) {
-                    console.error(e);
+                    logger.error(e);
                     // this.response.body.error = {};
                 }
             }
@@ -615,8 +615,8 @@ export class Handler {
     async onerror(error: HydroError) {
         if (!error.msg) error.msg = () => error.message;
         if (!(error instanceof NotFoundError)) {
-            console.error(error.msg(), error.params);
-            console.error(error.stack);
+            logger.error(error.msg(), error.params);
+            logger.error(error.stack);
         }
         this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
@@ -807,7 +807,7 @@ export class ConnectionHandler {
     async message(message: any) { } // eslint-disable-line
 
     onerror(err: HydroError) {
-        if (!(err instanceof NotFoundError)) console.error(err);
+        if (!(err instanceof NotFoundError)) logger.error(err);
         this.send({
             error: {
                 name: err.name,
@@ -895,13 +895,7 @@ export function start() {
             if (ctx.response.headers.nolog) return;
             ctx._remoteAddress = ctx.request.ip;
             const status = ctx.response.status;
-            const color = status >= 500 ? 31 // red
-                : status >= 400 ? 33 // yellow
-                    : status >= 300 ? 36 // cyan
-                        : status >= 200 ? 32 // green
-                            : 0; // no color
-            logger.debug(`\
-\x1b[0m${ctx.request.method} ${ctx.request.path} \x1b[${color}m${ctx.response.status}\x1b[0m ${endTime - startTime}ms ${ctx.response.length}\x1b[0m`);
+            logger.debug(`${ctx.request.method} ${ctx.request.path} ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }
     app.use(async (ctx, next) => {
