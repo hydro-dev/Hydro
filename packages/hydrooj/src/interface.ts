@@ -599,6 +599,7 @@ declare global {
                 ui: UI,
                 error: typeof import('./error'),
                 Logger: typeof import('./logger').Logger,
+                logger: typeof import('./logger').logger,
                 locales: Dict<Dict<string>>,
                 isFirstWorker: boolean,
             },

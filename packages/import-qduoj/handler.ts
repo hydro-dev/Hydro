@@ -108,6 +108,7 @@ class ImportQduojHandler extends Handler {
     }
 
     async get() {
+        this.response.body = { type: 'QDUOJ' };
         this.response.template = 'problem_import.html';
     }
 

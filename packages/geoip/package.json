@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.1.16",
+    "version": "1.1.17",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
@@ -12,6 +12,6 @@
         "prepublish": "./prepublish.sh"
     },
     "peerDependencies": {
-        "hydrooj": "^2.12.0||^2.13.0"
+        "hydrooj": "^2.15.0"
     }
 }

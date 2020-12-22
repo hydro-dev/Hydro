@@ -1,9 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import { ObjectID, Collection } from 'mongodb';
-// @ts-ignore
-import { terminal } from 'terminal-kit';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
+import { Progress } from './ui';
 import { Ufdoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
@@ -15,12 +14,6 @@ import * as user from './model/user';
 import * as domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
-
-declare module 'terminal-kit/Terminal' {
-    interface ProgressBarOptions {
-        y?: number;
-    }
-}
 
 const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
@@ -73,7 +66,7 @@ const scripts: UpgradeScript[] = [
             const ddoc = ddocs[i];
             logger.info('Domain %s (%d/%d)', ddoc._id, i + 1, ddocs.length);
             const pdocs = await problem.getMulti(ddoc._id, { data: { $ne: null } }, ['domainId', 'docId', 'data', 'title']).toArray();
-            const domainProgress = terminal.progressBar({ items: pdocs.length, title: 'Problems', inline: true });
+            const domainProgress = Progress.create({ items: pdocs.length, title: 'Problems', inline: true });
             for (let j = 0; j < pdocs.length; j++) {
                 const pdoc = pdocs[j];
                 domainProgress.startItem(`${pdoc.docId}: ${pdoc.title}`);
@@ -110,13 +103,13 @@ const scripts: UpgradeScript[] = [
             domainProgress.stop();
         }
         const udocs = await user.getMulti().project({ _id: 1, uname: 1 }).toArray();
-        const userfileProgress = terminal.progressBar({
+        const userfileProgress = Progress.create({
             items: udocs.length, title: 'Users', y: 3,
         });
         for (const udoc of udocs) {
             userfileProgress.startItem(`${udoc._id}: ${udoc.uname}`);
             const ufdocs = await coll.find({ owner: udoc._id }).toArray();
-            const currentUser = terminal.progressBar({
+            const currentUser = Progress.create({
                 items: ufdocs.length, title: `${udoc._id}: ${udoc.uname}`, y: 4, eta: true,
             });
             const namelist = [];

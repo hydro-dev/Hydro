@@ -52,6 +52,11 @@ export async function load(call: Entry) {
     await db.start(opts);
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
+    if (process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY) {
+        await modelSystem.set('file.accessKey', process.env.MINIO_ACCESS_KEY);
+        await modelSystem.set('file.secretKey', process.env.MINIO_SECRET_KEY);
+        await modelSystem.set('file.endPoint', 'http://localhost:9000/');
+    }
     const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
         'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
         'file.endPointForUser', 'file.endPointForJudge',

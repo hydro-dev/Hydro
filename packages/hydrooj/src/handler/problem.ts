@@ -669,6 +669,7 @@ export class ProblemCreateHandler extends Handler {
 
 export class ProblemImportHandler extends Handler {
     async get() {
+        this.response.body = { type: 'Hydro' };
         this.response.template = 'problem_import.html';
     }
 

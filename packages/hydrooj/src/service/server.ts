@@ -10,6 +10,7 @@ import { ObjectID } from 'mongodb';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import Router from 'koa-router';
+import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import { SetOption } from 'cookies';
@@ -270,6 +271,11 @@ export function requireCsrfToken(target: any, funcName: string, obj: any) {
 
 export async function prepare() {
     app.keys = system.get('session.keys') as unknown as string[];
+    app.use(proxy('/fs', {
+        target: system.get('file.endPoint'),
+        changeOrigin: true,
+        rewrite: (p) => p.replace('/fs', ''),
+    }));
     if (argv.public) {
         app.use(cache(argv.public, {
             maxAge: 0,
@@ -894,7 +900,6 @@ export function start() {
             const endTime = new Date().getTime();
             if (ctx.response.headers.nolog) return;
             ctx._remoteAddress = ctx.request.ip;
-            const status = ctx.response.status;
             logger.debug(`${ctx.request.method} ${ctx.request.path} ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }

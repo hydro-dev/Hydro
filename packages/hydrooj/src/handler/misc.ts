@@ -125,7 +125,7 @@ class SwitchLanguageHandler extends Handler {
 }
 
 export async function apply() {
-    Route('file_upload', '/fs/upload', FileUploadHandler, PRIV.PRIV_CREATE_FILE);
+    Route('file_upload', '/upload', FileUploadHandler, PRIV.PRIV_CREATE_FILE);
     Route('status', '/status', StatusHandler);
     Route('status_update', '/status/update', StatusUpdateHandler);
     Route('check_in', '/checkin', CheckInHandler, PRIV.PRIV_USER_PROFILE);

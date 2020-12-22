@@ -2,6 +2,8 @@
 
 echo "Running Hydro Installer for centos 7"
 db_password=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
+MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
+MINIO_SECRET_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 
 # Basic
 mkdir -p /etc/yum.repos.d
@@ -51,6 +53,13 @@ pm2 start "mongod --auth"
 # Install Compiler
 echo 'Installing g++'
 apt-get install -y g++ >/dev/null
+
+# Install MinIO
+echo 'Installing MinIO'
+wget https://dl.min.io/server/minio/release/linux-amd64/minio
+chmod +x minio
+mkdir -p /data/file
+pm2 start "./minio server /data/file" --name minio
 
 # Install HydroOJ
 # TODO: install basic addons?

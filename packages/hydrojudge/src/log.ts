@@ -1,6 +1,5 @@
 import { inspect, InspectOptions, format } from 'util';
 import { argv } from 'yargs';
-import { stderr } from 'supports-color';
 
 namespace Time {
     export const second = 1000;
@@ -23,7 +22,7 @@ namespace Time {
     }
 }
 
-const colors = stderr.level < 2 ? [6, 2, 3, 4, 5, 1] : [
+const colors = [
     20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62,
     63, 68, 69, 74, 75, 76, 77, 78, 79, 80, 81, 92, 93, 98, 99, 112, 113,
     129, 134, 135, 148, 149, 160, 161, 162, 163, 164, 165, 166, 167, 168,
@@ -59,7 +58,7 @@ export class Logger {
     static lastTime = 0
 
     static options: InspectOptions = {
-        colors: stderr.hasBasic,
+        colors: process.stderr.isTTY,
     }
 
     static formatters: Record<string, (this: Logger, value: any) => string> = {

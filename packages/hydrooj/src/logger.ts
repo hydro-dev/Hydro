@@ -75,3 +75,5 @@ export class Logger {
 }
 
 global.Hydro.Logger = Logger;
+export const logger = new Logger('*');
+global.Hydro.logger = logger;

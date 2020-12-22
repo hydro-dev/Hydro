@@ -1,6 +1,11 @@
 import { Readable } from 'stream';
+import assert from 'assert';
 import { URL } from 'url';
 import { Client, BucketItem, ItemBucketMetadata } from 'minio';
+import { Logger } from '../logger';
+import { streamToBuffer } from '../utils';
+
+const logger = new Logger('storage');
 
 interface StorageOptions {
     endPoint: string;
@@ -38,12 +43,17 @@ function parseMainEndpointUrl(endpoint: string): MinioEndpointConfig {
 }
 function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) => string {
     if (!endpoint) return (originalUrl) => originalUrl;
+    const pathonly = endpoint.startsWith('/');
+    if (pathonly) endpoint = `https://localhost${endpoint}`;
     const url = new URL(endpoint);
     if (url.hash || url.search) throw new Error('Search parameters and hash are not supported for alternative MinIO endpoint URL.');
     if (!url.pathname.endsWith('/')) throw new Error("Alternative MinIO endpoint URL's pathname must ends with '/'.");
     return (originalUrl) => {
         const parsedOriginUrl = new URL(originalUrl);
-        return new URL(parsedOriginUrl.pathname.slice(1) + parsedOriginUrl.search + parsedOriginUrl.hash, url).toString();
+        const replaced = new URL(parsedOriginUrl.pathname.slice(1) + parsedOriginUrl.search + parsedOriginUrl.hash, url).toString();
+        return pathonly
+            ? replaced.replace('https://localhost', '')
+            : replaced;
     };
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
@@ -80,7 +90,14 @@ class StorageService {
                 user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
                 judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),
             };
+            await this.put('storage.test', Buffer.from('test'));
+            const result = await streamToBuffer(await this.get('storage.test'));
+            assert(result.toString() === 'test');
+            await this.del('storage.test');
+            logger.success('Storage connected.');
         } catch (e) {
+            logger.error('Storage init fail.');
+            logger.error(e);
             this.error = e.toString();
         }
     }
@@ -104,11 +121,15 @@ class StorageService {
         const stream = this.client.listObjects(this.opts.bucket, target, recursive);
         return await new Promise<BucketItem[]>((resolve, reject) => {
             const results: BucketItem[] = [];
-            stream.on('data', (result) => results.push({
-                ...result,
-                prefix: target,
-                name: result.name.split(target)[1],
-            }));
+            stream.on('data', (result) => {
+                if (result.size) {
+                    results.push({
+                        ...result,
+                        prefix: target,
+                        name: result.name.split(target)[1],
+                    });
+                }
+            });
             stream.on('end', () => resolve(results));
             stream.on('error', reject);
         });

@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.1.34",
+    "version": "2.2.0",
     "main": "package.json",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -14,12 +14,11 @@
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "supports-color": "^8.0.0",
-        "systeminformation": "^4.31.1",
+        "systeminformation": "^4.32.0",
         "yargs": "^16.2.0"
     },
     "peerDependencies": {
-        "hydrooj": "^2.13.3"
+        "hydrooj": "^2.15.0"
     },
     "license": "AGPL-3.0-only",
     "devDependencies": {

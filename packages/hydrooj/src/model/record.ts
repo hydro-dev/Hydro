@@ -61,7 +61,7 @@ export async function judge(domainId: string, rid: ObjectID, priority = 1) {
     let data = [];
     if (rdoc.pid) {
         const pdoc = await problem.get(domainId, rdoc.pid);
-        data = await storage.list(`problem/${domainId}/${rdoc.pid}/testdata/`);
+        data = await storage.list(`problem/${domainId}/${rdoc.pid}/testdata/`, true);
         if (!config) config = pdoc?.config || {};
     }
     delete rdoc._id;
