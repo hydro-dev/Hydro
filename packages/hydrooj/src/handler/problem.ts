@@ -244,7 +244,7 @@ export class ProblemExportHandler extends ProblemDetailHandler {
             const files = await storage.list(`problem/${this.domainId}/${this.pdoc.docId}/`, true);
             for (const file of files) {
                 // eslint-disable-next-line no-await-in-loop
-                const buf = await streamToBuffer(storage.get(`${file.prefix}${file.name}`));
+                const buf = await streamToBuffer(await storage.get(`${file.prefix}${file.name}`));
                 zip.addFile(file.name, buf);
             }
         }
