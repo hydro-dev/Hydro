@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+// @ts-nocheck
 import {
     Rdoc, TestCase, Mdoc, Drrdoc, TrainingNode,
 } from 'hydrooj';
