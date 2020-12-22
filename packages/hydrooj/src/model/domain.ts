@@ -140,6 +140,7 @@ export async function getDomainUser(domainId: string, udoc: DomainUserArg) {
     if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
     dudoc.role = dudoc.role || 'default';
     const ddoc = await get(domainId);
+    if (ddoc.owner === udoc._id) dudoc.role = 'admin';
     dudoc.perm = ddoc.roles[dudoc.role]
         ? BigInt(ddoc.roles[dudoc.role])
         : BUILTIN_ROLES[dudoc.role];
@@ -167,13 +168,17 @@ export async function incUserInDomain(domainId: string, uid: number, field: stri
 }
 
 export async function getDictUserByDomainId(uid: number) {
-    const dudocs = await collUser.find({ uid }).toArray();
+    const [dudocs, ddocs] = await Promise.all([
+        collUser.find({ uid }).toArray(),
+        coll.find({ owner: uid }).toArray(),
+    ]);
     const dudict = {};
     for (const dudoc of dudocs) {
         // eslint-disable-next-line no-await-in-loop
         dudict[dudoc.domainId] = await get(dudoc.domainId);
         dudict[dudoc.domainId].role = dudoc.role;
     }
+    for (const ddoc of ddocs) dudict[ddoc._id] = 'admin';
     return dudict;
 }
 

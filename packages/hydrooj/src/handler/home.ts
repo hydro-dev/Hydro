@@ -297,6 +297,7 @@ class HomeDomainCreateHandler extends Handler {
         gravatar = gravatar || this.user.gravatar || this.user.mail || 'guest@hydro.local';
         const domainId = await domain.add(id, this.user._id, name, bulletin);
         await domain.edit(domainId, { gravatar });
+        await domain.setUserRole(domainId, this.user._id, 'admin');
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
     }
