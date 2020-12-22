@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 // @ts-nocheck
 import cluster from 'cluster';
 import {

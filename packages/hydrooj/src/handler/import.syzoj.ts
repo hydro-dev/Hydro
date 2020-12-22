@@ -7,7 +7,6 @@ import { filter } from 'lodash';
 import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
-import { streamToBuffer } from '../utils';
 import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
 import * as problem from '../model/problem';
