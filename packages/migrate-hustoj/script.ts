@@ -96,7 +96,7 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html'),
-                1, pdoc.source.split(' '), undefined, undefined, pdoc.defunct === 'Y',
+                1, pdoc.source.split(' '), undefined, pdoc.defunct === 'Y',
             );
             const [cdoc] = await query(`SELECT * FROM 'privilege' WHERE rightstr = 'p${pdoc.problem_id}'`);
             await problem.edit('system', pid, {

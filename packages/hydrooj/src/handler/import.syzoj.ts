@@ -75,8 +75,8 @@ class ProblemImportSYZOJHandler extends Handler {
                 ...result.body.localizedContentsOfAllLocales,
             ][0].title;
             const docId = await problem.add(
-                domainId, targetPid || `${host}_${pid}`, title, content, this.user._id,
-                tags || [], [], null, hidden,
+                domainId, targetPid, title, content, this.user._id,
+                tags || [], [], hidden,
             );
             (async () => {
                 const judge = result.body.judgeInfo;
@@ -93,9 +93,8 @@ class ProblemImportSYZOJHandler extends Handler {
                     const p = new PassThrough();
                     superagent.get(urls[f.filename]).pipe(p);
                     // eslint-disable-next-line no-await-in-loop
-                    await storage.put(`problem/${domainId}/${docId}/testdata/${f.filename}`, p);
+                    await problem.addTestdata(domainId, docId, f.filename, p);
                 }
-                // TODO additional_file
                 if (judge) {
                     await problem.edit(domainId, docId, {
                         config: {
@@ -104,6 +103,21 @@ class ProblemImportSYZOJHandler extends Handler {
                             // TODO other config
                         },
                     });
+                }
+                const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
+                    .send({
+                        problemId: +pid,
+                        type: 'AdditionalFile',
+                        filenameList: result.body.additionalFiles.map((node) => node.filename),
+                    });
+                const aurls = {};
+                if (a.body.error) return;
+                for (const t of a.body.downloadInfo) aurls[t.filename] = t.downloadUrl;
+                for (const f of result.body.additionalFiles) {
+                    const p = new PassThrough();
+                    superagent.get(aurls[f.filename]).pipe(p);
+                    // eslint-disable-next-line no-await-in-loop
+                    await storage.put(`problem/${domainId}/${docId}/additional_file/${f.filename}`, p);
                 }
             })().catch(logger.error);
             this.response.body = { pid: docId };
@@ -170,8 +184,8 @@ class ProblemImportSYZOJHandler extends Handler {
                 });
             }
             const docId = await problem.add(
-                domainId, targetPid || `${host}_${pid}`, p.title, content, this.user._id,
-                p.tags || [], [], null, hidden,
+                domainId, targetPid, p.title, content, this.user._id,
+                p.tags || [], [], hidden,
             );
             const r = download(`${url}testdata/download`);
             const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${docId}.zip`);
@@ -185,7 +199,7 @@ class ProblemImportSYZOJHandler extends Handler {
             const entries = zip.getEntries();
             for (const entry of entries) {
                 // eslint-disable-next-line no-await-in-loop
-                await storage.put(`problem/${domainId}/${docId}/testdata/${entry.entryName}`, entry.getData());
+                await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
             }
             await problem.edit(domainId, docId, {
                 config: {

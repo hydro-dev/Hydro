@@ -132,6 +132,19 @@ const scripts: UpgradeScript[] = [
         logger.success('Files copied successfully. You can now remove collection `file` `fs.files` `fs.chunks` in the database.');
         return true;
     },
+    async function _4_5() {
+        const domains = await domain.getMulti().project({ _id: 1 }).toArray();
+        for (const d of domains) {
+            const bulk = document.coll.initializeUnorderedBulkOp();
+            const pdocs = await document.getMulti(d._id, document.TYPE_PROBLEM).project({ domainId: 1, docId: 1 }).toArray();
+            for (const pdoc of pdocs) {
+                const data = await storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`, true);
+                bulk.find({ _id: pdoc._id }).updateOne({ $set: { data } });
+            }
+            if (bulk.length) await bulk.execute();
+        }
+        return true;
+    },
 ];
 
 export = scripts;

@@ -168,20 +168,31 @@ export function count<K extends keyof DocType>(
 
 export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
-    key: keyof DocType[K], content: string, owner: number, args: DocType[K][T][0] = {},
+    key: ArrayKeys<DocType[K]>, value: DocType[K][0],
+): Promise<[DocType[K], ObjectID]>
+export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
+    domainId: string, docType: K, docId: DocType[K]['docId'],
+    key: keyof DocType[K], content: string, owner: number, args?: DocType[K][T][0],
+): Promise<[DocType[K], ObjectID]>
+export async function push(
+    domainId: string, docType: number, docId: DocID, key: string,
+    arg0: any, arg1?: any, arg2?: any,
 ) {
-    const _id = new ObjectID();
+    const _id = arg2?._id || arg0?._id || new ObjectID();
+    const v = arg1
+        ? { _id, ...arg2, content: arg0, owner: arg1 }
+        : { _id, ...arg0 };
     const doc = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        { $push: { [key]: { ...args, content, owner, _id } } },
+        { $push: { [key]: v } },
         { returnOriginal: false },
     );
     return [doc.value, _id];
 }
 
-export async function pull<K extends keyof DocType>(
+export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[K]>>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
-    setKey: ArrayKeys<DocType[K]>, contents: string[],
+    setKey: T, contents: FilterQuery<DocType[K][T][0]>,
 ): Promise<DocType[K]> {
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },

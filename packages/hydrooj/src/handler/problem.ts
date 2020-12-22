@@ -193,36 +193,6 @@ export class ProblemDetailHandler extends ProblemHandler {
     async get(...args: any[]) { } // eslint-disable-line
 
     @param('pid', Types.UnsignedInt)
-    @param('dest', Types.String)
-    @param('hidden', Types.Boolean)
-    async postCopy(domainId: string, pid: number, destDomainId: string, hidden = false) {
-        const udoc = await user.getById(destDomainId, this.user._id);
-        if (!udoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) {
-            throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
-        }
-        if (!this.pdoc.data) {
-            // Copy Without Data
-            pid = await problem.add(
-                destDomainId, this.pdoc.pid, this.pdoc.title,
-                this.pdoc.content, this.user._id, this.pdoc.tag,
-                this.pdoc.category, null, hidden,
-            );
-        } else if (this.pdoc.data instanceof ObjectID) {
-            // With data
-            pid = await problem.add(
-                destDomainId, this.pdoc.pid, this.pdoc.title,
-                this.pdoc.content, this.user._id, this.pdoc.tag,
-                this.pdoc.category, { domainId, pid }, hidden,
-            );
-        } else {
-            // TODO better message
-            // Data should only be copied once.
-            throw new BadRequestError('Cannot copy this problem.');
-        }
-        this.response.redirect = this.url('problem_settings', { domainId: destDomainId, pid });
-    }
-
-    @param('pid', Types.UnsignedInt)
     async postRejudge(domainId: string, pid: number) {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         // TODO maybe async?
@@ -497,10 +467,19 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
             for (const entry of entries) {
-                // eslint-disable-next-line no-await-in-loop
-                await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${entry.name}`, entry.getData());
+                if (type === 'testdata') {
+                    // eslint-disable-next-line no-await-in-loop
+                    await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.getData());
+                } else {
+                    // eslint-disable-next-line no-await-in-loop
+                    await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${entry.name}`, entry.getData());
+                }
             }
-        } else await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`, this.request.files.file.path);
+        } else if (type === 'testdata') {
+            await problem.addTestdata(domainId, this.pdoc.docId, filename, this.request.files.file.path);
+        } else {
+            await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`, this.request.files.file.path);
+        }
         this.back();
     }
 
@@ -509,7 +488,11 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
-        await storage.del(files.map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`));
+        if (type === 'testdata') {
+            await problem.delTestdata(domainId, this.pdoc.docId, files);
+        } else {
+            await storage.del(files.map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`));
+        }
         this.back();
     }
 }
@@ -660,7 +643,7 @@ export class ProblemCreateHandler extends Handler {
         } catch { /* Ignore */ }
         const docId = await problem.add(
             domainId, pid, title, content,
-            this.user._id, [], [], null, hidden,
+            this.user._id, [], [], hidden,
         );
         this.response.body = { pid: docId };
         this.response.redirect = this.url('problem_settings', { pid: docId });
@@ -687,7 +670,8 @@ export class ProblemImportHandler extends Handler {
                 await storage.put(`problem/${domainId}/${pid}/${entry.name}`, entry.getData());
             }
         }
-        await problem.edit(domainId, pid, { html: pdoc.html });
+        const data = await storage.list(`problem/${domainId}/${pid}/testdata/`, true);
+        await problem.edit(domainId, pid, { html: pdoc.html, data });
         this.response.redirect = this.url('problem_detail', { pid });
     }
 }

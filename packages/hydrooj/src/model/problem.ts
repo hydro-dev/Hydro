@@ -1,12 +1,14 @@
+import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary } from 'lodash';
 import { STATUS } from './builtin';
 import * as document from './document';
 import * as domain from './domain';
-import { ProblemStatusDoc, ProblemDataSource, Pdict } from '../interface';
+import { ProblemStatusDoc, Pdict } from '../interface';
 import { Content } from '../loader';
-import { NumberKeys, Projection } from '../typeutils';
+import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
+import storage from '../service/storage';
 
 export interface Pdoc {
     _id: ObjectID
@@ -35,7 +37,7 @@ export namespace Pdoc {
         nAccept: 0,
         tag: [],
         category: [],
-        data: null,
+        data: [],
         hidden: true,
         config: {},
         acMsg: '',
@@ -77,11 +79,11 @@ export const PROJECTION_PUBLIC: Pdoc.Field[] = [
 
 export async function add(
     domainId: string, pid: string = null, title: string, content: Content, owner: number,
-    tag: string[] = [], category: string[] = [], data: ProblemDataSource = null, hidden = false,
+    tag: string[] = [], category: string[] = [], hidden = false,
 ) {
     const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
     const args: Partial<Pdoc> = {
-        title, data, category, tag, hidden, nSubmit: 0, nAccept: 0,
+        title, category, tag, hidden, nSubmit: 0, nAccept: 0,
     };
     if (pid) args.pid = pid;
     return await document.add(domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null, args);
@@ -118,12 +120,32 @@ export function edit(domainId: string, _id: number, $set: Partial<Pdoc>): Promis
     return document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
 }
 
+export function push<T extends ArrayKeys<Pdoc>>(domainId: string, _id: number, key: ArrayKeys<Pdoc>, value: Pdoc[T][0]) {
+    return document.push(domainId, document.TYPE_PROBLEM, _id, key, value);
+}
+
+export function pull<T extends ArrayKeys<Pdoc>>(domainId: string, pid: number, key: ArrayKeys<Pdoc>, values: Pdoc[T][0][]) {
+    return document.pull(domainId, document.TYPE_PROBLEM, pid, key, values.map((_id) => ({ _id })));
+}
+
 export function inc(domainId: string, _id: number, field: NumberKeys<Pdoc>, n: number): Promise<Pdoc> {
     return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
 }
 
 export function count(domainId: string, query: FilterQuery<Pdoc>) {
     return document.count(domainId, document.TYPE_PROBLEM, query);
+}
+
+export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
+    await storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f);
+    const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
+    return await push(domainId, pid, 'data', meta);
+}
+
+export async function delTestdata(domainId: string, pid: number, name: string | string[]) {
+    const names = name instanceof Array ? name : [name];
+    await storage.del(names.map((t) => `problem/${domainId}/${pid}/testdata/${t}`));
+    await pull(domainId, pid, 'data', names);
 }
 
 export async function random(domainId: string, query: FilterQuery<Pdoc>): Promise<string | null> {
@@ -201,7 +223,11 @@ global.Hydro.model.problem = {
     get,
     edit,
     count,
+    push,
+    pull,
     random,
+    addTestdata,
+    delTestdata,
     getMulti,
     getList,
     getListStatus,

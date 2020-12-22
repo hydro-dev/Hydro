@@ -93,14 +93,10 @@ export interface User extends Dictionary<any> {
 
 export type Udict = NumericDictionary<User>;
 
-export interface ProblemDataSource {
-    host?: string, // Empty for local
-    domainId: string,
-    pid: number,
+export interface ProblemData {
+    name: string,
+    size: number,
 }
-
-// ObjectID for built-in files, ProblemDataSource for other source (RemoteJudge, etc.)
-export type ProblemData = ObjectID | ProblemDataSource;
 
 export interface TestCaseConfig {
     input: string,
@@ -196,7 +192,7 @@ declare module './model/problem' {
         nAccept: number,
         tag: string[],
         category: string[],
-        data?: ProblemData,
+        data: ProblemData[],
         hidden: boolean,
         config: ProblemConfig,
         acMsg?: string,
