@@ -12,7 +12,7 @@ import type { ContentNode } from '../interface';
 import * as problem from '../model/problem';
 import { PERM } from '../model/builtin';
 import {
-    Route, Handler, Types, param, post,
+    Route, Handler, Types, post,
 } from '../service/server';
 import storage from '../service/storage';
 import { isPid } from '../lib/validator';
@@ -212,8 +212,8 @@ class ProblemImportSYZOJHandler extends Handler {
     }
 
     @post('url', Types.String, true)
-    @param('pid', Types.String, true, isPid)
-    @param('hidden', Types.Boolean)
+    @post('pid', Types.String, true, isPid)
+    @post('hidden', Types.Boolean)
     @post('prefix', Types.String, true)
     @post('start', Types.UnsignedInt, true)
     @post('end', Types.UnsignedInt, true)
@@ -226,16 +226,19 @@ class ProblemImportSYZOJHandler extends Handler {
             const base = `${prefix}${start}/`;
             assert(base.match(RE_SYZOJ), new ValidationError('prefix'));
             const [, protocol, host] = RE_SYZOJ.exec(base);
-            for (let i = start; i <= end; i++) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.v3(domainId, undefined, hidden, protocol, host, i, true);
-            }
+            (async () => {
+                for (let i = start; i <= end; i++) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.v3(domainId, undefined, hidden, protocol, host, i, true);
+                    logger.info('%s %d-%d-%d', prefix, start, i, end);
+                }
+            })().catch(logger.error);
+            this.response.redirect = this.url('problem_main');
         } else {
             assert(url.match(RE_SYZOJ), new ValidationError('url'));
             if (!url.endsWith('/')) url += '/';
             const [, protocol, host, n, pid] = RE_SYZOJ.exec(url);
             if (n === 'p') {
-                // SYZOJ-NG
                 const docId = await this.v3(
                     domainId, targetPid, hidden,
                     protocol, host, pid, false,

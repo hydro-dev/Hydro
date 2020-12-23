@@ -5,8 +5,10 @@ import { safeDump } from 'js-yaml';
 import db from './db';
 import * as bus from './bus';
 import * as sysinfo from '../lib/sysinfo';
+import { Logger } from '../logger';
 
 const coll = db.collection('status');
+const logger = new Logger('monitor');
 
 function crypt(str: string) {
     const cipher = crypto.createCipheriv('des-ecb', 'hydro-oj', '');
@@ -47,7 +49,9 @@ export async function feedback() {
         cpu: inf.cpu,
         flags: inf.flags,
     }));
-    axios.post('https://feedback.undefined.moe/', { payload });
+    axios.post('https://feedback.undefined.moe/', { payload }).catch(() => {
+        logger.warn('Cannot connect to hydro center.');
+    });
 }
 
 export async function update() {

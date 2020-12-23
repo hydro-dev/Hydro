@@ -556,7 +556,10 @@ export class Handler {
             const templateName = this.request.query.template || this.response.template;
             if (templateName) {
                 this.response.body = this.response.body || {};
-                await this.render(templateName, this.response.body);
+                const s = templateName.split('.');
+                if (global.Hydro.ui.template[`${s[0]}.${this.domainId}.${s[1]}`]) {
+                    await this.render(`${s[0]}.${this.domainId}.${s[1]}`, this.response.body);
+                } else await this.render(templateName, this.response.body);
             }
         }
     }
@@ -620,8 +623,9 @@ export class Handler {
 
     async onerror(error: HydroError) {
         if (!error.msg) error.msg = () => error.message;
+        if (error instanceof UserFacingError) error.stack = '';
         if (!(error instanceof NotFoundError)) {
-            logger.error(error.msg(), error.params);
+            logger.error(this.request.path, error.msg(), error.params);
             logger.error(error.stack);
         }
         this.response.status = error instanceof UserFacingError ? error.code : 500;
@@ -813,6 +817,7 @@ export class ConnectionHandler {
     async message(message: any) { } // eslint-disable-line
 
     onerror(err: HydroError) {
+        if (err instanceof UserFacingError) err.stack = this.conn.pathname;
         if (!(err instanceof NotFoundError)) logger.error(err);
         this.send({
             error: {
