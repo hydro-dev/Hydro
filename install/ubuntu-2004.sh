@@ -76,3 +76,5 @@ pm2 save
 echo "Done"
 echo "Database username: hydro"
 echo "Database password: $db_password"
+echo "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
+MINIO_SECRET_KEY=$MINIO_SECRET_KEY" >~/.hydro/env

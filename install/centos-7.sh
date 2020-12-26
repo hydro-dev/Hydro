@@ -6,6 +6,7 @@ MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 MINIO_SECRET_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 
 # Basic
+yum install wget
 mkdir -p /etc/yum.repos.d
 echo "[mongodb-org-4.4]
 name=MongoDB Repository
@@ -17,7 +18,8 @@ echo "yum install -y mongodb-org"
 yum install -y mongodb-org
 mkdir -p /var/lib/mongo
 mkdir -p /var/log/mongodb
-chown -R mongod:mongod /var/lib/mongo /var/log/mongodb
+mkdir -p /data/db
+chown -R mongod:mongod /var/lib/mongo /var/log/mongodb /data/db
 
 # Install NodeJS
 echo "Installing NodeJS"
@@ -50,10 +52,6 @@ pm2 del mongod >/dev/null
 echo 'pm2 start "mongod --auth"'
 pm2 start "mongod --auth"
 
-# Install Compiler
-echo 'Installing g++'
-apt-get install -y g++ >/dev/null
-
 # Install MinIO
 echo 'Installing MinIO'
 wget https://dl.min.io/server/minio/release/linux-amd64/minio
@@ -65,9 +63,9 @@ pm2 start "./minio server /data/file" --name minio
 # TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
-wget https://github.com/criyle/go-judge/releases/download/v0.7.1/executorserver-amd64 -O /usr/bin/sandbox
-chmod +x /usr/bin/sandbox
-pm2 start "/usr/bin/sandbox"
+wget https://github.com/criyle/go-judge/releases/download/v0.9.4/executorserver-amd64 -O /usr/bin/sandbox_
+chmod +x /usr/bin/sandbox_
+pm2 start "/usr/bin/sandbox_"
 mkdir ~/.hydro
 echo "{\"host\":\"127.0.0.1\",\"port\":\"27017\",\"name\":\"hydro\",\"username\":\"hydro\",\"password\":\"$db_password\"}" >~/.hydro/config.json
 echo '["@hydrooj/ui-default","@hydrooj/hydrojudge"]' >~/.hydro/addon.json
@@ -77,3 +75,5 @@ pm2 start hydrooj
 echo "Done"
 echo "Database username: hydro"
 echo "Database password: $db_password"
+echo "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
+MINIO_SECRET_KEY=$MINIO_SECRET_KEY" >~/.hydro/env
