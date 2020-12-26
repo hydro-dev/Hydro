@@ -10,7 +10,7 @@ apt-get -qq update
 echo "apt-get install curl wget gnupg -y"
 apt-get install -y curl wget gnupg >/dev/null
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
-echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu $name/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu $name/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 echo "apt-get update"
 apt-get -qq update
 mkdir -p /data/db /data/file
