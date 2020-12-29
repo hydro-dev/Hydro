@@ -66,7 +66,7 @@ async function entry(config: EntryConfig) {
             const p = await fork([`--entry=${config.entry}`]);
             await new Promise((resolve, reject) => {
                 p.on('exit', (code, signal) => {
-                    if (code === 0) resolve();
+                    if (code === 0) resolve(null);
                     else reject(signal);
                 });
                 p.on('error', (err: Error) => {

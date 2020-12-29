@@ -33,7 +33,7 @@ export = async function compile(
     } if (info.type === 'interpreter') {
         f[target] = { content: code };
         return {
-            execute: info.execute, copyIn: f, clean: () => Promise.resolve(), time: info.time || 1,
+            execute: info.execute, copyIn: f, clean: () => Promise.resolve(null), time: info.time || 1,
         };
     }
     throw new SystemError('Unknown language type.');

@@ -30,7 +30,7 @@ export function parseMemoryMB(str: string) {
 export function sleep(timeout: number) {
     return new Promise((resolve) => {
         setTimeout(() => {
-            resolve();
+            resolve(null);
         }, timeout);
     });
 }

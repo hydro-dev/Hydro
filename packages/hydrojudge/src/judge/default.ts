@@ -138,7 +138,7 @@ export const judge = async (ctx) => {
         })(),
         (async () => {
             if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
-                return { execute: '', copyIn: {}, clean: () => Promise.resolve() };
+                return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
             const copyIn = {};
             for (const file of ctx.config.judge_extra_files) {

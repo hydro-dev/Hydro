@@ -271,7 +271,7 @@ export default class Hydro {
             }, 30000);
         });
         await new Promise((resolve) => {
-            this.ws.once('open', () => { resolve(); });
+            this.ws.once('open', () => { resolve(null); });
         });
         log.info(`[${this.config.host}] 已连接`);
     }

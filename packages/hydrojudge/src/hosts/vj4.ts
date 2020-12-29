@@ -260,7 +260,7 @@ export default class VJ4 {
             await new Promise((resolve, reject) => {
                 zip.extractAllToAsync(savePath, true, (e) => {
                     if (e) reject(e);
-                    else resolve();
+                    else resolve(null);
                 });
             });
             await fs.unlink(tmpFilePath);
@@ -290,7 +290,7 @@ export default class VJ4 {
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(savePath, true, (e) => {
                 if (e) reject(e);
-                else resolve();
+                else resolve(null);
             });
         });
         await fs.unlink(tmpFilePath);
@@ -321,7 +321,7 @@ export default class VJ4 {
             }, 30000);
         });
         await new Promise((resolve) => {
-            this.ws.once('open', () => { resolve(); });
+            this.ws.once('open', () => { resolve(null); });
         });
         log.info(`[${this.config.host}] 已连接`);
     }

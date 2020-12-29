@@ -145,6 +145,10 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _5_6() {
+        // Issue #58
+        await domain.edit('system', { owner: 1 });
+    },
 ];
 
 export = scripts;

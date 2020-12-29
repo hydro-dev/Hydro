@@ -36,7 +36,7 @@ export async function postInit() {
     });
     await new Promise((resolve) => {
         socket.once('open', () => {
-            resolve();
+            resolve(null);
         });
     });
 }

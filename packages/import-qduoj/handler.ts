@@ -19,7 +19,7 @@ class ImportQduojHandler extends Handler {
         const zip = new AdmZip(zipfile);
         const tmp = path.resolve(os.tmpdir(), 'hydro', 'import-qduoj', String.random(32));
         await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, (err) => (err ? resolve() : reject(err)));
+            zip.extractAllToAsync(tmp, true, (err) => (err ? resolve(null) : reject(err)));
         });
         try {
             const folders = await fs.readdir(tmp);
