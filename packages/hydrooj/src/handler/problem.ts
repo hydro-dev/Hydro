@@ -497,6 +497,16 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     }
 }
 
+export class ProblemFileDownloadHandler extends ProblemDetailHandler {
+    @param('filename')
+    async get(domainId: string, filename: string) {
+        this.response.redirect = await storage.signDownloadLink(
+            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`,
+            filename, false, 'user',
+        );
+    }
+}
+
 export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
@@ -689,6 +699,7 @@ export async function apply() {
     Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler);
+    Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler);
     Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler);
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler);
