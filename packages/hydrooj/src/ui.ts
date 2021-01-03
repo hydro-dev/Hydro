@@ -4,6 +4,7 @@ import cluster from 'cluster';
 import {
     terminal, TextBox, LabeledInput,
 } from 'terminal-kit';
+import { argv } from 'yargs';
 import * as bus from './service/bus';
 
 declare module 'terminal-kit/Terminal' {
@@ -30,7 +31,7 @@ export namespace Progress {
     }
 
     export function create(args) {
-        return process.stdout.isTTY
+        return (process.stdout.isTTY && !argv.legacy)
             ? terminal.progressBar(args)
             : new Progress(args);
     }
@@ -43,7 +44,7 @@ async function terminate() {
     } catch (e) {
         hasError = true;
     }
-    if (cluster.isMaster && process.stdout.isTTY) {
+    if (cluster.isMaster && process.stdout.isTTY && !argv.legacy) {
         terminal.hideCursor(false);
         terminal.styleReset();
         terminal.resetScrollingRegion();
@@ -54,7 +55,7 @@ async function terminate() {
 }
 process.on('SIGINT', terminate);
 
-if (cluster.isMaster && process.stdout.isTTY) {
+if (cluster.isMaster && process.stdout.isTTY && !argv.legacy) {
     terminal.clear();
     terminal.grabInput();
     terminal.hideCursor();
