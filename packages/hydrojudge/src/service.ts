@@ -138,33 +138,19 @@ async function postInit() {
 
     class JudgeTask {
         stat: any;
-
         request: any;
-
         event: string;
-
         pid: string;
-
         rid: string;
-
         domainId: string;
-
         lang: string;
-
         code: string;
-
         data: any[];
-
         config: any;
-
         next: (data: any, id?: number) => void;
-
         end: (data: any) => void;
-
         tmpdir: string;
-
         clean: any[];
-
         folder: string;
 
         constructor(request) {
@@ -182,7 +168,7 @@ async function postInit() {
                 this.domainId = this.request.domainId;
                 this.lang = this.request.lang;
                 this.code = this.request.code;
-                this.data = (this.request.data || '').toString();
+                this.data = this.request.data;
                 this.config = this.request.config;
                 this.next = getNext(this);
                 this.end = getEnd(this.domainId, this.rid);
