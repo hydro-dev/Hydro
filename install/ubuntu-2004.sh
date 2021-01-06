@@ -51,7 +51,7 @@ pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb
 # Install MinIO
 wget https://dl.min.io/server/minio/release/linux-amd64/minio
 chmod +x minio
-pm2 start "./minio server /data/file" --name minio
+pm2 start "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY MINIO_SECRET_KEY=$MINIO_SECRET_KEY ./minio server /data/file" --name minio
 
 # Install Compiler
 echo 'Installing g++'
