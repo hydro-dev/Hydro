@@ -327,7 +327,7 @@ export class ProblemStatisticsHandler extends ProblemDetailHandler {
         const udoc = await user.getById(domainId, this.pdoc.owner);
         const path = [
             ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid }, true],
+            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid || this.pdoc.docId }, true],
             ['problem_statistics', null],
         ];
         this.response.template = 'problem_statistics.html';
@@ -530,7 +530,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         const pssdict = solution.getListStatus(domainId, docids, this.user._id);
         const path = [
             ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid }, true],
+            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid || this.pdoc.docId }, true],
             ['problem_solution', null],
         ];
         this.response.body = {
