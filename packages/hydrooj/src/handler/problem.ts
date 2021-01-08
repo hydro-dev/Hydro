@@ -194,8 +194,13 @@ export class ProblemDetailHandler extends ProblemHandler {
     async get(..._args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        if (typeof this.response.body.pdoc.content === 'string') {
+            this.response.body.pdoc.content = this.response.body.pdoc.content
+                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        } else {
+            this.response.body.pdoc.content = JSON.parse(JSON.stringify(this.response.body.pdoc.content)
+                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`));
+        }
     }
 
     @param('pid', Types.UnsignedInt)
