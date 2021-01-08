@@ -7,7 +7,6 @@ import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
-import storage from '../service/storage';
 import * as misc from '../lib/misc';
 import { md5 } from '../lib/crypto';
 import * as mail from '../lib/mail';
@@ -210,7 +209,7 @@ class HomeSettingsHandler extends Handler {
             this.response.body.settings = setting.ACCOUNT_SETTINGS;
         } else if (category === 'domain') {
             this.response.body.settings = setting.DOMAIN_USER_SETTINGS;
-        } else throw new NotFoundError();
+        } else throw new NotFoundError(category);
     }
 
     async post(args: any) {
@@ -378,28 +377,6 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-class HomeFileHandler extends Handler {
-    async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain_file', null],
-        ];
-        const ufdocs = await storage.list(`user/${this.user._id}/`);
-        this.response.template = 'home_file.html';
-        this.response.body = { ufdocs, path };
-    }
-
-    @param('ufid', Types.String)
-    async postDelete(domainId: string, target: string) {
-        if (!target.startsWith(`user/${this.user._id}`)) this.checkPriv(PRIV.PRIV_DELETE_FILE);
-        else this.checkPriv(PRIV.PRIV_DELETE_FILE_SELF);
-        const { size } = await storage.getMeta(target);
-        await storage.del(target);
-        await user.inc(this.user._id, 'usage', -size);
-        this.back();
-    }
-}
-
 async function apply() {
     Route('homepage', '/', HomeHandler);
     Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
@@ -408,7 +385,6 @@ async function apply() {
     Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
     Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
     Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
-    Route('home_file', '/home/file', HomeFileHandler, PRIV.PRIV_USER_PROFILE);
     Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
 }
 

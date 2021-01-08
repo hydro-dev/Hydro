@@ -190,7 +190,13 @@ export class ProblemDetailHandler extends ProblemHandler {
         };
     }
 
-    async get(...args: any[]) { } // eslint-disable-line
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async get(..._args: any[]) {
+        // Navigate to current additional file download
+        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        this.response.body.pdoc.content = this.response.body.pdoc.content
+            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+    }
 
     @param('pid', Types.UnsignedInt)
     async postRejudge(domainId: string, pid: number) {
@@ -207,7 +213,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 export class ProblemExportHandler extends ProblemDetailHandler {
     async get() {
         const hasPerm = (this.user._id === this.pdoc.owner && this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF))
-            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
+            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
         const zip = new AdmZip();
         if (hasPerm) {

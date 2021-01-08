@@ -328,7 +328,6 @@ home_account: 账户设置
 home_domain_account: 当前域的设置
 home_domain_create: 创建域
 home_domain: 我的域
-home_file: 我的文件
 home_messages: 站内消息
 home_preference: 偏好设置
 home_security: 安全设置
@@ -530,6 +529,7 @@ Problem Tags Visibility: 题目标签可见性
 problem_create: 创建题目
 problem_detail: 题目详情
 problem_edit: 编辑题目
+problem_files: 题目文件
 problem_import: 导入题目
 problem_main: 题库
 problem_settings: 题目设置

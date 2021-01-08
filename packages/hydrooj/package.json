@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.15.11",
+    "version": "2.15.12",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -24,7 +24,7 @@
         "koa-static-cache": "^5.1.3",
         "lodash": "^4.17.20",
         "lru-cache": "^6.0.0",
-        "minio": "7.0.18",
+        "minio": "7.0.17",
         "moment-timezone": "^0.5.32",
         "mongodb": "^3.6.3",
         "nodemailer": "^6.4.17",

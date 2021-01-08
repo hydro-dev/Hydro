@@ -4,8 +4,8 @@ import { NotFoundError } from '../error';
 import { Route, Handler } from '../service/server';
 
 class NotFoundHandler extends Handler {
-    async prepare() {
-        throw new NotFoundError();
+    prepare() {
+        throw new NotFoundError(this.request.path);
     }
 
     all() { }
