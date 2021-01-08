@@ -36,9 +36,6 @@ export interface SystemKeys {
     'session.secure': boolean,
     'session.expire_seconds': number,
     'session.unsaved_expire_seconds': number,
-    'lostpass_token_expire_seconds': number,
-    'registration_token_expire_seconds': number,
-    'changemail_token_expire_seconds': number,
     'user.quota': number,
 }
 

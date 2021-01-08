@@ -97,10 +97,10 @@ class UserRegisterWithCodeHandler extends Handler {
         domainId: string, password: string, verify: string,
         uname: string, code: string,
     ) {
-        const { mail } = await token.get(code, token.TYPE_REGISTRATION);
-        if (!mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
+        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
+        if (!tdoc || !tdoc.mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
         if (password !== verify) throw new VerifyPasswordError();
-        const uid = await user.create(mail, uname, password, undefined, this.request.ip);
+        const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
         this.session.scpoe = PERM.PERM_ALL;
