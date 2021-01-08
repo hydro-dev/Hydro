@@ -217,8 +217,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
 export class ProblemExportHandler extends ProblemDetailHandler {
     async get() {
-        const hasPerm = (this.user._id === this.pdoc.owner && this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA_SELF))
-            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const hasPerm = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
         const zip = new AdmZip();
         if (hasPerm) {
@@ -455,7 +454,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (type === 'testdata' && !isJudge) {
             if (this.user._id !== this.pdoc.owner) {
                 this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
-            } else this.checkPerm(PERM.PERM_READ_PROBLEM_DATA_SELF);
+            }
         }
         const links = {};
         for (const file of files) {
