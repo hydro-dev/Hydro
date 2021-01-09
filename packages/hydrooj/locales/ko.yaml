@@ -263,6 +263,7 @@ Edit discussion replies of own discussion: 본인의 토론에 대한 댓글 수
 Edit discussion replies: 토론에서 본인 댓글 수정
 Edit discussions: 토론 수정
 Edit Domain: 그룹 수정
+Edit domain settings: 그룹 설정 수정
 Edit Homework: 과제 수정
 Edit own contests: 본인의 대회 수정
 Edit own discussion replies: 본인의 토론 댓글 수정
@@ -496,6 +497,7 @@ perm_problem_solution: 해설
 perm_problem: 문제
 perm_record: 제출
 perm_training: 학습
+perm_ranking: 랭킹
 Permission: 권한
 Permissions: 권한
 Pick a problem randomly based on current filter: 필터 기반 무작위 추천
@@ -626,9 +628,13 @@ Set Role: 역할 설정
 Set Roles for Selected User: 선택 사용자 역할 설정
 Set Roles for selected users: 선택 사용자 역할 설정
 setting_storage: 설정 저장
+setting_server: 서버 설정
+setting_session: 세션 설정
+setting_smtp: SMTP 설정
 setting_customize: 개인 설정
 setting_display: 표시 설정
 setting_domain: 그룹 설정
+setting_file: 설정 파일
 setting_info_domain: 그룹 정보 설정
 setting_info: 정보 설정
 setting_privacy: 개인정보 설정
@@ -779,6 +785,7 @@ View Owned Training Plans: 내 학습 계획 보기
 View problem solutions: 해설 보기
 View Problem: 문제 보기
 View problems: 문제 보기
+View ranking: 랭킹 보기
 View this domain: 이 그룹 보기
 View training plans: 학습 계획 보기
 View: 보기
