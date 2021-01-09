@@ -13,6 +13,8 @@ declare module 'terminal-kit/Terminal' {
     }
 }
 
+const useTerminal = cluster.isMaster && process.stdout.isTTY && !argv.legacy;
+
 export namespace Progress {
     export class Progress {
         constructor(public args) {
@@ -31,7 +33,8 @@ export namespace Progress {
     }
 
     export function create(args) {
-        return (process.stdout.isTTY && !argv.legacy)
+        // TODO handle worker process
+        return useTerminal
             ? terminal.progressBar(args)
             : new Progress(args);
     }
@@ -44,7 +47,7 @@ async function terminate() {
     } catch (e) {
         hasError = true;
     }
-    if (cluster.isMaster && process.stdout.isTTY && !argv.legacy) {
+    if (useTerminal) {
         terminal.hideCursor(false);
         terminal.styleReset();
         terminal.resetScrollingRegion();
@@ -55,7 +58,7 @@ async function terminate() {
 }
 process.on('SIGINT', terminate);
 
-if (cluster.isMaster && process.stdout.isTTY && !argv.legacy) {
+if (useTerminal) {
     terminal.clear();
     terminal.grabInput();
     terminal.hideCursor();

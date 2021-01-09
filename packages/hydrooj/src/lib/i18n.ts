@@ -43,7 +43,7 @@ String.prototype.rawformat = function rawFormat(object) {
 };
 
 String.prototype.translate = function translate(...languages: string[]) {
-    if (!languages.length) languages = ['zh_CN'];
+    languages.push(global.Hydro.model.system.get('server.language'));
     for (const language of languages) {
         if (!language) continue;
         if (locales[language]) {

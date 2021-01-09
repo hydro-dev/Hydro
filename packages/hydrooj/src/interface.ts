@@ -32,6 +32,7 @@ export interface SystemKeys {
     'server.xff': string,
     'server.worker': number,
     'server.port': number,
+    'server.language': string,
     'session.keys': string[],
     'session.secure': boolean,
     'session.expire_seconds': number,

@@ -81,7 +81,7 @@ export const SystemSetting = (...settings: _Setting[]) => {
 };
 
 PreferenceSetting(
-    Setting('setting_display', 'viewLang', langRange, 'zh_CN', 'select', 'UI Language'),
+    Setting('setting_display', 'viewLang', langRange, null, 'select', 'UI Language'),
     Setting('setting_display', 'timeZone', timezones, 'Asia/Shanghai', 'select', 'Timezone'),
     Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS, 'c', 'select', 'Default Code Language'),
     Setting('setting_usage', 'codeTemplate', null, '', 'textarea', 'Default Code Template',
@@ -141,6 +141,7 @@ SystemSetting(
     Setting('setting_server', 'server.cdn', null, '/', 'text', 'CDN Prefix', 'Ends with /'),
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
+    Setting('setting_server', 'server.language', langRange, 'zh_CN', 'select', 'Default display language'),
     Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_HIDDEN),
     Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
