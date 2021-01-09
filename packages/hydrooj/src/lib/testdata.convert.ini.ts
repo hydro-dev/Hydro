@@ -15,7 +15,7 @@ function convert(ini: string) {
         if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
         res.subtasks.push(cur);
     }
-    return yaml.safeDump(res);
+    return yaml.dump(res);
 }
 
 global.Hydro.lib['testdata.convert.ini'] = convert;

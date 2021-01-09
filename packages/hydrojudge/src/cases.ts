@@ -299,7 +299,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     const yamlConfig = path.resolve(folder, 'config.yaml');
     let config;
     if (fs.existsSync(yamlConfig)) {
-        config = { ...yaml.safeLoad(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
+        config = { ...yaml.load(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
     } else if (fs.existsSync(iniConfig)) {
         config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
     } else config = cfg;

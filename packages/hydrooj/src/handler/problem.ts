@@ -363,7 +363,7 @@ export class ProblemSettingsHandler extends ProblemManageHandler {
             ['problem_settings', null],
         ];
         if (this.response.body.pdoc.config) {
-            this.response.body.pdoc.config = yaml.safeDump(this.response.body.pdoc.config);
+            this.response.body.pdoc.config = yaml.dump(this.response.body.pdoc.config);
         }
     }
 
@@ -372,7 +372,7 @@ export class ProblemSettingsHandler extends ProblemManageHandler {
     async postConfig(domainId: string, pid: string | number, cfg: string) {
         const pdoc = await problem.get(domainId, pid);
         // TODO validate
-        const config = yaml.safeLoad(cfg) as any;
+        const config = yaml.load(cfg) as any;
         await problem.edit(domainId, pdoc.docId, { config });
         this.back();
     }

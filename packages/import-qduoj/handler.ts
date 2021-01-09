@@ -98,7 +98,7 @@ class ImportQduojHandler extends Handler {
                 }
                 await storage.put(
                     `problem/${domainId}/${pid}/testdata/config.yaml`,
-                    Buffer.from(yaml.safeDump(config)),
+                    Buffer.from(yaml.dump(config)),
                 );
                 const data = await storage.list(`problem/${domainId}/${pid}/testdata/`, true);
                 await problem.edit(domainId, pid, { html: true, data });

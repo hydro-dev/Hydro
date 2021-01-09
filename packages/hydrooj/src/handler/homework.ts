@@ -24,7 +24,7 @@ import paginate from '../lib/paginate';
 import { isTitle, isContent } from '../lib/validator';
 
 const validatePenaltyRules = (input: string) => {
-    const s = yaml.safeLoad(input);
+    const s = yaml.load(input);
     return s;
 };
 const convertPenaltyRules = validatePenaltyRules;
@@ -281,7 +281,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             datePenaltyText: penaltySince.format('YYYY-M-D'),
             timePenaltyText: penaltySince.format('hh:mm'),
             extensionDays,
-            penaltyRules: yaml.safeDump(tdoc.penaltyRules),
+            penaltyRules: yaml.dump(tdoc.penaltyRules),
             pids: tdoc.pids.join(','),
             path,
         };

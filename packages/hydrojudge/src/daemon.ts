@@ -57,7 +57,7 @@ async function daemon() {
         if (CONFIG) config = CONFIG;
         else {
             config = (await fs.readFile(CONFIG_FILE)).toString();
-            config = yaml.safeLoad(config);
+            config = yaml.load(config);
         }
     } catch (e) {
         log.error('配置文件无效或未找到。');
@@ -85,7 +85,7 @@ async function daemon() {
                 if (hosts[i].config.cookie) cfg.hosts[i].cookie = hosts[i].config.cookie;
                 if (hosts[i].config.detail) cfg.hosts[i].detail = hosts[i].config.detail;
             }
-            await fs.writeFile(CONFIG_FILE, yaml.safeDump(cfg));
+            await fs.writeFile(CONFIG_FILE, yaml.dump(cfg));
         });
     }
     while ('Orz twd2') {

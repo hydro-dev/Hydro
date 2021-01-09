@@ -70,7 +70,7 @@ export async function locale(pending: string[], fail: string[]) {
                 const locales = {};
                 for (const file of files) {
                     const content = fs.readFileSync(path.resolve(p, file)).toString();
-                    locales[file.split('.')[0]] = yaml.safeLoad(content);
+                    locales[file.split('.')[0]] = yaml.load(content);
                 }
                 global.Hydro.lib.i18n(locales);
                 logger.info('Locale init: %s', i);
@@ -97,7 +97,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
         if (!fs.existsSync(p)) p = path.resolve(i, 'settings.yaml');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                const cfg: any = yaml.safeLoad(fs.readFileSync(p).toString());
+                const cfg: any = yaml.load(fs.readFileSync(p).toString());
                 for (const key in cfg) {
                     map[cfg[key].category || 'system'](
                         modelSetting.Setting(

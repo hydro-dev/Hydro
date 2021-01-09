@@ -1,5 +1,5 @@
 import Zip from 'adm-zip';
-import { safeLoad } from 'js-yaml';
+import { load } from 'js-yaml';
 import { LocalProblemConfig } from '../interface';
 
 export async function readConfig(file: string | Buffer) {
@@ -37,7 +37,7 @@ export async function parseConfig(config: string | LocalProblemConfig) {
     let cfg: LocalProblemConfig = {};
     if (typeof config === 'string') {
         // TODO should validate here?
-        cfg = safeLoad(config) as LocalProblemConfig;
+        cfg = load(config) as LocalProblemConfig;
     } else cfg = config;
     if (cfg.cases) {
         for (const c of cfg.cases) {

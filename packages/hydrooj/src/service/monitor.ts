@@ -1,7 +1,7 @@
 import cluster from 'cluster';
 import crypto from 'crypto';
 import axios from 'axios';
-import { safeDump } from 'js-yaml';
+import { dump } from 'js-yaml';
 import db from './db';
 import * as bus from './bus';
 import * as sysinfo from '../lib/sysinfo';
@@ -33,7 +33,7 @@ export async function feedback() {
         document.coll.find({ docType: document.TYPE_DISCUSSION }).count(),
         record.coll.find().count(),
     ]);
-    const payload = crypt(safeDump({
+    const payload = crypt(dump({
         _id: installid + mid.toString(),
         version,
         name,

@@ -346,7 +346,7 @@ async function fix(doc) {
             w.on('error', reject);
             r.pipe(w);
         });
-        const config = yaml.safeLoad(await testdataConfig.readConfig(p));
+        const config = yaml.load(await testdataConfig.readConfig(p));
         await dst.collection('document').updateOne(
             { _id: doc._id },
             { $set: { config } },

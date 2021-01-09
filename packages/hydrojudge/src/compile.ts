@@ -9,7 +9,7 @@ export = async function compile(
     lang: string, code: string, target: string, copyIn: any, next?: Function,
 ): Promise<Execute> {
     const LANGS = global.Hydro
-        ? yaml.safeLoad(await global.Hydro.model.system.get('hydrojudge.langs'))
+        ? yaml.load(global.Hydro.model.system.get('hydrojudge.langs'))
         : require('./config').LANGS;
     if (!LANGS[lang]) throw new SystemError('Unsupported language {0}.', [lang]);
     const info = LANGS[lang];

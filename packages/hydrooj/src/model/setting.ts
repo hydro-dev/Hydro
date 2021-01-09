@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
+import yaml from 'js-yaml';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -142,6 +143,7 @@ SystemSetting(
     Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
     Setting('setting_server', 'server.language', langRange, 'zh_CN', 'select', 'Default display language'),
+    Setting('setting_basic', 'problem.categories', null, yaml.dump(builtin.CATEGORIES), 'textarea', 'Problem Categories'),
     Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_HIDDEN),
     Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
     Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),

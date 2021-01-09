@@ -47,12 +47,12 @@ if (process.env.EXECUTION_HOST || argv.execute) {
     EXECUTION_HOST = path.resolve(process.env.EXECUTION_HOST || argv.execute as string);
 }
 if (!global.Hydro) {
-    if (fs.existsSync(LANGS_FILE)) LANGS = yaml.safeLoad(fs.readFileSync(LANGS_FILE).toString());
+    if (fs.existsSync(LANGS_FILE)) LANGS = yaml.load(fs.readFileSync(LANGS_FILE).toString());
     else {
         log.error('Language file not found, using default.');
         const file = path.join(path.dirname(require.resolve('@hydrooj/hydrojudge')), 'setting.yaml');
-        const content = yaml.safeLoad(fs.readFileSync(file).toString()) as any;
-        LANGS = yaml.safeLoad(content.langs.default) as any;
+        const content = yaml.load(fs.readFileSync(file).toString()) as any;
+        LANGS = yaml.load(content.langs.default) as any;
     }
     if (!(fs.existsSync(LANGS_FILE) || global.Hydro)) {
         fs.ensureDirSync(path.dirname(LANGS_FILE));

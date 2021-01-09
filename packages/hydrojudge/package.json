@@ -10,11 +10,11 @@
         "axios": "^0.21.1",
         "bson": "^4.2.2",
         "fs-extra": "^9.0.1",
-        "js-yaml": "^3.14.1",
+        "js-yaml": "^4.0.0",
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "systeminformation": "^4.33.4",
+        "systeminformation": "^4.34.5",
         "yargs": "^16.2.0"
     },
     "peerDependencies": {
@@ -24,7 +24,7 @@
     "devDependencies": {
         "@types/bson": "^4.0.2",
         "@types/fs-extra": "^9.0.6",
-        "@types/js-yaml": "^3.12.5",
+        "@types/js-yaml": "^4.0.0",
         "@types/shell-quote": "^1.7.0"
     },
     "scripts": {
