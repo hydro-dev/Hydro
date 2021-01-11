@@ -4,6 +4,9 @@ import cluster from 'cluster';
 import path from 'path';
 import serialize from 'serialize-javascript';
 import Lru from 'lru-cache';
+import { ObjectID } from 'mongodb';
+import { isMoment } from 'moment';
+import { Moment } from 'moment-timezone';
 
 declare global {
     interface StringConstructor {
@@ -239,5 +242,15 @@ export namespace Time {
             return `${Math.round(ms / second)}s`;
         }
         return `${ms}ms`;
+    }
+
+    export function getObjectID(timestamp: string | Date | Moment) {
+        let _timestamp: number;
+        if (typeof timestamp === 'string') _timestamp = new Date(timestamp).getTime();
+        else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
+        else _timestamp = timestamp.getTime();
+        const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
+        const constructedObjectId = new ObjectID(`${hexSeconds}0000000000000000`);
+        return constructedObjectId;
     }
 }

@@ -17,7 +17,7 @@ function isBailed(value: any) {
 }
 
 export type Disposable = () => void
-export type VoidReturn = Promise<void> | void
+export type VoidReturn = Promise<any> | any
 
 export interface EventMap {
     'app/started': () => void
@@ -57,6 +57,7 @@ export interface EventMap {
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
     'problem/setting': (update: Partial<Pdoc>, handler: any) => VoidReturn
     'problem/get': (doc: Pdoc, handler: any) => VoidReturn
+    'problem/delete': (domainId: string, docId: number) => VoidReturn
 
     'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn

@@ -33,6 +33,7 @@ export interface SystemKeys {
     'server.worker': number,
     'server.port': number,
     'server.language': string,
+    'problem.categories': string,
     'session.keys': string[],
     'session.secure': boolean,
     'session.expire_seconds': number,

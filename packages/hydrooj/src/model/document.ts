@@ -25,7 +25,6 @@ export const TYPE_DISCUSSION = 21;
 export const TYPE_DISCUSSION_REPLY = 22;
 export const TYPE_CONTEST = 30;
 export const TYPE_TRAINING = 40;
-export const TYPE_FILE = 50;
 export const TYPE_HOMEWORK = 60;
 
 export interface DocType {
@@ -37,7 +36,6 @@ export interface DocType {
     [TYPE_DISCUSSION_REPLY]: Drdoc,
     [TYPE_CONTEST]: Tdoc,
     [TYPE_TRAINING]: TrainingDoc,
-    [TYPE_FILE]: any,
     [TYPE_HOMEWORK]: Tdoc,
 }
 
@@ -457,6 +455,5 @@ global.Hydro.model.document = {
     TYPE_PROBLEM,
     TYPE_PROBLEM_LIST,
     TYPE_PROBLEM_SOLUTION,
-    TYPE_FILE,
     TYPE_TRAINING,
 };

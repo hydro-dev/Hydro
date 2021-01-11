@@ -2,12 +2,15 @@ import {
     ObjectID, Collection, UpdateQuery, PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
 } from 'mongodb';
 import { Dictionary } from 'lodash';
+import moment from 'moment';
 import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
 import {
     Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
+import { Time } from '../utils';
+import * as bus from '../service/bus';
 import db from '../service/db';
 import storage from '../service/storage';
 
@@ -53,6 +56,19 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
     const res = await coll.findOne({ _id });
     if (res && res.domainId === domainId) return res;
     return null;
+}
+
+export async function stat(domainId?: string) {
+    const [d5min, d1h, d1d, d1m, total] = await Promise.all([
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find(domainId ? { domainId } : {}).count(),
+    ]);
+    return {
+        d5min, d1h, d1d, d1m, total,
+    };
 }
 
 export async function judge(domainId: string, rid: ObjectID, priority = 1) {
@@ -186,11 +202,14 @@ export function getByUid(domainId: string, uid: number, limit: number): Promise<
     return coll.find({ domainId, uid }).limit(limit).toArray();
 }
 
+bus.on('problem/delete', (domainId, docId) => coll.deleteMany({ domainId, pid: docId }));
+
 global.Hydro.model.record = {
     coll,
     add,
     get,
     getMulti,
+    stat,
     update,
     count,
     reset,

@@ -73,16 +73,14 @@ class RecordDetailHandler extends RecordHandler {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
             if (!this.canShowRecord(tdoc, true)) throw new PermissionError(rid);
         }
-        if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
-            rdoc.code = null;
-        }
+        if (rdoc.uid !== this.user.uid && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
             problem.get(domainId, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
         if (!rdoc.contest && pdoc.hidden && pdoc.owner !== this.user._id) {
-            if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
+            if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
                 pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
             }
         }
@@ -125,22 +123,6 @@ class RecordDetailHandler extends RecordHandler {
                 record.update(domainId, rid, $set),
                 bus.emit('record/change', rdoc, $set),
             ]);
-        }
-        this.back();
-    }
-}
-
-/**
- * @deprecated
- * use RecordDetailHandler.postRejudge instead.
- */
-class RecordRejudgeHandler extends Handler {
-    @param('rid', Types.ObjectID)
-    async post(domainId: string, rid: ObjectID) {
-        const rdoc = await record.get(domainId, rid);
-        if (rdoc) {
-            await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid, 0);
         }
         this.back();
     }
@@ -230,7 +212,6 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
 export async function apply() {
     Route('record_main', '/record', RecordListHandler);
     Route('record_detail', '/record/:rid', RecordDetailHandler);
-    Route('record_rejudge', '/record/:rid/rejudge', RecordRejudgeHandler);
     Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
     Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }

@@ -1,6 +1,7 @@
 import { ObjectID } from 'mongodb';
 import * as document from './document';
 import { SolutionNotFoundError } from '../error';
+import * as bus from '../service/bus';
 
 export function add(domainId: string, pid: number, owner: number, content: string) {
     return document.add(
@@ -26,8 +27,11 @@ export function edit(domainId: string, psid: ObjectID, content: string) {
     return document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { content });
 }
 
-export function del(domainId: string, psid: ObjectID) {
-    return document.deleteOne(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
+export async function del(domainId: string, psid: ObjectID) {
+    return await Promise.all([
+        document.deleteOne(domainId, document.TYPE_PROBLEM_SOLUTION, psid),
+        document.deleteMultiStatus(domainId, document.TYPE_PROBLEM_SOLUTION, { docId: psid }),
+    ]);
 }
 
 export function count(domainId: string, query: any) {
@@ -74,6 +78,17 @@ export async function getListStatus(domainId: string, psids: ObjectID[], uid: nu
     for (const i of res) result[i.psid] = i;
     return result;
 }
+
+bus.on('problem/delete', async (domainId, docId) => {
+    const psids = await document.getMulti(
+        domainId, document.TYPE_PROBLEM_SOLUTION,
+        { parentType: document.TYPE_PROBLEM, parentId: docId },
+    ).project({ docId: 1 }).map((psdoc) => psdoc.docId).toArray();
+    return await Promise.all([
+        document.deleteMulti(domainId, document.TYPE_PROBLEM_SOLUTION, { docId: { $in: psids } }),
+        document.deleteMultiStatus(domainId, document.TYPE_PROBLEM_SOLUTION, { docId: { $in: psids } }),
+    ]);
+});
 
 global.Hydro.model.solution = {
     count,

@@ -9,6 +9,7 @@ import { Content } from '../loader';
 import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import storage from '../service/storage';
+import * as bus from '../service/bus';
 
 export interface Pdoc {
     _id: ObjectID
@@ -206,6 +207,11 @@ export async function updateStatus(
 export function setStar(domainId: string, pid: number, uid: number, star: boolean) {
     return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
 }
+
+bus.on('problem/delete', (domainId, docId) => Promise.all([
+    document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
+    document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
+]));
 
 global.Hydro.model.problem = {
     Pdoc,

@@ -5,6 +5,7 @@ import * as training from './training';
 import * as document from './document';
 import { DocumentNotFoundError } from '../error';
 import { Ddoc, Drdoc, Drrdoc } from '../interface';
+import * as bus from '../service/bus';
 
 export const typeDisplay = {
     [document.TYPE_PROBLEM]: 'problem',
@@ -214,6 +215,22 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden: boo
     await Promise.all(tasks);
     return res;
 }
+
+bus.on('problem/delete', async (domainId, docId) => {
+    const dids = await document.getMulti(
+        domainId, document.TYPE_DISCUSSION,
+        { parentType: document.TYPE_PROBLEM, parentId: docId },
+    ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
+    const drids = await document.getMulti(
+        domainId, document.TYPE_DISCUSSION_REPLY,
+        { parentType: document.TYPE_DISCUSSION, parentId: { $in: dids } },
+    ).project({ docId: 1 }).map((drdoc) => drdoc.docId).toArray();
+    return await Promise.all([
+        document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
+        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
+        document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
+    ]);
+});
 
 global.Hydro.model.discussion = {
     typeDisplay,

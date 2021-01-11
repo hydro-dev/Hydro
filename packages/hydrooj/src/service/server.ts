@@ -293,13 +293,68 @@ export async function prepare() {
     }));
 }
 
-export class Handler {
-    UIContext: any;
-
-    args: any;
-
+export class HandlerCommon {
     domainId: string;
+    domain: DomainDoc;
+    user: User;
+    session: Record<string, any>;
+    request: Record<string, any>;
 
+    async limitRate(op: string, periodSecs: number, maxOperations: number) {
+        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
+    }
+
+    translate(str: string) {
+        if (!str) return '';
+        return str.toString().translate(this.user.viewLang, this.session.viewLang);
+    }
+
+    renderTitle(str: string) {
+        return `${this.translate(str)} - ${system.get('server.name')}`;
+    }
+
+    checkPerm(...args: bigint[]) {
+        // @ts-ignore
+        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
+    }
+
+    checkPriv(...args: number[]) {
+        // @ts-ignore
+        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
+    }
+
+    url(name: string, kwargs: any = {}) {
+        let res = '#';
+        const args: any = {};
+        const query: any = {};
+        for (const key in kwargs) {
+            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
+            else args[key] = kwargs[key].toString();
+        }
+        for (const key in kwargs.query || {}) {
+            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
+            else query[key] = kwargs.query[key].toString();
+        }
+        try {
+            if (this.domainId !== 'system' || args.domainId) {
+                name += '_with_domainId';
+                args.domainId = args.domainId || this.domainId;
+            }
+            const { anchor } = args;
+            res = router.url(name, args, { query });
+            if (anchor) return `${res}#${anchor}`;
+        } catch (e) {
+            logger.warn(e.message);
+            logger.info('%s %o', name, args);
+            logger.info('%s', e.stack);
+        }
+        return res;
+    }
+}
+
+export class Handler extends HandlerCommon {
+    UIContext: any;
+    args: any;
     ctx: Koa.Context;
 
     request: {
@@ -327,19 +382,12 @@ export class Handler {
         attachment: (name: string, stream?: any) => void,
     };
 
-    session: any;
-
     csrfToken: string;
-
-    user: User;
-
-    domain: DomainDoc;
-
     loginMethods: any;
-
     __param: Record<string, ParamOption[]>;
 
     constructor(ctx: Koa.Context) {
+        super();
         this.ctx = ctx;
         this.request = {
             host: ctx.request.host,
@@ -402,57 +450,6 @@ export class Handler {
             _: this.translate.bind(this),
             ...context,
         });
-        return res;
-    }
-
-    async limitRate(op: string, periodSecs: number, maxOperations: number) {
-        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
-    }
-
-    translate(str: string) {
-        if (!str) return '';
-        return str.toString().translate(this.user.viewLang, this.session.viewLang);
-    }
-
-    renderTitle(str: string) {
-        return `${this.translate(str)} - ${system.get('server.name')}`;
-    }
-
-    checkPerm(...args: bigint[]) {
-        // @ts-ignore
-        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
-    }
-
-    checkPriv(...args: number[]) {
-        // @ts-ignore
-        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
-    }
-
-    url(name: string, kwargs: any = {}) {
-        let res = '#';
-        const args: any = {};
-        const query: any = {};
-        for (const key in kwargs) {
-            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
-            else args[key] = kwargs[key].toString();
-        }
-        for (const key in kwargs.query || {}) {
-            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = kwargs.query[key].toString();
-        }
-        try {
-            if (this.domainId !== 'system' || args.domainId) {
-                name += '_with_domainId';
-                args.domainId = args.domainId || this.domainId;
-            }
-            const { anchor } = args;
-            res = router.url(name, args, { query });
-            if (anchor) return `${res}#${anchor}`;
-        } catch (e) {
-            logger.warn(e.message);
-            logger.info('%s %o', name, args);
-            logger.info('%s', e.stack);
-        }
         return res;
     }
 
@@ -584,8 +581,8 @@ export class Handler {
 
     async saveCookie() {
         const expireSeconds = this.session.save
-            ? system.get('session.expire_seconds') as number
-            : system.get('session.unsaved_expire_seconds') as number;
+            ? system.get('session.expire_seconds')
+            : system.get('session.unsaved_expire_seconds');
         if (this.session._id) {
             await token.update(
                 this.session._id,
@@ -614,10 +611,6 @@ export class Handler {
             secure: !!system.get('session.secure'),
             httpOnly: false,
         };
-        if (this.session.save) {
-            cookie.expires = this.session.expireAt;
-            cookie.maxAge = expireSeconds;
-        }
         this.ctx.cookies.set('sid', this.session._id, cookie);
     }
 
@@ -717,26 +710,17 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
     router.all(`${name}_with_domainId`, `/d/:domainId${path}`, (ctx) => handle(ctx, RouteHandler, checker));
 }
 
-export class ConnectionHandler {
+export class ConnectionHandler extends HandlerCommon {
     conn: sockjs.Connection;
-
+    args: any;
     request: {
         params: any;
         headers: any;
         ip: string;
     }
 
-    domainId: string;
-
-    session: any;
-
-    args: any;
-
-    user: User;
-
-    domain: DomainDoc;
-
     constructor(conn: sockjs.Connection) {
+        super();
         this.conn = conn;
         this.request = {
             params: {},
@@ -755,54 +739,6 @@ export class ConnectionHandler {
             url: this.url.bind(this),
             _: this.translate.bind(this),
         }));
-        return res;
-    }
-
-    async limitRate(op: string, periodSecs: number, maxOperations: number) {
-        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
-    }
-
-    translate(str: string) {
-        return str ? str.toString().translate(this.user.viewLang || this.session.viewLang) : '';
-    }
-
-    renderTitle(str: string) {
-        return `${this.translate(str)} - ${system.get('server.name')}`;
-    }
-
-    checkPerm(...args: bigint[]) {
-        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
-    }
-
-    checkPriv(...args: number[]) {
-        // @ts-ignore
-        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
-    }
-
-    url(name: string, kwargs: any = {}) {
-        let res = '#';
-        const args: any = {};
-        const query: any = {};
-        for (const key in kwargs) {
-            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
-            else args[key] = kwargs[key].toString();
-        }
-        for (const key in kwargs.query || {}) {
-            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = kwargs.query[key].toString();
-        }
-        try {
-            if (this.args.domainId !== 'system' || args.domainId) {
-                name += '_with_domainId';
-                args.domainId = args.domainId || this.args.domainId;
-            }
-            const { anchor } = args;
-            res = router.url(name, args, { query });
-            if (anchor) return `${res}#${anchor}`;
-        } catch (e) {
-            logger.error(e.message);
-            logger.info(name, args);
-        }
         return res;
     }
 
@@ -934,6 +870,7 @@ global.Hydro.service.server = {
     route,
     param,
     requireCsrfToken,
+    HandlerCommon,
     Handler,
     ConnectionHandler,
     Route,
