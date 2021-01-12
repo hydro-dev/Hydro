@@ -13,7 +13,7 @@ declare module 'terminal-kit/Terminal' {
     }
 }
 
-const useTerminal = cluster.isMaster && process.stdout.isTTY && !argv.legacy;
+const useTerminal = cluster.isMaster && process.stdout.isTTY && !argv.legacy && !argv._.length;
 
 export namespace Progress {
     export class Progress {

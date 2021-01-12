@@ -69,9 +69,14 @@ export async function load(call: Entry) {
     for (const i of builtinModel) require(`../model/${i}`);
     const scripts = require('../upgrade');
     let dbVer = (await modelSystem.get('db.ver')) ?? 0;
+    const isFresh = !dbVer;
     const expected = scripts.length;
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
+        if (isFresh) {
+            const func = scripts[dbVer].toString();
+            if (func.includes('_FRESH_INSTALL_IGNORE')) continue;
+        }
         const result = await scripts[dbVer]();
         if (!result) break;
         dbVer++;

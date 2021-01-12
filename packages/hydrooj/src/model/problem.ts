@@ -137,6 +137,14 @@ export function count(domainId: string, query: FilterQuery<Pdoc>) {
     return document.count(domainId, document.TYPE_PROBLEM, query);
 }
 
+export function del(domainId: string, docId: number) {
+    return Promise.all([
+        document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
+        document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
+        bus.parallel('problem/delete', domainId, docId),
+    ]);
+}
+
 export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
     await storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
@@ -208,11 +216,6 @@ export function setStar(domainId: string, pid: number, uid: number, star: boolea
     return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
 }
 
-bus.on('problem/delete', (domainId, docId) => Promise.all([
-    document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
-    document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
-]));
-
 global.Hydro.model.problem = {
     Pdoc,
 
@@ -227,6 +230,7 @@ global.Hydro.model.problem = {
     add,
     inc,
     get,
+    del,
     edit,
     count,
     push,

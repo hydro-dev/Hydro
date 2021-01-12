@@ -194,69 +194,17 @@ function _descriptor(v: ParamOption) {
     };
 }
 
-export function get(
-    name: string, type: Type, validate: null, convert: Converter
-): MethodDecorator;
-export function get(
-    name: string, type: Type, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function get(
-    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function get(
-    name: string, ...args: Array<Type | boolean | Validator | Converter>
-): MethodDecorator;
-export function get(name: string, ...args: any): MethodDecorator {
-    return _descriptor(_buildParam(name, 'get', ...args));
-}
+type DescriptorBuilder =
+    ((name: string, type: Type) => MethodDecorator)
+    & ((name: string, type: Type, validate: null, convert: Converter) => MethodDecorator)
+    & ((name: string, type: Type, validate?: Validator, convert?: Converter) => MethodDecorator)
+    & ((name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter) => MethodDecorator)
+    & ((name: string, ...args: Array<Type | boolean | Validator | Converter>) => MethodDecorator)
 
-export function post(
-    name: string, type: Type, validate: null, convert: Converter
-): MethodDecorator;
-export function post(
-    name: string, type?: Type, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function post(
-    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function post(
-    name: string, ...args: Array<Type | boolean | Converter | Validator>
-): MethodDecorator;
-export function post(name: string, ...args: any): MethodDecorator {
-    return _descriptor(_buildParam(name, 'post', ...args));
-}
-
-export function route(
-    name: string, type: Type, validate: null, convert: Converter
-): MethodDecorator;
-export function route(
-    name: string, type?: Type, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function route(
-    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function route(
-    name: string, ...args: Array<Type | boolean | Converter | Validator>
-): MethodDecorator;
-export function route(name: string, ...args: any): MethodDecorator {
-    return _descriptor(_buildParam(name, 'route', ...args));
-}
-
-export function param(
-    name: string, type: Type, validate: null, convert: Converter
-): MethodDecorator;
-export function param(
-    name: string, type?: Type, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function param(
-    name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter,
-): MethodDecorator;
-export function param(
-    name: string, ...args: Array<Type | boolean | Converter | Validator>
-): MethodDecorator;
-export function param(name: string, ...args: any): MethodDecorator {
-    return _descriptor(_buildParam(name, 'all', ...args));
-}
+export const get: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));
+export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'post', ...args));
+export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
+export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
 
 export function requireCsrfToken(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
@@ -321,6 +269,24 @@ export class HandlerCommon {
     checkPriv(...args: number[]) {
         // @ts-ignore
         if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
+    }
+
+    async renderHTML(name: string, context: any): Promise<string> {
+        const UserContext: any = {
+            ...this.user,
+            gravatar: misc.gravatar(this.user.gravatar || '', 128),
+            perm: this.user.perm.toString(),
+        };
+        UserContext.viewLang = this.translate('__id');
+        if (!global.Hydro.lib.template) return JSON.stringify(context);
+        const res = await global.Hydro.lib.template.render(name, {
+            handler: this,
+            UserContext,
+            url: this.url.bind(this),
+            _: this.translate.bind(this),
+            ...context,
+        });
+        return res;
     }
 
     url(name: string, kwargs: any = {}) {
@@ -395,9 +361,7 @@ export class Handler extends HandlerCommon {
             ip: ctx.request.ip,
             headers: ctx.request.headers,
             cookies: ctx.cookies,
-            // @ts-ignore
             body: ctx.request.body,
-            // @ts-ignore
             files: ctx.request.files,
             query: ctx.query,
             path: ctx.path,
@@ -428,29 +392,14 @@ export class Handler extends HandlerCommon {
             url_prefix: '/',
         };
         this.session = {};
+        const xff = system.get('server.xff');
+        if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
     }
 
     @lrucache
     // eslint-disable-next-line class-methods-use-this
     getCsrfToken(id: string) {
         return hash('csrf_token', id);
-    }
-
-    async renderHTML(name: string, context: any): Promise<string> {
-        const UserContext = {
-            ...this.user,
-            gravatar: misc.gravatar(this.user.gravatar || '', 128),
-            perm: this.user.perm.toString(),
-        };
-        if (!global.Hydro.lib.template) return JSON.stringify(context);
-        const res = await global.Hydro.lib.template.render(name, {
-            handler: this,
-            UserContext,
-            url: this.url.bind(this),
-            _: this.translate.bind(this),
-            ...context,
-        });
-        return res;
     }
 
     async render(name: string, context: any) {
@@ -482,10 +431,9 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        const xff = system.get('server.xff') as string;
-        if (xff) this.request.ip = this.request.headers[xff.toLowerCase()];
         [this.domain] = await Promise.all([
             domain.get(domainId),
+            this.limitRate('global', 10, 100),
             this.getSession(),
             this.getBdoc(),
         ]);
@@ -733,15 +681,6 @@ export class ConnectionHandler extends HandlerCommon {
         for (const i in p) this.request.params[p[i][0]] = decodeURIComponent(p[i][1]);
     }
 
-    async renderHTML(name: string, context: any): Promise<string> {
-        const res = await global.Hydro.lib.template.render(name, Object.assign(context, {
-            handler: this,
-            url: this.url.bind(this),
-            _: this.translate.bind(this),
-        }));
-        return res;
-    }
-
     send(data: any) {
         this.conn.write(JSON.stringify(data));
     }
@@ -782,10 +721,13 @@ export class ConnectionHandler extends HandlerCommon {
             domain.get(domainId),
             this.getSession(cookie),
         ]);
-        const bdoc = await blacklist.get(this.request.ip);
+        const [bdoc, udoc] = await Promise.all([
+            blacklist.get(this.request.ip),
+            user.getById(domainId, this.session.uid, this.session.scope),
+        ]);
         if (bdoc) throw new BlacklistedError(this.request.ip);
-        this.user = await user.getById(domainId, this.session.uid, this.session.scope);
-        if (!this.user) throw new UserNotFoundError(this.session.uid);
+        if (!udoc) throw new UserNotFoundError(this.session.uid);
+        this.user = udoc;
         if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
     }
 }
@@ -844,17 +786,6 @@ export function start() {
             logger.debug(`${ctx.request.method} ${ctx.request.path} ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }
-    app.use(async (ctx, next) => {
-        const xff = system.get('server.xff');
-        const ip = xff ? ctx.request.headers[xff] : ctx.request.ip;
-        try {
-            await opcount.inc('global', ip, 10, 100);
-        } catch (e) {
-            ctx.status = 429;
-            return null;
-        }
-        return await next();
-    });
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.port || port);
     logger.success('Server listening at: %d', argv.port || port);

@@ -329,6 +329,7 @@ export interface DomainDoc extends Dictionary<any> {
     bulletin: string,
     pidCounter: number,
     join?: any,
+    hostname?: string,
 }
 
 // Message

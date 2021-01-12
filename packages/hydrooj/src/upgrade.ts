@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
 import { ObjectID, Collection } from 'mongodb';
 import AdmZip from 'adm-zip';
@@ -28,6 +29,7 @@ const scripts: UpgradeScript[] = [
     },
     // Add history column to ddoc,drdoc,psdoc
     async function _1_2() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const domains = await domain.getMulti().project({ _id: 1 }).toArray();
         for (const d of domains) {
             const bulk = document.coll.initializeUnorderedBulkOp();
@@ -46,10 +48,12 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _2_3() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('document').updateMany({ pid: /^\d+$/i }, { $unset: { pid: '' } });
         return true;
     },
     async function _3_4() {
+        const _FRESH_INSTALL_IGNORE = 1;
         if (storage.error) {
             logger.error('Cannot upgrade. Please change storage config.');
             return false;
@@ -133,6 +137,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _4_5() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const domains = await domain.getMulti().project({ _id: 1 }).toArray();
         for (const d of domains) {
             const bulk = document.coll.initializeUnorderedBulkOp();
@@ -147,6 +152,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _5_6() {
         // Issue #58
+        const _FRESH_INSTALL_IGNORE = 1;
         await domain.edit('system', { owner: 1 });
     },
 ];
