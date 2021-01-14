@@ -295,9 +295,7 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
 
 export class ProblemPretestConnectionHandler extends ConnectionHandler {
     pid: string;
-
     domainId: string;
-
     dispose: bus.Disposable;
 
     @param('pid', Types.String)
@@ -316,12 +314,6 @@ export class ProblemPretestConnectionHandler extends ConnectionHandler {
             || rdoc.pid.toString() !== this.pid
             || rdoc.domainId !== this.domainId
         ) return;
-        rdoc.compilerTexts = [];
-        rdoc.judgeTexts = [];
-        // @ts-ignore
-        rdoc.testCases = rdoc.testCases.map((c) => ({
-            status: c.status,
-        }));
         // TODO handle update
         if (rdoc.contest) return;
         this.send({ rdoc });

@@ -232,15 +232,10 @@ export namespace Time {
     export const week = day * 7;
     export function formatTimeShort(ms: number) {
         const abs = Math.abs(ms);
-        if (abs >= day - hour / 2) {
-            return `${Math.round(ms / day)}d`;
-        } if (abs >= hour - minute / 2) {
-            return `${Math.round(ms / hour)}h`;
-        } if (abs >= minute - second / 2) {
-            return `${Math.round(ms / minute)}m`;
-        } if (abs >= second) {
-            return `${Math.round(ms / second)}s`;
-        }
+        if (abs >= day - hour / 2) return `${Math.round(ms / day)}d`;
+        if (abs >= hour - minute / 2) return `${Math.round(ms / hour)}h`;
+        if (abs >= minute - second / 2) return `${Math.round(ms / minute)}m`;
+        if (abs >= second) return `${Math.round(ms / second)}s`;
         return `${ms}ms`;
     }
 

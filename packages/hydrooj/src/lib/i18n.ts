@@ -1,5 +1,3 @@
-import { Dictionary } from 'lodash';
-
 const locales = {};
 
 declare global {
@@ -43,7 +41,6 @@ String.prototype.rawformat = function rawFormat(object) {
 };
 
 String.prototype.translate = function translate(...languages: string[]) {
-    languages.push(global.Hydro.model.system.get('server.language'));
     for (const language of languages) {
         if (!language) continue;
         const curr = (locales[language] || {})[this] || (locales[language.split('_')[0]] || {})[this];
@@ -52,9 +49,9 @@ String.prototype.translate = function translate(...languages: string[]) {
     return this;
 };
 
-function load(data: Dictionary<string>) {
+function load(data: Record<string, Record<string, string>>) {
     for (const i in data) {
-        if (!locales[i]) locales[i] = data[i];
+        if (!locales[i]) locales[i] = { __id: i, ...data[i] };
         else locales[i] = Object.assign(locales[i], data[i]);
     }
 }

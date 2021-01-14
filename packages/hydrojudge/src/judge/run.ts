@@ -5,27 +5,72 @@ import * as STATUS from '../status';
 import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
+import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
+import { CompileError } from '../error';
 
 export const judge = async (ctx) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    ctx.execute = await compile(ctx.lang, ctx.code, 'code', {}, ctx.next);
+    try {
+        ctx.execute = await compile(ctx.lang, ctx.code, 'code', {}, ctx.next);
+    } catch (e) {
+        if (e instanceof CompileError) {
+            ctx.next({
+                status: STATUS.STATUS_COMPILE_ERROR,
+                case: {
+                    status: STATUS.STATUS_COMPILE_ERROR,
+                    score: 0,
+                    time_ms: 0,
+                    memory_kb: 0,
+                    message: compilerText(e.stdout, e.stderr),
+                },
+            });
+            ctx.end({
+                status: STATUS.STATUS_COMPILE_ERROR,
+                score: 0,
+                time_ms: 0,
+                memory_kb: 0,
+            });
+        } else {
+            ctx.next({
+                status: STATUS.STATUS_SYSTEM_ERROR,
+                case: {
+                    status: STATUS.STATUS_SYSTEM_ERROR,
+                    score: 0,
+                    time_ms: 0,
+                    memory_kb: 0,
+                    message: `${e.message}\n${JSON.stringify(e.params)}`,
+                },
+            });
+            ctx.end({
+                status: STATUS.STATUS_COMPILE_ERROR,
+                score: 0,
+                time_ms: 0,
+                memory_kb: 0,
+            });
+        }
+        return;
+    }
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const copyIn = { ...ctx.execute.copyIn };
-    const stdin = path.resolve(ctx.tmpdir, 'stdin');
-    const stdout = path.resolve(ctx.tmpdir, 'stdout');
-    const stderr = path.resolve(ctx.tmpdir, 'stderr');
-    fs.writeFileSync(stdin, ctx.config.input || '');
+    const { filename } = ctx.config;
+    if (filename) copyIn[`${filename}.in`] = { content: ctx.config.input };
+    const copyOut = filename ? [`${filename}.out`] : [];
+    const stdin = path.resolve(ctx.tmpdir, '0.in');
+    await fs.writeFile(stdin, ctx.config.input);
+    const stdout = path.resolve(ctx.tmpdir, '0.out');
+    const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
         ctx.execute.execute.replace(/\$\{name\}/g, 'code'),
         {
-            stdin,
-            stdout,
+            stdin: filename ? null : stdin,
+            stdout: filename ? null : stdout,
             stderr,
             copyIn,
-            time_limit_ms: ctx.config.time,
-            memory_limit_mb: ctx.config.memory,
+            copyOut,
+            time_limit_ms: parseTimeMS(ctx.config.time),
+            memory_limit_mb: parseMemoryMB(ctx.config.memory),
         },
     );
     const { code, time_usage_ms, memory_usage_kb } = res;

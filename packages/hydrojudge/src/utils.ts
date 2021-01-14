@@ -12,18 +12,19 @@ const MEMORY_UNITS = { k: 0.1, m: 1, g: 1024 };
 const EMPTY_STR = /^[ \r\n\t]*$/i;
 
 export const cmd = parse;
-
 export function noop() { }
 
-export function parseTimeMS(str: string) {
-    const match = TIME_RE.exec(str);
-    if (!match) throw new FormatError('Error parsing time: {0}', [str]);
+export function parseTimeMS(val: string | number) {
+    if (typeof val === 'number') return val;
+    const match = TIME_RE.exec(val);
+    if (!match) throw new FormatError('Error parsing time: {0}', [val]);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
 }
 
-export function parseMemoryMB(str: string) {
-    const match = MEMORY_RE.exec(str);
-    if (!match) throw new FormatError('Error parsing memory: {0}', [str]);
+export function parseMemoryMB(val: string | number) {
+    if (typeof val === 'number') return val;
+    const match = MEMORY_RE.exec(val);
+    if (!match) throw new FormatError('Error parsing memory: {0}', [val]);
     return Math.floor(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
 }
 
