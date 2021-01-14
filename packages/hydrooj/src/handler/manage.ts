@@ -10,11 +10,12 @@ import * as record from '../model/record';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
+import * as bus from '../service/bus';
 import {
     validate, isEmail, isUname, isPassword,
 } from '../lib/validator';
 
-function set(key, value) {
+function set(key: string, value: any) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
         const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
         if (s.flag & setting.FLAG_DISABLED) return undefined;
@@ -24,7 +25,7 @@ function set(key, value) {
             return false;
         }
         if (s.type === 'number') {
-            if (!Number.isSafeInteger(parseInt(value, 10))) {
+            if (!Number.isSafeInteger(+value)) {
                 throw new ValidationError(key);
             }
             return parseInt(value, 10);
@@ -139,8 +140,6 @@ class SystemSettingHandler extends SystemHandler {
         this.response.body.current = {};
         this.response.body.settings = setting.SYSTEM_SETTINGS;
         for (const s of this.response.body.settings) {
-            // FIXME no-await-in-loop
-            // eslint-disable-next-line no-await-in-loop
             this.response.body.current[s.key] = system.get(s.key);
         }
     }
@@ -151,15 +150,14 @@ class SystemSettingHandler extends SystemHandler {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
                     if (typeof set(`${key}.${subkey}`, args[key][subkey]) !== 'undefined') {
-                        // @ts-ignore
                         tasks.push(system.set(`${key}.${subkey}`, set(`${key}.${subkey}`, args[key][subkey])));
                     }
                 }
             } else if (typeof set(key, args[key]) !== 'undefined') {
-                // @ts-ignore
                 tasks.push(system.set(key, set(key, args[key])));
             }
         }
+        tasks.push(bus.parallel('system/setting', args));
         await Promise.all(tasks);
         this.back();
     }

@@ -254,7 +254,7 @@ export class HandlerCommon {
 
     translate(str: string) {
         if (!str) return '';
-        return str.toString().translate(this.user.viewLang, this.session.viewLang);
+        return str.toString().translate(this.user.viewLang, this.session.viewLang, system.get('server.language'));
     }
 
     renderTitle(str: string) {

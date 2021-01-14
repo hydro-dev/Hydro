@@ -38,6 +38,8 @@ export interface EventMap {
     'database/connect': (db: Db) => void
     'database/config': () => void
 
+    'system/setting': (args: Record<string, any>) => VoidReturn
+
     'monitor/update': (type: 'server' | 'judger', $set: any) => VoidReturn
 
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
