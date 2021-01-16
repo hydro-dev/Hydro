@@ -124,7 +124,7 @@ class UserLostPassHandler extends Handler {
             system.get('session.unsaved_expire_seconds'),
             { uid: udoc._id },
         );
-        const m = await this.renderHTML('user_lostpass_mail', { url: `lostpass/${tid}`, uname: udoc.uname });
+        const m = await this.renderHTML('user_lostpass_mail.html', { url: `lostpass/${tid}`, uname: udoc.uname });
         await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);
         this.response.template = 'user_lostpass_mail_sent.html';
     }

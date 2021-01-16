@@ -643,7 +643,7 @@ Show MOD badge: 展示 MOD 徽章
 Show: 显示
 Sign In: 登录
 SIGN IN: 登录
-Sign up mail has been sent to your email.: 注册邮件已经发送到您的电子邮箱。
+Sign up mail has been sent to your email.: 注册邮件已经发送到您的垃圾箱。
 Sign Up Now: 现在注册
 Sign Up: 注册
 Size: 大小
@@ -741,6 +741,7 @@ user_detail: 用户
 user_login: 登录
 user_logout: 登出
 user_lostpass: 忘记密码
+user_register_mail_sent: 注册邮件已发送
 user_register: 注册
 User-defined role: 用户定义的角色
 User: 用户
