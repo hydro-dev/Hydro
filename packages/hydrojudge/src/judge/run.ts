@@ -58,7 +58,7 @@ export const judge = async (ctx) => {
     if (filename) copyIn[`${filename}.in`] = { content: ctx.config.input };
     const copyOut = filename ? [`${filename}.out`] : [];
     const stdin = path.resolve(ctx.tmpdir, '0.in');
-    await fs.writeFile(stdin, ctx.config.input);
+    await fs.writeFile(stdin, ctx.config.input || '');
     const stdout = path.resolve(ctx.tmpdir, '0.out');
     const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
