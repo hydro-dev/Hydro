@@ -2,6 +2,7 @@ import { Readable } from 'stream';
 import assert from 'assert';
 import { URL } from 'url';
 import { Client, BucketItem, ItemBucketMetadata } from 'minio';
+import { createReadStream } from 'fs-extra';
 import { Logger } from '../logger';
 import { streamToBuffer } from '../utils';
 
@@ -103,7 +104,7 @@ class StorageService {
     }
 
     async put(target: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
-        if (typeof file === 'string') return await this.client.fPutObject(this.opts.bucket, target, file, meta);
+        if (typeof file === 'string') file = createReadStream(file);
         return await this.client.putObject(this.opts.bucket, target, file, meta);
     }
 

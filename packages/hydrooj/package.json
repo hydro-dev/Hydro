@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.15.21",
+    "version": "2.15.22",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -32,8 +32,8 @@
         "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
-        "systeminformation": "^4.34.5",
-        "terminal-kit": "^1.44.3",
+        "systeminformation": "^4.34.7",
+        "terminal-kit": "^1.45.4",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
@@ -45,7 +45,7 @@
         "@types/koa-static-cache": "^5.1.0",
         "@types/lodash": "^4.14.167",
         "@types/lru-cache": "^5.1.0",
-        "@types/minio": "^7.0.6",
+        "@types/minio": "^7.0.7",
         "@types/mongodb": "^3.5.33",
         "@types/nodemailer": "^6.4.0",
         "@types/serialize-javascript": "^5.0.0",
