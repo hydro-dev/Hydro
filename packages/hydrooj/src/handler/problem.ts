@@ -165,7 +165,6 @@ export class ProblemRandomHandler extends ProblemHandler {
 
 export class ProblemDetailHandler extends ProblemHandler {
     pdoc: Pdoc;
-
     udoc: User;
 
     @route('pid', Types.String, true, null, parsePid)
@@ -212,6 +211,12 @@ export class ProblemDetailHandler extends ProblemHandler {
             await record.judge(domainId, doc._id, -1);
         });
         this.back();
+    }
+
+    async postDelete() {
+        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        await problem.del(this.pdoc.domainId, this.pdoc.docId);
+        this.response.redirect = this.url('problem_main');
     }
 }
 
@@ -464,7 +469,6 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (!this.request.files.file) throw new ValidationError('file');
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
         if (filename === 'testdata.zip') {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
@@ -489,7 +493,6 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
         if (type === 'testdata') {
             await problem.delTestdata(domainId, this.pdoc.docId, files);
         } else {

@@ -141,6 +141,7 @@ export function del(domainId: string, docId: number) {
     return Promise.all([
         document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
         document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
+        storage.list(`problem/${domainId}/${docId}/`, true).then((items) => storage.del(items.map((item) => item.prefix + item.name))),
         bus.parallel('problem/delete', domainId, docId),
     ]);
 }

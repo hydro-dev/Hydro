@@ -660,10 +660,10 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 
 export class ConnectionHandler extends HandlerCommon {
     conn: sockjs.Connection;
-    args: any;
+    args: Record<string, any>;
     request: {
-        params: any;
-        headers: any;
+        params: Record<string, any>;
+        headers: Record<string, string>;
         ip: string;
     }
 
