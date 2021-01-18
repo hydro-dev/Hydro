@@ -18,7 +18,7 @@ import storage from '../service/storage';
 import { isPid } from '../lib/validator';
 import download from '../lib/download';
 
-const RE_SYZOJ = /(https?):\/\/([a-zA-Z0-9.:]+)\/(problem|p)\/([0-9]+)\/?/i;
+const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');
 
 class ProblemImportSYZOJHandler extends Handler {
@@ -112,11 +112,12 @@ class ProblemImportSYZOJHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
         }
+        const filename = p.file_io_input_name ? p.file_io_input_name?.split('.')[0] : null;
         await problem.edit(domainId, docId, {
             config: {
                 time: `${p.time_limit}ms`,
                 memory: `${p.memory_limit}m`,
-                filename: p.file_io_input_name.split('.')[0],
+                filename,
                 type: p.type === 'traditional' ? 'default' : p.type,
             },
         });
