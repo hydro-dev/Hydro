@@ -4,6 +4,7 @@ import cluster from 'cluster';
 import {
     terminal, TextBox, LabeledInput,
 } from 'terminal-kit';
+import { ProgressBarOptions } from 'terminal-kit/Terminal';
 import { argv } from 'yargs';
 import * as bus from './service/bus';
 
@@ -29,10 +30,12 @@ export namespace Progress {
             console.log('done: ', this.args, args);
         }
 
-        stop: () => {}
+        stop() {
+            console.log('stop', this.args);
+        }
     }
 
-    export function create(args) {
+    export function create(args: ProgressBarOptions) {
         // TODO handle worker process
         return useTerminal
             ? terminal.progressBar(args)
