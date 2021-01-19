@@ -30,10 +30,6 @@ export const parseCategory = (value: string) => flatten(value.split('+').map((e)
 export const parsePid = (value: string) => (isSafeInteger(value) ? parseInt(value, 10) : value);
 
 export class ProblemHandler extends Handler {
-    async __prepare() {
-        this.checkPerm(PERM.PERM_VIEW_PROBLEM);
-    }
-
     async cleanup() {
         if (this.response.template === 'problem_main.html' && this.request.json) {
             const {
@@ -693,24 +689,24 @@ export class ProblemImportHandler extends Handler {
 
 export async function apply() {
     ProblemAdd('problem_import', {}, 'copy', 'Import From Hydro');
-    Route('problem_main', '/p', ProblemMainHandler);
-    Route('problem_category', '/p/category/:category', ProblemCategoryHandler);
-    Route('problem_random', '/problem/random', ProblemRandomHandler);
-    Route('problem_detail', '/p/:pid', ProblemDetailHandler);
-    Route('problem_export', '/p/:pid/export', ProblemExportHandler);
+    Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_export', '/p/:pid/export', ProblemExportHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
-    Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler);
+    Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);
-    Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler);
+    Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
-    Route('problem_files', '/p/:pid/files', ProblemFilesHandler);
-    Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler);
-    Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler);
-    Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler);
-    Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler);
+    Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
-    Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler);
+    Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 
 global.Hydro.handler.problem = apply;

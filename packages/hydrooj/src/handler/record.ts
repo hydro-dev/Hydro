@@ -41,10 +41,13 @@ class RecordListHandler extends RecordHandler {
             page,
             CONSTANT.RECORD_PER_PAGE,
         );
+        const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
-            problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false),
+            canViewProblem
+                ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false)
+                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.Pdoc.create(rdoc.pid, rdoc.pid)])]),
         ]);
         const path = [
             ['Hydro', 'homepage'],
@@ -83,6 +86,9 @@ class RecordDetailHandler extends RecordHandler {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
                 pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
             }
+        }
+        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
+            pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
         }
         this.response.body = {
             path: [
@@ -170,8 +176,11 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
             user.getById(this.domainId, rdoc.uid),
             problem.get(this.domainId, rdoc.pid, null),
         ]);
-        if (pdoc && pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
-        else this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        if (pdoc) {
+            if (pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+            if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
+        }
+        this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
 
