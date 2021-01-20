@@ -65,8 +65,9 @@ class ProblemImportSYZOJHandler extends Handler {
         }
         if (p.example) {
             content.push({
-                type: 'Plain',
+                type: 'Text',
                 subType: 'markdown',
+                sectionTitle: this.translate('Sample'),
                 text: p.example,
             });
         }

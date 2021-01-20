@@ -365,6 +365,7 @@ Information: 信息
 Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
+Input Format: 输入格式
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -393,6 +394,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
+Limit And Hint: 数据范围与提示
 Limitations: 限制
 Links: 链接
 List View: 列表视图
@@ -483,6 +485,7 @@ Or, with automatically filled invitation code: 或者，这是可以自动填写
 Ordered List: 有序列表
 Original Score: 原始分数
 OS Info: 系统信息
+Output Format: 输出格式
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。
@@ -521,6 +524,7 @@ Pretest?: 自测?
 Privacy: 隐私
 Problem {1} not found.: 题目 {1} 不存在。
 Problem Data: 题目数据
+Problem Describe: 题目描述
 Problem ID List: 题目 ID 列表
 Problem Set: 题库
 Problem Settings: 题目设置
@@ -597,6 +601,7 @@ RP Algorithm: RP 算法
 Rule: 规则
 Run Pretest: 运行自测
 Run: 运行
+Sample: 样例
 Sample Input: 输入数据
 Sample Output: 输出数据
 Save All Changes: 保存所有修改
