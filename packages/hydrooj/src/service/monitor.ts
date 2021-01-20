@@ -1,6 +1,6 @@
 import cluster from 'cluster';
 import crypto from 'crypto';
-import axios from 'axios';
+import superagent from 'superagent';
 import { dump } from 'js-yaml';
 import db from './db';
 import * as bus from './bus';
@@ -49,9 +49,11 @@ export async function feedback() {
         cpu: inf.cpu,
         flags: inf.flags,
     }));
-    axios.post('https://feedback.undefined.moe/', { payload }).catch(() => {
-        logger.warn('Cannot connect to hydro center.');
-    });
+    superagent.post('https://feedback.undefined.moe/')
+        .send({ payload })
+        .catch(() => {
+            logger.warn('Cannot connect to hydro center.');
+        });
 }
 
 export async function update() {

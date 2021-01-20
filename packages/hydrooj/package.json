@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.15.25",
+    "version": "2.15.26",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -43,7 +43,7 @@
         "@types/koa": "^2.11.4",
         "@types/koa-router": "^7.4.1",
         "@types/koa-static-cache": "^5.1.0",
-        "@types/lodash": "^4.14.167",
+        "@types/lodash": "^4.14.168",
         "@types/lru-cache": "^5.1.0",
         "@types/minio": "^7.0.7",
         "@types/mongodb": "^3.5.33",
