@@ -43,7 +43,7 @@ class ProblemImportSYZOJHandler extends Handler {
             content.push({
                 type: 'Text',
                 subType: 'markdown',
-                sectionTitle: this.translate('Problem Describe'),
+                sectionTitle: this.translate('Problem Description'),
                 text: p.description,
             });
         }
