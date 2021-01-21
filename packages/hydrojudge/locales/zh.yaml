@@ -1,6 +1,5 @@
 'Error parsing memory: {0}': 无法解析内存：{0}
 'Error parsing time: {0}': 无法解析时间：{0}
-Cannot connect to sandbox service.: 无法连接到沙箱服务。
 Cannot find checker {0}.: 找不到比较器 {0}。
 Cannot find input file {0}.: 找不到输入文件 {0}。
 Cannot find judge extra file {0}.: 找不到评测额外文件 {0}。
@@ -14,6 +13,7 @@ Invalid judge_extra_files config.: 无效的 judge_extra_files 配置。
 Invalid user_extra_files config.: 无效的 user_extra_files 配置。
 Problem data not found.: 没有找到测试数据。
 Read {0}, expect {1}.: 读取到 {0}，应为 {1}。
+Sandbox Error: 沙箱错误
 Standard answer longer than user output.: 标准输出比选手输出长。
 Testdata configuration incorrect.: 题目配置错误。
 Too many files.: 文件过多。

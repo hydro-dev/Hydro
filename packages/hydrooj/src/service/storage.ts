@@ -5,6 +5,7 @@ import { Client, BucketItem, ItemBucketMetadata } from 'minio';
 import { createReadStream } from 'fs-extra';
 import { Logger } from '../logger';
 import { streamToBuffer } from '../utils';
+import * as system from '../model/system';
 
 const logger = new Logger('storage');
 
@@ -96,10 +97,20 @@ class StorageService {
             assert(result.toString() === 'test');
             await this.del('storage.test');
             logger.success('Storage connected.');
+            this.error = null;
         } catch (e) {
-            logger.error('Storage init fail.');
-            logger.error(e);
+            logger.warn('Storage init fail. will retry later.');
             this.error = e.toString();
+            setTimeout(async () => {
+                const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = system.getMany([
+                    'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
+                    'file.endPointForUser', 'file.endPointForJudge',
+                ]);
+                const sopts = {
+                    endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
+                };
+                await this.start(sopts);
+            }, 10000);
         }
     }
 

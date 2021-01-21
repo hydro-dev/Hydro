@@ -30,9 +30,7 @@ export function parseMemoryMB(val: string | number) {
 
 export function sleep(timeout: number) {
     return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(null);
-        }, timeout);
+        setTimeout(resolve, timeout);
     });
 }
 
@@ -42,18 +40,11 @@ export function parseFilename(filePath: string) {
 }
 
 export class Queue<T> extends EventEmitter {
-    queue: T[];
-
-    waiting: any[];
-
-    constructor() {
-        super();
-        this.queue = [];
-        this.waiting = [];
-    }
+    queue: T[] = [];
+    waiting: any[] = [];
 
     get(count = 1) {
-        if (this.empty() || this.queue.length < count) {
+        if (this.queue.length < count) {
             return new Promise<T[]>((resolve) => {
                 this.waiting.push({ count, resolve });
             });
@@ -62,10 +53,6 @@ export class Queue<T> extends EventEmitter {
         for (let i = 0; i < count; i++) { items.push(this.queue[i]); }
         this.queue = _.drop(this.queue, count);
         return items as T[];
-    }
-
-    empty() {
-        return this.queue.length === 0;
     }
 
     push(value: T) {

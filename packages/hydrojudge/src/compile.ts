@@ -4,13 +4,12 @@ import { run, del } from './sandbox';
 import { CompileError, SystemError } from './error';
 import { compilerText } from './utils';
 import { Execute } from './interface';
+import { getConfig } from './config';
 
 export = async function compile(
     lang: string, code: string, target: string, copyIn: any, next?: Function,
 ): Promise<Execute> {
-    const LANGS = global.Hydro
-        ? yaml.load(global.Hydro.model.system.get('hydrojudge.langs'))
-        : require('./config').LANGS;
+    const LANGS = yaml.load(getConfig('langs'));
     if (!LANGS[lang]) throw new SystemError('Unsupported language {0}.', [lang]);
     const info = LANGS[lang];
     target = info.target || target;

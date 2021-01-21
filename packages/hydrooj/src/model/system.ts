@@ -36,9 +36,10 @@ export function getMany(keys: string[]): any[] {
     return keys.map((key) => cache[key]);
 }
 
-export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K]): Promise<SystemKeys[K]>
-export async function set<K>(_id: string, value: K): Promise<K>
-export async function set(_id: string, value: any) {
+export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K], boardcast?: boolean): Promise<SystemKeys[K]>
+export async function set<K>(_id: string, value: K, boardcast?: boolean): Promise<K>
+export async function set(_id: string, value: any, boardcast = true) {
+    if (boardcast) bus.boardcast('system/setting', { [_id]: value });
     const res = await coll.findOneAndUpdate(
         { _id },
         { $set: { value } },
@@ -68,6 +69,10 @@ export async function runConfig() {
     for (const i of config) cache[i._id] = i.value;
     bus.emit('database/config');
 }
+
+bus.on('system/setting', (args) => {
+    for (const key in args) set(key, args[key], false);
+});
 
 global.Hydro.model.system = {
     runConfig,

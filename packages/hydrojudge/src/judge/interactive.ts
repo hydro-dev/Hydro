@@ -5,6 +5,7 @@ import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
+import { getConfig } from '../config';
 
 const Score = {
     sum: (a, b) => (a + b),
@@ -39,7 +40,7 @@ function judgeCase(c) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
-        } else [status, score, message] = resInteractor.files.stderr.split('\n');
+        } else[status, score, message] = resInteractor.files.stderr.split('\n');
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;
@@ -104,7 +105,7 @@ export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = ctx.total_score = ctx.total_memory_usage_kb = ctx.total_time_usage_ms = 0;
-    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || 2 });
+    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
     for (const sid in ctx.config.subtasks) {
         tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
     }

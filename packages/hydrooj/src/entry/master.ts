@@ -10,7 +10,6 @@ import { Logger } from '../logger';
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import storage from '../service/storage';
 
 const logger = new Logger('entry/master');
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
@@ -64,7 +63,8 @@ export async function load(call: Entry) {
     const sopts = {
         endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
     };
-    await storage.start(sopts);
+    const storage = require('../service/storage');
+    storage.start(sopts);
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const scripts = require('../upgrade');
