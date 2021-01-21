@@ -5,7 +5,6 @@ import path from 'path';
 import { argv } from 'yargs';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
-import { homedir, tmpdir } from 'os';
 import { noop } from 'lodash';
 import { Logger } from 'hydrooj/dist/logger';
 import * as monitor from 'hydrooj/dist/service/monitor';
@@ -14,10 +13,19 @@ import { FormatError, CompileError, SystemError } from './error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
 import { compilerText } from './utils';
 import readYamlCases from './cases';
+import { getConfig } from './config';
 
 declare module 'hydrooj/dist/interface' {
     interface SystemKeys {
         'hydrojudge.langs': string,
+        'hydrojudge.cache_dir': string,
+        'hydrojudge.tmp_dir': string,
+        'hydrojudge.tmpfs_size': string,
+        'hydrojudge.retry_delay_sec': number,
+        'hydrojudge.sandbox_host': string,
+        'hydrojudge.testcases_max': number,
+        'hydrojudge.total_time_limit': number,
+        'hydrojudge.parallelism': number,
     }
 }
 
@@ -63,7 +71,7 @@ async function postInit() {
     }
 
     async function cacheOpen(domainId: string, pid: string, files: any[]) {
-        const filePath = path.join(homedir(), '.cache', 'hydro', 'judge', domainId, pid);
+        const filePath = path.join(getConfig('cache_dir'), domainId, pid);
         await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
         let etags: Record<string, string> = {};
@@ -172,10 +180,10 @@ async function postInit() {
                 this.config = this.request.config;
                 this.next = getNext(this);
                 this.end = getEnd(this.domainId, this.rid);
-                this.tmpdir = path.resolve(tmpdir(), 'tmp', this.rid);
+                this.tmpdir = path.resolve(getConfig('tmp_dir'), this.rid);
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
-                tmpfs.mount(this.tmpdir, '512m');
+                tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
                 logger.info(`Submission: ${this.rid}`, { pid: this.pid });
                 if (this.config.input) await this.run();
                 else if (this.config.hack) await this.hack();

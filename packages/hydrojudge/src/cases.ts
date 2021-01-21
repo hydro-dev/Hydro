@@ -2,9 +2,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'js-yaml';
 import { Dictionary, sum } from 'lodash';
-import { argv } from 'yargs';
 import { FormatError, SystemError } from './error';
 import { parseTimeMS, parseMemoryMB, ensureFile } from './utils';
+import { getConfig } from './config';
 
 interface Re0 {
     reg: RegExp,
@@ -285,12 +285,12 @@ function convertIniConfig(ini: string) {
 }
 
 function isValidConfig(config) {
-    if (config.count > (argv.max_testcases_count as string || 100)) {
+    if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
     const total_time = sum(config.subtasks.map((subtask) => subtask.time_limit_ms * subtask.cases.length));
-    if (total_time > (+argv.max_time_limit || 60) * 1000) {
-        throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+argv.max_time_limit || 60]);
+    if (total_time > (getConfig('total_time_limit') || 60) * 1000) {
+        throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
 }
 

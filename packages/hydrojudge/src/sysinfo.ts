@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs-extra';
 import systeminformation from 'systeminformation';
-import { tmpdir } from 'os';
 import { noop } from 'lodash';
 import { judge } from './judge/run';
 import * as tmpfs from './tmpfs';
+import { getConfig } from './config';
 
 function size(s: number, base = 1) {
     s *= base;
@@ -45,7 +45,7 @@ int main(){
             },
             end: () => { },
         };
-        context.tmpdir = path.resolve(tmpdir(), 'hydro', 'tmp', 'sysinfo');
+        context.tmpdir = path.resolve(getConfig('tmp_dir'), 'sysinfo');
         fs.ensureDirSync(context.tmpdir);
         tmpfs.mount(context.tmpdir, '32m');
         await judge(context).catch((e) => console.error(e));

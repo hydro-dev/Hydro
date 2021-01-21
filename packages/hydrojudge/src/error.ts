@@ -1,15 +1,13 @@
+import { CompileErrorInfo } from './interface';
 import { STATUS_TEXTS } from './status';
 
 export class CompileError extends Error {
     stdout: string;
-
     stderr: string;
-
     status: string;
-
     type: string;
 
-    constructor(obj) {
+    constructor(obj: string | CompileErrorInfo) {
         super('Compile Error');
         if (typeof obj === 'string') {
             this.stdout = obj;
@@ -25,10 +23,9 @@ export class CompileError extends Error {
 
 export class FormatError extends Error {
     type: string;
-
     params: any[];
 
-    constructor(message, params = []) {
+    constructor(message: string, params = []) {
         super(message);
         this.type = 'FormatError';
         this.params = params;
@@ -37,10 +34,9 @@ export class FormatError extends Error {
 
 export class RuntimeError extends Error {
     type: string;
-
     detail: any;
 
-    constructor(detail, message) {
+    constructor(detail: string, message: string) {
         super(message);
         this.type = 'RuntimeError';
         this.detail = detail;
@@ -49,7 +45,6 @@ export class RuntimeError extends Error {
 
 export class SystemError extends Error {
     type: string;
-
     params: any[];
 
     constructor(message: string, params = []) {

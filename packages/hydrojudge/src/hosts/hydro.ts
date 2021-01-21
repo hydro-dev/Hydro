@@ -9,7 +9,7 @@ import { ObjectID } from 'bson';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
 import { compilerText, Queue } from '../utils';
-import { CACHE_DIR, TEMP_DIR } from '../config';
+import { getConfig } from '../config';
 import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import readCases from '../cases';
@@ -17,39 +17,22 @@ import judge from '../judge';
 
 class JudgeTask {
     stat: Record<string, Date>;
-
     session: any;
-
     host: string;
-
     request: any;
-
     ws: WebSocket;
-
     tag: any;
-
     type: any;
-
     domainId: string;
-
     pid: string;
-
     rid: string;
-
     lang: string;
-
     code: string;
-
     tmpdir: string;
-
     clean: Function[];
-
     folder: string;
-
     config: any;
-
     nextId = 1;
-
     nextWaiting = [];
 
     constructor(session: Hydro, request, ws: WebSocket) {
@@ -73,7 +56,7 @@ class JudgeTask {
         this.lang = this.request.lang;
         this.code = this.request.code;
         this.config = this.request.config;
-        this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.host, this.rid);
+        this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
         tmpfs.mount(this.tmpdir, '512m');
@@ -206,7 +189,7 @@ export default class Hydro {
     }
 
     async cacheOpen(domainId: string, pid: string, files: any[], next?) {
-        const domainDir = path.join(CACHE_DIR, this.config.host, domainId);
+        const domainDir = path.join(getConfig('cache_dir'), this.config.host, domainId);
         const filePath = path.join(domainDir, pid); await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
         let etags: Record<string, string>;

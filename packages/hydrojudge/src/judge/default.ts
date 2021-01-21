@@ -9,6 +9,7 @@ import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
 import { check, compileChecker } from '../check';
+import { getConfig } from '../config';
 
 const Score = {
     sum: (a: number, b: number) => (a + b),
@@ -158,7 +159,7 @@ export const judge = async (ctx) => {
     ctx.total_score = 0;
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
-    ctx.queue = new Queue({ concurrency: ctx.config.concurrency || 2 });
+    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
     ctx.failed = {};
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));
     const scores = await Promise.all(tasks);

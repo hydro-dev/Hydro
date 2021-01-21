@@ -100,9 +100,9 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             try {
                 const cfg: any = yaml.load(fs.readFileSync(p).toString());
                 for (const key in cfg) {
-                    let val;
-                    if (typeof cfg[key].default === 'string') {
-                        val = cfg[key].default
+                    let val = cfg[key].default;
+                    if (typeof val === 'string') {
+                        val = val
                             .replace(/\$TEMP/g, os.tmpdir())
                             .replace(/\$HOME/g, os.homedir());
                     }

@@ -8,7 +8,7 @@ import { noop } from 'lodash';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
 import { compilerText, Queue } from '../utils';
-import { CACHE_DIR, TEMP_DIR } from '../config';
+import { getConfig } from '../config';
 import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import readCases from '../cases';
@@ -16,39 +16,22 @@ import judge from '../judge';
 
 class JudgeTask {
     stat: Record<string, Date>;
-
     session: any;
-
     host: string;
-
     request: any;
-
     ws: WebSocket;
-
     tag: any;
-
     type: any;
-
     domain_id: string;
-
     pid: string;
-
     rid: string;
-
     lang: string;
-
     code: string;
-
     tmpdir: string;
-
     clean: Function[];
-
     folder: string;
-
     config: any;
-
     nextId = 1;
-
     nextWaiting = [];
 
     constructor(session: VJ4, request, ws: WebSocket) {
@@ -71,7 +54,7 @@ class JudgeTask {
         this.rid = this.request.rid;
         this.lang = this.request.lang;
         this.code = this.request.code;
-        this.tmpdir = path.resolve(TEMP_DIR, 'tmp', this.host, this.rid);
+        this.tmpdir = path.resolve(getConfig('tmp_dir'), 'tmp', this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
         tmpfs.mount(this.tmpdir, '512m');
@@ -180,9 +163,7 @@ class JudgeTask {
 
 export default class VJ4 {
     config: any;
-
     axios: any;
-
     ws: WebSocket;
 
     constructor(config) {
@@ -241,7 +222,7 @@ export default class VJ4 {
         log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
         await this.ensureLogin();
         if (next) next({ judge_text: '正在同步测试数据，请稍后' });
-        const tmpFilePath = path.resolve(CACHE_DIR, `download_${this.config.host}_${domainId}_${pid}`);
+        const tmpFilePath = path.resolve(getConfig('cache_dir'), `download_${this.config.host}_${domainId}_${pid}`);
         try {
             const res = await this.axios.get(
                 `${this.config.server_url}d/${domainId}/p/${pid}/data`,
@@ -274,7 +255,7 @@ export default class VJ4 {
 
     async recordPretestData(rid: string, savePath: string) {
         log.info(`Getting pretest data: ${this.config.host}/${rid}`);
-        const tmpFilePath = path.resolve(CACHE_DIR, `download_${this.config.host}_${rid}`);
+        const tmpFilePath = path.resolve(getConfig('cache_dir'), `download_${this.config.host}_${rid}`);
         await this.ensureLogin();
         const res = await this.axios.get(`records/${rid}/data`, { responseType: 'stream' });
         const w = fs.createWriteStream(tmpFilePath);
@@ -393,7 +374,7 @@ export default class VJ4 {
     }
 
     async cacheOpen(domainId: string, pid: string, next) {
-        const domainDir = path.join(CACHE_DIR, this.config.host, domainId);
+        const domainDir = path.join(getConfig('cache_dir'), this.config.host, domainId);
         const filePath = path.join(domainDir, pid);
         const version = await this.problemDataVersion(domainId, pid);
         if (fs.existsSync(filePath)) {

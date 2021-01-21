@@ -31,30 +31,19 @@ const colors = [
 ];
 
 const instances: Record<string, Logger> = {};
-
 type LogFunction = (format: any, ...param: any[]) => void
-
 type LogType = 'success' | 'error' | 'info' | 'warn' | 'debug'
-
 export interface Logger extends Record<LogType, LogFunction> { }
 
 export class Logger {
     static readonly SUCCESS = 1
-
     static readonly ERROR = 1
-
     static readonly INFO = 2
-
     static readonly WARN = 2
-
     static readonly DEBUG = 3
-
     static baseLevel = argv.debug ? 3 : 2
-
     static showDiff = false
-
     static levels: Record<string, number> = {}
-
     static lastTime = 0
 
     static options: InspectOptions = {
@@ -73,9 +62,7 @@ export class Logger {
     }
 
     private code: number
-
     private displayName: string
-
     public stream: NodeJS.WritableStream = process.stderr
 
     constructor(public name: string, private showDiff = false) {
