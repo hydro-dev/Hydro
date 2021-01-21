@@ -59,7 +59,7 @@ Add module: 添加模块
 Add new data: 添加新数据
 Add User: 添加用户
 Add: 添加
-Additional File: 附加数据
+Additional File: 附加文件
 All {0} Contests: 所有 {0} 比赛
 All Contests: 所有比赛
 All Homeworks: 所有作业
@@ -525,7 +525,7 @@ Pretest?: 自测?
 Privacy: 隐私
 Problem {1} not found.: 题目 {1} 不存在。
 Problem Data: 题目数据
-Problem Describe: 题目描述
+Problem Description: 题目描述
 Problem ID List: 题目 ID 列表
 Problem Set: 题库
 Problem Settings: 题目设置
