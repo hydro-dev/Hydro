@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import yaml from 'js-yaml';
 import { Logger } from '../logger';
@@ -99,9 +100,15 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             try {
                 const cfg: any = yaml.load(fs.readFileSync(p).toString());
                 for (const key in cfg) {
+                    let val;
+                    if (typeof cfg[key].default === 'string') {
+                        val = cfg[key].default
+                            .replace(/\$TEMP/g, os.tmpdir())
+                            .replace(/\$HOME/g, os.homedir());
+                    }
                     map[cfg[key].category || 'system'](
                         modelSetting.Setting(
-                            name, `${name}.${key}`, cfg[key].range, cfg[key].default,
+                            name, `${name}.${key}`, cfg[key].range, val,
                             cfg[key].type || 'text', cfg[key].name || key, cfg[key].desc || '',
                         ),
                     );

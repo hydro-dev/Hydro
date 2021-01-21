@@ -118,6 +118,7 @@ export function off<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
 
 export async function parallel<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
     const tasks: Promise<any>[] = [];
+    if (argv.showBus) logger.debug('parallel: %s %o', name, args);
     for (const callback of _hooks[name] || []) {
         tasks.push(callback.apply(this, args));
     }
@@ -166,7 +167,8 @@ async function messageHandler(worker: cluster.Worker, msg: any) {
                 for (const i in cluster.workers) {
                     cluster.workers[i].send(msg);
                 }
-            } else global.Hydro.service.bus.emit(msg.eventName, ...msg.payload);
+            }
+            emit(msg.eventName, ...msg.payload);
         } else if (msg.event === 'stat') {
             global.Hydro.stat.reqCount += msg.count;
         } else await emit(msg.event, ...msg.payload);

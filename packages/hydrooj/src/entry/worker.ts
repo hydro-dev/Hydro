@@ -8,7 +8,6 @@ import {
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import storage from '../service/storage';
 import { Logger } from '../logger';
 
 const logger = new Logger('loader/worker');
@@ -42,7 +41,8 @@ export async function load() {
     const sopts = {
         endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
     };
-    await storage.start(sopts);
+    const storage = require('../service/storage');
+    storage.start(sopts);
     if (argv.loaderDetail) logger.info('finish: storage.connect');
     for (const i of builtinLib) require(`../lib/${i}`);
     if (argv.loaderDetail) logger.info('finish: lib.builtin');
@@ -67,9 +67,7 @@ export async function load() {
     if (argv.loaderDetail) logger.info('finish: setting');
     await handler(pending, fail);
     if (argv.loaderDetail) logger.info('finish: handler.extra');
-    for (const i in global.Hydro.handler) {
-        await global.Hydro.handler[i]();
-    }
+    for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     if (argv.loaderDetail) logger.info('finish: handler.apply');
     const notfound = require('../handler/notfound');
     await notfound.apply();
