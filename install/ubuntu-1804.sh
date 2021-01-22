@@ -9,7 +9,7 @@ echo "apt-get update"
 apt-get -qq update
 echo "apt-get install curl wget gnupg -y"
 apt-get install -y curl wget gnupg >/dev/null
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
 echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu $name/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 echo "apt-get update"
 apt-get -qq update
@@ -49,7 +49,7 @@ echo 'Starting mongodb'
 pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb
 
 # Install MinIO
-wget https://dl.min.io/server/minio/release/linux-amd64/minio
+wget http://dl.minio.org.cn/server/minio/release/linux-amd64/minio
 chmod +x minio
 pm2 start "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY MINIO_SECRET_KEY=$MINIO_SECRET_KEY ./minio server /data/file" --name minio
 
@@ -61,7 +61,7 @@ apt-get install -y g++ >/dev/null
 # TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
-wget https://github.com/criyle/go-judge/releases/download/v0.9.4/executorserver-amd64 -O /usr/bin/sandbox
+wget https://github.com/criyle/go-judge/releases/download/v1.0.5/executorserver-amd64 -O /usr/bin/sandbox
 chmod +x /usr/bin/sandbox
 pm2 start sandbox
 mkdir ~/.hydro

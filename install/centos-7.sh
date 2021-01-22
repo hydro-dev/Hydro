@@ -20,6 +20,8 @@ mkdir -p /var/lib/mongo
 mkdir -p /var/log/mongodb
 mkdir -p /data/db
 chown -R mongod:mongod /var/lib/mongo /var/log/mongodb /data/db
+echo user.max_user_namespaces=10000 >> /etc/sysctl.d/98-userns.conf
+sysctl -p
 
 # Install NodeJS
 echo "Installing NodeJS"
@@ -54,7 +56,7 @@ pm2 start "mongod --auth"
 
 # Install MinIO
 echo 'Installing MinIO'
-wget https://dl.min.io/server/minio/release/linux-amd64/minio
+wget http://dl.minio.org.cn/server/minio/release/linux-amd64/minio
 chmod +x minio
 mkdir -p /data/file
 pm2 start "./minio server /data/file" --name minio
@@ -63,7 +65,7 @@ pm2 start "./minio server /data/file" --name minio
 # TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
-wget https://github.com/criyle/go-judge/releases/download/v0.9.4/executorserver-amd64 -O /usr/bin/sandbox_
+wget https://github.com/criyle/go-judge/releases/download/v1.0.5/executorserver-amd64 -O /usr/bin/sandbox
 chmod +x /usr/bin/sandbox_
 pm2 start "/usr/bin/sandbox_"
 mkdir ~/.hydro

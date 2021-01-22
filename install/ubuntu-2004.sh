@@ -49,7 +49,7 @@ echo 'Starting mongodb'
 pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb
 
 # Install MinIO
-wget https://dl.min.io/server/minio/release/linux-amd64/minio
+wget http://dl.minio.org.cn/server/minio/release/linux-amd64/minio
 chmod +x minio
 pm2 start "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY MINIO_SECRET_KEY=$MINIO_SECRET_KEY ./minio server /data/file" --name minio
 
@@ -61,7 +61,7 @@ apt-get install -y g++ >/dev/null
 # TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
-wget https://github.com/criyle/go-judge/releases/download/v0.9.4/executorserver-amd64 -O /usr/bin/sandbox
+wget https://github.com/criyle/go-judge/releases/download/v1.0.5/executorserver-amd64 -O /usr/bin/sandbox
 chmod +x /usr/bin/sandbox
 pm2 start sandbox
 mkdir ~/.hydro
