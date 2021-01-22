@@ -1,6 +1,6 @@
 import Zip from 'adm-zip';
 import { load } from 'js-yaml';
-import { LocalProblemConfig } from '../interface';
+import type { ProblemConfig } from '../interface';
 
 export async function readConfig(file: string | Buffer) {
     const data = new Zip(file);
@@ -26,7 +26,7 @@ interface ParseResult {
     timeMin: number,
 }
 
-export async function parseConfig(config: string | LocalProblemConfig) {
+export async function parseConfig(config: string | ProblemConfig) {
     const result: ParseResult = {
         count: 0,
         memoryMin: Number.MAX_SAFE_INTEGER,
@@ -34,10 +34,10 @@ export async function parseConfig(config: string | LocalProblemConfig) {
         timeMin: Number.MAX_SAFE_INTEGER,
         timeMax: 0,
     };
-    let cfg: LocalProblemConfig = {};
+    let cfg: ProblemConfig = {};
     if (typeof config === 'string') {
         // TODO should validate here?
-        cfg = load(config) as LocalProblemConfig;
+        cfg = load(config) as ProblemConfig;
     } else cfg = config;
     if (cfg.cases) {
         for (const c of cfg.cases) {

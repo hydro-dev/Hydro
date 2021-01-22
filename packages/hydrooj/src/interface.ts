@@ -104,19 +104,10 @@ export interface TestCaseConfig {
     memory?: number,
 }
 
-export enum LocalProblemType {
+export enum ProblemType {
     Default = 'default',
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
-}
-
-export enum RemoteProblemType {
-    RemoteJudge = 'remotejudge',
-}
-
-export enum RemoteServerType {
-    vj4 = 'vj4',
-    syzoj = 'syzoj',
 }
 
 export enum SubtaskType {
@@ -133,8 +124,8 @@ export interface SubtaskConfig {
     cases?: TestCaseConfig[],
 }
 
-export interface LocalProblemConfig {
-    type?: LocalProblemType,
+export interface ProblemConfig {
+    type?: ProblemType,
     score?: number,
     time?: string,
     memory?: string,
@@ -147,16 +138,6 @@ export interface LocalProblemConfig {
     cases?: TestCaseConfig[],
     subtasks?: SubtaskConfig[],
 }
-
-export interface RemoteProblemConfig {
-    type?: RemoteProblemType,
-    server_type?: RemoteServerType,
-    url?: string,
-    // TODO handle username&password storage
-    pid?: string,
-}
-
-export type ProblemConfig = LocalProblemConfig | RemoteProblemConfig;
 
 export interface PlainContentNode {
     type: 'Plain',
