@@ -102,26 +102,30 @@ class ProblemImportSYZOJHandler extends Handler {
         const r = download(`${url}testdata/download`);
         const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${docId}.zip`);
         const w = fs.createWriteStream(file);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', reject);
-            r.pipe(w);
-        });
-        const zip = new AdmZip(file);
-        const entries = zip.getEntries();
-        for (const entry of entries) {
-            // eslint-disable-next-line no-await-in-loop
-            await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
+        try {
+            await new Promise((resolve, reject) => {
+                w.on('finish', resolve);
+                w.on('error', reject);
+                r.pipe(w);
+            });
+            const zip = new AdmZip(file);
+            const entries = zip.getEntries();
+            for (const entry of entries) {
+                // eslint-disable-next-line no-await-in-loop
+                await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
+            }
+            const filename = p.file_io_input_name ? p.file_io_input_name?.split('.')[0] : null;
+            await problem.edit(domainId, docId, {
+                config: {
+                    time: `${p.time_limit}ms`,
+                    memory: `${p.memory_limit}m`,
+                    filename,
+                    type: p.type === 'traditional' ? 'default' : p.type,
+                },
+            });
+        } finally {
+            fs.unlinkSync(file);
         }
-        const filename = p.file_io_input_name ? p.file_io_input_name?.split('.')[0] : null;
-        await problem.edit(domainId, docId, {
-            config: {
-                time: `${p.time_limit}ms`,
-                memory: `${p.memory_limit}m`,
-                filename,
-                type: p.type === 'traditional' ? 'default' : p.type,
-            },
-        });
         return docId;
     }
 
