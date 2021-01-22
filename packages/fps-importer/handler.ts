@@ -4,7 +4,7 @@ import xml2js from 'xml2js';
 import fs from 'fs-extra';
 import { filter } from 'lodash';
 import decodeHTML from 'decode-html';
-import { LocalProblemConfig } from 'hydrooj';
+import type { ProblemConfig } from 'hydrooj';
 import {
     Route, Handler, param, Types,
 } from 'hydrooj/dist/service/server';
@@ -31,7 +31,7 @@ class FpsProblemImportHandler extends Handler {
                     : [],
                 hint: p.hint,
             }, 'html', this.translate.bind(this));
-            const config: LocalProblemConfig = {
+            const config: ProblemConfig = {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };

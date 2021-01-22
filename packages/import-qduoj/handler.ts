@@ -4,7 +4,7 @@ import os from 'os';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
-import { ContentNode, LocalProblemConfig } from 'hydrooj';
+import type { ContentNode, ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
 import storage from 'hydrooj/dist/service/storage';
 import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
@@ -76,7 +76,7 @@ class ImportQduojHandler extends Handler {
                 const n = await problem.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
                 const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, content, this.user._id, pdoc.tags);
-                const config: LocalProblemConfig = {
+                const config: ProblemConfig = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,
                     subtasks: [],

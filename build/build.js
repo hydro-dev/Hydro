@@ -58,9 +58,10 @@ for (const package of packages) {
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
 
+child.execSync('./node_modules/.bin/tsc -b packages/hydrooj', { stdio: 'inherit' });
+
 if (argv.watch) {
     child.execSync('./node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
 } else {
-    child.execSync('cd packages/hydrooj && yarn build', { stdio: 'inherit' });
     child.execSync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
 }
