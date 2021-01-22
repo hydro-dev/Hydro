@@ -30,18 +30,22 @@ export async function run() {
     ];
     const bulk = db.collection('document').initializeUnorderedBulkOp();
     db.collection('record').aggregate(pipeline).each(
-        (err, adoc: any) => bulk.find({
-            domainId: adoc._id.domainId,
-            docType: document.TYPE_PROBLEM,
-            docId: adoc._id.pid,
-        }).updateOne({
-            $set: {
-                nSubmit: adoc.nSubmit,
-                nAccept: adoc.nAccept,
-            },
-        }),
+        (err, adoc: any) => {
+            if (adoc) {
+                bulk.find({
+                    domainId: adoc._id.domainId,
+                    docType: document.TYPE_PROBLEM,
+                    docId: adoc._id.pid,
+                }).updateOne({
+                    $set: {
+                        nSubmit: adoc.nSubmit,
+                        nAccept: adoc.nAccept,
+                    },
+                });
+            }
+        },
     );
-    await bulk.execute();
+    if (bulk.length) await bulk.execute();
 }
 
 export const validate = {};

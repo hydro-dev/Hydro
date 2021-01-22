@@ -82,13 +82,13 @@ class RecordDetailHandler extends RecordHandler {
             problem.get(domainId, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
+        if (!(pdoc && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM))) {
+            pdoc = problem.Pdoc.create(pdoc?.docId || 0, pdoc?.pid || '*');
+        }
         if (!rdoc.contest && pdoc.hidden && pdoc.owner !== this.user._id) {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
                 pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
             }
-        }
-        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
-            pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
         }
         this.response.body = {
             path: [
