@@ -302,12 +302,20 @@ export class HandlerCommon {
             else query[key] = kwargs.query[key].toString();
         }
         try {
-            if (this.domainId !== 'system' || args.domainId) {
-                name += '_with_domainId';
-                args.domainId = args.domainId || this.domainId;
-            }
             const { anchor } = args;
-            res = router.url(name, args, { query });
+            if (!this.domain.host) {
+                if (this.domainId !== 'system' || args.domainId) {
+                    name += '_with_domainId';
+                    args.domainId = args.domainId || this.domainId;
+                }
+                res = router.url(name, args, { query });
+            } else {
+                if ((this.request.path || '').startsWith('/d/')) {
+                    name += '_with_domainId';
+                    args.domainId = args.domainId || this.domainId;
+                }
+                res = `//${this.domain.host}${router.url(name, args, { query })}`;
+            }
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             logger.warn(e.message);
@@ -431,13 +439,20 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        [this.domain] = await Promise.all([
+        const [absoluteDomain, inferDomain] = await Promise.all([
             domain.get(domainId),
+            domain.getByHost(this.request.host),
             this.limitRate('global', 10, 100),
             this.getSession(),
             this.getBdoc(),
         ]);
-        if (!this.domain) {
+        if (inferDomain) {
+            this.domainId = inferDomain._id;
+            this.args.domainId = inferDomain._id;
+            this.domain = inferDomain;
+            domainId = inferDomain._id;
+        } else if (absoluteDomain) this.domain = absoluteDomain;
+        else {
             this.args.domainId = 'system';
             this.user = await user.getById('system', this.session.uid);
             if (!this.user) this.user = await user.getById('system', 0);

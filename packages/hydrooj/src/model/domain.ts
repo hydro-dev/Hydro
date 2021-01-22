@@ -53,6 +53,16 @@ export async function get(domainId: string): Promise<DomainDoc | null> {
     return result;
 }
 
+export async function getByHost(host: string): Promise<DomainDoc | null> {
+    const query: FilterQuery<DomainDoc> = { host };
+    await bus.serial('domain/before-get', query);
+    console.log(query);
+    const result = await coll.findOne(query);
+    console.log(result);
+    await bus.serial('domain/get', result);
+    return result;
+}
+
 export function getMulti(query: FilterQuery<DomainDoc> = {}) {
     return coll.find(query);
 }
@@ -212,6 +222,7 @@ global.Hydro.model.domain = {
     add,
     inc,
     get,
+    getByHost,
     edit,
     getMulti,
     getList,

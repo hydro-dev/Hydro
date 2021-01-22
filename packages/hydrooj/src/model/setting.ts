@@ -108,6 +108,7 @@ DomainSetting(
     Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
     Setting('setting_storage', 'pidCounter', null, 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'host', null, '', 'text', 'Custom host', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 DomainUserSetting(
