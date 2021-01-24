@@ -141,7 +141,7 @@ export function del(domainId: string, docId: number) {
     return Promise.all([
         document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
         document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
-        storage.list(`problem/${domainId}/${docId}/`, true).then((items) => storage.del(items.map((item) => item.prefix + item.name))),
+        storage.list(`problem/${domainId}/${docId}/`).then((items) => storage.del(items.map((item) => item.prefix + item.name))),
         bus.parallel('problem/delete', domainId, docId),
     ]);
 }
@@ -149,7 +149,9 @@ export function del(domainId: string, docId: number) {
 export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
     await storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
-    return await push(domainId, pid, 'data', meta);
+    return await push(domainId, pid, 'data', {
+        _id: name, name, size: meta.size, lastModified: meta.lastModified, etag: meta.etag,
+    });
 }
 
 export async function delTestdata(domainId: string, pid: number, name: string | string[]) {
@@ -161,7 +163,9 @@ export async function delTestdata(domainId: string, pid: number, name: string | 
 export async function addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
     await storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/additional_file/${name}`);
-    return await push(domainId, pid, 'additional_file', meta);
+    return await push(domainId, pid, 'additional_file', {
+        _id: name, name, size: meta.size, lastModified: meta.lastModified, etag: meta.etag,
+    });
 }
 
 export async function delAdditionalFile(domainId: string, pid: number, name: string | string[]) {

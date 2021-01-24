@@ -15,7 +15,6 @@ import { PERM } from '../model/builtin';
 import {
     Route, Handler, Types, post,
 } from '../service/server';
-import storage from '../service/storage';
 import { isPid } from '../lib/validator';
 import download from '../lib/download';
 
@@ -208,7 +207,7 @@ class ProblemImportSYZOJHandler extends Handler {
                 const p = new PassThrough();
                 superagent.get(aurls[f.filename]).pipe(p);
                 // eslint-disable-next-line no-await-in-loop
-                await storage.put(`problem/${domainId}/${docId}/additional_file/${f.filename}`, p);
+                await problem.addAdditionalFile(domainId, docId, f.filename, p);
             }
         };
         if (wait) await syncFiles();

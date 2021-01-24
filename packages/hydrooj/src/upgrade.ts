@@ -13,7 +13,6 @@ import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
 import * as problem from './model/problem';
-import * as user from './model/user';
 import * as domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
@@ -26,9 +25,9 @@ async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: 
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
 
-async function iterateAllProblem(cb: (pdoc: problem.Pdoc, current?: number, total?: number) => Promise<any>) {
+async function iterateAllProblem(fields: problem.Pdoc.Field[], cb: (pdoc: problem.Pdoc, current?: number, total?: number) => Promise<any>) {
     await iterateAllDomain(async (d) => {
-        const pdocs = await problem.getMulti(d._id, {}).toArray();
+        const pdocs = await problem.getMulti(d._id, {}, fields).toArray();
         for (const i in pdocs) await cb(pdocs[i], +i, pdocs.length);
     });
 }
@@ -91,21 +90,16 @@ const scripts: UpgradeScript[] = [
                     try {
                         const [file, current] = await Promise.all([
                             streamToBuffer(gridfs.openDownloadStream(pdoc.data)),
-                            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`, true),
+                            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
                         ]);
                         const zip = new AdmZip(file);
                         const entries = zip.getEntries();
                         if (entries.map((entry) => entry.entryName).sort().join('?') !== current.map((f) => f.name).sort().join('?')) {
                             await storage.del(current.map((entry) => entry.prefix + entry.name));
                             const queue = new Queue({ concurrency: 5 });
-                            const tasks = [];
-                            for (const entry of entries) {
-                                tasks.push(queue.add(() => storage.put(
-                                    `problem/${pdoc.domainId}/${pdoc.docId}/testdata/${entry.entryName}`,
-                                    entry.getData(),
-                                )));
-                            }
-                            await Promise.all(tasks);
+                            await Promise.all(entries.map(
+                                (entry) => queue.add(() => problem.addTestdata(pdoc.domainId, pdoc.docId, entry.entryName, entry.getData())),
+                            ));
                         }
                     } catch (e) {
                         if (e.toString().includes('FileNotFound')) {
@@ -142,15 +136,21 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _6_7() {
+        return true; // invalid
+    },
+    async function _7_8() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(async (pdoc) => {
+        await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
+            logger.info('%s/%s', pdoc.domainId, pdoc.docId);
+            const [data, additional_file] = await Promise.all([
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_files/`),
+            ]);
+            await problem.edit(pdoc.domainId, pdoc.docId, { data, additional_file });
             if (!pdoc.config) return;
-            const dst = `problem/${pdoc.domainId}/${pdoc.pid}/testdata/config.yaml`;
-            await storage.get(dst)
-                .catch(() => {
-                    const cfg = yaml.dump(pdoc.config);
-                    return problem.addTestdata(pdoc.domainId, pdoc.docId, 'config.yaml', Buffer.from(cfg));
-                });
+            if (data.map((d) => d.name).includes('config.yaml')) return;
+            const cfg = yaml.dump(pdoc.config);
+            await problem.addTestdata(pdoc.domainId, pdoc.docId, 'config.yaml', Buffer.from(cfg));
         });
         return true;
     },

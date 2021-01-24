@@ -95,6 +95,8 @@ export type Udict = NumericDictionary<User>;
 export interface FileInfo {
     name: string,
     size: number,
+    etag: string,
+    lastModified: Date,
 }
 
 export interface TestCaseConfig {

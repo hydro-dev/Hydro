@@ -225,7 +225,7 @@ export class ProblemExportHandler extends ProblemDetailHandler {
         const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
         const zip = new AdmZip();
         if (hasPerm) {
-            const files = await storage.list(`problem/${this.domainId}/${this.pdoc.docId}/`, true);
+            const files = await storage.list(`problem/${this.domainId}/${this.pdoc.docId}/`);
             for (const file of files) {
                 // eslint-disable-next-line no-await-in-loop
                 const buf = await streamToBuffer(await storage.get(`${file.prefix}${file.name}`));
@@ -427,16 +427,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
         const canReadData = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        const [testdata, additional_file] = await Promise.all([
-            getTestdata && canReadData
-                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/`, true)
-                : [],
-            getAdditionalFile
-                ? storage.list(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/`, true)
-                : [],
-        ]);
-        this.response.body.testdata = testdata;
-        this.response.body.additional_file = additional_file;
+        this.response.body.testdata = (getTestdata && canReadData) ? this.pdoc.data : [];
+        this.response.body.additional_file = (getAdditionalFile ? this.pdoc.additional_file : []);
         this.response.template = 'problem_files.html';
     }
 
@@ -474,13 +466,13 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                     await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.getData());
                 } else {
                     // eslint-disable-next-line no-await-in-loop
-                    await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${entry.name}`, entry.getData());
+                    await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.getData());
                 }
             }
         } else if (type === 'testdata') {
             await problem.addTestdata(domainId, this.pdoc.docId, filename, this.request.files.file.path);
         } else {
-            await storage.put(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`, this.request.files.file.path);
+            await problem.addAdditionalFile(domainId, this.pdoc.docId, filename, this.request.files.file.path);
         }
         this.back();
     }
@@ -676,13 +668,15 @@ export class ProblemImportHandler extends Handler {
         const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tags, pdoc.category);
         const entries = zip.getEntries();
         for (const entry of entries) {
-            if (entry.name.startsWith('testdata/') || entry.name.startsWith('additional_file')) {
+            if (entry.name.startsWith('testdata/')) {
                 // eslint-disable-next-line no-await-in-loop
-                await storage.put(`problem/${domainId}/${pid}/${entry.name}`, entry.getData());
+                await problem.addTestdata(domainId, pid, entry.name.split('testdata/')[1], entry.getData());
+            } else if (entry.name.startsWith('additional_file/')) {
+                // eslint-disable-next-line no-await-in-loop
+                await problem.addAdditionalFile(domainId, pid, entry.name.split('testdata/')[1], entry.getData());
             }
         }
-        const data = await storage.list(`problem/${domainId}/${pid}/testdata/`, true);
-        await problem.edit(domainId, pid, { html: pdoc.html, data });
+        await problem.edit(domainId, pid, { html: pdoc.html });
         this.response.redirect = this.url('problem_detail', { pid });
     }
 }

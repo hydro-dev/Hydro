@@ -129,7 +129,7 @@ class StorageService {
         return await this.client.removeObjects(this.opts.bucket, target);
     }
 
-    async list(target: string, recursive = false) {
+    async list(target: string, recursive = true) {
         const stream = this.client.listObjects(this.opts.bucket, target, recursive);
         return await new Promise<BucketItem[]>((resolve, reject) => {
             const results: BucketItem[] = [];

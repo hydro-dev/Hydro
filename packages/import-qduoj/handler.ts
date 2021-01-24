@@ -6,7 +6,6 @@ import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import type { ContentNode, ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
-import storage from 'hydrooj/dist/service/storage';
 import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as problem from 'hydrooj/dist/model/problem';

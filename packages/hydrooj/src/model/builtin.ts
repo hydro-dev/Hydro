@@ -232,14 +232,27 @@ export const PRIV = {
     PRIV_REJUDGE: 1 << 13,
     PRIV_VIEW_USER_SECRET: 1 << 14,
     PRIV_VIEW_JUDGE_STATISTICS: 1 << 15,
-    PRIV_CREATE_FILE: 1 << 16,
-    PRIV_UNLIMITED_QUOTA: 1 << 17,
-    PRIV_DELETE_FILE: 1 << 18,
-    PRIV_DELETE_FILE_SELF: 1 << 19,
-    PRIV_ALL: -1,
 
+    PRIV_ALL: -1,
     PRIV_DEFAULT: 0,
     PRIV_NEVER: 1 << 20,
+
+    /**
+     * @deprecated
+     */
+    PRIV_CREATE_FILE: 1 << 16,
+    /**
+     * @deprecated
+     */
+    PRIV_UNLIMITED_QUOTA: 1 << 17,
+    /**
+     * @deprecated
+     */
+    PRIV_DELETE_FILE: 1 << 18,
+    /**
+     * @deprecated
+     */
+    PRIV_DELETE_FILE_SELF: 1 << 19,
 };
 
 PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE

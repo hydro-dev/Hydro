@@ -5,13 +5,13 @@ import { Dictionary } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
 import * as task from './task';
+import * as problem from './problem';
 import {
     Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
 import { Time } from '../utils';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import storage from '../service/storage';
 
 export const coll: Collection<Rdoc> = db.collection('record');
 
@@ -75,7 +75,8 @@ export async function judge(domainId: string, rid: ObjectID, priority = 1) {
     const config: RunConfig | ProblemConfig = rdoc.config || {};
     let data = [];
     if (rdoc.pid) {
-        data = await storage.list(`problem/${domainId}/${rdoc.pid}/testdata/`, true);
+        const pdoc = await problem.get(domainId, rdoc.pid);
+        data = pdoc.data;
     }
     delete rdoc._id;
     await task.add({
