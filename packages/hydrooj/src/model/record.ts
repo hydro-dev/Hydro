@@ -5,7 +5,6 @@ import { Dictionary } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
 import * as task from './task';
-import * as problem from './problem';
 import {
     Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
 } from '../interface';
