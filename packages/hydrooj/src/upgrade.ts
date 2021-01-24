@@ -21,14 +21,15 @@ import * as system from './model/system';
 const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
 
-async function iterateAllDomain(cb: (ddoc: DomainDoc) => Promise<any>) {
-    const domains = await domain.getMulti().project({ _id: 1 }).toArray();
-    for (const d of domains) await cb(d);
+async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
+    const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
+    for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
 
-async function iterateAllProblem(cb: (pdoc: problem.Pdoc) => Promise<any>) {
+async function iterateAllProblem(cb: (pdoc: problem.Pdoc, current?: number, total?: number) => Promise<any>) {
     await iterateAllDomain(async (d) => {
-        await problem.getMulti(d._id, {}).forEach(cb);
+        const pdocs = await problem.getMulti(d._id, {}).toArray();
+        for (const i in pdocs) await cb(pdocs[i], +i, pdocs.length);
     });
 }
 
@@ -77,7 +78,7 @@ const scripts: UpgradeScript[] = [
         if (savedProgress) savedProgress = JSON.parse(savedProgress);
         else savedProgress = { pdocs: [] };
         const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
-        logger.info('Total found %d domains.', ddocs.length);
+        logger.info('Found %d domains.', ddocs.length);
         for (let i = 0; i < ddocs.length; i++) {
             const ddoc = ddocs[i];
             logger.info('Domain %s (%d/%d)', ddoc._id, i + 1, ddocs.length);

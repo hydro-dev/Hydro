@@ -338,6 +338,8 @@ Homework Introduction: 作业介绍
 Homework scoreboard is not visible.: 目前无法查看作业成绩表。
 homework_create: 创建作业
 homework_detail_problem_submit: 递交作业题目
+homework_detail_problem: 题目详情
+homework_detail: 作业详情
 homework_edit: 编辑作业
 homework_main: 作业
 homework_scoreboard: 作业成绩表
@@ -602,9 +604,9 @@ RP Algorithm: RP 算法
 Rule: 规则
 Run Pretest: 运行自测
 Run: 运行
-Sample: 样例
 Sample Input: 输入数据
 Sample Output: 输出数据
+Sample: 样例
 Save All Changes: 保存所有修改
 Saved session: 已保存的会话
 score canceled: 成绩取消

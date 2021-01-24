@@ -140,7 +140,7 @@ class HomeworkDetailProblemHandler extends HomeworkHandler {
         ];
         this.response.template = 'problem_detail.html';
         this.response.body = {
-            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc, udoc, attended, path,
+            tdoc: this.tdoc, pdoc: this.pdoc, tsdoc: this.tsdoc, udoc, attended, path, page_name: 'homework_detail_problem',
         };
     }
 }
@@ -247,9 +247,9 @@ class HomeworkCreateHandler extends HomeworkHandler {
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        await this.verifyProblems(domainId, pids);
+        const verified = await this.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
-            'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
+            'homework', beginAt.toDate(), endAt.toDate(), verified, rated,
             { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
         this.response.redirect = this.url('homework_detail', { tid });
@@ -324,17 +324,17 @@ class HomeworkEditHandler extends HomeworkHandler {
         }
         let endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
-        await this.verifyProblems(domainId, pids);
+        const verified = await this.verifyProblems(domainId, pids);
         beginAt = beginAt.toDate();
         endAt = endAt.toDate();
         penaltySince = penaltySince.toDate();
         await contest.edit(domainId, tid, {
-            title, content, beginAt, endAt, pids, penaltySince, penaltyRules, rated,
+            title, content, beginAt, endAt, verified, penaltySince, penaltyRules, rated,
         }, document.TYPE_HOMEWORK);
         if (tdoc.beginAt !== beginAt
             || tdoc.endAt !== endAt
             || tdoc.penaltySince !== penaltySince
-            || new Set(tdoc.pids) !== new Set(pids)) {
+            || tdoc.pids.sort().join(' ') !== verified.sort().join(' ')) {
             await contest.recalcStatus(domainId, tdoc.docId, document.TYPE_HOMEWORK);
         }
         this.response.body = { tid };

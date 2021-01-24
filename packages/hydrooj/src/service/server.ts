@@ -446,7 +446,7 @@ export class Handler extends HandlerCommon {
             this.getSession(),
             this.getBdoc(),
         ]);
-        if (inferDomain) {
+        if (inferDomain && !this.request.path.startsWith('/d/')) {
             this.domainId = inferDomain._id;
             this.args.domainId = inferDomain._id;
             this.domain = inferDomain;

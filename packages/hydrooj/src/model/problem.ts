@@ -190,7 +190,7 @@ export async function getList(
             }
         }
     }
-    return r;
+    return Object.assign(r, l);
 }
 
 export async function getListStatus(domainId: string, uid: number, pids: number[]) {
