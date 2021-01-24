@@ -358,9 +358,6 @@ export class ProblemSettingsHandler extends ProblemManageHandler {
             [this.pdoc.title, 'problem_detail', { pid }, true],
             ['problem_settings', null],
         ];
-        if (this.response.body.pdoc.config) {
-            this.response.body.pdoc.config = yaml.dump(this.response.body.pdoc.config);
-        }
     }
 
     @param('pid', Types.String, null, parsePid)

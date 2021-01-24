@@ -73,12 +73,10 @@ export async function stat(domainId?: string) {
 
 export async function judge(domainId: string, rid: ObjectID, priority = 1) {
     const rdoc = await get(domainId, rid);
-    let config: RunConfig | ProblemConfig = rdoc.config;
+    const config: RunConfig | ProblemConfig = rdoc.config || {};
     let data = [];
     if (rdoc.pid) {
-        const pdoc = await problem.get(domainId, rdoc.pid);
         data = await storage.list(`problem/${domainId}/${rdoc.pid}/testdata/`, true);
-        if (!config) config = pdoc?.config || {};
     }
     delete rdoc._id;
     await task.add({

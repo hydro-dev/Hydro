@@ -97,6 +97,7 @@ global.Hydro.model.token = {
     TYPE_OAUTH,
     TYPE_REGISTRATION,
     TYPE_LOSTPASS,
+    TYPE_EXPORT,
 
     add,
     createOrUpdate,

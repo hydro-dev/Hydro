@@ -174,7 +174,6 @@ declare module './model/problem' {
         category: string[],
         data: ProblemData[],
         hidden: boolean,
-        config: ProblemConfig,
         acMsg?: string,
         html?: boolean,
 
@@ -182,6 +181,11 @@ declare module './model/problem' {
         difficultyAlgo?: number,
         difficultyAdmin?: number,
         difficultySetting?: any,
+
+        /**
+         * @deprecated
+         */
+        config: any,
     }
 }
 export type { Pdoc } from './model/problem';

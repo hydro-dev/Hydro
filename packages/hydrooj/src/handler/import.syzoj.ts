@@ -6,6 +6,7 @@ import superagent from 'superagent';
 import { filter } from 'lodash';
 import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
+import yaml from 'js-yaml';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
@@ -115,14 +116,13 @@ class ProblemImportSYZOJHandler extends Handler {
                 await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
             }
             const filename = p.file_io_input_name ? p.file_io_input_name?.split('.')[0] : null;
-            await problem.edit(domainId, docId, {
-                config: {
-                    time: `${p.time_limit}ms`,
-                    memory: `${p.memory_limit}m`,
-                    filename,
-                    type: p.type === 'traditional' ? 'default' : p.type,
-                },
-            });
+            const config = {
+                time: `${p.time_limit}ms`,
+                memory: `${p.memory_limit}m`,
+                filename,
+                type: p.type === 'traditional' ? 'default' : p.type,
+            };
+            await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
         } finally {
             fs.unlinkSync(file);
         }
@@ -188,13 +188,12 @@ class ProblemImportSYZOJHandler extends Handler {
                 await problem.addTestdata(domainId, docId, f.filename, p);
             }
             if (judge) {
-                await problem.edit(domainId, docId, {
-                    config: {
-                        time: `${judge.timeLimit}ms`,
-                        memory: `${judge.memoryLimit}m`,
-                        // TODO other config
-                    },
-                });
+                const config = {
+                    time: `${judge.timeLimit}ms`,
+                    memory: `${judge.memoryLimit}m`,
+                    // TODO other config
+                };
+                await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
             }
             const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
                 .send({

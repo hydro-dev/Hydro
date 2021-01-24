@@ -3,9 +3,11 @@
 import { ObjectID, Collection } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
+import yaml from 'js-yaml';
 import { Progress } from './ui';
 import { Ufdoc } from './interface';
 import { Logger } from './logger';
+import { DomainDoc } from './loader';
 import { streamToBuffer } from './utils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
@@ -19,6 +21,17 @@ import * as system from './model/system';
 const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
 
+async function iterateAllDomain(cb: (ddoc: DomainDoc) => Promise<any>) {
+    const domains = await domain.getMulti().project({ _id: 1 }).toArray();
+    for (const d of domains) await cb(d);
+}
+
+async function iterateAllProblem(cb: (pdoc: problem.Pdoc) => Promise<any>) {
+    await iterateAllDomain(async (d) => {
+        await problem.getMulti(d._id, {}).forEach(cb);
+    });
+}
+
 const scripts: UpgradeScript[] = [
     // Init
     async function _0_1() {
@@ -30,8 +43,7 @@ const scripts: UpgradeScript[] = [
     // Add history column to ddoc,drdoc,psdoc
     async function _1_2() {
         const _FRESH_INSTALL_IGNORE = 1;
-        const domains = await domain.getMulti().project({ _id: 1 }).toArray();
-        for (const d of domains) {
+        await iterateAllDomain(async (d) => {
             const bulk = document.coll.initializeUnorderedBulkOp();
             await document.getMulti(d._id, document.TYPE_DISCUSSION).forEach((ddoc) => {
                 bulk.find({ _id: ddoc._id }).updateOne({ $set: { history: [] } });
@@ -44,7 +56,7 @@ const scripts: UpgradeScript[] = [
                 bulk.find({ _id: psdoc._id }).updateOne({ $set: { history: [] } });
             });
             if (bulk.length) await bulk.execute();
-        }
+        });
         return true;
     },
     async function _2_3() {
@@ -138,8 +150,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _4_5() {
         const _FRESH_INSTALL_IGNORE = 1;
-        const domains = await domain.getMulti().project({ _id: 1 }).toArray();
-        for (const d of domains) {
+        await iterateAllDomain(async (d) => {
             const bulk = document.coll.initializeUnorderedBulkOp();
             const pdocs = await document.getMulti(d._id, document.TYPE_PROBLEM).project({ domainId: 1, docId: 1 }).toArray();
             for (const pdoc of pdocs) {
@@ -147,13 +158,27 @@ const scripts: UpgradeScript[] = [
                 bulk.find({ _id: pdoc._id }).updateOne({ $set: { data } });
             }
             if (bulk.length) await bulk.execute();
-        }
+        });
         return true;
     },
     async function _5_6() {
         // Issue #58
         const _FRESH_INSTALL_IGNORE = 1;
         await domain.edit('system', { owner: 1 });
+        return true;
+    },
+    async function _6_7() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(async (pdoc) => {
+            if (!pdoc.config) return;
+            const dst = `problem/${pdoc.domainId}/${pdoc.pid}/testdata/config.yaml`;
+            await storage.get(dst)
+                .catch(() => {
+                    const cfg = yaml.dump(pdoc.config);
+                    return storage.put(dst, Buffer.from(cfg));
+                });
+        });
+        return true;
     },
 ];
 
