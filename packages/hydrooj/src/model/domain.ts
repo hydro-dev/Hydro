@@ -2,6 +2,7 @@ import { Dictionary } from 'lodash';
 import { FilterQuery } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
+import { NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
@@ -56,9 +57,7 @@ export async function get(domainId: string): Promise<DomainDoc | null> {
 export async function getByHost(host: string): Promise<DomainDoc | null> {
     const query: FilterQuery<DomainDoc> = { host };
     await bus.serial('domain/before-get', query);
-    console.log(query);
     const result = await coll.findOne(query);
-    console.log(result);
     await bus.serial('domain/get', result);
     return result;
 }
@@ -74,7 +73,7 @@ export async function edit(domainId: string, $set: Partial<DomainDoc>) {
     return result.value;
 }
 
-export async function inc(domainId: string, field: keyof DomainDoc, n: number): Promise<number | null> {
+export async function inc(domainId: string, field: NumberKeys<DomainDoc>, n: number): Promise<number | null> {
     const res = await coll.findOneAndUpdate(
         { _id: domainId },
         // FIXME

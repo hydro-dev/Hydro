@@ -2,6 +2,7 @@ import { isSafeInteger, flatten, pick } from 'lodash';
 import yaml from 'js-yaml';
 import fs from 'fs-extra';
 import { FilterQuery, ObjectID } from 'mongodb';
+import superagent from 'superagent';
 import AdmZip from 'adm-zip';
 import {
     NoProblemError, BadRequestError, PermissionError,
@@ -17,6 +18,8 @@ import { ProblemAdd } from '../lib/ui';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as domain from '../model/domain';
+import * as system from '../model/system';
+import * as token from '../model/token';
 import * as user from '../model/user';
 import * as solution from '../model/solution';
 import { PERM, PRIV, CONSTANT } from '../model/builtin';
@@ -687,6 +690,33 @@ export class ProblemImportHandler extends Handler {
     }
 }
 
+export class ProblemSendHandler extends Handler {
+    async get() {
+        this.response.template = 'problem_send.html';
+    }
+
+    @post('target', Types.String)
+    @post('pids', Types.Array)
+    async post(domainId: string, target: any, pids: number[]) {
+        target = target.split('@');
+        const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        const pdocs = await problem.getList(domainId, pids, getHidden, true);
+        const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        if (!getData) {
+            for (const pid in pdocs) {
+                if (pdocs[pid].owner !== this.user._id) {
+                    throw new PermissionError(PERM.PERM_READ_PROBLEM_DATA);
+                }
+            }
+        }
+        const [source, expire] = system.getMany(['server.url', 'session.expire_seconds']);
+        const tokenId = await token.createOrUpdate(token.TYPE_EXPORT, expire, { domainId, pids });
+        await superagent.post(`${target[1]}/d/${target[0]}/problem/receive`)
+            .send({ source, domainId, tokenId });
+        this.back();
+    }
+}
+
 export async function apply() {
     ProblemAdd('problem_import', {}, 'copy', 'Import From Hydro');
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
@@ -706,6 +736,7 @@ export async function apply() {
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
+    Route('problem_send', '/problem/send', ProblemSendHandler, PERM.PERM_VIEW_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 

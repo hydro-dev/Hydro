@@ -9,6 +9,7 @@ export const TYPE_REGISTRATION = 2;
 export const TYPE_CHANGEMAIL = 3;
 export const TYPE_OAUTH = 4;
 export const TYPE_LOSTPASS = 5;
+export const TYPE_EXPORT = 6;
 
 function ensureIndexes() {
     return Promise.all([
