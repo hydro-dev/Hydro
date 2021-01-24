@@ -92,7 +92,7 @@ export interface User extends Dictionary<any> {
 
 export type Udict = NumericDictionary<User>;
 
-export interface ProblemData {
+export interface FileInfo {
     name: string,
     size: number,
 }
@@ -172,7 +172,8 @@ declare module './model/problem' {
         nAccept: number,
         tag: string[],
         category: string[],
-        data: ProblemData[],
+        data: FileInfo[],
+        additional_file: FileInfo[],
         hidden: boolean,
         acMsg?: string,
         html?: boolean,

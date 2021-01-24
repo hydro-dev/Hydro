@@ -119,33 +119,6 @@ const scripts: UpgradeScript[] = [
             }
             domainProgress.stop();
         }
-        const udocs = await user.getMulti().project({ _id: 1, uname: 1 }).toArray();
-        const userfileProgress = Progress.create({
-            items: udocs.length, title: 'Users', y: 3,
-        });
-        for (const udoc of udocs) {
-            userfileProgress.startItem(`${udoc._id}: ${udoc.uname}`);
-            const ufdocs = await coll.find({ owner: udoc._id }).toArray();
-            const currentUser = Progress.create({
-                items: ufdocs.length, title: `${udoc._id}: ${udoc.uname}`, y: 4, eta: true,
-            });
-            const namelist = [];
-            for (const ufdoc of ufdocs) {
-                currentUser.startItem(`${ufdoc._id}: ${ufdoc.filename || ''}`);
-                ufdoc.filename = ufdoc.filename || ufdoc._id.toHexString();
-                const file = await streamToBuffer(gridfs.openDownloadStream(ufdoc._id));
-                if (!namelist.includes(ufdoc.filename)) {
-                    await storage.put(`user/${udoc._id}/${ufdoc.filename}`, file);
-                } else {
-                    await storage.put(`user/${udoc._id}/${ufdoc._id}`, file);
-                }
-                namelist.push(ufdoc.filename);
-                currentUser.itemDone(`${ufdoc._id}: ${ufdoc.filename || ''}`);
-            }
-            currentUser.stop();
-            userfileProgress.itemDone(`${udoc._id}: ${udoc.uname}`);
-        }
-        userfileProgress.stop();
         logger.success('Files copied successfully. You can now remove collection `file` `fs.files` `fs.chunks` in the database.');
         return true;
     },
@@ -176,7 +149,7 @@ const scripts: UpgradeScript[] = [
             await storage.get(dst)
                 .catch(() => {
                     const cfg = yaml.dump(pdoc.config);
-                    return storage.put(dst, Buffer.from(cfg));
+                    return problem.addTestdata(pdoc.domainId, pdoc.docId, 'config.yaml', Buffer.from(cfg));
                 });
         });
         return true;

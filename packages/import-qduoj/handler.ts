@@ -82,14 +82,16 @@ class ImportQduojHandler extends Handler {
                     subtasks: [],
                 };
                 for (const tc of pdoc.test_case_score) {
-                    await storage.put(
-                        `problem/${domainId}/${pid}/testdata/${tc.input_name}`,
-                        path.join(tmp, folder, 'testcase', tc.input_name),
-                    );
-                    await storage.put(
-                        `problem/${domainId}/${pid}/testdata/${tc.output_name}`,
-                        path.join(tmp, folder, 'testcase', tc.output_name),
-                    );
+                    await Promise.all([
+                        problem.addTestdata(
+                            domainId, pid, tc.input_name,
+                            path.join(tmp, folder, 'testcase', tc.input_name),
+                        ),
+                        problem.addTestdata(
+                            domainId, pid, tc.output_name,
+                            path.join(tmp, folder, 'testcase', tc.output_name),
+                        ),
+                    ]);
                     config.subtasks.push({
                         score: tc.score,
                         cases: [{
@@ -98,12 +100,10 @@ class ImportQduojHandler extends Handler {
                         }],
                     });
                 }
-                await storage.put(
-                    `problem/${domainId}/${pid}/testdata/config.yaml`,
-                    Buffer.from(yaml.dump(config)),
-                );
-                const data = await storage.list(`problem/${domainId}/${pid}/testdata/`, true);
-                await problem.edit(domainId, pid, { html: true, data });
+                await Promise.all([
+                    problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+                    problem.edit(domainId, pid, { html: true }),
+                ]);
             }
         } catch (e) {
             console.error(e);

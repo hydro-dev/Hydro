@@ -158,6 +158,18 @@ export async function delTestdata(domainId: string, pid: number, name: string | 
     await pull(domainId, pid, 'data', names);
 }
 
+export async function addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
+    await storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f);
+    const meta = await storage.getMeta(`problem/${domainId}/${pid}/additional_file/${name}`);
+    return await push(domainId, pid, 'additional_file', meta);
+}
+
+export async function delAdditionalFile(domainId: string, pid: number, name: string | string[]) {
+    const names = name instanceof Array ? name : [name];
+    await storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`));
+    await pull(domainId, pid, 'additional_file', names);
+}
+
 export async function random(domainId: string, query: FilterQuery<Pdoc>): Promise<string | null> {
     const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
     const pcount = await cursor.count();
@@ -239,6 +251,8 @@ global.Hydro.model.problem = {
     random,
     addTestdata,
     delTestdata,
+    addAdditionalFile,
+    delAdditionalFile,
     getMulti,
     getList,
     getListStatus,
