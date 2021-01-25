@@ -214,7 +214,7 @@ const homework: ContestRule = {
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid) && !effective[j.pid] && j.accept) {
+            if (tdoc.pids.includes(j.pid) && (!effective[j.pid] || j.accept)) {
                 effective[j.pid] = j;
             }
         }
@@ -248,7 +248,7 @@ const homework: ContestRule = {
         }
         return {
             score: Math.sum(detail.map((d) => d.score)),
-            penaltyScore: Math.sum(detail.map((d) => d.penaltySince)),
+            penaltyScore: Math.sum(detail.map((d) => d.penaltyScore)),
             time: Math.sum(detail.map((d) => d.time)),
             detail,
         };
@@ -300,7 +300,7 @@ const homework: ContestRule = {
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            for (const item of tsdoc.journal || []) {
+            for (const item of tsdoc.detail || []) {
                 tsddict[item.pid] = item;
             }
             const row = [

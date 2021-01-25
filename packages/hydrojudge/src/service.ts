@@ -71,7 +71,6 @@ async function postInit() {
     }
 
     async function cacheOpen(domainId: string, pid: string, files: any[]) {
-        console.log(files);
         const filePath = path.join(getConfig('cache_dir'), domainId, pid);
         await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
