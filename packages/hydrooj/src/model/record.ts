@@ -58,15 +58,17 @@ export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null>
 }
 
 export async function stat(domainId?: string) {
-    const [d5min, d1h, d1d, d1m, total] = await Promise.all([
+    const [d5min, d1h, day, week, month, year, total] = await Promise.all([
         coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
         coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
         coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
         coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
+        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
         coll.find(domainId ? { domainId } : {}).count(),
     ]);
     return {
-        d5min, d1h, d1d, d1m, total,
+        d5min, d1h, day, week, month, year, total,
     };
 }
 

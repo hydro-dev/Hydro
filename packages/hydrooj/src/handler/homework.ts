@@ -356,7 +356,7 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
         ];
         this.response.template = 'contest_scoreboard.html';
         this.response.body = {
-            tdoc, rows, path, udict,
+            tdoc, rows, path, udict, page_name: 'homework_scoreboard',
         };
     }
 }
@@ -370,8 +370,8 @@ class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_HOMEWORK);
-        this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
+        const [tdoc, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_HOMEWORK);
+        this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }
 
@@ -407,7 +407,10 @@ export async function apply() {
     Route('homework_create', '/homework/create', HomeworkCreateHandler, PERM.PERM_CREATE_HOMEWORK);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
-    Route('homework_scoreboard', '/homework/:tid/scoreboard/download/:ext', HomeworkScoreboardDownloadHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
+    Route(
+        'homework_scoreboard_download', '/homework/:tid/scoreboard/download/:ext',
+        HomeworkScoreboardDownloadHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
+    );
     Route('homework_detail_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_detail_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('homework_code', '/homework/:tid/code', HomeworkCodeHandler, PERM.PERM_VIEW_HOMEWORK);

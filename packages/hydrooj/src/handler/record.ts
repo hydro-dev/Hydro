@@ -1,6 +1,8 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
-import { PERM, CONSTANT, STATUS } from '../model/builtin';
+import {
+    PERM, CONSTANT, STATUS, PRIV,
+} from '../model/builtin';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as contest from '../model/contest';
@@ -19,7 +21,8 @@ class RecordListHandler extends RecordHandler {
     @param('pid', Types.String, true)
     @param('tid', Types.ObjectID, true)
     @param('uidOrName', Types.String, true)
-    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string) {
+    @param('allDomain', Types.Boolean, true)
+    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, all = false) {
         this.response.template = 'record_main.html';
         const q: FilterQuery<Rdoc> = { 'contest.tid': tid, hidden: false };
         if (uidOrName) {
@@ -63,6 +66,9 @@ class RecordListHandler extends RecordHandler {
             filterTid: tid,
             filterUidOrName: uidOrName,
         };
+        if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS)) {
+            this.response.body.statistics = await record.stat(all ? undefined : domainId);
+        }
     }
 }
 
