@@ -116,7 +116,6 @@ export async function calcLevel(domainId: string, report: Function) {
         bulk.find(query).update({ $set: { level: levels[i][0] } });
     }
     const i = levels.length - 1;
-    report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
     bulk.find({ domainId, rank: { $lte: levels[i][1] } }).update({ $set: { level: levels[i][0] } });
     await bulk.execute();
 }

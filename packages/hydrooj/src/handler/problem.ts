@@ -281,7 +281,6 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
     @param('input', Types.String, true)
     async post(domainId: string, lang: string, code: string, input: string = '') {
         this.limitRate('add_record', 3600, 100);
-        // TODO parseConfig
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
             lang, code, true,

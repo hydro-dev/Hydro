@@ -303,19 +303,12 @@ export class HandlerCommon {
         }
         try {
             const { anchor } = args;
-            if (!this.domain.host) {
-                if (this.domainId !== 'system' || args.domainId) {
-                    name += '_with_domainId';
-                    args.domainId = args.domainId || this.domainId;
-                }
-                res = router.url(name, args, { query });
-            } else {
-                if ((this.request.path || '').startsWith('/d/')) {
-                    name += '_with_domainId';
-                    args.domainId = args.domainId || this.domainId;
-                }
-                res = `//${this.domain.host}${router.url(name, args, { query })}`;
+            if (args.domainId) name += '_with_domainId';
+            else if (this.domain.host !== this.request.host && this.domainId !== 'system') {
+                name += '_with_domainId';
+                args.domainId = this.domainId;
             }
+            res = router.url(name, args, { query });
             if (anchor) return `${res}#${anchor}`;
         } catch (e) {
             logger.warn(e.message);
@@ -546,29 +539,19 @@ export class Handler extends HandlerCommon {
         const expireSeconds = this.session.save
             ? system.get('session.expire_seconds')
             : system.get('session.unsaved_expire_seconds');
+        const $update = {
+            updateIp: this.request.ip,
+            updateUa: this.request.headers['user-agent'] || '',
+        };
+        const $create = {
+            createIp: this.request.ip,
+            createUa: this.request.headers['user-agent'] || '',
+            createHost: this.request.host,
+        };
         if (this.session._id) {
-            await token.update(
-                this.session._id,
-                token.TYPE_SESSION,
-                expireSeconds,
-                {
-                    ...this.session,
-                    updateIp: this.request.ip,
-                    updateUa: this.request.headers['user-agent'] || '',
-                },
-            );
+            await token.update(this.session._id, token.TYPE_SESSION, expireSeconds, { ...this.session, ...$update });
         } else {
-            [, this.session] = await token.add(
-                token.TYPE_SESSION,
-                expireSeconds,
-                {
-                    ...this.session,
-                    createIp: this.request.ip,
-                    createUa: this.request.headers['user-agent'] || '',
-                    updateIp: this.request.ip,
-                    updateUa: this.request.headers['user-agent'] || '',
-                },
-            );
+            [, this.session] = await token.add(token.TYPE_SESSION, expireSeconds, { ...this.session, ...$update, ...$create });
         }
         const cookie: SetOption = {
             secure: !!system.get('session.secure'),
