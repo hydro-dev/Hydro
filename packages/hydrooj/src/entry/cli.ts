@@ -8,7 +8,6 @@ import {
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import storage from '../service/storage';
 
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
@@ -25,6 +24,9 @@ async function cli() {
     const [, modelName, func, ...args] = argv._;
     if (!global.Hydro.model[modelName]) {
         return console.error(`Model ${modelName} doesn't exist.`);
+    }
+    if (!func) {
+        return console.log(Object.keys(global.Hydro.model[modelName]));
     }
     if (!global.Hydro.model[modelName][func]) {
         return console.error(`Function ${func} doesn't exist in model ${modelName}.`);
@@ -65,6 +67,7 @@ export async function load() {
     const sopts = {
         endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
     };
+    const storage = require('../service/storage');
     await storage.start(sopts);
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);

@@ -370,7 +370,7 @@ class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_CONTEST);
+        const [, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_HOMEWORK);
         this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
     }
 }

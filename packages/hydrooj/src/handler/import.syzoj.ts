@@ -247,12 +247,12 @@ class ProblemImportSYZOJHandler extends Handler {
                     domainId, targetPid, hidden,
                     protocol, host, pid, false,
                 );
-                this.response.body = { pid: pid || docId };
-                this.response.redirect = this.url('problem_settings', { pid: pid || docId });
+                this.response.body = { pid: targetPid || docId };
+                this.response.redirect = this.url('problem_settings', { pid: targetPid || docId });
             } else {
                 const docId = await this.v2(domainId, targetPid, hidden, url);
-                this.response.body = { pid: pid || docId };
-                this.response.redirect = this.url('problem_settings', { pid: pid || docId });
+                this.response.body = { pid: targetPid || docId };
+                this.response.redirect = this.url('problem_settings', { pid: targetPid || docId });
             }
         }
     }

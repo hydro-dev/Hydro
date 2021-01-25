@@ -538,6 +538,7 @@ problem_create: 创建题目
 problem_detail: 题目详情
 problem_edit: 编辑题目
 problem_files: 题目文件
+problem_import_syzoj: 从 SYZOJ 导入题目
 problem_import: 导入题目
 problem_main: 题库
 problem_settings: 题目设置

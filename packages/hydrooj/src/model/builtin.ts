@@ -18,9 +18,7 @@ export const PERM = {
     // Problem and Record
     PERM_CREATE_PROBLEM: 1n << 4n,
     PERM_EDIT_PROBLEM: 1n << 5n,
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     PERM_EDIT_PROBLEM_SELF: 1n << 6n,
     PERM_VIEW_PROBLEM: 1n << 7n,
     PERM_VIEW_PROBLEM_HIDDEN: 1n << 8n,
@@ -237,21 +235,13 @@ export const PRIV = {
     PRIV_DEFAULT: 0,
     PRIV_NEVER: 1 << 20,
 
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     PRIV_CREATE_FILE: 1 << 16,
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     PRIV_UNLIMITED_QUOTA: 1 << 17,
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     PRIV_DELETE_FILE: 1 << 18,
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     PRIV_DELETE_FILE_SELF: 1 << 19,
 };
 

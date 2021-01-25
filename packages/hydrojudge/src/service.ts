@@ -71,6 +71,7 @@ async function postInit() {
     }
 
     async function cacheOpen(domainId: string, pid: string, files: any[]) {
+        console.log(files);
         const filePath = path.join(getConfig('cache_dir'), domainId, pid);
         await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
@@ -82,7 +83,7 @@ async function postInit() {
         for (const file of files) {
             version[file.name] = file.etag;
             if (etags[file.name] !== file.etag) {
-                await storage.get(`${file.prefix}${file.name}`, path.join(filePath, file.name));
+                await storage.get(`problem/${domainId}/${pid}/testdata/${file.name}`, path.join(filePath, file.name));
             }
         }
         fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));

@@ -304,7 +304,7 @@ export class HandlerCommon {
         try {
             const { anchor } = args;
             if (args.domainId) name += '_with_domainId';
-            else if (this.domain.host !== this.request.host && this.domainId !== 'system') {
+            else if (this.domain?.host !== this.request.host && this.domainId !== 'system') {
                 name += '_with_domainId';
                 args.domainId = this.domainId;
             }

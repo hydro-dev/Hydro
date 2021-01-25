@@ -185,9 +185,7 @@ declare module './model/problem' {
         difficultyAdmin?: number,
         difficultySetting?: any,
 
-        /**
-         * @deprecated
-         */
+        /** @deprecated */
         config: any,
     }
 }
