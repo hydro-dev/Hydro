@@ -76,7 +76,7 @@ export const judge = async (ctx) => {
     const { code, time_usage_ms, memory_usage_kb } = res;
     let { status } = res;
     if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
-    let message: any = fs.readFileSync(stdout).toString() + fs.readFileSync(stderr).toString();
+    const message: string[] = [];
     if (status === STATUS.STATUS_ACCEPTED) {
         if (time_usage_ms > ctx.config.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -85,16 +85,18 @@ export const judge = async (ctx) => {
         }
     } else if (code) {
         status = STATUS.STATUS_RUNTIME_ERROR;
-        if (code < 32) message += signals[code];
-        else message = { message: 'Your program returned {0}.', params: [code] };
+        if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
+        else message.push(`ExitCode: ${code}`);
     }
+    message.push(fs.readFileSync(stdout).toString());
+    message.push(fs.readFileSync(stderr).toString());
     ctx.next({
         status,
         case: {
             status,
             time_ms: time_usage_ms,
             memory_kb: memory_usage_kb,
-            message,
+            message: message.join('\n'),
         },
     });
     ctx.stat.done = new Date();
