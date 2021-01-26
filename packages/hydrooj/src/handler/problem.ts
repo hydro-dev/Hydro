@@ -480,11 +480,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        if (type === 'testdata') {
-            await problem.delTestdata(domainId, this.pdoc.docId, files);
-        } else {
-            await storage.del(files.map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`));
-        }
+        if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
+        else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
         this.back();
     }
 }

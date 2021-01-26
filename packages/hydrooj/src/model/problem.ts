@@ -1,6 +1,6 @@
 import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
-import { Dictionary } from 'lodash';
+import { Dictionary, pick } from 'lodash';
 import { STATUS } from './builtin';
 import * as document from './document';
 import * as domain from './domain';
@@ -126,7 +126,7 @@ export function push<T extends ArrayKeys<Pdoc>>(domainId: string, _id: number, k
 }
 
 export function pull<T extends ArrayKeys<Pdoc>>(domainId: string, pid: number, key: ArrayKeys<Pdoc>, values: Pdoc[T][0][]) {
-    return document.pull(domainId, document.TYPE_PROBLEM, pid, key, values.map((_id) => ({ _id })));
+    return document.deleteSub(domainId, document.TYPE_PROBLEM, pid, key, values);
 }
 
 export function inc(domainId: string, _id: number, field: NumberKeys<Pdoc>, n: number): Promise<Pdoc> {
@@ -147,29 +147,35 @@ export function del(domainId: string, docId: number) {
 }
 
 export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
-    await storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f);
+    const [current] = await Promise.all([
+        document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', name),
+        storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f),
+    ]);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
-    return await push(domainId, pid, 'data', {
-        _id: name, name, size: meta.size, lastModified: meta.lastModified, etag: meta.etag,
-    });
+    const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
+    if (!current) await push(domainId, pid, 'data', { _id: name, ...payload });
+    else await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', name, payload);
 }
 
 export async function delTestdata(domainId: string, pid: number, name: string | string[]) {
-    const names = name instanceof Array ? name : [name];
+    const names = (name instanceof Array) ? name : [name];
     await storage.del(names.map((t) => `problem/${domainId}/${pid}/testdata/${t}`));
     await pull(domainId, pid, 'data', names);
 }
 
 export async function addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
-    await storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f);
+    const [[, fileinfo]] = await Promise.all([
+        document.getSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', name),
+        storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f),
+    ]);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/additional_file/${name}`);
-    return await push(domainId, pid, 'additional_file', {
-        _id: name, name, size: meta.size, lastModified: meta.lastModified, etag: meta.etag,
-    });
+    const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
+    if (!fileinfo) await push(domainId, pid, 'additional_file', { _id: name, ...payload });
+    else await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', name, payload);
 }
 
 export async function delAdditionalFile(domainId: string, pid: number, name: string | string[]) {
-    const names = name instanceof Array ? name : [name];
+    const names = (name instanceof Array) ? name : [name];
     await storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`));
     await pull(domainId, pid, 'additional_file', names);
 }

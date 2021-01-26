@@ -200,13 +200,14 @@ export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[
     return res.value;
 }
 
-export async function deleteSub<K extends keyof DocType>(
-    domainId: string, docType: K, docId: DocType[K]['docId'],
-    key: ArrayKeys<DocType[K]>, subId: ObjectID,
-): Promise<DocType[K]> {
+export async function deleteSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
+    domainId: string, docType: T, docId: DocType[T]['docId'],
+    key: K, subId: DocType[T][K][0]['_id'] | DocType[T][K][0]['_id'][],
+): Promise<DocType[T]> {
+    subId = (subId instanceof Array) ? subId : [subId];
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
-        { $pull: { [key]: { _id: subId } } },
+        { $pull: { [key]: { _id: { $in: subId } } } },
         { returnOriginal: false },
     );
     return res.value;
@@ -214,8 +215,8 @@ export async function deleteSub<K extends keyof DocType>(
 
 export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
-    key: K, subId: ObjectID,
-): Promise<[DocType[T], DocType[T][K]][0]> {
+    key: K, subId: DocType[T][K][0]['_id'],
+): Promise<[DocType[T], DocType[T][K][0]]> {
     const doc = await coll.findOne({
         domainId,
         docType,
