@@ -147,13 +147,13 @@ export function del(domainId: string, docId: number) {
 }
 
 export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
-    const [current] = await Promise.all([
+    const [[, fileinfo]] = await Promise.all([
         document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', name),
         storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f),
     ]);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
     const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
-    if (!current) await push(domainId, pid, 'data', { _id: name, ...payload });
+    if (!fileinfo) await push(domainId, pid, 'data', { _id: name, ...payload });
     else await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', name, payload);
 }
 
