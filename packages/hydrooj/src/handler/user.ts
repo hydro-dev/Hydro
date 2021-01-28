@@ -162,16 +162,22 @@ class UserDetailHandler extends Handler {
         const [sdoc, rdocs, [pdocs, pcount]] = await Promise.all([
             token.getMostRecentSessionByUid(uid),
             record.getByUid(domainId, uid, 30),
-            paginate(
-                problem.getMulti(domainId, { owner: this.user._id }),
-                1,
-                100,
-            ),
+            this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
+                ? paginate(
+                    problem.getMulti(domainId, { owner: this.user._id }),
+                    1,
+                    100,
+                )
+                : [[], 0, 0] as [problem.Pdoc[], number, number],
         ]);
-        const pdict = await problem.getList(
-            domainId, rdocs.map((rdoc) => rdoc.pid),
-            this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
-        );
+        const pdict = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
+            ? await problem.getList(
+                domainId, rdocs.map((rdoc) => rdoc.pid),
+                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
+            )
+            : Object.fromEntries(rdocs.map(
+                (rdoc) => [rdoc.pid, problem.Pdoc.create(undefined, rdoc.pid.toString())],
+            ));
         // Remove sensitive data
         if (!isSelfProfile && sdoc) {
             sdoc.createIp = '';
