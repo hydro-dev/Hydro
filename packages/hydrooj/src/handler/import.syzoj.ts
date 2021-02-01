@@ -84,7 +84,7 @@ class ProblemImportSYZOJHandler extends Handler {
                 type: 'Text',
                 subType: 'markdown',
                 sectionTitle: this.translate('Limit And Hint'),
-                text: p.output_format,
+                text: p.limit_and_hint,
             });
         }
         if (p.have_additional_file) {
