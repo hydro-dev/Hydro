@@ -1,4 +1,4 @@
-import { isSafeInteger, flatten, pick } from 'lodash';
+import { isSafeInteger, flatten } from 'lodash';
 import yaml from 'js-yaml';
 import fs from 'fs-extra';
 import { FilterQuery, ObjectID } from 'mongodb';
@@ -8,7 +8,6 @@ import {
     NoProblemError, BadRequestError, PermissionError,
     SolutionNotFoundError, ProblemNotFoundError, ValidationError,
 } from '../error';
-import { streamToBuffer } from '../utils';
 import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
@@ -216,24 +215,6 @@ export class ProblemDetailHandler extends ProblemHandler {
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
-    }
-}
-
-export class ProblemExportHandler extends ProblemDetailHandler {
-    async get() {
-        const hasPerm = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        const pdoc = pick(this.pdoc, ['pid', 'acMsg', 'content', 'config', 'title', 'html', 'tag', 'category']);
-        const zip = new AdmZip();
-        if (hasPerm) {
-            const files = await storage.list(`problem/${this.domainId}/${this.pdoc.docId}/`);
-            for (const file of files) {
-                // eslint-disable-next-line no-await-in-loop
-                const buf = await streamToBuffer(await storage.get(`${file.prefix}${file.name}`));
-                zip.addFile(file.name, buf);
-            }
-        }
-        zip.addFile('problem.json', Buffer.from(JSON.stringify(pdoc)));
-        this.response.attachment(`${this.pdoc.title}.zip`, zip.toBuffer());
     }
 }
 
@@ -448,7 +429,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 file, false, isJudge ? 'judge' : 'user',
             );
         }
-        this.response.body.links = links;
+        this.response.body = { links };
     }
 
     @post('filename', Types.String)
@@ -710,7 +691,6 @@ export async function apply() {
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
-    Route('problem_export', '/p/:pid/export', ProblemExportHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);

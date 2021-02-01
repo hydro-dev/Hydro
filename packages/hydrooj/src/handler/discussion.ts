@@ -26,11 +26,8 @@ export const typeMapper = {
 
 class DiscussionHandler extends Handler {
     ddoc?: Ddoc;
-
     drdoc?: Drdoc;
-
     drrdoc?: Drrdoc;
-
     vnode?: any;
 
     @param('type', Types.String, true)
