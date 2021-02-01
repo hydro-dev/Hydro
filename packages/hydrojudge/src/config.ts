@@ -55,11 +55,11 @@ if (!global.Hydro) {
     }
     const configFile = fs.readFileSync(CONFIG_FILE).toString();
     config = { ...config, ...yaml.load(configFile) as any };
-    if (fs.existsSync(LANGS_FILE)) config.langs = yaml.load(fs.readFileSync(LANGS_FILE).toString());
+    if (fs.existsSync(LANGS_FILE)) config.langs = fs.readFileSync(LANGS_FILE).toString();
     else {
         log.error('Language file not found, using default.');
         const file = path.join(path.dirname(require.resolve('@hydrooj/hydrojudge')), 'setting.yaml');
         const content = yaml.load(fs.readFileSync(file).toString()) as any;
-        config.langs = yaml.load(content.langs.default) as any;
+        config.langs = content.langs.default;
     }
 }

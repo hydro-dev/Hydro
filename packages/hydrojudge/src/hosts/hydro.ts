@@ -30,6 +30,7 @@ class JudgeTask {
     code: string;
     tmpdir: string;
     clean: Function[];
+    data: any[];
     folder: string;
     config: any;
     nextId = 1;
@@ -56,6 +57,7 @@ class JudgeTask {
         this.lang = this.request.lang;
         this.code = this.request.code;
         this.config = this.request.config;
+        this.data = this.request.data;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
         fs.ensureDirSync(this.tmpdir);
@@ -79,7 +81,7 @@ class JudgeTask {
                 });
             } else {
                 log.error(e);
-                this.next({ message: { message: e.message, params: e.params, ...argv.debug ? { stack: e.stack } : {} } });
+                this.next({ message: { message: e.message, params: e.params || [], ...argv.debug ? { stack: e.stack } : {} } });
                 this.end({
                     status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
@@ -92,7 +94,7 @@ class JudgeTask {
 
     async doSubmission() {
         this.stat.cache_start = new Date();
-        this.folder = await this.session.cacheOpen(this.domainId, this.pid, this.next);
+        this.folder = await this.session.cacheOpen(this.domainId, this.pid, this.data, this.next);
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
@@ -192,7 +194,7 @@ export default class Hydro {
         const domainDir = path.join(getConfig('cache_dir'), this.config.host, domainId);
         const filePath = path.join(domainDir, pid); await fs.ensureDir(filePath);
         if (!files.length) throw new SystemError('Problem data not found.');
-        let etags: Record<string, string>;
+        let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
         } catch (e) { /* ignore */ }
@@ -210,8 +212,9 @@ export default class Hydro {
                 operation: 'get_links',
                 files: filenames,
             });
-            for (const name in res.urls) {
-                const f = await this.axios.get(res.urls[name], { responseType: 'stream' });
+            for (const name in res.data.links) {
+                if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
+                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' });
                 const w = fs.createWriteStream(path.join(filePath, name));
                 f.data.pipe(w);
                 await new Promise((resolve, reject) => {

@@ -147,9 +147,9 @@ class DomainPermissionHandler extends ManageHandler {
             const perms = this.request.body[role] instanceof Array
                 ? this.request.body[role]
                 : [this.request.body[role]];
-            // @ts-ignore
+            // @ts-expect-error
             roles[role] = 0n;
-            // @ts-ignore
+            // @ts-expect-error
             for (const r of perms) roles[role] |= 1n << BigInt(r);
         }
         await domain.setRoles(domainId, roles);
