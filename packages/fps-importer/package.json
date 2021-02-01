@@ -7,13 +7,13 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "adm-zip": "^0.5.1",
+        "adm-zip": "^0.5.2",
         "decode-html": "^2.0.0",
         "fs-extra": "^9.1.0",
         "xml2js": "^0.4.23"
     },
     "devDependencies": {
-        "@types/xml2js": "^0.4.7",
+        "@types/xml2js": "^0.4.8",
         "bson": "^4.2.2"
     },
     "peerDependencies": {

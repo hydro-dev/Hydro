@@ -95,8 +95,8 @@ export function setUserRole(domainId: string, uid: number, role: string) {
     return collUser.updateOne({ uid, domainId }, { $set: { role } }, { upsert: true });
 }
 
-export async function getRoles(domainId: string): Promise<any[]>
-export async function getRoles(domain: DomainDoc): Promise<any[]>
+export async function getRoles(domainId: string): Promise<any[]>;
+export async function getRoles(domain: DomainDoc): Promise<any[]>;
 export async function getRoles(arg: string | DomainDoc) {
     let ddoc: DomainDoc;
     if (typeof arg === 'string') ddoc = await get(arg);

@@ -16,8 +16,8 @@ function isBailed(value: any) {
     return value !== null && value !== false && value !== undefined;
 }
 
-export type Disposable = () => void
-export type VoidReturn = Promise<any> | any
+export type Disposable = () => void;
+export type VoidReturn = Promise<any> | any;
 
 export interface EventMap {
     'app/started': () => void
@@ -53,7 +53,7 @@ export interface EventMap {
 
     'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>
-        (domainId: string, docType: T, docId: DocType[T], $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>) => VoidReturn
+    (domainId: string, docType: T, docId: DocType[T], $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>) => VoidReturn
 
     'problem/edit': (doc: Pdoc) => VoidReturn
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn

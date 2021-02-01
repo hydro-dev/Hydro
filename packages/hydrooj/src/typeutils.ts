@@ -4,10 +4,10 @@ export type NumberKeys<O> = {
 
 export type ArrayKeys<O, P = any> = {
     [K in keyof O]: P[] extends O[K] ? K : never
-}[keyof O]
+}[keyof O];
 
 export type Value<O, V = ''> = {
     [K in keyof O]: V
-}
+};
 
-export type Projection<O> = (string & keyof O)[]
+export type Projection<O> = (string & keyof O)[];

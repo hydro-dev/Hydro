@@ -2,6 +2,7 @@ import type { Readable, Writable } from 'stream';
 import type { ObjectID } from 'mongodb';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
+import type * as Koa from 'koa';
 import type { Pdoc } from './model/problem';
 
 type document = typeof import('./model/document');
@@ -159,7 +160,7 @@ export interface SampleContentNode {
     payload: [string, string],
 }
 export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
-export type Content = string | ContentNode[] | Record<string, ContentNode[]>
+export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
 
 declare module './model/problem' {
     interface Pdoc {
@@ -587,5 +588,12 @@ declare global {
             },
             addons: string[],
         }
+    }
+}
+
+declare module 'koa' {
+    interface Request extends Koa.BaseRequest {
+        body?: any;
+        files?: import('formidable').Files;
     }
 }

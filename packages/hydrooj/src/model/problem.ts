@@ -17,7 +17,7 @@ export interface Pdoc {
 export namespace Pdoc {
     export type Field = keyof Pdoc;
     export const fields: Field[] = [];
-    type Getter = (docId?: number, pid?: string) => Partial<Pdoc>
+    type Getter = (docId?: number, pid?: string) => Partial<Pdoc>;
     const getters: Getter[] = [];
     export function extend(getter: Getter) {
         getters.push(getter);

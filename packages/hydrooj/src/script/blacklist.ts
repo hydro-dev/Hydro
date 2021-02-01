@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { ObjectID } from 'mongodb';
 import * as document from '../model/document';
 import * as discussion from '../model/discussion';
@@ -62,7 +62,7 @@ async function _user(
 }
 
 export async function run({
-    // eslint-disable-next-line no-shadow
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     address = null, discuss = null, user = null, dryrun = true,
 }, report) {
     if (address) await _address(address, new Set(), new Set(), new Set(), dryrun, report);

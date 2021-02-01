@@ -36,4 +36,4 @@ export = async function compile(
         };
     }
     throw new SystemError('Unknown language type.');
-}
+};

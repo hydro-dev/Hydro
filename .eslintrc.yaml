@@ -1,0 +1,55 @@
+root: true
+extends:
+  - airbnb-typescript/base
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
+  BigInt: readonly
+parser: '@typescript-eslint/parser'
+plugins:
+  - '@typescript-eslint'
+rules:
+  '@typescript-eslint/dot-notation': off
+  '@typescript-eslint/no-implied-eval': off
+  '@typescript-eslint/no-throw-literal': off
+
+  '@typescript-eslint/indent':
+    - warn
+    - 4
+  '@typescript-eslint/lines-between-class-members':
+    - error
+    - always
+    - exceptAfterSingleLine: true
+  '@typescript-eslint/naming-convention': off
+  '@typescript-eslint/no-redeclare': off
+
+  global-require: off
+  guard-for-in: off
+  implicit-arrow-linebreak: off
+  import/no-cycle: off
+  import/no-extraneous-dependencies: off
+  import/no-named-as-default: off
+  import/prefer-default-export: off
+  max-classes-per-file: off
+  max-len:
+    - warn
+    - 150
+  no-bitwise: off
+  no-console: off
+  no-continue: off
+  no-extend-native: off
+  no-multi-assign: off
+  no-nested-ternary: off
+  no-param-reassign: off
+  no-plusplus: off
+  no-restricted-syntax: off
+  no-return-await: off
+  no-underscore-dangle: off
+  prefer-destructuring: off
+settings:
+  import/parsers:
+    '@typescript-eslint/parser':
+      - .ts
+  import/resolver:
+    typescript:
+      alwaysTryTypes: true

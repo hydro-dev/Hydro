@@ -28,4 +28,4 @@ export = function load() {
         result = {};
     }
     return result;
-}
+};

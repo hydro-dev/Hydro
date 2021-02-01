@@ -49,13 +49,13 @@ export async function add<T extends keyof DocType, K extends DocType[T]['docId']
     docType: T, docId: K,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
-): Promise<K>
+): Promise<K>;
 export async function add<T extends keyof DocType>(
     domainId: string, content: Content, owner: number,
     docType: T, docId: null,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
-): Promise<ObjectID>
+): Promise<ObjectID>;
 export async function add(
     domainId: string, content: Content, owner: number,
     docType: number, docId: DocID = null,
@@ -164,14 +164,14 @@ export function count<K extends keyof DocType>(
     return coll.find({ ...query, docType, domainId }).count();
 }
 
-export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
+export async function push<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     key: ArrayKeys<DocType[K]>, value: DocType[K][0],
-): Promise<[DocType[K], ObjectID]>
+): Promise<[DocType[K], ObjectID]>;
 export async function push<K extends keyof DocType, T extends keyof DocType[K]>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     key: keyof DocType[K], content: string, owner: number, args?: DocType[K][T][0],
-): Promise<[DocType[K], ObjectID]>
+): Promise<[DocType[K], ObjectID]>;
 export async function push(
     domainId: string, docType: number, docId: DocID, key: string,
     arg0: any, arg1?: any, arg2?: any,

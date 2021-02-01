@@ -6,4 +6,4 @@ import * as hack from './hack';
 
 export = {
     default: def, interactive, run, submit_answer, hack,
-}
+};

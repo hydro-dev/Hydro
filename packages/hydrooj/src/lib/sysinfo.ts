@@ -18,11 +18,11 @@ export async function get() {
     const cpu = `${Cpu.manufacturer} ${Cpu.brand}`;
     const memory = `${size(Memory.active)}/${size(Memory.total)}`;
     const osinfo = `${OsInfo.distro} ${OsInfo.release} ${OsInfo.codename} ${OsInfo.kernel} ${OsInfo.arch}`;
-    const load = `${CurrentLoad.avgload}`;
+    const load = `${CurrentLoad.avgLoad}`;
     const flags = CpuFlags;
     let battery;
-    if (!Battery.hasbattery) battery = 'No battery';
-    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.ischarging ? ' Charging' : ''}`;
+    if (!Battery.hasBattery) battery = 'No battery';
+    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.isCharging ? ' Charging' : ''}`;
     const mid = OsInfo.serial;
     cache.cpu = cpu;
     cache.osinfo = osinfo;
@@ -44,10 +44,10 @@ export async function update(): Promise<[string, any, any]> {
         mid, cpu, osinfo, flags,
     } = cache;
     const memory = `${size(Memory.active)}/${size(Memory.total)}`;
-    const load = `${CurrentLoad.avgload}`;
+    const load = `${CurrentLoad.avgLoad}`;
     let battery;
-    if (!Battery.hasbattery) battery = 'No battery';
-    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.ischarging ? ' Charging' : ''}`;
+    if (!Battery.hasBattery) battery = 'No battery';
+    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.isCharging ? ' Charging' : ''}`;
     return [
         mid,
         {

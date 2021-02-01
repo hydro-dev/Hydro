@@ -12,10 +12,10 @@ import paginate from '../lib/paginate';
 
 export const description = 'Calculate rp of a domain, or all domains';
 
-type ND = NumericDictionary<number>
+type ND = NumericDictionary<number>;
 
-async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>
-async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>
+async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>;
+async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>;
 async function runProblem(...arg: any[]) {
     const pdoc: Pdoc = (typeof arg[0] === 'string')
         ? await problem.get(arg[0], arg[1], -1)
@@ -50,10 +50,10 @@ async function runProblem(...arg: any[]) {
     }
 }
 
-async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void>
+async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void>;
 async function runContest(
     domainId: string, tid: ObjectID, udict: ND, report: Function
-): Promise<void>
+): Promise<void>;
 async function runContest(...arg: any[]) {
     const start = new Date().getTime();
     const tdoc: Tdoc = (typeof arg[0] === 'string')

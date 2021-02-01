@@ -3,3 +3,4 @@ dist
 *.js
 test
 tests
+node_modules

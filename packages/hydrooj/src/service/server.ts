@@ -1,4 +1,3 @@
-/* eslint-disable prefer-destructuring */
 import assert from 'assert';
 import { PassThrough } from 'stream';
 import { resolve } from 'path';
@@ -199,7 +198,7 @@ type DescriptorBuilder =
     & ((name: string, type: Type, validate: null, convert: Converter) => MethodDecorator)
     & ((name: string, type: Type, validate?: Validator, convert?: Converter) => MethodDecorator)
     & ((name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter) => MethodDecorator)
-    & ((name: string, ...args: Array<Type | boolean | Validator | Converter>) => MethodDecorator)
+    & ((name: string, ...args: Array<Type | boolean | Validator | Converter>) => MethodDecorator);
 
 export const get: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));
 export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'post', ...args));
@@ -663,7 +662,7 @@ export class ConnectionHandler extends HandlerCommon {
         params: Record<string, any>;
         headers: Record<string, string>;
         ip: string;
-    }
+    };
 
     constructor(conn: sockjs.Connection) {
         super();

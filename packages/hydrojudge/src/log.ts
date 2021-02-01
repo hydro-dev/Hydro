@@ -31,39 +31,39 @@ const colors = [
 ];
 
 const instances: Record<string, Logger> = {};
-type LogFunction = (format: any, ...param: any[]) => void
-type LogType = 'success' | 'error' | 'info' | 'warn' | 'debug'
+type LogFunction = (format: any, ...param: any[]) => void;
+type LogType = 'success' | 'error' | 'info' | 'warn' | 'debug';
 export interface Logger extends Record<LogType, LogFunction> { }
 
 export class Logger {
-    static readonly SUCCESS = 1
-    static readonly ERROR = 1
-    static readonly INFO = 2
-    static readonly WARN = 2
-    static readonly DEBUG = 3
-    static baseLevel = argv.debug ? 3 : 2
-    static showDiff = false
-    static levels: Record<string, number> = {}
-    static lastTime = 0
+    static readonly SUCCESS = 1;
+    static readonly ERROR = 1;
+    static readonly INFO = 2;
+    static readonly WARN = 2;
+    static readonly DEBUG = 3;
+    static baseLevel = argv.debug ? 3 : 2;
+    static showDiff = false;
+    static levels: Record<string, number> = {};
+    static lastTime = 0;
 
     static options: InspectOptions = {
         colors: process.stderr.isTTY,
-    }
+    };
 
     static formatters: Record<string, (this: Logger, value: any) => string> = {
         c: Logger.prototype.color,
         C: (value) => Logger.color(15, value, ';1'),
         o: (value) => inspect(value, Logger.options).replace(/\s*\n\s*/g, ' '),
-    }
+    };
 
     static color(code: number, value: any, decoration = '') {
         if (!Logger.options.colors) return `${value}`;
         return `\u001B[3${code < 8 ? code : `8;5;${code}`}${decoration}m${value}\u001B[0m`;
     }
 
-    private code: number
-    private displayName: string
-    public stream: NodeJS.WritableStream = process.stderr
+    private code: number;
+    private displayName: string;
+    public stream: NodeJS.WritableStream = process.stderr;
 
     constructor(public name: string, private showDiff = false) {
         if (name in instances) return instances[name];
@@ -97,7 +97,7 @@ export class Logger {
         return Logger.levels[this.name] ?? Logger.baseLevel;
     }
 
-    extend = (namespace: string, showDiff = this.showDiff) => new Logger(`${this.name}:${namespace}`, showDiff)
+    extend = (namespace: string, showDiff = this.showDiff) => new Logger(`${this.name}:${namespace}`, showDiff);
 
     format: (format: any, ...param: any[]) => string = (...args) => {
         if (args[0] instanceof Error) args[0] = args[0].stack || args[0].message;
@@ -122,7 +122,7 @@ export class Logger {
             Logger.lastTime = now;
         }
         return format(...args);
-    }
+    };
 }
 
 export default new Logger('judge');
