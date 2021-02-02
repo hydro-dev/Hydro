@@ -429,7 +429,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 file, false, isJudge ? 'judge' : 'user',
             );
         }
-        this.response.body = { links };
+        this.response.body.links = links;
     }
 
     @post('filename', Types.String)
