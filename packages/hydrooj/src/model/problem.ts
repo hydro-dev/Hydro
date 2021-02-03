@@ -39,6 +39,7 @@ export namespace Pdoc {
         tag: [],
         category: [],
         data: [],
+        additional_file: [],
         hidden: true,
         config: {},
         acMsg: '',
@@ -76,6 +77,7 @@ export const PROJECTION_LIST: Pdoc.Field[] = [
 export const PROJECTION_PUBLIC: Pdoc.Field[] = [
     ...PROJECTION_LIST,
     'content', 'html', 'data', 'config', 'acMsg',
+    'additional_file',
 ];
 
 export async function add(
