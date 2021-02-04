@@ -10,6 +10,10 @@ tmpfs_size:
   type: text
   name: Tmpfs size
   default: 256m
+stdio_size:
+  type: text
+  name: Stdout/Stderr size
+  default: 32m
 testcases_max:
   type: number
   name: Max testcases per problem

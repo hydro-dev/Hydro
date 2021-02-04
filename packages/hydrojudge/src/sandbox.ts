@@ -3,7 +3,8 @@ import fs from 'fs-extra';
 import { argv } from 'yargs';
 import * as STATUS from './status';
 import { SystemError } from './error';
-import { cmd } from './utils';
+import { cmd, parseMemoryMB } from './utils';
+import { getConfig } from './config';
 
 const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
 const axios = Axios.create({ baseURL: argv.sandbox as string || 'http://localhost:5050' });
@@ -26,13 +27,14 @@ function proc({
     process_limit = 32,
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
+    const size = parseMemoryMB(getConfig('stdio_size'));
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
         env,
         files: [
             stdin ? { src: stdin } : { content: '' },
-            { name: 'stdout', max: 1024 * 1024 * 32 },
-            { name: 'stderr', max: 1024 * 1024 * 32 },
+            { name: 'stdout', max: 1024 * 1024 * size },
+            { name: 'stderr', max: 1024 * 1024 * size },
         ],
         cpuLimit: time_limit_ms * 1000 * 1000,
         realCpuLimit: time_limit_ms * 3000 * 1000,

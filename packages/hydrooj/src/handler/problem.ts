@@ -468,11 +468,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
 }
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
-    @param('filename')
-    async get(domainId: string, filename: string) {
+    @param('filename', Types.String)
+    @param('noDisposition', Types.Boolean)
+    async get(domainId: string, filename: string, noDisposition = false) {
         this.response.redirect = await storage.signDownloadLink(
             `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`,
-            filename, false, 'user',
+            noDisposition ? undefined : filename, false, 'user',
         );
     }
 }
