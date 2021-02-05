@@ -72,9 +72,8 @@ export async function stat(domainId?: string) {
     };
 }
 
-export async function judge(domainId: string, rid: ObjectID, priority = 1) {
+export async function judge(domainId: string, rid: ObjectID, priority = 1, config: ProblemConfig = {}) {
     const rdoc = await get(domainId, rid);
-    const config: RunConfig | ProblemConfig = rdoc.config || {};
     let data = [];
     if (rdoc.pid) {
         const pdoc = await problem.get(domainId, rdoc.pid);

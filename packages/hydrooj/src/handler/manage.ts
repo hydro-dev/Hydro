@@ -98,9 +98,9 @@ class SystemScriptHandler extends SystemHandler {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
         const args = JSON.parse(raw);
         validate(global.Hydro.script[id].validate, args);
-        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: 'raw' });
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, 'raw');
         const report = (data) => judge.next({ domainId, rid, ...data });
-        report({ message: `Running script: ${id}`, status: STATUS.STATUS_JUDGING });
+        report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = new Date().getTime();
         // Maybe async?
         global.Hydro.script[id].run(args, report)
@@ -122,7 +122,7 @@ class SystemScriptHandler extends SystemHandler {
                     domainId,
                     rid,
                     status: STATUS.STATUS_SYSTEM_ERROR,
-                    message: `${err}\n${err.stack}`,
+                    message: `${err} \n${err.stack} `,
                     judger: 1,
                     time,
                     memory: 0,
@@ -149,8 +149,8 @@ class SystemSettingHandler extends SystemHandler {
         for (const key in args) {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
-                    if (typeof set(`${key}.${subkey}`, args[key][subkey]) !== 'undefined') {
-                        tasks.push(system.set(`${key}.${subkey}`, set(`${key}.${subkey}`, args[key][subkey])));
+                    if (typeof set(`${key}.${subkey} `, args[key][subkey]) !== 'undefined') {
+                        tasks.push(system.set(`${key}.${subkey} `, set(`${key}.${subkey} `, args[key][subkey])));
                     }
                 }
             } else if (typeof set(key, args[key]) !== 'undefined') {

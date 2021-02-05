@@ -260,16 +260,11 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
     @param('lang', Types.String)
     @param('code', Types.String)
     @param('input', Types.String, true)
-    async post(domainId: string, lang: string, code: string, input: string = '') {
+    async post(domainId: string, lang: string, code: string, input = '') {
         this.limitRate('add_record', 3600, 100);
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
-            lang, code, true,
-            {
-                input,
-                time: '1s',
-                memory: '512m',
-            },
+            lang, code, true, input,
         );
         const rdoc = await record.get(domainId, rid);
         bus.boardcast('record/change', rdoc);

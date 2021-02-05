@@ -410,7 +410,7 @@ export interface ContestRule {
 export type ContestRules = Dictionary<ContestRule>;
 
 export type ProblemImporter = (url: string, handler: any) =>
-    Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
+Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
 
 export interface Script {
     run: (args: any, report: Function) => any,
