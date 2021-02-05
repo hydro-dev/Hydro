@@ -29,6 +29,7 @@ class JudgeTask {
     lang: string;
     code: string;
     tmpdir: string;
+    input?: string;
     clean: Function[];
     data: any[];
     folder: string;
@@ -57,6 +58,7 @@ class JudgeTask {
         this.lang = this.request.lang;
         this.code = this.request.code;
         this.config = this.request.config;
+        this.input = this.request.input;
         this.data = this.request.data;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
@@ -64,9 +66,8 @@ class JudgeTask {
         tmpfs.mount(this.tmpdir, '512m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
         try {
-            if (this.type === 'judge') await this.doSubmission();
-            else if (this.type === 1) await this.doPretest();
-            else throw new SystemError(`Unsupported type: ${this.type}`);
+            if (this.input) await this.doPretest();
+            else await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });

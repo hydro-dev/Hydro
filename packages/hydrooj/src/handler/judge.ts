@@ -16,6 +16,7 @@ import {
 const logger = new Logger('judge');
 
 async function _postJudge(rdoc: Rdoc) {
+    if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const tasks = [];
     if (rdoc.contest) {

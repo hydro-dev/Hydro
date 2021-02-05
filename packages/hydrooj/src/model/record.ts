@@ -7,7 +7,7 @@ import { STATUS } from './builtin';
 import * as task from './task';
 import * as problem from './problem';
 import {
-    Rdoc, TestCase, RunConfig, ContestInfo, ProblemConfig,
+    Rdoc, TestCase, ContestInfo, ProblemConfig,
 } from '../interface';
 import { Time } from '../utils';
 import * as bus from '../service/bus';
@@ -94,7 +94,7 @@ export async function judge(domainId: string, rid: ObjectID, priority = 1) {
 
 export async function add(
     domainId: string, pid: number, uid: number,
-    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | RunConfig,
+    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
 ) {
     const data: Rdoc = {
         status: STATUS.STATUS_WAITING,
@@ -115,14 +115,11 @@ export async function add(
         judgeAt: null,
         rejudged: false,
     };
-    if (contestOrConfig) {
-        if ((contestOrConfig as ContestInfo).type) {
-            data.contest = contestOrConfig as ContestInfo;
-        } else {
-            data.config = contestOrConfig as RunConfig;
-            data.hidden = true;
-        }
-    }
+    if (typeof contestOrConfig === 'string') {
+        // is Run
+        data.input = contestOrConfig;
+        data.hidden = true;
+    } else data.contest = contestOrConfig;
     const res = await coll.insertOne(data);
     if (addTask) await judge(domainId, res.insertedId);
     return res.insertedId;

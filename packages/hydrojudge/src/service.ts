@@ -155,6 +155,7 @@ async function postInit() {
         code: string;
         data: any[];
         config: any;
+        input?: string;
         next: (data: any, id?: number) => void;
         end: (data: any) => void;
         tmpdir: string;
@@ -178,6 +179,7 @@ async function postInit() {
                 this.code = this.request.code;
                 this.data = this.request.data;
                 this.config = this.request.config;
+                this.input = this.request.input;
                 this.next = getNext(this);
                 this.end = getEnd(this.domainId, this.rid);
                 this.tmpdir = path.resolve(getConfig('tmp_dir'), this.rid);
@@ -185,8 +187,7 @@ async function postInit() {
                 fs.ensureDirSync(this.tmpdir);
                 tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
                 logger.info(`Submission: ${this.rid}`, { pid: this.pid });
-                if (this.config.input) await this.run();
-                else if (this.config.hack) await this.hack();
+                if (typeof this.input === 'string') await this.run();
                 else await this.submission();
             } catch (e) {
                 if (e instanceof CompileError) {
@@ -224,19 +225,6 @@ async function postInit() {
             );
             this.stat.judge = new Date();
             await judge[this.config.type || 'default'].judge(this);
-        }
-
-        async hack() {
-            this.stat.cache_start = new Date();
-            this.folder = await cacheOpen(this.domainId, this.pid, this.data);
-            this.stat.read_cases = new Date();
-            this.config = await readYamlCases(
-                this.folder,
-                this.config,
-                { next: this.next },
-            );
-            this.stat.judge = new Date();
-            await judge.hack.judge(this);
         }
 
         async run() {

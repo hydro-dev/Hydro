@@ -55,10 +55,10 @@ export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const copyIn = { ...ctx.execute.copyIn };
     const { filename } = ctx.config;
-    if (filename) copyIn[`${filename}.in`] = { content: ctx.config.input };
+    if (filename) copyIn[`${filename}.in`] = { content: ctx.input };
     const copyOut = filename ? [`${filename}.out`] : [];
     const stdin = path.resolve(ctx.tmpdir, '0.in');
-    await fs.writeFile(stdin, ctx.config.input || '');
+    await fs.writeFile(stdin, ctx.input || '');
     const stdout = path.resolve(ctx.tmpdir, '0.out');
     const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
