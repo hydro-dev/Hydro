@@ -303,10 +303,12 @@ export async function setMultiStatus<K extends keyof DocStatusType>(
 
 export async function setIfNotStatus<T extends keyof DocStatusType, K extends keyof DocStatusType[T]>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
-    key: K, value: number, ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
+    key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
 ): Promise<DocStatusType[T]> {
+    const current = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
+    if (current[key] === ifNot) return current;
     const res = await collStatus.findOneAndUpdate(
-        { domainId, docType, docId, uid, [key]: { $not: { $eq: ifNot } } },
+        { domainId, docType, docId, uid },
         { $set: { [key]: value, ...args } },
         { upsert: true, returnOriginal: false },
     );
