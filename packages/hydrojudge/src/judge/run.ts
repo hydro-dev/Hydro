@@ -69,8 +69,8 @@ export const judge = async (ctx) => {
             stderr,
             copyIn,
             copyOut,
-            time_limit_ms: parseTimeMS(ctx.config.time),
-            memory_limit_mb: parseMemoryMB(ctx.config.memory),
+            time_limit_ms: parseTimeMS(ctx.config.time || '1s'),
+            memory_limit_mb: parseMemoryMB(ctx.config.memory || '128m'),
         },
     );
     const { code, time_usage_ms, memory_usage_kb } = res;

@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "@types/js-yaml": "^4.0.0",
-        "@types/mongodb": "^3.6.3"
+        "@types/mongodb": "^3.6.7"
     },
     "peerDependencies": {
         "hydrooj": "2.14.x"
