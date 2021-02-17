@@ -14,7 +14,7 @@
         "lodash": "^4.17.20",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "systeminformation": "^5.3.0",
+        "systeminformation": "^5.3.3",
         "yargs": "^16.2.0"
     },
     "peerDependencies": {
