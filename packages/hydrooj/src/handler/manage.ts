@@ -19,16 +19,14 @@ function set(key: string, value: any) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
         const s = setting.SYSTEM_SETTINGS_BY_KEY[key];
         if (s.flag & setting.FLAG_DISABLED) return undefined;
-        if (s.flag & setting.FLAG_SECRET && !value) return undefined;
+        if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
         if (s.type === 'boolean') {
             if (value === 'on') return true;
             return false;
         }
         if (s.type === 'number') {
-            if (!Number.isSafeInteger(+value)) {
-                throw new ValidationError(key);
-            }
-            return parseInt(value, 10);
+            if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
+            return +value;
         }
         return value;
     }
@@ -149,12 +147,11 @@ class SystemSettingHandler extends SystemHandler {
         for (const key in args) {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
-                    if (typeof set(`${key}.${subkey} `, args[key][subkey]) !== 'undefined') {
-                        tasks.push(system.set(`${key}.${subkey} `, set(`${key}.${subkey} `, args[key][subkey])));
+                    const val = set(`${key}.${subkey}`, args[key][subkey]);
+                    if (val !== undefined) {
+                        tasks.push(system.set(`${key}.${subkey}`, val));
                     }
                 }
-            } else if (typeof set(key, args[key]) !== 'undefined') {
-                tasks.push(system.set(key, set(key, args[key])));
             }
         }
         tasks.push(bus.parallel('system/setting', args));
