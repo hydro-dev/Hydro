@@ -48,25 +48,3 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_large)
-
-## Contributors ✨
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://undefined.moe/"><img src="https://avatars3.githubusercontent.com/u/29992205?v=4" width="100px;" alt=""/><br /><sub><b>undefined</b></sub></a><br /><a href="https://github.com/hydro-dev/Hydro/commits?author=undefined-moe" title="Code">💻</a> <a href="#content-undefined-moe" title="Content">🖋</a> <a href="https://github.com/hydro-dev/Hydro/commits?author=undefined-moe" title="Documentation">📖</a> <a href="#ideas-undefined-moe" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-undefined-moe" title="Maintenance">🚧</a> <a href="#infra-undefined-moe" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#question-undefined-moe" title="Answering Questions">💬</a> <a href="https://github.com/hydro-dev/Hydro/pulls?q=is%3Apr+reviewed-by%3Aundefined-moe" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://github.com/lie-ying"><img src="https://avatars2.githubusercontent.com/u/46625336?v=4" width="100px;" alt=""/><br /><sub><b>lie-ying</b></sub></a><br /><a href="https://github.com/hydro-dev/Hydro/issues?q=author%3Alie-ying" title="Bug reports">🐛</a> <a href="https://github.com/hydro-dev/Hydro/commits?author=lie-ying" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://criyle.github.io"><img src="https://avatars0.githubusercontent.com/u/6821729?v=4" width="100px;" alt=""/><br /><sub><b>Yang Gao</b></sub></a><br /><a href="https://github.com/hydro-dev/Hydro/issues?q=author%3Acriyle" title="Bug reports">🐛</a> <a href="https://github.com/hydro-dev/Hydro/commits?author=criyle" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/junukwon7"><img src="https://avatars1.githubusercontent.com/u/48399106?v=4" width="100px;" alt=""/><br /><sub><b>Junu Kwon</b></sub></a><br /><a href="https://github.com/hydro-dev/Hydro/issues?q=author%3Ajunukwon7" title="Bug reports">🐛</a> <a href="#translation-junukwon7" title="Translation">🌍</a> <a href="#ideas-junukwon7" title="Ideas, Planning, & Feedback">🤔</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-enable -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
