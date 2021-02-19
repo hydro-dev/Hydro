@@ -59,6 +59,22 @@ const checkers: Record<string, Checker> = {
         };
     },
 
+    async strict(config) {
+        const { stdout } = await run('/usr/bin/diff usrout stdout', {
+            copyIn: {
+                usrout: { src: config.user_stdout },
+                stdout: { src: config.output },
+                ...config.copyIn,
+            },
+        });
+        const status = stdout ? STATUS.STATUS_WRONG_ANSWER : STATUS.STATUS_ACCEPTED;
+        return {
+            score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
+            status,
+            message: '',
+        };
+    },
+
     /*
      * argv[1]：输入
      * argv[2]：标准输出
