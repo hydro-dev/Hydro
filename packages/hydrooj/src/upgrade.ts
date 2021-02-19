@@ -27,8 +27,14 @@ async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: 
 
 async function iterateAllProblem(fields: problem.Pdoc.Field[], cb: (pdoc: problem.Pdoc, current?: number, total?: number) => Promise<any>) {
     await iterateAllDomain(async (d) => {
-        const pdocs = await problem.getMulti(d._id, {}, fields).toArray();
-        for (const i in pdocs) await cb(pdocs[i], +i, pdocs.length);
+        const cursor = problem.getMulti(d._id, {}, fields);
+        const total = await problem.getMulti(d._id, {}).count();
+        let i = 0;
+        while (await cursor.hasNext()) {
+            const doc = await cursor.next();
+            i++;
+            await cb(doc, i, total);
+        }
     });
 }
 
@@ -151,6 +157,24 @@ const scripts: UpgradeScript[] = [
             if (data.map((d) => d.name).includes('config.yaml')) return;
             const cfg = yaml.dump(pdoc.config);
             await problem.addTestdata(pdoc.domainId, pdoc.docId, 'config.yaml', Buffer.from(cfg));
+        });
+        return true;
+    },
+    async function _8_9() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['docId', 'domainId'], async (pdoc) => {
+            logger.info('%s/%s', pdoc.domainId, pdoc.docId);
+            const [data, additional_file] = await Promise.all([
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_files/`),
+            ]) as any;
+            for (let i = 0; i < data.length; i++) {
+                data[i]._id = data[i].name;
+            }
+            for (let i = 0; i < additional_file.length; i++) {
+                additional_file[i]._id = additional_file[i].name;
+            }
+            await problem.edit(pdoc.domainId, pdoc.docId, { data, additional_file });
         });
         return true;
     },
