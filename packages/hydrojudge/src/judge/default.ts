@@ -166,7 +166,7 @@ export const judge = async (ctx) => {
     for (const sid in ctx.config.subtasks) {
         let effective = true;
         for (const required of ctx.config.subtasks[sid].if || []) {
-            if (ctx.failed[required]) effective = false;
+            if (ctx.failed[required.toString()]) effective = false;
         }
         if (effective) ctx.total_score += scores[sid];
     }
