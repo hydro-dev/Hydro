@@ -18,22 +18,14 @@ const logger = new Logger('judge');
 async function _postJudge(rdoc: Rdoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    const tasks = [];
-    tasks.push(
-        problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1),
-        problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status),
-    );
+    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status);
     if (rdoc.contest) {
-        tasks.push(
-            contest.updateStatus(
-                rdoc.domainId, rdoc.contest.tid, rdoc.uid,
-                rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
-            ),
+        await contest.updateStatus(
+            rdoc.domainId, rdoc.contest.tid, rdoc.uid,
+            rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
         );
-    } else {
-        tasks.push(domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1));
-    }
-    await Promise.all(tasks);
+    } else if (updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
+    if (accept && updated) await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1);
 }
 
 export async function next(body: JudgeResultBody) {
