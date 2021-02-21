@@ -80,7 +80,7 @@ export function getSessionListByUid(uid: number) {
 }
 
 export async function getMostRecentSessionByUid(uid: number) {
-    const res = await coll.find({ uid, tokenType: TYPE_SESSION }).sort('updateAt', -1);
+    const res = await coll.find({ uid, tokenType: TYPE_SESSION }).sort('updateAt', -1).toArray();
     return res[0];
 }
 
