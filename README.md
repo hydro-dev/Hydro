@@ -1,7 +1,4 @@
 # Hydro
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_shield)
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署（且提供安装脚本），轻量，功能强大且易于扩展。  

@@ -5,9 +5,7 @@ import fs from 'fs-extra';
 import { filter } from 'lodash';
 import decodeHTML from 'decode-html';
 import type { ProblemConfig } from 'hydrooj';
-import {
-    Route, Handler, param, Types,
-} from 'hydrooj/dist/service/server';
+import { Route, Handler } from 'hydrooj/dist/service/server';
 import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as solution from 'hydrooj/dist/model/solution';
@@ -61,9 +59,8 @@ class FpsProblemImportHandler extends Handler {
         }
     }
 
-    @param('input', Types.String, true)
-    async post(domainId: string, input: string) {
-        if (!input && !this.request.files.file) throw new ValidationError('file');
+    async post({ domainId }) {
+        if (!this.request.files.file) throw new ValidationError('file');
         const tasks = [];
         if (this.request.files.file) {
             try {
@@ -80,13 +77,9 @@ class FpsProblemImportHandler extends Handler {
                     } catch { } // eslint-disable-line no-empty
                 }
             }
-        } else {
-            tasks.push(await xml2js.parseStringPromise(input));
         }
         if (!tasks.length) throw new ValidationError('file');
-        for (const task of tasks) {
-            await this.run(domainId, task);
-        }
+        for (const task of tasks) await this.run(domainId, task);
         this.response.redirect = this.url('problem_main');
     }
 }
