@@ -5,9 +5,9 @@ const path = require('path');
 const cluster = require('cluster');
 const fs = require('fs-extra');
 const { argv } = require('yargs');
-const hydro = require('../dist/loader');
 
 if (!cluster.isMaster) {
+    const hydro = require('../dist/loader');
     // Forked by hydro
     hydro.load().catch((e) => {
         console.error(e);
@@ -46,6 +46,7 @@ if (!cluster.isMaster) {
             fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
         }
     } else {
+        const hydro = require('../dist/loader');
         addons = Array.from(new Set(addons));
         for (const addon of addons) hydro.addon(addon);
         (argv._[0] === 'cli' ? hydro.loadCli : hydro.load)().catch((e) => {

@@ -6,7 +6,10 @@ import {
 } from 'terminal-kit';
 import { ProgressBarOptions } from 'terminal-kit/Terminal';
 import { argv } from 'yargs';
+import { Logger } from './logger';
 import * as bus from './service/bus';
+
+const logger = new Logger('ui');
 
 declare module 'terminal-kit/Terminal' {
     interface ProgressBarOptions {
@@ -46,12 +49,11 @@ export namespace Progress {
 async function terminate() {
     let hasError = false;
     try {
-        await require('./service/bus').parallel('app/exit');
+        await bus.parallel('app/exit');
     } catch (e) {
         hasError = true;
     }
     if (useTerminal) {
-        terminal.hideCursor(false);
         terminal.styleReset();
         terminal.resetScrollingRegion();
         terminal.moveTo(terminal.width, terminal.height);
@@ -64,7 +66,6 @@ process.on('SIGINT', terminate);
 if (useTerminal) {
     terminal.clear();
     terminal.grabInput();
-    terminal.hideCursor();
     // Clipboard doesn't work well over ssh env, it throws an error.
     terminal.getClipboard = () => { };
     terminal.setClipboard = () => { };
@@ -92,7 +93,7 @@ if (useTerminal) {
     });
     const history = [''];
     let current = 0;
-    ShellInput.on('submit', async (input) => {
+    ShellInput.on('submit', async (input: string) => {
         history.push(input);
         current = history.length;
         ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
@@ -118,6 +119,9 @@ if (useTerminal) {
     terminal.on('key', (key) => {
         if (key === 'CTRL_C') terminate();
     });
+    if (process.env.SSH_CLIENT || process.env.SSH_TTY || process.env.SSH_CONNECTION) {
+        logger.warn('Running over ssh detected. Add a --legacy when starting if GUI mode doesn\'t work properly.');
+    }
 } else if (cluster.isMaster) {
     console.log('Not running in a terminal environment. Interactive mode disabled.');
     bus.on('message/log', (message) => {

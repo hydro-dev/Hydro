@@ -9,6 +9,7 @@ import path from 'path';
 import cluster from 'cluster';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
+import wtfnode from 'wtfnode';
 import './utils';
 
 export * from './interface';
@@ -47,6 +48,14 @@ import * as bus from './service/bus';
 
 const logger = new Logger('loader');
 logger.debug('%o', argv);
+bus.on('app/exit', () => {
+    if (argv.debug) {
+        wtfnode.setLogger('info', logger.info.bind(logger));
+        wtfnode.setLogger('warn', logger.warn.bind(logger));
+        wtfnode.setLogger('error', logger.error.bind(logger));
+        wtfnode.dump();
+    }
+});
 
 async function fork(args: string[] = []) {
     const _args = process.argv.slice(2);

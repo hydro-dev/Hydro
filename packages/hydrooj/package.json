@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.17.16",
+    "version": "2.17.17",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "engines": {
-        "node": ">=14"
+        "node": ">=13"
     },
     "dependencies": {
         "adm-zip": "^0.5.2",
@@ -34,6 +34,7 @@
         "superagent": "^6.1.0",
         "systeminformation": "^5.3.3",
         "terminal-kit": "^1.47.0",
+        "wtfnode": "^0.8.4",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
@@ -52,6 +53,7 @@
         "@types/sockjs": "^0.3.32",
         "@types/superagent": "^4.1.8",
         "@types/terminal-kit": "^1.28.2",
+        "@types/wtfnode": "^0.7.0",
         "@types/yargs": "^16.0.0",
         "formidable": "^1.2.2"
     },
