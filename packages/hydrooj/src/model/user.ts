@@ -256,7 +256,7 @@ export async function setSuperAdmin(uid: number) {
 }
 
 export async function setJudge(uid: number) {
-    await setPriv(uid, PRIV.PRIV_JUDGE);
+    await setPriv(uid, PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE);
     return uid;
 }
 
