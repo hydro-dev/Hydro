@@ -176,6 +176,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     }
 
     async onRecordChange(rdoc: Rdoc) {
+        if (rdoc.input) return;
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
