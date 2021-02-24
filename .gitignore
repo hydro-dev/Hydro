@@ -23,7 +23,6 @@ tsconfig.json
 packages/**/*.js
 !/build/build.js
 !**/bin/*.js
-!packages/hydrojudge/service.js
 
 # Data files
 *.mmdb
