@@ -171,7 +171,9 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.pdoc = await problem.get(domainId, pid, this.user._id);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
-            this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!this.user.hasPriv(PRIV.PRIV_JUDGE)) {
+                this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            }
         }
         await bus.serial('problem/get', this.pdoc, this);
         this.udoc = await user.getById(domainId, this.pdoc.owner);
@@ -401,15 +403,17 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
-        const canReadData = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const canReadData = this.user.hasPriv(PRIV.PRIV_JUDGE)
+            || this.user._id === this.pdoc.owner
+            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.body.testdata = (getTestdata && canReadData) ? this.pdoc.data : [];
         this.response.body.additional_file = (getAdditionalFile ? this.pdoc.additional_file : []);
         this.response.template = 'problem_files.html';
     }
 
-    @post('files', Types.Array)
+    @post('files', Types.Set)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
-    async postGetLinks(domainId: string, files: string[], type = 'testdata') {
+    async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         const isJudge = this.user.hasPriv(PRIV.PRIV_JUDGE);
         if (type === 'testdata' && !isJudge) {
             if (this.user._id !== this.pdoc.owner) {

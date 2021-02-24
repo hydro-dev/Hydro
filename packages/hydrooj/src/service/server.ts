@@ -64,6 +64,7 @@ export interface Types {
     Time: Type,
     Range: (range: Array<string | number> | Dictionary<any>) => Type,
     Array: Type,
+    Set: Type,
 }
 
 export const Types: Types = {
@@ -133,7 +134,11 @@ export const Types: Types = {
     ],
     Array: [(v) => {
         if (v instanceof Array) return v;
-        return [v] || [];
+        return v ? [v] : [];
+    }, null],
+    Set: [(v) => {
+        if (v instanceof Array) return new Set(v);
+        return v ? new Set([v]) : new Set();
     }, null],
 };
 
