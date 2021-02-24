@@ -10,7 +10,7 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/mongodb": "^3.6.7"
+        "@types/mongodb": "^3.6.8"
     },
     "peerDependencies": {
         "hydrooj": "^2.17.22"

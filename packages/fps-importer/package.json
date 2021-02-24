@@ -7,7 +7,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "adm-zip": "^0.5.2",
+        "adm-zip": "^0.5.3",
         "decode-html": "^2.0.0",
         "fs-extra": "^9.1.0",
         "xml2js": "^0.4.23"
