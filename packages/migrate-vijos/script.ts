@@ -1,18 +1,11 @@
 /* eslint-disable no-await-in-loop */
-// @ts-nocheck
 import {
     Rdoc, TestCase, Mdoc, Drrdoc, TrainingNode,
 } from 'hydrooj';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import yaml from 'js-yaml';
-import mongodb, { ObjectID, Db, Cursor } from 'mongodb';
+import mongodb, { Db, Cursor } from 'mongodb';
 
 const dst = global.Hydro.service.db;
-const { file, discussion, document } = global.Hydro.model;
-const { testdataConfig } = global.Hydro.lib;
-// TODO handle usage_userfile
+const { discussion, document } = global.Hydro.model;
 // TODO output enhancement
 const map = {};
 
@@ -337,22 +330,6 @@ async function fix(doc) {
         { _id: doc._id },
         { $set: { pid: doc.pid || doc.docId.toString(), content: addSpace(doc.content) } },
     );
-    if (doc.data && doc.data instanceof ObjectID) {
-        const r = await file.get(doc.data);
-        const p = path.resolve(os.tmpdir(), 'hydro', `migrate.vijos.${doc._id}.zip`);
-        const w = fs.createWriteStream(p);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', reject);
-            r.pipe(w);
-        });
-        const config = yaml.load(await testdataConfig.readConfig(p));
-        await dst.collection('document').updateOne(
-            { _id: doc._id },
-            { $set: { config } },
-        );
-        fs.unlinkSync(p);
-    }
 }
 
 async function fixProblem(report: Function) {
@@ -418,24 +395,6 @@ async function removeInvalidPid(report: Function) {
             }
         }
         await bulk.execute();
-    }
-}
-
-async function userfileUsage(src: Db, report: Function) {
-    const count = await src.collection('domain.user').find().count();
-    await report({ progress: 1, message: `userfileUsage: ${count}` });
-    const total = Math.floor(count / 50);
-    for (let i = 0; i <= total; i++) {
-        const docs = await src.collection('domain.user')
-            .find().skip(i * 50).limit(50)
-            .toArray();
-        const t = [];
-        for (const doc of docs) {
-            if (doc.userfile_usage) {
-                t.push(dst.collection('user').updateOne({ _id: doc.uid }, { $set: { usage: doc.userfile_usage } }));
-            }
-        }
-        await Promise.all(t);
     }
 }
 
@@ -550,8 +509,8 @@ export async function run({
     await fixProblem(report);
     await discussionNode(src, report);
     await message(src, report);
-    await userfileUsage(src, report);
     await removeInvalidPid(report);
+    await global.Hydro.model.system.set('db.ver', 1);
     return true;
 }
 
