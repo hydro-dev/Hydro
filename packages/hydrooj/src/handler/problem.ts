@@ -171,9 +171,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.pdoc = await problem.get(domainId, pid, this.user._id);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
-            if (!this.user.hasPriv(PRIV.PRIV_JUDGE)) {
-                this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            }
+            this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         await bus.serial('problem/get', this.pdoc, this);
         this.udoc = await user.getById(domainId, this.pdoc.owner);
@@ -403,9 +401,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
-        const canReadData = this.user.hasPriv(PRIV.PRIV_JUDGE)
-            || this.user._id === this.pdoc.owner
-            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const canReadData = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.body.testdata = (getTestdata && canReadData) ? this.pdoc.data : [];
         this.response.body.additional_file = (getAdditionalFile ? this.pdoc.additional_file : []);
         this.response.template = 'problem_files.html';
@@ -414,18 +410,15 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Set)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
-        const isJudge = this.user.hasPriv(PRIV.PRIV_JUDGE);
-        if (type === 'testdata' && !isJudge) {
-            if (this.user._id !== this.pdoc.owner) {
-                this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
-            }
+        if (type === 'testdata' && this.user._id !== this.pdoc.owner) {
+            this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
         const links = {};
         for (const file of files) {
             // eslint-disable-next-line no-await-in-loop
             links[file] = await storage.signDownloadLink(
                 `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`,
-                file, false, isJudge ? 'judge' : 'user',
+                file, false, 'user',
             );
         }
         this.response.body.links = links;

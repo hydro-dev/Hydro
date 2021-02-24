@@ -209,8 +209,8 @@ export default class Hydro {
             log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
             if (next) next({ judge_text: '正在同步测试数据，请稍后' });
             await this.ensureLogin();
-            const res = await this.axios.post(`/d/${domainId}/p/${pid}/files`, {
-                operation: 'get_links',
+            const res = await this.axios.post(`/d/${domainId}/judge/files`, {
+                pid,
                 files: filenames,
             });
             for (const name in res.data.links) {

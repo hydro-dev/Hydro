@@ -10,8 +10,9 @@ import * as domain from '../model/domain';
 import * as task from '../model/task';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Connection, ConnectionHandler,
+    Route, Handler, Connection, ConnectionHandler, post, Types,
 } from '../service/server';
+import storage from '../service/storage';
 
 const logger = new Logger('judge');
 
@@ -108,6 +109,23 @@ class JudgeHandler extends Handler {
     }
 }
 
+export class JudgeFilesDownloadHandler extends Handler {
+    @post('files', Types.Set)
+    @post('pid', Types.UnsignedInt)
+    async postGetLinks(domainId: string, files: Set<string>, pid: number) {
+        const pdoc = await problem.get(domainId, pid);
+        const links = {};
+        for (const file of files) {
+            // eslint-disable-next-line no-await-in-loop
+            links[file] = await storage.signDownloadLink(
+                `problem/${pdoc.domainId}/${pdoc.docId}/testdata/${file}`,
+                file, false, 'judge',
+            );
+        }
+        this.response.body.links = links;
+    }
+}
+
 class JudgeConnectionHandler extends ConnectionHandler {
     processing: any = null;
 
@@ -148,6 +166,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
 export async function apply() {
     Route('judge', '/judge', JudgeHandler, builtin.PRIV.PRIV_JUDGE);
+    Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 
