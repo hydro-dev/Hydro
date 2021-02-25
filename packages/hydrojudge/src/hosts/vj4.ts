@@ -150,6 +150,11 @@ class JudgeTask {
     }
 
     end(data) {
+        this.ws.send(JSON.stringify({
+            key: 'next',
+            tag: this.tag,
+            judge_text: '自豪的采用HydroJudge(https://github.com/hydro-dev/Hydro)进行评测。',
+        }));
         if (data.message !== undefined) {
             data.judge_text = data.message;
             delete data.message;
