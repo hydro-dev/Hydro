@@ -69,8 +69,8 @@ export class Queue<T> extends EventEmitter {
 
 export function compilerText(stdout: string, stderr: string) {
     const ret = [];
-    if (!EMPTY_STR.test(stdout)) ret.push(stdout);
-    if (!EMPTY_STR.test(stderr)) ret.push(stderr);
+    if (!EMPTY_STR.test(stdout)) ret.push(stdout.substr(0, 1024 * 1024));
+    if (!EMPTY_STR.test(stderr)) ret.push(stderr.substr(0, 1024 * 1024));
     return ret.join('\n');
 }
 
