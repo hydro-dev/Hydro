@@ -4,6 +4,7 @@ import { Dictionary, pick } from 'lodash';
 import { STATUS } from './builtin';
 import * as document from './document';
 import * as domain from './domain';
+import { buildProjection } from '../utils';
 import { ProblemStatusDoc, Pdict } from '../interface';
 import { Content } from '../loader';
 import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
@@ -193,14 +194,15 @@ export async function random(domainId: string, query: FilterQuery<Pdoc>): Promis
 
 export async function getList(
     domainId: string, pids: Array<number | string>,
-    getHidden = false, doThrow = true,
+    getHidden = false, doThrow = true, projection = PROJECTION_PUBLIC,
 ): Promise<Pdict> {
-    pids = Array.from(new Set(pids));
+    pids = Array.from(new Set(pids)).map((i) => (+i ? +i : i));
     const r = {};
     const l = {};
     const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
     if (!getHidden) q.hidden = false;
-    const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q).toArray();
+    const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
+        .project(buildProjection(projection)).toArray();
     for (const pdoc of pdocs) {
         r[pdoc.docId] = pdoc;
         l[pdoc.pid] = pdoc;

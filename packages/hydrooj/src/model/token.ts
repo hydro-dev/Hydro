@@ -1,3 +1,4 @@
+import { FilterQuery } from 'mongodb';
 import { TokenDoc } from '../interface';
 import db from '../service/db';
 import * as bus from '../service/bus';
@@ -10,6 +11,7 @@ export const TYPE_CHANGEMAIL = 3;
 export const TYPE_OAUTH = 4;
 export const TYPE_LOSTPASS = 5;
 export const TYPE_EXPORT = 6;
+export const TYPE_IMPORT = 7;
 
 function ensureIndexes() {
     return Promise.all([
@@ -36,6 +38,10 @@ export async function add(
 
 export async function get(tokenId: string, tokenType: number): Promise<TokenDoc | null> {
     return await coll.findOne({ _id: tokenId, tokenType });
+}
+
+export function getMulti(tokenType: number, query: FilterQuery<TokenDoc> = {}) {
+    return coll.find({ tokenType, ...query });
 }
 
 export async function update(
@@ -98,10 +104,12 @@ global.Hydro.model.token = {
     TYPE_REGISTRATION,
     TYPE_LOSTPASS,
     TYPE_EXPORT,
+    TYPE_IMPORT,
 
     add,
     createOrUpdate,
     get,
+    getMulti,
     update,
     del,
     delByUid,

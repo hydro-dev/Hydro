@@ -26,7 +26,7 @@ export const builtinModel = [
 export const builtinHandler = [
     'home', 'problem', 'record', 'judge', 'user',
     'contest', 'training', 'discussion', 'manage', 'import.syzoj',
-    'misc', 'homework', 'domain',
+    'misc', 'homework', 'domain', 'remote',
 ];
 
 export const builtinScript = [

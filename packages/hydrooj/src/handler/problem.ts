@@ -1,24 +1,19 @@
 import { isSafeInteger, flatten } from 'lodash';
 import yaml from 'js-yaml';
-import fs from 'fs-extra';
 import { FilterQuery, ObjectID } from 'mongodb';
-import superagent from 'superagent';
 import AdmZip from 'adm-zip';
 import {
-    NoProblemError, BadRequestError, PermissionError,
-    SolutionNotFoundError, ProblemNotFoundError, ValidationError,
+    NoProblemError, PermissionError, ValidationError,
+    SolutionNotFoundError, ProblemNotFoundError,
 } from '../error';
 import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isTitle, isContent, isPid } from '../lib/validator';
-import { ProblemAdd } from '../lib/ui';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as domain from '../model/domain';
-import * as system from '../model/system';
-import * as token from '../model/token';
 import * as user from '../model/user';
 import * as solution from '../model/solution';
 import { PERM, PRIV, CONSTANT } from '../model/builtin';
@@ -623,63 +618,7 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
-export class ProblemImportHandler extends Handler {
-    async get() {
-        this.response.body = { type: 'Hydro' };
-        this.response.template = 'problem_import.html';
-    }
-
-    async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
-        const stat = await fs.stat(this.request.files.file.path);
-        if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');
-        const zip = new AdmZip(this.request.files.file.path);
-        const pdoc = JSON.parse(zip.getEntry('problem.json').getData().toString());
-        const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tags, pdoc.category);
-        const entries = zip.getEntries();
-        for (const entry of entries) {
-            if (entry.name.startsWith('testdata/')) {
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addTestdata(domainId, pid, entry.name.split('testdata/')[1], entry.getData());
-            } else if (entry.name.startsWith('additional_file/')) {
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addAdditionalFile(domainId, pid, entry.name.split('testdata/')[1], entry.getData());
-            }
-        }
-        await problem.edit(domainId, pid, { html: pdoc.html });
-        this.response.redirect = this.url('problem_detail', { pid });
-    }
-}
-
-export class ProblemSendHandler extends Handler {
-    async get() {
-        this.response.template = 'problem_send.html';
-    }
-
-    @post('target', Types.String)
-    @post('pids', Types.Array)
-    async post(domainId: string, target: any, pids: number[]) {
-        target = target.split('@');
-        const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        const pdocs = await problem.getList(domainId, pids, getHidden, true);
-        const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        if (!getData) {
-            for (const pid in pdocs) {
-                if (pdocs[pid].owner !== this.user._id) {
-                    throw new PermissionError(PERM.PERM_READ_PROBLEM_DATA);
-                }
-            }
-        }
-        const [source, expire] = system.getMany(['server.url', 'session.expire_seconds']);
-        const tokenId = await token.createOrUpdate(token.TYPE_EXPORT, expire, { domainId, pids });
-        await superagent.post(`${target[1]}/d/${target[0]}/problem/receive`)
-            .send({ source, domainId, tokenId });
-        this.back();
-    }
-}
-
 export async function apply() {
-    ProblemAdd('problem_import', {}, 'copy', 'Import From Hydro');
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
@@ -695,8 +634,6 @@ export async function apply() {
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
-    Route('problem_import', '/problem/import', ProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
-    Route('problem_send', '/problem/send', ProblemSendHandler, PERM.PERM_VIEW_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 

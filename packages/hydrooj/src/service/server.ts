@@ -541,7 +541,7 @@ export class Handler extends HandlerCommon {
 
     async saveCookie() {
         const expireSeconds = this.session.save
-            ? system.get('session.expire_seconds')
+            ? system.get('session.saved_expire_seconds')
             : system.get('session.unsaved_expire_seconds');
         const $update = {
             updateIp: this.request.ip,

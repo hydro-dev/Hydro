@@ -37,7 +37,7 @@ export interface SystemKeys {
     'problem.categories': string,
     'session.keys': string[],
     'session.secure': boolean,
-    'session.expire_seconds': number,
+    'session.saved_expire_seconds': number,
     'session.unsaved_expire_seconds': number,
     'user.quota': number,
 }
@@ -408,9 +408,7 @@ export interface ContestRule {
 }
 
 export type ContestRules = Dictionary<ContestRule>;
-
-export type ProblemImporter = (url: string, handler: any) =>
-Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
+export type ProblemImporter = (url: string, handler: any) => Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
 
 export interface Script {
     run: (args: any, report: Function) => any,
