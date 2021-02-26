@@ -55,7 +55,7 @@ langs:
         execute: ${dir}/${name}
     cc98:
         type: compiler
-        compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o ${name} foo.cc -lm
+        compile: /usr/bin/g++ -O2 -Wall -std=c++98 -o ${name} foo.cc -lm
         code_file: foo.cc
         execute: ${dir}/${name}
     cc11:

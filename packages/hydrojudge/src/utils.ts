@@ -8,7 +8,7 @@ import { FormatError } from './error';
 const TIME_RE = /^([0-9]+(?:\.[0-9]*)?)([mu]?)s?$/i;
 const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
-const MEMORY_UNITS = { k: 0.1, m: 1, g: 1024 };
+const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 const EMPTY_STR = /^[ \r\n\t]*$/i;
 
 export const cmd = parse;
