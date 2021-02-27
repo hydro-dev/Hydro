@@ -53,6 +53,7 @@ class ImportQduojHandler extends Handler {
                 if (pdoc.samples?.length) {
                     content.push(...pdoc.samples.map((sample) => ({
                         type: 'Sample',
+                        sectionTitle: this.translate('Sample'),
                         payload: [sample.input, sample.output],
                     })));
                 }
@@ -72,6 +73,7 @@ class ImportQduojHandler extends Handler {
                         text: pdoc.source.value,
                     });
                 }
+                if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const n = await problem.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
                 const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, content, this.user._id, pdoc.tags);
