@@ -130,6 +130,7 @@ export class ProblemCategoryHandler extends ProblemHandler {
         this.response.body = {
             path, page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
         };
+        this.extraTitleContent = category.join('+');
     }
 }
 
@@ -180,6 +181,7 @@ export class ProblemDetailHandler extends ProblemHandler {
                 [this.pdoc.title, null, true],
             ],
         };
+        this.extraTitleContent = this.pdoc.title;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -192,6 +192,7 @@ class UserDetailHandler extends Handler {
         this.response.body = {
             isSelfProfile, udoc, sdoc, rdocs, pdocs, pcount, pdict, path,
         };
+        this.extraTitleContent = udoc.uname;
     }
 }
 

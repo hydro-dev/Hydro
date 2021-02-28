@@ -251,6 +251,7 @@ export class HandlerCommon {
     user: User;
     session: Record<string, any>;
     request: Record<string, any>;
+    extraTitleContent?: string;
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
@@ -262,6 +263,7 @@ export class HandlerCommon {
     }
 
     renderTitle(str: string) {
+        if (this.extraTitleContent) return `${this.translate(str)} - ${this.extraTitleContent} - ${system.get('server.name')}`;
         return `${this.translate(str)} - ${system.get('server.name')}`;
     }
 
