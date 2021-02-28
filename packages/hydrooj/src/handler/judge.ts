@@ -112,7 +112,7 @@ class JudgeHandler extends Handler {
 export class JudgeFilesDownloadHandler extends Handler {
     @post('files', Types.Set)
     @post('pid', Types.UnsignedInt)
-    async postGetLinks(domainId: string, files: Set<string>, pid: number) {
+    async post(domainId: string, files: Set<string>, pid: number) {
         const pdoc = await problem.get(domainId, pid);
         const links = {};
         for (const file of files) {
