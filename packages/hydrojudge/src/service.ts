@@ -86,6 +86,7 @@ async function postInit() {
             }
         }
         fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
+        fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         await processData(filePath).catch(noop);
         return filePath;
     }

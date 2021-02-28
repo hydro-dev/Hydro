@@ -226,6 +226,7 @@ export default class Hydro {
             fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
             await this.processData(filePath).catch(noop);
         }
+        fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
     }
 

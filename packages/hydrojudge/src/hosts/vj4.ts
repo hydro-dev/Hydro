@@ -387,12 +387,16 @@ export default class VJ4 {
             try {
                 ver = fs.readFileSync(path.join(filePath, 'version')).toString();
             } catch (e) { /* ignore */ }
-            if (version === ver) return filePath;
+            if (version === ver) {
+                fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
+                return filePath;
+            }
             fs.removeSync(filePath);
         }
         fs.ensureDirSync(domainDir);
         await this.problemData(domainId, pid, filePath, 3, next);
         fs.writeFileSync(path.join(filePath, 'version'), version);
+        fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
     }
 
