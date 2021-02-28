@@ -702,7 +702,7 @@ export class ConnectionHandler extends HandlerCommon {
                 params: err.params || [],
             },
         });
-        this.close(1001, err.toString());
+        this.close(4000, err.toString());
     }
 
     async getSession(cookieHeader: string) {
