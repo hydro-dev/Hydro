@@ -1,3 +1,6 @@
 #!/usr/bin/env node
 
-require('../dist/daemon')();
+const { argv } = require('yargs');
+
+if (argv._[0] == 'cache') require('../dist/cache')()
+else if (!argv._) require('../dist/daemon')();
