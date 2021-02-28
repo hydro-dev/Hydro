@@ -128,7 +128,6 @@ export class ProblemReceiveHandler extends Handler {
             pids: filterPid.length ? filterPid.map((i) => (+i ? +i : i)) : data.pids,
         }).catch(logAndReturn(logger));
         if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
-        const tasks = [];
         const pids = [];
         const { pdocs } = res.body;
         const files = res.body.links;
@@ -142,7 +141,7 @@ export class ProblemReceiveHandler extends Handler {
             }
             const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tag, pdoc.category);
             pids.push(pid);
-            tasks.push(this.syncFiles(domainId, baseUrl, pid, files[i]));
+            this.syncFiles(domainId, baseUrl, pid, files[i]).catch(logAndReturn(logger));
             await problem.edit(domainId, pid, { html: pdoc.html });
         }
         this.back();

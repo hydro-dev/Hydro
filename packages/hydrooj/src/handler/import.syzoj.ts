@@ -114,7 +114,7 @@ class ProblemImportSYZOJHandler extends Handler {
                 // eslint-disable-next-line no-await-in-loop
                 await problem.addTestdata(domainId, docId, entry.entryName, entry.getData());
             }
-            const filename = p.file_io_input_name ? p.file_io_input_name?.split('.')[0] : null;
+            const filename = p.file_io_input_name ? p.file_io_input_name.split('.')[0] : null;
             const config = {
                 time: `${p.time_limit}ms`,
                 memory: `${p.memory_limit}m`,

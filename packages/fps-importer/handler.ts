@@ -62,20 +62,18 @@ class FpsProblemImportHandler extends Handler {
     async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
         const tasks = [];
-        if (this.request.files.file) {
-            try {
-                const content = fs.readFile(this.request.files.file.path).toString();
-                const result = await xml2js.parseStringPromise(content);
-                tasks.push(result);
-            } catch (e) {
-                const zip = new AdmZip(this.request.files.file.path);
-                for (const entry of zip.getEntries()) {
-                    try {
-                        const content = entry.getData().toString();
-                        const result = await xml2js.parseStringPromise(content);
-                        tasks.push(result);
-                    } catch { } // eslint-disable-line no-empty
-                }
+        try {
+            const content = fs.readFile(this.request.files.file.path).toString();
+            const result = await xml2js.parseStringPromise(content);
+            tasks.push(result);
+        } catch (e) {
+            const zip = new AdmZip(this.request.files.file.path);
+            for (const entry of zip.getEntries()) {
+                try {
+                    const content = entry.getData().toString();
+                    const result = await xml2js.parseStringPromise(content);
+                    tasks.push(result);
+                } catch { } // eslint-disable-line no-empty
             }
         }
         if (!tasks.length) throw new ValidationError('file');

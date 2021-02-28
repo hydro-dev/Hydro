@@ -106,7 +106,6 @@ export const judge = async (ctx) => {
             });
         }
     } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-        status = STATUS.STATUS_RUNTIME_ERROR;
         if (code < 32) message = signals[code];
         else message = `您的程序返回了 ${code}.`;
     }

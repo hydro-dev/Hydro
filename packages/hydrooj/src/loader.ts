@@ -135,12 +135,11 @@ process.on('uncaughtException', logger.error);
 const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
 
 export function addon(addonPath: string) {
-    let modulePath = path.resolve(process.cwd(), addonPath);
     if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${addonPath}/package.json`);
-            modulePath = path.dirname(packagejson);
+            const modulePath = path.dirname(packagejson);
             const publicPath = path.resolve(modulePath, 'public');
             if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
             global.addons.push(modulePath);

@@ -325,7 +325,7 @@ const homework: ContestRule = {
                 const colScore = tsddict[pid]?.penaltyScore || '-';
                 const colOriginalScore = tsddict[pid]?.score || '-';
                 const colTime = tsddict[pid]?.time || '-';
-                const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime || 0) : '-';
+                const colTimeStr = colTime !== '-' ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {
                     row.push(
                         { type: 'string', value: colScore },
