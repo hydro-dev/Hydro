@@ -14,6 +14,19 @@ import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import readCases from '../cases';
 import judge from '../judge';
 
+function formatStr(content: string, ...args) {
+    let result = content;
+    if (args.length > 0) {
+        for (const key in args) {
+            if (args[key] !== undefined) {
+                const reg = new RegExp(`(\\{${key}\\})`, 'g');
+                result = result.replace(reg, args[key]);
+            }
+        }
+    }
+    return result;
+}
+
 class JudgeTask {
     stat: Record<string, Date>;
     session: any;
@@ -118,14 +131,14 @@ class JudgeTask {
             delete data.message;
         }
         if (data.judge_text && typeof data.judge_text !== 'string') {
-            data.judge_text = `${data.judge_text.message} ${JSON.stringify(data.judge_text.params || {})}`;
+            data.judge_text = formatStr(data.judge_text.message, ...data.judge_text.params);
         }
         if (data.case?.message !== undefined) {
             data.case.judge_text = data.case.message;
             delete data.case.message;
         }
         if (data.case?.judge_text && typeof data.case?.judge_text !== 'string') {
-            data.case.judge_text = `${data.case.judge_text.message} ${JSON.stringify(data.case.judge_text.params || {})}`;
+            data.case.judge_text = formatStr(data.case.judge_text.message, ...data.case.judge_text.params);
         }
         data.key = 'next';
         data.tag = this.tag;
