@@ -54,7 +54,7 @@ async function daemon() {
     const hosts = {};
     const queue = new Queue<any>();
     for (const i in _hosts) {
-        _hosts[i].host = i;
+        _hosts[i].host = _hosts[i].host || i;
         hosts[i] = new Session[_hosts[i].type || 'vj4'](_hosts[i]);
         await hosts[i].init();
     }
@@ -64,7 +64,7 @@ async function daemon() {
             for (const i in hosts) await hosts[i].consume(queue);
             while ('Orz iceb0y') {
                 const [task] = await queue.get();
-                task.handle();
+                await task.handle();
             }
         } catch (e) {
             log.error(e, e.stack);
