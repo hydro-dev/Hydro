@@ -3,7 +3,7 @@ import { argv } from 'yargs';
 import { Time } from './utils';
 
 const instances: Record<string, Logger> = {};
-type LogFunction = (format: any, ...param: any[]) => void;
+type LogFunction = (format: any, ...param: any[]) => boolean;
 type LogType = 'success' | 'error' | 'info' | 'warn' | 'debug';
 export interface Logger extends Record<LogType, LogFunction> { }
 export class Logger {
@@ -37,10 +37,11 @@ export class Logger {
 
     private createMethod(name: LogType, prefix: string, minLevel: number) {
         this[name] = (...args: [any, ...any[]]) => {
-            if (this.level < minLevel) return;
+            if (this.level < minLevel) return false;
             const msg = `${prefix} ${this.name} ${this.format(...args)}`;
             if (process.send) process.send({ event: 'message/log', payload: [msg] });
             else global.Hydro.service.bus.parallel('message/log', msg);
+            return true;
         };
     }
 

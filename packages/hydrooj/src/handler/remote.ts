@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import superagent from 'superagent';
 import { PassThrough } from 'stream';
-import { PermissionError, InvalidTokenError } from '../error';
+import { PermissionError, InvalidTokenError, RemoteOnlineJudgeError } from '../error';
+import { Logger } from '../logger';
 import { ProblemAdd } from '../lib/ui';
 import { PERM } from '../model/builtin';
 import * as token from '../model/token';
@@ -11,6 +12,9 @@ import {
     Handler, Types, Route, post,
 } from '../service/server';
 import storage from '../service/storage';
+import { logAndReturn } from '../utils';
+
+const logger = new Logger('remote');
 
 export class ProblemSendHandler extends Handler {
     async get() {
@@ -23,10 +27,13 @@ export class ProblemSendHandler extends Handler {
         target = target.split('@');
         const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        const pdocs = await problem.getList(domainId, _pids, getHidden, true, ['docId', 'owner']);
+        const pdocs = await problem.getList(domainId, _pids, true, true, ['docId', 'owner', 'hidden']);
         const pids = new Set<number>();
         for (const key in pdocs) {
             pids.add(pdocs[key].docId);
+            if (pdocs[key].hidden && !getHidden && pdocs[key].owner !== this.user._id) {
+                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            }
             if (!getData && pdocs[key].owner !== this.user._id) {
                 throw new PermissionError(PERM.PERM_READ_PROBLEM_DATA);
             }
@@ -36,7 +43,7 @@ export class ProblemSendHandler extends Handler {
         await superagent.post(`${target[1]}/d/${target[0]}/problem/receive`)
             .send({
                 operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
-            });
+            }).catch(logAndReturn(logger));
         this.back();
     }
 
@@ -87,7 +94,9 @@ export class ProblemReceiveHandler extends Handler {
     @post('expire', Types.UnsignedInt)
     async postRequest(domainId: string, url: string, tokenId: string, expire: number) {
         const res = await superagent.post(url)
-            .send({ operation: 'info', token: tokenId });
+            .send({ operation: 'info', token: tokenId })
+            .catch(logAndReturn(logger));
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
         const [id] = await token.add(token.TYPE_IMPORT, expire, {
             domainId, tokenId, source: url, pdocs: res.body.pdocs, pids: res.body.pids,
         });
@@ -117,7 +126,8 @@ export class ProblemReceiveHandler extends Handler {
             operation: 'fetch',
             token: data.tokenId,
             pids: filterPid.length ? filterPid.map((i) => (+i ? +i : i)) : data.pids,
-        });
+        }).catch(logAndReturn(logger));
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
         const tasks = [];
         const pids = [];
         const { pdocs } = res.body;

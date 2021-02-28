@@ -6,7 +6,8 @@ import serialize from 'serialize-javascript';
 import Lru from 'lru-cache';
 import { ObjectID } from 'mongodb';
 import { isMoment } from 'moment';
-import { Moment } from 'moment-timezone';
+import type { Moment } from 'moment-timezone';
+import type { Logger } from './logger';
 
 declare global {
     interface StringConstructor {
@@ -217,6 +218,13 @@ function deepen(modifyString: (source: string) => string) {
     return function t<T>(source: T): T {
         if (typeof source === 'string') return modifyString(source) as any;
         return modifyObject(source);
+    };
+}
+
+export function logAndReturn(logger: Logger) {
+    return function cb(err: Error) {
+        logger.error(err);
+        return err;
     };
 }
 
