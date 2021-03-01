@@ -46,6 +46,28 @@ function proc({
     };
 }
 
+async function adaptResult(result, params) {
+    // FIXME: Signalled?
+    const ret: any = {
+        status: statusMap[result.status] || STATUS.STATUS_ACCEPTED,
+        time_usage_ms: result.time / 1000000,
+        memory_usage_kb: result.memory / 1024,
+        files: result.files,
+        code: result.exitStatus,
+    };
+    if (ret.time_usage_ms >= (params.time_limit_ms || 16000)) {
+        ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
+    }
+    ret.files = result.files || {};
+    ret.fileIds = result.fileIds || {};
+    if (params.stdout) await fs.writeFile(params.stdout, ret.files.stdout || '');
+    else ret.stdout = ret.files.stdout || '';
+    if (params.stderr) await fs.writeFile(params.stderr, ret.files.stderr || '');
+    else ret.stderr = ret.files.stderr || '';
+    if (result.error) ret.error = result.error;
+    return ret;
+}
+
 export async function runMultiple(execute) {
     let res;
     try {
@@ -70,7 +92,7 @@ export async function runMultiple(execute) {
     } catch (e) {
         throw new SystemError('Sandbox Error');
     }
-    return res.data;
+    return await Promise.all(res.data.map((i) => adaptResult(i, {})));
 }
 
 export async function del(fileId) {
@@ -91,24 +113,5 @@ export async function run(execute, params?) {
         // FIXME request body larger than maxBodyLength limit
         throw new SystemError('Sandbox Error', e.message);
     }
-    // FIXME: Signalled?
-    const ret: any = {
-        status: statusMap[result.status] || STATUS.STATUS_ACCEPTED,
-        time_usage_ms: result.time / 1000000,
-        memory_usage_kb: result.memory / 1024,
-        files: result.files,
-        code: result.exitStatus,
-    };
-    if (ret.time_usage_ms >= (params.time_limit_ms || 16000)) {
-        ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-    }
-    result.files = result.files || {};
-    if (params.stdout) await fs.writeFile(params.stdout, result.files.stdout || '');
-    else ret.stdout = result.files.stdout || '';
-    if (params.stderr) await fs.writeFile(params.stderr, result.files.stderr || '');
-    else ret.stderr = result.files.stderr || '';
-    if (result.error) ret.error = result.error;
-    ret.files = result.files;
-    ret.fileIds = result.fileIds || {};
-    return ret;
+    return await adaptResult(result, params);
 }

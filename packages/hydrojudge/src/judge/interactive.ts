@@ -1,6 +1,8 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
+import { resolve } from 'path';
 import * as STATUS from '../status';
+import { parse } from '../testlib';
 import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -15,7 +17,9 @@ const Score = {
 
 function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
-        ctx.executeInteractor.copyIn.stdans = { src: c.input };
+        ctx.executeInteractor.copyIn.in = { src: c.input };
+        ctx.executeInteractor.copyIn.out = { src: c.output };
+        ctx.executeInteractor.copyIn['testlib.h'] = { src: resolve(__dirname, '../../files/testlib.h') };
         const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await run([
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
@@ -23,7 +27,7 @@ function judgeCase(c) {
                 time_limit_ms: ctxSubtask.subtask.time_limit_ms,
                 memory_limit_mb: ctxSubtask.subtask.memory_limit_mb,
             }, {
-                execute: ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'code'),
+                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time_limit_ms: ctxSubtask.subtask.time_limit_ms * 2,
                 memory_limit_mb: ctxSubtask.subtask.memory_limit_mb * 2,
@@ -40,7 +44,12 @@ function judgeCase(c) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
-        } else[status, score, message] = resInteractor.files.stderr.split('\n');
+        } else {
+            const result = parse(resInteractor.files.stderr, ctx.config.score);
+            status = result.status;
+            score = result.score;
+            message = result.message;
+        }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;

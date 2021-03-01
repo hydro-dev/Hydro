@@ -1,6 +1,8 @@
 /* eslint-disable no-template-curly-in-string */
 import fs from 'fs-extra';
+import { resolve } from 'path';
 import * as STATUS from './status';
+import { parse } from './testlib';
 import { run } from './sandbox';
 import { SystemError } from './error';
 
@@ -178,6 +180,7 @@ const checkers: Record<string, Checker> = {
     async testlib(config) {
         const { stderr, status } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
             copyIn: {
+                'testlib.h': { src: resolve(__dirname, '../files/testlib.h') },
                 in: { src: config.input },
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },
@@ -191,11 +194,7 @@ const checkers: Record<string, Checker> = {
                 message: '',
             };
         }
-        return {
-            status: stderr.startsWith('ok ') ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER,
-            score: stderr.startsWith('ok ') ? config.score : 0,
-            message: stderr.split(' ').splice(1).join(' '),
-        };
+        return parse(stderr, config.score);
     },
 };
 

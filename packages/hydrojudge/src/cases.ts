@@ -205,6 +205,7 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
     const checkFile = ensureFile(folder);
     config.checker_type = cfg.checker_type || 'default';
     if (cfg.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
+    if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
     if (cfg.judge_extra_files) {
         if (typeof cfg.judge_extra_files === 'string') {
             config.judge_extra_files = [checkFile(cfg.judge_extra_files, 'Cannot find judge extra file {0}.')];
