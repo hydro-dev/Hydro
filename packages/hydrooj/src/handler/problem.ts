@@ -346,22 +346,12 @@ export class ProblemSettingsHandler extends ProblemManageHandler {
     @param('hidden', Types.Boolean)
     @param('category', Types.String, true, null, parseCategory)
     @param('tag', Types.String, true, null, parseCategory)
-    @param('difficultySetting', Types.UnsignedInt)
-    @param('difficultyAdmin', Types.UnsignedInt, true)
     async postSetting(
         domainId: string, pid: string | number, hidden = false,
         category: string[] = [], tag: string[] = [],
-        difficultySetting: string, difficultyAdmin: number,
     ) {
         const pdoc = await problem.get(domainId, pid);
-        if (!problem.SETTING_DIFFICULTY_RANGE[difficultySetting]) {
-            throw new ValidationError('difficultySetting');
-        }
-        if (!difficultyAdmin) difficultyAdmin = null;
-        else if (difficultyAdmin < 1 || difficultyAdmin > 9) throw new ValidationError('difficultyAdmin');
-        const update: Partial<Pdoc> = {
-            hidden, category, tag, difficultySetting, difficultyAdmin,
-        };
+        const update: Partial<Pdoc> = { hidden, category, tag };
         await bus.serial('problem/setting', update, this);
         await problem.edit(domainId, pdoc.docId, update);
         await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
