@@ -178,6 +178,7 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     async onRecordChange(rdoc: Rdoc) {
         if (rdoc.input) return;
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (rdoc.domainId !== this.domainId) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
