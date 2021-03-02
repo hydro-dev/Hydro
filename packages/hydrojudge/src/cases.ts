@@ -67,7 +67,7 @@ const RE1: Re1[] = [
     },
 ];
 
-async function read0(folder: string, files: string[], checkFile) {
+async function read0(folder: string, files: string[], checkFile, cfg) {
     const cases = [];
     for (const file of files) {
         for (const REG of RE0) {
@@ -86,8 +86,8 @@ async function read0(folder: string, files: string[], checkFile) {
     const config = {
         count: 0,
         subtasks: [{
-            time_limit_ms: 1000,
-            memory_limit_mb: 512,
+            time_limit_ms: parseTimeMS(cfg.time || '1s'),
+            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length),
@@ -103,8 +103,8 @@ async function read0(folder: string, files: string[], checkFile) {
     }
     if (extra < cases.length) {
         config.subtasks.push({
-            time_limit_ms: 1000,
-            memory_limit_mb: 512,
+            time_limit_ms: parseTimeMS(cfg.time || '1s'),
+            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length) + 1,
@@ -121,7 +121,7 @@ async function read0(folder: string, files: string[], checkFile) {
     return config;
 }
 
-async function read1(folder: string, files: string[], checkFile) {
+async function read1(folder: string, files: string[], checkFile, cfg) {
     const subtask = {};
     const subtasks = [];
     for (const file of files) {
@@ -132,8 +132,8 @@ async function read1(folder: string, files: string[], checkFile) {
                 if (fs.existsSync(path.resolve(folder, c.output))) {
                     if (!subtask[REG.subtask(data)]) {
                         subtask[REG.subtask(data)] = [{
-                            time_limit_ms: 1000,
-                            memory_limit_mb: 512,
+                            time_limit_ms: parseTimeMS(cfg.time || '1s'),
+                            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
                             type: 'min',
                             cases: [c],
                         }];
@@ -164,7 +164,7 @@ async function read1(folder: string, files: string[], checkFile) {
     return config;
 }
 
-async function readAutoCases(folder, { next }) {
+async function readAutoCases(folder, { next }, cfg) {
     const config = {
         checker_type: 'default',
         count: 0,
@@ -183,8 +183,8 @@ async function readAutoCases(folder, { next }) {
             const outputs = await fs.readdir(path.resolve(folder, 'output'));
             files.push(...outputs.map((i) => `output/${i}`));
         }
-        let result = await read0(folder, files, checkFile);
-        if (!result.count) result = await read1(folder, files, checkFile);
+        let result = await read0(folder, files, checkFile, cfg);
+        if (!result.count) result = await read1(folder, files, checkFile, cfg);
         Object.assign(config, result);
         next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
@@ -235,8 +235,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
         for (const c of cfg.cases) {
             config.count++;
             config.subtasks[0].cases.push({
-                input: checkFile(c.input, 'Cannot find input file {0}.'),
-                output: checkFile(c.output, 'Cannot find output file {0}.'),
+                input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : null,
+                output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : null,
                 id: config.count,
             });
         }
@@ -246,8 +246,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             for (const c of subtask.cases) {
                 config.count++;
                 cases.push({
-                    input: checkFile(c.input, 'Cannot find input file {0}.'),
-                    output: checkFile(c.output, 'Cannot find output file {0}.'),
+                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : null,
+                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : null,
                     id: config.count,
                 });
             }
@@ -260,7 +260,7 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             });
         }
     } else {
-        const c = await readAutoCases(folder, { next });
+        const c = await readAutoCases(folder, { next }, cfg);
         config.subtasks = c.subtasks;
         config.count = c.count;
     }
