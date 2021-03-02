@@ -1,0 +1,5 @@
+excluded_words:
+  - hydrooj
+excluded_files:
+  - package.json
+  - .typo-ci.yml
