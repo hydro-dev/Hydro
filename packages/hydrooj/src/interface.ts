@@ -45,7 +45,7 @@ export interface SystemKeys {
 export interface Setting {
     family: string,
     key: string,
-    range: Array<[string, string]> | Dictionary<string>,
+    range: [string, string][] | Record<string, string>,
     value: any,
     type: string,
     name: string,

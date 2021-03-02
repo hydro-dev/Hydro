@@ -119,39 +119,3 @@ global.Hydro.lib.validator = {
     isDescription,
     checkDescription,
 };
-/*
-ID_RE = re.compile(r'[^\\/\s\u3000]([^\\/\n\r]*[^\\/\s\u3000])?')
-
-def is_id(s):
-  return bool(ID_RE.fullmatch(s))
-
-def check_category_name(s):
-  if not is_id(s):
-    raise error.ValidationError('category_name')
-
-def check_node_name(s):
-  if not is_id(s):
-    raise error.ValidationError('node_name')
-
-def is_intro(s):
-  return isinstance(s, str) and 0 < len(s.strip()) < 500
-
-def check_intro(s):
-  if not is_intro(s):
-    raise error.ValidationError('intro')
-
-def is_description(s):
-  return isinstance(s, str) and len(s) < 65536
-
-def check_description(s):
-  if not is_description(s):
-    raise error.ValidationError('description')
-
-def is_lang(i):
-  return i in export const ant.language.LANG_TEXTS
-
-def check_lang(i):
-  if not is_lang(i):
-    raise error.ValidationError('lang')
-
-*/

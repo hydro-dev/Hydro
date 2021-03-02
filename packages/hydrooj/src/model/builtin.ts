@@ -311,7 +311,7 @@ export const DEFAULT_NODES = {
         { pic: 'share', name: '分享' },
         { pic: 'solution', name: '题解' },
     ],
-    Vijos: [
+    Hydro: [
         { pic: 'hydro', name: 'Hydro' },
         { pic: null, name: '团队' },
         { pic: null, name: '月赛' },
@@ -517,27 +517,6 @@ export const LANG_TEXTS = {
     rb: 'Ruby',
 };
 
-export const LANG_HIGHLIGHT_ID = {
-    c: 'c',
-    cc: 'cpp',
-    cs: 'csharp',
-    pas: 'pascal',
-    java: 'java',
-    py: 'python',
-    py3: 'python',
-    php: 'php',
-    rs: 'rust',
-    hs: 'haskell',
-    js: 'javascript',
-    go: 'go',
-    rb: 'ruby',
-};
-
-export function registerLanguage(id: string, display: string, highlight: string) {
-    LANG_TEXTS[id] = display;
-    LANG_HIGHLIGHT_ID[id] = highlight;
-}
-
 export const STATUS = {
     STATUS_WAITING: 0,
     STATUS_ACCEPTED: 1,
@@ -626,7 +605,6 @@ export const CONSTANT = {
 
 global.Hydro.model.builtin = {
     Permission,
-    registerLanguage,
     CONSTANT,
     PERM,
     PERMS,
@@ -638,7 +616,6 @@ global.Hydro.model.builtin = {
     DEFAULT_NODES,
     CATEGORIES,
     LANG_TEXTS,
-    LANG_HIGHLIGHT_ID,
     STATUS,
     STATUS_TEXTS,
     STATUS_CODES,

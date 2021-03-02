@@ -17,7 +17,7 @@ for (const country of countries) {
     for (const t of tz) tzs.add(t);
 }
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
-export const langRange: Dictionary<string> = {};
+const langRange: Dictionary<string> = {};
 
 for (const lang in global.Hydro.locales) {
     langRange[lang] = global.Hydro.locales[lang].__langname;
@@ -38,15 +38,27 @@ export const DOMAIN_USER_SETTINGS_BY_KEY: SettingDict = {};
 export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
 export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
-export type SettingType = 'text' | 'number' | 'markdown' | 'password' | 'select' | 'boolean' | 'textarea';
+export type SettingType = 'text' | 'yaml' | 'number' | 'markdown' | 'password' | 'boolean' | 'textarea' | [string, string][] | Record<string, string>;
 
 export const Setting = (
-    family: string, key: string, range: Array<[string, string]> | Dictionary<string> = null,
-    value: any = null, type: SettingType = 'text', name = '',
-    desc = '', flag = 0,
-): _Setting => ({
-    family, key, range, value, type, name, desc, flag,
-});
+    family: string, key: string, value: any = null,
+    type: SettingType = 'text', name = '', desc = '', flag = 0,
+): _Setting => {
+    if (type === 'yaml' && typeof value !== 'string') {
+        value = yaml.dump(value);
+        type = 'textarea';
+    }
+    return {
+        family,
+        key,
+        value,
+        name,
+        desc,
+        flag,
+        type: typeof type === 'object' ? 'select' : type,
+        range: typeof type === 'object' ? type : null,
+    };
+};
 
 export const PreferenceSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
@@ -82,76 +94,77 @@ export const SystemSetting = (...settings: _Setting[]) => {
 };
 
 PreferenceSetting(
-    Setting('setting_display', 'viewLang', langRange, null, 'select', 'UI Language'),
-    Setting('setting_display', 'timeZone', timezones, 'Asia/Shanghai', 'select', 'Timezone'),
-    Setting('setting_usage', 'codeLang', builtin.LANG_TEXTS, 'c', 'select', 'Default Code Language'),
-    Setting('setting_usage', 'codeTemplate', null, '', 'textarea', 'Default Code Template',
+    Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
+    Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
+    Setting('setting_usage', 'codeLang', 'c', builtin.LANG_TEXTS, 'Default Code Language'),
+    Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
 
 AccountSetting(
-    Setting('setting_info', 'gravatar', null, null, 'text', 'Gravatar Email',
+    Setting('setting_info', 'gravatar', null, 'text', 'Gravatar Email',
         'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.'),
-    Setting('setting_info', 'qq', null, null, 'text', 'QQ'),
-    Setting('setting_info', 'gender', builtin.USER_GENDER_RANGE, builtin.USER_GENDER_OTHER, 'select', 'Gender'),
-    Setting('setting_info', 'bio', null, null, 'markdown', 'Bio'),
-    Setting('setting_customize', 'backgroundImage', null,
+    Setting('setting_info', 'qq', null, 'text', 'QQ'),
+    Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
+    Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
+    Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
-    Setting('setting_storage', 'usage', null, 0, 'number', 'Userfile Usage', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'checkincnt', null, 0, 'number', 'Check In Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'lastcheckin', null, 0, 'number', 'Last checkin time', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'usage', 0, 'number', 'Userfile Usage', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'checkincnt', 0, 'number', 'Check In Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'lastcheckin', 0, 'number', 'Last checkin time', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 DomainSetting(
-    Setting('setting_domain', 'name', null, 'New domain', 'text', 'name'),
-    Setting('setting_domain', 'gravatar', null, '', 'text', 'gravatar', 'Will be used as the domain icon.'),
-    Setting('setting_domain', 'bulletin', null, '', 'markdown', 'Bulletin'),
-    Setting('setting_storage', 'pidCounter', null, 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'host', null, '', 'text', 'Custom host', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_domain', 'name', 'New domain', 'text', 'name'),
+    Setting('setting_domain', 'gravatar', '', 'text', 'gravatar', 'Will be used as the domain icon.'),
+    Setting('setting_domain', 'bulletin', '', 'markdown', 'Bulletin'),
+    Setting('setting_storage', 'pidCounter', 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'host', '', 'text', 'Custom host', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 DomainUserSetting(
-    Setting('setting_info', 'displayName', null, null, 'text', 'display name'),
-    Setting('setting_storage', 'nAccept', null, 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'nSubmit', null, 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'nLike', null, 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rp', null, 1500, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rpdelta', null, 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'level', null, 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_info', 'displayName', null, 'text', 'display name'),
+    Setting('setting_storage', 'nAccept', 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'nSubmit', 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'nLike', 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rp', 1500, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rpdelta', 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 SystemSetting(
-    Setting('setting_file', 'file.endPoint', null, null, 'text', 'Storage engine endPoint'),
-    Setting('setting_file', 'file.accessKey', null, null, 'text', 'Storage engine accessKey'),
-    Setting('setting_file', 'file.secretKey', null, null, 'password', 'Storage engine secret', null, FLAG_SECRET),
-    Setting('setting_file', 'file.bucket', null, 'hydro', 'text', 'Storage engine bucket'),
-    Setting('setting_file', 'file.region', null, 'us-east-1', 'text', 'Storage engine region'),
-    Setting('setting_file', 'file.endPointForUser', null, '/fs/', 'text', 'EndPoint for user'),
-    Setting('setting_file', 'file.endPointForJudge', null, '/fs/', 'text', 'EndPoint for judge'),
-    Setting('setting_smtp', 'smtp.user', null, null, 'text', 'SMTP Username'),
-    Setting('setting_smtp', 'smtp.pass', null, null, 'password', 'SMTP Password', null, FLAG_SECRET),
-    Setting('setting_smtp', 'smtp.host', null, null, 'text', 'SMTP Server Host'),
-    Setting('setting_smtp', 'smtp.port', null, 465, 'number', 'SMTP Server Port'),
-    Setting('setting_smtp', 'smtp.from', null, null, 'text', 'Mail From'),
-    Setting('setting_smtp', 'smtp.secure', null, false, 'boolean', 'SSL'),
-    Setting('setting_server', 'server.name', null, 'Hydro', 'text', 'Server Name'),
-    Setting('setting_server', 'server.worker', null, 1, 'number', 'Server Workers Number'),
-    Setting('setting_server', 'server.hostname', null, 'oj.undefined.moe', 'text', 'Server Hostname'),
-    Setting('setting_server', 'server.host', null, 'oj.undefined.moe', 'text', 'Server Host'),
-    Setting('setting_server', 'server.url', null, '/', 'text', 'Server BaseURL'),
-    Setting('setting_server', 'server.cdn', null, '/', 'text', 'CDN Prefix', 'Ends with /'),
-    Setting('setting_server', 'server.port', null, 8888, 'number', 'Server Port'),
-    Setting('setting_server', 'server.xff', null, null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
-    Setting('setting_server', 'server.language', langRange, 'zh_CN', 'select', 'Default display language'),
-    Setting('setting_basic', 'problem.categories', null, yaml.dump(builtin.CATEGORIES), 'textarea', 'Problem Categories'),
-    Setting('setting_session', 'session.keys', null, [String.random(32)], 'text', 'session.keys', null, FLAG_HIDDEN),
-    Setting('setting_session', 'session.secure', null, false, 'boolean', 'session.secure'),
-    Setting('setting_session', 'session.saved_expire_seconds', null, 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
-    Setting('setting_session', 'session.unsaved_expire_seconds', null, 3600 * 3, 'number', 'Unsaved session expire seconds'),
-    Setting('setting_storage', 'db.ver', null, 0, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'user', null, 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'installid', null, String.random(64), 'text', 'Installation ID', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_file', 'file.endPoint', null, 'text', 'Storage engine endPoint'),
+    Setting('setting_file', 'file.accessKey', null, 'text', 'Storage engine accessKey'),
+    Setting('setting_file', 'file.secretKey', null, 'password', 'Storage engine secret', null, FLAG_SECRET),
+    Setting('setting_file', 'file.bucket', 'hydro', 'text', 'Storage engine bucket'),
+    Setting('setting_file', 'file.region', 'us-east-1', 'text', 'Storage engine region'),
+    Setting('setting_file', 'file.endPointForUser', '/fs/', 'text', 'EndPoint for user'),
+    Setting('setting_file', 'file.endPointForJudge', '/fs/', 'text', 'EndPoint for judge'),
+    Setting('setting_smtp', 'smtp.user', null, 'text', 'SMTP Username'),
+    Setting('setting_smtp', 'smtp.pass', null, 'password', 'SMTP Password', null, FLAG_SECRET),
+    Setting('setting_smtp', 'smtp.host', null, 'text', 'SMTP Server Host'),
+    Setting('setting_smtp', 'smtp.port', 465, 'number', 'SMTP Server Port'),
+    Setting('setting_smtp', 'smtp.from', null, 'text', 'Mail From'),
+    Setting('setting_smtp', 'smtp.secure', false, 'boolean', 'SSL'),
+    Setting('setting_server', 'server.name', 'Hydro', 'text', 'Server Name'),
+    Setting('setting_server', 'server.worker', 1, 'number', 'Server Workers Number'),
+    Setting('setting_server', 'server.hostname', 'oj.undefined.moe', 'text', 'Server Hostname'),
+    Setting('setting_server', 'server.host', 'oj.undefined.moe', 'text', 'Server Host'),
+    Setting('setting_server', 'server.url', '/', 'text', 'Server BaseURL'),
+    Setting('setting_server', 'server.cdn', '/', 'text', 'CDN Prefix', 'Ends with /'),
+    Setting('setting_server', 'server.port', 8888, 'number', 'Server Port'),
+    Setting('setting_server', 'server.xff', null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
+    Setting('setting_server', 'server.language', 'zh_CN', langRange, 'Default display language'),
+    Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'Problem Categories'),
+    Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'LANG_TEXTS'),
+    Setting('setting_session', 'session.keys', [String.random(32)], 'text', 'session.keys', null, FLAG_HIDDEN),
+    Setting('setting_session', 'session.secure', false, 'boolean', 'session.secure'),
+    Setting('setting_session', 'session.saved_expire_seconds', 3600 * 24 * 30, 'number', 'Saved session expire seconds'),
+    Setting('setting_session', 'session.unsaved_expire_seconds', 3600 * 3, 'number', 'Unsaved session expire seconds'),
+    Setting('setting_storage', 'db.ver', 0, 'number', 'Database version', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'user', 1, 'number', 'User Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'installid', String.random(64), 'text', 'Installation ID', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 bus.once('app/started', async () => {
@@ -168,7 +181,6 @@ bus.once('app/started', async () => {
 });
 
 global.Hydro.model.setting = {
-    langRange,
     Setting,
     PreferenceSetting,
     AccountSetting,

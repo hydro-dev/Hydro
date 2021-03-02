@@ -108,8 +108,8 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                     }
                     map[cfg[key].category || 'system'](
                         modelSetting.Setting(
-                            name, `${name}.${key}`, cfg[key].range, val,
-                            cfg[key].type || 'text', cfg[key].name || key, cfg[key].desc || '',
+                            name, `${name}.${key}`, val, cfg[key].type || 'text',
+                            cfg[key].name || key, cfg[key].desc || '',
                         ),
                     );
                 }
