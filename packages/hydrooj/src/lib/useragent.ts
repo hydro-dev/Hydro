@@ -4,7 +4,7 @@ export function parse(str: string) {
     return browser.parseUserAgent(str);
 }
 
-export function icon(str: string) {
+export function icon(str: string = '') {
     return str.split(' ')[0].toLowerCase();
 }
 
