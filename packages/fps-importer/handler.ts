@@ -10,7 +10,7 @@ import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import * as solution from 'hydrooj/dist/model/solution';
 import { PERM } from 'hydrooj/dist/model/builtin';
-import { ValidationError } from 'hydrooj/dist/error';
+import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -63,6 +63,8 @@ class FpsProblemImportHandler extends Handler {
         if (!this.request.files.file) throw new ValidationError('file');
         const tasks = [];
         try {
+            const file = await fs.stat(this.request.files.file.path);
+            if (file.size > 64 * 1024 * 1024) throw new BadRequestError('File too large');
             const content = fs.readFile(this.request.files.file.path).toString();
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
@@ -70,7 +72,9 @@ class FpsProblemImportHandler extends Handler {
             const zip = new AdmZip(this.request.files.file.path);
             for (const entry of zip.getEntries()) {
                 try {
-                    const content = entry.getData().toString();
+                    const buf = entry.getData();
+                    if (buf.byteLength > 64 * 1024 * 1024) throw new BadRequestError('File too large');
+                    const content = buf.toString();
                     const result = await xml2js.parseStringPromise(content);
                     tasks.push(result);
                 } catch { } // eslint-disable-line no-empty
