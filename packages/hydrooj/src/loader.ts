@@ -97,8 +97,8 @@ async function stopWorker() {
     cluster.disconnect();
 }
 
-async function startWorker(cnt: number) {
-    await fork(['--firstWorker']);
+async function startWorker(cnt: number, createFirst = true) {
+    await fork(createFirst ? ['--firstWorker'] : undefined);
     for (let i = 1; i < cnt; i++) await fork();
 }
 
@@ -158,6 +158,7 @@ export async function load() {
         logger.info('Master started');
         cluster.on('exit', (worker, code, signal) => {
             logger.warn(`Worker ${worker.process.pid} ${worker.id} exit: ${code} ${signal}`);
+            if (code) startWorker(1);
         });
         cluster.on('disconnect', (worker) => {
             logger.info(`Worker ${worker.process.pid} ${worker.id} disconnected`);
