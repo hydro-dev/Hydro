@@ -146,7 +146,7 @@ export function folderSize(folderPath: string) {
 const TIME_RE = /^([0-9]+(?:\.[0-9]*)?)([mu]?)s?$/i;
 const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
-const MEMORY_UNITS = { k: 0.1, m: 1, g: 1024 };
+const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 
 export function parseTimeMS(str: string) {
     const match = TIME_RE.exec(str);
