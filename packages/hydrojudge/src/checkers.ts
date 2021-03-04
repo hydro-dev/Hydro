@@ -180,7 +180,6 @@ const checkers: Record<string, Checker> = {
     async testlib(config) {
         const { stderr, status } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
             copyIn: {
-                'testlib.h': { src: resolve(__dirname, '../files/testlib.h') },
                 in: { src: config.input },
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },

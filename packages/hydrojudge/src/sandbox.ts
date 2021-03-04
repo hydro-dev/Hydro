@@ -1,10 +1,13 @@
 import Axios from 'axios';
 import fs from 'fs-extra';
+import { argv } from 'yargs';
 import * as STATUS from './status';
 import { SystemError } from './error';
 import { cmd, parseMemoryMB } from './utils';
 import { getConfig } from './config';
+import { Logger } from './log';
 
+const logger = new Logger('sandbox');
 const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
 const axios = Axios.create({ baseURL: getConfig('sandbox_host') });
 
@@ -87,7 +90,9 @@ export async function runMultiple(execute) {
         body.cmd[0].files[1] = null;
         body.cmd[1].files[0] = null;
         body.cmd[1].files[1] = null;
+        if (argv['show-sandbox-call']) logger.debug(JSON.stringify(body));
         res = await axios.post('/run', body);
+        if (argv['show-sandbox-call']) logger.debug(JSON.stringify(res.data));
     } catch (e) {
         throw new SystemError('Sandbox Error');
     }
@@ -106,7 +111,9 @@ export async function run(execute, params?) {
     if (typeof execute === 'object') return await runMultiple(execute);
     try {
         const body = { cmd: [proc({ execute, ...params })] };
+        if (argv['show-sandbox-call']) logger.debug(JSON.stringify(body));
         const res = await axios.post('/run', body);
+        if (argv['show-sandbox-call']) logger.debug(JSON.stringify(res.data));
         [result] = res.data;
     } catch (e) {
         // FIXME request body larger than maxBodyLength limit

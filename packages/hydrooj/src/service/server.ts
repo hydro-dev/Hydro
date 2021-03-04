@@ -12,7 +12,7 @@ import Router from 'koa-router';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
-import { SetOption } from 'cookies';
+import type { SetOption } from 'cookies';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
 import { lrucache } from '../utils';
