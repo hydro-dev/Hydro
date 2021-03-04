@@ -1,3 +1,4 @@
+// https://github.com/MikeMirzayanov/testlib/blob/master/testlib.h
 #ifndef _TESTLIB_H_
 #define _TESTLIB_H_
 #define VERSION "0.9.24-SNAPSHOT"
@@ -174,7 +175,8 @@ static bool __testlib_prelimIsNaN(double r) {
     volatile double ra = r;
 #ifndef __BORLANDC__
     return ((ra != ra) == true) && ((ra == ra) == false) && ((1.0 > ra) == false) && ((1.0 < ra) == false);
-#else return std::_isnan(ra);
+#else
+    return std::_isnan(ra);
 #endif
 }
 static std::string removeDoubleTrailingZeroes(std::string value) {
@@ -211,7 +213,8 @@ static double __testlib_nan() {
     double nan;
     std::memcpy(&nan, &llnan, sizeof(double));
     return nan;
-#else return NAN;
+#else
+    return NAN;
 #endif
 }
 static bool __testlib_isInfinite(double r) {
@@ -273,9 +276,10 @@ static void __testlib_set_binary(std::FILE* file)
     if (NULL != file) {
 #ifndef __BORLANDC__
         _setmode(_fileno(file), O_BINARY);
-#else setmode(fileno(file), O_BINARY);
+#else
+        setmode(fileno(file), O_BINARY);
 #endif
-    }
+}
 #endif
 }
 class random_t;
@@ -316,8 +320,7 @@ private:
 
 public:
     static int version;
-    random_t(): seed(3905348978240129619LL) {
-    }
+    random_t() : seed(3905348978240129619LL) {}
     void setSeed(int argc, char* argv[]) {
         random_t p;
         seed = 3905348978240129619LL;
@@ -333,7 +336,6 @@ public:
         seed = _seed;
     }
 #ifndef __BORLANDC__
-
     std::string next(const std::string& ptrn) {
         pattern p(ptrn);
         return p.next(*this);
@@ -345,7 +347,6 @@ public:
         return p.next(*this);
     }
 #endif
-
     int next(int n) {
         if (n <= 0)__testlib_fail("random_t::next(int n): n must be positive");
         if ((n & -n) == n)return (int)((n * (long long)nextBits(31)) >> 31);
@@ -427,8 +428,8 @@ public:
 #ifdef __GNUC__
     __attribute__((format(printf, 2, 3)))
 #endif
-    std::string
-    next(const char* format, ...) {
+        std::string
+        next(const char* format, ...) {
         FMT_TO_RESULT(format, format, ptrn);
         return next(ptrn);
     }
@@ -710,7 +711,7 @@ static std::vector<char> __pattern_scanCharSet(const std::string& s, size_t& pos
     } else result.push_back(__pattern_getChar(s, pos));
     return result;
 }
-pattern::pattern(std::string s): s(s), from(0), to(0) {
+pattern::pattern(std::string s) : s(s), from(0), to(0) {
     std::string t;
     for (size_t i = 0; i < s.length(); i++)if (!__pattern_isCommandChar(s, i, ' '))t += s[i];
     s = t;
@@ -731,7 +732,7 @@ pattern::pattern(std::string s): s(s), from(0), to(0) {
         if (__pattern_isCommandChar(s, i, '|') && opened == 0)seps.push_back(int(i));
     }
     if (opened != 0)__testlib_fail("pattern: Illegal pattern (or part) \"" + s + "\"");
-    if (seps.size() == 0 && firstClose + 1 == (int)s.length()&& __pattern_isCommandChar(s, 0, '(') && __pattern_isCommandChar(s, s.length() - 1, ')')) {
+    if (seps.size() == 0 && firstClose + 1 == (int)s.length() && __pattern_isCommandChar(s, 0, '(') && __pattern_isCommandChar(s, s.length() - 1, ')')) {
         children.push_back(pattern(s.substr(1, s.length() - 2)));
     } else {
         if (seps.size() > 0) {
@@ -805,7 +806,8 @@ const std::string outcomes[] = {
     "fail",
 #ifndef PCMS2
     "points",
-#else "relative-scoring",
+#else
+    "relative-scoring",
 #endif
     "reserved",
     "reserved",
@@ -831,16 +833,14 @@ public:
     virtual int getLine() = 0;
     virtual ~InputStreamReader() = 0;
 };
-InputStreamReader::~InputStreamReader() {
-}
+InputStreamReader::~InputStreamReader() {}
 class StringInputStreamReader : public InputStreamReader {
 private:
     std::string s;
     size_t pos;
 
 public:
-    StringInputStreamReader(const std::string& content): s(content), pos(0) {
-    }
+    StringInputStreamReader(const std::string& content) : s(content), pos(0) {}
     int curChar() {
         if (pos >= s.length())return EOFC;
         else return s[pos];
@@ -868,8 +868,7 @@ public:
     bool eof() {
         return pos >= s.length();
     }
-    void close() {
-    }
+    void close() {}
 };
 class FileInputStreamReader : public InputStreamReader {
 private:
@@ -898,8 +897,7 @@ private:
     }
 
 public:
-    FileInputStreamReader(std::FILE* file, const std::string& name): file(file), name(name), line(1) {
-    }
+    FileInputStreamReader(std::FILE* file, const std::string& name) : file(file), name(name), line(1) {}
     int curChar() {
         if (feof(file))return EOFC;
         else {
@@ -973,7 +971,7 @@ private:
         return c;
     }
 public:
-    BufferedFileInputStreamReader(std::FILE* file, const std::string& name): file(file), name(name), line(1) {
+    BufferedFileInputStreamReader(std::FILE* file, const std::string& name) : file(file), name(name), line(1) {
         buffer = new char[BUFFER_SIZE];
         isEof = new bool[BUFFER_SIZE];
         bufferSize = MAX_UNREAD_COUNT;
@@ -1141,8 +1139,8 @@ struct InStream {
 #ifdef __GNUC__
     __attribute__((format(printf, 3, 4)))
 #endif
-    void
-    ensuref(bool cond, const char* format, ...);
+        void
+        ensuref(bool cond, const char* format, ...);
     void __testlib_ensure(bool cond, std::string message);
     void close();
     const static int NO_INDEX = INT_MAX;
@@ -1175,7 +1173,7 @@ struct ValidatorBoundsHit {
     static const double EPS;
     bool minHit;
     bool maxHit;
-    ValidatorBoundsHit(bool minHit = false, bool maxHit = false): minHit(minHit), maxHit(maxHit) {};
+    ValidatorBoundsHit(bool minHit = false, bool maxHit = false) : minHit(minHit), maxHit(maxHit) {};
     ValidatorBoundsHit merge(const ValidatorBoundsHit& validatorBoundsHit) {
         return ValidatorBoundsHit(
             __testlib_max(minHit, validatorBoundsHit.minHit),
@@ -1201,8 +1199,7 @@ private:
     }
 
 public:
-    Validator(): _testset("tests"), _group() {
-    }
+    Validator() : _testset("tests"), _group() {}
     std::string testset() const {
         return _testset;
     }
@@ -1230,8 +1227,8 @@ public:
     std::string getBoundsHitLog() {
         std::string result;
         for (std::map<std::string, ValidatorBoundsHit>::iterator i = _boundsHitByVariableName.begin();
-             i != _boundsHitByVariableName.end();
-             i++) {
+            i != _boundsHitByVariableName.end();
+            i++) {
             result += "\"" + i->first + "\":";
             if (i->second.minHit)result += " min-value-hit";
             if (i->second.maxHit)result += " max-value-hit";
@@ -1242,8 +1239,8 @@ public:
     std::string getFeaturesLog() {
         std::string result;
         for (std::set<std::string>::iterator i = _features.begin();
-             i != _features.end();
-             i++) {
+            i != _features.end();
+            i++) {
             result += "feature \"" + *i + "\":";
             if (_hitFeatures.count(*i))result += " hit";
             result += "\n";
@@ -1274,8 +1271,7 @@ public:
 struct TestlibFinalizeGuard {
     static bool alive;
     int quitCount, readEofCount;
-    TestlibFinalizeGuard(): quitCount(0), readEofCount(0) {
-    }
+    TestlibFinalizeGuard() : quitCount(0), readEofCount(0) {}
     ~TestlibFinalizeGuard() {
         bool _alive = alive;
         alive = false;
@@ -1386,7 +1382,8 @@ resultExitCode(TResult r) {
     if (r == _unexpected_eof)
 #ifdef ENABLE_UNEXPECTED_EOF
         return UNEXPECTED_EOF_EXIT_CODE;
-#else return PE_EXIT_CODE;
+#else
+        return PE_EXIT_CODE;
 #endif
     if (r >= _partially)return PC_BASE_EXIT_CODE + (r - _partially);
     return FAIL_EXIT_CODE;
@@ -1398,7 +1395,8 @@ void InStream::textColor(
 #if defined(ON_WINDOWS) && (!defined(_MSC_VER) || _MSC_VER > 1400)HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(handle, color);
 #endif
-#if !defined(ON_WINDOWS) && defined(__GNUC__)if (isatty(2)) {
+#if !defined(ON_WINDOWS) && defined(__GNUC__)
+    if (isatty(2)) {
         switch (color) {
         case LightRed:
             fprintf(stderr, "\033[1;31m");
@@ -1490,7 +1488,7 @@ NORETURN void InStream::quit(TResult result, const char* msg) {
         }
     }
     if (message.length() > maxMessageLength) {
-        std::string warn = "message length exceeds " + vtos(maxMessageLength)+ ", the message is truncated: ";
+        std::string warn = "message length exceeds " + vtos(maxMessageLength) + ", the message is truncated: ";
         message = warn + message.substr(0, maxMessageLength - warn.length());
     }
 #ifndef ENABLE_UNEXPECTED_EOF
@@ -1634,9 +1632,9 @@ void InStream::reset(std::FILE* file) {
     if (opened && stdfile)quit(_fail, "Can't reset standard handle");
     if (opened)close();
     if (!stdfile)if (NULL == (file = std::fopen(name.c_str(), "rb"))) {
-            if (mode == _output)quits(_pe, std::string("Output file not found: \"") + name + "\"");
-            if (mode == _answer)quits(_fail, std::string("Answer file not found: \"") + name + "\"");
-        }
+        if (mode == _output)quits(_pe, std::string("Output file not found: \"") + name + "\"");
+        if (mode == _answer)quits(_fail, std::string("Answer file not found: \"") + name + "\"");
+    }
     if (NULL != file) {
         opened = true;
         __testlib_set_binary(file);
@@ -1894,11 +1892,11 @@ static inline double stringToStrictDouble(InStream& in, const char* buffer, int 
     if (afterDigitsCount < minAfterPointDigitCount || afterDigitsCount > maxAfterPointDigitCount)in.quit(_pe, ("Expected strict double with number of digits after point in range [" + vtos(minAfterPointDigitCount) + "," + vtos(maxAfterPointDigitCount) + "], but \"" + __testlib_part(buffer) + "\" found").c_str());
     int firstDigitPos = -1;
     for (size_t i = 0; i < length; i++)if (buffer[i] >= '0' && buffer[i] <= '9') {
-            firstDigitPos = int(i);
-            break;
-        }
+        firstDigitPos = int(i);
+        break;
+    }
     if (firstDigitPos > 1 || firstDigitPos == -1)in.quit(_pe, ("Expected strict double, but \"" + __testlib_part(buffer) + "\" found").c_str());
-    if (buffer[firstDigitPos] == '0' && firstDigitPos + 1 < int(length)&& buffer[firstDigitPos + 1] >= '0' && buffer[firstDigitPos + 1] <= '9')in.quit(_pe, ("Expected strict double, but \"" + __testlib_part(buffer) + "\" found").c_str());
+    if (buffer[firstDigitPos] == '0' && firstDigitPos + 1 < int(length) && buffer[firstDigitPos + 1] >= '0' && buffer[firstDigitPos + 1] <= '9')in.quit(_pe, ("Expected strict double, but \"" + __testlib_part(buffer) + "\" found").c_str());
     char* suffix = new char[length + 1];
     int scanned = std::sscanf(buffer, "%lf%s", &retval, suffix);
     bool empty = strlen(suffix) == 0;
@@ -1978,7 +1976,8 @@ long long InStream::readLong(long long minv, long long maxv, const std::string& 
 }
 std::vector<long long> InStream::readLongs(int size, long long minv, long long maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readLongs, readLong(minv, maxv, variablesName), long long, true)
-} std::vector<long long> InStream::readLongs(int size, int indexBase) {
+}
+std::vector<long long> InStream::readLongs(int size, int indexBase) {
     __testlib_readMany(readLongs, readLong(), long long, true)
 }
 unsigned long long InStream::readUnsignedLong(unsigned long long minv, unsigned long long maxv, const std::string& variableName) {
@@ -1997,7 +1996,8 @@ unsigned long long InStream::readUnsignedLong(unsigned long long minv, unsigned 
 }
 std::vector<unsigned long long> InStream::readUnsignedLongs(int size, unsigned long long minv, unsigned long long maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readUnsignedLongs, readUnsignedLong(minv, maxv, variablesName), unsigned long long, true)
-} std::vector<unsigned long long> InStream::readUnsignedLongs(int size, int indexBase) {
+}
+std::vector<unsigned long long> InStream::readUnsignedLongs(int size, int indexBase) {
     __testlib_readMany(readUnsignedLongs, readUnsignedLong(), unsigned long long, true)
 }
 unsigned long long InStream::readLong(unsigned long long minv, unsigned long long maxv, const std::string& variableName) {
@@ -2025,11 +2025,14 @@ int InStream::readInteger(int minv, int maxv, const std::string& variableName) {
 }
 std::vector<int> InStream::readInts(int size, int minv, int maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readInts, readInt(minv, maxv, variablesName), int, true)
-} std::vector<int> InStream::readInts(int size, int indexBase) {
+}
+std::vector<int> InStream::readInts(int size, int indexBase) {
     __testlib_readMany(readInts, readInt(), int, true)
-} std::vector<int> InStream::readIntegers(int size, int minv, int maxv, const std::string& variablesName, int indexBase) {
+}
+std::vector<int> InStream::readIntegers(int size, int minv, int maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readIntegers, readInt(minv, maxv, variablesName), int, true)
-} std::vector<int> InStream::readIntegers(int size, int indexBase) {
+}
+std::vector<int> InStream::readIntegers(int size, int indexBase) {
     __testlib_readMany(readIntegers, readInt(), int, true)
 }
 double InStream::readReal() {
@@ -2055,7 +2058,8 @@ double InStream::readReal(double minv, double maxv, const std::string& variableN
 }
 std::vector<double> InStream::readReals(int size, double minv, double maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readReals, readReal(minv, maxv, variablesName), double, true)
-} std::vector<double> InStream::readReals(int size, int indexBase) {
+}
+std::vector<double> InStream::readReals(int size, int indexBase) {
     __testlib_readMany(readReals, readReal(), double, true)
 }
 double InStream::readDouble(double minv, double maxv, const std::string& variableName) {
@@ -2063,7 +2067,8 @@ double InStream::readDouble(double minv, double maxv, const std::string& variabl
 }
 std::vector<double> InStream::readDoubles(int size, double minv, double maxv, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readDoubles, readDouble(minv, maxv, variablesName), double, true)
-} std::vector<double> InStream::readDoubles(int size, int indexBase) {
+}
+std::vector<double> InStream::readDoubles(int size, int indexBase) {
     __testlib_readMany(readDoubles, readDouble(), double, true)
 }
 double InStream::readStrictReal(double minv, double maxv,
@@ -2128,7 +2133,8 @@ bool InStream::eoln() {
         return false;
     } else {
         bool returnCr = false;
-#if (defined(ON_WINDOWS) && !defined(FOR_LINUX)) || defined(FOR_WINDOWS)if (c != CR) {
+#if (defined(ON_WINDOWS) && !defined(FOR_LINUX)) || defined(FOR_WINDOWS)
+        if (c != CR) {
             reader->unreadChar(c);
             return false;
         } else {
@@ -2142,8 +2148,8 @@ bool InStream::eoln() {
             return false;
         }
         return true;
+        }
     }
-}
 void InStream::readEoln() {
     lastLine = reader->getLine();
     if (!eoln())quit(_pe, "Expected EOLN");
@@ -2212,7 +2218,8 @@ std::string InStream::readString(const pattern& p, const std::string& variableNa
 }
 std::vector<std::string> InStream::readStrings(int size, const pattern& p, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readStrings, readString(p, variablesName), std::string, false)
-} std::string InStream::readString(const std::string& ptrn, const std::string& variableName) {
+}
+std::string InStream::readString(const std::string& ptrn, const std::string& variableName) {
     readStringTo(_tmpReadToken, ptrn, variableName);
     return _tmpReadToken;
 }
@@ -2240,7 +2247,8 @@ std::string InStream::readLine(const pattern& p, const std::string& variableName
 }
 std::vector<std::string> InStream::readLines(int size, const pattern& p, const std::string& variablesName, int indexBase) {
     __testlib_readMany(readLines, readString(p, variablesName), std::string, false)
-} std::string InStream::readLine(const std::string& ptrn, const std::string& variableName) {
+}
+std::string InStream::readLine(const std::string& ptrn, const std::string& variableName) {
     return readString(ptrn, variableName);
 }
 std::vector<std::string> InStream::readLines(int size, const std::string& ptrn, const std::string& variablesName, int indexBase) {
@@ -2250,8 +2258,7 @@ std::vector<std::string> InStream::readLines(int size, const std::string& ptrn, 
 #ifdef __GNUC__
 __attribute__((format(printf, 3, 4)))
 #endif
-void
-InStream::ensuref(bool cond, const char* format, ...) {
+void InStream::ensuref(bool cond, const char* format, ...) {
     if (!cond) {
         FMT_TO_RESULT(format, format, message);
         this->__testlib_ensure(cond, message);
@@ -2306,24 +2313,21 @@ template <typename F>
 #ifdef __GNUC__
 __attribute__((format(printf, 2, 3)))
 #endif
-NORETURN void
-quitp(F points, const char* format, ...) {
+NORETURN void quitp(F points, const char* format, ...) {
     FMT_TO_RESULT(format, format, message);
     quitp(points, message);
 }
 #ifdef __GNUC__
 __attribute__((format(printf, 2, 3)))
 #endif
-NORETURN void
-quitf(TResult result, const char* format, ...) {
+NORETURN void quitf(TResult result, const char* format, ...) {
     FMT_TO_RESULT(format, format, message);
     quit(result, message);
 }
 #ifdef __GNUC__
 __attribute__((format(printf, 3, 4)))
 #endif
-void
-quitif(bool condition, TResult result, const char* format, ...) {
+void quitif(bool condition, TResult result, const char* format, ...) {
     if (condition) {
         FMT_TO_RESULT(format, format, message);
         quit(result, message);
@@ -2353,24 +2357,24 @@ void registerGen(int argc, char* argv[]) {
 #ifdef __GNUC__
 #if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 4))
 __attribute__((deprecated("Use registerGen(argc, argv, 0) or registerGen(argc, argv, 1)."
-                          " The third parameter stands for the random generator version."
-                          " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
-                          " Version 1 has been released on Spring, 2013. Use it to write new generators.")))
+    " The third parameter stands for the random generator version."
+    " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
+    " Version 1 has been released on Spring, 2013. Use it to write new generators.")))
 #else
 __attribute__((deprecated))
 #endif
 #endif
 #ifdef _MSC_VER
 __declspec(deprecated("Use registerGen(argc, argv, 0) or registerGen(argc, argv, 1)."
-                      " The third parameter stands for the random generator version."
-                      " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
-                      " Version 1 has been released on Spring, 2013. Use it to write new generators."))
+    " The third parameter stands for the random generator version."
+    " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
+    " Version 1 has been released on Spring, 2013. Use it to write new generators."))
 #endif
     void registerGen(int argc, char* argv[]) {
     std::fprintf(stderr, "Use registerGen(argc, argv, 0) or registerGen(argc, argv, 1)."
-                         " The third parameter stands for the random generator version."
-                         " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
-                         " Version 1 has been released on Spring, 2013. Use it to write new generators.\n\n");
+        " The third parameter stands for the random generator version."
+        " If you are trying to compile old generator use macro -DUSE_RND_AS_BEFORE_087 or registerGen(argc, argv, 0)."
+        " Version 1 has been released on Spring, 2013. Use it to write new generators.\n\n");
     registerGen(argc, argv, 0);
 }
 #endif
@@ -2438,7 +2442,6 @@ void registerTestlibCmd(int argc, char* argv[]) {
     __testlib_ensuresPreconditions();
     testlibMode = _checker;
     __testlib_set_binary(stdin);
-    if (argc > 1 && !strcmp("--help", argv[1]))__testlib_help();
     if (argc < 4 || argc > 6) {
         quit(_fail, std::string("Program must be run with the following arguments: ") + std::string("<input-file> <output-file> <answer-file> [<report-file> [<-appes>]]") + "\nUse \"--help\" to get help information");
     }
@@ -2464,7 +2467,7 @@ void registerTestlibCmd(int argc, char* argv[]) {
 }
 void registerTestlib(int argc, ...) {
     if (argc < 3 || argc > 5)quit(_fail, std::string("Program must be run with the following arguments: ") + "<input-file> <output-file> <answer-file> [<report-file> [<-appes>]]");
-    char** argv = new char*[argc + 1];
+    char** argv = new char* [argc + 1];
     va_list ap;
     va_start(ap, argc);
     argv[0] = NULL;
@@ -2481,16 +2484,14 @@ static inline void __testlib_ensure(bool cond, const std::string& msg) {
 #ifdef __GNUC__
 __attribute__((unused))
 #endif
-static inline void
-__testlib_ensure(bool cond, const char* msg) {
+static inline void __testlib_ensure(bool cond, const char* msg) {
     if (!cond)quit(_fail, msg);
 }
 #define ensure(cond) __testlib_ensure(cond, "Condition failed: \"" #cond "\"")
 #ifdef __GNUC__
 __attribute__((format(printf, 2, 3)))
 #endif
-inline void
-ensuref(bool cond, const char* format, ...) {
+inline void ensuref(bool cond, const char* format, ...) {
     if (!cond) {
         FMT_TO_RESULT(format, format, message);
         __testlib_ensure(cond, message);
@@ -2502,8 +2503,7 @@ NORETURN static void __testlib_fail(const std::string& message) {
 #ifdef __GNUC__
 __attribute__((format(printf, 1, 2)))
 #endif
-void
-setName(const char* format, ...) {
+void setName(const char* format, ...) {
     FMT_TO_RESULT(format, format, name);
     checkerName = name;
 }
@@ -2516,8 +2516,7 @@ template <typename _RandomAccessIter>
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((error("Don't use random_shuffle(), use shuffle() instead")))
 #endif
-void
-random_shuffle(_RandomAccessIter, _RandomAccessIter) {
+void random_shuffle(_RandomAccessIter, _RandomAccessIter) {
     quitf(_fail, "Don't use random_shuffle(), use shuffle() instead");
 }
 #ifdef __GLIBC__
@@ -2531,25 +2530,23 @@ __attribute__((error("Don't use rand(), use rnd.next() instead")))
 #ifdef _MSC_VER
 #pragma warning(disable : 4273)
 #endif
-int
-rand() RAND_THROW_STATEMENT {
+int rand() RAND_THROW_STATEMENT {
     quitf(_fail, "Don't use rand(), use rnd.next() instead");
 }
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((error("Don't use srand(), you should use "
-                     "'registerGen(argc, argv, 1);' to initialize generator seed "
-                     "by hash code of the command line params. The third parameter "
-                     "is randomGeneratorVersion (currently the latest is 1).")))
+    "'registerGen(argc, argv, 1);' to initialize generator seed "
+    "by hash code of the command line params. The third parameter "
+    "is randomGeneratorVersion (currently the latest is 1).")))
 #endif
 #ifdef _MSC_VER
 #pragma warning(disable : 4273)
 #endif
-void
-srand(unsigned int seed) RAND_THROW_STATEMENT {
+    void srand(unsigned int seed) RAND_THROW_STATEMENT {
     quitf(_fail, "Don't use srand(), you should use "
-                 "'registerGen(argc, argv, 1);' to initialize generator seed "
-                 "by hash code of the command line params. The third parameter "
-                 "is randomGeneratorVersion (currently the latest is 1) [ignored seed=%d].",
+        "'registerGen(argc, argv, 1);' to initialize generator seed "
+        "by hash code of the command line params. The third parameter "
+        "is randomGeneratorVersion (currently the latest is 1) [ignored seed=%d].",
         seed);
 }
 void startTest(int test) {
@@ -2601,10 +2598,12 @@ std::string join(const _Collection& collection) {
 std::vector<std::string> split(const std::string& s, char separator) {
     std::vector<std::string> result;
     std::string item;
-    for (size_t i = 0; i < s.length(); i++)if (s[i] == separator) {
+    for (size_t i = 0; i < s.length(); i++) {
+        if (s[i] == separator) {
             result.push_back(item);
             item = "";
         } else item += s[i];
+    }
     result.push_back(item);
     return result;
 }
@@ -2614,10 +2613,12 @@ std::vector<std::string> split(const std::string& s, const std::string& separato
     for (size_t i = 0; i < separators.size(); i++)isSeparator[(unsigned char)(separators[i])] = true;
     std::vector<std::string> result;
     std::string item;
-    for (size_t i = 0; i < s.length(); i++)if (isSeparator[(unsigned char)(s[i])]) {
+    for (size_t i = 0; i < s.length(); i++) {
+        if (isSeparator[(unsigned char)(s[i])]) {
             result.push_back(item);
             item = "";
         } else item += s[i];
+    }
     result.push_back(item);
     return result;
 }
@@ -2625,31 +2626,33 @@ std::vector<std::string> tokenize(const std::string& s, char separator) {
     std::vector<std::string> result;
     std::string item;
     for (size_t i = 0; i < s.length(); i++)if (s[i] == separator) {
-            if (!item.empty())result.push_back(item);
-            item = "";
-        } else item += s[i];
+        if (!item.empty())result.push_back(item);
+        item = "";
+    } else item += s[i];
     if (!item.empty())result.push_back(item);
     return result;
 }
 std::vector<std::string> tokenize(const std::string& s, const std::string& separators) {
     if (separators.empty())return std::vector<std::string>(1, s);
     std::vector<bool> isSeparator(256);
-    for (size_t i = 0; i < separators.size(); i++)isSeparator[(unsigned char)(separators[i])] = true;
+    for (size_t i = 0; i < separators.size(); i++) isSeparator[(unsigned char)(separators[i])] = true;
     std::vector<std::string> result;
     std::string item;
-    for (size_t i = 0; i < s.length(); i++)if (isSeparator[(unsigned char)(s[i])]) {
+    for (size_t i = 0; i < s.length(); i++) {
+        if (isSeparator[(unsigned char)(s[i])]) {
             if (!item.empty())result.push_back(item);
             item = "";
         } else item += s[i];
+    }
     if (!item.empty())result.push_back(item);
     return result;
 }
 NORETURN void __testlib_expectedButFound(TResult result, std::string expected, std::string found, const char* prepend) {
     std::string message;
     if (strlen(prepend) != 0)message = format("%s: expected '%s', but found '%s'",
-            compress(prepend).c_str(), compress(expected).c_str(), compress(found).c_str());
+        compress(prepend).c_str(), compress(expected).c_str(), compress(found).c_str());
     else message = format("expected '%s', but found '%s'",
-            compress(expected).c_str(), compress(found).c_str());
+        compress(expected).c_str(), compress(found).c_str());
     quit(result, message);
 }
 NORETURN void __testlib_expectedButFound(TResult result, double expected, double found, const char* prepend) {
@@ -2661,8 +2664,7 @@ template <typename T>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound(TResult result, T expected, T found, const char* prependFormat = "", ...) {
+NORETURN void expectedButFound(TResult result, T expected, T found, const char* prependFormat = "", ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     std::string expectedString = vtos(expected);
     std::string foundString = vtos(found);
@@ -2672,8 +2674,7 @@ template <>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound<std::string>(TResult result, std::string expected, std::string found, const char* prependFormat, ...) {
+NORETURN void expectedButFound<std::string>(TResult result, std::string expected, std::string found, const char* prependFormat, ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     __testlib_expectedButFound(result, expected, found, prepend.c_str());
 }
@@ -2681,8 +2682,7 @@ template <>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound<double>(TResult result, double expected, double found, const char* prependFormat, ...) {
+NORETURN void expectedButFound<double>(TResult result, double expected, double found, const char* prependFormat, ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     std::string expectedString = removeDoubleTrailingZeroes(format("%.12f", expected));
     std::string foundString = removeDoubleTrailingZeroes(format("%.12f", found));
@@ -2692,8 +2692,7 @@ template <>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound<const char*>(TResult result, const char* expected, const char* found, const char* prependFormat, ...) {
+NORETURN void expectedButFound<const char*>(TResult result, const char* expected, const char* found, const char* prependFormat, ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     __testlib_expectedButFound(result, std::string(expected), std::string(found), prepend.c_str());
 }
@@ -2701,8 +2700,7 @@ template <>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound<float>(TResult result, float expected, float found, const char* prependFormat, ...) {
+NORETURN void expectedButFound<float>(TResult result, float expected, float found, const char* prependFormat, ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     __testlib_expectedButFound(result, double(expected), double(found), prepend.c_str());
 }
@@ -2710,8 +2708,7 @@ template <>
 #ifdef __GNUC__
 __attribute__((format(printf, 4, 5)))
 #endif
-NORETURN void
-expectedButFound<long double>(TResult result, long double expected, long double found, const char* prependFormat, ...) {
+NORETURN void expectedButFound<long double>(TResult result, long double expected, long double found, const char* prependFormat, ...) {
     FMT_TO_RESULT(prependFormat, prependFormat, prepend);
     __testlib_expectedButFound(result, double(expected), double(found), prepend.c_str());
 }
@@ -2725,7 +2722,7 @@ struct is_iterable {
     static const bool value = sizeof(test<T>(0)) == 1;
 };
 template <bool B, class T = void>
-struct __testlib_enable_if { };
+struct __testlib_enable_if {};
 template <class T>
 struct __testlib_enable_if<true, T> { typedef T type; };
 template <typename T>
