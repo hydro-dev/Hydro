@@ -111,6 +111,7 @@ export const judge = async (ctx) => {
             );
         })(),
     ]);
+    ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = ctx.total_score = ctx.total_memory_usage_kb = ctx.total_time_usage_ms = 0;

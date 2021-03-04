@@ -235,8 +235,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
         for (const c of cfg.cases) {
             config.count++;
             config.subtasks[0].cases.push({
-                input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : null,
-                output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : null,
+                input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
                 id: config.count,
             });
         }
@@ -246,8 +246,8 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             for (const c of subtask.cases) {
                 config.count++;
                 cases.push({
-                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : null,
-                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : null,
+                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
                     id: config.count,
                 });
             }
