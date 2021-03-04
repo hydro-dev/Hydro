@@ -20,7 +20,7 @@ import * as domain from '../model/domain';
 import * as discussion from '../model/discussion';
 import * as token from '../model/token';
 import * as training from '../model/training';
-import { PERM, PRIV, CONSTANT } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import {
     isContent, isPassword, isEmail, isTitle,
 } from '../lib/validator';
@@ -32,7 +32,7 @@ class HomeHandler extends Handler {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
                 .sort('beginAt', -1)
-                .limit(CONSTANT.HOMEWORK_ON_MAIN)
+                .limit(system.get('pagination.homework_main'))
                 .toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id,
@@ -47,7 +47,7 @@ class HomeHandler extends Handler {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
                 .sort('beginAt', -1)
-                .limit(CONSTANT.CONTEST_ON_MAIN)
+                .limit(system.get('pagination.contest_main'))
                 .toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
@@ -61,7 +61,7 @@ class HomeHandler extends Handler {
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti(domainId)
                 .sort('_id', 1)
-                .limit(CONSTANT.TRAINING_ON_MAIN)
+                .limit(system.get('pagination.training_main'))
                 .toArray();
             const tsdict = await training.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
@@ -74,7 +74,7 @@ class HomeHandler extends Handler {
     async discussion(domainId: string): Promise<[any[], any]> {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti(domainId)
-                .limit(CONSTANT.DISCUSSION_ON_MAIN)
+                .limit(system.get('pagination.discussion_main'))
                 .toArray();
             const vndict = await discussion.getListVnodes(
                 domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),

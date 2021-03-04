@@ -5,12 +5,13 @@ import {
     Mdoc, Drdoc, Ddoc, Drrdoc,
 } from '../interface';
 import paginate from '../lib/paginate';
+import * as system from '../model/system';
 import * as user from '../model/user';
 import * as oplog from '../model/oplog';
 import * as message from '../model/message';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
-import { PERM, PRIV, CONSTANT } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -74,7 +75,7 @@ class DiscussionMainHandler extends Handler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId),
             page,
-            CONSTANT.DISCUSSION_PER_PAGE,
+            system.get('pagination.discussion'),
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
         const path = [
@@ -106,7 +107,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name }),
             page,
-            CONSTANT.DISCUSSION_PER_PAGE,
+            system.get('pagination.discussion'),
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(this.vnode.owner);
@@ -183,7 +184,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const [drdocs, pcount, drcount] = await paginate(
             discussion.getMultiReply(domainId, did),
             page,
-            CONSTANT.REPLY_PER_PAGE,
+            system.get('pagination.reply'),
         );
         const uids = drdocs.map((drdoc) => drdoc.owner);
         uids.push(this.ddoc.owner);

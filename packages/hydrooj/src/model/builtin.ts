@@ -589,23 +589,8 @@ export const USER_GENDER_ICONS = {
     [USER_GENDER_OTHER]: '?',
 };
 
-export const CONSTANT = {
-    PROBLEM_PER_PAGE: 100,
-    CONTEST_PER_PAGE: 20,
-    DISCUSSION_PER_PAGE: 50,
-    RECORD_PER_PAGE: 100,
-    SOLUTION_PER_PAGE: 20,
-    TRAINING_PER_PAGE: 10,
-    REPLY_PER_PAGE: 50,
-    HOMEWORK_ON_MAIN: 5,
-    DISCUSSION_ON_MAIN: 20,
-    CONTEST_ON_MAIN: 10,
-    TRAINING_ON_MAIN: 10,
-};
-
 global.Hydro.model.builtin = {
     Permission,
-    CONSTANT,
     PERM,
     PERMS,
     PERMS_BY_FAMILY,

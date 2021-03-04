@@ -8,8 +8,9 @@ import {
 } from '../error';
 import { isContent, isTitle } from '../lib/validator';
 import paginate from '../lib/paginate';
-import { PERM, PRIV, CONSTANT } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
+import * as system from '../model/system';
 import * as document from '../model/document';
 import * as problem from '../model/problem';
 import * as domain from '../model/domain';
@@ -39,7 +40,7 @@ class ContestListHandler extends ContestHandler {
             qs = `rule=${rule}`;
         }
         // eslint-disable-next-line prefer-const
-        [tdocs, tpcount] = await paginate(tdocs, page, CONSTANT.CONTEST_PER_PAGE);
+        [tdocs, tpcount] = await paginate(tdocs, page, system.get('pagination.contest'));
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc.docId);
         const tsdict = await contest.getListStatus(domainId, this.user._id, tids);

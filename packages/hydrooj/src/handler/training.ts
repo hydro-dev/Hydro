@@ -4,7 +4,8 @@ import { Tdoc, TrainingDoc } from '../interface';
 import { ValidationError, ProblemNotFoundError } from '../error';
 import { isTitle, isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
-import { PERM, PRIV, CONSTANT } from '../model/builtin';
+import * as system from '../model/system';
+import { PERM, PRIV } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as training from '../model/training';
@@ -62,7 +63,7 @@ class TrainingMainHandler extends Handler {
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
-            CONSTANT.TRAINING_PER_PAGE,
+            system.get('pagination.training'),
         );
         const tids: Set<ObjectID> = new Set();
         for (const tdoc of tdocs) tids.add(tdoc.docId);

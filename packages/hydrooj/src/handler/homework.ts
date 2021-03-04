@@ -13,8 +13,9 @@ import {
 } from '../service/server';
 import * as bus from '../service/bus';
 import * as domain from '../model/domain';
-import { PERM, CONSTANT } from '../model/builtin';
+import { PERM } from '../model/builtin';
 import * as user from '../model/user';
+import * as system from '../model/system';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import * as problem from '../model/problem';
@@ -84,7 +85,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
         const [ddocs, dpcount, dcount] = await paginate(
             discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
             page,
-            CONSTANT.DISCUSSION_PER_PAGE,
+            system.get('pagination.discussion'),
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(tdoc.owner);

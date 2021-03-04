@@ -1,8 +1,7 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
-import {
-    PERM, CONSTANT, STATUS, PRIV,
-} from '../model/builtin';
+import { PERM, STATUS, PRIV } from '../model/builtin';
+import * as system from '../model/system';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as contest from '../model/contest';
@@ -42,7 +41,7 @@ class RecordListHandler extends RecordHandler {
         const [rdocs] = await paginate(
             record.getMulti(domainId, q).sort('_id', -1),
             page,
-            CONSTANT.RECORD_PER_PAGE,
+            system.get('pagination.record'),
         );
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
