@@ -1,6 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
 import fs from 'fs-extra';
-import { resolve } from 'path';
 import * as STATUS from './status';
 import { parse } from './testlib';
 import { run } from './sandbox';
