@@ -152,7 +152,7 @@ const checkers: Record<string, Checker> = {
     },
 
     /*
-     * in：输入
+     * input：输入
      * user_out：选手输出
      * answer：标准输出
      * code：选手代码
@@ -163,7 +163,7 @@ const checkers: Record<string, Checker> = {
         // eslint-disable-next-line prefer-const
         let { status, stdout, stderr } = await run('${dir}/checker', {
             copyIn: {
-                in: { src: config.input },
+                input: { src: config.input },
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },
                 code: { content: config.code },
