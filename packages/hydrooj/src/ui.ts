@@ -1,22 +1,11 @@
 /* eslint-disable @typescript-eslint/no-shadow */
-// @ts-nocheck
 import cluster from 'cluster';
-import {
-    terminal, TextBox, LabeledInput,
-} from 'terminal-kit';
-import { ProgressBarOptions } from 'terminal-kit/Terminal';
 import { argv } from 'yargs';
+import BottomBar from 'inquirer/lib/ui/bottom-bar';
 import { Logger } from './logger';
 import * as bus from './service/bus';
 
 const logger = new Logger('ui');
-
-declare module 'terminal-kit/Terminal' {
-    interface ProgressBarOptions {
-        y?: number;
-    }
-}
-
 const useTerminal = cluster.isMaster && process.stdout.isTTY && !argv.legacy && !argv._.length;
 
 export namespace Progress {
@@ -38,11 +27,8 @@ export namespace Progress {
         }
     }
 
-    export function create(args: ProgressBarOptions) {
-        // TODO handle worker process
-        return useTerminal
-            ? terminal.progressBar(args)
-            : new Progress(args);
+    export function create(args) {
+        return new Progress(args);
     }
 }
 
@@ -53,71 +39,44 @@ async function terminate() {
     } catch (e) {
         hasError = true;
     }
-    if (useTerminal) {
-        terminal.styleReset();
-        terminal.resetScrollingRegion();
-        terminal.moveTo(terminal.width, terminal.height);
-        terminal('\n');
-    }
     process.exit(hasError ? 1 : 0);
 }
 process.on('SIGINT', terminate);
 
 if (useTerminal) {
-    terminal.clear();
-    terminal.grabInput();
-    // Clipboard doesn't work well over ssh env, it throws an error.
-    terminal.getClipboard = () => { };
-    terminal.setClipboard = () => { };
-    const document = terminal.createDocument({});
-    const LogBox = new TextBox({
-        parent: document,
-        contentHasMarkup: true,
-        scrollable: true,
-        vScrollBar: true,
-        lineWrap: true,
-        x: 0,
-        y: 0,
-        width: terminal.width,
-        height: terminal.height - 1,
-    });
-    const ShellInput = new LabeledInput({
-        parent: document,
-        label: '>',
-        x: 1,
-        y: terminal.height - 1,
-        width: terminal.width,
+    let current = 0;
+    const history = [''];
+    let input = '';
+    const ui = new BottomBar({ bottomBar: '>' });
+    process.stdin.on('data', (data) => {
+        // Control Seq?
+        const seq = data.toString('hex');
+        logger.info(data.toString('hex'));
+        if (seq === '7f') input = input.substr(0, input.length - 1);
+        else if (seq === '1b5b41') {
+            // Arrow up
+            current--;
+            input = history[current];
+        } else if (seq === '1b5b42') {
+            // Arrow down
+            current++;
+            input = history[current];
+        } else if (seq === '0d') {
+            // Enter
+            history.push(input);
+            current = history.length;
+            if (input[0] === '@') {
+                for (const i in cluster.workers) {
+                    cluster.workers[i].send({ event: 'message/run', payload: [input.substr(1, input.length - 1)] });
+                    break;
+                }
+            } else bus.parallel('message/run', input);
+            input = '';
+        } else input += data.toString();
+        ui.updateBottomBar(`>${input}`);
     });
     bus.on('message/log', (message) => {
-        LogBox.appendLog(message);
-    });
-    const history = [''];
-    let current = 0;
-    ShellInput.on('submit', async (input: string) => {
-        history.push(input);
-        current = history.length;
-        ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
-        ShellInput.input.setContent('', false, false);
-        if (input[0] === '@') {
-            for (const i in cluster.workers) {
-                cluster.workers[i].send({ event: 'message/run', payload: [input.substr(1, input.length - 1)] });
-                break;
-            }
-        } else bus.parallel('message/run', input);
-    });
-    ShellInput.on('key', (key) => {
-        if (key === 'UP') {
-            current--;
-            ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
-            ShellInput.input.setContent(history[current] || '', false, false);
-        } else if (key === 'DOWN') {
-            current++;
-            ShellInput.input.setContent(' '.repeat(terminal.width), false, false);
-            ShellInput.input.setContent(history[current] || '', false, false);
-        }
-    });
-    terminal.on('key', (key) => {
-        if (key === 'CTRL_C') terminate();
+        ui.log.write(message);
     });
     if (process.env.SSH_CLIENT || process.env.SSH_TTY || process.env.SSH_CONNECTION) {
         logger.warn('Running over ssh detected. Add a --legacy when starting if GUI mode doesn\'t work properly.');

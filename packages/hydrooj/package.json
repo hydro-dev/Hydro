@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.19.4",
+    "version": "2.19.5",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -16,6 +16,7 @@
         "cookies": "^0.8.0",
         "detect-browser": "^5.1.1",
         "fs-extra": "^9.1.0",
+        "inquirer": "^8.0.0",
         "js-yaml": "^4.0.0",
         "koa": "^2.13.1",
         "koa-body": "^4.2.0",
@@ -33,13 +34,13 @@
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
         "systeminformation": "5.3.3",
-        "terminal-kit": "^1.47.0",
         "wtfnode": "^0.8.4",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.33",
         "@types/fs-extra": "^9.0.7",
+        "@types/inquirer": "^7.3.1",
         "@types/js-yaml": "^4.0.0",
         "@types/koa": "^2.13.0",
         "@types/koa-router": "^7.4.1",
@@ -52,7 +53,6 @@
         "@types/serialize-javascript": "^5.0.0",
         "@types/sockjs": "^0.3.32",
         "@types/superagent": "^4.1.8",
-        "@types/terminal-kit": "^1.28.2",
         "@types/wtfnode": "^0.7.0",
         "@types/yargs": "^16.0.0",
         "formidable": "^1.2.2"
