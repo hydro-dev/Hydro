@@ -1389,10 +1389,12 @@ resultExitCode(TResult r) {
     return FAIL_EXIT_CODE;
 }
 void InStream::textColor(
-#if !(defined(ON_WINDOWS) && (!defined(_MSC_VER) || _MSC_VER > 1400)) && defined(__GNUC__)__attribute__((unused))
+#if !(defined(ON_WINDOWS) && (!defined(_MSC_VER) || _MSC_VER > 1400)) && defined(__GNUC__)
+    __attribute__((unused))
 #endif
     WORD color) {
-#if defined(ON_WINDOWS) && (!defined(_MSC_VER) || _MSC_VER > 1400)HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+#if defined(ON_WINDOWS) && (!defined(_MSC_VER) || _MSC_VER > 1400)
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(handle, color);
 #endif
 #if !defined(ON_WINDOWS) && defined(__GNUC__)
