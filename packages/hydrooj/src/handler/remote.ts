@@ -18,12 +18,14 @@ const logger = new Logger('remote');
 
 export class ProblemSendHandler extends Handler {
     async get() {
+        this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         this.response.template = 'problem_send.html';
     }
 
     @post('target', Types.String)
     @post('pids', Types.Array)
     async postSend(domainId: string, target: any, _pids: (number | string)[]) {
+        this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         target = target.split('@');
         const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
@@ -64,7 +66,7 @@ export class ProblemSendHandler extends Handler {
         const pdocs = await problem.getMulti(domainId, { docId: { $in: pids } }, problem.PROJECTION_PUBLIC).toArray();
         const data = await token.get(tokenId, token.TYPE_EXPORT);
         if (!data) throw new InvalidTokenError(tokenId);
-        for (const pid of pids) if (!data.pids.includes(pid)) throw new InvalidTokenError(tokenId);
+        if (pids.filter((pid) => !data.pids.includes(pid)).length) throw new InvalidTokenError(tokenId);
         const links = [];
         for (const pdoc of pdocs) {
             const files = await storage.list(`problem/${domainId}/${pdoc.docId}/`, true);
@@ -152,7 +154,7 @@ export class ProblemReceiveHandler extends Handler {
 export async function apply() {
     ProblemAdd('problem_receive', {}, 'copy', 'Import From Hydro');
     Route('problem_receive', '/problem/receive', ProblemReceiveHandler);
-    Route('problem_send', '/problem/send', ProblemSendHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_send', '/problem/send', ProblemSendHandler);
 }
 
 global.Hydro.handler.remote = apply;
