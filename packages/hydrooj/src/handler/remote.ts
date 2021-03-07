@@ -86,9 +86,20 @@ export class ProblemSendHandler extends Handler {
 export class ProblemReceiveHandler extends Handler {
     async get({ domainId }) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM);
-        const requests = await token.getMulti(token.TYPE_IMPORT, { domainId }).toArray();
+        let requests = await token.getMulti(token.TYPE_IMPORT, { domainId }).toArray();
+        requests = requests.map((request) => {
+            const url = new URL(request.source);
+            request.display = `${url.host}/${url.pathname.split('/')[2]}/`;
+            request.url = `${url.origin}/d/${url.pathname.split('/')[2]}/p/`;
+            return request;
+        });
         this.response.template = 'problem_receive.html';
         this.response.body = { requests };
+        this.response.body.path = [
+            ['Hydro', 'homepage'],
+            ['problem_main', 'problem_main'],
+            ['problem_receive', null],
+        ];
     }
 
     @post('url', Types.String)
