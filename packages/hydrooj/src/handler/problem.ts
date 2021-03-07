@@ -328,7 +328,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
         try {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
-        if (await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
+        if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<Pdoc> = {
             title, content, pid: newPid, hidden, tag,
         };
