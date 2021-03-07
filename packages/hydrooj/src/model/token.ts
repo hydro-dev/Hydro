@@ -21,19 +21,18 @@ function ensureIndexes() {
 }
 
 export async function add(
-    tokenType: number, expireSeconds: number, data: any,
+    tokenType: number, expireSeconds: number, data: any, id = String.random(32),
 ): Promise<[string, TokenDoc]> {
     const now = new Date();
-    const str = String.random(32);
     const res = await coll.insertOne({
         ...data,
-        _id: str,
+        _id: id,
         tokenType,
         createAt: now,
         updateAt: now,
         expireAt: new Date(now.getTime() + expireSeconds * 1000),
     });
-    return [str, res.ops[0]];
+    return [id, res.ops[0]];
 }
 
 export async function get(tokenId: string, tokenType: number): Promise<TokenDoc | null> {

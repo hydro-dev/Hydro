@@ -525,7 +525,6 @@ problem_create: 문제 만들기
 problem_edit: 문제 수정
 problem_import: 문제 가져오기
 problem_main: 문제
-problem_settings: 문제 설정
 problem_solution: 문제 해설
 problem_statistics: 문제 통계
 problem_submit: 제출

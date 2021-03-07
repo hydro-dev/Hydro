@@ -552,17 +552,17 @@ export class ProblemCreateHandler extends Handler {
 
     @post('title', Types.String, isTitle)
     @post('content', Types.String, isContent)
-    @post('pid', Types.String, isPid, true)
+    @post('pid', Types.String, true, isPid)
     @post('hidden', Types.Boolean)
     @post('tag', Types.String, true, null, parseCategory)
     async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
         try {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
-        if (await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
+        if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag, hidden);
         this.response.body = { pid: pid || docId };
-        this.response.redirect = this.url('problem_settings', { pid: pid || docId });
+        this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
 }
 

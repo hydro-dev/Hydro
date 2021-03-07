@@ -540,7 +540,6 @@ problem_files: 题目文件
 problem_import_syzoj: 从 SYZOJ 导入题目
 problem_import: 导入题目
 problem_main: 题库
-problem_settings: 题目设置
 problem_solution: 题解
 problem_statistics: 题目统计
 problem_submit: 递交代码

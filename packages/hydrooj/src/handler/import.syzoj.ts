@@ -246,11 +246,11 @@ class ProblemImportSYZOJHandler extends Handler {
                     protocol, host, pid, false,
                 );
                 this.response.body = { pid: targetPid || docId };
-                this.response.redirect = this.url('problem_settings', { pid: targetPid || docId });
+                this.response.redirect = this.url('problem_files', { pid: targetPid || docId });
             } else {
                 const docId = await this.v2(domainId, targetPid, hidden, url);
                 this.response.body = { pid: targetPid || docId };
-                this.response.redirect = this.url('problem_settings', { pid: targetPid || docId });
+                this.response.redirect = this.url('problem_files', { pid: targetPid || docId });
             }
         }
     }
