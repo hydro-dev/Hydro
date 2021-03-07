@@ -38,7 +38,6 @@ export namespace Pdoc {
         nSubmit: 0,
         nAccept: 0,
         tag: [],
-        category: [],
         data: [],
         additional_file: [],
         hidden: true,
@@ -72,7 +71,7 @@ export const SETTING_DIFFICULTY_RANGE = [
 export const PROJECTION_LIST: Pdoc.Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'pid',
     'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
-    'tag', 'category', 'hidden',
+    'tag', 'hidden',
 ];
 
 export const PROJECTION_PUBLIC: Pdoc.Field[] = [
@@ -83,11 +82,11 @@ export const PROJECTION_PUBLIC: Pdoc.Field[] = [
 
 export async function add(
     domainId: string, pid: string = null, title: string, content: Content, owner: number,
-    tag: string[] = [], category: string[] = [], hidden = false,
+    tag: string[] = [], hidden = false,
 ) {
     const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
     const args: Partial<Pdoc> = {
-        title, category, tag, hidden, nSubmit: 0, nAccept: 0,
+        title, tag, hidden, nSubmit: 0, nAccept: 0,
     };
     if (pid) args.pid = pid;
     return await document.add(domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null, args);

@@ -25,15 +25,25 @@ async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: 
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
 
-async function iterateAllProblem(fields: problem.Pdoc.Field[], cb: (pdoc: problem.Pdoc, current?: number, total?: number) => Promise<any>) {
+interface PartialPdoc extends problem.Pdoc {
+    [key: string]: any,
+}
+
+async function iterateAllProblem(
+    fields: (problem.Pdoc.Field | string)[],
+    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
+) {
+    if (!fields.includes('domainId')) fields.push('domainId');
+    if (!fields.includes('docId')) fields.push('docId');
     await iterateAllDomain(async (d) => {
-        const cursor = problem.getMulti(d._id, {}, fields);
+        const cursor = problem.getMulti(d._id, {}, fields as any);
         const total = await problem.getMulti(d._id, {}).count();
         let i = 0;
         while (await cursor.hasNext()) {
             const doc = await cursor.next();
             i++;
-            await cb(doc, i, total);
+            const res = await cb(doc, i, total);
+            if (res) await problem.edit(doc.domainId, doc.docId, res);
         }
     });
 }
@@ -162,7 +172,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _8_9() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(['docId', 'domainId'], async (pdoc) => {
+        await iterateAllProblem([], async (pdoc) => {
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
             const [data, additional_file] = await Promise.all([
                 storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
@@ -174,7 +184,21 @@ const scripts: UpgradeScript[] = [
             for (let i = 0; i < additional_file.length; i++) {
                 additional_file[i]._id = additional_file[i].name;
             }
-            await problem.edit(pdoc.domainId, pdoc.docId, { data, additional_file });
+            return { data, additional_file };
+        });
+        return true;
+    },
+    // Move category to tag
+    async function _9_10() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['tag', 'category'], async (pdoc) => {
+            await document.coll.updateOne(
+                { domainId: pdoc.domainId, docId: pdoc.docId },
+                {
+                    $set: { tag: [...pdoc.tag || [], ...pdoc.category || []] },
+                    $unset: { category: '' },
+                },
+            );
         });
         return true;
     },

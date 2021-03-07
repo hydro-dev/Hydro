@@ -390,8 +390,6 @@ async function ensureIndexes() {
     await ic({ domainId: 1, docType: 1, owner: 1, docId: -1 });
     // For problem
     await ic({ domainId: 1, docType: 1, search: 'text', title: 'text' }, s);
-    await ic({ domainId: 1, docType: 1, category: 1, docId: 1 }, s);
-    await ic({ domainId: 1, docType: 1, hidden: 1, category: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, tag: 1, docId: 1 }, s);
     await ic({ domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1 }, s);
     // For problem solution

@@ -52,9 +52,12 @@ export interface EventMap {
     'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => VoidReturn
 
     'document/add': (doc: any) => VoidReturn
-    'document/set': <T extends keyof DocType>
-    (domainId: string, docType: T, docId: DocType[T], $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>) => VoidReturn
+    'document/set': <T extends keyof DocType>(
+        domainId: string, docType: T, docId: DocType[T],
+        $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
+    ) => VoidReturn
 
+    'problem/before-edit': (doc: Partial<Pdoc>) => VoidReturn
     'problem/edit': (doc: Pdoc) => VoidReturn
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
     'problem/setting': (update: Partial<Pdoc>, handler: any) => VoidReturn

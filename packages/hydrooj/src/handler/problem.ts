@@ -1,10 +1,9 @@
 import { isSafeInteger, flatten } from 'lodash';
-import yaml from 'js-yaml';
 import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import {
     NoProblemError, PermissionError, ValidationError,
-    SolutionNotFoundError, ProblemNotFoundError,
+    SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
 } from '../error';
 import {
     Pdoc, User, Rdoc, PathComponent,
@@ -102,14 +101,7 @@ export class ProblemCategoryHandler extends ProblemHandler {
     async get(domainId: string, page = 1, category: string[]) {
         this.response.template = 'problem_main.html';
         const q: any = { $and: [] };
-        for (const name of category) {
-            q.$and.push({
-                $or: [
-                    { category: { $elemMatch: { $eq: name } } },
-                    { tag: { $elemMatch: { $eq: name } } },
-                ],
-            });
-        }
+        for (const tag of category) q.$and.push({ tag });
         let psdict = {};
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         await bus.serial('problem/list', q, this);
@@ -138,17 +130,8 @@ export class ProblemCategoryHandler extends ProblemHandler {
 export class ProblemRandomHandler extends ProblemHandler {
     @param('category', Types.String, true, null, parseCategory)
     async get(domainId: string, category: string[] = []) {
-        const q: any = category.length ? { $and: [] } : {};
-        for (const name of category) {
-            if (name) {
-                q.$and.push({
-                    $or: [
-                        { category: { $elemMatch: { $eq: name } } },
-                        { tag: { $elemMatch: { $eq: name } } },
-                    ],
-                });
-            }
-        }
+        const q: FilterQuery<Pdoc> = category.length ? { $and: [] } : {};
+        for (const tag of category) q.$and.push({ tag });
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         await bus.serial('problem/list', q, this);
         const pid = await problem.random(domainId, q);
@@ -321,45 +304,6 @@ export class ProblemManageHandler extends ProblemDetailHandler {
     }
 }
 
-export class ProblemSettingsHandler extends ProblemManageHandler {
-    @param('pid', Types.String)
-    async get(domainId: string, pid: string) {
-        this.response.template = 'problem_settings.html';
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid }, true],
-            ['problem_settings', null],
-        ];
-    }
-
-    @param('pid', Types.String, null, parsePid)
-    @param('yaml', Types.String)
-    async postConfig(domainId: string, pid: string | number, cfg: string) {
-        const pdoc = await problem.get(domainId, pid);
-        // TODO validate
-        const config = yaml.load(cfg) as any;
-        await problem.edit(domainId, pdoc.docId, { config });
-        this.back();
-    }
-
-    @param('pid', Types.String, null, parsePid)
-    @param('hidden', Types.Boolean)
-    @param('category', Types.String, true, null, parseCategory)
-    @param('tag', Types.String, true, null, parseCategory)
-    async postSetting(
-        domainId: string, pid: string | number, hidden = false,
-        category: string[] = [], tag: string[] = [],
-    ) {
-        const pdoc = await problem.get(domainId, pid);
-        const update: Partial<Pdoc> = { hidden, category, tag };
-        await bus.serial('problem/setting', update, this);
-        await problem.edit(domainId, pdoc.docId, update);
-        await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
-        this.back();
-    }
-}
-
 export class ProblemEditHandler extends ProblemManageHandler {
     async get({ pid }) {
         this.response.template = 'problem_edit.html';
@@ -371,17 +315,29 @@ export class ProblemEditHandler extends ProblemManageHandler {
         ];
     }
 
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @route('pid', Types.String, null, parsePid)
+    @post('title', Types.String, isTitle)
+    @post('content', Types.String, isContent)
     @post('pid', Types.String, isPid, true)
-    async post(domainId: string, title: string, content: string, newPid: string = '') {
+    @post('hidden', Types.Boolean)
+    @post('tag', Types.String, true, null, parseCategory)
+    async post(
+        domainId: string, pid: string | number, title: string, content: string,
+        newPid: string = '', hidden = false, tag: string[],
+    ) {
         try {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
-        const $update: Partial<Pdoc> = { title, content, pid: newPid };
-        let pdoc = await problem.get(domainId, this.request.params.pid);
+        if (await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
+        const $update: Partial<Pdoc> = {
+            title, content, pid: newPid, hidden, tag,
+        };
+        let pdoc = await problem.get(domainId, pid);
+        await bus.serial('problem/before-edit', $update);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
-        this.response.redirect = this.url('problem_detail', { pid: pdoc.pid || pdoc.docId });
+        await bus.emit('problem/edit', pdoc);
+        await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
+        this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
     }
 }
 
@@ -594,20 +550,19 @@ export class ProblemCreateHandler extends Handler {
         };
     }
 
-    @param('title', Types.String, isTitle)
-    @param('pid', Types.String, isPid, true)
-    @param('content', Types.String, isContent)
-    @param('hidden', Types.Boolean)
-    async post(domainId: string, title: string, pid: string, content: string, hidden = false) {
+    @post('title', Types.String, isTitle)
+    @post('content', Types.String, isContent)
+    @post('pid', Types.String, isPid, true)
+    @post('hidden', Types.Boolean)
+    @post('tag', Types.String, true, null, parseCategory)
+    async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
         try {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
-        const docId = await problem.add(
-            domainId, pid, title, content,
-            this.user._id, [], [], hidden,
-        );
-        this.response.body = { pid: docId };
-        this.response.redirect = this.url('problem_settings', { pid: docId });
+        if (await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag, hidden);
+        this.response.body = { pid: pid || docId };
+        this.response.redirect = this.url('problem_settings', { pid: pid || docId });
     }
 }
 
@@ -618,7 +573,6 @@ export async function apply() {
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler, PERM.PERM_SUBMIT_PROBLEM);
-    Route('problem_settings', '/p/:pid/settings', ProblemSettingsHandler);
     Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);

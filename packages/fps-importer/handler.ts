@@ -35,7 +35,7 @@ class FpsProblemImportHandler extends Handler {
             };
             const title = decodeHTML(p.title.join(' '));
             const tags = filter(p.source, (i: string) => i.trim());
-            const pid = await problem.add(domainId, null, title, content, this.user._id, tags, []);
+            const pid = await problem.add(domainId, null, title, content, this.user._id, tags);
             await problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {

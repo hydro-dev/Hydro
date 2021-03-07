@@ -174,7 +174,8 @@ declare module './model/problem' {
         nSubmit: number,
         nAccept: number,
         tag: string[],
-        category: string[],
+        /** @deprecated */
+        category?: string[],
         data: FileInfo[],
         additional_file: FileInfo[],
         hidden: boolean,

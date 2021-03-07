@@ -51,7 +51,6 @@ if (useTerminal) {
     process.stdin.on('data', (data) => {
         // Control Seq?
         const seq = data.toString('hex');
-        logger.info(data.toString('hex'));
         if (seq === '7f') input = input.substr(0, input.length - 1);
         else if (seq === '1b5b41') {
             // Arrow up

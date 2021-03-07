@@ -30,14 +30,7 @@ export class QueryProblemSetAPIHandler extends Handler {
         }
         const query: FilterQuery<Pdoc> = {};
         if ($search) query.$text = { $search };
-        if (tags?.length) {
-            query.$and = tags.map(($eq) => ({
-                $or: [
-                    { category: { $elemMatch: { $eq } } },
-                    { tag: { $elemMatch: { $eq } } },
-                ],
-            }));
-        }
+        if (tags?.length) query.$and = tags.map((tag) => ({ tag }));
         if (owner) query.owner = owner;
         if (!nonpublic) query.hidden = false;
         const [raw, count] = await Promise.all([

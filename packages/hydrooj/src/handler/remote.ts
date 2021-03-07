@@ -141,7 +141,7 @@ export class ProblemReceiveHandler extends Handler {
                 const exist = await problem.get(domainId, pdoc.pid);
                 if (exist) pdoc.pid = undefined;
             }
-            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tag, pdoc.category);
+            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tag);
             pids.push(pid);
             this.syncFiles(domainId, baseUrl, pid, files[i]).catch(logAndReturn(logger));
             await problem.edit(domainId, pid, { html: pdoc.html });
