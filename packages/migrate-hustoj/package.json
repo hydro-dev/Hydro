@@ -10,7 +10,7 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/mysql": "^2.15.17"
+        "@types/mysql": "^2.15.18"
     },
     "peerDependencies": {
         "hydrooj": "^2.14.0"

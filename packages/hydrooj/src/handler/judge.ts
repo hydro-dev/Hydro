@@ -159,7 +159,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     async cleanup() {
         if (this.processing) {
             await record.reset(this.processing.domainId, this.processing.rid, false);
-            task.add(this.processing);
+            await task.add(this.processing);
         }
     }
 }

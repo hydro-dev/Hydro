@@ -243,7 +243,6 @@ export default class Hydro {
         });
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
-            console.log(request);
             if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
         });
         this.ws.on('close', (data, reason) => {

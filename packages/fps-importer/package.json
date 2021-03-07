@@ -14,7 +14,7 @@
     },
     "devDependencies": {
         "@types/xml2js": "^0.4.8",
-        "bson": "^4.2.2"
+        "bson": "^4.2.3"
     },
     "peerDependencies": {
         "hydrooj": "^2.20.0"

@@ -12,7 +12,7 @@
         "fs-extra": "^9.1.0"
     },
     "devDependencies": {
-        "bson": "^4.2.2"
+        "bson": "^4.2.3"
     },
     "peerDependencies": {
         "hydrooj": "^2.15.0"

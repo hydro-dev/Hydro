@@ -13,7 +13,7 @@
         "hydrooj": "^2.15.0"
     },
     "dependencies": {
-        "ws": "^7.4.3"
+        "ws": "^7.4.4"
     },
     "devDependencies": {
         "@types/ws": "^7.4.0"

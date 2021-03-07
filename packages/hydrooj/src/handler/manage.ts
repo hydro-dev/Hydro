@@ -144,6 +144,8 @@ class SystemSettingHandler extends SystemHandler {
 
     async post(args: any) {
         const tasks = [];
+        const booleanKeys = args.booleanKeys || {};
+        delete args.booleanKeys;
         for (const key in args) {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
@@ -151,6 +153,13 @@ class SystemSettingHandler extends SystemHandler {
                     if (val !== undefined) {
                         tasks.push(system.set(`${key}.${subkey}`, val));
                     }
+                }
+            }
+        }
+        for (const key in booleanKeys) {
+            if (typeof booleanKeys[key] === 'object') {
+                for (const subkey in booleanKeys[key]) {
+                    if (!args[key][subkey]) tasks.push(system.set(`${key}.${subkey}`, false));
                 }
             }
         }
