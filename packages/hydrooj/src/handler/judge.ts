@@ -87,28 +87,6 @@ export async function end(body: JudgeResultBody) {
     bus.boardcast('record/change', rdoc); // trigger a full update
 }
 
-class JudgeHandler extends Handler {
-    async get({ check = false }) {
-        if (check) return;
-        const tasks = [];
-        let t = await task.getFirst({ type: 'judge' });
-        while (t) {
-            tasks.push(t);
-            t = await task.getFirst({ type: 'judge' }); // eslint-disable-line no-await-in-loop
-        }
-        this.response.body = { tasks };
-    }
-
-    async postNext() {
-        await next(this.request.body);
-    }
-
-    async postEnd() {
-        this.request.body.judger = this.user._id;
-        await end(this.request.body);
-    }
-}
-
 export class JudgeFilesDownloadHandler extends Handler {
     @post('files', Types.Set)
     @post('pid', Types.UnsignedInt)
@@ -144,6 +122,9 @@ class JudgeConnectionHandler extends ConnectionHandler {
         }
         this.send({ task: t });
         this.processing = t;
+        const $set = { status: builtin.STATUS.STATUS_FETCHED };
+        const rdoc = await record.update(t.domainId, t.rid, $set, {});
+        bus.boardcast('record/change', rdoc, $set, {});
     }
 
     async message(msg) {
@@ -165,7 +146,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
 }
 
 export async function apply() {
-    Route('judge', '/judge', JudgeHandler, builtin.PRIV.PRIV_JUDGE);
     Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
