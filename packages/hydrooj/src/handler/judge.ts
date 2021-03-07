@@ -13,6 +13,7 @@ import {
     Route, Handler, Connection, ConnectionHandler, post, Types,
 } from '../service/server';
 import storage from '../service/storage';
+import { updateJudger } from '../service/monitor';
 
 const logger = new Logger('judge');
 
@@ -134,6 +135,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
             await end({ judger: this.user._id, ...msg });
             this.processing = null;
             await this.newTask();
+        } else if (msg.key === 'status') {
+            await updateJudger(msg.info);
         }
     }
 

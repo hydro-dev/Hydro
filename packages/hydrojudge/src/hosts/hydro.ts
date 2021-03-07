@@ -14,6 +14,7 @@ import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import readCases from '../cases';
 import judge from '../judge';
+import * as sysinfo from '../sysinfo';
 
 class JudgeTask {
     stat: Record<string, Date>;
@@ -258,7 +259,17 @@ export default class Hydro {
             }, 30000);
         });
         await new Promise((resolve) => {
-            this.ws.once('open', () => { resolve(null); });
+            this.ws.once('open', async () => {
+                if (!this.config.noStatus) {
+                    const info = await sysinfo.get();
+                    this.ws.send(JSON.stringify({ key: 'status', info }));
+                    setInterval(async () => {
+                        const [mid, inf] = await sysinfo.update();
+                        this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf } }));
+                    }, 1200000);
+                }
+                resolve(null);
+            });
         });
         log.info(`[${this.config.host}] 已连接`);
     }

@@ -34,6 +34,10 @@ parallelism:
   type: number
   name: Runner parallelism
   default: 2
+disable:
+  type: boolean
+  name: Disable builtin judge
+  default: false
 langs:
   type: textarea
   name: Language file settings

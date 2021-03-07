@@ -26,6 +26,7 @@ declare module 'hydrooj/dist/interface' {
         'hydrojudge.testcases_max': number,
         'hydrojudge.total_time_limit': number,
         'hydrojudge.parallelism': number,
+        'hydrojudge.disable': boolean,
     }
 }
 
@@ -37,10 +38,11 @@ async function postInit() {
     const judge = require('./judge');
     const sysinfo = require('./sysinfo');
 
-    const { task } = global.Hydro.model;
+    const { task, system } = global.Hydro.model;
     const { storage } = global.Hydro.service;
     const _judge = global.Hydro.handler.judge as any;
 
+    if (system.get('hydrojudge.disable')) return;
     const info = await sysinfo.get();
     monitor.updateJudger(info);
     setInterval(async () => {
