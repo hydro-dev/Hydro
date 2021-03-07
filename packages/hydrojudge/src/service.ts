@@ -12,7 +12,7 @@ import * as tmpfs from './tmpfs';
 import { FormatError, CompileError, SystemError } from './error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
 import { compilerText } from './utils';
-import readYamlCases from './cases';
+import readCases from './cases';
 import { getConfig } from './config';
 
 declare module 'hydrooj/dist/interface' {
@@ -221,11 +221,12 @@ async function postInit() {
             this.stat.cache_start = new Date();
             this.folder = await cacheOpen(this.domainId, this.pid, this.data);
             this.stat.read_cases = new Date();
-            this.config = await readYamlCases(
+            this.config = await readCases(
                 this.folder,
                 this.config,
                 { next: this.next },
             );
+            console.log(this.config);
             this.stat.judge = new Date();
             await judge[this.config.type || 'default'].judge(this);
         }

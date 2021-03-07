@@ -171,9 +171,9 @@ const checkers: Record<string, Checker> = {
             },
         });
         if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned {0}.', [status]);
-        const score = parseInt(stdout, 10);
-        status = score === config.score ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
-        return { status, score, message: stderr };
+        const score = +stdout;
+        status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
+        return { status, score: Math.floor((score * config.score) / 100), message: stderr };
     },
 
     async testlib(config) {
