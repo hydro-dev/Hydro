@@ -21,7 +21,8 @@ function judgeCase(c, sid) {
     return async (ctx, ctxSubtask) => {
         if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || (ctxSubtask.subtask.if && ctx.failed[sid])) {
+            || (ctxSubtask.subtask.if && ctx.failed[sid])
+            || ctx.errored) {
             ctx.next({
                 case: {
                     status: STATUS.STATUS_CANCELED,
@@ -113,7 +114,10 @@ function judgeSubtask(subtask, sid) {
         for (const cid in subtask.cases) {
             cases.push(ctx.queue.add(() => judgeCase(subtask.cases[cid], sid)(ctx, ctxSubtask)));
         }
-        await Promise.all(cases);
+        await Promise.all(cases).catch((e) => {
+            ctx.errored = true;
+            throw e;
+        });
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
         if (ctx.total_status !== STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
         return ctxSubtask.score;

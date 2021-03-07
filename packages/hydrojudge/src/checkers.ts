@@ -155,7 +155,7 @@ const checkers: Record<string, Checker> = {
      * input：输入
      * user_out：选手输出
      * answer：标准输出
-     * code：选手代码
+     * code：选手代码 (not impl)
      * stdout：输出最终得分
      * stderr：输出错误报告
      */
@@ -166,7 +166,7 @@ const checkers: Record<string, Checker> = {
                 input: { src: config.input },
                 user_out: { src: config.user_stdout },
                 answer: { src: config.output },
-                code: { content: config.code },
+                code: { content: '' },
                 ...config.copyIn,
             },
         });
