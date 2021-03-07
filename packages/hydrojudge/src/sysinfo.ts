@@ -11,10 +11,10 @@ function size(s: number, base = 1) {
     const unit = 1024;
     const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
     for (const unitName of unitNames) {
-        if (s < unit) return '{0} {1}'.format(Math.round(s * 10) / 10, unitName);
+        if (s < unit) return `${Math.round(s * 10) / 10} ${unitName}`;
         s /= unit;
     }
-    return '{0} {1}'.format(Math.round(s * unit), unitNames[unitNames.length - 1]);
+    return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
 const cache: any = {};
