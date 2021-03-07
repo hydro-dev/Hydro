@@ -15,6 +15,7 @@ import { PERM, PRIV } from '../model/builtin';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
+import * as bus from '../service/bus';
 import { isTitle, isContent } from '../lib/validator';
 
 export const typeMapper = {
@@ -165,6 +166,11 @@ class DiscussionCreateHandler extends DiscussionHandler {
         else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
+        await bus.serial(
+            'discussion/before-add',
+            domainId, typeMapper[type], name, this.user._id,
+            title, content, this.request.ip, highlight, pin,
+        );
         const did = await discussion.add(
             domainId, typeMapper[type], name, this.user._id,
             title, content, this.request.ip, highlight, pin,

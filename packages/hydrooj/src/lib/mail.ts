@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer';
 import { SendMailError } from '../error';
+import { Logger } from '../logger';
+
+const logger = new Logger('mail');
 
 export async function sendMail(to: string, subject: string, text: string, html: string) {
     let t: unknown;
@@ -29,6 +32,7 @@ export async function sendMail(to: string, subject: string, text: string, html: 
             });
         });
     } catch (e) {
+        logger.error(e);
         throw new SendMailError(to);
     }
     return t;

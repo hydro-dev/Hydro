@@ -1,6 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
+import type {
+    Db, FilterQuery, ObjectID, OnlyFieldsOfType,
+} from 'mongodb';
 import { argv } from 'yargs';
 import { Logger } from '../logger';
 import type {
@@ -55,6 +57,12 @@ export interface EventMap {
     'document/set': <T extends keyof DocType>(
         domainId: string, docType: T, docId: DocType[T],
         $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
+    ) => VoidReturn
+
+    'discussion/before-add': (
+        domainId: string, parentType: number, parentId: ObjectID | number | string,
+        owner: number, title: string, content: string,
+        ip: string | null, highlight: boolean, pin: boolean
     ) => VoidReturn
 
     'problem/before-edit': (doc: Partial<Pdoc>) => VoidReturn
