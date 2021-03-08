@@ -49,7 +49,7 @@ export namespace Ddoc {
 export const PROJECTION_LIST: Ddoc.Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'highlight',
     'nReply', 'views', 'pin', 'updateAt', 'owner',
-    'parentId', 'parentType',
+    'parentId', 'parentType', 'title',
 ];
 export const PROJECTION_PUBLIC: Ddoc.Field[] = [
     ...PROJECTION_LIST, 'content', 'history',
