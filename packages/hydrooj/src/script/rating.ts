@@ -50,13 +50,13 @@ async function runProblem(...arg: any[]) {
     }
 }
 
-async function runContest(tdoc: Tdoc, udict: ND, report: Function): Promise<void>;
+async function runContest(tdoc: Tdoc<30 | 60>, udict: ND, report: Function): Promise<void>;
 async function runContest(
     domainId: string, tid: ObjectID, udict: ND, report: Function
 ): Promise<void>;
 async function runContest(...arg: any[]) {
     const start = new Date().getTime();
-    const tdoc: Tdoc = (typeof arg[0] === 'string')
+    const tdoc: Tdoc<30 | 60> = (typeof arg[0] === 'string')
         ? await contest.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
@@ -127,8 +127,8 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     for (const dudoc of dudocs) {
         deltaudict[dudoc.uid] = dudoc.rpdelta || 0;
     }
-    const contests = await contest.getMulti(domainId, { rated: true })
-        .sort('endAt', -1).toArray();
+    const contests: Tdoc<30 | 60>[] = await contest.getMulti(domainId, { rated: true })
+        .sort('endAt', -1).toArray() as any;
     await report({ message: `Found ${contests.length} contests in ${domainId}` });
     for (const i in contests) {
         const tdoc = contests[i];

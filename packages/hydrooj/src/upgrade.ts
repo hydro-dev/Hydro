@@ -86,7 +86,6 @@ const scripts: UpgradeScript[] = [
             logger.error('Cannot upgrade. Please change storage config.');
             return false;
         }
-        const coll: Collection<Ufdoc> = db.collection('file');
         logger.info('Changing storage engine. This may take a long time.');
         // Problem file and User file
         let savedProgress = system.get('upgrade.file.progress.domain');

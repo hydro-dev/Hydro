@@ -385,9 +385,10 @@ export async function edit(
     return await document.set(domainId, type, tid, $set);
 }
 
-export async function get(
-    domainId: string, tid: ObjectID, type: Type | -1 = document.TYPE_CONTEST,
-) {
+export async function get(domainId: string, tid: ObjectID, type: -1): Promise<Tdoc<30 | 60>>;
+export async function get<T extends Type>(domainId: string, tid: ObjectID, type: T): Promise<Tdoc<T>>;
+export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>>;
+export async function get(domainId: string, tid: ObjectID, type: Type | -1 = document.TYPE_CONTEST) {
     let tdoc: Tdoc;
     if (type === -1) {
         tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
@@ -413,14 +414,14 @@ export async function updateStatus(
 
 export function getStatus(
     domainId: string, tid: ObjectID, uid: number,
-    type = document.TYPE_CONTEST,
+    type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     return document.getStatus(domainId, type, tid, uid);
 }
 
 export async function getListStatus(
     domainId: string, uid: number, tids: ObjectID[],
-    type = document.TYPE_CONTEST,
+    type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     const r = {};
     // eslint-disable-next-line no-await-in-loop
@@ -441,7 +442,7 @@ export async function attend(
     return {};
 }
 
-export function getMultiStatus(domainId: string, query: any, docType = document.TYPE_CONTEST) {
+export function getMultiStatus(domainId: string, query: any, docType: 30 | 60 = document.TYPE_CONTEST) {
     return document.getMultiStatus(domainId, docType, query);
 }
 
@@ -480,13 +481,13 @@ export const ContestHandlerMixin = (c) => class extends c {
         return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
     }
 
-    canShowRecord(tdoc: Tdoc, allowPermOverride = true) {
+    canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
         if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
         return false;
     }
 
-    canShowScoreboard(tdoc: Tdoc, allowPermOverride = true) {
+    canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
         if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
         if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
         return false;
@@ -495,7 +496,7 @@ export const ContestHandlerMixin = (c) => class extends c {
     async getScoreboard(
         domainId: string, tid: ObjectID,
         isExport = false, docType: 30 | 60 = document.TYPE_CONTEST,
-    ): Promise<[Tdoc, ScoreboardRow[], Udict]> {
+    ): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict]> {
         const {
             tdoc, udict, pdict, rankedTsdocs,
         } = await this.getRawStatus(domainId, tid, docType);
@@ -549,7 +550,7 @@ export async function getAndListStatus(
     domainId: string, tid: ObjectID, docType: Type | -1 = document.TYPE_CONTEST,
 ): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
-    const tdoc = await get(domainId, tid, docType);
+    const tdoc = await get(domainId, tid, docType as any);
     const tsdocs = await document.getMultiStatus(domainId, docType, { docId: tid })
         .sort(RULES[tdoc.rule].statusSort).toArray();
     return [tdoc, tsdocs];

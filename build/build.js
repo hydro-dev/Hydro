@@ -62,7 +62,7 @@ for (const package of packages) {
             if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
             const name = file.split('.')[0];
             if (['handler', 'service', 'lib', 'model', 'script'].includes(name)) {
-                fs.writeFileSync(path.resolve(basedir, name + '.js'), `module.exports = require('./dist/${name}');\n`)
+                fs.writeFileSync(path.resolve(basedir, name + '.js'), `module.exports = require('./dist/${name}');\n`);
             }
         }
     }

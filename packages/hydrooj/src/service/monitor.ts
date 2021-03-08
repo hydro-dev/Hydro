@@ -11,7 +11,7 @@ const coll = db.collection('status');
 const logger = new Logger('monitor');
 
 function crypt(str: string) {
-    const cipher = crypto.createCipheriv('des-ecb', 'hydro-oj', '');
+    const cipher = crypto.createCipheriv('des-ecb', 'hydro-oj', ''); // lgtm [js/hardcoded-credentials]
     let encrypted = cipher.update(str, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;

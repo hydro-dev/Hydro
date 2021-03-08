@@ -269,9 +269,9 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export interface Tdoc extends Document {
+export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWORK'] | document['TYPE_TRAINING']> extends Document {
     docId: ObjectID,
-    docType: document['TYPE_CONTEST'] | document['TYPE_HOMEWORK'] | document['TYPE_TRAINING'],
+    docType: docType & number,
     beginAt: Date,
     endAt: Date,
     attend: number,
@@ -399,12 +399,12 @@ export interface ContestRule {
     TEXT: string,
     check: (args: any) => any,
     statusSort: any,
-    showScoreboard: (tdoc: Tdoc, now: Date) => boolean,
-    showRecord: (tdoc: Tdoc, now: Date) => boolean,
-    stat: (tdoc: Tdoc, journal: any[]) => ContestStat,
+    showScoreboard: (tdoc: Tdoc<30 | 60>, now: Date) => boolean,
+    showRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean,
+    stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat,
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc, rankedTsdocs: any[], udict: Udict, pdict: Pdict
+        tdoc: Tdoc<30 | 60>, rankedTsdocs: any[], udict: Udict, pdict: Pdict
     ) => ScoreboardRow[],
     rank: (tsdocs: any[]) => any[],
 }
