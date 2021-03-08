@@ -156,6 +156,7 @@ SystemSetting(
     Setting('setting_server', 'server.port', 8888, 'number', 'Server Port'),
     Setting('setting_server', 'server.xff', null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'Default display language'),
+    Setting('setting_server', 'server.login', true, 'boolean', 'Allow builtin-login'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'Problem Categories'),
     Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'LANG_TEXTS'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'Problems per page'),
