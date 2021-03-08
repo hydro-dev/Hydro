@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable func-names */
 import { isClass } from './utils';
-import { PERMS } from './model/builtin';
 
 interface IHydroError {
     new(...args: any[]): HydroError
@@ -78,7 +77,7 @@ export const VerifyPasswordError = Err('VerifyPasswordError', ForbiddenError, "P
 export const OpcountExceededError = Err('OpcountExceededError', ForbiddenError, 'Too frequent operations of {0} (limit: {2} operations in {1} seconds).');
 export const PermissionError = Err('PermissionError', ForbiddenError, function () {
     if (typeof this.params[0] === 'bigint') {
-        this.params[0] = PERMS.find(({ key }) => key === this.params[0])?.desc || this.params[0];
+        this.params[0] = require('./model/builtin').PERMS.find(({ key }) => key === this.params[0])?.desc || this.params[0];
     }
     return "You don't have the required permission ({0}) in this domain.";
 });

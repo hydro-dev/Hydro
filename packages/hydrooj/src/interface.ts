@@ -337,7 +337,7 @@ export interface HistoryDoc {
 }
 
 // Discussion
-export { Ddoc } from './model/discussion';
+export type { Ddoc } from './model/discussion';
 declare module './model/discussion' {
     interface Ddoc {
         docType: document['TYPE_DISCUSSION'],

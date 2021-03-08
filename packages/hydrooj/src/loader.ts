@@ -3,17 +3,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-import './interface';
-import os from 'os';
-import path from 'path';
-import cluster from 'cluster';
-import fs from 'fs-extra';
-import { argv } from 'yargs';
-import wtfnode from 'wtfnode';
-import './utils';
-
-export * from './interface';
-
 if (!global.Hydro) {
     global.Hydro = {
         stat: { reqCount: 0 },
@@ -41,11 +30,19 @@ if (!global.Hydro) {
     };
     global.addons = [];
 }
-
+import './interface';
+import os from 'os';
+import path from 'path';
+import cluster from 'cluster';
+import fs from 'fs-extra';
+import { argv } from 'yargs';
+import wtfnode from 'wtfnode';
+import './utils';
 import { Logger } from './logger';
 import './ui';
 import * as bus from './service/bus';
 
+export * from './interface';
 const logger = new Logger('loader');
 logger.debug('%o', argv);
 bus.on('app/exit', () => {
