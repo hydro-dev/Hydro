@@ -8,9 +8,12 @@ import { log2 } from '../utils';
 import type { DomainDoc } from '../interface';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
+import * as discussion from '../model/discussion';
 import * as system from '../model/system';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
-import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
+import {
+    DEFAULT_NODES, PERM, PERMS_BY_FAMILY, PRIV,
+} from '../model/builtin';
 import { gravatar } from '../lib/misc';
 import paginate from '../lib/paginate';
 import {
@@ -80,6 +83,18 @@ class DomainDashboardHandler extends ManageHandler {
         ];
         this.response.template = 'domain_dashboard.html';
         this.response.body = { domain: this.domain, path };
+    }
+
+    async postInitDiscussionNode({ domainId }) {
+        for (const category of Object.keys(DEFAULT_NODES)) {
+            for (const item of DEFAULT_NODES[category]) {
+                // eslint-disable-next-line no-await-in-loop
+                const curr = await discussion.getNode(domainId, item.name);
+                // eslint-disable-next-line no-await-in-loop
+                if (!curr) await discussion.addNode(domainId, item.name, category, item.pic ? { pic: item.pic } : undefined);
+            }
+        }
+        this.back();
     }
 }
 
