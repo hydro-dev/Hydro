@@ -200,6 +200,12 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    // Set null tag to []
+    async function _9_10() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('document').updateMany({ docType: 10, tag: null }, { $set: { tag: [] } });
+        return true;
+    },
 ];
 
 export = scripts;

@@ -323,14 +323,14 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('tag', Types.String, true, null, parseCategory)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
-        newPid: string = '', hidden = false, tag: string[],
+        newPid: string = '', hidden = false, tag: string[] = [],
     ) {
         try {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<Pdoc> = {
-            title, content, pid: newPid, hidden, tag,
+            title, content, pid: newPid, hidden, tag: tag ?? [],
         };
         let pdoc = await problem.get(domainId, pid);
         await bus.serial('problem/before-edit', $update);
@@ -560,7 +560,7 @@ export class ProblemCreateHandler extends Handler {
             content = JSON.parse(content);
         } catch { /* Ignore */ }
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag, hidden);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
