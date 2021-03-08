@@ -4,6 +4,8 @@ import {
     RoleAlreadyExistError, ValidationError, DomainJoinForbiddenError,
     DomainJoinAlreadyMemberError, InvalidJoinInvitationCodeError,
 } from '../error';
+import { log2 } from '../utils';
+import type { DomainDoc } from '../interface';
 import * as user from '../model/user';
 import * as domain from '../model/domain';
 import * as system from '../model/system';
@@ -14,7 +16,6 @@ import paginate from '../lib/paginate';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-import { DomainDoc } from '../interface';
 
 class DomainRankHandler extends Handler {
     @param('page', Types.PositiveInt, true)
@@ -124,10 +125,6 @@ class DomainUserHandler extends ManageHandler {
 class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await domain.getRoles(domainId);
-        const log2 = (val: bigint) => {
-            // @ts-ignore
-            for (let i = 0n; ; i++) if (!(val >> i)) return +i.toString() - 1;
-        };
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],

@@ -153,13 +153,12 @@ class ContestScoreboardRawHandler extends ContestHandler {
 
 class ContestScoreboardDownloadHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
-    @param('ext', Types.String)
+    @param('ext', Types.Range(['csv', 'html']))
     async get(domainId: string, tid: ObjectID, ext: string) {
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
-        if (!getContent[ext]) throw new ValidationError('ext');
         const [tdoc, rows] = await this.getScoreboard(domainId, tid, true);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }

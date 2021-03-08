@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable func-names */
 import { isClass } from './utils';
+import { PERMS } from './model/builtin';
 
 interface IHydroError {
     new(...args: any[]): HydroError
@@ -10,8 +11,9 @@ function isHydroError(item: any): item is IHydroError {
     return isClass(item);
 }
 
-const Err = (name: string, ...info: Array<IHydroError | (() => string) | string | number>) => {
+const Err = (name: string, ...info: Array<IHydroError | (() => string) | ((_super: Function, ...args: any) => HydroError) | string | number>) => {
     let Class: IHydroError;
+    let constr: (_super: Function, ...args: any[]) => HydroError;
     let msg: () => string;
     let code: number;
     for (const item of info) {
@@ -21,20 +23,29 @@ const Err = (name: string, ...info: Array<IHydroError | (() => string) | string 
             msg = function () { return item; };
         } else if (isHydroError(item)) {
             Class = item;
-        } else if (typeof item === 'function') {
+        } else if (typeof item === 'function' && item.length === 0) {
+            // @ts-ignore
             msg = item;
+        } else if (typeof item === 'function') {
+            // @ts-ignore
+            constr = item;
         }
     }
     const HydroError = class extends Class { };
     HydroError.prototype.name = name;
     if (msg) HydroError.prototype.msg = msg;
     if (code) HydroError.prototype.code = code;
+    if (constr) {
+        const original = HydroError.prototype.constructor;
+        HydroError.prototype.constructor = function (...args: any[]) {
+            constr.call(this, original.bind(this, ...args));
+        };
+    }
     return HydroError;
 };
 
 export class HydroError extends Error {
     params: any[];
-
     code: number;
 
     constructor(...params: any[]) {
@@ -65,7 +76,12 @@ export const InvalidTokenError = Err('InvalidTokenError', ForbiddenError);
 export const BlacklistedError = Err('BlacklistedError', ForbiddenError, 'Address or user {0} is blacklisted.');
 export const VerifyPasswordError = Err('VerifyPasswordError', ForbiddenError, "Passwords don't match.");
 export const OpcountExceededError = Err('OpcountExceededError', ForbiddenError, 'Too frequent operations of {0} (limit: {2} operations in {1} seconds).');
-export const PermissionError = Err('PermissionError', ForbiddenError, "You don't have the required permission ({0}) in this domain.");
+export const PermissionError = Err('PermissionError', ForbiddenError, function () {
+    if (typeof this.params[0] === 'bigint') {
+        this.params[0] = PERMS.find(({ key }) => key === this.params[0])?.desc || this.params[0];
+    }
+    return "You don't have the required permission ({0}) in this domain.";
+});
 export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function () {
     if (this.params.includes(global.Hydro.model.builtin.PRIV.PRIV_USER_PROFILE)) {
         return "You're not logged in.";
@@ -89,6 +105,7 @@ export const DomainAlreadyExistsError = Err('DomainAlreadyExistsError', Forbidde
 export const DomainJoinForbiddenError = Err('DomainJoinForbiddenError', ForbiddenError, 'You are not allowed to join the domain. The link is either invalid or expired.');
 export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', ForbiddenError, 'Failed to join the domain. You are already a member.');
 export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeError', ForbiddenError, 'The invitation code you provided is invalid.');
+export const CurrentPasswordError = Err('CurrentPasswordError', ForbiddenError, "Current password doesn't match.");
 
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
@@ -105,6 +122,7 @@ export const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNo
 export const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', DocumentNotFoundError, 'Discussion node {1} not found.');
 
 export const InvalidOperationError = Err('InvalidOperationError', MethodNotAllowedError);
+export const FileTooLargeError = Err('FileTooLargeError', ValidationError, 'The uploaded file is too long.');
 
 global.Hydro.error = {
     HydroError,
@@ -152,14 +170,11 @@ global.Hydro.error = {
     DiscussionNotFoundError,
     RoleAlreadyExistError,
     MessageNotFoundError,
+    FileTooLargeError,
+    CurrentPasswordError,
 };
 
 /*
-class FileTooLongError(ValidationError):
-  @property
-  def message(self):
-    return 'The uploaded file is too long.'
-
 class FileTypeNotAllowedError(ValidationError):
   @property
   def message(self):
@@ -167,11 +182,6 @@ class FileTypeNotAllowedError(ValidationError):
 
 class InvalidTokenDigestError(ForbiddenError):
   pass
-
-class CurrentPasswordError(ForbiddenError):
-  @property
-  def message(self):
-    return "Current password doesn't match."
 
 class DiscussionCategoryAlreadyExistError(ForbiddenError):
   @property

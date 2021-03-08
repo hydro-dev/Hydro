@@ -521,7 +521,7 @@ interface GeoIP {
     lookup: (ip: string, locale?: string) => any,
 }
 
-export interface Lib {
+export interface Lib extends Record<string, any> {
     download: typeof import('./lib/download'),
     buildContent: typeof import('./lib/content').buildContent,
     'hash.hydro': typeof import('./lib/hash.hydro'),

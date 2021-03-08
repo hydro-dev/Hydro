@@ -257,3 +257,12 @@ export namespace Time {
         return constructedObjectId;
     }
 }
+
+export const log2 = (val: bigint | number) => {
+    if (typeof val === 'bigint') {
+        // @ts-ignore
+        for (let i = 0n; ; i++) if (!(val >> i)) return +i.toString() - 1;
+    } else {
+        for (let i = 0; ; i++) if (!(val >> i)) return i - 1;
+    }
+};
