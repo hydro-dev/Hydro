@@ -2,10 +2,10 @@ import moment from 'moment-timezone';
 import {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, SystemError, BlacklistedError,
-    UserFacingError,
+    UserFacingError, LoginError,
 } from '../error';
 import {
-    Route, Handler, Types, param,
+    Route, Handler, Types, param, post,
 } from '../service/server';
 import * as user from '../model/user';
 import * as oauth from '../model/oauth';
@@ -23,6 +23,7 @@ import { User } from '../interface';
 
 class UserLoginHandler extends Handler {
     async get() {
+        if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         this.response.template = 'user_login.html';
     }
 
@@ -30,6 +31,7 @@ class UserLoginHandler extends Handler {
     @param('password', Types.String)
     @param('rememberme', Types.Boolean)
     async post(domainId: string, uname: string, password: string, rememberme = false) {
+        if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         udoc.checkPassword(password);
@@ -60,24 +62,36 @@ class UserRegisterHandler extends Handler {
         this.response.template = 'user_register.html';
     }
 
-    @param('mail', Types.String, isEmail)
-    async post(domainId: string, mail: string) {
-        if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
-        this.limitRate('send_mail', 3600, 30);
-        const t = await token.add(
-            token.TYPE_REGISTRATION,
-            system.get('session.unsaved_expire_seconds'),
-            { mail },
-        );
-        if (system.get('smtp.user')) {
-            const m = await this.renderHTML('user_register_mail.html', {
-                path: `register/${t[0]}`,
-                url_prefix: system.get('server.url'),
-            });
-            await sendMail(mail, 'Sign Up', 'user_register_mail', m);
-            this.response.template = 'user_register_mail_sent.html';
-        } else {
-            this.response.redirect = this.url('user_register_with_code', { code: t[0] });
+    @post('mail', Types.String, true, isEmail)
+    @post('phone', Types.String, true, (s) => /^\d{11}$/.test(s))
+    async post(domainId: string, mail: string, phoneNumber: string) {
+        if (mail) {
+            if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
+            this.limitRate('send_mail', 3600, 30);
+            const t = await token.add(
+                token.TYPE_REGISTRATION,
+                system.get('session.unsaved_expire_seconds'),
+                { mail },
+            );
+            if (system.get('smtp.user')) {
+                const m = await this.renderHTML('user_register_mail.html', {
+                    path: `register/${t[0]}`,
+                    url_prefix: system.get('server.url'),
+                });
+                await sendMail(mail, 'Sign Up', 'user_register_mail', m);
+                this.response.template = 'user_register_mail_sent.html';
+            } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
+        } else if (phoneNumber) {
+            if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
+            this.limitRate('send_sms', 60, 3);
+            const t = await token.add(
+                token.TYPE_REGISTRATION,
+                system.get('session.unsaved_expire_seconds'),
+                { phone: phoneNumber },
+                String.random(6),
+            );
+            await global.Hydro.lib.sendSms(phoneNumber, 'register', t[0]);
+            this.response.template = 'user_register_sms.html';
         }
     }
 }
@@ -100,8 +114,9 @@ class UserRegisterWithCodeHandler extends Handler {
         uname: string, code: string,
     ) {
         const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc || !tdoc.mail) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
+        if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_REGISTRATION, code);
         if (password !== verify) throw new VerifyPasswordError();
+        if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
@@ -281,6 +296,7 @@ export async function apply() {
     Route('user_oauth', '/oauth/:type', OauthHandler);
     Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
+    Route('user_register_without_code', '/register/code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
     Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
     Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_lostpass', '/lostpass', UserLostPassHandler);

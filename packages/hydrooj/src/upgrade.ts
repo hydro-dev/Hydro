@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-import { ObjectID, Collection } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
 import { Progress } from './ui';
-import { Ufdoc } from './interface';
 import { Logger } from './logger';
 import { DomainDoc } from './loader';
 import { streamToBuffer } from './utils';
