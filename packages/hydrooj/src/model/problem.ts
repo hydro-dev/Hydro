@@ -5,16 +5,14 @@ import { STATUS } from './builtin';
 import * as document from './document';
 import * as domain from './domain';
 import { buildProjection } from '../utils';
-import { ProblemStatusDoc, Pdict } from '../interface';
+import type { ProblemStatusDoc, Pdict, Document } from '../interface';
 import { Content } from '../loader';
 import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError } from '../error';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 
-export interface Pdoc {
-    _id: ObjectID
-}
+export interface Pdoc extends Document { }
 export namespace Pdoc {
     export type Field = keyof Pdoc;
     export const fields: Field[] = [];

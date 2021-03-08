@@ -162,13 +162,19 @@ export interface SampleContentNode {
 export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
 export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
 
+export interface Document {
+    _id: ObjectID,
+    docId: any,
+    docType: number,
+    domainId: string,
+    owner: number,
+}
+
 declare module './model/problem' {
     interface Pdoc {
-        domainId: string,
-        docType: 10,
+        docType: document['TYPE_PROBLEM'],
         docId: number,
         pid: string,
-        owner: number,
         title: string,
         content: Content,
         nSubmit: number,
@@ -200,14 +206,6 @@ export interface StatusDoc {
     docType: number,
     domainId: string,
     uid: number,
-}
-
-export interface Document {
-    _id: ObjectID,
-    docId: any,
-    docType: number,
-    domainId: string,
-    owner: number,
 }
 
 export interface ProblemStatusDoc extends StatusDoc {
@@ -339,20 +337,23 @@ export interface HistoryDoc {
 }
 
 // Discussion
-export interface Ddoc extends Document {
-    docType: document['TYPE_DISCUSSION'],
-    docId: ObjectID,
-    parentType: number,
-    parentId: ObjectID | number | string,
-    title: string,
-    content: string,
-    ip: string,
-    pin: boolean,
-    highlight: boolean,
-    updateAt: Date,
-    nReply: number,
-    views: number,
-    history: HistoryDoc[],
+export { Ddoc } from './model/discussion';
+declare module './model/discussion' {
+    interface Ddoc {
+        docType: document['TYPE_DISCUSSION'],
+        docId: ObjectID,
+        parentType: number,
+        parentId: ObjectID | number | string,
+        title: string,
+        content: string,
+        ip: string,
+        pin: boolean,
+        highlight: boolean,
+        updateAt: Date,
+        nReply: number,
+        views: number,
+        history: HistoryDoc[],
+    }
 }
 
 // Discussion reply

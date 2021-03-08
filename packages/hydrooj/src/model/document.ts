@@ -17,15 +17,15 @@ type DocID = ObjectID | string | number;
 export const coll = db.collection('document');
 export const collStatus = db.collection('document.status');
 
-export const TYPE_PROBLEM = 10;
-export const TYPE_PROBLEM_SOLUTION = 11;
-export const TYPE_PROBLEM_LIST = 12;
-export const TYPE_DISCUSSION_NODE = 20;
-export const TYPE_DISCUSSION = 21;
-export const TYPE_DISCUSSION_REPLY = 22;
-export const TYPE_CONTEST = 30;
-export const TYPE_TRAINING = 40;
-export const TYPE_HOMEWORK = 60;
+export const TYPE_PROBLEM: 10 = 10;
+export const TYPE_PROBLEM_SOLUTION: 11 = 11;
+export const TYPE_PROBLEM_LIST: 12 = 12;
+export const TYPE_DISCUSSION_NODE: 20 = 20;
+export const TYPE_DISCUSSION: 21 = 21;
+export const TYPE_DISCUSSION_REPLY: 22 = 22;
+export const TYPE_CONTEST: 30 = 30;
+export const TYPE_TRAINING: 40 = 40;
+export const TYPE_HOMEWORK: 60 = 60;
 
 export interface DocType {
     [TYPE_PROBLEM]: Pdoc,

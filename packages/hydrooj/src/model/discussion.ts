@@ -4,8 +4,56 @@ import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';
 import { DocumentNotFoundError } from '../error';
-import { Ddoc, Drdoc, Drrdoc } from '../interface';
+import { Drdoc, Drrdoc, Document } from '../interface';
+import { buildProjection } from '../utils';
 import * as bus from '../service/bus';
+
+export interface Ddoc extends Document { }
+export namespace Ddoc {
+    export type Field = keyof Ddoc;
+    export const fields: Field[] = [];
+    type Getter = () => Partial<Ddoc>;
+    const getters: Getter[] = [];
+    export function extend(getter: Getter) {
+        getters.push(getter);
+        fields.push(...Object.keys(getter()) as any);
+    }
+
+    extend(() => ({
+        _id: new ObjectID(),
+        domainId: 'system',
+        docType: document.TYPE_DISCUSSION,
+        docId: new ObjectID(),
+        owner: 1,
+        title: '*',
+        content: '',
+        parentId: new ObjectID(),
+        ip: '1.1.1.1',
+        pin: false,
+        highlight: false,
+        updateAt: new Date(),
+        nReply: 0,
+        views: 0,
+        history: [],
+    }));
+
+    export function create() {
+        const result = {} as Ddoc;
+        for (const getter of getters) {
+            Object.assign(result, getter());
+        }
+        return result;
+    }
+}
+
+export const PROJECTION_LIST: Ddoc.Field[] = [
+    '_id', 'domainId', 'docType', 'docId', 'highlight',
+    'nReply', 'views', 'pin', 'updateAt', 'owner',
+    'parentId', 'parentType',
+];
+export const PROJECTION_PUBLIC: Ddoc.Field[] = [
+    ...PROJECTION_LIST, 'content', 'history',
+];
 
 export const typeDisplay = {
     [document.TYPE_PROBLEM]: 'problem',
@@ -35,8 +83,9 @@ export function add(
     );
 }
 
-export function get(domainId: string, did: ObjectID): Promise<Ddoc | null> {
-    return document.get(domainId, document.TYPE_DISCUSSION, did);
+// FIXME typings doesn't work
+export function get<T extends Ddoc.Field>(domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any): Promise<Pick<Ddoc, T>> {
+    return document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
 export function edit(
@@ -48,23 +97,24 @@ export function edit(
     });
 }
 
-export function del(domainId: string, did: ObjectID) {
+export function del(domainId: string, did: ObjectID): Promise<never> {
     return Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION, did),
         document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
             parentType: document.TYPE_DISCUSSION, parentId: did,
         }),
         document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: did }),
-    ]);
+    ]) as any;
 }
 
 export function count(domainId: string, query: FilterQuery<Ddoc>) {
     return document.count(domainId, document.TYPE_DISCUSSION, query);
 }
 
-export function getMulti(domainId: string, query: FilterQuery<Ddoc> = {}) {
+export function getMulti(domainId: string, query: FilterQuery<Ddoc> = {}, projection = PROJECTION_LIST) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
-        .sort({ pin: -1, updateAt: -1 });
+        .sort({ pin: -1, updateAt: -1 })
+        .project(buildProjection(projection));
 }
 
 export async function addReply(
@@ -234,6 +284,10 @@ bus.on('problem/delete', async (domainId, docId) => {
 
 global.Hydro.model.discussion = {
     typeDisplay,
+    Ddoc,
+    PROJECTION_LIST,
+    PROJECTION_PUBLIC,
+
     add,
     get,
     edit,
