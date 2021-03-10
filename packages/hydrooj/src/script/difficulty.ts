@@ -1,4 +1,3 @@
-import { Pdoc } from '../interface';
 import * as problem from '../model/problem';
 
 export const description = 'Caculate the difficulty of a problem';
@@ -47,22 +46,12 @@ function difficultyAlgorithm(nSubmit: number, nAccept: number) {
     return Math.max(ans, 1);
 }
 
-function _get_difficulty(pdoc: Pdoc, calculatedDifficulty: number) {
-    const setting = pdoc.difficultySetting;
-    if (setting === problem.SETTING_DIFFICULTY_ALGORITHM) return calculatedDifficulty;
-    if (setting === problem.SETTING_DIFFICULTY_ADMIN) return pdoc.difficultyAdmin;
-    if (setting === problem.SETTING_DIFFICULTY_AVERAGE && pdoc.difficultyAdmin !== null) {
-        return Math.round((calculatedDifficulty + pdoc.difficultyAdmin) / 2);
-    } return calculatedDifficulty;
-}
-
 export async function run({
     domainId, pid,
 }) {
     const pdoc = await problem.get(domainId, pid);
-    const difficultyAlgo = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-    const difficulty = _get_difficulty(pdoc, difficultyAlgo);
-    return await problem.edit(domainId, pdoc.docId, { difficulty, difficultyAlgo });
+    const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
+    return await problem.edit(domainId, pdoc.docId, { difficulty });
 }
 
 export const validate = {

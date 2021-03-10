@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 /* eslint-disable import/first */
 /* eslint-disable no-continue */
 /* eslint-disable import/no-dynamic-require */

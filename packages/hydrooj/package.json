@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.20.16",
+    "version": "2.20.17",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -30,6 +30,7 @@
         "mongodb": "^3.6.4",
         "nodemailer": "^6.5.0",
         "p-queue": "^6.6.2",
+        "reflect-metadata": "^0.1.13",
         "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",

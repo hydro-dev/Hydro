@@ -44,9 +44,11 @@ export const Setting = (
     family: string, key: string, value: any = null,
     type: SettingType = 'text', name = '', desc = '', flag = 0,
 ): _Setting => {
+    let subType = '';
     if (type === 'yaml' && typeof value !== 'string') {
         value = yaml.dump(value);
         type = 'textarea';
+        subType = 'yaml';
     }
     return {
         family,
@@ -55,6 +57,7 @@ export const Setting = (
         name,
         desc,
         flag,
+        subType,
         type: typeof type === 'object' ? 'select' : type,
         range: typeof type === 'object' ? type : null,
     };
@@ -181,15 +184,24 @@ SystemSetting(
 
 bus.once('app/started', async () => {
     logger.debug('Ensuring settings');
+    const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
         if (setting.value) {
             const current = await global.Hydro.service.db.collection('system').findOne({ _id: setting.key });
             if (!current || current.value == null || current.value === '') {
                 // @ts-ignore
-                await global.Hydro.model.system.set(setting.key, setting.value);
+                await system.set(setting.key, setting.value);
             }
         }
     }
+    try {
+        SETTINGS_BY_KEY['codeLang'].range = yaml.load(system.get('lang.texts')) as any;
+    } catch (e) { /* Ignore */ }
+});
+
+bus.on('system/setting', (args) => {
+    if (!args.lang?.texts) return;
+    SETTINGS_BY_KEY['lang.texts'].value = args.lang.texts;
 });
 
 global.Hydro.model.setting = {

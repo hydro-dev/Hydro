@@ -1,4 +1,5 @@
 import { inspect } from 'util';
+import * as yaml from 'js-yaml';
 import * as judge from './judge';
 import { ValidationError } from '../error';
 import * as check from '../check';
@@ -27,6 +28,13 @@ function set(key: string, value: any) {
         if (s.type === 'number') {
             if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
             return +value;
+        }
+        if (s.subType === 'yaml') {
+            try {
+                yaml.load(value);
+            } catch (e) {
+                throw new ValidationError(key);
+            }
         }
         return value;
     }

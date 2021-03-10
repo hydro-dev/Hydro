@@ -42,9 +42,6 @@ export namespace Pdoc {
         config: {},
         acMsg: '',
         difficulty: 0,
-        difficultyAlgo: 0,
-        difficultyAdmin: 0,
-        difficultySetting: null,
     }));
 
     export function create(docId?: number, pid?: string) {
@@ -55,16 +52,6 @@ export namespace Pdoc {
         return result;
     }
 }
-
-export const SETTING_DIFFICULTY_ALGORITHM = 0;
-export const SETTING_DIFFICULTY_ADMIN = 1;
-export const SETTING_DIFFICULTY_AVERAGE = 2;
-
-export const SETTING_DIFFICULTY_RANGE = [
-    [SETTING_DIFFICULTY_ALGORITHM, 'Use algorithm calculated'],
-    [SETTING_DIFFICULTY_ADMIN, 'Use admin specificed'],
-    [SETTING_DIFFICULTY_AVERAGE, 'Use average of above'],
-];
 
 export const PROJECTION_LIST: Pdoc.Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'pid',
@@ -245,11 +232,6 @@ global.Hydro.model.problem = {
 
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
-
-    SETTING_DIFFICULTY_ADMIN,
-    SETTING_DIFFICULTY_ALGORITHM,
-    SETTING_DIFFICULTY_AVERAGE,
-    SETTING_DIFFICULTY_RANGE,
 
     add,
     inc,

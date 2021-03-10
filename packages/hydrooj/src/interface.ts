@@ -48,6 +48,7 @@ export interface Setting {
     range: [string, string][] | Record<string, string>,
     value: any,
     type: string,
+    subType?: string,
     name: string,
     desc: string,
     flag: number,
@@ -180,19 +181,14 @@ declare module './model/problem' {
         nSubmit: number,
         nAccept: number,
         tag: string[],
-        /** @deprecated */
-        category?: string[],
         data: FileInfo[],
         additional_file: FileInfo[],
         hidden: boolean,
         acMsg?: string,
         html?: boolean,
-
         difficulty?: number,
-        difficultyAlgo?: number,
-        difficultyAdmin?: number,
-        difficultySetting?: any,
-
+        /** @deprecated */
+        category?: string[],
         /** @deprecated */
         config: any,
     }
