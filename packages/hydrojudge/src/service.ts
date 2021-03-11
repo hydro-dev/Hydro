@@ -226,7 +226,6 @@ async function postInit() {
                 this.config,
                 { next: this.next },
             );
-            console.log(this.config);
             this.stat.judge = new Date();
             await judge[this.config.type || 'default'].judge(this);
         }

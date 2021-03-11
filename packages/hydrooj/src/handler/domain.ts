@@ -155,7 +155,6 @@ class DomainPermissionHandler extends ManageHandler {
         const roles = {};
         delete this.request.body.csrfToken;
         for (const role in this.request.body) {
-            console.log(role, this.request.body[role]);
             const perms = this.request.body[role] instanceof Array
                 ? this.request.body[role]
                 : [this.request.body[role]];

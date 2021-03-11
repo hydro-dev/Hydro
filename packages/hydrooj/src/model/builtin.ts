@@ -2,7 +2,8 @@
 
 import { Udoc } from '../interface';
 
-/* Why nocheck?
+/*
+ * Why nocheck?
  * BitInt requires at least ES2020, but we can't use it as
  * NodeJS doesn't support some of this new features.
  * e.g.: object?.property

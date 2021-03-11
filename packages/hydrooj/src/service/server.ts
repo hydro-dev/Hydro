@@ -15,7 +15,7 @@ import sockjs from 'sockjs';
 import type { SetOption } from 'cookies';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
-import { lrucache } from '../utils';
+import { errorMessage, lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
 import { Logger } from '../logger';
 import {
@@ -478,7 +478,8 @@ export class Handler extends HandlerCommon {
         if (!this.response.body) return;
         try {
             await this.renderBody();
-        } catch (error) {
+        } catch (err) {
+            const error = errorMessage(err);
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             if (this.request.json) this.response.body = { error };
             else {
@@ -576,7 +577,7 @@ export class Handler extends HandlerCommon {
         this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
         this.response.body = {
-            error: { message: error.msg(), params: error.params, stack: error.stack },
+            error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack) },
         };
         await this.finish().catch(() => { });
     }

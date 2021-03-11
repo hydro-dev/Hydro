@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { Duplex } from 'stream';
 import cluster from 'cluster';
-import path from 'path';
+import path, { sep } from 'path';
 import serialize from 'serialize-javascript';
 import Lru from 'lru-cache';
 import { ObjectID } from 'mongodb';
@@ -266,3 +266,16 @@ export const log2 = (val: bigint | number) => {
         for (let i = 0; ; i++) if (!(val >> i)) return i - 1;
     }
 };
+
+export function errorMessage(err: Error | string) {
+    const t = typeof err === 'string' ? err : err.stack;
+    const q = t.split('\n');
+    for (let i = 0; i < q.length; i++) {
+        if (!q[i].startsWith('    at')) continue;
+        if (q[i].includes(`${sep}@hydrooj${sep}`)) q[i] = q[i].split(`@hydrooj${sep}`)[1];
+        else if (q[i].includes(`${sep}hydrooj${sep}`)) q[i] = `hydrooj${sep}${q[i].split(`hydrooj/${sep}`)[1]}`;
+    }
+    if (typeof err === 'string') return q.join('\n');
+    err.stack = q.join('\n');
+    return err;
+}
