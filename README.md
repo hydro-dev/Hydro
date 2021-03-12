@@ -1,5 +1,13 @@
 # Hydro
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhydro-dev%2FHydro?ref=badge_shield)
+![LICENSE](https://img.shields.io/github/license/hydro-dev/Hydro)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hydro-dev/hydro/CI)
+![hydrooj](https://img.shields.io/npm/dm/hydrooj)
+![npm](https://img.shields.io/npm/v/hydrooj?label=hydrooj)
+![node-current](https://img.shields.io/node/v/hydrooj)
+![GitHub contributors](https://img.shields.io/github/contributors/hydro-dev/Hydro)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/hydro-dev/Hydro)
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署（且提供安装脚本），轻量，功能强大且易于扩展。  
 
