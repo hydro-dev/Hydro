@@ -29,7 +29,7 @@ export async function udoc() {
     ];
     let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
     const cursor = db.collection('record').aggregate(pipeline);
-    while (cursor.hasNext()) {
+    while (await cursor.hasNext()) {
         const adoc = await cursor.next() as any;
         bulk.find({
             domainId: adoc._id.domainId,

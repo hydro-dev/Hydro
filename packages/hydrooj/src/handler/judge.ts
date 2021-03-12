@@ -2,6 +2,7 @@ import { ObjectID } from 'mongodb';
 import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import { sleep } from '../utils';
 import { Logger } from '../logger';
+import difficultyAlgorithm from '../lib/difficulty';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
@@ -27,7 +28,11 @@ async function _postJudge(rdoc: Rdoc) {
             rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
         );
     } else if (updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
-    if (accept && updated) await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1);
+    const pdoc = (accept && updated)
+        ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
+        : await problem.get(rdoc.domainId, rdoc.pid);
+    const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
+    await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
 }
 
 export async function next(body: JudgeResultBody) {

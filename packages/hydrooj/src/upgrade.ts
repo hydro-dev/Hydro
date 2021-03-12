@@ -15,6 +15,7 @@ import * as problem from './model/problem';
 import * as domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
+import difficultyAlgorithm from './lib/difficulty';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
@@ -201,9 +202,18 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     // Set null tag to []
-    async function _9_10() {
+    async function _10_11() {
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('document').updateMany({ docType: 10, tag: null }, { $set: { tag: [] } });
+        return true;
+    },
+    // Update problem difficulty
+    async function _11_12() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['nSubmit', 'nAccept'], async (pdoc) => {
+            const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
+            await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
+        });
         return true;
     },
 ];

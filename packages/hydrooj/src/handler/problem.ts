@@ -10,6 +10,7 @@ import {
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isTitle, isContent, isPid } from '../lib/validator';
+import difficultyAlgorithm from '../lib/difficulty';
 import * as system from '../model/system';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
@@ -333,10 +334,10 @@ export class ProblemEditHandler extends ProblemManageHandler {
             title, content, pid: newPid, hidden, tag: tag ?? [],
         };
         let pdoc = await problem.get(domainId, pid);
+        $update.difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
         await bus.serial('problem/before-edit', $update);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
         await bus.emit('problem/edit', pdoc);
-        await global.Hydro.script.difficulty.run({ domainId, pid }, console.log);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
     }
 }

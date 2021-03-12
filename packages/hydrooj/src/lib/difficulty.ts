@@ -1,7 +1,3 @@
-import * as problem from '../model/problem';
-
-export const description = 'Caculate the difficulty of a problem';
-
 const _CACHE_INFO = {
     last_s: 0.0,
     last_y: 0,
@@ -46,17 +42,5 @@ function difficultyAlgorithm(nSubmit: number, nAccept: number) {
     return Math.max(ans, 1);
 }
 
-export async function run({
-    domainId, pid,
-}) {
-    const pdoc = await problem.get(domainId, pid);
-    const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-    return await problem.edit(domainId, pdoc.docId, { difficulty });
-}
-
-export const validate = {
-    domainId: { $type: 'string' },
-    pid: { $type: 'number' },
-};
-
-global.Hydro.script.difficulty = { run, description, validate };
+export = difficultyAlgorithm;
+global.Hydro.lib.difficulty = difficultyAlgorithm;

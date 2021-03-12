@@ -520,6 +520,7 @@ interface GeoIP {
 
 export interface Lib extends Record<string, any> {
     download: typeof import('./lib/download'),
+    difficulty: typeof import('./lib/difficulty'),
     buildContent: typeof import('./lib/content').buildContent,
     'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
