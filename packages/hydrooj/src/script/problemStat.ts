@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import db from '../service/db';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
@@ -26,22 +27,24 @@ export async function udoc() {
             },
         },
     ];
-    const bulk = db.collection('domain.user').initializeUnorderedBulkOp();
-    db.collection('record').aggregate(pipeline).each(
-        (err, adoc: any) => {
-            if (adoc) {
-                bulk.find({
-                    domainId: adoc._id.domainId,
-                    uid: adoc._id.uid,
-                }).updateOne({
-                    $set: {
-                        nSubmit: adoc.nSubmit,
-                        nAccept: adoc.nAccept,
-                    },
-                });
-            }
-        },
-    );
+    let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
+    const cursor = db.collection('record').aggregate(pipeline);
+    while (cursor.hasNext()) {
+        const adoc = await cursor.next() as any;
+        bulk.find({
+            domainId: adoc._id.domainId,
+            uid: adoc._id.uid,
+        }).updateOne({
+            $set: {
+                nSubmit: adoc.nSubmit,
+                nAccept: adoc.nAccept,
+            },
+        });
+        if (bulk.length > 100) {
+            await bulk.execute();
+            bulk = db.collection('domain.user').initializeUnorderedBulkOp();
+        }
+    }
     if (bulk.length) await bulk.execute();
 }
 
@@ -67,23 +70,25 @@ export async function pdoc() {
             },
         },
     ];
-    const bulk = db.collection('document').initializeUnorderedBulkOp();
-    db.collection('record').aggregate(pipeline).each(
-        (err, adoc: any) => {
-            if (adoc) {
-                bulk.find({
-                    domainId: adoc._id.domainId,
-                    docType: document.TYPE_PROBLEM,
-                    docId: adoc._id.pid,
-                }).updateOne({
-                    $set: {
-                        nSubmit: adoc.nSubmit,
-                        nAccept: adoc.nAccept,
-                    },
-                });
-            }
-        },
-    );
+    let bulk = db.collection('document').initializeUnorderedBulkOp();
+    const data = db.collection('record').aggregate(pipeline);
+    while (await data.hasNext()) {
+        const adoc = await data.next() as any;
+        bulk.find({
+            domainId: adoc._id.domainId,
+            docType: document.TYPE_PROBLEM,
+            docId: adoc._id.pid,
+        }).updateOne({
+            $set: {
+                nSubmit: adoc.nSubmit,
+                nAccept: adoc.nAccept,
+            },
+        });
+        if (bulk.length > 100) {
+            await bulk.execute();
+            bulk = db.collection('domain.user').initializeUnorderedBulkOp();
+        }
+    }
     if (bulk.length) await bulk.execute();
 }
 
