@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.4.11",
+    "version": "2.4.12",
     "os": [
         "linux"
     ],

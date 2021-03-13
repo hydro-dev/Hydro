@@ -385,7 +385,16 @@ export default class VJ4 {
                 else if (i.toLowerCase() === 'output') await fs.rename(`${folder}/${i}`, `${folder}/output`);
             }
             files = await fs.readdir(`${folder}/input`);
-            for (const i of files) await fs.rename(`${folder}/input/${i}`, `${folder}/input/${i.toLowerCase()}`);
+            for (const i of files) {
+                if (fs.statSync(`${folder}/input/${i}`).size > 64 * 1024 * 1024) {
+                    await fs.rename(`${folder}/input/${i}`, `${folder}/input/${i.toLowerCase()}`);
+                } else {
+                    const buffer = await fs.readFile(`${folder}/input/${i}`);
+                    const data = buffer.toString().replace(/\r/g, '');
+                    await fs.unlink(`${folder}/input/${i}`);
+                    await fs.writeFile(`${folder}/input/${i.toLowerCase()}`, data);
+                }
+            }
             files = await fs.readdir(`${folder}/output`);
             for (const i of files) await fs.rename(`${folder}/output/${i}`, `${folder}/output/${i.toLowerCase()}`);
         }
