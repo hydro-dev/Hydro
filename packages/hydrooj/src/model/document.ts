@@ -7,7 +7,7 @@ import {
     Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, ProblemStatusDoc,
 } from '../interface';
 import { buildProjection } from '../utils';
-import { NumberKeys, ArrayKeys, Projection } from '../typeutils';
+import { NumberKeys, ArrayKeys, Projection, MaybeArray } from '../typeutils';
 import db from '../service/db';
 import * as bus from '../service/bus';
 import { Content } from '../loader';
@@ -202,7 +202,7 @@ export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[
 
 export async function deleteSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
-    key: K, subId: DocType[T][K][0]['_id'] | DocType[T][K][0]['_id'][],
+    key: K, subId: MaybeArray<DocType[T][K][0]['_id']>,
 ): Promise<DocType[T]> {
     subId = (subId instanceof Array) ? subId : [subId];
     const res = await coll.findOneAndUpdate(
@@ -235,9 +235,7 @@ export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
     key: K, subId: DocType[T][K][0]['_id'], args: Partial<DocType[T][K][0]>,
 ): Promise<DocType[T]> {
     const $set = {};
-    for (const k in args) {
-        $set[`${key}.$.${k}`] = args[k];
-    }
+    for (const k in args) $set[`${key}.$.${k}`] = args[k];
     const res = await coll.findOneAndUpdate(
         {
             domainId,

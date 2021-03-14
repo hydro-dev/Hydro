@@ -10,3 +10,4 @@ export type Value<O, V = ''> = {
 export type Projection<O> = (string & keyof O)[];
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 export type Filter<T, U> = T extends U ? T : never;
+export type MaybeArray<T> = T | T[];

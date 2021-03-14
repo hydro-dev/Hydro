@@ -64,6 +64,7 @@ export class ProblemMainHandler extends ProblemHandler {
         ];
         if (q) {
             query.$text = { $search: q };
+            path[1][1] = 'problem_main';
             path.push([q, null, null, true]);
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
