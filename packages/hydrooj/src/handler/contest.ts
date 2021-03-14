@@ -15,7 +15,7 @@ import * as document from '../model/document';
 import * as problem from '../model/problem';
 import * as domain from '../model/domain';
 import * as record from '../model/record';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as message from '../model/message';
 import {
     Route, Handler, Types, param,

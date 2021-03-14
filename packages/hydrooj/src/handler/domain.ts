@@ -6,7 +6,7 @@ import {
 } from '../error';
 import { log2 } from '../utils';
 import type { DomainDoc } from '../interface';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as domain from '../model/domain';
 import * as discussion from '../model/discussion';
 import * as system from '../model/system';

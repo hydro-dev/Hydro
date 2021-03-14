@@ -9,7 +9,7 @@ import { PERM, PRIV } from '../model/builtin';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as training from '../model/training';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Types, param,

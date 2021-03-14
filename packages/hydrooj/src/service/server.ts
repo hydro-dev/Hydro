@@ -26,11 +26,11 @@ import {
 } from '../error';
 import hash from '../lib/hash.hydro';
 import * as misc from '../lib/misc';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as domain from '../model/domain';
 import * as system from '../model/system';
-import * as blacklist from '../model/blacklist';
-import * as token from '../model/token';
+import blacklist from '../model/blacklist';
+import token from '../model/token';
 import * as opcount from '../model/opcount';
 import { PERM } from '../model/builtin';
 

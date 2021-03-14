@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import * as user from './user';
+import user from './user';
 import { Mdoc } from '../interface';
 import db from '../service/db';
 import * as bus from '../service/bus';

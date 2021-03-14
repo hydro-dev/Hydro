@@ -7,9 +7,9 @@ import {
 import {
     Route, Handler, Types, param, post,
 } from '../service/server';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as oauth from '../model/oauth';
-import * as token from '../model/token';
+import token from '../model/token';
 import * as record from '../model/record';
 import * as problem from '../model/problem';
 import * as task from '../model/task';

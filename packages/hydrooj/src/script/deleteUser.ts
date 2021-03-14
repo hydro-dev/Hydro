@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { Udoc } from '../interface';
 import { Value } from '../typeutils';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as document from '../model/document';
 import * as setting from '../model/setting';
 import db from '../service/db';

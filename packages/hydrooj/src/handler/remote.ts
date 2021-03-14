@@ -5,7 +5,7 @@ import { PermissionError, InvalidTokenError, RemoteOnlineJudgeError } from '../e
 import { Logger } from '../logger';
 import { ProblemAdd } from '../lib/ui';
 import { PERM } from '../model/builtin';
-import * as token from '../model/token';
+import token from '../model/token';
 import * as problem from '../model/problem';
 import * as system from '../model/system';
 import {

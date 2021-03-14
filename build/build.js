@@ -13,6 +13,7 @@ const compilerOptionsBase = {
     composite: true,
     strictBindCallApply: true,
     experimentalDecorators: true,
+    emitDecoratorMetadata: true,
 };
 const config = {
     compilerOptions: compilerOptionsBase,

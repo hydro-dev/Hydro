@@ -6,7 +6,7 @@ import {
 } from '../interface';
 import paginate from '../lib/paginate';
 import * as system from '../model/system';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as oplog from '../model/oplog';
 import * as message from '../model/message';
 import * as discussion from '../model/discussion';

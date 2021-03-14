@@ -24,6 +24,7 @@ rules:
   '@typescript-eslint/naming-convention': off
   '@typescript-eslint/no-redeclare': off
 
+  class-methods-use-this: off
   global-require: off
   guard-for-in: off
   implicit-arrow-linebreak: off

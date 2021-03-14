@@ -279,3 +279,7 @@ export function errorMessage(err: Error | string) {
     err.stack = q.join('\n');
     return err;
 }
+
+export function ArgMethod(target: any, funcName: string, obj: any) {
+    return obj;
+}

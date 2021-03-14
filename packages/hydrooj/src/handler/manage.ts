@@ -5,7 +5,7 @@ import { ValidationError } from '../error';
 import * as check from '../check';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
-import * as user from '../model/user';
+import user from '../model/user';
 import { STATUS, PRIV } from '../model/builtin';
 import * as record from '../model/record';
 import {

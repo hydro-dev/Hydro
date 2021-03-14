@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { BadRequestError } from '../error';
 import { PRIV } from '../model/builtin';
-import * as user from '../model/user';
+import user from '../model/user';
 import db from '../service/db';
 import {
     Route, Handler, Types, param,

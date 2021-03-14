@@ -1,17 +1,17 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import { PermissionError, RecordNotFoundError } from '../error';
+import { Rdoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as contest from '../model/contest';
-import * as user from '../model/user';
+import user from '../model/user';
 import paginate from '../lib/paginate';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
-import { Rdoc } from '../interface';
 
 const RecordHandler = contest.ContestHandlerMixin(Handler);
 
@@ -146,14 +146,10 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
 
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid?: ObjectID) {
-        this.domainId = domainId;
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (this.canShowRecord(tdoc)) this.tid = tid.toHexString();
-            else {
-                this.close();
-                return;
-            }
+            else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
@@ -161,12 +157,8 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     async message(msg) {
         if (msg.rids instanceof Array) {
             const rids = msg.rids.map((id: string) => new ObjectID(id));
-            const rdocs = await record.getMulti(
-                this.domainId, { _id: { $in: rids } },
-            ).toArray();
-            for (const rdoc of rdocs) {
-                this.onRecordChange(rdoc);
-            }
+            const rdocs = await record.getMulti(this.domainId, { _id: { $in: rids } }).toArray();
+            for (const rdoc of rdocs) this.onRecordChange(rdoc);
         }
     }
 
@@ -199,10 +191,7 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
         const rdoc = await record.get(domainId, rid);
         if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
-            if (!this.canShowRecord(tdoc)) {
-                this.close();
-                return;
-            }
+            if (!this.canShowRecord(tdoc)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         this.rid = rid.toString();
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));

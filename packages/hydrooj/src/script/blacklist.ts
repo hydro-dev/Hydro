@@ -2,8 +2,8 @@
 import { ObjectID } from 'mongodb';
 import * as document from '../model/document';
 import * as discussion from '../model/discussion';
-import * as user from '../model/user';
-import * as blacklist from '../model/blacklist';
+import user from '../model/user';
+import blacklist from '../model/blacklist';
 import db from '../service/db';
 
 export const description = 'Add blacklist by ip, uid';

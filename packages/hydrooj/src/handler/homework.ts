@@ -14,7 +14,7 @@ import {
 import * as bus from '../service/bus';
 import * as domain from '../model/domain';
 import { PERM } from '../model/builtin';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as system from '../model/system';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';

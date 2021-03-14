@@ -14,11 +14,11 @@ import * as contest from '../model/contest';
 import * as message from '../model/message';
 import * as document from '../model/document';
 import * as system from '../model/system';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as setting from '../model/setting';
 import * as domain from '../model/domain';
 import * as discussion from '../model/discussion';
-import * as token from '../model/token';
+import token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
 import {

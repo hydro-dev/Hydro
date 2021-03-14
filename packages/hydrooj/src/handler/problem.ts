@@ -15,7 +15,7 @@ import * as system from '../model/system';
 import * as problem from '../model/problem';
 import * as record from '../model/record';
 import * as domain from '../model/domain';
-import * as user from '../model/user';
+import user from '../model/user';
 import * as solution from '../model/solution';
 import { PERM, PRIV } from '../model/builtin';
 import storage from '../service/storage';
