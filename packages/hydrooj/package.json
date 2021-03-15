@@ -34,7 +34,7 @@
         "serialize-javascript": "^5.0.1",
         "sockjs": "^0.3.20",
         "superagent": "^6.1.0",
-        "systeminformation": "5.6.2",
+        "systeminformation": "5.6.4",
         "wtfnode": "^0.8.4",
         "yargs": "^16.2.0"
     },
@@ -49,7 +49,7 @@
         "@types/lodash": "^4.14.168",
         "@types/lru-cache": "^5.1.0",
         "@types/minio": "^7.0.7",
-        "@types/mongodb": "^3.6.9",
+        "@types/mongodb": "^3.6.10",
         "@types/nodemailer": "^6.4.1",
         "@types/serialize-javascript": "^5.0.0",
         "@types/sockjs": "^0.3.32",
