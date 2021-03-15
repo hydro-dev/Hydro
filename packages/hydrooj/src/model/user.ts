@@ -2,7 +2,7 @@ import { Collection } from 'mongodb';
 import * as system from './system';
 import token from './token';
 import * as setting from './setting';
-import * as domain from './domain';
+import domain from './domain';
 import { BUILTIN_USERS, PERM, PRIV } from './builtin';
 import { ArgMethod } from '../utils';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';

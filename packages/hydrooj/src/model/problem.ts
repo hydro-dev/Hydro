@@ -3,7 +3,7 @@ import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary, pick } from 'lodash';
 import { STATUS } from './builtin';
 import * as document from './document';
-import * as domain from './domain';
+import domain from './domain';
 import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, Pdict, Document } from '../interface';
 import { Content } from '../loader';

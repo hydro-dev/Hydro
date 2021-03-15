@@ -12,7 +12,7 @@ import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
 import * as problem from './model/problem';
-import * as domain from './model/domain';
+import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
 import difficultyAlgorithm from './lib/difficulty';

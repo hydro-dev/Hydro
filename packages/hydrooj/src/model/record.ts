@@ -4,213 +4,167 @@ import {
 import { Dictionary } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
-import * as task from './task';
+import task from './task';
 import * as problem from './problem';
-import {
-    Rdoc, TestCase, ContestInfo, ProblemConfig,
-} from '../interface';
-import { Time } from '../utils';
+import { Rdoc, ContestInfo, ProblemConfig } from '../interface';
+import { ArgMethod, Time } from '../utils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
-export const coll: Collection<Rdoc> = db.collection('record');
+class RecordModel {
+    static coll: Collection<Rdoc> = db.collection('record');
 
-export interface RdocBase {
-    _id?: ObjectID,
-    domainId?: string,
-    pid: number
-    uid: number,
-    lang: string,
-    code: string,
-    score?: number,
-    memory?: number,
-    time?: number,
-    judgeTexts?: string[],
-    compilerTexts?: string[],
-    testCases?: TestCase[],
-    rejudged?: boolean,
-    judger?: string,
-    judgeAt?: Date,
-    status?: number,
-    type?: string,
-    hidden?: boolean,
-    input?: string,
-    tid?: ObjectID,
-    ttype?: number,
-}
-
-export interface JudgeTask {
-    _id: ObjectID,
-    rid: ObjectID,
-    domainId: string,
-    pid: number
-    lang: string,
-    code: string,
-    data?: ObjectID,
-    config: string,
-    type?: string,
-}
-
-export async function get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
-    const res = await coll.findOne({ _id });
-    if (res && res.domainId === domainId) return res;
-    return null;
-}
-
-export async function stat(domainId?: string) {
-    const [d5min, d1h, day, week, month, year, total] = await Promise.all([
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
-        coll.find(domainId ? { domainId } : {}).count(),
-    ]);
-    return {
-        d5min, d1h, day, week, month, year, total,
-    };
-}
-
-export async function judge(domainId: string, rid: ObjectID, priority = 1, config: ProblemConfig = {}) {
-    const rdoc = await get(domainId, rid);
-    let data = [];
-    if (rdoc.pid) {
-        const pdoc = await problem.get(domainId, rdoc.pid);
-        data = pdoc.data;
+    static async get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
+        const res = await RecordModel.coll.findOne({ _id });
+        if (res && res.domainId === domainId) return res;
+        return null;
     }
-    delete rdoc._id;
-    await task.add({
-        ...rdoc,
-        priority,
-        type: 'judge',
-        rid,
-        domainId,
-        config,
-        data,
-    });
-}
 
-export async function add(
-    domainId: string, pid: number, uid: number,
-    lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
-) {
-    const data: Rdoc = {
-        status: STATUS.STATUS_WAITING,
-        _id: new ObjectID(),
-        uid,
-        code,
-        lang,
-        pid,
-        domainId,
-        score: 0,
-        time: 0,
-        memory: 0,
-        hidden: false,
-        judgeTexts: [],
-        compilerTexts: [],
-        testCases: [],
-        judger: null,
-        judgeAt: null,
-        rejudged: false,
-    };
-    if (typeof contestOrConfig === 'string') {
-        // is Run
-        data.input = contestOrConfig;
-        data.hidden = true;
-    } else data.contest = contestOrConfig;
-    const res = await coll.insertOne(data);
-    if (addTask) await judge(domainId, res.insertedId);
-    return res.insertedId;
-}
-
-export function getMulti(domainId: string, query: any) {
-    return coll.find({ ...query, domainId });
-}
-
-export async function update(
-    domainId: string, _id: ObjectID,
-    $set?: MatchKeysAndValues<Rdoc>,
-    $push?: PushOperator<Rdoc>,
-    $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
-): Promise<Rdoc | null> {
-    const $update: UpdateQuery<Rdoc> = {};
-    if ($set && Object.keys($set).length) $update.$set = $set;
-    if ($push && Object.keys($push).length) $update.$push = $push;
-    if ($unset && Object.keys($unset).length) $update.$unset = $unset;
-    if (Object.keys($update).length) {
-        const res = await coll.findOneAndUpdate(
-            { _id, domainId },
-            $update,
-            { returnOriginal: false },
-        );
-        return res.value;
+    @ArgMethod
+    static async stat(domainId?: string) {
+        const [d5min, d1h, day, week, month, year, total] = await Promise.all([
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find(domainId ? { domainId } : {}).count(),
+        ]);
+        return {
+            d5min, d1h, day, week, month, year, total,
+        };
     }
-    return await get(domainId, _id);
-}
 
-export function reset(domainId: string, rid: ObjectID, isRejudge: boolean) {
-    const upd: any = {
-        score: 0,
-        status: STATUS.STATUS_WAITING,
-        time: 0,
-        memory: 0,
-        testCases: [],
-        judgeTexts: [],
-        compilerTexts: [],
-        judgeAt: null,
-        judger: null,
-    };
-    if (isRejudge) upd.rejudged = true;
-    return update(domainId, rid, upd);
-}
-
-export function count(domainId: string, query: any) {
-    return coll.find({ domainId, ...query }).count();
-}
-
-export async function getList(
-    domainId: string, rids: ObjectID[], showHidden: boolean,
-): Promise<Dictionary<Rdoc>> {
-    const r = {};
-    rids = Array.from(new Set(rids));
-    const rdocs = await coll.find({ domainId, _id: { $in: rids } }).toArray();
-    for (const rdoc of rdocs) {
-        if (rdoc.hidden && !showHidden) r[rdoc._id.toHexString()] = null;
-        else r[rdoc._id.toHexString()] = rdoc;
-    }
-    return r;
-}
-
-export function getUserInProblemMulti(
-    domainId: string, uid: number, pid: number,
-    getHidden = false,
-) {
-    if (!getHidden) {
-        return coll.find({
-            domainId, uid, pid, hidden: false,
+    static async judge(domainId: string, rid: ObjectID, priority = 1, config: ProblemConfig = {}) {
+        const rdoc = await RecordModel.get(domainId, rid);
+        let data = [];
+        if (rdoc.pid) {
+            const pdoc = await problem.get(domainId, rdoc.pid);
+            data = pdoc.data;
+        }
+        delete rdoc._id;
+        await task.add({
+            ...rdoc,
+            priority,
+            type: 'judge',
+            rid,
+            domainId,
+            config,
+            data,
         });
     }
-    return coll.find({ domainId, uid, pid });
+
+    static async add(
+        domainId: string, pid: number, uid: number,
+        lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
+    ) {
+        const data: Rdoc = {
+            status: STATUS.STATUS_WAITING,
+            _id: new ObjectID(),
+            uid,
+            code,
+            lang,
+            pid,
+            domainId,
+            score: 0,
+            time: 0,
+            memory: 0,
+            hidden: false,
+            judgeTexts: [],
+            compilerTexts: [],
+            testCases: [],
+            judger: null,
+            judgeAt: null,
+            rejudged: false,
+        };
+        if (typeof contestOrConfig === 'string') {
+            // is Run
+            data.input = contestOrConfig;
+            data.hidden = true;
+        } else data.contest = contestOrConfig;
+        const res = await RecordModel.coll.insertOne(data);
+        if (addTask) await RecordModel.judge(domainId, res.insertedId);
+        return res.insertedId;
+    }
+
+    static getMulti(domainId: string, query: any) {
+        return RecordModel.coll.find({ ...query, domainId });
+    }
+
+    static async update(
+        domainId: string, _id: ObjectID,
+        $set?: MatchKeysAndValues<Rdoc>,
+        $push?: PushOperator<Rdoc>,
+        $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
+    ): Promise<Rdoc | null> {
+        const $update: UpdateQuery<Rdoc> = {};
+        if ($set && Object.keys($set).length) $update.$set = $set;
+        if ($push && Object.keys($push).length) $update.$push = $push;
+        if ($unset && Object.keys($unset).length) $update.$unset = $unset;
+        if (Object.keys($update).length) {
+            const res = await RecordModel.coll.findOneAndUpdate(
+                { _id, domainId },
+                $update,
+                { returnOriginal: false },
+            );
+            return res.value;
+        }
+        return await RecordModel.get(domainId, _id);
+    }
+
+    static reset(domainId: string, rid: ObjectID, isRejudge: boolean) {
+        const upd: any = {
+            score: 0,
+            status: STATUS.STATUS_WAITING,
+            time: 0,
+            memory: 0,
+            testCases: [],
+            judgeTexts: [],
+            compilerTexts: [],
+            judgeAt: null,
+            judger: null,
+        };
+        if (isRejudge) upd.rejudged = true;
+        return RecordModel.update(domainId, rid, upd);
+    }
+
+    static count(domainId: string, query: any) {
+        return RecordModel.coll.find({ domainId, ...query }).count();
+    }
+
+    static async getList(
+        domainId: string, rids: ObjectID[], showHidden: boolean,
+    ): Promise<Dictionary<Rdoc>> {
+        const r = {};
+        rids = Array.from(new Set(rids));
+        const rdocs = await RecordModel.coll.find({ domainId, _id: { $in: rids } }).toArray();
+        for (const rdoc of rdocs) {
+            if (rdoc.hidden && !showHidden) r[rdoc._id.toHexString()] = null;
+            else r[rdoc._id.toHexString()] = rdoc;
+        }
+        return r;
+    }
+
+    @ArgMethod
+    static getUserInProblemMulti(
+        domainId: string, uid: number, pid: number,
+        getHidden: boolean = false,
+    ) {
+        if (!getHidden) {
+            return RecordModel.coll.find({
+                domainId, uid, pid, hidden: false,
+            });
+        }
+        return RecordModel.coll.find({ domainId, uid, pid });
+    }
+
+    @ArgMethod
+    static getByUid(domainId: string, uid: number, limit: number): Promise<Rdoc[]> {
+        return RecordModel.coll.find({ domainId, uid }).limit(limit).toArray();
+    }
 }
 
-export function getByUid(domainId: string, uid: number, limit: number): Promise<Rdoc[]> {
-    return coll.find({ domainId, uid }).limit(limit).toArray();
-}
-
-bus.on('problem/delete', (domainId, docId) => coll.deleteMany({ domainId, pid: docId }));
-
-global.Hydro.model.record = {
-    coll,
-    add,
-    get,
-    getMulti,
-    stat,
-    update,
-    count,
-    reset,
-    getList,
-    getUserInProblemMulti,
-    getByUid,
-    judge,
-};
+bus.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
+export = RecordModel;
+global.Hydro.model.record = RecordModel;

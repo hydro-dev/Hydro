@@ -7,7 +7,7 @@ import {
 import { log2 } from '../utils';
 import type { DomainDoc } from '../interface';
 import user from '../model/user';
-import * as domain from '../model/domain';
+import domain from '../model/domain';
 import * as discussion from '../model/discussion';
 import * as system from '../model/system';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';

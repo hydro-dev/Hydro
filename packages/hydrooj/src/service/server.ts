@@ -27,7 +27,7 @@ import {
 import hash from '../lib/hash.hydro';
 import * as misc from '../lib/misc';
 import user from '../model/user';
-import * as domain from '../model/domain';
+import domain from '../model/domain';
 import * as system from '../model/system';
 import blacklist from '../model/blacklist';
 import token from '../model/token';

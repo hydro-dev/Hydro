@@ -3,12 +3,12 @@ import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import { sleep } from '../utils';
 import { Logger } from '../logger';
 import difficultyAlgorithm from '../lib/difficulty';
-import * as record from '../model/record';
+import record from '../model/record';
 import * as problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
-import * as domain from '../model/domain';
-import * as task from '../model/task';
+import domain from '../model/domain';
+import task from '../model/task';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, post, Types,

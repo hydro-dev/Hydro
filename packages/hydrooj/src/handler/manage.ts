@@ -7,7 +7,7 @@ import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
 import { STATUS, PRIV } from '../model/builtin';
-import * as record from '../model/record';
+import record from '../model/record';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';

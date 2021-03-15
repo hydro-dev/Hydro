@@ -4,7 +4,7 @@ import { Rdoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
 import * as problem from '../model/problem';
-import * as record from '../model/record';
+import record from '../model/record';
 import * as contest from '../model/contest';
 import user from '../model/user';
 import paginate from '../lib/paginate';

@@ -8,7 +8,7 @@ import type { ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
 import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
-import * as solution from 'hydrooj/dist/model/solution';
+import solution from 'hydrooj/dist/model/solution';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { FileTooLargeError, ValidationError } from 'hydrooj/dist/error';
 

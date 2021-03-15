@@ -12,25 +12,25 @@ const cache = new Lru({
     maxAge: 5000,
 });
 
-export async function get(_id: string) {
-    const res = cache.get(_id);
-    if (res !== undefined) return res;
-    const doc = await coll.findOne({ _id });
-    if (doc) return doc.uid;
-    return null;
+class OauthModel {
+    static async get(_id: string) {
+        const res = cache.get(_id);
+        if (res !== undefined) return res;
+        const doc = await coll.findOne({ _id });
+        if (doc) return doc.uid;
+        return null;
+    }
+
+    static async set(_id: string, value: number) {
+        cache.set(_id, value);
+        const res = await coll.findOneAndUpdate(
+            { _id },
+            { $set: { value } },
+            { upsert: true, returnOriginal: false },
+        );
+        return res.value.uid;
+    }
 }
 
-export async function set(_id: string, value: number) {
-    cache.set(_id, value);
-    const res = await coll.findOneAndUpdate(
-        { _id },
-        { $set: { value } },
-        { upsert: true, returnOriginal: false },
-    );
-    return res.value.uid;
-}
-
-global.Hydro.model.oauth = {
-    get,
-    set,
-};
+export = OauthModel;
+global.Hydro.model.oauth = OauthModel;

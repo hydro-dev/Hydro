@@ -1,7 +1,7 @@
 import { FilterQuery } from 'mongodb';
 import { Pdoc } from 'hydrooj/dist/interface';
 import * as problem from 'hydrooj/dist/model/problem';
-import * as record from 'hydrooj/dist/model/record';
+import record from 'hydrooj/dist/model/record';
 import user from 'hydrooj/dist/model/user';
 import { PERM, PRIV } from 'hydrooj/dist/model/builtin';
 import {

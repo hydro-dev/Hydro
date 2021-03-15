@@ -8,11 +8,11 @@ import {
     Route, Handler, Types, param, post,
 } from '../service/server';
 import user from '../model/user';
-import * as oauth from '../model/oauth';
+import oauth from '../model/oauth';
 import token from '../model/token';
-import * as record from '../model/record';
+import record from '../model/record';
 import * as problem from '../model/problem';
-import * as task from '../model/task';
+import task from '../model/task';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
 import { isEmail, isPassword, isUname } from '../lib/validator';

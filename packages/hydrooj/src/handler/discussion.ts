@@ -8,7 +8,7 @@ import paginate from '../lib/paginate';
 import * as system from '../model/system';
 import user from '../model/user';
 import * as oplog from '../model/oplog';
-import * as message from '../model/message';
+import message from '../model/message';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
 import { PERM, PRIV } from '../model/builtin';
