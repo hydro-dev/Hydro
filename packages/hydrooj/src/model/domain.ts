@@ -89,7 +89,7 @@ class DomainModel {
         const res = await coll.findOneAndUpdate(
             { _id: domainId },
             // FIXME
-            // @ts-ignore
+            // @ts-expect-error
             { $inc: { [field]: n } },
             { returnOriginal: false },
         );
@@ -182,7 +182,7 @@ class DomainModel {
     @ArgMethod
     static async incUserInDomain(domainId: string, uid: number, field: string, n: number = 1) {
         // @ts-ignore
-        const dudoc = await getDomainUser(domainId, { _id: uid });
+        const dudoc = await DomainModel.getDomainUser(domainId, { _id: uid });
         dudoc[field] = dudoc[field] + n || n;
         await DomainModel.setUserInDomain(domainId, uid, { [field]: dudoc[field] });
         return dudoc;
