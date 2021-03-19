@@ -49,15 +49,19 @@ async function iterateAllProblem(
 }
 
 const scripts: UpgradeScript[] = [
-    // Init
+    // Mark as used
     async function _0_1() {
+        return true;
+    },
+    // Init
+    async function _1_2() {
         const ddoc = await domain.get('system');
         if (!ddoc) await domain.add('system', 1, 'Hydro', 'Hydro System');
         // TODO discussion node?
         return true;
     },
     // Add history column to ddoc,drdoc,psdoc
-    async function _1_2() {
+    async function _2_3() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllDomain(async (d) => {
             const bulk = document.coll.initializeUnorderedBulkOp();
@@ -75,12 +79,12 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _2_3() {
+    async function _3_4() {
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('document').updateMany({ pid: /^\d+$/i }, { $unset: { pid: '' } });
         return true;
     },
-    async function _3_4() {
+    async function _4_5() {
         const _FRESH_INSTALL_IGNORE = 1;
         if (storage.error) {
             logger.error('Cannot upgrade. Please change storage config.');
@@ -131,7 +135,7 @@ const scripts: UpgradeScript[] = [
         logger.success('Files copied successfully. You can now remove collection `file` `fs.files` `fs.chunks` in the database.');
         return true;
     },
-    async function _4_5() {
+    async function _5_6() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllDomain(async (d) => {
             const bulk = document.coll.initializeUnorderedBulkOp();
@@ -144,16 +148,16 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _5_6() {
+    async function _6_7() {
         // Issue #58
         const _FRESH_INSTALL_IGNORE = 1;
         await domain.edit('system', { owner: 1 });
         return true;
     },
-    async function _6_7() {
+    async function _7_8() {
         return true; // invalid
     },
-    async function _7_8() {
+    async function _8_9() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
@@ -169,7 +173,7 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _8_9() {
+    async function _9_10() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem([], async (pdoc) => {
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
@@ -188,7 +192,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     // Move category to tag
-    async function _9_10() {
+    async function _10_11() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem(['tag', 'category'], async (pdoc) => {
             await document.coll.updateOne(
@@ -202,13 +206,13 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     // Set null tag to []
-    async function _10_11() {
+    async function _11_12() {
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('document').updateMany({ docType: 10, tag: null }, { $set: { tag: [] } });
         return true;
     },
     // Update problem difficulty
-    async function _11_12() {
+    async function _12_13() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem(['nSubmit', 'nAccept'], async (pdoc) => {
             const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
