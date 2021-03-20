@@ -21,7 +21,7 @@ import { PERM, PRIV } from '../model/builtin';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param, post, route,
+    Route, Connection, Handler, ConnectionHandler, Types, param, post, route, get,
 } from '../service/server';
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
@@ -406,11 +406,13 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
 }
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
+    @get('type', Types.Range(['additional_file', 'testdata']), true)
     @param('filename', Types.String)
     @param('noDisposition', Types.Boolean)
-    async get(domainId: string, filename: string, noDisposition = false) {
+    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+        if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.redirect = await storage.signDownloadLink(
-            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`,
+            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
             noDisposition ? undefined : filename, false, 'user',
         );
     }
