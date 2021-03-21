@@ -319,7 +319,7 @@ export class HandlerCommon {
         } catch (e) {
             logger.warn(e.message);
             logger.info('%s %o', name, args);
-            logger.info('%s', e.stack);
+            if (!e.message.includes('Expected') || !e.message.includes('to match')) logger.info('%s', e.stack);
         }
         return res;
     }

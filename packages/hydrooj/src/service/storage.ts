@@ -26,6 +26,7 @@ interface MinioEndpointConfig {
 }
 
 function parseMainEndpointUrl(endpoint: string): MinioEndpointConfig {
+    if (!endpoint) throw new Error('Empty endpoint');
     const url = new URL(endpoint);
     const result: Partial<MinioEndpointConfig> = {};
     if (url.pathname !== '/') throw new Error('Main MinIO endpoint URL of a sub-directory is not supported.');
@@ -116,53 +117,83 @@ class StorageService {
 
     async put(target: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
         if (typeof file === 'string') file = createReadStream(file);
-        return await this.client.putObject(this.opts.bucket, target, file, meta);
+        try {
+            return await this.client.putObject(this.opts.bucket, target, file, meta);
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 
     async get(target: string, path?: string) {
-        if (path) return await this.client.fGetObject(this.opts.bucket, target, path);
-        return await this.client.getObject(this.opts.bucket, target);
+        try {
+            if (path) return await this.client.fGetObject(this.opts.bucket, target, path);
+            return await this.client.getObject(this.opts.bucket, target);
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 
     async del(target: string | string[]) {
-        if (typeof target === 'string') return await this.client.removeObject(this.opts.bucket, target);
-        return await this.client.removeObjects(this.opts.bucket, target);
+        try {
+            if (typeof target === 'string') return await this.client.removeObject(this.opts.bucket, target);
+            return await this.client.removeObjects(this.opts.bucket, target);
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 
     async list(target: string, recursive = true) {
-        const stream = this.client.listObjects(this.opts.bucket, target, recursive);
-        return await new Promise<BucketItem[]>((resolve, reject) => {
-            const results: BucketItem[] = [];
-            stream.on('data', (result) => {
-                if (result.size) {
-                    results.push({
-                        ...result,
-                        prefix: target,
-                        name: result.name.split(target)[1],
-                    });
-                }
+        try {
+            const stream = this.client.listObjects(this.opts.bucket, target, recursive);
+            return await new Promise<BucketItem[]>((resolve, reject) => {
+                const results: BucketItem[] = [];
+                stream.on('data', (result) => {
+                    if (result.size) {
+                        results.push({
+                            ...result,
+                            prefix: target,
+                            name: result.name.split(target)[1],
+                        });
+                    }
+                });
+                stream.on('end', () => resolve(results));
+                stream.on('error', reject);
             });
-            stream.on('end', () => resolve(results));
-            stream.on('error', reject);
-        });
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 
     async getMeta(target: string) {
-        const result = await this.client.statObject(this.opts.bucket, target);
-        return { ...result.metaData, ...result };
+        try {
+            const result = await this.client.statObject(this.opts.bucket, target);
+            return { ...result.metaData, ...result };
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
-        const url = await this.client.presignedGetObject(
-            this.opts.bucket,
-            target,
-            noExpire ? 24 * 60 * 60 * 7 : 30 * 60,
-            filename
-                ? { 'response-content-disposition': `attachment; filename="${encodeRFC5987ValueChars(filename)}"` }
-                : {},
-        );
-        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
-        return url;
+        try {
+            const url = await this.client.presignedGetObject(
+                this.opts.bucket,
+                target,
+                noExpire ? 24 * 60 * 60 * 7 : 30 * 60,
+                filename
+                    ? { 'response-content-disposition': `attachment; filename="${encodeRFC5987ValueChars(filename)}"` }
+                    : {},
+            );
+            if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+            return url;
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
     }
 }
 
