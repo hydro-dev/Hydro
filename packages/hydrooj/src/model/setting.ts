@@ -38,6 +38,7 @@ export const DOMAIN_USER_SETTINGS_BY_KEY: SettingDict = {};
 export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
 export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
+// eslint-disable-next-line max-len
 export type SettingType = 'text' | 'yaml' | 'number' | 'markdown' | 'password' | 'boolean' | 'textarea' | [string, string][] | Record<string, string>;
 
 export const Setting = (
@@ -160,6 +161,7 @@ SystemSetting(
     Setting('setting_server', 'server.xff', null, 'text', 'IP Header', 'e.g. x-forwarded-for (lowercase)'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'Default display language'),
     Setting('setting_server', 'server.login', true, 'boolean', 'Allow builtin-login'),
+    Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'Default Privilege'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'Problem Categories'),
     Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'LANG_TEXTS'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'Problems per page'),

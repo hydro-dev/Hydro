@@ -168,7 +168,7 @@ class DomainModel {
     }
 
     static setMultiUserInDomain(domainId: string, query: any, params: any) {
-        return collUser.updateMany({ domainId, ...query }, { $set: params });
+        return collUser.updateMany({ domainId, ...query }, { $set: params }, { upsert: true });
     }
 
     static getMultiUserInDomain(domainId: string, query: any = {}) {
@@ -176,7 +176,7 @@ class DomainModel {
     }
 
     static setUserInDomain(domainId: string, uid: number, params: any) {
-        return collUser.updateOne({ domainId, uid }, { $set: params });
+        return collUser.updateOne({ domainId, uid }, { $set: params }, { upsert: true });
     }
 
     @ArgMethod

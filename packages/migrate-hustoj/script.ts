@@ -4,9 +4,7 @@ import mysql from 'mysql';
 import 'hydrooj';
 import { buildContent } from 'hydrooj/dist/lib/content';
 
-const {
-    user, problem, builtin: { PRIV },
-} = global.Hydro.model;
+const { user, problem, system } = global.Hydro.model;
 
 export async function run({
     host = 'localhost', port = 27017, name = 'vijos4', username, password,
@@ -45,7 +43,7 @@ export async function run({
 
     const [udocs] = await query('SELECT * FROM `users`');
     for (const udoc of udocs) {
-        const uid = await user.create(udoc.email, udoc.nick, '', null, udoc.ip, udoc.defunct === 'Y' ? 0 : PRIV.PRIV_DEFAULT);
+        const uid = await user.create(udoc.email, udoc.nick, '', null, udoc.ip, udoc.defunct === 'Y' ? 0 : system.get('default.priv'));
         uidMap[udoc.uid] = uid;
         await user.setById(uid, {
             nSubmit: udoc.submit,
