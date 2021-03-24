@@ -133,7 +133,7 @@ class ProblemImportSYZOJHandler extends Handler {
         wait = false,
     ) {
         var tagLocale = this.user.viewLang || this.session.viewLang;
-        if (tagLocale == 'en') tagLocale = 'en_US';
+        if (tagLocale === 'en') tagLocale = 'en_US';
         else tagLocale = 'zh_CN';
         const result = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/getProblem`)
             .send({
@@ -158,8 +158,8 @@ class ProblemImportSYZOJHandler extends Handler {
                 }
             }
             var locale = c.locale;
-            if (locale == 'en_US') locale = 'en';
-            else if (locale == 'zh_CN') locale = 'zh';
+            if (locale === 'en_US') locale = 'en';
+            else if (locale === 'zh_CN') locale = 'zh';
             else continue;
             content[locale] = sections;
         }
