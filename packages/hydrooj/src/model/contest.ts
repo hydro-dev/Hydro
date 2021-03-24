@@ -385,6 +385,13 @@ export async function edit(
     return await document.set(domainId, type, tid, $set);
 }
 
+export async function del(domainId: string, tid: ObjectID, type: Type = document.TYPE_CONTEST) {
+    await Promise.all([
+        document.deleteOne(domainId, type, tid),
+        document.deleteMultiStatus(domainId, type, { docId: tid }),
+    ]);
+}
+
 export async function get(domainId: string, tid: ObjectID, type: -1): Promise<Tdoc<30 | 60>>;
 export async function get<T extends Type>(domainId: string, tid: ObjectID, type: T): Promise<Tdoc<T>>;
 export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>>;
@@ -601,6 +608,7 @@ global.Hydro.model.contest = {
     getMultiStatus,
     attend,
     edit,
+    del,
     get,
     updateStatus,
     getStatus,
