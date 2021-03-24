@@ -2,15 +2,10 @@
 
 class User {
     uid: number;
-
     rank: number;
-
     old: number;
-
     seed?: number;
-
     delta?: number;
-
     new?: number;
 
     constructor(rank: number, old: number, uid = 0) {
