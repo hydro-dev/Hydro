@@ -132,11 +132,14 @@ class ProblemImportSYZOJHandler extends Handler {
         protocol: string, host: string, pid: string | number,
         wait = false,
     ) {
+        var tagLocale = this.user.viewLang || this.session.viewLang;
+        if (tagLocale == 'en') tagLocale = 'en_US';
+        else tagLocale = 'zh_CN';
         const result = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/getProblem`)
             .send({
                 displayId: +pid,
                 localizedContentsOfAllLocales: true,
-                tagsOfLocale: this.user.viewLang || this.session.viewLang,
+                tagsOfLocale: tagLocale,
                 samples: true,
                 testData: true,
                 additionalFiles: true,
@@ -154,7 +157,11 @@ class ProblemImportSYZOJHandler extends Handler {
                     delete section.sampleId;
                 }
             }
-            content[c.locale] = sections;
+            var locale = c.locale;
+            if (locale == 'en_US') locale = 'en';
+            else if (locale == 'zh_CN') locale = 'zh';
+            else continue;
+            content[locale] = sections;
         }
         const tags = result.body.tagsOfLocale.map((node) => node.name);
         const title = [
