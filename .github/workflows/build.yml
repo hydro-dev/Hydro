@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: yarn build
     - name: Lint
-      run: yarn lint
+      run: yarn lint:ci
     - name: Unit Test
       run: yarn jest --runInBand
     - name: Report Coverage

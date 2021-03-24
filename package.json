@@ -9,6 +9,7 @@
         "build": "node build/build.js",
         "build:watch": "node build/build.js --watch",
         "lint": "eslint packages --ext ts --fix",
+        "lint:ci": "eslint packages --ext ts",
         "pub": "node build/publish",
         "jest": "node build/jest",
         "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug",

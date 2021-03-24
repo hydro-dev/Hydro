@@ -112,8 +112,10 @@ export class JudgeFilesDownloadHandler extends Handler {
 
 class JudgeConnectionHandler extends ConnectionHandler {
     processing: any = null;
+    closed = false;
 
     async prepare() {
+        logger.info('Judge daemon connected from ', this.request.ip);
         this.newTask();
     }
 
@@ -123,6 +125,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         while (!t) {
             // eslint-disable-next-line no-await-in-loop
             await sleep(100);
+            if (this.closed) return;
             // eslint-disable-next-line no-await-in-loop
             t = await task.getFirst({ type: 'judge' });
         }
@@ -146,10 +149,12 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
+        logger.info('Judge daemon disconnected from ', this.request.ip);
         if (this.processing) {
             await record.reset(this.processing.domainId, this.processing.rid, false);
             await task.add(this.processing);
         }
+        this.closed = true;
     }
 }
 
