@@ -205,10 +205,10 @@ class SystemUserImportHandler extends SystemHandler {
                     });
                     if (!confirm) {
                         tasks.push(
-                            user.create(email, username, password).then((uid) => {
-                                if (displayName) return domain.setUserInDomain(domainId, uid, { displayName });
-                                return Promise.resolve();
-                            }),
+                            (async () => {
+                                const uid = await user.create(email, username, password);
+                                if (displayName) await domain.setUserInDomain(domainId, uid, { displayName });
+                            })(),
                         );
                     }
                 }
