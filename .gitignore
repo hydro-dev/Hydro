@@ -23,6 +23,7 @@ tsconfig.json
 packages/**/*.js
 !/build/build.js
 !**/bin/*.js
+!*.page.js
 
 # Data files
 *.mmdb

@@ -447,6 +447,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.response.body = {
             path, psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
         };
+        await bus.serial('handler/solution/get', this);
     }
 
     @param('content', Types.String, isContent)

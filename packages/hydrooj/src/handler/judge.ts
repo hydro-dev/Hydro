@@ -33,6 +33,7 @@ async function _postJudge(rdoc: Rdoc) {
         : await problem.get(rdoc.domainId, rdoc.pid);
     const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
     await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
+    await bus.serial('record/judge', rdoc, updated);
 }
 
 export async function next(body: JudgeResultBody) {
