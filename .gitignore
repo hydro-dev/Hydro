@@ -24,6 +24,7 @@ packages/**/*.js
 !/build/build.js
 !**/bin/*.js
 !*.page.js
+!/install/jssh.d.ts
 
 # Data files
 *.mmdb

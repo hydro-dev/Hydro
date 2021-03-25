@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "engines": {
-        "node": ">=13"
+        "node": ">=14"
     },
     "dependencies": {
         "adm-zip": "^0.5.4",
