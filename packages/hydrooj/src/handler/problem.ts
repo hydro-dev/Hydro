@@ -164,7 +164,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             path: [
                 ['Hydro', 'homepage'],
                 ['problem_main', 'problem_main'],
-                [this.pdoc.title, null, true],
+                [this.pdoc.title, null, null, true],
             ],
         };
         this.extraTitleContent = this.pdoc.title;
