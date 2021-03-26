@@ -23,7 +23,7 @@ if (!cluster.isMaster) {
 
     if (argv._[0] === 'db') {
         function buildUrl(opts) {
-            let mongourl = `${opts.protocol}://`;
+            let mongourl = `${opts.protocol || 'mongodb'}://`;
             if (opts.username) mongourl += `${opts.username}:${opts.password}@`;
             mongourl += `${opts.host}:${opts.port}/${opts.name}`;
             if (opts.url) mongourl = opts.url;
