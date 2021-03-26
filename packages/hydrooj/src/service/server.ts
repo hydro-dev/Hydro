@@ -4,7 +4,9 @@ import { resolve } from 'path';
 import os from 'os';
 import http from 'http';
 import moment from 'moment-timezone';
-import { isSafeInteger, Dictionary, filter } from 'lodash';
+import {
+    isSafeInteger, Dictionary, filter, cloneDeep,
+} from 'lodash';
 import { ObjectID } from 'mongodb';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
@@ -245,6 +247,11 @@ export async function prepare() {
     }));
 }
 
+export const UiContextBase = {
+    cdn_prefix: '/',
+    url_prefix: '/',
+};
+
 export class HandlerCommon {
     domainId: string;
     domain: DomainDoc;
@@ -326,7 +333,7 @@ export class HandlerCommon {
 }
 
 export class Handler extends HandlerCommon {
-    UIContext: any;
+    UiContext: any;
     args: any;
     ctx: Koa.Context;
 
@@ -394,10 +401,8 @@ export class Handler extends HandlerCommon {
             },
             disposition: null,
         };
-        this.UIContext = {
-            cdn_prefix: '/',
-            url_prefix: '/',
-        };
+        this.UiContext = cloneDeep(UiContextBase);
+        this.UiContext.cdn_prefix = system.get('server.cdn');
         this.session = {};
         const xff = system.get('server.xff');
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
@@ -465,7 +470,7 @@ export class Handler extends HandlerCommon {
         }
         if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
-        this.UIContext.csrfToken = this.csrfToken;
+        this.UiContext.csrfToken = this.csrfToken;
         this.loginMethods = filter(Object.keys(global.Hydro.lib), (str) => str.startsWith('oauth_'))
             .map((key) => ({
                 id: key.split('_')[1],
@@ -801,6 +806,7 @@ global.Hydro.service.server = {
     app,
     server,
     router,
+    UiContextBase,
     get,
     post,
     route,

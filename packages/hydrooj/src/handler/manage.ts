@@ -8,6 +8,7 @@ import * as system from '../model/system';
 import user from '../model/user';
 import { STATUS, PRIV } from '../model/builtin';
 import record from '../model/record';
+import domain from '../model/domain';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
@@ -193,14 +194,23 @@ class SystemUserImportHandler extends SystemHandler {
         const messages = [];
         for (const i in users) {
             const u = users[i];
-            const [email, username, password] = u.split(',').map((t) => t.trim());
+            const [email, username, password, displayName] = u.split(',').map((t) => t.trim());
             if (email && username && password) {
                 if (!isEmail(email)) messages.push(`Line ${i + 1}: Invalid email.`);
                 else if (!isUname(username)) messages.push(`Line ${i + 1}: Invalid username`);
                 else if (!isPassword(password)) messages.push(`Line ${i + 1}: Invalid password`);
                 else {
-                    udocs.push({ email, username, password });
-                    if (!confirm) tasks.push(user.create(email, username, password));
+                    udocs.push({
+                        email, username, password, displayName,
+                    });
+                    if (!confirm) {
+                        tasks.push(
+                            (async () => {
+                                const uid = await user.create(email, username, password);
+                                if (displayName) await domain.setUserInDomain(domainId, uid, { displayName });
+                            })(),
+                        );
+                    }
                 }
             } else messages.push(`Line ${i + 1}: Input invalid.`);
         }

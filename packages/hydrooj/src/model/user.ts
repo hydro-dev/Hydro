@@ -54,17 +54,11 @@ class User implements _User {
         this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
-            if (udoc[key]) this[key] = udoc[key];
-            else if (setting.SETTINGS_BY_KEY[key].value !== null) {
-                this[key] = setting.SETTINGS_BY_KEY[key].value;
-            }
+            this[key] = udoc[key] ?? setting.SETTINGS_BY_KEY[key].value;
         }
 
         for (const key in setting.DOMAIN_USER_SETTINGS_BY_KEY) {
-            if (dudoc[key]) this[key] = dudoc[key];
-            else if (setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value !== null) {
-                this[key] = setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
-            }
+            this[key] = dudoc[key] ?? setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
         }
 
         bus.serial('user/get', this);

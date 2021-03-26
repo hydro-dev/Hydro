@@ -10,6 +10,7 @@ import type {
 } from '../interface';
 import type { DomainDoc } from '../loader';
 import type { DocType } from '../model/document';
+import type { ProblemSolutionHandler } from '../handler/problem';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus', true);
@@ -59,6 +60,8 @@ export interface EventMap {
         $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
     ) => VoidReturn
 
+    'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
+
     'discussion/before-add': (
         domainId: string, parentType: number, parentId: ObjectID | number | string,
         owner: number, title: string, content: string,
@@ -76,6 +79,7 @@ export interface EventMap {
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
+    'record/judge': (rdoc: Rdoc, updated: boolean) => VoidReturn
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {

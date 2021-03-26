@@ -164,7 +164,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             path: [
                 ['Hydro', 'homepage'],
                 ['problem_main', 'problem_main'],
-                [this.pdoc.title, null, true],
+                [this.pdoc.title, null, null, true],
             ],
         };
         this.extraTitleContent = this.pdoc.title;
@@ -447,6 +447,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.response.body = {
             path, psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
         };
+        await bus.serial('handler/solution/get', this);
     }
 
     @param('content', Types.String, isContent)

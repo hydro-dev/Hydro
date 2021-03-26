@@ -50,6 +50,13 @@ export function edit(domainId: string, tid: ObjectID, $set: Partial<TrainingDoc>
     return document.set(domainId, document.TYPE_TRAINING, tid, $set);
 }
 
+export function del(domainId: string, tid: ObjectID) {
+    return Promise.all([
+        document.deleteOne(domainId, document.TYPE_TRAINING, tid),
+        document.deleteMultiStatus(domainId, document.TYPE_TRAINING, { docId: tid }),
+    ]);
+}
+
 export function getPids(dag: TrainingNode[]) {
     return Array.from(new Set(flatten(dag.map((node) => node.pids))));
 }
@@ -117,6 +124,7 @@ global.Hydro.model.training = {
     isInvalid,
     add,
     edit,
+    del,
     count,
     get,
     getList,
