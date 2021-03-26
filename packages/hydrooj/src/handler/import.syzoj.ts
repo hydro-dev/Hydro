@@ -139,7 +139,7 @@ class ProblemImportSYZOJHandler extends Handler {
             .send({
                 displayId: +pid,
                 localizedContentsOfAllLocales: true,
-                tagsOfLocale: tagsOfLocale,
+                tagsOfLocale,
                 samples: true,
                 testData: true,
                 additionalFiles: true,
