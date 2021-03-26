@@ -132,7 +132,7 @@ class ProblemImportSYZOJHandler extends Handler {
         protocol: string, host: string, pid: string | number,
         wait = false,
     ) {
-        var tagsOfLocale = this.user.viewLang || this.session.viewLang;
+        let tagsOfLocale = this.user.viewLang || this.session.viewLang;
         if (tagsOfLocale === 'en') tagsOfLocale = 'en_US';
         else tagsOfLocale = 'zh_CN';
         const result = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/getProblem`)
@@ -157,7 +157,7 @@ class ProblemImportSYZOJHandler extends Handler {
                     delete section.sampleId;
                 }
             }
-            var locale = c.locale;
+            let locale = c.locale;
             if (locale === 'en_US') locale = 'en';
             else if (locale === 'zh_CN') locale = 'zh';
             content[locale] = sections;
