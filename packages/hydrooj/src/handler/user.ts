@@ -179,7 +179,7 @@ class UserDetailHandler extends Handler {
             record.getByUid(domainId, uid, 30),
             this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
                 ? paginate(
-                    problem.getMulti(domainId, { owner: this.user._id }),
+                    problem.getMulti(domainId, { owner: uid }),
                     1,
                     100,
                 )
