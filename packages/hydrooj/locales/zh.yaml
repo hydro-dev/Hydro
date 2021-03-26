@@ -1,45 +1,45 @@
 __id: zh
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
-'{} is a moderator of this domain.': '{}是这个域的管理者之一。'
-'{0} comments': '{0} 条评论'
-'{0} discussions': '{0} 条讨论'
-'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
-'{0} problems': '{0} 道题'
-'{0} sections': '{0} 小节'
-'{0} solutions': '{0} 条题解'
-'{0} views': '{0} 次查看'
-'{0}: Permissions': '{0}: 权限'
-'{0}: Roles': '{0}: 角色'
-'{0}: Users': '{0}: 用户'
-'# My Submissions': '我的递交数'
-'# Submissions': '递交数'
-'↓ # Comments': '↓ 评论数'
-'↓ # Enrollees': '↓ 参与人数'
-'↓ # Likes': '↓ 赞数'
-'↓ # Stars': '↓ 收藏数'
-'↓ Create Time': '↓ 创建时间'
-'↓ Update Time': '↓ 更新时间'
-'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
-'Copy "{data}" failed :(': '复制“{data}”失败 :('
-'Copy failed :(': '复制失败 :('
-'Current dataset: {0}': '当前测试数据: {0}'
-'Discussion: Terms Of Service': 讨论区服务条款
-'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
-'Hello, {0}! You can click following link to active your new email of your Hydro account:': 您好，{0}！您可以点击以下链接来激活您 Hydro 账户的新电子邮件地址：
-'Hello, {0}! You can click following link to reset the password of your Hydro account:': 您好，{0}！您可以点击以下链接来重置您 Hydro 账户的密码：
-'Hello! You can click following link to sign up your Hydro account:': 您好！您可以点击以下链接来注册您的 Hydro 账户：
-'Join {0}': '加入 {0}'
-'No': 否
-'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
-'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
-'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
-'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
+'Copy "{data}" failed :(': "复制“{data}”失败 :("
 'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '我们使用 <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a> 服务来呈现您的头像。'
-'Yes': 是
+"{} is a moderator of this domain.": "{}是这个域的管理者之一。"
+"{0} comments": "{0} 条评论"
+"{0} discussions": "{0} 条讨论"
+"{0} limit exceeded (limit: {2} operations in {1} seconds).": "{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。"
+"{0} problems": "{0} 道题"
+"{0} sections": "{0} 小节"
+"{0} solutions": "{0} 条题解"
+"{0} views": "{0} 次查看"
+"{0}: Permissions": "{0}: 权限"
+"{0}: Roles": "{0}: 角色"
+"{0}: Users": "{0}: 用户"
+"# My Submissions": "我的递交数"
+"# Submissions": "递交数"
+"↓ # Comments": "↓ 评论数"
+"↓ # Enrollees": "↓ 参与人数"
+"↓ # Likes": "↓ 赞数"
+"↓ # Stars": "↓ 收藏数"
+"↓ Create Time": "↓ 创建时间"
+"↓ Update Time": "↓ 更新时间"
+"A domain ID cannot be changed after creation. It is supposed to be:": "创建后将无法更改 ID。ID 必须满足以下条件："
+"Copy failed :(": "复制失败 :("
+"Current dataset: {0}": "当前测试数据: {0}"
+"Discussion: Terms Of Service": 讨论区服务条款
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
+"Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...": 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
+"Hello, {0}! You can click following link to active your new email of your Hydro account:": 您好，{0}！您可以点击以下链接来激活您 Hydro 账户的新电子邮件地址：
+"Hello, {0}! You can click following link to reset the password of your Hydro account:": 您好，{0}！您可以点击以下链接来重置您 Hydro 账户的密码：
+"Hello! You can click following link to sign up your Hydro account:": 您好！您可以点击以下链接来注册您的 Hydro 账户：
+"Join {0}": "加入 {0}"
+"No": 否
+"Note: Problem title may not be hidden.": 注意：题目标题可能不会被隐藏。
+"Role {1} already exists in domain {0}.": "域 {0} 中已存在角色 {1}。"
+"Solved {0} problems, RP: {1} (No. {2})": "解决了 {0} 道题目，RP: {1} (No. {2})"
 "Splitted by ', '.": 由“, ”或“，”分隔。
+"The value `{1}` of {0} already exists.": "{0} 的值 `{1}` 已经存在。"
 "What's file?": 什么是文件？
+"Yes": 是
 (All Problems): (所有题目)
 (None): (无)
 (Not changed): 未更改
@@ -55,6 +55,7 @@ Accepted: 已通过
 Access Control: 访问控制
 Action: 动作
 Active Sessions: 活动会话
+Add blacklist by ip, uid: 封禁 IP / 将对应 uid 的用户拉入黑名单
 Add module: 添加模块
 Add new data: 添加新数据
 Add User: 添加用户
@@ -66,6 +67,7 @@ All Homeworks: 所有作业
 All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All: 全部
+Allow builtin-login: 使用默认登录方式
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
@@ -97,6 +99,7 @@ By Contest: 由比赛
 By Problem: 由题目
 By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.: 注册一个 Hydro 通用账户，您就可以在我们提供的所有在线评测服务上提交代码、参与讨论。
 By Username / UID: 由用户名或 UID
+Calculate rp of a domain, or all domains: 计算用户的 RP
 Calendar View: 日历视图
 Calendar: 日历
 Can be Extended For: 可延期
@@ -104,6 +107,7 @@ Cancel Score: 取消成绩
 Cancel: 取消
 Categories: 分类
 Category: 分类
+CDN Prefix: CDN 目录路径
 Change Email: 修改电子邮件
 Change Password: 修改密码
 Chinese: 中文
@@ -145,6 +149,8 @@ contest_edit: 编辑比赛
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
 Contest: 比赛
+Contests on main: 主页展示的比赛数量
+Contests per page: 每页展示的比赛数量
 Continue: 继续
 Contributed Problems: 贡献的题目
 Contributions: 贡献
@@ -192,6 +198,9 @@ Day: 日
 Deadline: 截止时间
 Default Code Language: 默认代码语言
 Default Code Template: 默认代码模板
+Default display language: 网站默认语言
+Default Privilege: 用户默认全站权限
+Delete a user: 删除用户
 Delete discussion replies of own discussion: 删除自己讨论中的回复
 Delete discussion replies: 删除讨论回复
 Delete discussions: 删除讨论
@@ -212,6 +221,7 @@ Difficulty by admin: 管理员设定的难度
 Difficulty by algorithm: 算法计算的难度
 Difficulty displayed: 显示的难度
 Difficulty: 难度
+Disable builtin judge: 禁用内置评测机
 Disabled: 关闭
 Disconnected from the server. Reconnecting...: 到服务器的连接断开。正在重新连接...
 Discussion {1} not found.: 讨论 {1} 不存在。
@@ -226,8 +236,11 @@ discussion_edit: 编辑讨论
 discussion_main: 讨论
 discussion_node: 讨论
 Discussion: 讨论
+Discussions on main: 主页展示的讨论数量
+Discussions per page: 每页展示的讨论数量
 Discussions: 讨论
 Display name {1} you want to set is used by others.: 您想要设置的显示名 {1} 已经被其他人使用了。
+display name: 本域内显示名称
 Display Name: 显示名
 display_name: 显示名
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 请勿讨论解法，否则以作弊论处并且将失去参赛资格。
@@ -288,10 +301,13 @@ Enabled: 开启
 End at: 结束于
 End Date: 结束日期
 End Time: 结束时间
+EndPoint for judge: 提供给评测机的 EndPoint
+EndPoint for user: 提供给用户的 EndPoint
 English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
+Ensure index for peoblem search: 初始化 better-search 插件
 error: 错误
 Evaluated difficulty: 估计的难度
 expand: 展开
@@ -306,10 +322,12 @@ Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
 Filter: 过滤
+Footer Extra HTML: 额外底部代码
 Footer: 页脚
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
+From QDUOJ Export: 从 QDUOJ 导入
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
@@ -318,6 +336,10 @@ Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
 He: 他
+Header Background: 顶部背景
+Header Background@2x: 顶部背景（大）
+Header Logo: 顶部图标
+Header Logo@2x: 顶部图标（大）
 Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
@@ -344,15 +366,20 @@ homework_main: 作业
 homework_scoreboard: 作业成绩表
 homework_status: 作业成绩表
 Homework: 作业
+Homeworks on main: 主页展示的作业数量
+Homeworks per page: 每页展示的作业数量
 Host: 主持人
 hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
 Images: 图片
+Import From Hydro: 从 Hydro 导入
+Import From SYZOJ: 从 SYZOJ 导入
 Import From SYZOJ.: 从 SYZOJ 导入
 Import from: 导入自
 Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
+Import User: 导入用户
 Import: 导入
 In 1 day: 一天后
 In 1 month: 一个月后
@@ -364,6 +391,7 @@ In following homework: 在以下作业中
 In following training plans: 在下列训练计划中
 In Progress: 进行中
 Information: 信息
+Init Discussion Nodes: 初始化讨论结点
 Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
@@ -378,6 +406,7 @@ Invalid password for user {0}.: 用户 {0} 的密码错误。
 Invalid: 无效
 Invitation Code: 邀请码
 IO: 输入输出
+IP Header: IP 头部
 Is rated: 计入排名
 It works!: 它成了！
 Italic: 斜体
@@ -388,6 +417,9 @@ Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
+LANG_TEXTS: 编译语言代号 -> 语言名称
+Language file settings: 评测机语言配置文件（langs.yaml）
+Language Highlight ID: 编译语言代号 -> 高亮语言代号
 Language: 语言
 last active at: 最后活动于
 last login at: 最后登录于
@@ -413,6 +445,7 @@ Logout This Session: 注销该会话
 Logout: 登出
 Lost Password: 忘记密码
 Lucky: 手气不错
+Mail From: 发件人
 manage_dashboard: 控制面板
 manage_join_applications: 加域申请
 manage_module: 管理模块
@@ -423,12 +456,16 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Yellow: 标黄
+Max testcases per problem: 单题最多测试点数量
 Memory Cost: 内存占用
 Memory Info: 内存信息
 Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
+migrate from hustoj: 从 HustOJ 导入
+migrate from vijos: 从 Vijos 导入
+Monaco language modes: 编译语言代号 -> Monaco 编辑器模式
 Month: 月
 Monthly Popular: 月度最受欢迎
 Most Upvoted Solutions: 最被赞同的题解
@@ -439,6 +476,10 @@ My Recent Submissions: 我的最近递交记录
 My Role: 我的角色
 name: 名称
 Name: 名称
+Nav Logo Dark: 左上角小图标（暗）
+Nav Logo Dark@2x: 左上角图标（暗）（大）
+Nav Logo Light: 左上角图标（亮）
+Nav Logo Light@2x: 左上角图标（亮）（大）
 Network error: 网络错误
 Never expire: 从不过期
 New dataset: 新测试数据
@@ -458,7 +499,7 @@ No problem.: 没有题目。
 No solutions so far...: 目前还没有题解...
 No Submissions: 没有递交
 No user is allowed to join this domain: 没有用户可以自助加入此域
-no_translation_warn: ''
+no_translation_warn: ""
 None: 无
 Not Attended: 未参加
 Not available: 不可用
@@ -514,6 +555,7 @@ perm_training: 训练
 Permission: 权限
 Permissions: 权限
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
+pid: 题目编号
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
@@ -523,8 +565,10 @@ Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试
 Pretest: 自测
 Pretest?: 自测?
+Preview: 预览
 Privacy: 隐私
 Problem {1} not found.: 题目 {1} 不存在。
+Problem Categories: 题目标签
 Problem Data: 题目数据
 Problem Description: 题目描述
 Problem ID List: 题目 ID 列表
@@ -543,15 +587,16 @@ problem_main: 题库
 problem_solution: 题解
 problem_statistics: 题目统计
 problem_submit: 递交代码
-problem-category-delim: '|'
+problem-category-delim: "|"
 problem-subcategory-delim: 、
 Problem: 题目
-problem.import.additional_file: '## 附加文件'
-problem.import.hint: '## 提示'
-problem.import.input_format: '## 输入格式'
-problem.import.limit_and_hint: '## 限制'
-problem.import.output_format: '## 输出格式'
-problem.import.problem_description: '## 题目描述'
+problem.import.additional_file: "## 附加文件"
+problem.import.hint: "## 提示"
+problem.import.input_format: "## 输入格式"
+problem.import.limit_and_hint: "## 限制"
+problem.import.output_format: "## 输出格式"
+problem.import.problem_description: "## 题目描述"
+Problems per page: 每页展示的题目数量
 Problems Sets: 题库
 Problems: 题目
 Profile Background Image: 背景图片
@@ -565,10 +610,12 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
+Recalcuates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
 record_detail: 记录详情
 record_main: 评测队列
+Records per page: 每页展示的评测记录数量
 Records: 评测记录
 Refresh Records: 刷新评测记录
 Refresh: 刷新
@@ -583,6 +630,7 @@ Remove Selected User: 将所选用户移出
 Remove this data: 移除这组数据
 Remove: 移除
 Repeat Password: 重复密码
+Replies per page: 每页展示的回复数量
 Reply discussions: 回复讨论
 Reply problem solutions: 回复题解
 reply: 回复
@@ -593,6 +641,7 @@ Reset Password or Find Username: 重置密码或找回用户名
 Reset Password: 重置密码
 Reset: 重置
 Restart: 重新启动
+Retry delay sec: 错误时的重试等待秒数
 Role Assignment: 角色分配
 Role has been updated to {0} for selected users.: 所选用户角色已更新为 {0}。
 Role has been updated to {0}.: 角色已更新为 {0}。
@@ -603,10 +652,13 @@ RP Algorithm: RP 算法
 Rule: 规则
 Run Pretest: 运行自测
 Run: 运行
+Runner parallelism: 评测机运行进程数
 Sample Input: 输入数据
 Sample Output: 输出数据
 Sample: 样例
+Sandbox Host: 沙箱地址
 Save All Changes: 保存所有修改
+Saved session expire seconds: 保存的会话的过期秒数
 Saved session: 已保存的会话
 score canceled: 成绩取消
 Score: 分数
@@ -626,21 +678,31 @@ Selected users have been removed from the domain.: 所选用户已从此域中�
 Send Code after acceptance: 通过题目后发送源代码
 Send Message: 发送站内信息
 Send Password Reset Email: 发送密码重置邮件
+Send Problem: 发送题目
 Send Verification Email: 发送验证邮件
 Send: 发送
+Server BaseURL: 网站完整 URL
+Server Host: 网站带端口域名
+Server Hostname: 网站无端口域名
+Server Name: 网站名称
+Server Port: 服务器内部的端口
+Server Workers Number: 进程数量
 Service Status: 服务状态
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
 Set Roles for selected users: 为所选用户设置角色
+setting_basic: 基础设置
 setting_customize: 个性化
 setting_display: 显示偏好
 setting_domain: 域设置
+setting_file: 存储桶设置
 setting_info_domain: 个人信息
 setting_info: 个人信息
 setting_privacy: 隐私
 setting_server: 服务器设置
 setting_session: Session 设置
 setting_smtp: SMTP 设置
+setting_storage: 存储设置
 setting_usage: 使用偏好
 Settings: 设置
 Share: 分享
@@ -654,6 +716,11 @@ Sign up mail has been sent to your email.: 注册邮件已经发送到您的垃�
 Sign Up Now: 现在注册
 Sign Up: 注册
 Size: 大小
+SMTP Password: SMTP 密码
+SMTP Server Host: SMTP 服务器地址
+SMTP Server Port: SMTP 服务器端口
+SMTP Username: SMTP 用户名
+Solutions per page: 每页展示的题解数量
 Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
@@ -664,6 +731,12 @@ Statistics: 统计
 Status is hidden: 状态已隐藏
 status: 状态
 Status: 状态
+Stdout/Stderr size: 标准输出/错误流输出大小限制
+Storage engine accessKey: 存储桶 accessKey
+Storage engine bucket: 存储桶名称
+Storage engine endPoint: 存储桶 endPoint
+Storage engine region: 存储桶地域
+Storage engine secret: 存储桶 secretKey
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
@@ -671,10 +744,13 @@ Submit: 递交
 Submitted: 已递交
 Support: 支持
 Tags: 标签
+Target: 目标域地址（格式形如：<域 ID>@<接收网站网址>，如 system@https://hydro.org.cn/）
 Technical Information: 技术信息
+Temp directory: 沙箱分区文件夹
 Temporary session: 临时会话
 Terms of Service: 服务条款
 Test data comes from: 测试数据来自
+Testdata cache directory: 测试数据缓存文件夹
 Testdata Config: 测试数据配置
 Text: 文本
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
@@ -695,6 +771,7 @@ This homework is not open.: 该作业还未开放递交。
 This is the current session: 这是当前的会话
 This message will be presented to those whose submissions are accepted.: 这条消息将会被展示给通过此题的用户。
 This page needs JavaScript to work.: 这个页面需要 Javascript。
+This person is lazy and didn't wrote anything.: 该用户太懒，这里啥也没写 (´・ω・｀)
 This section cannot be challenged at present, so please complete the following sections first: 该章节目前不可挑战，请先完成以下章节
 This type of files are not allowed to be uploaded.: 不允许上传这种文件。
 Time (Seconds): 耗时 (秒)
@@ -705,11 +782,13 @@ timeago_locale: zh_CN
 Timezone: 时区
 title: 标题
 Title: 标题
+Tmpfs size: 沙箱分区大小
 Toggle Pretest Panel: 切换自测面板
 Toggle Preview: 切换预览
 Toggle Records Panel: 切换评测记录面板
 Total Score: 总分数
 Total Time (Seconds): 总耗时 (秒)
+Total time limit per problem: 单题最多总评测时长
 Total Time: 总耗时
 Total: 总计
 Training requirement is not satisfied.: 不满足训练条件。
@@ -718,6 +797,8 @@ training_detail: 训练详情
 training_edit: 编辑训练
 training_main: 训练
 Training: 训练
+Trainings on main: 主页展示的训练数量
+Trainings per page: 每页展示的训练数量
 Type: 类型
 UI Language: 用户界面语言
 Uncompleted: 未完成
@@ -725,6 +806,7 @@ Unique: 唯一
 Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
 Unordered List: 无序列表
+Unsaved session expire seconds: 未保存的会话的过期秒数
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
 Update Permission: 更新权限
@@ -798,6 +880,8 @@ What's this?: 这是什么？
 Whether to show tags in the problem list.: 是否在题目列表中显示题目的标签。
 Will be used as the domain icon.: 将被用作系统图标。
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
+With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported. However, their test data are not copied directly.: 您可以通过这个功能将其他 OJ 的题目导入到本站。题目的标题、题面、标签和分类将会被直接导入，测试数据将会在后台自动导入。
+With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported.: 您可以通过这个功能将其他 OJ 的题目导入到本站。题目的标题、题面、标签和分类都将会被自动导入。
 Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 Year: 年
