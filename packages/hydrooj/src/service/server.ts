@@ -289,8 +289,8 @@ export class HandlerCommon {
             ...this.user,
             gravatar: misc.gravatar(this.user.gravatar || '', 128),
             perm: this.user.perm.toString(),
+            viewLang: this.translate('__id'),
         };
-        UserContext.viewLang = this.translate('__id');
         if (!global.Hydro.lib.template) return JSON.stringify(context);
         const res = await global.Hydro.lib.template.render(name, {
             handler: this,

@@ -27,7 +27,7 @@ async function _postJudge(rdoc: Rdoc) {
             rdoc.domainId, rdoc.contest.tid, rdoc.uid,
             rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
         );
-    } else if (updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
+    } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
     const pdoc = (accept && updated)
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid);
