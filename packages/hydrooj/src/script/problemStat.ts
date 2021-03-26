@@ -3,7 +3,7 @@ import db from '../service/db';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
 
-export const description = 'Recalcuates nSubmit and nAccept in problem status.';
+export const description = 'Recalculates nSubmit and nAccept in problem status.';
 
 export async function udoc() {
     const pipeline = [

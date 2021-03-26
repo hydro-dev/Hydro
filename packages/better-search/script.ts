@@ -2,7 +2,7 @@ import nodejieba from 'nodejieba';
 import { Pdoc } from 'hydrooj';
 import * as document from 'hydrooj/dist/model/document';
 
-export const description = 'Ensure index for peoblem search';
+export const description = 'Ensure index for problem search';
 
 export async function run() {
     await document.coll.find({ docType: document.TYPE_PROBLEM }).forEach(async (doc: Pdoc) => {

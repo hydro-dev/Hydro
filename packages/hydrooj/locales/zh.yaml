@@ -307,7 +307,7 @@ English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
-Ensure index for peoblem search: 初始化 better-search 插件
+Ensure index for problem search: 初始化 better-search 插件
 error: 错误
 Evaluated difficulty: 估计的难度
 expand: 展开
@@ -610,7 +610,7 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
-Recalcuates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
+Recalculates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
 record_detail: 记录详情
