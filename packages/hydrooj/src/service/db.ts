@@ -3,6 +3,7 @@ import * as bus from './bus';
 import { Collections } from '../interface';
 
 interface MongoConfig {
+    protocol?: string,
     username?: string,
     password?: string,
     host?: string,
@@ -19,12 +20,17 @@ class MongoService {
     public db2: Db;
     private opts: MongoConfig;
 
-    async start(opts: MongoConfig) {
-        this.opts = opts;
-        let mongourl = 'mongodb://';
+    static buildUrl(opts: MongoConfig) {
+        let mongourl = `${opts.protocol}://`;
         if (opts.username) mongourl += `${opts.username}:${opts.password}@`;
         mongourl += `${opts.host}:${opts.port}/${opts.name}`;
         if (opts.url) mongourl = opts.url;
+        return mongourl;
+    }
+
+    async start(opts: MongoConfig) {
+        this.opts = opts;
+        const mongourl = MongoService.buildUrl(opts);
         this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
         this.db = this.client.db(opts.name);
         this.client2 = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
