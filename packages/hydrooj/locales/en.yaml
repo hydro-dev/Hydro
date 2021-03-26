@@ -36,6 +36,7 @@ homework_main: Homework
 homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
+manage_dashboard: Control Panel
 manage_module: Module Management
 manage_script: Scripts
 manage_setting: System Settings
@@ -58,6 +59,7 @@ perm_training: Trainings
 problem_create: Problem Create
 problem_detail: Problem Detail
 problem_edit: Problem Edit
+problem_files: Problem Files
 problem_import: Import Problem
 problem_main: Problem Set
 problem_solution: Problem Solution
@@ -87,6 +89,7 @@ setting_smtp: SMTP Settings
 setting_usage: Usage Preference
 timeago_locale: en_US
 training_create: Training Create
+training_detail: Training Detail
 training_edit: Training Edit
 training_main: Training
 user_detail: User Detail
