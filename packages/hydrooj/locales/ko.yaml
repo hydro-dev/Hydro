@@ -38,7 +38,7 @@ __langname: 한국어
 'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '<a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요.'
 'Yes': 예
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 난이도가 알고리즘에 의해 정해지지 않은 경우에만 적용됩니다.
-"Splitted by ', '.": “, ”“，”으로 구분
+"Split by ', '.": “, ”“，”으로 구분
 "What's file?": 파일?
 (All Problems): (전체 문제)
 (None): (N/A)

@@ -1,46 +1,57 @@
 sandbox_host:
   type: text
-  name: Sandbox Host
+  name: sandbox_host
+  desc: Sandbox Host
   default: http://localhost:5050
 tmp_dir:
   type: text
-  name: Temp directory
+  name: tmp_dir
+  desc: Temp directory
   default: $TEMP/hydro/judge.tmp
 tmpfs_size:
   type: text
-  name: Tmpfs size
+  name: tmpfs_size
+  desc: Tmpfs size
   default: 256m
 stdio_size:
   type: text
-  name: Stdout/Stderr size
+  name: stdio_size
+  desc: Stdout/Stderr size
   default: 32m
 testcases_max:
   type: number
-  name: Max testcases per problem
+  name: testcases_max
+  desc: Max testcases per problem
   default: 100
 total_time_limit:
   type: number
-  name: Total time limit per problem
+  name: total_time_limit
+  desc: Total time limit per problem
   default: 60
 retry_delay_sec:
   type: number
-  name: Retry delay sec
+  name: retry_delay_sec
+  desc: Retry delay sec
   default: 15
 cache_dir:
   type: text
-  name: Testdata cache directory
+  name: cache_dir
+  desc: Testdata cache directory
   default: $HOME/.cache/hydro/judge
 parallelism:
   type: number
-  name: Runner parallelism
+  name: parallelism
+  desc: Runner parallelism
   default: 2
 disable:
   type: boolean
-  name: Disable builtin judge
+  name: disable
+  desc: Disable builtin judge
   default: false
 langs:
   type: textarea
-  name: Language file settings
+  name: langs
+  desc: Language file settings
   default: |
     ccWithoutO2: # Do not remove this entry
         type: compiler
