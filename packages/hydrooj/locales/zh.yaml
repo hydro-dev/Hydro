@@ -25,7 +25,6 @@ __langname: 简体中文
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
-'Effects only when Difficulty is not 'Use algorithm calculated'.': 仅当难度不为“使用算法计算”时才起效。
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
 'Hello, {0}! You can click following link to active your new email of your Hydro account:': 您好，{0}！您可以点击以下链接来激活您 Hydro 账户的新电子邮件地址：
 'Hello, {0}! You can click following link to reset the password of your Hydro account:': 您好，{0}！您可以点击以下链接来重置您 Hydro 账户的密码：
@@ -39,6 +38,7 @@ __langname: 简体中文
 'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '我们使用 <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a> 服务来呈现您的头像。'
 'What's file?': 什么是文件？
 'Yes': 是
+"Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ',' '.'": 由“, ”或“，”分隔。
 (All Problems): (所有题目)
 (None): (无)
@@ -67,7 +67,7 @@ All Homeworks: 所有作业
 All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All: 全部
-Allow builtin-login: 使用默认登录方式
+Allow builtin-login: 启用内置登录
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
@@ -107,7 +107,7 @@ Cancel Score: 取消成绩
 Cancel: 取消
 Categories: 分类
 Category: 分类
-CDN Prefix: CDN 目录路径
+CDN Prefix: CDN 路径前缀
 Change Email: 修改电子邮件
 Change Password: 修改密码
 Chinese: 中文
@@ -198,7 +198,7 @@ Day: 日
 Deadline: 截止时间
 Default Code Language: 默认代码语言
 Default Code Template: 默认代码模板
-Default display language: 网站默认语言
+Default display language: 默认显示语言
 Default Privilege: 用户默认全站权限
 Delete a user: 删除用户
 Delete discussion replies of own discussion: 删除自己讨论中的回复
@@ -221,7 +221,6 @@ Difficulty by admin: 管理员设定的难度
 Difficulty by algorithm: 算法计算的难度
 Difficulty displayed: 显示的难度
 Difficulty: 难度
-Disable builtin judge: 禁用内置评测机
 Disabled: 关闭
 Disconnected from the server. Reconnecting...: 到服务器的连接断开。正在重新连接...
 Discussion {1} not found.: 讨论 {1} 不存在。
@@ -307,7 +306,6 @@ English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
-Ensure index for problem search: 初始化 better-search 插件
 error: 错误
 Evaluated difficulty: 估计的难度
 expand: 展开
@@ -327,7 +325,6 @@ Footer: 页脚
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
-From QDUOJ Export: 从 QDUOJ 导入
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
@@ -336,10 +333,6 @@ Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
 He: 他
-Header Background: 顶部背景
-Header Background@2x: 顶部背景（大）
-Header Logo: 顶部图标
-Header Logo@2x: 顶部图标（大）
 Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
@@ -406,7 +399,6 @@ Invalid password for user {0}.: 用户 {0} 的密码错误。
 Invalid: 无效
 Invitation Code: 邀请码
 IO: 输入输出
-IP Header: IP 头部
 Is rated: 计入排名
 It works!: 它成了！
 Italic: 斜体
@@ -456,16 +448,12 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Yellow: 标黄
-Max testcases per problem: 单题最多测试点数量
 Memory Cost: 内存占用
 Memory Info: 内存信息
 Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
-migrate from hustoj: 从 HustOJ 导入
-migrate from vijos: 从 Vijos 导入
-Monaco language modes: 编译语言代号 -> Monaco 编辑器模式
 Month: 月
 Monthly Popular: 月度最受欢迎
 Most Upvoted Solutions: 最被赞同的题解
@@ -476,10 +464,6 @@ My Recent Submissions: 我的最近递交记录
 My Role: 我的角色
 name: 名称
 Name: 名称
-Nav Logo Dark: 左上角小图标（暗）
-Nav Logo Dark@2x: 左上角图标（暗）（大）
-Nav Logo Light: 左上角图标（亮）
-Nav Logo Light@2x: 左上角图标（亮）（大）
 Network error: 网络错误
 Never expire: 从不过期
 New dataset: 新测试数据
@@ -498,6 +482,7 @@ No Permission to Submit: 您没有权限递交
 No problem.: 没有题目。
 No solutions so far...: 目前还没有题解...
 No Submissions: 没有递交
+No testdata at current.: 暂无测试数据。╰(*°▽°*)╯
 No user is allowed to join this domain: 没有用户可以自助加入此域
 no_translation_warn: ''
 None: 无
@@ -555,7 +540,7 @@ perm_training: 训练
 Permission: 权限
 Permissions: 权限
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
-pid: 题目编号
+pid: 题目 ID
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
@@ -641,7 +626,6 @@ Reset Password or Find Username: 重置密码或找回用户名
 Reset Password: 重置密码
 Reset: 重置
 Restart: 重新启动
-Retry delay sec: 错误时的重试等待秒数
 Role Assignment: 角色分配
 Role has been updated to {0} for selected users.: 所选用户角色已更新为 {0}。
 Role has been updated to {0}.: 角色已更新为 {0}。
@@ -652,11 +636,9 @@ RP Algorithm: RP 算法
 Rule: 规则
 Run Pretest: 运行自测
 Run: 运行
-Runner parallelism: 评测机运行进程数
 Sample Input: 输入数据
 Sample Output: 输出数据
 Sample: 样例
-Sandbox Host: 沙箱地址
 Save All Changes: 保存所有修改
 Saved session expire seconds: 保存的会话的过期秒数
 Saved session: 已保存的会话
@@ -681,12 +663,6 @@ Send Password Reset Email: 发送密码重置邮件
 Send Problem: 发送题目
 Send Verification Email: 发送验证邮件
 Send: 发送
-Server BaseURL: 网站完整 URL
-Server Host: 网站带端口域名
-Server Hostname: 网站无端口域名
-Server Name: 网站名称
-Server Port: 服务器内部的端口
-Server Workers Number: 进程数量
 Service Status: 服务状态
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
@@ -702,7 +678,6 @@ setting_privacy: 隐私
 setting_server: 服务器设置
 setting_session: Session 设置
 setting_smtp: SMTP 设置
-setting_storage: 存储设置
 setting_usage: 使用偏好
 Settings: 设置
 Share: 分享
@@ -731,7 +706,6 @@ Statistics: 统计
 Status is hidden: 状态已隐藏
 status: 状态
 Status: 状态
-Stdout/Stderr size: 标准输出/错误流输出大小限制
 Storage engine accessKey: 存储桶 accessKey
 Storage engine bucket: 存储桶名称
 Storage engine endPoint: 存储桶 endPoint
@@ -744,13 +718,11 @@ Submit: 递交
 Submitted: 已递交
 Support: 支持
 Tags: 标签
-Target: 目标域地址（格式形如：<域 ID>@<接收网站网址>，如 system@https://hydro.org.cn/）
+Target: 目标域地址
 Technical Information: 技术信息
-Temp directory: 沙箱分区文件夹
 Temporary session: 临时会话
 Terms of Service: 服务条款
 Test data comes from: 测试数据来自
-Testdata cache directory: 测试数据缓存文件夹
 Testdata Config: 测试数据配置
 Text: 文本
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
@@ -782,13 +754,11 @@ timeago_locale: zh_CN
 Timezone: 时区
 title: 标题
 Title: 标题
-Tmpfs size: 沙箱分区大小
 Toggle Pretest Panel: 切换自测面板
 Toggle Preview: 切换预览
 Toggle Records Panel: 切换评测记录面板
 Total Score: 总分数
 Total Time (Seconds): 总耗时 (秒)
-Total time limit per problem: 单题最多总评测时长
 Total Time: 总耗时
 Total: 总计
 Training requirement is not satisfied.: 不满足训练条件。
