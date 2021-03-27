@@ -18,6 +18,7 @@ import sockjs from 'sockjs';
 import type { SetOption } from 'cookies';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
+import * as bus from './bus';
 import { errorMessage, lrucache } from '../utils';
 import { User, DomainDoc } from '../interface';
 import { Logger } from '../logger';
@@ -616,6 +617,8 @@ async function handle(ctx, HandlerClass, checker) {
                 .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
         }
 
+        await bus.serial('handler/create', h);
+
         await h.init(args);
         if (checker) checker.call(h);
         if (method === 'post') {
@@ -629,6 +632,8 @@ async function handle(ctx, HandlerClass, checker) {
         } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
             throw new MethodNotAllowedError(method);
         }
+
+        await bus.serial('handler/init', h);
 
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);

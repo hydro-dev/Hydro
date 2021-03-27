@@ -4,6 +4,10 @@ import 'reflect-metadata';
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
+
+const versionNum = +process.version.replace(/v/gim, '').split('.')[0];
+if (versionNum < 14) throw new Error('NodeJS >=v14 required');
+
 if (!global.Hydro) {
     global.Hydro = {
         stat: { reqCount: 0 },

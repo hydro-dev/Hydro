@@ -4,6 +4,7 @@ import type {
     Db, FilterQuery, ObjectID, OnlyFieldsOfType,
 } from 'mongodb';
 import { argv } from 'yargs';
+import type { Handler } from './server';
 import { Logger } from '../logger';
 import type {
     Mdoc, Pdoc, Rdoc, TrainingDoc, User,
@@ -60,6 +61,8 @@ export interface EventMap {
         $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
     ) => VoidReturn
 
+    'handler/create': (thisArg: Handler) => VoidReturn
+    'handler/init': (thisArg: Handler) => VoidReturn
     'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
     'discussion/before-add': (
