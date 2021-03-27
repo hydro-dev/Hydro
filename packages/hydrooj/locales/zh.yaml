@@ -36,7 +36,7 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '我们使用 <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a> 服务来呈现您的头像。'
-'What's file?': 什么是文件？
+"What's file?": 什么是文件？
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ',' '.'": 由“, ”或“，”分隔。
