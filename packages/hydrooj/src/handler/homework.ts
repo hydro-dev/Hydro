@@ -330,7 +330,7 @@ class HomeworkEditHandler extends HomeworkHandler {
         endAt = endAt.toDate();
         penaltySince = penaltySince.toDate();
         await contest.edit(domainId, tid, {
-            title, content, beginAt, endAt, verified, penaltySince, penaltyRules, rated,
+            title, content, beginAt, endAt, pids: verified, penaltySince, penaltyRules, rated,
         }, document.TYPE_HOMEWORK);
         if (tdoc.beginAt !== beginAt
             || tdoc.endAt !== endAt
