@@ -36,7 +36,7 @@ import * as system from '../model/system';
 import blacklist from '../model/blacklist';
 import token from '../model/token';
 import * as opcount from '../model/opcount';
-import { PERM } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 
 const logger = new Logger('server');
 export const app = new Koa();
@@ -274,6 +274,7 @@ export class HandlerCommon {
     extraTitleContent?: string;
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
+        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_RATE)) return;
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
@@ -459,7 +460,7 @@ export class Handler extends HandlerCommon {
         const [absoluteDomain, inferDomain] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
-            this.limitRate('global', 10, 100),
+            this.limitRate('global', 10, 50),
             this.getSession(),
             this.getBdoc(),
         ]);

@@ -311,7 +311,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.String)
     @param('code', Types.String)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
-        await this.limitRate('add_record', 60, 100);
+        await this.limitRate('add_record', 60, 10);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, {
             type: document.TYPE_CONTEST,
             tid,
@@ -339,7 +339,7 @@ class ContestCodeHandler extends ContestHandler {
         if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         }
-        this.limitRate('homework_code', 3600, 60);
+        await this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         const rnames = {};
         for (const tsdoc of tsdocs) {

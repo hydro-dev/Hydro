@@ -177,7 +177,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     @param('code', Types.String)
     @param('lang', Types.String)
     async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
-        this.limitRate('add_record', 3600, 100);
+        await this.limitRate('add_record', 60, 5);
         const tsdoc = await contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK);
         if (!tsdoc.attend) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
@@ -380,7 +380,7 @@ class HomeworkCodeHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         this.checkPerm(PERM.PERM_READ_RECORD_CODE);
-        this.limitRate('homework_code', 3600, 60);
+        await this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(
             domainId, tid, document.TYPE_HOMEWORK,
         );

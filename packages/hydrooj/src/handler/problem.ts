@@ -231,6 +231,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.String)
     @param('code', Types.String)
     async post(domainId: string, lang: string, code: string) {
+        await this.limitRate('add_record', 60, 5);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
@@ -248,7 +249,7 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
     @param('code', Types.String)
     @param('input', Types.String, true)
     async post(domainId: string, lang: string, code: string, input = '') {
-        this.limitRate('add_record', 3600, 100);
+        await this.limitRate('add_record', 60, 5);
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
             lang, code, true, input,

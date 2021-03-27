@@ -67,7 +67,7 @@ class UserRegisterHandler extends Handler {
     async post(domainId: string, mail: string, phoneNumber: string) {
         if (mail) {
             if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
-            this.limitRate('send_mail', 3600, 30);
+            await this.limitRate('send_mail', 3600, 30);
             const t = await token.add(
                 token.TYPE_REGISTRATION,
                 system.get('session.unsaved_expire_seconds'),
@@ -83,7 +83,7 @@ class UserRegisterHandler extends Handler {
             } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
-            this.limitRate('send_sms', 60, 3);
+            await this.limitRate('send_sms', 60, 3);
             const t = await token.add(
                 token.TYPE_REGISTRATION,
                 system.get('session.unsaved_expire_seconds'),

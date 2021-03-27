@@ -159,7 +159,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
         domainId: string, type: string, _name: string,
         title: string, content: string, highlight = false, pin = false,
     ) {
-        this.limitRate('add_discussion', 3600, 30);
+        await this.limitRate('add_discussion', 3600, 60);
         let name: ObjectID | string | number;
         if (ObjectID.isValid(_name)) name = new ObjectID(_name);
         else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
@@ -220,7 +220,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.String, isContent)
     async postReply(domainId: string, did: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
-        this.limitRate('add_discussion', 3600, 30);
+        await this.limitRate('add_discussion', 3600, 60);
         // Notify related users
         const replies: Drdoc[] = await discussion.getMultiReply(domainId, did).toArray();
         const uids = Array.from(new Set(replies.map((drdoc) => drdoc.owner)));
@@ -239,7 +239,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.String, isContent)
     async postTailReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
-        this.limitRate('add_discussion', 3600, 30);
+        await this.limitRate('add_discussion', 3600, 60);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
         this.back();
     }
