@@ -10,6 +10,7 @@ import {
 import { ObjectID } from 'mongodb';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
+import Compress from 'koa-compress';
 import Router from 'koa-router';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
@@ -230,14 +231,25 @@ export async function prepare() {
         changeOrigin: true,
         rewrite: (p) => p.replace('/fs', ''),
     }));
+    app.use(Compress());
     if (argv.public) {
         app.use(cache(argv.public, {
             maxAge: 0,
         }));
     } else {
         app.use(cache(resolve(os.tmpdir(), 'hydro', 'public'), {
-            maxAge: 365 * 24 * 60 * 60,
+            maxAge: 30 * 24 * 60 * 60,
         }));
+    }
+    if (argv.debug) {
+        app.use(async (ctx: Context, next: Function) => {
+            const startTime = new Date().getTime();
+            await next();
+            const endTime = new Date().getTime();
+            if (ctx.nolog || ctx.response.headers.nolog) return;
+            ctx._remoteAddress = ctx.request.ip;
+            logger.debug(`${ctx.request.method} ${ctx.request.path} ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+        });
     }
     app.use(Body({
         multipart: true,
@@ -786,16 +798,6 @@ export function Connection(
 // TODO use postInit?
 export function start() {
     const port = system.get('server.port');
-    if (argv.debug) {
-        app.use(async (ctx: Context, next: Function) => {
-            const startTime = new Date().getTime();
-            await next();
-            const endTime = new Date().getTime();
-            if (ctx.response.headers.nolog) return;
-            ctx._remoteAddress = ctx.request.ip;
-            logger.debug(`${ctx.request.method} ${ctx.request.path} ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
-        });
-    }
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.port || port);
     logger.success('Server listening at: %d', argv.port || port);
