@@ -12,6 +12,7 @@ dist/
 .coverage
 globalConfig.json
 *.out
+.clinic/
 
 # Config Files
 /config.yaml

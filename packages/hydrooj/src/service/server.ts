@@ -18,8 +18,9 @@ import sockjs from 'sockjs';
 import type { SetOption } from 'cookies';
 import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
+import { createHash } from 'crypto';
 import * as bus from './bus';
-import { errorMessage, lrucache } from '../utils';
+import { errorMessage } from '../utils';
 import { User, DomainDoc } from '../interface';
 import { Logger } from '../logger';
 import {
@@ -422,10 +423,9 @@ export class Handler extends HandlerCommon {
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
     }
 
-    @lrucache
     // eslint-disable-next-line class-methods-use-this
     getCsrfToken(id: string) {
-        return hash('csrf_token', id);
+        return createHash('md5').update(`csrf_token${id}`).digest('hex');
     }
 
     async render(name: string, context: any) {
@@ -457,10 +457,10 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
+        if (!argv.benchmark) await this.limitRate('global', 10, 50);
         const [absoluteDomain, inferDomain] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
-            this.limitRate('global', 10, 50),
             this.getSession(),
             this.getBdoc(),
         ]);

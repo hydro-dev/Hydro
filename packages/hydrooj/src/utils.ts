@@ -2,8 +2,6 @@ import fs from 'fs';
 import { Duplex } from 'stream';
 import cluster from 'cluster';
 import path, { sep } from 'path';
-import serialize from 'serialize-javascript';
-import Lru from 'lru-cache';
 import { ObjectID } from 'mongodb';
 import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';
@@ -27,21 +25,6 @@ declare global {
         intersection: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
         union: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
     }
-}
-
-const lru = new Lru(1000);
-
-export function lrucache(target: any, funcName: string, obj: any) {
-    const originalMethod = obj.value;
-    obj.value = function func(...args: any[]) {
-        const key = serialize({ funcName, args });
-        let val = lru.get(key);
-        if (val) return val;
-        val = originalMethod.call(this, ...args);
-        lru.set(key, val);
-        return val;
-    };
-    return obj;
 }
 
 if (!cluster.worker) {

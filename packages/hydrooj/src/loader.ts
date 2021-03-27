@@ -41,7 +41,6 @@ import path from 'path';
 import cluster from 'cluster';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
-import wtfnode from 'wtfnode';
 import './utils';
 import { Logger } from './logger';
 import './ui';
@@ -50,14 +49,6 @@ import * as bus from './service/bus';
 export * from './interface';
 const logger = new Logger('loader');
 logger.debug('%o', argv);
-bus.on('app/exit', () => {
-    if (argv.debug) {
-        wtfnode.setLogger('info', logger.info.bind(logger));
-        wtfnode.setLogger('warn', logger.warn.bind(logger));
-        wtfnode.setLogger('error', logger.error.bind(logger));
-        wtfnode.dump();
-    }
-});
 
 async function fork(args: string[] = []) {
     const _args = process.argv.slice(2);
@@ -100,8 +91,12 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt: number, createFirst = true) {
-    await fork(createFirst ? ['--firstWorker'] : undefined);
-    for (let i = 1; i < cnt; i++) await fork();
+    if (argv.single) {
+        await entry({ entry: 'worker' });
+    } else {
+        await fork(createFirst ? ['--firstWorker'] : undefined);
+        for (let i = 1; i < cnt; i++) await fork();
+    }
 }
 
 async function reload(count = 1) {
