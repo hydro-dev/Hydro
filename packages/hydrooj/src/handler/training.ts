@@ -157,6 +157,14 @@ class TrainingDetailHandler extends Handler {
         await training.enroll(domainId, tdoc.docId, this.user._id);
         this.back();
     }
+
+    @param('tid', Types.ObjectID)
+    async postDelete(domainId: string, tid: ObjectID) {
+        const tdoc = await training.get(domainId, tid);
+        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        await training.del(domainId, tid);
+        this.response.redirect = this.url('training_main');
+    }
 }
 
 class TrainingCreateHandler extends Handler {

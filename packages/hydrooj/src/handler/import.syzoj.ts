@@ -141,6 +141,7 @@ class ProblemImportSYZOJHandler extends Handler {
                 localizedContentsOfAllLocales: true,
                 tagsOfLocale,
                 samples: true,
+                judgeInfo: true,
                 testData: true,
                 additionalFiles: true,
             });

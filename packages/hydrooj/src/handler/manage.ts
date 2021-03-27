@@ -186,8 +186,8 @@ class SystemUserImportHandler extends SystemHandler {
     }
 
     @param('users', Types.String)
-    @param('confirm', Types.Boolean)
-    async post(domainId: string, _users: string, confirm: boolean) {
+    @param('draft', Types.Boolean)
+    async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
         const udocs = [];
         const tasks = [];
@@ -203,7 +203,7 @@ class SystemUserImportHandler extends SystemHandler {
                     udocs.push({
                         email, username, password, displayName,
                     });
-                    if (!confirm) {
+                    if (!draft) {
                         tasks.push(
                             (async () => {
                                 const uid = await user.create(email, username, password);
