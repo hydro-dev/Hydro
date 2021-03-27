@@ -74,6 +74,10 @@ export class ProblemMainHandler extends ProblemHandler {
             page,
             system.get('pagination.problem'),
         );
+        if (q && +q) {
+            const pdoc = await problem.get(domainId, +q, this.user._id, problem.PROJECTION_LIST);
+            if (pdoc) pdocs.unshift(pdoc);
+        }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
                 domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
