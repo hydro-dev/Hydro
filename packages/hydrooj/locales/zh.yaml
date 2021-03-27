@@ -239,7 +239,6 @@ Discussions on main: 主页展示的讨论数量
 Discussions per page: 每页展示的讨论数量
 Discussions: 讨论
 Display name {1} you want to set is used by others.: 您想要设置的显示名 {1} 已经被其他人使用了。
-display name: 本域内显示名称
 Display Name: 显示名
 display_name: 显示名
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 请勿讨论解法，否则以作弊论处并且将失去参赛资格。
@@ -320,7 +319,6 @@ Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
 Filter: 过滤
-Footer Extra HTML: 额外底部代码
 Footer: 页脚
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
@@ -361,7 +359,7 @@ homework_status: 作业成绩表
 Homework: 作业
 Homeworks on main: 主页展示的作业数量
 Homeworks per page: 每页展示的作业数量
-Host: 主持人
+Host: 主办人
 hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
@@ -410,7 +408,7 @@ Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
 LANG_TEXTS: 编译语言代号 -> 语言名称
-Language file settings: 评测机语言配置文件（langs.yaml）
+Language file settings: 评测机语言（langs.yaml）
 Language Highlight ID: 编译语言代号 -> 高亮语言代号
 Language: 语言
 last active at: 最后活动于
@@ -482,7 +480,7 @@ No Permission to Submit: 您没有权限递交
 No problem.: 没有题目。
 No solutions so far...: 目前还没有题解...
 No Submissions: 没有递交
-No testdata at current.: 暂无测试数据。╰(*°▽°*)╯
+No testdata at current.: 暂无测试数据。
 No user is allowed to join this domain: 没有用户可以自助加入此域
 no_translation_warn: ''
 None: 无
@@ -718,7 +716,7 @@ Submit: 递交
 Submitted: 已递交
 Support: 支持
 Tags: 标签
-Target: 目标域地址
+Target: 目标
 Technical Information: 技术信息
 Temporary session: 临时会话
 Terms of Service: 服务条款

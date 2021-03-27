@@ -15,16 +15,16 @@ Invalid user_extra_files config.: 无效的 user_extra_files 配置。
 Max testcases per problem: 单题最多测试点数量
 Problem data not found.: 没有找到测试数据。
 Read {0}, expect {1}.: 读取到 {0}，应为 {1}。
-Retry delay sec: 错误时的重试等待秒数
+Retry delay sec: 重试间隔（秒）
 Runner parallelism: 评测机运行进程数
 Sandbox Error: 沙箱错误
 Sandbox Host: 沙箱地址
 Standard answer longer than user output.: 标准输出比选手输出长。
 Stdout/Stderr size: 标准输出/错误流输出大小限制
-Temp directory: 沙箱分区文件夹
-Testdata cache directory: 测试数据缓存文件夹
+Temp directory: 临时目录
+Testdata cache directory: 测试数据缓存目录
 Testdata configuration incorrect.: 题目配置错误。
-Tmpfs size: 沙箱分区大小
+Tmpfs size: tmpfs 分区大小
 Too many files.: 文件过多。
 Too many testcases. Cancelled.: 测试数据过多。评测取消。
 Total time limit longer than {0}s. Cancelled.: 总时限超过{0}s。评测取消。

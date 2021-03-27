@@ -128,7 +128,7 @@ DomainSetting(
 );
 
 DomainUserSetting(
-    Setting('setting_info', 'displayName', null, 'text', 'Display name'),
+    Setting('setting_info', 'displayName', null, 'text', 'Display Name'),
     Setting('setting_storage', 'nAccept', 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nSubmit', 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nLike', 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
