@@ -21,7 +21,7 @@ const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
 
 async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
-    const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
+    const ddocs = await domain.getMulti().project({ _id: 1, owner: 1 }).toArray();
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
 
@@ -218,6 +218,13 @@ const scripts: UpgradeScript[] = [
             const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
             await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
         });
+        return true;
+    },
+    // Set domain owner perm
+    async function _13_14() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain((ddoc) => domain.setUserRole(ddoc._id, ddoc.owner, 'root'));
+        await db.collection('domain.user').updateMany({ role: 'admin' }, { $set: { role: 'root' } });
         return true;
     },
 ];

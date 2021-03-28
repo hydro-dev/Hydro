@@ -29,7 +29,6 @@ import {
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError,
 } from '../error';
-import hash from '../lib/hash.hydro';
 import * as misc from '../lib/misc';
 import user from '../model/user';
 import domain from '../model/domain';

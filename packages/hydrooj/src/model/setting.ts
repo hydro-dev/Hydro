@@ -205,7 +205,7 @@ bus.once('app/started', async () => {
 
 bus.on('system/setting', (args) => {
     if (!args.lang?.texts) return;
-    SETTINGS_BY_KEY['codeLang'].range = args.lang.texts;
+    SETTINGS_BY_KEY['codeLang'].range = yaml.load(args.lang.texts) as any;
 });
 
 global.Hydro.model.setting = {

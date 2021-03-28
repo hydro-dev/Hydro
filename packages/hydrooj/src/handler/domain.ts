@@ -104,7 +104,7 @@ class DomainUserHandler extends ManageHandler {
         const [dudocs, roles] = await Promise.all([
             domain.getMultiUserInDomain(domainId, {
                 $and: [
-                    { role: { $ne: 'default' } },
+                    { role: { $nin: ['default', 'guest'] } },
                     { role: { $ne: null } },
                 ],
             }).toArray(),
@@ -115,7 +115,7 @@ class DomainUserHandler extends ManageHandler {
         for (const role of roles) rudocs[role._id] = [];
         for (const dudoc of dudocs) {
             const ud = udict[dudoc.uid];
-            rudocs[ud.role].push(ud);
+            rudocs[ud.role || 'default'].push(ud);
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
         const path = [
@@ -132,6 +132,13 @@ class DomainUserHandler extends ManageHandler {
     @param('uid', Types.Int)
     @param('role', Types.String)
     async postSetUser(domainId: string, uid: number, role: string) {
+        await domain.setUserRole(domainId, uid, role);
+        this.back();
+    }
+
+    @param('uid', Types.Array)
+    @param('role', Types.String)
+    async postSetUsers(domainId: string, uid: number[], role: string) {
         await domain.setUserRole(domainId, uid, role);
         this.back();
     }
@@ -170,7 +177,7 @@ class DomainPermissionHandler extends ManageHandler {
 
 class DomainRoleHandler extends ManageHandler {
     async get({ domainId }) {
-        const roles = await domain.getRoles(domainId);
+        const roles = await domain.getRoles(domainId, true);
         const path = [
             ['Hydro', 'homepage'],
             ['domain', null],

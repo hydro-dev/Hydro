@@ -3,7 +3,7 @@ import { FilterQuery } from 'mongodb';
 import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
 import { ArgMethod } from '../utils';
-import { NumberKeys } from '../typeutils';
+import { MaybeArray, NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
@@ -52,6 +52,7 @@ class DomainModel {
         };
         await bus.serial('domain/create', ddoc);
         await coll.insertOne(ddoc);
+        await DomainModel.setUserRole(domainId, owner, 'root');
         return domainId;
     }
 
@@ -104,15 +105,23 @@ class DomainModel {
         return r;
     }
 
-    @ArgMethod
-    static setUserRole(domainId: string, uid: number, role: string) {
-        return collUser.updateOne({ uid, domainId }, { $set: { role } }, { upsert: true });
+    static async countUser(domainId: string, role?: string) {
+        if (role) return await collUser.find({ domainId, role }).count();
+        return await collUser.find({ domainId }).count();
     }
 
-    static async getRoles(domainId: string): Promise<any[]>;
-    static async getRoles(domain: DomainDoc): Promise<any[]>;
     @ArgMethod
-    static async getRoles(arg: string | DomainDoc) {
+    static setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
+        if (!(uid instanceof Array)) {
+            return collUser.updateOne({ domainId, uid }, { $set: { role } }, { upsert: true });
+        }
+        return collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
+    }
+
+    static async getRoles(domainId: string, count?: boolean): Promise<any[]>;
+    static async getRoles(domain: DomainDoc, count?: boolean): Promise<any[]>;
+    @ArgMethod
+    static async getRoles(arg: string | DomainDoc, count: boolean = false) {
         let ddoc: DomainDoc;
         if (typeof arg === 'string') ddoc = await DomainModel.get(arg);
         else ddoc = arg;
@@ -125,6 +134,14 @@ class DomainModel {
         for (const role in BUILTIN_ROLES) {
             if (!r.includes(role)) {
                 roles.push({ _id: role, perm: BUILTIN_ROLES[role] });
+            }
+        }
+        if (count) {
+            for (const role of roles) {
+                if (!['default', 'guest'].includes(role._id)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    role.count = await DomainModel.countUser(ddoc._id, role._id);
+                }
             }
         }
         return roles;
@@ -157,10 +174,9 @@ class DomainModel {
         let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
         dudoc = dudoc || {};
         if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
-        if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'admin';
+        if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
         dudoc.role = dudoc.role || 'default';
         const ddoc = await DomainModel.get(domainId);
-        if (ddoc.owner === udoc._id) dudoc.role = 'admin';
         dudoc.perm = ddoc.roles[dudoc.role]
             ? BigInt(ddoc.roles[dudoc.role])
             : BUILTIN_ROLES[dudoc.role];
@@ -190,17 +206,13 @@ class DomainModel {
 
     @ArgMethod
     static async getDictUserByDomainId(uid: number) {
-        const [dudocs, ddocs] = await Promise.all([
-            collUser.find({ uid }).toArray(),
-            coll.find({ owner: uid }).toArray(),
-        ]);
+        const dudocs = await collUser.find({ uid }).toArray();
         const dudict = {};
         for (const dudoc of dudocs) {
             // eslint-disable-next-line no-await-in-loop
             dudict[dudoc.domainId] = await DomainModel.get(dudoc.domainId);
             dudict[dudoc.domainId].role = dudoc.role;
         }
-        for (const ddoc of ddocs) dudict[ddoc._id] = 'admin';
         return dudict;
     }
 

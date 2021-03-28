@@ -304,7 +304,7 @@ export const BUILTIN_USERS: Udoc[] = [
 export const BUILTIN_ROLES = {
     guest: PERM.PERM_BASIC,
     default: PERM.PERM_DEFAULT,
-    admin: PERM.PERM_ADMIN,
+    root: PERM.PERM_ALL,
 };
 
 export const DEFAULT_NODES = {
