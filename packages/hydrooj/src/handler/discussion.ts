@@ -343,8 +343,8 @@ class DiscussionEditHandler extends DiscussionHandler {
     ) {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
-        if (highlight !== this.ddoc.highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
-        if (pin !== this.ddoc.pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
+        if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
+        if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
         await discussion.edit(domainId, did, title, content, highlight, pin);
         this.response.body = { did };
         this.response.redirect = this.url('discussion_detail', { did });

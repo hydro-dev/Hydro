@@ -227,6 +227,11 @@ const scripts: UpgradeScript[] = [
         await db.collection('domain.user').updateMany({ role: 'admin' }, { $set: { role: 'root' } });
         return true;
     },
+    async function _14_15() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('domain.user').deleteMany({ uid: null });
+        await db.collection('domain.user').deleteMany({ uid: 0 });
+    },
 ];
 
 export = scripts;
