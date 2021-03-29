@@ -232,6 +232,17 @@ const scripts: UpgradeScript[] = [
         await db.collection('domain.user').deleteMany({ uid: null });
         await db.collection('domain.user').deleteMany({ uid: 0 });
     },
+    async function _15_16() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['data', 'additional_file'], async (pdoc) => {
+            const $set: any = {};
+            const td = pdoc.data.filter((f) => f.name);
+            if (JSON.stringify(td) !== JSON.stringify(pdoc.data)) $set.data = td;
+            const af = pdoc.additional_file.filter((f) => f.name);
+            if (JSON.stringify(af) !== JSON.stringify(pdoc.additional_file)) $set.additional_file = af;
+            if (Object.keys($set).length) await problem.edit(pdoc.domainId, pdoc.docId, $set);
+        });
+    },
 ];
 
 export = scripts;

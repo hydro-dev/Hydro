@@ -8,7 +8,7 @@ import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, Pdict, Document } from '../interface';
 import { Content } from '../loader';
 import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
-import { ProblemNotFoundError } from '../error';
+import { ProblemNotFoundError, ValidationError } from '../error';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 
@@ -134,11 +134,13 @@ export function del(domainId: string, docId: number) {
 }
 
 export async function addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
+    if (!name) throw new ValidationError('name');
     const [[, fileinfo]] = await Promise.all([
         document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', name),
         storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f),
     ]);
     const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
+    if (!meta) throw new Error('Upload failed');
     const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
     if (!fileinfo) await push(domainId, pid, 'data', { _id: name, ...payload });
     else await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', name, payload);

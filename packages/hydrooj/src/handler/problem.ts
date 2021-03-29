@@ -384,6 +384,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
             for (const entry of entries) {
+                if (!entry.name) continue;
                 if (type === 'testdata') {
                     // eslint-disable-next-line no-await-in-loop
                     await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.getData());
