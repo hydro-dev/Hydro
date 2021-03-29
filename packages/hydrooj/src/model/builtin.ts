@@ -368,7 +368,6 @@ export const DEFAULT_NODES = {
 };
 
 export const CATEGORIES = {
-    //从洛谷标签中借鉴了一部分
     动态规划: [
         'LCS',
         'LIS',
