@@ -192,12 +192,12 @@ class DiscussionDetailHandler extends DiscussionHandler {
             page,
             system.get('pagination.reply'),
         );
-        const uids = drdocs.map((drdoc) => drdoc.owner);
-        uids.push(this.ddoc.owner);
+        const uids = [
+            this.ddoc.owner,
+            ...drdocs.map((drdoc) => drdoc.owner),
+        ];
         for (const drdoc of drdocs) {
-            if (drdoc.reply) {
-                drdocs.forEach((drrdoc) => uids.push(drrdoc.owner));
-            }
+            if (drdoc.reply) uids.push(...drdoc.reply.map((drrdoc) => drrdoc.owner));
         }
         const udict = await user.getList(domainId, uids);
         const path = [
