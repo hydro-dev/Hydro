@@ -274,7 +274,7 @@ export class HandlerCommon {
     extraTitleContent?: string;
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
-        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_RATE)) return;
+        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
@@ -352,6 +352,7 @@ export class Handler extends HandlerCommon {
     ctx: Koa.Context;
 
     request: {
+        method: string,
         host: string,
         hostname: string,
         ip: string,
@@ -384,6 +385,7 @@ export class Handler extends HandlerCommon {
         super();
         this.ctx = ctx;
         this.request = {
+            method: ctx.request.method.toLowerCase(),
             host: ctx.request.host,
             hostname: ctx.request.hostname,
             ip: ctx.request.ip,
@@ -634,15 +636,16 @@ async function handle(ctx, HandlerClass, checker) {
         }
 
         await bus.serial('handler/init', h);
-
+        await bus.serial(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
-
+        await bus.serial(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         if (h[method]) await h[method](args);
         if (operation) await h[`post${operation}`](args);
-
+        await bus.serial(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         if (h.cleanup) await h.cleanup(args);
         if (h.finish) await h.finish(args);
+        await bus.serial(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
     } catch (e) {
         try {
             await h.onerror(e);

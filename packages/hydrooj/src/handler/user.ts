@@ -57,7 +57,7 @@ class UserLogoutHandler extends Handler {
     }
 }
 
-class UserRegisterHandler extends Handler {
+export class UserRegisterHandler extends Handler {
     async get() {
         this.response.template = 'user_register.html';
     }

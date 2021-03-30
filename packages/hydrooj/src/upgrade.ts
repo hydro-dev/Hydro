@@ -231,6 +231,7 @@ const scripts: UpgradeScript[] = [
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('domain.user').deleteMany({ uid: null });
         await db.collection('domain.user').deleteMany({ uid: 0 });
+        return true;
     },
     async function _15_16() {
         const _FRESH_INSTALL_IGNORE = 1;
@@ -242,6 +243,7 @@ const scripts: UpgradeScript[] = [
             if (JSON.stringify(af) !== JSON.stringify(pdoc.additional_file)) $set.additional_file = af;
             if (Object.keys($set).length) await problem.edit(pdoc.domainId, pdoc.docId, $set);
         });
+        return true;
     },
 ];
 

@@ -12,6 +12,7 @@ import type {
 import type { DomainDoc } from '../loader';
 import type { DocType } from '../model/document';
 import type { ProblemSolutionHandler } from '../handler/problem';
+import type { UserRegisterHandler } from '../handler/user';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus', true);
@@ -23,7 +24,7 @@ function isBailed(value: any) {
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 
-export interface EventMap {
+export interface EventMap extends Record<string, any> {
     'app/started': () => void
     'app/load/lib': () => VoidReturn
     'app/load/locale': () => VoidReturn
@@ -63,6 +64,10 @@ export interface EventMap {
 
     'handler/create': (thisArg: Handler) => VoidReturn
     'handler/init': (thisArg: Handler) => VoidReturn
+    'handler/before-prepare/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
+    'handler/before/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
+    'handler/after/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
+    'handler/finish/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
     'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
     'discussion/before-add': (
