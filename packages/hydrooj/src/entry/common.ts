@@ -30,7 +30,7 @@ export const builtinHandler = [
 ];
 
 export const builtinScript = [
-    'rating', 'problemStat', 'blacklist', 'deleteUser',
+    'rating', 'problemStat', 'blacklist', 'deleteUser', 'updateFilelist',
 ];
 
 function getFiles(folder: string, base = ''): string[] {

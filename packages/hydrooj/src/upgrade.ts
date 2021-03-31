@@ -20,7 +20,7 @@ import difficultyAlgorithm from './lib/difficulty';
 const logger = new Logger('upgrade');
 type UpgradeScript = () => Promise<boolean | void>;
 
-async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
+export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().project({ _id: 1, owner: 1 }).toArray();
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
@@ -29,22 +29,30 @@ interface PartialPdoc extends problem.Pdoc {
     [key: string]: any,
 }
 
-async function iterateAllProblem(
+export async function iterateAllProblemInDomain(
+    domainId: string,
     fields: (problem.Pdoc.Field | string)[],
     cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
 ) {
     if (!fields.includes('domainId')) fields.push('domainId');
     if (!fields.includes('docId')) fields.push('docId');
+    const cursor = problem.getMulti(domainId, {}, fields as any);
+    const total = await problem.getMulti(domainId, {}).count();
+    let i = 0;
+    while (await cursor.hasNext()) {
+        const doc = await cursor.next();
+        i++;
+        const res = await cb(doc, i, total);
+        if (res) await problem.edit(doc.domainId, doc.docId, res);
+    }
+}
+
+export async function iterateAllProblem(
+    fields: (problem.Pdoc.Field | string)[],
+    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
+) {
     await iterateAllDomain(async (d) => {
-        const cursor = problem.getMulti(d._id, {}, fields as any);
-        const total = await problem.getMulti(d._id, {}).count();
-        let i = 0;
-        while (await cursor.hasNext()) {
-            const doc = await cursor.next();
-            i++;
-            const res = await cb(doc, i, total);
-            if (res) await problem.edit(doc.domainId, doc.docId, res);
-        }
+        await iterateAllProblemInDomain(d._id, fields, cb);
     });
 }
 
@@ -245,6 +253,20 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _16_18() {
+        await iterateAllProblem(['title', 'pid'], async (pdoc) => {
+            if (pdoc.domainId !== 'bzoj') return;
+            if (pdoc.docId > 100000) return;
+            console.log(pdoc.title, pdoc.docId, pdoc.pid);
+            await problem.edit(pdoc.domainId, pdoc.docId, { docId: pdoc.docId + 100000 });
+        });
+        await iterateAllProblem(['pid', 'title'], async (pdoc) => {
+            if (pdoc.domainId !== 'bzoj') return;
+            console.log(pdoc.title, pdoc.docId, pdoc.pid);
+            if (pdoc.pid.startsWith('P')) pdoc.pid = pdoc.pid.split('P')[1];
+            await problem.edit(pdoc.domainId, pdoc.docId, { docId: +pdoc.pid });
+        });
+    },
 ];
 
-export = scripts;
+export default scripts;
