@@ -367,6 +367,7 @@ export const DEFAULT_NODES = {
 };
 
 export const CATEGORIES = {
+    // 从洛谷标签中借鉴了一部分
     动态规划: [
         'LCS',
         'LIS',
@@ -405,6 +406,7 @@ export const CATEGORIES = {
     树结构: [
         '最近公共祖先',
         '生成树',
+        '次小生成树',
         'DFS序列',
         '树上倍增',
         '树的分治',
@@ -412,6 +414,10 @@ export const CATEGORIES = {
         'Link-Cut-Tree',
     ],
     图结构: [
+        'Floyd',
+        'Dijkstra',
+        'SPFA',
+        '负权边',
         '平面图',
         '二分图',
         '二分图匹配',
@@ -452,6 +458,8 @@ export const CATEGORIES = {
         '四分树',
         '划分树',
         '归并树',
+        '替罪羊树',
+        '左偏树',
         'k-d树',
         '块状链表',
         'Hashing',
@@ -468,6 +476,7 @@ export const CATEGORIES = {
         '最小表示法',
     ],
     组合数学: [
+        '鸽笼',
         '生成函数',
         '容斥原理',
         '康托展开',

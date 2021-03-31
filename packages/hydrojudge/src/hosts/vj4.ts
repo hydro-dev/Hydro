@@ -166,7 +166,7 @@ class JudgeTask {
         this.ws.send(JSON.stringify({
             key: 'next',
             tag: this.tag,
-            judge_text: '自豪的采用 HydroJudge(https://github.com/hydro-dev/Hydro) 进行评测。',
+            judge_text: '自豪地采用 HydroJudge(https://github.com/hydro-dev/Hydro) 进行评测。',
         }));
         if (data.message !== undefined) {
             data.judge_text = data.message;
