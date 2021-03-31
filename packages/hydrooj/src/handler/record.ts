@@ -198,15 +198,15 @@ class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(Connecti
         this.onRecordChange(rdoc);
     }
 
+    // eslint-disable-next-line
     async onRecordChange(rdoc: Rdoc, $set?: any, $push?: any) {
         if (rdoc._id.toString() !== this.rid) return;
-        if ($set) this.send({ $set, $push });
-        else {
-            this.send({
-                status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
-                summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
-            });
-        }
+        // TODO: frontend doesn't support incremental update
+        // if ($set) this.send({ $set, $push });
+        this.send({
+            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
+            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
+        });
     }
 
     async cleanup() {

@@ -65,7 +65,7 @@ class FpsProblemImportHandler extends Handler {
         try {
             const file = await fs.stat(this.request.files.file.path);
             if (file.size > 64 * 1024 * 1024) throw new FileTooLargeError('64m');
-            const content = fs.readFile(this.request.files.file.path).toString();
+            const content = fs.readFileSync(this.request.files.file.path, 'utf-8');
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {

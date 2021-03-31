@@ -7,18 +7,8 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-only",
     "dependencies": {
-        "adm-zip": "^0.5.4",
+        "adm-zip": "^0.5.5",
         "decode-html": "^2.0.0",
         "fs-extra": "^9.1.0"
-    },
-    "devDependencies": {
-        "bson": "^4.2.3"
-    },
-    "peerDependencies": {
-        "hydrooj": "^2.15.0"
-    },
-    "scripts": {
-        "build": "tsc",
-        "lint": "eslint . --ext ts --fix"
     }
 }

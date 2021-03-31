@@ -5,15 +5,8 @@
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "MIT",
-    "scripts": {
-        "lint": "eslint lib.ts script.ts --fix",
-        "build": "tsc"
-    },
     "devDependencies": {
-        "@types/mongodb": "^3.6.10"
-    },
-    "peerDependencies": {
-        "hydrooj": "^2.17.22"
+        "@types/mongodb": "^3.6.11"
     },
     "dependencies": {
         "mongodb": "^3.6.5"

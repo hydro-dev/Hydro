@@ -9,7 +9,7 @@
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
-        "adm-zip": "^0.5.4",
+        "adm-zip": "^0.5.5",
         "axios": "^0.21.1",
         "bson": "^4.2.3",
         "fs-extra": "^9.1.0",
@@ -17,22 +17,15 @@
         "lodash": "^4.17.21",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "systeminformation": "5.6.8",
+        "systeminformation": "5.6.10",
         "ws": "^7.4.4",
         "yargs": "^16.2.0"
-    },
-    "peerDependencies": {
-        "hydrooj": "^2.15.0"
     },
     "license": "AGPL-3.0-only",
     "devDependencies": {
         "@types/bson": "^4.0.2",
-        "@types/fs-extra": "^9.0.8",
+        "@types/fs-extra": "^9.0.9",
         "@types/js-yaml": "^4.0.0",
         "@types/shell-quote": "^1.7.0"
-    },
-    "scripts": {
-        "build": "tsc",
-        "lint": "eslint . --ext ts --fix"
     }
 }
