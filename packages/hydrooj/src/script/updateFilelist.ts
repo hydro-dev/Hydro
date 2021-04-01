@@ -8,7 +8,7 @@ export async function run({ domainId }, report: Function) {
         report({ message: `${pdoc.domainId}/${pdoc.docId}` });
         const [data, additional_file] = await Promise.all([
             storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
-            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_files/`),
+            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`),
         ]) as any;
         for (let i = 0; i < data.length; i++) {
             data[i]._id = data[i].name;
