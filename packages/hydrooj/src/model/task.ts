@@ -97,5 +97,5 @@ class TaskModel {
     };
 }
 
-export = TaskModel;
+export default TaskModel;
 global.Hydro.model.task = TaskModel;

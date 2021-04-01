@@ -4,7 +4,7 @@ import { sleep } from '../utils';
 import { Logger } from '../logger';
 import difficultyAlgorithm from '../lib/difficulty';
 import record from '../model/record';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
@@ -14,7 +14,7 @@ import {
     Route, Handler, Connection, ConnectionHandler, post, Types,
 } from '../service/server';
 import storage from '../service/storage';
-import { updateJudger } from '../service/monitor';
+import { updateJudge } from '../service/monitor';
 
 const logger = new Logger('judge');
 
@@ -145,7 +145,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
             this.processing = null;
             await this.newTask();
         } else if (msg.key === 'status') {
-            await updateJudger(msg.info);
+            await updateJudge(msg.info);
         }
     }
 

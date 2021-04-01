@@ -12,7 +12,7 @@ import paginate from '../lib/paginate';
 import { isTitle, isContent, isPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
 import * as system from '../model/system';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import record from '../model/record';
 import domain from '../model/domain';
 import user from '../model/user';
@@ -62,18 +62,26 @@ export class ProblemMainHandler extends ProblemHandler {
             ['Hydro', 'homepage'],
             ['problem_main', null],
         ];
+        const search = global.Hydro.lib.problemSearch;
+        let sort: number[];
         if (q) {
-            query.$text = { $search: q };
             path[1][1] = 'problem_main';
             path.push([q, null, null, true]);
+            if (search) {
+                const result = await search(domainId, q);
+                query.docId = { $in: result };
+                sort = result;
+            } else query.$text = { $search: q };
         }
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
         await bus.serial('problem/list', query, this);
-        const [pdocs, ppcount, pcount] = await paginate(
+        // eslint-disable-next-line prefer-const
+        let [pdocs, ppcount, pcount] = await paginate(
             problem.getMulti(domainId, query).sort({ pid: 1, docId: 1 }),
             page,
             system.get('pagination.problem'),
         );
+        if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(a.docId) - sort.indexOf(b.docId));
         if (q && +q) {
             const pdoc = await problem.get(domainId, +q, this.user._id, problem.PROJECTION_LIST);
             if (pdoc) pdocs.unshift(pdoc);
@@ -341,9 +349,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
         };
         let pdoc = await problem.get(domainId, pid);
         $update.difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-        await bus.serial('problem/before-edit', $update);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
-        await bus.emit('problem/edit', pdoc);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
     }
 }

@@ -206,6 +206,10 @@ export async function service(pending: string[], fail: string[]) {
             }
         }
     }
+    for (const key in global.Hydro.service) {
+        const srv = global.Hydro.service[key];
+        if (!srv.started && srv.start) await srv.start();
+    }
     await bus.serial('app/load/service');
 }
 

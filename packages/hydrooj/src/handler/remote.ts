@@ -6,7 +6,7 @@ import { Logger } from '../logger';
 import { ProblemAdd } from '../lib/ui';
 import { PERM } from '../model/builtin';
 import token from '../model/token';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import * as system from '../model/system';
 import {
     Handler, Types, Route, post,
@@ -24,9 +24,10 @@ export class ProblemSendHandler extends Handler {
 
     @post('target', Types.String)
     @post('pids', Types.Array)
-    async postSend(domainId: string, target: any, _pids: (number | string)[]) {
+    async postSend(domainId: string, _target: string, _pids: (number | string)[]) {
         this.checkPerm(PERM.PERM_VIEW_PROBLEM);
-        target = target.split('@');
+        const target = _target.split('@');
+        if (target[1].endsWith('/')) target[1] = target[1].substr(0, target[1].length - 1);
         const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         const pdocs = await problem.getList(domainId, _pids, true, true, ['docId', 'owner', 'hidden']);

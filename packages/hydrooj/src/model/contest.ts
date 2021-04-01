@@ -1,6 +1,6 @@
 import { ObjectID, FilterQuery } from 'mongodb';
 import user from './user';
-import * as problem from './problem';
+import problem from './problem';
 import * as document from './document';
 import { PERM } from './builtin';
 import {

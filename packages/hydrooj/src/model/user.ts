@@ -271,5 +271,5 @@ function ensureIndexes() {
 }
 
 bus.once('app/started', ensureIndexes);
-export = UserModel;
+export default UserModel;
 global.Hydro.model.user = UserModel;

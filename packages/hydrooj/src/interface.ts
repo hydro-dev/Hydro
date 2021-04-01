@@ -458,6 +458,13 @@ export interface HydroFileSystem {
 
 export type PathComponent = [string, string, Dictionary<any>?, boolean?];
 
+export interface BaseService {
+    started: boolean;
+    error?: Error | string;
+    start: Function;
+    stop?: Function;
+}
+
 export interface Collections {
     'blacklist': Bdoc,
     'contest': Tdoc,
@@ -483,25 +490,25 @@ export interface Collections {
 }
 
 export interface Model {
-    blacklist: typeof import('./model/blacklist'),
+    blacklist: typeof import('./model/blacklist').default,
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     discussion: typeof import('./model/discussion'),
     document: typeof import('./model/document'),
-    domain: typeof import('./model/domain'),
-    message: typeof import('./model/message'),
+    domain: typeof import('./model/domain').default,
+    message: typeof import('./model/message').default,
     opcount: typeof import('./model/opcount'),
-    problem: typeof import('./model/problem'),
-    record: typeof import('./model/record'),
+    problem: typeof import('./model/problem').default,
+    record: typeof import('./model/record').default,
     setting: typeof import('./model/setting'),
-    solution: typeof import('./model/solution'),
+    solution: typeof import('./model/solution').default,
     system: typeof import('./model/system'),
-    task: typeof import('./model/task'),
+    task: typeof import('./model/task').default,
     oplog: typeof import('./model/oplog'),
-    token: typeof import('./model/token'),
+    token: typeof import('./model/token').default,
     training: typeof import('./model/training'),
-    user: typeof import('./model/user'),
-    oauth: typeof import('./model/oauth'),
+    user: typeof import('./model/user').default,
+    oauth: typeof import('./model/oauth').default,
 }
 
 export interface Service {

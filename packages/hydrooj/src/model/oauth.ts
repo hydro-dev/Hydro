@@ -25,5 +25,5 @@ class OauthModel {
     }
 }
 
-export = OauthModel;
+export default OauthModel;
 global.Hydro.model.oauth = OauthModel;

@@ -3,7 +3,7 @@ import { PermissionError, RecordNotFoundError } from '../error';
 import { Rdoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import record from '../model/record';
 import * as contest from '../model/contest';
 import user from '../model/user';
@@ -49,7 +49,7 @@ class RecordListHandler extends RecordHandler {
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             canViewProblem
                 ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false)
-                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.Pdoc.create(rdoc.pid, rdoc.pid)])]),
+                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.create(rdoc.pid, rdoc.pid)])]),
         ]);
         const path = [
             ['Hydro', 'homepage'],
@@ -88,11 +88,11 @@ class RecordDetailHandler extends RecordHandler {
             user.getById(domainId, rdoc.uid),
         ]);
         if (!(pdoc && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM))) {
-            pdoc = problem.Pdoc.create(pdoc?.docId || 0, pdoc?.pid || '*');
+            pdoc = problem.create(pdoc?.docId || 0, pdoc?.pid || '*');
         }
         if (!rdoc.contest && pdoc.hidden && pdoc.owner !== this.user._id) {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
-                pdoc = problem.Pdoc.create(pdoc.docId, pdoc.pid);
+                pdoc = problem.create(pdoc.docId, pdoc.pid);
             }
         }
         this.response.body = {

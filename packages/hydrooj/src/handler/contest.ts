@@ -12,7 +12,7 @@ import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as system from '../model/system';
 import * as document from '../model/document';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import domain from '../model/domain';
 import record from '../model/record';
 import user from '../model/user';

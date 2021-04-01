@@ -44,10 +44,10 @@ async function postInit() {
 
     if (system.get('hydrojudge.disable')) return;
     const info = await sysinfo.get();
-    monitor.updateJudger(info);
+    monitor.updateJudge(info);
     setInterval(async () => {
         const [mid, inf] = await sysinfo.update();
-        monitor.updateJudger({ mid, ...inf });
+        monitor.updateJudge({ mid, ...inf });
     }, 1200000);
 
     async function processData(folder: string) {

@@ -5,7 +5,7 @@ import { Dictionary } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
-import * as problem from './problem';
+import problem from './problem';
 import { Rdoc, ContestInfo, ProblemConfig } from '../interface';
 import { ArgMethod, Time } from '../utils';
 import * as bus from '../service/bus';
@@ -166,5 +166,5 @@ class RecordModel {
 }
 
 bus.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
-export = RecordModel;
+export default RecordModel;
 global.Hydro.model.record = RecordModel;

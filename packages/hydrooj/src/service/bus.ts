@@ -45,7 +45,7 @@ export interface EventMap extends Record<string, any> {
 
     'system/setting': (args: Record<string, any>) => VoidReturn
 
-    'monitor/update': (type: 'server' | 'judger', $set: any) => VoidReturn
+    'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
 
     'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
     'user/get': (udoc: User) => void
@@ -76,10 +76,13 @@ export interface EventMap extends Record<string, any> {
         ip: string | null, highlight: boolean, pin: boolean
     ) => VoidReturn
 
+    'problem/before-add': (doc: Partial<Pdoc>) => VoidReturn
+    'problem/add': (doc: Partial<Pdoc>, docId: number) => VoidReturn
     'problem/before-edit': (doc: Partial<Pdoc>) => VoidReturn
     'problem/edit': (doc: Pdoc) => VoidReturn
+    'problem/before-del': (domainId: string, docId: number) => VoidReturn
+    'problem/del': (domainId: string, docId: number) => VoidReturn
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
-    'problem/setting': (update: Partial<Pdoc>, handler: any) => VoidReturn
     'problem/get': (doc: Pdoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
 

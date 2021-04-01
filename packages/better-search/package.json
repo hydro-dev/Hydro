@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/better-search",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Enhance Problem Search",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -8,13 +8,5 @@
     "license": "AGPL-3.0-only",
     "dependencies": {
         "nodejieba": "^2.5.1"
-    },
-    "devDependencies": {},
-    "peerDependencies": {
-        "hydrooj": "^2.13.2"
-    },
-    "scripts": {
-        "build": "tsc",
-        "lint": "eslint . --ext ts --fix"
     }
 }

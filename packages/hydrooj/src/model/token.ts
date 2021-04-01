@@ -101,5 +101,5 @@ function ensureIndexes() {
 }
 
 bus.once('app/started', ensureIndexes);
-export = TokenModel;
+export default TokenModel;
 global.Hydro.model.token = TokenModel;

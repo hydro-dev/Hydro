@@ -32,5 +32,5 @@ async function ensureIndexes() {
 }
 
 bus.once('app/started', ensureIndexes);
-export = BlackListModel;
+export default BlackListModel;
 global.Hydro.model.blacklist = BlackListModel;

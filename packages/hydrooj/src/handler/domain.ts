@@ -17,11 +17,11 @@ import {
 import { gravatar } from '../lib/misc';
 import paginate from '../lib/paginate';
 import {
-    Route, Handler, Types, param,
+    Route, Handler, Types, param, query, post,
 } from '../service/server';
 
 class DomainRankHandler extends Handler {
-    @param('page', Types.PositiveInt, true)
+    @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
             domain.getMultiUserInDomain(domainId).sort({ rp: -1 }),
@@ -129,8 +129,8 @@ class DomainUserHandler extends ManageHandler {
         };
     }
 
-    @param('uid', Types.Int)
-    @param('role', Types.String)
+    @post('uid', Types.Int)
+    @post('role', Types.String)
     async postSetUser(domainId: string, uid: number, role: string) {
         await domain.setUserRole(domainId, uid, role);
         this.back();
@@ -228,10 +228,10 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         this.response.template = 'domain_join_applications.html';
     }
 
-    @param('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
-    @param('role', Types.String, true)
-    @param('expire', Types.Int, true)
-    @param('invitationCode', Types.String, true)
+    @post('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
+    @post('role', Types.String, true)
+    @post('expire', Types.Int, true)
+    @post('invitationCode', Types.String, true)
     async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((rl) => rl._id);

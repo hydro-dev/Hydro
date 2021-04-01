@@ -10,7 +10,7 @@ import yaml from 'js-yaml';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import { PERM } from '../model/builtin';
 import {
     Route, Handler, Types, post,

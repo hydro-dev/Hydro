@@ -235,5 +235,5 @@ class DomainModel {
     }
 }
 
-export = DomainModel;
+export default DomainModel;
 global.Hydro.model.domain = DomainModel;

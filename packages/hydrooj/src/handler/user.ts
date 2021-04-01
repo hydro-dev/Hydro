@@ -11,7 +11,7 @@ import user from '../model/user';
 import oauth from '../model/oauth';
 import token from '../model/token';
 import record from '../model/record';
-import * as problem from '../model/problem';
+import problem, { Pdoc } from '../model/problem';
 import task from '../model/task';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
@@ -183,7 +183,7 @@ class UserDetailHandler extends Handler {
                     1,
                     100,
                 )
-                : [[], 0, 0] as [problem.Pdoc[], number, number],
+                : [[], 0, 0] as [Pdoc[], number, number],
         ]);
         const pdict = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
             ? await problem.getList(
@@ -191,7 +191,7 @@ class UserDetailHandler extends Handler {
                 this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
             )
             : Object.fromEntries(rdocs.map(
-                (rdoc) => [rdoc.pid, problem.Pdoc.create(undefined, rdoc.pid.toString())],
+                (rdoc) => [rdoc.pid, problem.create(undefined, rdoc.pid.toString())],
             ));
         // Remove sensitive data
         if (!isSelfProfile && sdoc) {

@@ -76,5 +76,5 @@ function ensureIndexes() {
 }
 
 bus.once('app/started', ensureIndexes);
-export = MessageModel;
+export default MessageModel;
 global.Hydro.model.message = MessageModel;

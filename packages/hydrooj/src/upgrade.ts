@@ -11,7 +11,7 @@ import { streamToBuffer } from './utils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
-import * as problem from './model/problem';
+import problem, { Field, Pdoc } from './model/problem';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
@@ -25,13 +25,13 @@ export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, t
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
 }
 
-interface PartialPdoc extends problem.Pdoc {
+interface PartialPdoc extends Pdoc {
     [key: string]: any,
 }
 
 export async function iterateAllProblemInDomain(
     domainId: string,
-    fields: (problem.Pdoc.Field | string)[],
+    fields: (Field | string)[],
     cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
 ) {
     if (!fields.includes('domainId')) fields.push('domainId');
@@ -48,7 +48,7 @@ export async function iterateAllProblemInDomain(
 }
 
 export async function iterateAllProblem(
-    fields: (problem.Pdoc.Field | string)[],
+    fields: (Field | string)[],
     cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
 ) {
     await iterateAllDomain(async (d) => {
@@ -171,7 +171,7 @@ const scripts: UpgradeScript[] = [
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
             const [data, additional_file] = await Promise.all([
                 storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
-                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_files/`),
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`),
             ]);
             await problem.edit(pdoc.domainId, pdoc.docId, { data, additional_file });
             if (!pdoc.config) return;
@@ -187,7 +187,7 @@ const scripts: UpgradeScript[] = [
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
             const [data, additional_file] = await Promise.all([
                 storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
-                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_files/`),
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`),
             ]) as any;
             for (let i = 0; i < data.length; i++) {
                 data[i]._id = data[i].name;

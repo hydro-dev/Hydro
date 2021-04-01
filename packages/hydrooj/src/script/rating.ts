@@ -4,7 +4,7 @@ import { ObjectID, FilterQuery } from 'mongodb';
 import { Tdoc, Pdoc, Udoc } from '../interface';
 import domain from '../model/domain';
 import * as contest from '../model/contest';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import record from '../model/record';
 import { STATUS } from '../model/builtin';
 import rating from '../lib/rating';

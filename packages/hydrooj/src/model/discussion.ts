@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import * as problem from './problem';
+import problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';

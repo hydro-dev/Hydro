@@ -8,7 +8,7 @@ import type { ContentNode, ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
 import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
-import * as problem from 'hydrooj/dist/model/problem';
+import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');

@@ -1,0 +1,7 @@
+host:
+  value: localhost
+port:
+  type: number
+  value: 1491
+auth:
+  type: text

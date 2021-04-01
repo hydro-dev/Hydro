@@ -3,6 +3,7 @@ import * as yaml from 'js-yaml';
 import * as judge from './judge';
 import { ValidationError } from '../error';
 import * as check from '../check';
+import { Logger } from '../logger';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -16,6 +17,8 @@ import * as bus from '../service/bus';
 import {
     validate, isEmail, isUname, isPassword,
 } from '../lib/validator';
+
+const logger = new Logger('manage');
 
 function set(key: string, value: any) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
@@ -125,11 +128,12 @@ class SystemScriptHandler extends SystemHandler {
             })
             .catch((err: Error) => {
                 const time = new Date().getTime() - start;
+                logger.error(err);
                 judge.end({
                     domainId,
                     rid,
                     status: STATUS.STATUS_SYSTEM_ERROR,
-                    message: `${err} \n${err.stack} `,
+                    message: `${err.message} \n${err.stack} `,
                     judger: 1,
                     time,
                     memory: 0,

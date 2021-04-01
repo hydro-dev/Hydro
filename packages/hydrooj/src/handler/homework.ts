@@ -18,7 +18,7 @@ import user from '../model/user';
 import * as system from '../model/system';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import * as problem from '../model/problem';
+import problem from '../model/problem';
 import record from '../model/record';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';

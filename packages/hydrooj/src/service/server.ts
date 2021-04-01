@@ -210,6 +210,7 @@ type DescriptorBuilder =
     & ((name: string, ...args: Array<Type | boolean | Validator | Converter>) => MethodDecorator);
 
 export const get: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));
+export const query: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));
 export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'post', ...args));
 export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
 export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
@@ -319,6 +320,7 @@ export class HandlerCommon {
     url(name: string, kwargs: any = {}) {
         let res = '#';
         const args: any = {};
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: any = {};
         for (const key in kwargs) {
             if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
@@ -803,12 +805,16 @@ export function Connection(
     sock.installHandlers(server);
 }
 
+let started = false;
+
 // TODO use postInit?
 export function start() {
+    if (started) return;
     const port = system.get('server.port');
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.port || port);
     logger.success('Server listening at: %d', argv.port || port);
+    started = true;
 }
 
 global.Hydro.service.server = {
@@ -818,6 +824,7 @@ global.Hydro.service.server = {
     router,
     UiContextBase,
     get,
+    query,
     post,
     route,
     param,

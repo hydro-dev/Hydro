@@ -32,9 +32,9 @@ class StatusHandler extends Handler {
 class StatusUpdateHandler extends Handler {
     async post(args) {
         this.checkPriv(PRIV.PRIV_JUDGE);
-        args.type = 'judger';
+        args.type = 'judge';
         return coll.updateOne(
-            { mid: args.mid, type: 'judger' },
+            { mid: args.mid, type: 'judge' },
             { $set: args },
             { upsert: true },
         );

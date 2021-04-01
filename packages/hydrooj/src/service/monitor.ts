@@ -70,11 +70,11 @@ export async function update() {
     global.Hydro.stat.reqCount = 0;
 }
 
-export async function updateJudger(args) {
+export async function updateJudge(args) {
     const $set = { ...args, updateAt: new Date() };
-    await bus.serial('monitor/update', 'judger', $set);
+    await bus.serial('monitor/update', 'judge', $set);
     return await coll.updateOne(
-        { mid: args.mid, type: 'judger' },
+        { mid: args.mid, type: 'judge' },
         { $set },
         { upsert: true },
     );
@@ -93,4 +93,4 @@ if (cluster.isMaster) {
     });
 }
 
-global.Hydro.service.monitor = { feedback, update, updateJudger };
+global.Hydro.service.monitor = { feedback, update, updateJudge };

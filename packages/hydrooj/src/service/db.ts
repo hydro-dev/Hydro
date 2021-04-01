@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient } from 'mongodb';
 import * as bus from './bus';
-import { Collections } from '../interface';
+import { Collections, BaseService } from '../interface';
 
 interface MongoConfig {
     protocol?: string,
@@ -13,11 +13,12 @@ interface MongoConfig {
     prefix?: string,
 }
 
-class MongoService {
+class MongoService implements BaseService {
     public client: MongoClient;
     public client2: MongoClient;
     public db: Db;
     public db2: Db;
+    public started = false;
     private opts: MongoConfig;
 
     static buildUrl(opts: MongoConfig) {
@@ -35,7 +36,8 @@ class MongoService {
         this.db = this.client.db(opts.name);
         this.client2 = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
         this.db2 = this.client2.db(opts.name);
-        bus.parallel('database/connect', this.db);
+        await bus.parallel('database/connect', this.db);
+        this.started = true;
     }
 
     public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
