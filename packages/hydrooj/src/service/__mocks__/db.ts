@@ -38,10 +38,10 @@ class MongoService implements BaseService {
     }
 
     public async stop() {
-        await this.db.close();
-        await this.db2.close();
         await this.client.close();
         await this.client2.close();
+        await this.db.close();
+        await this.db2.close();
     }
 }
 

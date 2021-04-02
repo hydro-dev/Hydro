@@ -6,7 +6,8 @@ import { Logger } from './logger';
 import * as bus from './service/bus';
 
 const logger = new Logger('ui');
-const useTerminal = cluster.isMaster && process.stdout.isTTY && !argv.legacy && !argv._.length;
+const useTerminal = cluster.isMaster && process.stdout.isTTY;
+const disabledTerminal = argv.legacy || argv._.length || process.env.NODE_ENV === 'test';
 
 export namespace Progress {
     export class Progress {
@@ -43,7 +44,7 @@ async function terminate() {
 }
 process.on('SIGINT', terminate);
 
-if (useTerminal) {
+if (useTerminal && !disabledTerminal) {
     let current = 0;
     const history = [''];
     let input = '';
@@ -81,18 +82,20 @@ if (useTerminal) {
         logger.warn('Running over ssh detected. Add a --legacy when starting if GUI mode doesn\'t work properly.');
     }
 } else if (cluster.isMaster) {
-    console.log('Not running in a terminal environment. Interactive mode disabled.');
+    if (!disabledTerminal) console.log('Not running in a terminal environment. Interactive mode disabled.');
     bus.on('message/log', (message) => {
         process.stdout.write(`${message}\n`);
     });
-    process.stdin.setEncoding('utf-8');
-    process.stdin.on('data', (buf) => {
-        const input = buf.toString();
-        if (input[0] === '@') {
-            for (const i in cluster.workers) {
-                cluster.workers[i].send({ event: 'message/run', payload: [input.substr(1, input.length - 1)] });
-                break;
-            }
-        } else bus.parallel('message/run', input);
-    });
+    if (process.env.NODE_ENV !== 'test') {
+        process.stdin.setEncoding('utf-8');
+        process.stdin.on('data', (buf) => {
+            const input = buf.toString();
+            if (input[0] === '@') {
+                for (const i in cluster.workers) {
+                    cluster.workers[i].send({ event: 'message/run', payload: [input.substr(1, input.length - 1)] });
+                    break;
+                }
+            } else bus.parallel('message/run', input);
+        });
+    }
 }
