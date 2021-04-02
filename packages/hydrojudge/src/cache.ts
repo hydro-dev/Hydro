@@ -23,10 +23,10 @@ export = function main() {
             for (const domain of domains) {
                 const domaindir = path.resolve(hostdir, domain);
                 if (!fs.statSync(domaindir).isDirectory()) continue;
-                const problems = fs.readdirSync(domaindir);
+                let problems = fs.readdirSync(domaindir);
                 for (const problem of problems) {
                     const problemdir = path.resolve(domaindir, problem);
-                    if (!fs.statSync(problem).isDirectory()) continue;
+                    if (!fs.statSync(problemdir).isDirectory()) continue;
                     let lastUsage = 0;
                     if (fs.existsSync(path.resolve(problemdir, 'lastUsage'))) {
                         const content = fs.readFileSync(path.resolve(problemdir, 'lastUsage')).toString();
@@ -37,6 +37,8 @@ export = function main() {
                     cnt++;
                     logger.info('Removed cache %s', problemdir);
                 }
+                problems = fs.readdirSync(domaindir);
+                if (!problems.length) fs.removeSync(domaindir);
             }
         }
         logger.info('Done! %d items deleted.', cnt);

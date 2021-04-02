@@ -66,7 +66,7 @@ export class ProblemMainHandler extends ProblemHandler {
         let sort: number[];
         if (q) {
             path[1][1] = 'problem_main';
-            path.push([q, null, null, true]);
+            path.push([`${this.translate('Keyword')}: ${q}`, null, null, true]);
             if (search) {
                 const result = await search(domainId, q);
                 query.docId = { $in: result };
