@@ -46,6 +46,7 @@ export async function load(call: Entry) {
     }
     bus.once('app/exit', () => {
         fs.removeSync(lockfile);
+        fs.removeSync(path.resolve(os.tmpdir(), 'hydro', 'public'));
     });
     const opts = options();
     await db.start(opts);

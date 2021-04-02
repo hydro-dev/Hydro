@@ -21,7 +21,7 @@ import { PERM, PRIV } from '../model/builtin';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param, post, route, get,
+    Route, Connection, Handler, ConnectionHandler, Types, param, post, route, query,
 } from '../service/server';
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
@@ -56,6 +56,7 @@ export class ProblemMainHandler extends ProblemHandler {
     @param('q', Types.String, true)
     async get(domainId: string, page = 1, q = '') {
         this.response.template = 'problem_main.html';
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: FilterQuery<Pdoc> = {};
         let psdict = {};
         const path: PathComponent[] = [
@@ -186,13 +187,8 @@ export class ProblemDetailHandler extends ProblemHandler {
     async get(..._args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        if (typeof this.response.body.pdoc.content === 'string') {
-            this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
-        } else {
-            this.response.body.pdoc.content = JSON.parse(JSON.stringify(this.response.body.pdoc.content)
-                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`));
-        }
+        this.response.body.pdoc.content = this.response.body.pdoc.content
+            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
     }
 
     @param('pid', Types.UnsignedInt)
@@ -340,9 +336,6 @@ export class ProblemEditHandler extends ProblemManageHandler {
         domainId: string, pid: string | number, title: string, content: string,
         newPid: string = '', hidden = false, tag: string[] = [],
     ) {
-        try {
-            content = JSON.parse(content);
-        } catch { /* Ignore */ }
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<Pdoc> = {
             title, content, pid: newPid, hidden, tag: tag ?? [],
@@ -418,7 +411,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
 }
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
-    @get('type', Types.Range(['additional_file', 'testdata']), true)
+    @query('type', Types.Range(['additional_file', 'testdata']), true)
     @param('filename', Types.String)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
@@ -573,9 +566,6 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('tag', Types.String, true, null, parseCategory)
     async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
-        try {
-            content = JSON.parse(content);
-        } catch { /* Ignore */ }
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
         this.response.body = { pid: pid || docId };

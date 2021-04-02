@@ -253,18 +253,15 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _16_18() {
-        await iterateAllProblem(['title', 'pid'], async (pdoc) => {
-            if (pdoc.domainId !== 'bzoj') return;
-            if (pdoc.docId > 100000) return;
-            console.log(pdoc.title, pdoc.docId, pdoc.pid);
-            await problem.edit(pdoc.domainId, pdoc.docId, { docId: pdoc.docId + 100000 });
-        });
-        await iterateAllProblem(['pid', 'title'], async (pdoc) => {
-            if (pdoc.domainId !== 'bzoj') return;
-            console.log(pdoc.title, pdoc.docId, pdoc.pid);
-            if (pdoc.pid.startsWith('P')) pdoc.pid = pdoc.pid.split('P')[1];
-            await problem.edit(pdoc.domainId, pdoc.docId, { docId: +pdoc.pid });
+    async function _16_17() {
+        return true;
+    },
+    async function _17_18() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['content'], async (pdoc) => {
+            if (typeof pdoc.content !== 'string') {
+                await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(pdoc.content) });
+            }
         });
     },
 ];

@@ -177,7 +177,7 @@ declare module './model/problem' {
         docId: number,
         pid: string,
         title: string,
-        content: Content,
+        content: string,
         nSubmit: number,
         nAccept: number,
         tag: string[],
