@@ -123,7 +123,7 @@ export const PERMS = [
     Permission('perm_discussion', PERM.PERM_VIEW_DISCUSSION, 'View discussions'),
     Permission('perm_discussion', PERM.PERM_CREATE_DISCUSSION, 'Create discussions'),
     Permission('perm_discussion', PERM.PERM_HIGHLIGHT_DISCUSSION, 'Highlight discussions'),
-    Permission('perm_discussion', PERM.PERM_PIN_DISCUSSION, 'Highlight discussions'),
+    Permission('perm_discussion', PERM.PERM_PIN_DISCUSSION, 'Pin discussions'),
     Permission('perm_discussion', PERM.PERM_EDIT_DISCUSSION, 'Edit discussions'),
     Permission('perm_discussion', PERM.PERM_EDIT_DISCUSSION_SELF, 'Edit own discussions'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION, 'Delete discussions'),
