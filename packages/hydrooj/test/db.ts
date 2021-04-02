@@ -1,28 +1,21 @@
-import 'hydrooj';
+import 'hydrooj/src/loader';
 jest.mock('hydrooj/src/service/db');
 
 export async function connect() {
-    await new Promise((resolve) => {
-        const db = require('hydrooj/src/service/db');
-        db.bus.once('connect', resolve);
-    });
-    const modelSystem = require('hydrooj/src/model/system');
-    const scripts = require('hydrooj/src/upgrade');
-    let dbVer = (await modelSystem.get('db.ver')) || 0;
+    const db = require('hydrooj/src/service/db');
+    await db.start({});
+    const scripts = require('hydrooj/src/upgrade').default;
+    let dbVer = 0;
     const expected = scripts.length;
     while (dbVer < expected) {
-        await scripts[dbVer]();
+        const func = scripts[dbVer];
         dbVer++;
-        await modelSystem.set('db.ver', dbVer);
+        if (func.toString().includes('_FRESH_INSTALL_IGNORE')) continue;
+        await func();
     }
 }
 
 export async function dispose() {
     const db = require('hydrooj/src/service/db');
-    await Promise.all([
-        db.getClient().close(),
-        db.getClient2().close(),
-        db.getDb().close(),
-        db.getDb2().close(),
-    ]);
+    await db.stop();
 }

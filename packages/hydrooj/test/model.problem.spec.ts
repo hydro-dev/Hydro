@@ -1,4 +1,4 @@
-import 'hydrooj';
+import 'hydrooj/src/loader';
 import { connect, dispose } from './db';
 
 const DOMAIN_ID = 'system';
@@ -8,11 +8,11 @@ const UID = 22;
 const PNAME = 'aaa';
 
 describe('Model.Problem', () => {
-    let problem: typeof import('hydrooj/src/model/problem');
+    let problem: typeof import('hydrooj/src/model/problem').default;
 
     beforeAll(async () => {
         await connect();
-        problem = require('hydrooj/src/model/problem');
+        problem = require('hydrooj/src/model/problem').default;
     });
 
     test('add_get', async () => {

@@ -1,5 +1,5 @@
-import 'hydrooj';
-import * as utils from 'hydrooj/src/utils';
+import 'hydrooj/src/loader';
+import * as utils from 'hydrooj/dist/utils';
 
 describe('Utils', () => {
     test('Array.isDiff', () => {

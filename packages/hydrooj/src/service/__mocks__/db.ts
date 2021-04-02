@@ -1,50 +1,50 @@
-/* eslint-disable import/no-mutable-exports */
-import { EventEmitter } from 'events';
-import mongodb, { Db, MongoClient } from 'mongodb';
+// @ts-nocheck
+import { Collection, Db, MongoClient } from 'mongodb';
+import * as bus from '../bus';
+import { Collections, BaseService } from '../../interface';
 
-export let db: Db = null;
-export let client: MongoClient = null;
-export let db2: Db = null;
-export let client2: MongoClient = null;
-
-export const bus = new EventEmitter();
-
-mongodb.MongoClient.connect(
-    // @ts-ignore
-    global.__MONGO_URI__,
-    { useNewUrlParser: true, useUnifiedTopology: true },
-).then((c) => {
-    // @ts-ignore
-    db = c.db(global.__MONGO_DB_NAME__);
-    client = c;
-    mongodb.MongoClient.connect(
-        // @ts-ignore
-        global.__MONGO_URI__,
-        { useNewUrlParser: true, useUnifiedTopology: true },
-    ).then((c2) => {
-        // @ts-ignore
-        db2 = c2.db(global.__MONGO_DB_NAME__);
-        client2 = c2;
-        bus.emit('connect');
-    });
-});
-
-export function collection(c: string) {
-    return db.collection(c);
+interface MongoConfig {
+    protocol?: string,
+    username?: string,
+    password?: string,
+    host?: string,
+    port?: string,
+    name?: string,
+    url?: string,
+    prefix?: string,
 }
 
-export function getClient() {
-    return client;
+class MongoService implements BaseService {
+    public client: MongoClient;
+    public client2: MongoClient;
+    public db: Db;
+    public db2: Db;
+    public started = false;
+    private opts: MongoConfig;
+
+    async start(opts: MongoConfig) {
+        this.opts = opts;
+        this.client = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true, useUnifiedTopology: true });
+        this.db = this.client.db(global.__MONGO_DB_NAME_);
+        this.client2 = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true, useUnifiedTopology: true });
+        this.db2 = this.client2.db(global.__MONGO_DB_NAME_);
+        await bus.parallel('database/connect', this.db);
+        this.started = true;
+    }
+
+    public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
+        if (this.opts.prefix) return this.db.collection(`${this.opts.prefix}.${c}`);
+        return this.db.collection(c);
+    }
+
+    public async stop() {
+        await this.db.close();
+        await this.db2.close();
+        await this.client.close();
+        await this.client2.close();
+    }
 }
 
-export function getClient2() {
-    return client2;
-}
-
-export function getDb() {
-    return db;
-}
-
-export function getDb2() {
-    return db2;
-}
+const service = new MongoService();
+global.Hydro.service.db = service as any;
+export = service;
