@@ -1,0 +1,55 @@
+.scratchpad-container
+  position: absolute
+  background: #FFF
+
+#scratchpad
+  position: absolute
+  left: 0
+  top: $nav-item-height
+  width: 100%
+  bottom: 0
+
+.scratchpad__problem
+  position: absolute
+  left: 0
+  top: 0
+  width: 100%
+  height: 100%
+  overflow: auto
+
+.scratchpad__toolbar__pretest.enabled:hover .icon
+  color: red
+
+.scratchpad__toolbar__submit.enabled:hover .icon
+  color: green
+
+.scratchpad__records__table
+  &.loading
+    // make a flash by setting opacity, otherwise users
+    // won't think that refreshing is completed!
+    opacity: 0.6
+
+  .col--at
+    width: rem(120px)
+
+  .col--time,
+  .col--memory
+    width: rem(70px)
+
+  .col--detail
+    border-right: 1px solid $table-border-color
+
+  .icol
+    display: inline-block
+
+  .icol--pretest
+    width: rem(60px)
+
+    .flag
+      font-size: rem(12px)
+      color: #FFF
+      padding: rem(2px 3px)
+
+  .icol--stat
+    color: #AAA
+    width: rem(60px)

@@ -1,0 +1,57 @@
+__langname: English
+Can be Extended For: Extension
+Current Status: Status
+Handled Requests: Req
+manage: System Manage
+no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
+page.problem_detail.sidebar.show_category: Click to Show
+page.training_detail.invalid_when_not_enrolled: You cannot view problem details unless enrolled.
+pager_first: « First
+pager_last: Last »
+pager_next: Next ›
+pager_previous: ‹ Previous
+perm_contest: Contests
+perm_discussion: Discussions
+perm_general: General
+perm_problem_solution: Problem Solutions
+perm_problem: Problems
+perm_record: Records
+perm_training: Trainings
+problem_create: Problem Create
+problem_edit: Problem Edit
+problem_import: Import Problem
+problem_main: Problem Set
+problem_settings: Problem Settings
+problem_solution: Problem Solution
+problem_statistics: Problem Statistics
+problem_submit: Problem Submit
+problem-category-delim: '|'
+problem-subcategory-delim: ', '
+problem.import.additional_file: '## Additional Files'
+problem.import.hint: '## Hint'
+problem.import.input_format: '## Input Format'
+problem.import.limit_and_hint: '## Limits'
+problem.import.output_format: '## Output Format'
+problem.import.problem_description: '## Description'
+ranking: Ranking
+record_detail: Record Detail
+record_main: Judging Queue
+setting_customize: Customize
+setting_display: Display Preference
+setting_function: Function
+setting_info_domain: Personal Info
+setting_info: Personal Info
+setting_preference: Preference
+setting_privacy: Privacy
+setting_usage: Usage Preference
+tasks_list: Task list
+timeago_locale: en_US
+training_create: Training Create
+training_edit: Training Edit
+training_main: Training
+user_detail: User Detail
+user_login: Login
+user_logout: Logout
+user_lostpass: Lost Password
+user_register: Register
+wiki_help: Help

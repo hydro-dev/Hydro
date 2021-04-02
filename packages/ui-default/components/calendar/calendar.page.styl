@@ -1,0 +1,129 @@
+.calendar__header
+  line-height: rem(45px)
+  text-align: center
+
+  h1
+    display: inline-block
+    line-height: inherit
+    width: rem(280px)
+
+  button
+    font-size: rem($font-size-title)
+    color: $text-3-color
+    padding: 0 rem(10px)
+    outline: 0
+
+    &:hover
+      color: $primary-color
+
+.calendar__week-title
+  table
+    width: 100%
+
+  th
+    width: 14.28%
+    padding: rem(20px 10px)
+    color: $supplementary-color
+
+.calendar__row
+  position: relative
+
+.calendar__row__bg
+  position: absolute
+  left: 0
+  top: 0
+  width: 100%
+  height: 100%
+
+  table
+    width: 100%
+    height: 100%
+
+  td
+    width: 14.28%
+    border: 1px solid $table-border-color
+
+    &.is-current-day
+      background: lighten($highlight-color, 85%)
+
+.calendar__row__content
+  min-height: rem(100px)
+  position: relative
+  z-index: 2
+  padding-bottom: rem(10px)
+
+  table
+    width: 100%
+
+  th
+    width: 14.28%
+    padding: rem(10px)
+    color: $text-2-color
+
+    &.is-inactive
+      opacity: 0.3
+
+    &.is-current-day
+      color: $highlight-color
+
+  td
+    position: relative
+    height: rem(24px)
+
+.calendar__banner
+  position: absolute
+  display: block
+  top: rem(2px)
+  left: rem(5px)
+  right: rem(5px)
+  height: rem(20px)
+  line-height: rem(20px)
+  padding: rem(0 5px)
+  font-size: rem($font-size-small)
+  border-radius: rem(5px)
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+  &, &:visited, &:hover, &:active
+    color: #FFF
+    text-decoration: none
+
+  &.is-trunc-begin, &.is-snap-begin
+    border-top-left-radius: 0
+    border-bottom-left-radius: 0
+
+  &.is-trunc-end, &.is-snap-end
+    border-top-right-radius: 0
+    border-bottom-right-radius: 0
+
+  &.is-snap-begin
+    left: 0
+    padding-left: rem(10px)
+
+  &.is-snap-end
+    right: 0
+    padding-right: rem(10px)
+
+  &.is-masked
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(#000, 0.1),
+      rgba(#000, 0.1) 10px,
+      rgba(#000, 0) 10px,
+      rgba(#000, 0) 20px
+    );
+
+  for key, value in $calendar-banner-color
+    &.color-{key}
+      background-color: value
+
+.calendar__body-container
+  position: relative
+
+.calendar__body.exit
+  position: absolute
+  left: 0
+  top: 0
+  width: 100%
+  user-select: none

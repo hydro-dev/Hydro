@@ -1,0 +1,92 @@
+{% import "components/user.html" as user with context %}
+{% import "components/contest.html" as contest with context %}
+<div class="section side">
+{% if page_name != 'contest_detail' %}
+  <a class="contest-sidebar__bg" href="{{ url('contest_detail', tid=tdoc.docId) }}">
+    <div class="section__body">
+      <h1>{{ tdoc.title }}</h1>
+      <div class="contest-sidebar__status">
+      {% if attended %}
+        <span class="icon icon-check"></span> {{ _('Attended') }}
+      {% else %}
+        <span class="icon icon-schedule"></span> {{ _('Not Attended') }}
+      {% endif %}
+      </div>
+    </div>
+  </a>
+{% endif %}
+  <div>
+    <ol class="menu">
+    {% if page_name != 'contest_detail' %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_detail', tid=tdoc.docId) }}">
+        <span class="icon icon-award"></span> {{ _('View Contest') }}
+      </a></li>
+    {% endif %}
+    {% if not attended and not model.contest.isDone(tdoc) %}
+      <li class="menu__item">
+    {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
+          <input type="hidden" name="operation" value="attend">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+          <button class="menu__link" type="submit">
+            <span class="icon icon-add"></span> {{ _('Attend Contest') }}
+          </button>
+        </form>
+    {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <a class="menu__link" href="javascript:showSignInDialog()">
+          <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}
+        </a>
+    {% else %}
+        <a class="menu__link disabled" href="javascript:;">
+          <span class="icon icon-add"></span> {{ _('No Permission to Attend Contest') }}
+        </a>
+    {% endif %}
+      </li>
+    {% endif %}
+    {% if handler.canShowScoreboard(tdoc, False) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">
+        <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
+      </a></li>
+    {% elif handler.canViewHiddenScoreboard(tdoc) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">
+        <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
+      </a></li>
+    {% endif %}
+    {% if user._id == tdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
+        <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
+      </a></li>
+    {% endif %}
+    {% if handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_code', tid=tdoc.docId) }}">
+        <span class="icon icon-download"></span> {{ _('Export All Code') }}
+      </a></li>
+    {% endif %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
+        <span class="icon icon-flag"></span> {{ _('All Submissions') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('wiki_help', anchor='contest') }}">
+        <span class="icon icon-help"></span> {{ _('Help') }}
+      </a></li>
+      <li class="menu__seperator"></li>
+    </ol>
+  </div>
+  <div class="section__body typo">
+    <dl class="large horizontal">
+      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.statusText(tdoc)) }}</dd>
+      <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
+      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
+      <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tdoc.beginAt) }}</dd>
+      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tdoc.endAt) }}</dd>
+      <dt>{{ _('Duration') }}</dt><dd>{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</dd>
+      <dt>{{ _('Host') }}</dt><dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
+      <dt>{{ _('Partic.') }}</dt>
+      <dd>
+        {{ tdoc['attend']|default(0) }}
+      {% if attended %}
+        ({{ _('Attended') }})
+      {% endif %}
+      </dd>
+    </dl>
+  </div>
+</div>

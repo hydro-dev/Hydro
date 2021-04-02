@@ -1,0 +1,25 @@
+{% macro render(page, num_pages, add_qs='') %}
+{% if num_pages > 0 %}
+  <ul class="pager">
+  {%- for type, page0 in paginate(page, num_pages) -%}
+    <li>
+    {% if type == 'first' %}
+      <a class="pager__item first link" href="?page={{ page0 }}{% if add_qs %}&{{ add_qs }}{% endif %}">{{ _('pager_first') }}</a>
+    {% elif type == 'previous' %}
+      <a class="pager__item previous link" href="?page={{ page0 }}{% if add_qs %}&{{ add_qs }}{% endif %}">{{ _('pager_previous') }}</a>
+    {% elif type == 'ellipsis' %}
+      <span class="pager__item ellipsis">...</span>
+    {% elif type == 'page' %}
+      <a class="pager__item page link" href="?page={{ page0 }}{% if add_qs %}&{{ add_qs }}{% endif %}">{{ page0 }}</a>
+    {% elif type == 'current' %}
+      <span class="pager__item current">{{ page0 }}</span>
+    {% elif type == 'next' %}
+      <a class="pager__item next link" href="?page={{ page0 }}{% if add_qs %}&{{ add_qs }}{% endif %}">{{ _('pager_next') }}</a>
+    {% elif type == 'last' %}
+      <a class="pager__item last link" href="?page={{ page0 }}{% if add_qs %}&{{ add_qs }}{% endif %}">{{ _('pager_last') }}</a>
+    {% endif %}
+    </li>
+  {%- endfor -%}
+  </ul>
+{% endif %}
+{% endmacro %}

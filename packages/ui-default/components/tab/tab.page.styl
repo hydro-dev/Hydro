@@ -1,0 +1,89 @@
+@import './var.inc.styl'
+
+// No JavaScript
+.section__tab-item
+  margin: rem(20px) 0
+  border-bottom: 1px solid #DDD
+  padding: 0 rem($section-gap-h) rem($section-gap-v)
+
+.section__tab-title
+  font-size: rem($font-size-title)
+  color: #888
+  margin-bottom: 0.8em
+
+// Has JavaScript
+.section__tab-header-wrapper
+  overflow: hidden
+
+.section__tab-header
+  padding: 0 rem($section-gap-h)
+  padding-top: rem($tab-item-shadow-size)
+  overflow-x: auto
+  white-space: nowrap
+  padding-bottom: 20px
+  margin-bottom: -20px
+
+  +mobile()
+    padding-top: 0
+    padding-right: rem($section-gap-h + 50px)
+    webkit-overflow-scrolling: touch
+    mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0));
+
+.section__tab-header-item
+  display: inline-block
+  font-size: rem($font-size-secondary)
+  line-height: rem($tab-item-height)
+  height: rem($tab-item-height)
+  padding: 0 rem(20px)
+  margin-right: rem(10px)
+  user-select: none
+  position: relative
+
+  +mobile()
+    line-height: rem($tab-item-height-mobile)
+    height: rem($tab-item-height-mobile)
+
+.section__tab-container.immersive
+  .section__tab-header-item
+    color: rgba(#FFF, 0.9)
+    border-radius: 1px 1px 0 0
+    cursor: pointer
+    transition: background .2s ease-out-cubic
+
+    &:hover
+      color: #FFF
+
+    &.selected
+      background: #FFF
+      color: #666
+      box-shadow: 0 0 10px rgba(#000, 0.3)
+
+    +mobile()
+      &.selected
+        box-shadow: none
+        background: transparent
+        color: #FFF
+
+        &::after
+          position: absolute
+          left: 0
+          width: 100%
+          bottom: 0
+          height: 3px
+          background: $secondary-color
+          content: ''
+
+.section__tab-content-wrapper
+  overflow: hidden
+
+.section__tab-content
+  position: relative
+  white-space: nowrap
+
+  .section__tab-main
+    display: none
+    vertical-align: top
+    width: 100%
+
+    &.active
+      display: inline-block

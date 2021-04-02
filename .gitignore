@@ -2,6 +2,7 @@
 .build/
 dist/
 *.cache
+.cache
 /build/*.js
 .cache/
 *.log
@@ -21,11 +22,17 @@ yarn.lock
 tsconfig.json
 
 # Project Rules
+## Core
 packages/**/*.js
 !/build/build.js
 !**/bin/*.js
 !*.page.js
 !/install/jssh.d.ts
+## ui-default
+!packages/ui-default/**/*.js
+packages/ui-default/public
+packages/ui-default/misc/.iconfont
+packages/ui-default/static/locale
 
 # Data files
 *.mmdb

@@ -1,0 +1,54 @@
+$signin_form_width = 320px
+$signin_form_gap_v = 50px
+$signin_form_gap_h = 50px
+$signin_dialog_expand_v = 50px
+$signin_dialog_expand_h = 30px
+
+.dialog--signin__bg
+  background: rgba(#000, 0.8)
+  position: absolute
+  left: rem(-($signin_dialog_expand_h))
+  top: rem($signin_dialog_expand_v)
+  bottom: rem($signin_dialog_expand_v)
+  right: rem(-($signin_dialog_expand_h))
+  z-index: 1
+  box-shadow: 0 3px 10px rgba(#000, 0.3)
+
+.dialog--signin__main
+  background: #FFF
+  width: rem($signin_form_width)
+  padding: rem($signin_form_gap_v $signin_form_gap_h)
+  margin-right: rem($signin_form_width - $signin_dialog_expand_h)
+  position: relative
+  z-index: 2
+  box-shadow: 0 0 30px rgba(#000, 0.6)
+
+.dialog--signin__side
+  position: absolute
+  right: 0
+  width: rem($signin_form_width)
+  padding: rem(0 $signin_form_gap_h)
+  transform: translateY(-50%)
+  top: 50%
+  color: #DDD
+
+.dialog--signin__side h1
+  color: #FFF
+
+.dialog--signin__side p
+  margin: 1em 0
+  line-height: 1.2em
+
+.dialog--signin__title
+  text-align: center
+  color: lighten($primary-color, 20%)
+
+.dialog--signin__note
+  margin: 0.3em 0 2em 0
+  text-align: center
+  font-size: rem($font-size-secondary)
+
+.dialog--signin__close-container
+  position: absolute
+  right: rem(15px)
+  top: rem(15px)

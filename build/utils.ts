@@ -15,7 +15,7 @@ export function getWorkspaces() {
     });
 }
 
-export type DependencyType = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies'
+export type DependencyType = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
 
 export interface PackageJson extends Partial<Record<DependencyType, Record<string, string>>> {
     name?: string

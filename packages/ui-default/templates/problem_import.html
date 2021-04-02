@@ -1,0 +1,26 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+          <p>{{ _('Upload zipfile') }} ({{ _('Type') }}: {{type}}):
+            <input type="file" name="file">
+            <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div class="section__body typo">
+        <h2>{{ _('What is this?') }}</h2>
+        <p>{{ _('With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported.') }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

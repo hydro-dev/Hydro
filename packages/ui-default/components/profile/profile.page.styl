@@ -1,0 +1,23 @@
+.user-profile-avatar
+  border-radius: 50%
+
+.user-profile-badge
+  display: inline-block
+  font-size: rem(12px)
+  padding: rem(3px 4px)
+  line-height: 1
+
+  &:hover
+    text-decoration: none
+
+for n in (1..21)
+  .user-profile-bg--{n}
+    background-image: url('backgrounds/' + n + '.jpg')
+
+  .user-profile-bg--thumbnail-{n}
+    background-image: url('backgrounds/thumbnail/' + n + '.jpg')
+
+for key, _ in $badge-bg-color
+  .badge--{key}
+    background-color: $badge-bg-color[key] !important
+    color: $badge-text-color[key] !important

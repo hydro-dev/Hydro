@@ -1,0 +1,23 @@
+.layout--immersive
+  #panel
+    background: #80b2d5 url('immersive-background.jpg') no-repeat
+    background-size: 1920px 1080px
+    background-size: cover
+    +retina()
+      background-image: url('immersive-background@2x.jpg')
+
+.immersive--content
+  color: $immersive-text-color
+
+  h1, h2, h3, h4, h5, h6
+    color: $immersive-header-color
+
++above(rupture.mobile-cutoff)
+  .immersive--center
+    width: 200px
+    margin: 0 auto
+
+.immersive--center
+  h1
+    text-align: center
+    margin: 2em 0

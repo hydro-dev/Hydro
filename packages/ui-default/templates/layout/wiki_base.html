@@ -1,0 +1,16 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row" data-sticky-parent>
+  <div class="medium-9 columns">
+    {% block wiki_content %}{% endblock %}
+  </div>
+  <div class="medium-3 columns"><div data-sticky="large">
+    <div class="section side">
+      <ol class="menu">
+        {{ sidemenu.render_item('info', 'wiki_about') }}
+        {{ sidemenu.render_item('help', 'wiki_help') }}
+      </ol>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+@font-face
+  font-family: $icon-font-name
+  src: url('./{{ options.fontName }}.eot')
+  src: url('./{{ options.fontName }}.eot#iefix') format('embedded-opentype'),
+    url('./{{ options.fontName }}.woff2') format('woff2'),
+    url('./{{ options.fontName }}.woff') format('woff'),
+    url('./{{ options.fontName }}.ttf') format('truetype')
+  font-weight: normal
+  font-style: normal
+
+.icon
+  font-family: $icon-font-name !important
+  speak: none
+  font-style: normal
+  font-weight: normal
+  font-variant: normal
+  text-transform: none
+  line-height: 1
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+
+{% for icon in glyphs %}
+.icon-{{ icon.name }}:before
+  content: $icon-{{ icon.name }}
+{% endfor %}

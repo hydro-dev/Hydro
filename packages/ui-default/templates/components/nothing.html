@@ -1,0 +1,6 @@
+{% macro render(text, compact=false) %}
+<div class="nothing-placeholder{% if compact %} compact{% endif %}">
+  <div class="nothing-icon"></div>
+  {{ _(text) }}
+</div>
+{% endmacro %}

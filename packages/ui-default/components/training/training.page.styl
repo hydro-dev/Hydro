@@ -1,0 +1,25 @@
+.training-status--icon
+  display: inline-block
+  width: 1.15em
+  for key, value in $training-status-icon
+    &.{key}:before
+      content: value
+      color: $training-status-color[key]
+
+.training-status--text
+  for key, value in $training-status-color
+    &.{key}
+      color: value
+
+.training-section-status--icon
+  display: inline-block
+  width: 1.15em
+  for key, value in $training-section-status-icon
+    &.{key}:before
+      content: value
+      color: $training-status-color[key]
+
+.training-section-status--text
+  for key, value in $training-section-status-color
+    &.{key}
+      color: value

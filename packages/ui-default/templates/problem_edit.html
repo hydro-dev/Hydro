@@ -1,0 +1,84 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          <div class="row">
+            <div class="medium-7 columns">
+              <label>
+                {{ _('Title') }}
+                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox" autofocus>
+              </label>
+            </div>
+            <div class="medium-3 columns">
+              <label>
+                {{ _('pid') }}
+                <br>
+                <label>
+                  <input name="pid" placeholder="{{ _('Leave blank to use numeric pid.') }}" value="{{ pdoc['pid']|default('') }}" class="textbox">
+                </label>
+              </label>
+            </div>
+            <div class="medium-2 columns">
+              <label>
+                <br>
+                <label class="checkbox">
+                  <input type="checkbox" name="hidden" value="on"{% if pdoc['hidden'] %} checked{% endif %}>{{ _('Hidden') }}
+                </label>
+              </label>
+            </div>
+          </div>
+          {{ form.form_text({
+               columns:12,
+               label:'Tags',
+               help_text:'Split by \', \'.',
+               name:'tag',
+               value:pdoc['tag']|default([])|join(', ')
+             }) }}
+          <div class="row"><div class="columns">
+            <label>
+              {{ _('Content') }}
+              <textarea name="content" class="textbox" data-markdown style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
+            </label>
+          </div></div>
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+          {% if page_name == 'problem_edit' %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Update') }}
+            </button>
+            {% if pdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+              <button name="operation" value="delete" type="submit" class="rounded button">
+                {{ _('Delete') }}
+              </button>
+            {% endif %}
+          {% else %}
+            <button type="submit" class="rounded primary button">
+              {{ _('Create') }}
+            </button>
+          {% endif %}
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side visiable nojs--hide">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Categories') }} ({{ _('click to add') }})</h1>
+      </div>
+      <div class="section__body">
+        {% include "partials/category.html" %}
+      </div>
+    </div>
+  {% if page_name == 'problem_edit' %}
+    {% set owner_udoc = udoc %}
+    {% include "partials/problem_sidebar.html" %}
+  {% else %}
+    {% include 'components/md_hint.html' %}
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

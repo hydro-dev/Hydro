@@ -1,0 +1,210 @@
+{% set no_path_section = true %}
+{% set page_name = "homepage" %}
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+{% if domain['bulletin'] %}
+<div class="row">
+  <div class="large-12 columns">
+    <div class="section">
+      <div class="section__body typo">
+        {{ domain['bulletin']|markdown|safe }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="row">
+  <div class="large-9 columns">
+  {% if tdocs.length %}
+    <div class="section page--contest_main">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Contest') }}</h1>
+      </div>
+      <ol class="section__list contest__list">
+      {%- for tdoc in tdocs -%}
+        <li class="section__list__item contest__item contest-type--{{ tdoc.rule }}">
+          <div class="media">
+            <div class="media__left medium">
+              <div class="contest__date numbox">
+                <div class="numbox__num large">{{ datetimeSpan(tdoc['beginAt'], false, '%d')|safe }}</div>
+                <div class="numbox__text">{{ datetimeSpan(tdoc['beginAt'], false, '%Y-%m')|safe }}</div>
+              </div>
+            </div>
+            <div class="media__body medium">
+              <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <ul class="supplementary list">
+                <li>
+                  <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
+                </li>
+                <li>
+                  <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
+                </li>
+                <li>
+                  <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
+                </li>
+              {% if tsdict[tdoc.docId]['attend'] == 1 %}
+                <li class="contest__info-attended">
+                  <span class="icon icon-check"></span> {{ _('Attended') }}
+                </li>
+              {% endif %}
+              </ul>
+            </div>
+          </div>
+        </li>
+      {%- endfor -%}
+      </ol>
+    </div>
+  {% endif %}
+  {% if htdocs.length %}
+    <div class="section page--homework_main">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Homework') }}</h1>
+      </div>
+      <ol class="section__list homework__list">
+        {%- for tdoc in htdocs -%}
+          <li class="section__list__item homework__item">
+            <div class="media">
+              <div class="media__left medium">
+                <div class="homework__date numbox">
+                  <div class="numbox__num large">{{ datetimeSpan(tdoc['penaltySince'], false, '%d')|safe }}</div>
+                  <div class="numbox__text">{{ datetimeSpan(tdoc['penaltySince'], false, '%Y-%m')|safe }}</div>
+                </div>
+              </div>
+              <div class="media__body medium">
+                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+                <ul class="supplementary list">
+                  <li>
+                    {{ _('Status') }}: <span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span>
+                  </li>
+                  <li>
+                    {{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}
+                  </li>
+                  <li>
+                  {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
+                    {{ _('Hard Deadline') }}: {{ datetimeSpan(tdoc['endAt'])|safe }}
+                  {% else %}
+                    {{ _('Deadline') }}: {{ datetimeSpan(tdoc['penaltySince'])|safe }}
+                  {% endif %}
+                  </li>
+                {% if htsdict[tdoc['docId']]['attend'] == 1 %}
+                  <li class="homework__info-attended">
+                    <span class="icon icon-check"></span> {{ _('Claimed') }}
+                  </li>
+                {% endif %}
+                </ul>
+              </div>
+            </div>
+          </li>
+        {%- endfor -%}
+      </ol>
+    </div>
+  {% endif %}
+  {% if trdocs.length %}
+    <div class="section page--training_main">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Training') }}</h1>
+      </div>
+      {% set tdocs = trdocs %}
+      {% set tsdict = trsdict %}
+      <ol class="section__list all primary training__list">
+        {%- for tdoc in tdocs -%}
+        <li class="section__list__item training__item">
+          <div class="media">
+            <div class="media__left middle">
+              <div class="training__participants numbox">
+                <div class="numbox__num large">{{ tdoc['enroll']|default(0) }}</div>
+                <div class="numbox__text">{{ _('Enrolled') }}</div>
+              </div>
+            </div>
+            <div class="media__body middle">
+              <h1 class="training__title"><a href="{{ url('training_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <div class="training__intro typo">
+                <p>{{ tdoc['content'] }}</p>
+              </div>
+              <ul class="supplementary list training__progress">
+                <li>
+                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc.dag)|length) }}
+                </li>
+                <li>
+                {% if tsdict[tdoc.docId]['enroll'] %}
+                  {% if not tsdict[tdoc.docId]['done'] %}
+                  <span class="icon training-status--icon progress"></span>
+                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc.docId]['donePids']|length / model.training.getPids(tdoc.dag)|length)|round|int }}%</span>
+                  {% else %}
+                  <span class="icon training-status--icon done"></span>
+                  <span class="training-status--text done">{{ _('Completed') }} 100%</span>
+                  {% endif %}
+                {% elif handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                  <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
+                {% endif %}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        {%- endfor -%}
+      </ol>
+    </div>
+  {% endif %}
+  {% if ddocs.length %}
+    <div class="section page--discussion_main">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Discussion') }}</h1>
+      </div>
+      {% include "partials/discussion_list.html" %}
+    </div>
+  {% endif %}
+  </div>
+  <div class="large-3 columns">
+    <div class="section side nojs--hide">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Hitokoto') }}</h1>
+      </div>
+      <div class="section__body" name="hitokoto"></div>
+    </div>
+    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+      <div class="section side">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Check In') }}</h1>
+        </div>
+        <div class="section__body">还没做好（前端不会做欢迎来帮忙）</div>
+      </div>
+    {% endif %}
+    {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
+      {% include 'partials/discussion_nodes_widget.html' %}
+    {% endif %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Recommended') }}</h1>
+      </div>
+      <div class="section__body"><ul class="group-list">
+        <li class="group-list__item">
+          <h2 class="section__title">{{ _('Chinese') }}</h2>
+          <ol class="chip-list">
+            <li class="chip-list__item"><a class="typo-a" href="https://www.xuetangx.com/courses/course-v1:TsinghuaX+30240184+sp/about" target="_blank">清华数据结构 MOOC 上</a><a class="typo-a" href="https://www.xuetangx.com/courses/course-v1:TsinghuaX+30240184_2X+sp/about" target="_blank">/下</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://www.51nod.com/" target="_blank">51Nod</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://www.luogu.com.cn/" target="_blank">洛谷</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://www.rqnoj.cn/" target="_blank">RQNOJ</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://zoj.pintia.cn/" target="_blank">ZOJ</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://uoj.ac/" target="_blank">UOJ</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://loj.ac/" target="_blank">LibreOJ</a></li>
+          </ol>
+        </li>
+        <li class="group-list__item">
+          <h2 class="section__title">{{ _('English') }}</h2>
+          <ol class="chip-list">
+            <li class="chip-list__item"><a class="typo-a" href="https://acm.njupt.edu.cn/" target="_blank">NOJ</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://www.topcoder.com/" target="_blank">TopCoder</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://uva.onlinejudge.org/" target="_blank">UVa</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="https://codeforces.com/" target="_blank">Codeforces</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="http://www.usaco.org/" target="_blank">USACO</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="http://spoj.pl/" target="_blank">SPOJ</a></li>
+            <li class="chip-list__item"><a class="typo-a" href="http://poj.org/" target="_blank">POJ</a></li>
+          </ol>
+        </li>
+      </ul></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -2,8 +2,7 @@
     "files.autoGuessEncoding": false,
     "files.encoding": "utf8",
     "files.eol": "\n",
-    "editor.detectIndentation": false,
-    "editor.tabSize": 4,
+    "editor.detectIndentation": true,
     "editor.formatOnSave": true,
     "editor.renderWhitespace": "boundary",
     "typescript.tsdk": "node_modules/typescript/lib"

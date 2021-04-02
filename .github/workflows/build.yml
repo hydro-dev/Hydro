@@ -25,9 +25,13 @@ jobs:
     - name: Install
       run: yarn
     - name: Build
-      run: yarn build
+      run: |
+        yarn build
+        yarn build:ui:production
     - name: Lint
-      run: yarn lint:ci
+      run: |
+        yarn lint:ci
+        yarn lint:ui:ci
     - name: Unit Test
       run: yarn jest --runInBand
     - name: Report Coverage

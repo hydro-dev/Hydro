@@ -1,0 +1,46 @@
+{% import "components/form.html" as form with context %}
+<div class="row">
+  <div class="medium-8 columns">
+    <label>
+      {{ _('Title') }}
+      <input 
+        name="title" placeholder="{{ _('title') }}"
+        value="{{ ddoc.title|default('') }}"
+        class="textbox" autofocus>
+    </label>
+  </div>
+  <div class="medium-2 columns">
+    <label>
+      {{ _('Highlight') }}
+      <br>
+      <label class="checkbox">
+        <input type="checkbox" name="highlight" value="on"
+          {%- if ddoc.highlight %} checked{% endif -%}
+          {%- if not handler.user.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION) %} disabled{% endif -%}
+        >{{ _('Highlight') }}
+      </label>
+    </label>
+  </div>
+  <div class="medium-2 columns">
+    <label>
+      {{ _('Pin') }}
+      <br>
+      <label class="checkbox">
+        <input type="checkbox" name="pin" value="on"
+          {%- if ddoc.pin %} checked{% endif -%}
+          {%- if not handler.user.hasPerm(perm.PERM_PIN_DISCUSSION) %} disabled{% endif -%}
+        >{{ _('Pin') }}
+      </label>
+    </label>
+  </div>
+</div>
+{{ form.form_textarea({
+      columns:12,
+      label:'Content',
+      name:'content',
+      value:ddoc.content|default(''),
+      hotkeys:'ctrl+enter:submit',
+      markdown:true,
+      required:true,
+      extra_style:'height: 500px'
+    }) }}

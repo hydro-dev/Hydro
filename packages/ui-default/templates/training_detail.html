@@ -1,0 +1,206 @@
+{% import "components/record.html" as record with context %}
+{% import "components/problem.html" as problem with context %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body typo">
+        {{ tdoc['content'] }}
+      </div>
+      <div class="section__body typo">
+        {{ tdoc['desc']|default('')|markdown|safe }}
+      </div>
+    </div>
+    <div class="section">
+      {% if not tsdoc.enroll %}
+        <div class="section__body">
+          <blockquote class="typo warn">
+            <p>{{ _('page.training_detail.invalid_when_not_enrolled') }}</p>
+          </blockquote>
+        </div>
+      {% endif %}
+      {%- for node in tdoc['dag'] -%}
+        <div data-heading-extract-to="#menu-item-training_detail" class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}  {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
+          <div class="section__header clearfix">
+            <div class="float-left">
+              <h1 data-heading id="node-{{ node._id }}" class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'] }}</h1>
+            </div>
+            <div class="float-right">
+              <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}">
+                <span class="icon training-section-status--icon {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}"></span>
+                {% if nsdict[node['_id']]['isDone'] %}
+                  {{ _('Completed') }}
+                {% elif nsdict[node['_id']]['isProgress'] %}
+                  {{ _('In Progress') }}
+                {% elif nsdict[node['_id']]['isOpen'] %}
+                  {{ _('Open') }}
+                {% else %}
+                  {{ _('Invalid') }}
+                {% endif %}
+              </h1>
+            </div>
+          </div>
+          <div class="section__body">
+            <ul class="supplementary dot list">
+              <li>
+                <a href="javascript:;" name="training__section__expand" class="expanded--hidden"><span class="icon icon-expand_more"></span> {{ _('expand') }}</a>
+                <a href="javascript:;" name="training__section__collapse" class="collapsed--hidden"><span class="icon icon-expand_less"></span> {{ _('collapse') }}</a>
+              </li>
+              <!--
+              TODO(twd2): twd2 todo
+              <li>
+                递交了 ? 次完成该章节 (TOP ?%)
+              </li>
+              <li>
+                第 ? 个完成该章节 (总计 ? 用户完成)
+              </li>
+              -->
+            </ul>
+          </div>
+          <div class="training__section__detail">
+            {% if nsdict[node['_id']]['isInvalid'] %}
+              <div class="section__body">
+                <blockquote class="typo note">
+                  <p>{{ _('This section cannot be challenged at present, so please complete the following sections first') }}:</p>
+                  <ul>
+                    {%- for nid in node['requireNids'] -%}
+                      <li>{{ _('Section') }} {{ _(nid) }}. {{ ndict[nid]['title'] }} ({{ _('Completed') }} {{ nsdict[nid]['progress'] }}%)</li>
+                    {%- endfor -%}
+                  </ul>
+                </blockquote>
+              </div>
+            {% endif %}
+            {% if node['content'] %}
+              <div class="section__body typo">
+                {{ node['content']|markdown|safe }}
+              </div>
+            {% endif %}
+          <div class="section__body no-padding training__problems">
+            <table class="data-table">
+              <colgroup>
+              {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                <col class="col--status">
+              {% endif %}
+                <col class="col--name">
+                <col class="col--submit_n">
+                <col class="col--ac_rate">
+                <col class="col--difficulty">
+              </colgroup>
+              <thead>
+                <tr>
+                {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                  <th class="col--status record-status--border">{{ _('Status') }}</th>
+                {% endif %}
+                  <th class="col--name">{{ _('Problem') }}</th>
+                  <th class="col--submit_n">{{ _('Submit') }}</th>
+                  <th class="col--ac_rate">% {{ _('AC') }}</th>
+                  <th class="col--difficulty">{{ _('Difficulty') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+              {%- for pid in node['pids'] -%}
+              {% if pid in pdict %}
+              {% set pdoc=pdict[pid] %}
+              {% set psdoc=psdict[pid] %}
+                <tr>
+                {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                {% if psdoc['rid'] %}
+                  {{ record.render_status_td(psdoc, rid_key='rid') }}
+                {% else %}
+                  <td class="col--status record-status--border"></td>
+                {% endif %}
+                {% endif %}
+                  <td class="col--name col--problem-name">
+                  {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                    <form class="form--inline" action="{{ url('problem_main') }}" method="post">
+                      <input type="hidden" name="pid" value="{{ pdoc.docId }}">
+                      <input type="hidden" name="operation" value="{% if not psdoc['star'] %}star{% else %}unstar{% endif %}">
+                      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+                      <button class="star{% if psdoc['star'] %} activated{% endif %}" type="submit">
+                        <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
+                        <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+                      </button>
+                    </form>
+                  {% endif %}
+                    {{ problem.render_problem_title(
+                      pdoc,
+                      invalid=not tsdoc['enroll'],
+                      show_tags=false
+                    ) }}
+                  </td>
+                  <td class="col--submit_n">{{ pdoc.nSubmit }}</td>
+                  <td class="col--ac_rate">{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int if pdoc.nSubmit > 0 else _('?') }}</td>
+                  <td class="col--difficulty">{{ pdoc['difficulty'] or _('(None)') }}</td>
+                </tr>
+              {% else %}
+              {% set pdoc = {'_id': pid, 'hidden': true, 'title': '*'} %}
+                <tr>
+                  <td class="col--status record-status--border">
+                  </td>
+                  <td class="col--name col--problem-name">
+                    {{ problem.render_problem_title(pdoc, invalid=true) }}
+                  </td>
+                  <td class="col--submit_n">*</td>
+                  <td class="col--ac_rate">*</td>
+                  <td class="col--difficulty">*</td>
+                </tr>
+              {% endif %}
+              {%- endfor -%}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {%- endfor -%}
+      <div class="section__body">&nbsp;<!-- space placeholder --></div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div>
+        <ol class="menu">
+        {% if not tsdoc['enroll'] and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+          <li class="menu__item">
+            <form action="" method="POST">
+              <input type="hidden" name="operation" value="enroll">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              <button class="menu__link" type="submit">
+                <span class="icon icon-add"></span> {{ _('Enroll Training') }}
+              </button>
+            </form>
+          </li>
+        {% endif %}
+        {% if tdoc.owner == user._id or handler.user.hasPerm(perm.PERM_EDIT_TRAINING) %}
+          <li class="menu__item"><a class="menu__link" href="{{ url('training_edit', tid=tdoc.docId) }}">
+            <span class="icon icon-edit"></span>  {{ _('Edit') }}
+          </a></li>
+        {% endif %}
+          <li class="menu__item"><a class="menu__link" href="{{ url('wiki_help', anchor='training') }}">
+            <span class="icon icon-help"></span> {{ _('Help') }}
+          </a></li>
+          <li class="menu__seperator"></li>
+        </ol>
+      </div>
+      <div class="section__body typo">
+        <dl class="large horizontal">
+        {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+          <dt>{{ _('Status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
+        {% endif %}
+          {% if tsdoc['enroll'] %}
+          <dt>{{ _('Progress') }}</dt><dd>{{ _('Completed') }} {{ (100 * tsdoc['donePids']|length / pids|length)|round|int }}%</dd>
+          {% endif %}
+          <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc['enroll']|default(0) }}</dd>
+          <dt>{{ _('Created By') }}</dt>
+          <dd>{{ user.render_inline(owner, badge=false) }}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="section side"><div data-sticky="large">
+      <ol class="menu">
+        {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list') }}
+      </ol>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

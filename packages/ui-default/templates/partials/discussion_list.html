@@ -1,0 +1,46 @@
+{% import "components/nothing.html" as nothing with context %}
+{% import "components/user.html" as user with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% if not ddocs.length %}
+  {{ nothing.render('no discussion yet...') }}
+{% else %}
+  <ol class="section__list discussion__list">
+  {%- for ddoc in ddocs -%}
+    <li class="section__list__item discussion__item{% if ddoc.highlight %} highlight{% endif %}">
+      <div class="media">
+        <div class="media__left">
+          <div class="discussion__replies numbox">
+            <div class="numbox__num large">{{ ddoc.nReply }}</div>
+            <div class="numbox__text">{{ _('Comments') }}</div>
+          </div>
+        </div>
+        <div class="media__body top">
+          <h1 class="discussion__title"><a href="{{ url('discussion_detail', did=ddoc._id, anchor=ddoc.updateAt.getTime()) }}" data-emoji-enabled>{{ ddoc['title'] }}</a></h1>
+          <ul class="supplementary list">
+            <li>
+              <a class="discussion-node-tag" href="{{ url('discussion_node', type=model.discussion.typeDisplay[ddoc.parentType], name=ddoc.parentId) }}">
+              {% if ddoc.parentType == model.document.TYPE_PROBLEM %}
+                <span class="v-center icon icon-tag"></span>
+              {% elif ddoc.parentType == model.document.TYPE_CONTEST %}
+                <span class="v-center icon icon-award"></span>
+              {% else %}
+                <span class="v-center icon icon-flag"></span>
+              {% endif %}
+                {{ vndict[ddoc.parentType][ddoc.parentId].title|default(_('(missing)')) }}
+              </a>
+            </li>
+            <li>
+              {{ user.render_inline(udict[ddoc.owner], badge=false) }}
+              @
+              {{ datetimeSpan(ddoc.updateAt)|safe }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </li>
+  {%- endfor -%}
+  </ol>
+  {% if page != undefined and dpcount != undefined %}
+  {{ paginator.render(page, dpcount) }}
+  {% endif %}
+{% endif %}

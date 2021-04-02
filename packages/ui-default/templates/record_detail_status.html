@@ -1,0 +1,59 @@
+<div class="section visible" id="status">
+  <div class="section__header">
+    <h1 class="section__title">
+      <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+      <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+        {{ model.builtin.STATUS_TEXTS[rdoc['status']] }}
+      </span>
+    </h1>
+  </div>
+{% if rdoc.compilerTexts.length %}
+  <div class="section__body">
+    <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n')|ansi|safe }}</pre>
+  </div>
+{% endif %}
+{% if rdoc.judgeTexts.length %}
+  <div class="section__body">
+    <pre class="judge-text">{{ formatJudgeTexts(rdoc.judgeTexts)|ansi|safe }}</pre>
+  </div>
+{% endif %}
+{% if rdoc.testCases.length %}
+  <div class="section__body no-padding">
+    <table class="data-table record_detail__table">
+      <colgroup>
+        <col class="col--case">
+        <col class="col--status">
+        <col class="col--time">
+        <col class="col--memory">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--case record-status--border">#</th>
+          <th class="col--status">{{ _('Status') }}</th>
+          <th class="col--time">{{ _('Time Cost') }}</th>
+          <th class="col--memory">{{ _('Memory Cost') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {%- for rcdoc in rdoc.testCases -%}
+        <tr>
+          <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+            #{{ loop.index }}
+          </td>
+          <td class="col--status">
+            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+            <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+              {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
+            </span>
+            <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+            <a class="tool-button" href="{{ url('wiki_help', anchor='status') }}"><span class="icon icon-help"></span></a>
+          </td>
+          <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
+          <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+        </tr>
+      {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+</div>

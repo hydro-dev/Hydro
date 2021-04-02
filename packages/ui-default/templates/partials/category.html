@@ -1,0 +1,18 @@
+<ul class="group-list" data-widget-cf-container>
+  {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
+    <li class="group-list__item">
+      <h2 class="section__title">
+        <a href="{{ url('problem_category', category=category) }}" data-category="{{ category }}">{{ category }}</a>
+      </h2>
+      {% if sub_categories | length > 0 %}
+        <ol class="chip-list">
+          {%- for sub_category in sub_categories -%}
+            <li class="chip-list__item">
+              <a class="typo-a" href="{{ url('problem_category', category=(category + ',' + sub_category)) }}">{{ sub_category }}</a>
+            </li>
+          {%- endfor -%}
+        </ol>
+      {% endif %}
+    </li>
+  {%- endfor -%}
+</ul>

@@ -1,0 +1,64 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'docs', calendar) }}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('All Homeworks') }}</h1>
+        <div class="section__tools">
+          <span class="nojs--hide">
+            {{ _('View') }}:
+            <select class="inline compact select" name="homework_display">
+              <option value="calendar">{{ _('Calendar View') }}</option>
+              <option value="list">{{ _('List View') }}</option>
+            </select>
+          </span>
+        {% if handler.user.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
+          <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
+        {% endif %}
+        </div>
+      </div>
+      <div class="section__body no-padding">
+      {% if not tdocs.length %}
+        {{ nothing.render('There is no homework so far ╰(*°▽°*)╯') }}
+      {% else %}
+        <ol class="section__list homework__list hasjs--hide">
+        {%- for tdoc in tdocs -%}
+          <li class="section__list__item homework__item">
+            <div class="media">
+              <div class="media__left medium">
+                <div class="homework__date numbox">
+                  <div class="numbox__num large">{{ datetimeSpan(tdoc['penaltySince'], false, '%d')|safe }}</div>
+                  <div class="numbox__text">{{ datetimeSpan(tdoc['penaltySince'], false, '%Y-%m')|safe }}</div>
+                </div>
+              </div>
+              <div class="media__body medium">
+                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <ul class="supplementary list">
+                  <li>
+                    {{ _('Status') }}: <span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span>
+                  </li>
+                  <li>
+                    {{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}
+                  </li>
+                  <li>
+                  {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
+                    {{ _('Hard Deadline') }}: {{ datetimeSpan(tdoc['endAt'])|safe }}
+                  {% else %}
+                    {{ _('Deadline') }}: {{ datetimeSpan(tdoc['penaltySince'])|safe }}
+                  {% endif %}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+        {%- endfor -%}
+        </ol>
+        <div name="calendar_entry"></div>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

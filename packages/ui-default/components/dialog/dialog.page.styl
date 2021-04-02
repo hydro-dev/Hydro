@@ -1,0 +1,38 @@
+.dialog
+  position: fixed
+  left: 0
+  top: 0
+  width: 100%
+  height: 100%
+  opacity: 0
+  z-index: 1000  // managed
+  // display flex will be added after animation completes
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  display: none
+  background: $dialog-layer-bg-color
+
+.dialog__content
+  position: relative
+
+.dialog.withBg .dialog__content
+  background: $dialog-bg-color
+  border: 1px solid $dialog-border-color
+  box-shadow: $dialog-shadow
+  min-width: rem(500px)
+  max-width: rem(900px)
+  padding: rem(40px) rem(30px)
+
+.dialog__body
+  margin-bottom: rem(20px)
+  min-height: rem(50px)
+
+  h1
+    font-size: 1.6rem
+    color: $dialog-title-color
+    margin-bottom: 1rem
+
+.dialog__action button
+  margin-left: rem(10px)
+  margin-bottom: 0

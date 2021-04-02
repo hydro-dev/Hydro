@@ -1,0 +1,11 @@
+{% import "components/record.html" as record with context %}
+<tr data-rid="{{ rdoc['_id'] }}">
+  {{ record.render_status_td(rdoc) }}
+  <td class="col--memory">
+    {{ (rdoc.memory / 1000)|round(0, 'ceil')|int }} MB
+  </td>
+  <td class="col--time">
+    {{ rdoc.time|round|int }}ms
+  </td>
+  <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
+</tr>

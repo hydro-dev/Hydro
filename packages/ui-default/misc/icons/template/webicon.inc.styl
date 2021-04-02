@@ -1,0 +1,6 @@
+$icon-font-name = '{{ options.fontName }}'
+
+{% for icon in glyphs %}
+$icon-{{ icon.name }} = '\{{ icon.unicode[0].charCodeAt(0).toString(16)|upper }}'
+$icon-{{ icon.name }}-file = '{{ icon.name }}.svg'
+{% endfor %}

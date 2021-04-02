@@ -1,0 +1,90 @@
+<form method="post">
+{%- for family, family_settings in settings|groupby('family') -%}
+  <div class="section__header">
+    <h1 class="section__title" id="{{ family }}" data-heading>{{ _(family) }}</h1>
+  </div>
+  <div class="section__body">
+  {%- for setting in family_settings -%}
+  {% if not setting.flag|bitand(model.setting.FLAG_HIDDEN) %}
+  {% set secret = setting.flag|bitand(model.setting.FLAG_SECRET) != 0 %}
+  {% if setting.type == 'text' or setting.type == 'password' or setting.type == 'number' %}
+    {{ form.form_text({
+          type:setting.type,
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:'' if secret else (current[setting.key]|default(setting.value)),
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
+        }) }}
+  {% elif setting.type == 'select' %}
+    {{ form.form_select({
+          options:setting.range,
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
+        }) }}
+  {% elif setting.type == 'radio' %}
+    {{ form.form_radio({
+          options:setting.range,
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
+        }) }}
+  {% elif setting.type == 'image_radio' %}
+    {{ form.form_image_radio({
+          options:setting.range,
+          image_class:setting.image_class,
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
+        }) }}
+  {% elif setting.type == 'textarea' %}
+    {{ form.form_textarea({
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:'' if secret else (current[setting.key]|default(setting.value)),
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
+        }) }}
+  {% elif setting.type == 'markdown' %}
+    {{ form.form_textarea({
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:'' if secret else (current[setting.key]|default(setting.value)),
+          markdown:true,
+          disabled:setting.disabled,
+          placeholder:_('(Not changed)') if secret else ''
+        }) }}
+  {% elif setting.type == 'boolean' %}
+    {{ form.form_checkbox({
+          label:setting.name,
+          help_text:setting.desc,
+          name:setting.key,
+          value:current[setting.key] or setting.value,
+          disabled:setting.disabled
+    })}}
+    {{ form.form_checkbox({
+          label:setting.name,
+          name:'booleanKeys.' + setting.key,
+          value:true,
+          extra_class:'display-hidden'
+    })}}
+  {% endif %}
+  {% endif %}
+  {%- endfor -%}
+  </div>
+{%- endfor -%}
+  <div class="section__body">
+    <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+    <input type="submit" class="rounded primary button" value="{{ _('Save All Changes') }}">
+  </div>
+</form>

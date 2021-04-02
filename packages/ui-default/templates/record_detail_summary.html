@@ -1,0 +1,8 @@
+<dl class="large horizontal" id="summary">
+  <dt>{{ _('Score') }}</dt>
+  <dd>{{ rdoc['score'] }}</dd>
+  <dt>{{ _('Total Time') }}</dt>
+  <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</dd>
+  <dt>{{ _('Peak Memory') }}</dt>
+  <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</dd>
+</dl>

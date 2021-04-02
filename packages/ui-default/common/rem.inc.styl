@@ -1,0 +1,7 @@
+rem() {
+  ret = ();
+  for arg in arguments {
+    push(ret, unit(arg / $font-size, 'rem'));
+  }
+  return ret;
+}

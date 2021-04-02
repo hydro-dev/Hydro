@@ -1,0 +1,62 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+{% if joinSettings %}
+<div class="section">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Information') }}</h1>
+    </div>
+    <div class="section__body typo">
+      <p>{{ _('User can join this domain by visiting the following URL') }}:</p>
+      <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}</code></pre>
+    {% if joinSettings['method'] == model.domain.JOIN_METHOD_CODE %}
+      <p>{{ _('Or, with automatically filled invitation code') }}:</p>
+      <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}&code={{ joinSettings.code|urlencode }}</code></pre>
+    {% endif %}
+    {% if not joinSettings['expire'] %}
+      <br/>
+      <blockquote class="note">
+        {{ (_('The link will be expired at {0}').format(datetimeSpan(joinSettings.expire, relative=false)))|safe }}
+      </blockquote>
+    {% endif %}
+    </div>
+  </div>
+{% endif %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Settings') }}</h1>
+  </div>
+  <div class="section__body">
+    <form method="POST">
+      {{ form.form_select({
+        options:model.domain.JOIN_METHOD_RANGE,
+        label:'Method',
+        name:'method',
+        value:joinSettings['method']|default(model.domain.JOIN_METHOD_NONE)
+      }) }}
+      {{ form.form_select({
+        options:rolesWithText,
+        label:'Role Assignment',
+        name:'role',
+        help_text:'The role to assign when user joining the domain.',
+        value:joinSettings['role']|default('')
+      }) }}
+      {{ form.form_select({
+        options:expirations,
+        label:'Expire',
+        name:'expire',
+        help_text:'User will no longer be allowed to join the domain after expiration.'
+      }) }}
+      {{ form.form_text({
+        label:'Invitation Code',
+        name:'invitationCode',
+        help_text:'The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.',
+        value:joinSettings['code']|default('')
+      }) }}
+      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+      <button class="rounded primary button" role="submit">
+        {{ _('Update Settings') }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

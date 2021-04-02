@@ -1,0 +1,109 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId) }}
+{{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
+<div class="row">
+  <div class="medium-12 columns">
+    <form method="get">
+      <div class="section">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Filter') }}</h1>
+          <div class="section__tools">
+            <button type="submit" class="primary button"><span class="icon icon-filter"></span> {{ _('Filter') }}</button>
+            <a href="{{ url('record_main') }}" class="button">{{ _('Reset') }}</a>
+          </div>
+        </div>
+        <div class="section__body">
+          <div class="row">
+            <!-- TODO: replace with form_builder -->
+            <div class="medium-4 columns">
+              <label class="filter-user">
+                {{ _('By Username / UID') }}
+                <input name="uidOrName" type="text" class="textbox" value="{{ filterUidOrName }}" autocomplete="off" data-autofocus>
+              </label>
+            </div>
+            <div class="medium-4 columns">
+              <label>
+                {{ _('By Problem') }}
+                <input name="pid" type="text" class="textbox" value="{{ filterPid }}">
+              </label>
+            </div>
+            <div class="medium-4 columns">
+              <label>
+                {{ _('By Contest') }}
+                <input name="tid" type="text" class="textbox" value="{{ filterTid }}">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="section">
+      <div class="section__body no-padding">
+      {% if not rdocs %}
+        {% if not filterUidOrName and not filterPid and not filterTid %}
+        {{ nothing.render('Oh, there is no task in the queue!') }}
+        {% else %}
+        {{ nothing.render('Oh, there is no task that matches the filter!') }}
+        {% endif%}
+      {% else %}
+        <table class="data-table record_main__table">
+          <colgroup>
+            <col class="col--status">
+            <col class="col--problem">
+            <col class="col--submit-by">
+            <col class="col--time">
+            <col class="col--memory">
+            <col class="col--lang">
+            <col class="col--submit-at">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--status record-status--border">{{ _('Status') }}</th>
+              <th class="col--problem">{{ _('Problem') }}</th>
+              <th class="col--submit-by">{{ _('Submit By') }}</th>
+              <th class="col--time">{{ _('Time') }}</th>
+              <th class="col--memory">{{ _('Memory') }}</th>
+              <th class="col--lang">{{ _('Language') }}</th>
+              <th class="col--submit-at">{{ _('Submit At') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {%- for rdoc in rdocs -%}
+            {% set udoc = udict[rdoc['uid']] %}
+            {% set pdoc = pdict[rdoc['pid']] %}
+            {% include 'record_main_tr.html' %}
+          {%- endfor -%}
+          </tbody>
+        </table>
+        {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) %}
+        <ul class="pager">
+          <li>
+            <a class="pager__item next link" href="?page={{ page + 1 }}&{{ query_string }}">{{ _('pager_next') }}</a>
+          </li>
+        </ul>
+        {% endif %}
+      {% endif %}
+      </div>
+    </div>
+    {% if statistics %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Statistics') }}</h1>
+      </div>
+      <div class="section__body">
+        <dl class="large horizontal">
+          <dt>{{ _('5 Min')}}</dt><dd>{{ statistics['d5min'] }}</dd>
+          <dt>{{ _('1 Hour')}}</dt><dd>{{ statistics['d1h'] }}</dd>
+          <dt>{{ _('Day') }}</dt><dd>{{ statistics['day'] }}</dd>
+          <dt>{{ _('Week') }}</dt><dd>{{ statistics['week'] }}</dd>
+          <dt>{{ _('Month') }}</dt><dd>{{ statistics['month'] }}</dd>
+          <dt>{{ _('Year') }}</dt><dd>{{ statistics['year'] }}</dd>
+          <dt>{{ _('Total') }}</dt><dd>{{ statistics['total'] }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

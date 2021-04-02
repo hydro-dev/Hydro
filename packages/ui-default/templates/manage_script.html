@@ -1,0 +1,56 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div style="display: none" class="dialog__body--run-script">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Run script') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-12 columns">
+        <label>
+          {{ _('Params') }}
+          <input name="args" type="text" class="textbox" autocomplete="off" data-autofocus>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Scripts') }}</h1>
+    <div class="section__tools">
+      <a class="tool-button" href="{{ url('wiki_help', anchor='script') }}"><span class="icon icon-help"></span> {{ _("What's script?") }}</a>
+    </div>
+  </div>
+  <div class="section__body no-padding">
+    {{ noscript_note.render() }}
+    <table class="data-table">
+      <colgroup>
+        <col class="col--id">
+        <col class="col--desc">
+        <col class="col--action">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--id">{{ _('ID') }}</th>
+          <th class="col--desc">{{ _('Description') }}</th>
+          <th class="col--action">{{ _('Action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {%- for id, script in scripts -%}
+      {% if not script.hidden %}
+        <tr>
+          <td class="col--id">{{ id }}</td>
+          <td class="col--desc">{{ _(script.description|default(_('None'))) }}</td>
+          <td class="col--action">
+            <a class="typo-a" href="javascript: window.runScript('{{ id }}')">{{ _('Run') }}</a>
+          </td>
+        </tr>
+      {% endif %}
+      {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

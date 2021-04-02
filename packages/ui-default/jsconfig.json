@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES6",
+    "baseUrl": ".",
+    "paths": {
+      "vj/*": [
+        "./*"
+      ]
+    }
+  }
+}
