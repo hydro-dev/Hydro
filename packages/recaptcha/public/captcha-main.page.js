@@ -1,7 +1,7 @@
 (() => {
-    const { AutoloadPage } = window.Hydro;
+    const { NamedPage } = window.Hydro;
 
-    const page = new AutoloadPage('recaptcha', () => {
+    const page = new NamedPage('user_register', () => {
         function captcha(event) {
             event.preventDefault();
             grecaptcha.ready(function () {
@@ -11,7 +11,8 @@
                 });
             });
         }
-        document.getElementById('submit').onclick = captcha;
+        const element = document.getElementById('submit');
+        if (element) element.onclick = captcha;
     });
 
     window.Hydro.extraPages.push(page);
