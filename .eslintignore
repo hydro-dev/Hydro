@@ -1,6 +1,4 @@
 dist
 *.d.ts
 *.js
-test
-tests
 node_modules

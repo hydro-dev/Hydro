@@ -1,5 +1,5 @@
 import 'hydrooj/src/loader';
-import * as utils from 'hydrooj/dist/utils';
+import * as utils from 'hydrooj/src/utils';
 
 describe('Utils', () => {
     test('Array.isDiff', () => {
@@ -70,11 +70,11 @@ describe('Utils', () => {
 
     test('isClass', () => {
         const classA = class { };
-        const classB = function () { };
-        classB.prototype.get = function () { return 1 };
-        const funcA = function () { };
+        const classB = function a() { };
+        classB.prototype.get = function a() { return 1; };
+        const funcA = function a() { };
         expect(utils.isClass(classA)).toBeTruthy();
         expect(utils.isClass(classB)).toBeTruthy();
         expect(utils.isClass(funcA)).toBeFalsy();
-    })
+    });
 });

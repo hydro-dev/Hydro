@@ -8,5 +8,5 @@ module.exports = {
             dbName: 'jest'
         },
         autoStart: false
-    }
+    },
 };

@@ -263,6 +263,7 @@ const scripts: UpgradeScript[] = [
                 await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(pdoc.content) });
             }
         });
+        return true;
     },
 ];
 
