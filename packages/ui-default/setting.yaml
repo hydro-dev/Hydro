@@ -61,6 +61,7 @@ lang_highlight_id:
     js: javascript
     go: go
     rb: ruby
+    jl: julia
 lang_monaco_modes:
   type: yaml
   name: lang_monaco_modes
@@ -79,3 +80,4 @@ lang_monaco_modes:
     js: javascript
     go: go
     rb: ruby
+    jl: julia
