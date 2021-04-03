@@ -9,7 +9,7 @@
   pretestConnUrl: "/conn/pretest?pid=" + pdoc.pid|default(pdoc.docId) + "&domainId=" + handler.domainId,
   codeLang: handler.user.codeLang,
   codeTemplate: handler.user.codeTemplate
-} }}
+}) }}
 {% if tdoc %}
   {{ set(UiContext, 'postSubmitUrl', url('contest_detail_problem_submit' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem_submit', pid=pdoc.docId, tid=tdoc.docId)) }}
   {{ set(UiContext, 'getSubmissionsUrl', url('contest_detail_problem_submit' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem_submit', pid=pdoc.docId, tid=tdoc.docId)) }}
