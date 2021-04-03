@@ -20,8 +20,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - name: Create .npmrc
-      run: 'echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > .npmrc'
+    - name: Config
+      run: |
+        echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > .npmrc
+        git config --global user.name undefined
+        git config --global user.email i@undefined.moe
+    - name: Cache
+      uses: c-hive/gha-yarn-cache@v1
     - name: Install
       run: yarn
     - name: Build
@@ -29,9 +34,7 @@ jobs:
         yarn build
         yarn build:ui:production
     - name: Lint
-      run: |
-        yarn lint:ci
-        yarn lint:ui:ci
+      run: yarn lint:ci
     - name: Unit Test
       run: yarn jest --runInBand
     - name: Report Coverage
