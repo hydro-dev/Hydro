@@ -9,7 +9,7 @@
         "maxmind": "^4.3.1"
     },
     "scripts": {
-        "prepublish": "./prepublish.sh"
+        "prepare": "./download.sh"
     },
     "peerDependencies": {
         "hydrooj": "^2.15.0"

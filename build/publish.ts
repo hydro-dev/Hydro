@@ -37,8 +37,13 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
         try {
             meta = require(`../${name}/package.json`);
             if (!meta.private) {
-                const version = await latest(meta.name, { version: tag });
-                if (gt(meta.version, version)) bumpMap[name] = meta.version;
+                try {
+                    const version = await latest(meta.name, { version: tag });
+                    if (gt(meta.version, version)) bumpMap[name] = meta.version;
+                } catch (e) {
+                    if (e.name === 'VersionNotFoundError') bumpMap[name] = meta.version;
+                    else throw e;
+                }
             }
         } catch (e) {
             console.error(e);
