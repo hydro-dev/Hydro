@@ -679,7 +679,7 @@ const Checker = (permPrivChecker) => {
     }
     return function check() {
         checker();
-        if (perm) this.checkPerm(perm);
+        if (perm) this.checkPerm(perm); // lgtm [js/trivial-conditional]
         if (priv) this.checkPriv(priv);
     };
 };
