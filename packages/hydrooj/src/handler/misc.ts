@@ -2,44 +2,9 @@
 import { BadRequestError } from '../error';
 import { PRIV } from '../model/builtin';
 import user from '../model/user';
-import db from '../service/db';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-
-const coll = db.collection('status');
-
-class StatusHandler extends Handler {
-    async get() {
-        const stats = await coll.find().sort({ type: 1, updateAt: -1 }).toArray();
-        for (const i in stats) {
-            let desc = '';
-            const online = new Date(stats[i].updateAt).getTime() > new Date().getTime() - 300000;
-            if (!online) desc = 'Offline';
-            desc = desc || 'Online';
-            stats[i].isOnline = online;
-            stats[i].status = desc;
-        }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['status', null],
-        ];
-        this.response.body = { stats, path };
-        this.response.template = 'status.html';
-    }
-}
-
-class StatusUpdateHandler extends Handler {
-    async post(args) {
-        this.checkPriv(PRIV.PRIV_JUDGE);
-        args.type = 'judge';
-        return coll.updateOne(
-            { mid: args.mid, type: 'judge' },
-            { $set: args },
-            { upsert: true },
-        );
-    }
-}
 
 class CheckInHandler extends Handler {
     async prepare() {
@@ -82,8 +47,6 @@ class SwitchLanguageHandler extends Handler {
 }
 
 export async function apply() {
-    Route('status', '/status', StatusHandler);
-    Route('status_update', '/status/update', StatusUpdateHandler);
     Route('check_in', '/checkin', CheckInHandler, PRIV.PRIV_USER_PROFILE);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
 }

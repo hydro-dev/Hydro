@@ -163,6 +163,7 @@ env.addGlobal('static_url', (assetName) => {
 });
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
+env.addGlobal('global', global);
 env.addGlobal('typeof', (o) => typeof o);
 env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);

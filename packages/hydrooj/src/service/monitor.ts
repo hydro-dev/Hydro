@@ -6,6 +6,7 @@ import db from './db';
 import * as bus from './bus';
 import * as sysinfo from '../lib/sysinfo';
 import { Logger } from '../logger';
+import type { StatusUpdate } from '../lib/sysinfo';
 
 const coll = db.collection('status');
 const logger = new Logger('monitor');
@@ -17,15 +18,13 @@ function crypt(str: string) {
     return encrypted;
 }
 
-export async function feedback() {
+export async function feedback(): Promise<[string, StatusUpdate]> {
     const {
         system, domain, document, user, record,
     } = global.Hydro.model;
     const version = require('hydrooj/package.json').version;
-    const [mid, , inf] = await sysinfo.update();
-    const [installid, name, url] = system.getMany([
-        'installid', 'server.name', 'server.url',
-    ]);
+    const [mid, $update, inf] = await sysinfo.update();
+    const [installid, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
     const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
         domain.getMulti().count(),
         user.getMulti().count(),
@@ -47,20 +46,22 @@ export async function feedback() {
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,
-        flags: inf.flags,
     }));
     superagent.post('https://feedback.undefined.moe/')
         .send({ payload })
         .catch(() => {
             logger.warn('Cannot connect to hydro center.');
         });
+    return [mid, $update];
 }
 
 export async function update() {
-    await feedback();
-    const [mid, $set] = await sysinfo.update();
-    $set.updateAt = new Date();
-    $set.reqCount = global.Hydro.stat.reqCount;
+    const [mid, $update] = await feedback();
+    const $set = {
+        ...$update,
+        updateAt: new Date(),
+        reqCount: global.Hydro.stat.reqCount,
+    };
     await bus.serial('monitor/update', 'server', $set);
     await coll.updateOne(
         { mid, type: 'server' },

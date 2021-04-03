@@ -66,7 +66,7 @@
           {%- for html in (model.system.get('ui-default.footer_extra_html')|default('')).split('\n') -%}
             <li class="footer__extra-link-item">{{ html|safe }}</li>
           {%- endfor -%}
-          <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro</a></li>
+          <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a></li>
         </ol>
       </div>
     </div>

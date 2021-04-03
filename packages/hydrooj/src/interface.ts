@@ -565,6 +565,7 @@ declare global {
     namespace NodeJS {
         interface Global {
             Hydro: {
+                version: Record<string, string>,
                 model: Model,
                 handler: Dict<Function>,
                 script: Dict<Script>,

@@ -10,6 +10,10 @@ if (versionNum < 14) throw new Error('NodeJS >=v14 required');
 
 if (!global.Hydro) {
     global.Hydro = {
+        version: {
+            node: process.version,
+            hydrooj: require('hydrooj/package.json').version,
+        },
         stat: { reqCount: 0 },
         handler: {},
         // @ts-ignore

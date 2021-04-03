@@ -14,7 +14,9 @@ const {
     CI, GITHUB_EVENT_NAME, GITHUB_REF,
 } = process.env;
 
-if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) {
+const tag = GITHUB_REF === 'refs/heads/master' ? 'latest' : GITHUB_REF === 'refs/heads/develop' ? 'dev' : null;
+
+if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
     console.log('publish skipped.');
     process.exit(0);
 }
@@ -35,7 +37,7 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
         try {
             meta = require(`../${name}/package.json`);
             if (!meta.private) {
-                const version = await latest(meta.name);
+                const version = await latest(meta.name, { version: tag });
                 if (gt(meta.version, version)) bumpMap[name] = meta.version;
             }
         } catch (e) {
@@ -48,7 +50,7 @@ if (CI && (GITHUB_REF !== 'refs/heads/master' || GITHUB_EVENT_NAME !== 'push')) 
     if (Object.keys(bumpMap).length) {
         for (const name in bumpMap) {
             console.log(`publishing ${name}@${bumpMap[name]} ...`);
-            await spawnAsync(`yarn publish ${name} --new-version ${bumpMap[name]} --access public`);
+            await spawnAsync(`yarn publish ${name} --new-version ${bumpMap[name]}${tag === 'dev' ? '-dev' : ''} --access public --tag ${tag}`);
         }
     }
     console.log('Release created successfully.');
