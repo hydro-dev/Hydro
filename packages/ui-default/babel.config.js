@@ -29,6 +29,7 @@ module.exports = {
           'go',
           'ruby',
           'csharp',
+          'julia',
         ],
         plugins: [
           'toolbar',
