@@ -1,0 +1,17 @@
+{
+    "name": "@hydrooj/utils",
+    "version": "1.0.0",
+    "description": "hydrooj utils",
+    "main": "package.json",
+    "repository": "https://github.com/hydro-dev/Hydro.git",
+    "author": "undefined <i@undefined.moe>",
+    "license": "AGPL-3.0-only",
+    "dependencies": {
+        "bson": "^4.2.3",
+        "moment": "^2.29.1",
+        "systeminformation": "^5.6.10"
+    },
+    "devDependencies": {
+        "moment-timezone": "^0.5.33"
+    }
+}

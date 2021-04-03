@@ -1,23 +1,12 @@
 import path from 'path';
 import fs from 'fs-extra';
-import systeminformation from 'systeminformation';
 import { noop } from 'lodash';
+import { get as _get } from '@hydrooj/utils/lib/sysinfo';
 import { judge } from './judge/run';
 import * as tmpfs from './tmpfs';
 import { getConfig } from './config';
 
-function size(s: number, base = 1) {
-    s *= base;
-    const unit = 1024;
-    const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-    for (const unitName of unitNames) {
-        if (s < unit) return `${Math.round(s * 10) / 10} ${unitName}`;
-        s /= unit;
-    }
-    return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
-}
-
-const cache: any = {};
+export { update } from '@hydrooj/utils/lib/sysinfo';
 
 async function stackSize() {
     let output = '';
@@ -35,8 +24,8 @@ int main(){
     main();
 }`,
             config: {
-                time: 3000,
-                memory: 256,
+                time: '3s',
+                memory: '256m',
             },
             stat: {},
             clean: [],
@@ -61,38 +50,10 @@ int main(){
 }
 
 export async function get() {
-    const [
-        Cpu, Memory, OsInfo,
-        CurrentLoad, CpuFlags, CpuTemp,
-        Battery, stack,
-    ] = await Promise.all([
-        systeminformation.cpu(),
-        systeminformation.mem(),
-        systeminformation.osInfo(),
-        systeminformation.currentLoad(),
-        systeminformation.cpuFlags(),
-        systeminformation.cpuTemperature(),
-        systeminformation.battery(),
-        stackSize(),
-    ]);
-    const cpu = `${Cpu.manufacturer} ${Cpu.brand}`;
-    const memory = `${size(Memory.active)}/${size(Memory.total)}`;
-    const osinfo = `${OsInfo.distro} ${OsInfo.release} ${OsInfo.codename} ${OsInfo.kernel} ${OsInfo.arch}`;
-    const load = `${CurrentLoad.avgLoad}`;
-    const flags = CpuFlags;
-    let battery;
-    if (!Battery.hasBattery) battery = 'No battery';
-    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.isCharging ? ' Charging' : ''}`;
-    const mid = OsInfo.serial;
-    cache.cpu = cpu;
-    cache.osinfo = osinfo;
-    cache.flags = flags;
-    cache.mid = mid;
-    cache.stack = stack;
-    global.reqCount = 0;
-    return {
-        mid, cpu, memory, osinfo, load, flags, CpuTemp, battery, stack, reqCount: 0,
-    };
+    const info = await _get();
+    // @ts-ignore
+    info.stack = await stackSize();
+    return info;
 }
 
 declare global {
@@ -101,32 +62,4 @@ declare global {
             reqCount: number,
         }
     }
-}
-
-export async function update() {
-    const [Memory, CurrentLoad, CpuTemp, Battery] = await Promise.all([
-        systeminformation.mem(),
-        systeminformation.currentLoad(),
-        systeminformation.cpuTemperature(),
-        systeminformation.battery(),
-    ]);
-    const {
-        mid, cpu, osinfo, flags, stack,
-    } = cache;
-    const memory = `${size(Memory.active)}/${size(Memory.total)}`;
-    const load = `${CurrentLoad.avgLoad}`;
-    let battery;
-    if (!Battery.hasBattery) battery = 'No battery';
-    else battery = `${Battery.type} ${Battery.model} ${Battery.percent}%${Battery.isCharging ? ' Charging' : ''}`;
-    const reqCount = global.reqCount;
-    global.reqCount = 0;
-    return [
-        mid,
-        {
-            memory, load, battery, CpuTemp, reqCount,
-        },
-        {
-            mid, cpu, memory, osinfo, load, flags, battery, CpuTemp, stack, reqCount,
-        },
-    ];
 }

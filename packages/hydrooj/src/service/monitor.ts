@@ -2,11 +2,11 @@ import cluster from 'cluster';
 import crypto from 'crypto';
 import superagent from 'superagent';
 import { dump } from 'js-yaml';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
+import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
 import db from './db';
 import * as bus from './bus';
-import * as sysinfo from '../lib/sysinfo';
 import { Logger } from '../logger';
-import type { StatusUpdate } from '../lib/sysinfo';
 
 const coll = db.collection('status');
 const logger = new Logger('monitor');

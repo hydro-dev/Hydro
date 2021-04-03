@@ -8,6 +8,7 @@ import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { Logger } from 'hydrooj/dist/logger';
 import * as monitor from 'hydrooj/dist/service/monitor';
+import * as sysinfo from './sysinfo';
 import * as tmpfs from './tmpfs';
 import { FormatError, CompileError, SystemError } from './error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
@@ -36,7 +37,6 @@ async function postInit() {
     // Only start a single daemon
     if (!global.Hydro.isFirstWorker) return;
     const judge = require('./judge');
-    const sysinfo = require('./sysinfo');
 
     const { task, system } = global.Hydro.model;
     const { storage } = global.Hydro.service;

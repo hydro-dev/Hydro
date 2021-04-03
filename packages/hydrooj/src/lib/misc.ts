@@ -1,6 +1,9 @@
 import AnsiUp from 'ansi_up';
 import { ObjectID } from 'mongodb';
+import { size, formatSeconds } from '@hydrooj/utils/lib/utils';
 import { md5 } from './crypto';
+
+export { size, formatSeconds } from '@hydrooj/utils/lib/utils';
 
 const AU = new AnsiUp();
 
@@ -47,30 +50,6 @@ export function* paginate(page: number, numPages: number) {
         yield ['next', page + 1];
         if (page < numPages - 1) yield ['last', numPages];
     }
-}
-
-export function size(s: number, base = 1) {
-    s *= base;
-    const unit = 1024;
-    const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-    for (const unitName of unitNames) {
-        if (s < unit) return '{0} {1}'.format(Math.round(s * 10) / 10, unitName);
-        s /= unit;
-    }
-    return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
-}
-
-function _digit2(number: number) {
-    return number < 10 ? `0${number}` : number.toString();
-}
-
-export function formatSeconds(_seconds = '0') {
-    const seconds = parseInt(_seconds, 10);
-    return '{0}:{1}:{2}'.format(
-        _digit2(Math.floor(seconds / 3600)),
-        _digit2(Math.floor((seconds % 3600) / 60)),
-        _digit2(seconds % 60),
-    );
 }
 
 global.Hydro.lib.misc = {

@@ -44,7 +44,15 @@ export async function load() {
     const storage = require('../service/storage');
     storage.start(sopts);
     if (argv.loaderDetail) logger.info('finish: storage.connect');
-    for (const i of builtinLib) require(`../lib/${i}`);
+    for (const i of builtinLib) {
+        let t;
+        try {
+            t = require.resolve(`../lib/${i}`);
+        } catch (e) {
+            t = require.resolve(`@hydrooj/utils/lib/${i}`);
+        }
+        require(t);
+    }
     if (argv.loaderDetail) logger.info('finish: lib.builtin');
     await lib(pending, fail);
     if (argv.loaderDetail) logger.info('finish: lib.extra');

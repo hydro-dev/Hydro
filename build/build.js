@@ -52,7 +52,7 @@ for (const package of packages) {
     if (package === 'ui-default') continue;
     const basedir = path.resolve(process.cwd(), 'packages', package);
     const files = fs.readdirSync(basedir);
-    if (!files.includes('src') && !files.map(n => n.split('.')[1]).includes('ts')) continue;
+    if (!files.includes('src') && !files.map(n => n.split('.')[1]).includes('ts') && package !== 'utils') continue;
     if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
     fs.writeFileSync(
         path.resolve(basedir, 'tsconfig.json'),

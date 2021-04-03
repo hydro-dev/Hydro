@@ -540,7 +540,6 @@ export interface Lib extends Record<string, any> {
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),
     testdataConfig: typeof import('./lib/testdataConfig'),
-    sysinfo: typeof import('./lib/sysinfo'),
     'testdata.convert.ini': typeof import('./lib/testdata.convert.ini'),
     useragent: typeof import('./lib/useragent'),
     validator: typeof import('./lib/validator'),

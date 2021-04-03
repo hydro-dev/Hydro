@@ -52,5 +52,3 @@ export async function update(): Promise<[string, StatusUpdate, StatusFull]> {
         },
     ];
 }
-
-global.Hydro.lib.sysinfo = { get, update };
