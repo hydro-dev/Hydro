@@ -112,7 +112,7 @@ langs:
     php:
         type: interpreter
         code_file: foo.php
-        execute: /usr/bin/php ${name}
+        execute: /usr/bin/php foo.php
     rs:
         type: compiler
         compile: /usr/bin/rustc -O -o ${dir}/${name} ${dir}/foo.rs
@@ -126,7 +126,7 @@ langs:
     js:
         type: interpreter
         code_file: foo.js
-        execute: /usr/bin/jsc ${dir}/${name}
+        execute: /usr/bin/jsc ${dir}/foo.js
     go:
         type: compiler
         compile: /usr/bin/go build -o ${name} foo.go
@@ -135,7 +135,7 @@ langs:
     rb:
         type: interpreter
         code_file: foo.rb
-        execute: /usr/bin/ruby ${name}
+        execute: /usr/bin/ruby foo.rb
     cs:
         type: compiler
         compile: /usr/bin/mcs -optimize+ -out:${dir}/${name} ${dir}/foo.cs
@@ -144,4 +144,4 @@ langs:
     jl:
         type: interpreter
         code_file: foo.jl
-        execute: /usr/bin/julia ${dir}/${name}
+        execute: /usr/bin/julia ${dir}/foo.jl
