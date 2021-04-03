@@ -361,6 +361,7 @@ export const DEFAULT_NODES = {
         { pic: null, name: 'Java' },
         { pic: null, name: 'PHP' },
         { pic: null, name: 'Python' },
+        { pic: null, name: 'Julia' },
         { pic: null, name: '游戏' },
         { pic: null, name: '保送' },
         { pic: null, name: 'ACM' },
@@ -527,6 +528,7 @@ export const LANG_TEXTS = {
     js: 'JavaScript',
     go: 'Go',
     rb: 'Ruby',
+    jl: 'Julia',
 };
 
 export const STATUS = {

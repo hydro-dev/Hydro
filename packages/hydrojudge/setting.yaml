@@ -141,3 +141,7 @@ langs:
         compile: /usr/bin/mcs -optimize+ -out:${dir}/${name} ${dir}/foo.cs
         code_file: foo.cs
         execute: /usr/bin/mono ${name}
+    jl:
+        type: interpreter
+        code_file: foo.jl
+        execute: /usr/bin/julia ${dir}/${name}
