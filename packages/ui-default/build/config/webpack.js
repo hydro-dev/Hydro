@@ -160,7 +160,7 @@ export default function (env = {}) {
       }),
       new MonacoWebpackPlugin({
         // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go'],
+        languages: ['cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go', 'julia'],
       }),
       new StaticManifestPlugin({
         fileName: 'static-manifest.json',
