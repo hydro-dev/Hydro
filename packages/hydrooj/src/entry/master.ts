@@ -68,10 +68,10 @@ export async function load(call: Entry) {
     storage.start(sopts);
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
-    const scripts = require('../upgrade');
+    const scripts = require('../upgrade').default;
     let dbVer = (await modelSystem.get('db.ver')) ?? 0;
     const isFresh = !dbVer;
-    const expected = scripts.default.length;
+    const expected = scripts.length;
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
         if (isFresh) {
