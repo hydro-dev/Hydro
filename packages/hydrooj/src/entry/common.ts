@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-import fs from 'fs';
+import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import yaml from 'js-yaml';
@@ -130,9 +130,7 @@ export async function template(pending: string[], fail: string[]) {
             try {
                 const files = getFiles(p);
                 for (const file of files) {
-                    global.Hydro.ui.template[file] = fs.readFileSync(
-                        path.resolve(p, file),
-                    ).toString();
+                    global.Hydro.ui.template[file] = await fs.readFile(path.resolve(p, file), 'utf-8');
                 }
                 logger.info('Template init: %s', i);
             } catch (e) {
@@ -216,7 +214,7 @@ export async function service(pending: string[], fail: string[]) {
 export async function script(pending: string[], fail: string[], active: string[]) {
     for (const i of pending) {
         const p = path.resolve(i, 'script.js');
-        if (fs.existsSync(p) && !fail.includes(i)) {
+        if (await fs.pathExists(p) && !fail.includes(i)) {
             try {
                 logger.info('Script init: %s', i);
                 eval('require')(p);

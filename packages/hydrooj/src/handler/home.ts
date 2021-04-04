@@ -3,6 +3,7 @@ import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError, UserNotFoundError, PermissionError, DomainAlreadyExistsError,
 } from '../error';
+import { Mdoc } from '../interface';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
@@ -328,6 +329,7 @@ class HomeMessagesHandler extends Handler {
             ['Hydro', 'homepage'],
             ['home_messages', null],
         ];
+        await user.setById(this.user._id, { unreadMsg: 0 });
         this.response.body = { messages: parsed, path };
         this.response.template = 'home_messages.html';
     }
@@ -367,9 +369,11 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
         this.dispose = bus.on('user/message', this.onMessageReceived.bind(this));
     }
 
-    async onMessageReceived(uid: number, e: any) {
+    async onMessageReceived(uid: number, mdoc: Mdoc) {
         if (uid !== this.user._id) return;
-        this.send(e);
+        const udoc = await user.getById(this.domainId, mdoc.from);
+        udoc.gravatar_url = misc.gravatar(udoc.gravatar, 64);
+        this.send({ udoc, mdoc });
     }
 
     async cleanup() {

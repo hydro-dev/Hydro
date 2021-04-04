@@ -27,6 +27,7 @@ class MessageModel {
             const udoc = await user.getById('system', to);
             bus.boardcast('user/message', to, mdoc, udoc);
         }
+        await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }
 

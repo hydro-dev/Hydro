@@ -114,7 +114,7 @@ AccountSetting(
     Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
-    Setting('setting_storage', 'usage', 0, 'number', 'Userfile Usage', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'unreadMsg', 0, 'number', 'Unread Message Count', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'checkincnt', 0, 'number', 'Check In Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'lastcheckin', 0, 'number', 'Last checkin time', null, FLAG_DISABLED | FLAG_HIDDEN),
 );

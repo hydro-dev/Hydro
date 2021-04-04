@@ -146,6 +146,7 @@ export async function parallel<K extends keyof EventMap>(name: K, ...args: Param
     const tasks: Promise<any>[] = [];
     if (argv.showBus) logger.debug('parallel: %s %o', name, args);
     for (const callback of _hooks[name] || []) {
+        if (argv.busDetail) logger.debug(callback.toString());
         tasks.push(callback.apply(this, args));
     }
     await Promise.all(tasks);
