@@ -22,7 +22,7 @@ module.exports = {
       legacyDecorators: true,
     },
     babelOptions: {
-      configFile: './babel.config.js',
+      configFile: `${__dirname}/babel.config.js`,
     },
   },
   settings: {

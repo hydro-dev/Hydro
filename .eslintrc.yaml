@@ -54,6 +54,8 @@ settings:
   import/parsers:
     '@typescript-eslint/parser':
       - .ts
+      - .js
+      - .jsx
   import/resolver:
     typescript:
       alwaysTryTypes: true
