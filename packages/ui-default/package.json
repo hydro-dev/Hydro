@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.5.3",
+  "version": "4.5.4",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -8,6 +8,7 @@
   "devDependencies": {
     "@babel/cli": "^7.13.14",
     "@babel/core": "^7.13.14",
+    "@babel/eslint-parser": "7.13.10",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@babel/plugin-proposal-export-namespace-from": "^7.12.13",
     "@babel/plugin-proposal-function-sent": "^7.12.13",
@@ -101,7 +102,6 @@
     "webpack-bundle-analyzer": "^4.4.0"
   },
   "dependencies": {
-    "@babel/eslint-parser": "7.13.10",
     "js-yaml": "^4.0.0",
     "katex": "^0.13.0",
     "lodash": "^4.17.21",
