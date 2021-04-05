@@ -1,0 +1,29 @@
+.section
+  background: $section-bg-color
+  box-shadow: $section-shadow
+  transition: transform .5s, opacity .5s
+  transition-timing-function: ease-out-cubic
+
+  +mobile()
+    box-shadow: none
+    margin-left: - rem($grid-padding)
+    margin-right: - rem($grid-padding)
+
+  .section__header
+    background: linear-gradient(90deg, #000080, #1084d0);
+    padding: 3px 2px 3px 3px;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Pixelated MS Sans Serif", Arial;
+    -webkit-font-smoothing: none;
+    font-size: 11px;
+
+    .section__title
+      margin-left: rem(10px);
+      font-weight: bold;
+      color: white;
+      letter-spacing: 0;
+      margin-right: rem(24px);
+
+    .inactive
+      background: linear-gradient(90deg, #808080, #b5b5b5);

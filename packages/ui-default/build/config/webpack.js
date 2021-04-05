@@ -68,6 +68,7 @@ export default function (env = {}) {
     entry: {
       hydro: './entry.js',
       'theme.default': './theme/default.js',
+      'theme.98': './theme/98.js',
     },
     output: {
       path: root('public'),
@@ -75,8 +76,8 @@ export default function (env = {}) {
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
-      filename: '[name].js?[chunkhash]',
-      chunkFilename: '[name].chunk.js?[chunkhash]',
+      filename: '[name].js?[hash]',
+      chunkFilename: '[name].chunk.js?[hash]',
     },
     resolve: {
       modules: [root('node_modules'), root('../../node_modules')],
@@ -119,7 +120,7 @@ export default function (env = {}) {
         React: 'react',
       }),
       new ExtractCssPlugin({
-        filename: '[name].css?[contenthash:10]',
+        filename: '[name].css?[hash:10]',
       }),
       new webpack.LoaderOptionsPlugin({
         test: /\.styl$/,
@@ -136,7 +137,7 @@ export default function (env = {}) {
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
-          { from: root(dirname(require.resolve('emojify.js/package.json')) + '/dist/images/basic'), to: 'img/emoji/' },
+          { from: root(`${dirname(require.resolve('emojify.js/package.json'))}/dist/images/basic`), to: 'img/emoji/' },
         ],
       }),
       new webpack.DefinePlugin({

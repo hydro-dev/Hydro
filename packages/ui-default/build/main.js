@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { argv } from 'yargs';
 import webpack from 'webpack';
+import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
 import log from 'fancy-log';
 import chalk from 'chalk';
@@ -8,8 +9,23 @@ import root from './utils/root';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
 
-function runWebpack({ watch, production, measure }) {
+function runWebpack({
+  watch, production, measure, dev,
+}) {
   const compiler = webpack(webpackConfig({ watch, production, measure }));
+  if (dev) {
+    const server = new WebpackDevServer(compiler, {
+      compress: true,
+      hot: true,
+      stats: 'errors-warnings',
+      index: '',
+      proxy: {
+        context: () => true,
+        target: 'http://localhost:2333',
+      },
+    });
+    return server.listen(8000);
+  }
   return new Promise((resolve, reject) => {
     function compilerCallback(err, stats) {
       if (err) {

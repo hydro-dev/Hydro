@@ -15,7 +15,7 @@ import 'vj/misc/slideout.styl';
 import 'vj/misc/.iconfont/webicon.styl';
 import 'vj/misc/immersive.styl';
 import 'vj/misc/structure.styl';
-import 'vj/misc/section.styl';
+import 'vj/misc/section.98.styl';
 import 'vj/misc/nothing.styl';
 
 import 'vj/components/cmeditor/cmeditor.styl';
@@ -25,5 +25,7 @@ import 'vj/components/katex/katex.styl';
 // load all page stylesheets
 const pageStyleReq = require.context('../', true, /\.page\.styl$/i);
 pageStyleReq.keys().map((key) => pageStyleReq(key));
-const pageStyleReqDefault = require.context('../', true, /\.page\.default\.styl$/i);
-pageStyleReqDefault.keys().map((key) => pageStyleReq(key));
+const pageStyleReq98 = require.context('../', true, /\.page\.98\.styl$/i);
+pageStyleReq98.keys().map((key) => pageStyleReq(key));
+
+import './98.styl';
