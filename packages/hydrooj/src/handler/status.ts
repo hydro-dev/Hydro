@@ -3,6 +3,7 @@ import RecordModel from '../model/record';
 import DomainModel from '../model/domain';
 import * as DocumentModel from '../model/document';
 import db from '../service/db';
+import * as bus from '../service/bus';
 import { Route, Handler } from '../service/server';
 import UserModel from '../model/user';
 
@@ -64,6 +65,7 @@ class StatusUpdateHandler extends Handler {
     async post(args) {
         this.checkPriv(PRIV.PRIV_JUDGE);
         args.type = 'judge';
+        args.updateAt = new Date();
         return coll.updateOne(
             { mid: args.mid, type: 'judge' },
             { $set: args },
@@ -71,6 +73,8 @@ class StatusUpdateHandler extends Handler {
         );
     }
 }
+
+bus.once('app/started', () => coll.createIndex('updateAt', { expireAfterSeconds: 24 * 3600 }));
 
 export async function apply() {
     Route('status', '/status', StatusHandler);
