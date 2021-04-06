@@ -1,60 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-import { ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
 import { Progress } from './ui';
 import { Logger } from './logger';
-import { DomainDoc } from './loader';
 import { streamToBuffer } from './utils';
+import { iterateAllDomain, iterateAllProblem } from './pipelineUtils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
-import problem, { Field, Pdoc } from './model/problem';
+import problem from './model/problem';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
 import difficultyAlgorithm from './lib/difficulty';
+import { STATUS } from './model/builtin';
+import RecordModel from './model/record';
+import { Rdoc } from './interface';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
-
-export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
-    const ddocs = await domain.getMulti().project({ _id: 1, owner: 1 }).toArray();
-    for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
-}
-
-interface PartialPdoc extends Pdoc {
-    [key: string]: any,
-}
-
-export async function iterateAllProblemInDomain(
-    domainId: string,
-    fields: (Field | string)[],
-    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
-) {
-    if (!fields.includes('domainId')) fields.push('domainId');
-    if (!fields.includes('docId')) fields.push('docId');
-    const cursor = problem.getMulti(domainId, {}, fields as any);
-    const total = await problem.getMulti(domainId, {}).count();
-    let i = 0;
-    while (await cursor.hasNext()) {
-        const doc = await cursor.next();
-        i++;
-        const res = await cb(doc, i, total);
-        if (res) await problem.edit(doc.domainId, doc.docId, res);
-    }
-}
-
-export async function iterateAllProblem(
-    fields: (Field | string)[],
-    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
-) {
-    await iterateAllDomain(async (d) => {
-        await iterateAllProblemInDomain(d._id, fields, cb);
-    });
-}
 
 const scripts: UpgradeScript[] = [
     // Mark as used
@@ -260,6 +227,36 @@ const scripts: UpgradeScript[] = [
                 await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(pdoc.content) });
             }
         });
+        return true;
+    },
+    async function _19_20() {
+        const data = db.collection('record').aggregate([
+            { $match: { hidden: false, type: { $ne: 'run' } } },
+            {
+                $group: {
+                    _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
+                    nAccept: {
+                        $sum: {
+                            $cond: [{ $eq: ['$status', STATUS.STATUS_ACCEPTED] }, 1, 0],
+                        },
+                    },
+                },
+            },
+        ]);
+        while (await data.hasNext()) {
+            const d: any = await data.next();
+            logger.info('%o', d);
+            const filter: FilterQuery<Rdoc> = { domainId: d._id.domainId, pid: d._id.pid, uid: d._id.uid };
+            if (d.nAccept) {
+                const [first] = await db.collection('record')
+                    .find({ ...filter, status: STATUS.STATUS_ACCEPTED })
+                    .sort({ _id: 1 }).limit(1)
+                    .project({ _id: 1 })
+                    .toArray();
+                filter._id = { $lte: first._id };
+            }
+            await db.collection('record').updateMany(filter, { $set: { effective: true } });
+        }
         return true;
     },
 ];

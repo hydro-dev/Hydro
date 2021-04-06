@@ -1,5 +1,7 @@
 import {
-    ObjectID, Collection, UpdateQuery, PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
+    ObjectID, Collection, UpdateQuery,
+    PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
+    FilterQuery,
 } from 'mongodb';
 import { Dictionary } from 'lodash';
 import moment from 'moment';
@@ -111,6 +113,20 @@ class RecordModel {
             return res.value;
         }
         return await RecordModel.get(domainId, _id);
+    }
+
+    static async updateMulti(
+        domainId: string, $match: FilterQuery<Rdoc>,
+        $set?: MatchKeysAndValues<Rdoc>,
+        $push?: PushOperator<Rdoc>,
+        $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
+    ) {
+        const $update: UpdateQuery<Rdoc> = {};
+        if ($set && Object.keys($set).length) $update.$set = $set;
+        if ($push && Object.keys($push).length) $update.$push = $push;
+        if ($unset && Object.keys($unset).length) $update.$unset = $unset;
+        const res = await RecordModel.coll.updateMany({ domainId, ...$match }, $update);
+        return res.modifiedCount;
     }
 
     static reset(domainId: string, rid: ObjectID, isRejudge: boolean) {

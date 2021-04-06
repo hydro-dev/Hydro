@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "MIT",
     "devDependencies": {
-        "@types/mongodb": "^3.6.11"
+        "@types/mongodb": "^3.6.12"
     },
     "dependencies": {
         "mongodb": "^3.6.5"

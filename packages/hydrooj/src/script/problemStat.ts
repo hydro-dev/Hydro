@@ -50,7 +50,7 @@ export async function udoc() {
 
 export async function pdoc() {
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' } } },
+        { $match: { hidden: false, type: { $ne: 'run' } }, effective: true },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },

@@ -247,6 +247,7 @@ export interface Rdoc {
     progress?: number,
     input?: string,
     contest?: ContestInfo,
+    effective?: boolean,
 }
 
 export interface ScoreboardNode {

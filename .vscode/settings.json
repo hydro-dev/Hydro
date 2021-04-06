@@ -5,5 +5,9 @@
     "editor.detectIndentation": true,
     "editor.formatOnSave": true,
     "editor.renderWhitespace": "boundary",
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "[json]": {
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": false,
+    }
 }

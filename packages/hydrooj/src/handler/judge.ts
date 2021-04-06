@@ -32,6 +32,8 @@ async function _postJudge(rdoc: Rdoc) {
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid);
     const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
+    if (!updated) await record.updateMulti(rdoc.domainId, { uid: rdoc.uid, status: builtin.STATUS.STATUS_ACCEPTED }, { effective: false });
+    await record.update(rdoc.domainId, rdoc._id, { effective: true });
     await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
     await bus.serial('record/judge', rdoc, updated);
 }

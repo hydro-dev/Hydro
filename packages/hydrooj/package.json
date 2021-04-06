@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.21.8",
+    "version": "2.21.9",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -38,8 +38,8 @@
         "yargs": "^16.2.0"
     },
     "devDependencies": {
-        "@types/adm-zip": "^0.4.33",
-        "@types/fs-extra": "^9.0.9",
+        "@types/adm-zip": "^0.4.34",
+        "@types/fs-extra": "^9.0.10",
         "@types/inquirer": "^7.3.1",
         "@types/js-yaml": "^4.0.0",
         "@types/koa": "^2.13.1",
@@ -47,7 +47,7 @@
         "@types/koa-static-cache": "^5.1.0",
         "@types/lodash": "^4.14.168",
         "@types/minio": "^7.0.7",
-        "@types/mongodb": "^3.6.11",
+        "@types/mongodb": "^3.6.12",
         "@types/nodemailer": "^6.4.1",
         "@types/serialize-javascript": "^5.0.0",
         "@types/sockjs": "^0.3.32",
