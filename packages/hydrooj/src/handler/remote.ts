@@ -3,6 +3,7 @@ import superagent from 'superagent';
 import { PassThrough } from 'stream';
 import { PermissionError, InvalidTokenError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
+import { logAndReturn } from '../utils';
 import { ProblemAdd } from '../lib/ui';
 import { PERM } from '../model/builtin';
 import token from '../model/token';
@@ -12,7 +13,6 @@ import {
     Handler, Types, Route, post,
 } from '../service/server';
 import storage from '../service/storage';
-import { logAndReturn } from '../utils';
 
 const logger = new Logger('remote');
 

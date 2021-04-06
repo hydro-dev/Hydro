@@ -256,6 +256,11 @@ class DomainJoinApplicationsHandler extends ManageHandler {
 class DomainJoinHandler extends Handler {
     joinSettings: any;
 
+    constructor(ctx) {
+        super(ctx);
+        this.noCheckPermView = true;
+    }
+
     async prepare() {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id);
@@ -283,7 +288,7 @@ class DomainJoinHandler extends Handler {
             }
         }
         await domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role);
-        this.response.redirect = this.url('domain_main');
+        this.response.redirect = this.url('domain_main', { query: { notification: 'Successfully joined domain.' } });
     }
 }
 

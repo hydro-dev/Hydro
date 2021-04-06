@@ -381,6 +381,7 @@ export class Handler extends HandlerCommon {
 
     csrfToken: string;
     loginMethods: any;
+    noCheckPermView: boolean;
     __param: Record<string, ParamOption[]>;
 
     constructor(ctx: Koa.Context) {
@@ -424,6 +425,7 @@ export class Handler extends HandlerCommon {
         this.session = {};
         const xff = system.get('server.xff');
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
+        this.noCheckPermView = true;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -494,6 +496,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.lib[key].icon,
                 text: global.Hydro.lib[key].text,
             }));
+        if (!this.noCheckPermView) this.checkPerm(PERM.PERM_VIEW);
     }
 
     async finish() {
