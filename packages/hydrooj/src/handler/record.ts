@@ -7,6 +7,7 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as contest from '../model/contest';
 import user from '../model/user';
+import TaskModel from '../model/task';
 import paginate from '../lib/paginate';
 import * as bus from '../service/bus';
 import {
@@ -66,7 +67,10 @@ class RecordListHandler extends RecordHandler {
             filterUidOrName: uidOrName,
         };
         if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS)) {
-            this.response.body.statistics = await record.stat(all ? undefined : domainId);
+            this.response.body.statistics = {
+                ...await record.stat(all ? undefined : domainId),
+                delay: await TaskModel.getDelay({ type: 'judge' }),
+            };
         }
     }
 }

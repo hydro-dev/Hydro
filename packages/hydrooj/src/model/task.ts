@@ -48,6 +48,13 @@ class TaskModel {
         return null;
     }
 
+    static async getDelay(query?: FilterQuery<Task>) {
+        const now = new Date();
+        const [res] = await coll.find(query).sort({ executeAfter: 1 }).limit(1).toArray();
+        if (res) return [Math.max(0, now.getTime() - res.executeAfter.getTime()), res.executeAfter];
+        return [0, now];
+    }
+
     static async consume(query: any, cb: Function) {
         let isRunning = false;
         const interval = setInterval(async () => {

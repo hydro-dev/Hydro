@@ -169,12 +169,13 @@ env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
 env.addGlobal('gravatar', misc.gravatar);
+env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('model', global.Hydro.model);
 env.addGlobal('ui', global.Hydro.ui);
 env.addGlobal('isIE', (str) => str.includes('MSIE') || str.includes('rv:11.0'));
 env.addGlobal('set', (obj, key, val) => {
   if (val !== undefined) obj[key] = val;
-  else obj = { ...obj, key };
+  else Object.assign(obj, key);
   return '';
 });
 env.addGlobal('findSubModule', (prefix) => {
