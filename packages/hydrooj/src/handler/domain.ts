@@ -136,7 +136,7 @@ class DomainUserHandler extends ManageHandler {
         this.back();
     }
 
-    @param('uid', Types.Array)
+    @param('uid', Types.NumericArray)
     @param('role', Types.String)
     async postSetUsers(domainId: string, uid: number[], role: string) {
         await domain.setUserRole(domainId, uid, role);

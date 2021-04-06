@@ -68,6 +68,7 @@ export interface Types {
     Time: Type,
     Range: (range: Array<string | number> | Dictionary<any>) => Type,
     Array: Type,
+    NumericArray: Type,
     Set: Type,
 }
 
@@ -140,6 +141,13 @@ export const Types: Types = {
         if (v instanceof Array) return v;
         return v ? [v] : [];
     }, null],
+    NumericArray: [(v) => {
+        if (v instanceof Array) return v.map(Number);
+        return v ? [Number(v)] : [];
+    }, (v) => {
+        if (v instanceof Array) return !v.map(Number).includes(NaN);
+        return !Number.isNaN(+v);
+    }],
     Set: [(v) => {
         if (v instanceof Array) return new Set(v);
         return v ? new Set([v]) : new Set();
