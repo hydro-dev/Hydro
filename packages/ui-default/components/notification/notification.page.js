@@ -3,5 +3,5 @@ import Notification from 'vj/components/notification/index';
 
 export default new AutoloadPage('notificationPage', () => {
     const text = new URL(window.location.href).searchParams.get('notification');
-    if (text) new Notification(text).show();
+    if (text) Notification.success(text);
 });
