@@ -96,7 +96,7 @@ class ProblemImportSYZOJHandler extends Handler {
             });
         }
         const docId = await problem.add(
-            domainId, target, p.title, content, this.user._id, p.tags || [], hidden,
+            domainId, target, p.title, JSON.stringify(content), this.user._id, p.tags || [], hidden,
         );
         const r = download(`${url}testdata/download`);
         const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${docId}.zip`);
@@ -172,7 +172,7 @@ class ProblemImportSYZOJHandler extends Handler {
             ...result.body.localizedContentsOfAllLocales,
         ][0].title;
         const docId = await problem.add(
-            domainId, target, title, content, this.user._id, tags || [], hidden,
+            domainId, target, title, JSON.stringify(content), this.user._id, tags || [], hidden,
         );
         const syncFiles = async () => {
             const judge = result.body.judgeInfo;

@@ -76,7 +76,7 @@ class ImportQduojHandler extends Handler {
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const n = await problem.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
-                const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, content, this.user._id, pdoc.tags);
+                const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, JSON.stringify(content), this.user._id, pdoc.tags);
                 const config: ProblemConfig = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,

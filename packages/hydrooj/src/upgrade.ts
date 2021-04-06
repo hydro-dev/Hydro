@@ -18,7 +18,7 @@ import * as system from './model/system';
 import difficultyAlgorithm from './lib/difficulty';
 
 const logger = new Logger('upgrade');
-type UpgradeScript = () => Promise<boolean | void>;
+type UpgradeScript = void | (() => Promise<boolean | void>);
 
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().project({ _id: 1, owner: 1 }).toArray();
@@ -58,9 +58,7 @@ export async function iterateAllProblem(
 
 const scripts: UpgradeScript[] = [
     // Mark as used
-    async function _0_1() {
-        return true;
-    },
+    null,
     // Init
     async function _1_2() {
         const ddoc = await domain.get('system');
@@ -253,10 +251,9 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _16_17() {
-        return true;
-    },
-    async function _17_18() {
+    null,
+    null,
+    async function _18_19() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem(['content'], async (pdoc) => {
             if (typeof pdoc.content !== 'string') {

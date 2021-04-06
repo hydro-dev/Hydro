@@ -6,7 +6,6 @@ import * as document from './document';
 import domain from './domain';
 import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, Pdict, Document } from '../interface';
-import { Content } from '../loader';
 import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import storage from '../service/storage';
@@ -45,16 +44,24 @@ export class ProblemModel {
     }
 
     static async add(
-        domainId: string, pid: string = null, title: string, content: Content, owner: number,
+        domainId: string, pid: string = null, title: string, content: string, owner: number,
         tag: string[] = [], hidden = false,
     ) {
         const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
+        const result = await ProblemModel.addWithId(domainId, pidCounter, pid, title, content, owner, tag, hidden);
+        return result;
+    }
+
+    static async addWithId(
+        domainId: string, docId: number, pid: string = null, title: string,
+        content: string, owner: number, tag: string[] = [], hidden = false,
+    ) {
         const args: Partial<Pdoc> = {
             title, tag, hidden, nSubmit: 0, nAccept: 0,
         };
         if (pid) args.pid = pid;
         await bus.serial('problem/before-add', args);
-        const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, pidCounter, null, null, args);
+        const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
         await bus.emit('problem/add', args, result);
         return result;
     }
