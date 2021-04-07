@@ -18,9 +18,10 @@ import record from '../model/record';
 import user from '../model/user';
 import message from '../model/message';
 import {
-    Route, Handler, Types, param,
+    Route, Handler, Types, param, query,
 } from '../service/server';
 import * as bus from '../service/bus';
+import storage from '../service/storage';
 
 const ContestHandler = contest.ContestHandlerMixin(Handler);
 
@@ -257,13 +258,18 @@ class ContestProblemHandler extends ContestHandler {
         }
     }
 
-    async get() {
+    // eslint-disable-next-line
+    async get(...args: any[]) {
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
             [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
             [this.pdoc.title, null, null, true],
         ];
+        // Navigate to current additional file download
+        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        this.response.body.pdoc.content = this.response.body.pdoc.content
+            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
         this.response.body = {
             tdoc: this.tdoc,
             pdoc: this.pdoc,
@@ -273,6 +279,19 @@ class ContestProblemHandler extends ContestHandler {
             path,
             page_name: 'contest_detail_problem',
         };
+    }
+}
+
+export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
+    @query('type', Types.Range(['additional_file', 'testdata']), true)
+    @param('filename', Types.String)
+    @param('noDisposition', Types.Boolean)
+    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+        if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        this.response.redirect = await storage.signDownloadLink(
+            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
+            noDisposition ? undefined : filename, false, 'user',
+        );
     }
 }
 
@@ -425,6 +444,7 @@ export async function apply() {
     Route('contest_scoreboard_raw', '/contest/:tid/scoreboard/raw', ContestScoreboardRawHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_detail_problem_file_download', '/contest/:tid/p/:pid/file/:filename', ContestProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
     Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestDetailProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
 }
