@@ -75,8 +75,12 @@ export async function load(call: Entry) {
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
         const func = scripts[dbVer];
+        if (typeof func !== 'function') {
+            dbVer++;
+            continue;
+        }
         if (isFresh) {
-            if (typeof func !== 'function' || func.toString().includes('_FRESH_INSTALL_IGNORE')) {
+            if (func.toString().includes('_FRESH_INSTALL_IGNORE')) {
                 dbVer++;
                 continue;
             }
@@ -86,6 +90,6 @@ export async function load(call: Entry) {
         dbVer++;
         await modelSystem.set('db.ver', dbVer);
     }
-    bus.serial('app/started');
+    await bus.serial('app/started');
     return await modelSystem.get('server.worker');
 }
