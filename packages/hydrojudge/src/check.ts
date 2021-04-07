@@ -24,7 +24,7 @@ export async function check(config): Promise<[number, number, string]> {
 
 export async function compileChecker(checkerType: string, checker: string, copyIn: any) {
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
-    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: resolve(__dirname, '../files/testlib.h') };
+    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: resolve(__dirname, '../vendor/testlib/testlib.h') };
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
     return await compile(parseFilename(checker).split('.')[1], file.toString(), 'checker', copyIn);

@@ -31,8 +31,7 @@ export default class MessagePadContainer extends React.PureComponent {
         {this.props.panel.map((i, name) => (
           <div className="row">
             <div className="medium-7 columns form__item end">
-              {i.type === 'textbox' && this.Textbox(i, name)}
-              {i.type === 'radio' && this.Radio(i, name)}
+              {i.choices ? this.Radio(i, name) : this.Textbox(i, name)}
             </div>
           </div>
         ))}

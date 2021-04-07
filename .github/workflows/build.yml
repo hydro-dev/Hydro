@@ -15,7 +15,9 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
     - name: Check out
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: Set up Node
       uses: actions/setup-node@v1
       with:

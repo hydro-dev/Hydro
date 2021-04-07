@@ -19,7 +19,7 @@ function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        ctx.executeInteractor.copyIn['testlib.h'] = { src: resolve(__dirname, '../../files/testlib.h') };
+        ctx.executeInteractor.copyIn['testlib.h'] = { src: resolve(__dirname, '../../vendor/testlib/testlib.h') };
         const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await run([
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),

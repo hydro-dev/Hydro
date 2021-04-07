@@ -224,7 +224,9 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
             }
         } else throw new FormatError('Invalid user_extra_files config.');
     }
-    if (cfg.cases) {
+    if (cfg.outputs) {
+        config.type = 'submit_answer';
+    } else if (cfg.cases) {
         config.subtasks = [{
             score: parseInt(cfg.score, 10) || Math.floor(100 / cfg.cases.length),
             time_limit_ms: parseTimeMS(cfg.time || '1s'),
@@ -264,6 +266,7 @@ export async function readYamlCases(folder: string, cfg: Dictionary<any> = {}, a
         config.subtasks = c.subtasks;
         config.count = c.count;
     }
+    if (config.type === 'submit_answer' && !cfg.outputs) throw new FormatError('outputs config not found');
     return Object.assign(cfg, config);
 }
 
@@ -299,9 +302,12 @@ function isValidConfig(config) {
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
     const iniConfig = path.resolve(folder, 'config.ini');
     const yamlConfig = path.resolve(folder, 'config.yaml');
+    const ymlConfig = path.resolve(folder, 'config.yml');
     let config;
     if (fs.existsSync(yamlConfig)) {
         config = { ...yaml.load(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
+    } else if (fs.existsSync(ymlConfig)) {
+        config = { ...yaml.load(fs.readFileSync(ymlConfig).toString()) as object, ...cfg };
     } else if (fs.existsSync(iniConfig)) {
         config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
     } else config = cfg;
