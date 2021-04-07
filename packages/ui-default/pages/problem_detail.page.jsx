@@ -223,7 +223,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
 
       ReactDOM.render(
         <div className="section__body typo">
-          <Subjective panel={props}></Subjective>
+          <Subjective panel={props} target={UiContext.postSubmitUrl}></Subjective>
         </div>,
         $('.problem-content').get(0),
       );
