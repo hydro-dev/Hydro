@@ -266,7 +266,7 @@ export function errorMessage(err: Error | string) {
     for (let i = 0; i < q.length; i++) {
         if (!q[i].startsWith('    at')) continue;
         if (q[i].includes(`${sep}@hydrooj${sep}`)) q[i] = q[i].split(`@hydrooj${sep}`)[1];
-        else if (q[i].includes(`${sep}hydrooj${sep}`)) q[i] = `hydrooj${sep}${q[i].split(`hydrooj/${sep}`)[1]}`;
+        else if (q[i].includes(`${sep}hydrooj${sep}`)) q[i] = `    at hydrooj${sep}${q[i].split(`hydrooj${sep}`)[1]}`;
     }
     if (typeof err === 'string') return q.join('\n');
     err.stack = q.join('\n');

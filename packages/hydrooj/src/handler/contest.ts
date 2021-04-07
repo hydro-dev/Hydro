@@ -266,10 +266,6 @@ class ContestProblemHandler extends ContestHandler {
             [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
             [this.pdoc.title, null, null, true],
         ];
-        // Navigate to current additional file download
-        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
         this.response.body = {
             tdoc: this.tdoc,
             pdoc: this.pdoc,
@@ -279,6 +275,10 @@ class ContestProblemHandler extends ContestHandler {
             path,
             page_name: 'contest_detail_problem',
         };
+        // Navigate to current additional file download
+        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        this.response.body.pdoc.content = this.response.body.pdoc.content
+            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
     }
 }
 
