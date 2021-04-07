@@ -1,3 +1,4 @@
+import yaml from 'js-yaml';
 import { NamedPage } from 'vj/misc/Page';
 import Navigation from 'vj/components/navigation';
 import { ActionDialog } from 'vj/components/dialog';
@@ -5,6 +6,7 @@ import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
+import base64 from 'vj/utils/base64';
 
 class ProblemPageExtender {
   constructor() {
@@ -211,6 +213,27 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     unmountReact();
   }
 
+  async function loadSubjective() {
+    try {
+      const props = yaml.load(base64.decode(document.getElementsByClassName('section__body typo')[0].innerText));
+      $('.loader-container').show();
+      const { default: Subjective } = await import('vj/components/subjective-question/index');
+      const React = await import('react');
+      const ReactDOM = await import('react-dom');
+
+      ReactDOM.render(
+        <div className="section__body typo">
+          <Subjective panel={props}></Subjective>
+        </div>,
+        $('.problem-content').get(0),
+      );
+      $('.loader-container').hide();
+      // eslint-disable-next-line no-empty
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
     enterScratchpadMode();
     ev.preventDefault();
@@ -224,6 +247,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('[name="problem-sidebar__categories"]').show();
   });
   $('[name="problem-sidebar__send-to"]').click(() => handleClickCopyProblem());
+  loadSubjective();
 });
 
 export default page;

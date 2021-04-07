@@ -1,10 +1,10 @@
-import base64 from 'base-64';
 import Clipboard from 'clipboard';
 
 import { NamedPage } from 'vj/misc/Page';
 import substitute from 'vj/utils/substitute';
 import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
+import base64 from 'vj/utils/base64';
 
 const page = new NamedPage('user_detail', async () => {
   $('[name="profile_contact_copy"]').get().forEach((el) => {

@@ -62,6 +62,9 @@ export class ProblemModel {
         if (pid) args.pid = pid;
         await bus.serial('problem/before-add', args);
         const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
+        args.content = content;
+        args.owner = owner;
+        args.docType = document.TYPE_PROBLEM;
         await bus.emit('problem/add', args, result);
         return result;
     }
