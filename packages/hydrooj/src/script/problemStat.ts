@@ -48,9 +48,26 @@ export async function udoc() {
     if (bulk.length) await bulk.execute();
 }
 
+export async function psdoc() {
+    const pipeline = [
+        { $match: { hidden: false, type: { $ne: 'run' } } },
+        {
+            $group: {
+                _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
+                nSubmit: { $sum: 1 },
+            },
+        },
+    ];
+    const data = db.collection('record').aggregate(pipeline);
+    while (await data.hasNext()) {
+        const adoc = await data.next() as any;
+        await document.setStatus(adoc._id.domainId, document.TYPE_PROBLEM, adoc._id.pid, adoc._id.uid, { nSubmit: adoc.nSubmit });
+    }
+}
+
 export async function pdoc() {
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' } }, effective: true },
+        { $match: { hidden: false, type: { $ne: 'run' }, effective: true } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -93,7 +110,7 @@ export async function pdoc() {
 }
 
 export async function run() {
-    return await Promise.all([udoc(), pdoc()]);
+    return await Promise.all([udoc(), pdoc(), psdoc()]);
 }
 
 export const validate = {};

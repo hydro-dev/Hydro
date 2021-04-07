@@ -223,6 +223,13 @@ export class ProblemModel {
         return !!res;
     }
 
+    static async incStatus(
+        domainId: string, pid: number, uid: number,
+        key: NumberKeys<ProblemStatusDoc>, count: number,
+    ) {
+        return await document.incStatus(domainId, document.TYPE_PROBLEM, pid, uid, key, count);
+    }
+
     static setStar(domainId: string, pid: number, uid: number, star: boolean) {
         return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
     }
