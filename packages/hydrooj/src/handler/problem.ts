@@ -9,7 +9,7 @@ import {
     Pdoc, User, Rdoc, PathComponent,
 } from '../interface';
 import paginate from '../lib/paginate';
-import { isTitle, isContent, isPid } from '../lib/validator';
+import { isPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
 import * as system from '../model/system';
 import problem from '../model/problem';

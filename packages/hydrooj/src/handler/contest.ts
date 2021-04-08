@@ -6,7 +6,6 @@ import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError,
 } from '../error';
-import { isContent, isTitle } from '../lib/validator';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';

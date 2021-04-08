@@ -15,8 +15,6 @@ import { PERM, PRIV } from '../model/builtin';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
-import * as bus from '../service/bus';
-import { isTitle, isContent } from '../lib/validator';
 
 export const typeMapper = {
     problem: document.TYPE_PROBLEM,

@@ -22,9 +22,7 @@ import * as discussion from '../model/discussion';
 import token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
-import {
-    isContent, isPassword, isEmail, isTitle,
-} from '../lib/validator';
+import { isPassword, isEmail } from '../lib/validator';
 
 const { geoip, useragent } = global.Hydro.lib;
 

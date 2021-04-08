@@ -2,7 +2,7 @@ import assert from 'assert';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Tdoc, TrainingDoc } from '../interface';
 import { ValidationError, ProblemNotFoundError } from '../error';
-import { isTitle, isContent, isDescription } from '../lib/validator';
+import { isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';

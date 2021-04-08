@@ -22,7 +22,6 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
-import { isTitle, isContent } from '../lib/validator';
 
 const validatePenaltyRules = (input: string) => {
     const s = yaml.load(input);

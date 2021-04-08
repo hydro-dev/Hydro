@@ -1,8 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import type {
-    Db, FilterQuery, ObjectID, OnlyFieldsOfType,
-} from 'mongodb';
+import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import { argv } from 'yargs';
 import type { Handler } from './server';
 import { Logger } from '../logger';
