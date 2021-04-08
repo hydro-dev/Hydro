@@ -4,10 +4,10 @@ const { join } = require('path');
 const crypto = require('crypto');
 const yaml = require('js-yaml');
 const { tmpdir } = require('os');
+const bus = require('hydrooj/dist/service/bus');
 const markdown = require('./backendlib/markdown.js');
 
-const { bus } = global.Hydro.service;
-const { system, domain } = global.Hydro.model;
+const { system, domain, user } = global.Hydro.model;
 const { Route, Handler, UiContextBase } = global.Hydro.service.server;
 
 class WikiHelpHandler extends Handler {
@@ -94,6 +94,13 @@ class LocaleHandler extends Handler {
   }
 }
 
+class SetThemeHandler extends Handler {
+  async get({ theme }) {
+    await user.setById(this.user._id, { theme });
+    this.back();
+  }
+}
+
 class MarkdownHandler extends Handler {
   async post({ text, html = false, inline = false }) {
     this.response.body = inline
@@ -104,16 +111,20 @@ class MarkdownHandler extends Handler {
   }
 }
 
+const getUrl = (files) => files.map((i) => {
+  const shasum = crypto.createHash('sha1');
+  const file = readFileSync(join(tmpdir(), 'hydro', 'public', i));
+  shasum.update(file);
+  const hash = shasum.digest('hex').substr(0, 10);
+  return `/${i}?${hash}`;
+});
+
 bus.on('app/started', () => {
   const files = readdirSync(join(tmpdir(), 'hydro', 'public'));
   const pages = files.filter((file) => file.endsWith('.page.js'));
-  UiContextBase.extraPages = pages.map((i) => {
-    const shasum = crypto.createHash('sha1');
-    const file = readFileSync(join(tmpdir(), 'hydro', 'public', i));
-    shasum.update(file);
-    const hash = shasum.digest('hex').substr(0, 10);
-    return `/${i}?${hash}`;
-  });
+  const themes = files.filter((file) => file.endsWith('.theme.js'));
+  UiContextBase.extraPages = getUrl(pages);
+  UiContextBase.themes = getUrl(themes);
 });
 
 global.Hydro.handler.ui = async () => {
@@ -121,6 +132,7 @@ global.Hydro.handler.ui = async () => {
   Route('wiki_about', '/wiki/about', WikiAboutHandler);
   Route('ui_constants', '/ui-constants.js', UiConstantsHandler);
   Route('locale', '/locale/:id', LocaleHandler);
+  Route('set_theme', '/set_theme/:id', SetThemeHandler);
   Route('ui_extracss', '/extra.css', UiSettingsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
 };

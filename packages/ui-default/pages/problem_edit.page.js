@@ -142,7 +142,7 @@ function buildCategoryFilter() {
   });
 }
 
-const page = new NamedPage('problem_edit', async () => {
+export default new NamedPage(['problem_create', 'problem_edit'], () => {
   $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
     $(ev.currentTarget).hide();
     $('[name="problem-sidebar__categories"]').show();
@@ -171,5 +171,3 @@ const page = new NamedPage('problem_edit', async () => {
   buildCategoryFilter();
   parseCategorySelection();
 });
-
-export default page;

@@ -73,12 +73,12 @@
         {% include "partials/category.html" %}
       </div>
     </div>
-  {% if page_name == 'problem_edit' %}
-    {% set owner_udoc = udoc %}
-    {% include "partials/problem_sidebar.html" %}
-  {% else %}
-    {% include 'components/md_hint.html' %}
-  {% endif %}
+    {% if page_name == 'problem_edit' %}
+      {% set owner_udoc = udoc %}
+      {% include "partials/problem_sidebar.html" %}
+    {% else %}
+      {% include 'components/md_hint.html' %}
+    {% endif %}
   </div>
 </div>
 {% endblock %}
