@@ -151,7 +151,7 @@ class HomeSecurityHandler extends Handler {
     }
 
     @param('currentPassword', Types.String)
-    @param('mail', Types.String, isEmail)
+    @param('mail', Types.Name, isEmail)
     async postChangeMail(domainId: string, current: string, email: string) {
         await this.limitRate('send_mail', 3600, 30);
         this.user.checkPassword(current);
@@ -191,7 +191,7 @@ class HomeSecurityHandler extends Handler {
 }
 
 class HomeSettingsHandler extends Handler {
-    @param('category', Types.String)
+    @param('category', Types.Name)
     async get(domainId: string, category: string) {
         const path = [
             ['Hydro', 'homepage'],
@@ -287,10 +287,10 @@ class HomeDomainCreateHandler extends Handler {
         this.response.template = 'domain_create.html';
     }
 
-    @param('id', Types.String)
-    @param('name', Types.String, isTitle)
-    @param('bulletin', Types.String, isContent)
-    @param('gravatar', Types.String, true, isEmail)
+    @param('id', Types.Name)
+    @param('name', Types.Title)
+    @param('bulletin', Types.Content)
+    @param('gravatar', Types.Content, true, isEmail)
     async post(_: string, id: string, name: string, bulletin: string, gravatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);
@@ -335,7 +335,7 @@ class HomeMessagesHandler extends Handler {
     }
 
     @param('uid', Types.Int)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postSend(domainId: string, uid: number, content: string) {
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);

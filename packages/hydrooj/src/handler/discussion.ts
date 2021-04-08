@@ -32,8 +32,8 @@ class DiscussionHandler extends Handler {
     drrdoc?: Drrdoc;
     vnode?: any;
 
-    @param('type', Types.String, true)
-    @param('name', Types.String, true)
+    @param('type', Types.Name, true)
+    @param('name', Types.Name, true)
     @param('did', Types.ObjectID, true)
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
@@ -97,8 +97,8 @@ class DiscussionMainHandler extends Handler {
 }
 
 class DiscussionNodeHandler extends DiscussionHandler {
-    @param('type', Types.String)
-    @param('name', Types.String)
+    @param('type', Types.Name)
+    @param('name', Types.Name)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, type: string, _name: string, page = 1) {
         let name: ObjectID | string | number;
@@ -149,10 +149,10 @@ class DiscussionCreateHandler extends DiscussionHandler {
         this.response.body = { path, vnode: this.vnode };
     }
 
-    @param('type', Types.String)
-    @param('name', Types.String)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @param('type', Types.Name)
+    @param('name', Types.Name)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
     async post(
@@ -166,11 +166,6 @@ class DiscussionCreateHandler extends DiscussionHandler {
         else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
-        await bus.serial(
-            'discussion/before-add',
-            domainId, typeMapper[type], name, this.user._id,
-            title, content, this.request.ip, highlight, pin,
-        );
         const did = await discussion.add(
             domainId, typeMapper[type], name, this.user._id,
             title, content, this.request.ip, highlight, pin,
@@ -217,7 +212,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     @param('did', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postReply(domainId: string, did: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
@@ -236,7 +231,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     @param('drid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postTailReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
@@ -245,7 +240,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     @param('drid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postEditReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
@@ -268,7 +263,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     @param('drid', Types.ObjectID)
     @param('drrid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postEditTailReply(domainId: string, drid: ObjectID, drrid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
@@ -333,8 +328,8 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 
     @param('did', Types.ObjectID)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
     async postUpdate(

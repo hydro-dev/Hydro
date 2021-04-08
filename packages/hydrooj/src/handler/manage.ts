@@ -102,8 +102,8 @@ class SystemScriptHandler extends SystemHandler {
         this.response.body.path.push(['manage_script', null]);
     }
 
-    @param('id', Types.String)
-    @param('args', Types.String, true)
+    @param('id', Types.Name)
+    @param('args', Types.Content, true)
     async post(domainId: string, id: string, raw = '{}') {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
         const args = JSON.parse(raw);
@@ -189,7 +189,7 @@ class SystemUserImportHandler extends SystemHandler {
         this.response.template = 'manage_user_import.html';
     }
 
-    @param('users', Types.String)
+    @param('users', Types.Content)
     @param('draft', Types.Boolean)
     async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');

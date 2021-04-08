@@ -50,7 +50,7 @@ export class ProblemSendHandler extends Handler {
         this.back();
     }
 
-    @post('token', Types.String)
+    @post('token', Types.Content)
     async postInfo(domainId: string, tokenId: string) {
         const data = await token.get(tokenId, token.TYPE_EXPORT);
         if (!data) throw new InvalidTokenError(tokenId);
@@ -60,7 +60,7 @@ export class ProblemSendHandler extends Handler {
         this.response.body = { pdocs: r, pids: data.pids };
     }
 
-    @post('token', Types.String, true)
+    @post('token', Types.Content, true)
     @post('pids', Types.Array)
     async postFetch(domainId: string, tokenId: string, pids: number[]) {
         pids = pids.map((i) => (+i ? +i : i));

@@ -9,7 +9,7 @@ import { Logger } from '../logger';
 import type {
     Mdoc, Pdoc, Rdoc, TrainingDoc, User,
 } from '../interface';
-import type { DomainDoc } from '../loader';
+import type { Ddoc, DomainDoc } from '../loader';
 import type { DocType } from '../model/document';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
@@ -70,11 +70,8 @@ export interface EventMap extends Record<string, any> {
     'handler/finish/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
     'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
-    'discussion/before-add': (
-        domainId: string, parentType: number, parentId: ObjectID | number | string,
-        owner: number, title: string, content: string,
-        ip: string | null, highlight: boolean, pin: boolean
-    ) => VoidReturn
+    'discussion/before-add': (payload: Partial<Ddoc>) => VoidReturn
+    'discussion/add': (payload: Partial<Ddoc>) => VoidReturn
 
     'problem/before-add': (doc: Partial<Pdoc>) => VoidReturn
     'problem/add': (doc: Partial<Pdoc>, docId: number) => VoidReturn

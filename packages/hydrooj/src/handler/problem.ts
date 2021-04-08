@@ -53,7 +53,7 @@ export class ProblemHandler extends Handler {
 
 export class ProblemMainHandler extends ProblemHandler {
     @param('page', Types.PositiveInt, true)
-    @param('q', Types.String, true)
+    @param('q', Types.Content, true)
     async get(domainId: string, page = 1, q = '') {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -112,7 +112,7 @@ export class ProblemMainHandler extends ProblemHandler {
 
 export class ProblemCategoryHandler extends ProblemHandler {
     @param('page', Types.PositiveInt, true)
-    @param('category', Types.String, null, parseCategory)
+    @param('category', Types.Name, null, parseCategory)
     async get(domainId: string, page = 1, category: string[]) {
         this.response.template = 'problem_main.html';
         const q: any = { $and: [] };
@@ -143,7 +143,7 @@ export class ProblemCategoryHandler extends ProblemHandler {
 }
 
 export class ProblemRandomHandler extends ProblemHandler {
-    @param('category', Types.String, true, null, parseCategory)
+    @param('category', Types.Name, true, null, parseCategory)
     async get(domainId: string, category: string[] = []) {
         const q: FilterQuery<Pdoc> = category.length ? { $and: [] } : {};
         for (const tag of category) q.$and.push({ tag });
@@ -160,7 +160,7 @@ export class ProblemDetailHandler extends ProblemHandler {
     pdoc: Pdoc;
     udoc: User;
 
-    @route('pid', Types.String, true, null, parsePid)
+    @route('pid', Types.Name, true, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
         this.pdoc = await problem.get(domainId, pid, this.user._id);
@@ -210,7 +210,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
-    @param('pid', Types.String, null, parsePid)
+    @param('pid', Types.Name, null, parsePid)
     async get(domainId: string, pid: string | number) {
         this.response.template = 'problem_submit.html';
         const rdocs = await record
@@ -232,8 +232,8 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         };
     }
 
-    @param('lang', Types.String)
-    @param('code', Types.String)
+    @param('lang', Types.Name)
+    @param('code', Types.Content)
     async post(domainId: string, lang: string, code: string) {
         await this.limitRate('add_record', 60, 5);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
@@ -250,9 +250,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
 }
 
 export class ProblemPretestHandler extends ProblemDetailHandler {
-    @param('lang', Types.String)
-    @param('code', Types.String)
-    @param('input', Types.String, true)
+    @param('lang', Types.Name)
+    @param('code', Types.Content)
+    @param('input', Types.Content, true)
     async post(domainId: string, lang: string, code: string, input = '') {
         await this.limitRate('add_record', 60, 5);
         const rid = await record.add(
@@ -270,7 +270,7 @@ export class ProblemPretestConnectionHandler extends ConnectionHandler {
     domainId: string;
     dispose: bus.Disposable;
 
-    @param('pid', Types.String)
+    @param('pid', Types.Name)
     async prepare(domainId: string, pid: string) {
         const pdoc = await problem.get(domainId, pid);
         if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
@@ -327,12 +327,12 @@ export class ProblemEditHandler extends ProblemManageHandler {
         ];
     }
 
-    @route('pid', Types.String, null, parsePid)
-    @post('title', Types.String, isTitle)
-    @post('content', Types.String, isContent)
-    @post('pid', Types.String, isPid, true)
+    @route('pid', Types.Name, null, parsePid)
+    @post('content', Types.Title)
+    @post('content', Types.Content)
+    @post('pid', Types.Name, isPid, true)
     @post('hidden', Types.Boolean)
-    @post('tag', Types.String, true, null, parseCategory)
+    @post('tag', Types.Content, true, null, parseCategory)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
         newPid: string = '', hidden = false, tag: string[] = [],
@@ -375,8 +375,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.response.body.links = links;
     }
 
-    @post('filename', Types.String)
-    @post('type', Types.String, true)
+    @post('filename', Types.Name)
+    @post('type', Types.Content, true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (!this.request.files.file) throw new ValidationError('file');
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -413,7 +413,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @query('type', Types.Range(['additional_file', 'testdata']), true)
-    @param('filename', Types.String)
+    @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
         if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
@@ -456,14 +456,14 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         await bus.serial('handler/solution/get', this);
     }
 
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postSubmit(domainId: string, content: string) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM_SOLUTION);
         await solution.add(domainId, this.pdoc.docId, this.user._id, content);
         this.back();
     }
 
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     @param('psid', Types.ObjectID)
     async postEditSolution(domainId: string, content: string, psid: ObjectID) {
         let psdoc = await solution.get(domainId, psid);
@@ -483,7 +483,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     }
 
     @param('psid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postReply(domainId: string, psid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_PROBLEM_SOLUTION);
         const psdoc = await solution.get(domainId, psid);
@@ -493,7 +493,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
 
     @param('psid', Types.ObjectID)
     @param('psrid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
@@ -561,11 +561,11 @@ export class ProblemCreateHandler extends Handler {
         };
     }
 
-    @post('title', Types.String, isTitle)
-    @post('content', Types.String, isContent)
-    @post('pid', Types.String, true, isPid)
+    @post('content', Types.Title)
+    @post('content', Types.Content)
+    @post('pid', Types.Name, true, isPid)
     @post('hidden', Types.Boolean)
-    @post('tag', Types.String, true, null, parseCategory)
+    @post('tag', Types.Content, true, null, parseCategory)
     async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);

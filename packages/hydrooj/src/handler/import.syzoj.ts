@@ -220,10 +220,10 @@ class ProblemImportSYZOJHandler extends Handler {
         return docId;
     }
 
-    @post('url', Types.String, true)
-    @post('pid', Types.String, true, isPid)
+    @post('url', Types.Content, true)
+    @post('pid', Types.Name, true, isPid)
     @post('hidden', Types.Boolean)
-    @post('prefix', Types.String, true)
+    @post('prefix', Types.Name, true)
     @post('start', Types.UnsignedInt, true)
     @post('end', Types.UnsignedInt, true)
     async post(

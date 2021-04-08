@@ -115,7 +115,7 @@ class ContestBoardcastHandler extends ContestHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Content)
     async post(domainId: string, tid: ObjectID, content: string) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
@@ -202,10 +202,10 @@ class ContestEditHandler extends ContestHandler {
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('duration', Types.Float)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
     @param('rule', Types.Range(contest.RULES))
-    @param('pids', Types.String)
+    @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
@@ -284,7 +284,7 @@ class ContestProblemHandler extends ContestHandler {
 
 export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
     @query('type', Types.Range(['additional_file', 'testdata']), true)
-    @param('filename', Types.String)
+    @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
         if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
@@ -327,8 +327,8 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('lang', Types.String)
-    @param('code', Types.String)
+    @param('lang', Types.Name)
+    @param('code', Types.Content)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
         await this.limitRate('add_record', 60, 10);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, {
@@ -406,10 +406,10 @@ class ContestCreateHandler extends ContestHandler {
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('duration', Types.Float)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
-    @param('rule', Types.String)
-    @param('pids', Types.String)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
+    @param('rule', Types.Name)
+    @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,

@@ -130,14 +130,14 @@ class DomainUserHandler extends ManageHandler {
     }
 
     @post('uid', Types.Int)
-    @post('role', Types.String)
+    @post('role', Types.Name)
     async postSetUser(domainId: string, uid: number, role: string) {
         await domain.setUserRole(domainId, uid, role);
         this.back();
     }
 
     @param('uid', Types.NumericArray)
-    @param('role', Types.String)
+    @param('role', Types.Name)
     async postSetUsers(domainId: string, uid: number[], role: string) {
         await domain.setUserRole(domainId, uid, role);
         this.back();
@@ -187,7 +187,7 @@ class DomainRoleHandler extends ManageHandler {
         this.response.body = { roles, domain: this.domain, path };
     }
 
-    @param('role', Types.String)
+    @param('role', Types.Name)
     async postAdd(domainId: string, role: string) {
         const roles = await domain.getRoles(this.domain);
         const rdict: Dictionary<any> = {};
@@ -229,9 +229,9 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     }
 
     @post('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
-    @post('role', Types.String, true)
+    @post('role', Types.Name, true)
     @post('expire', Types.Int, true)
-    @post('invitationCode', Types.String, true)
+    @post('invitationCode', Types.Content, true)
     async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((rl) => rl._id);
@@ -269,7 +269,7 @@ class DomainJoinHandler extends Handler {
         if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
     }
 
-    @param('code', Types.String, true)
+    @param('code', Types.Content, true)
     async get(domainId: string, code: string) {
         this.response.template = 'domain_join.html';
         this.response.body.joinSettings = this.joinSettings;
@@ -280,7 +280,7 @@ class DomainJoinHandler extends Handler {
         ];
     }
 
-    @param('code', Types.String, true)
+    @param('code', Types.Content, true)
     async post(domainId: string, code: string) {
         if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
             if (this.joinSettings.code !== code) {
@@ -293,7 +293,7 @@ class DomainJoinHandler extends Handler {
 }
 
 class DomainSearchHandler extends Handler {
-    @param('q', Types.String)
+    @param('q', Types.Content)
     async get(domainId: string, q: string) {
         const ddocs = await domain.getPrefixSearch(q, 20);
         for (let i = 0; i < ddocs.length; i++) {

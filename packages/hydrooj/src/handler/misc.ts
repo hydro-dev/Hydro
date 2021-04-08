@@ -36,7 +36,7 @@ class CheckInHandler extends Handler {
 }
 
 class SwitchLanguageHandler extends Handler {
-    @param('lang', Types.String)
+    @param('lang', Types.Name)
     async get(domainId: string, lang: string) {
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             this.session.viewLang = lang;

@@ -178,8 +178,8 @@ class TrainingCreateHandler extends Handler {
         this.response.body = { page_name: 'training_create', path };
     }
 
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
     @param('dag', Types.String, isContent)
     @param('description', Types.String, isDescription)
     async post(
@@ -224,8 +224,8 @@ class TrainingEditHandler extends Handler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
     @param('dag', Types.String, isContent)
     @param('description', Types.String, isDescription)
     async post(

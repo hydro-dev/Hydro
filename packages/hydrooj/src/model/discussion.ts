@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { omit } from 'lodash';
 import problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
@@ -63,24 +64,33 @@ export const typeDisplay = {
     [document.TYPE_HOMEWORK]: 'homework',
 };
 
-export function add(
+export async function add(
     domainId: string, parentType: number, parentId: ObjectID | number | string,
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean, pin: boolean,
 ): Promise<ObjectID> {
-    return document.add(
-        domainId, content, owner, document.TYPE_DISCUSSION,
-        null, parentType, parentId,
-        {
-            title,
-            ip,
-            nReply: 0,
-            highlight,
-            pin,
-            updateAt: new Date(),
-            views: 0,
-        },
+    const payload: Partial<Ddoc> = {
+        domainId,
+        content,
+        owner,
+        parentType,
+        parentId,
+        title,
+        ip,
+        nReply: 0,
+        highlight,
+        pin,
+        updateAt: new Date(),
+        views: 0,
+    };
+    await bus.serial('discussion/before-add', payload);
+    const res = await document.add(
+        payload.domainId, payload.content, payload.owner, document.TYPE_DISCUSSION,
+        null, payload.parentType, payload.parentId, omit(payload, ['domainId', 'content', 'owner', 'parentType', 'parentId']),
     );
+    payload.docId = res;
+    await bus.emit('discussion/add', payload);
+    return payload.docId;
 }
 
 // FIXME typings doesn't work

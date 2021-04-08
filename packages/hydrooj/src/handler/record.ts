@@ -18,9 +18,9 @@ const RecordHandler = contest.ContestHandlerMixin(Handler);
 
 class RecordListHandler extends RecordHandler {
     @param('page', Types.PositiveInt, true)
-    @param('pid', Types.String, true)
+    @param('pid', Types.Name, true)
     @param('tid', Types.ObjectID, true)
-    @param('uidOrName', Types.String, true)
+    @param('uidOrName', Types.Name, true)
     @param('allDomain', Types.Boolean, true)
     async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, all = false) {
         this.response.template = 'record_main.html';

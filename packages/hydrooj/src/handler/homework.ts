@@ -174,8 +174,8 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
-    @param('code', Types.String)
-    @param('lang', Types.String)
+    @param('code', Types.Content)
+    @param('lang', Types.Name)
     async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
         await this.limitRate('add_record', 60, 5);
         const tsdoc = await contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK);
@@ -227,10 +227,10 @@ class HomeworkCreateHandler extends HomeworkHandler {
     @param('penaltySinceDate', Types.Date)
     @param('penaltySinceTime', Types.Time)
     @param('extensionDays', Types.Float)
-    @param('penaltyRules', Types.String, validatePenaltyRules, convertPenaltyRules)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
-    @param('pids', Types.String)
+    @param('penaltyRules', Types.Content, validatePenaltyRules, convertPenaltyRules)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
+    @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     async post(
         domainId: string, beginAtDate: string, beginAtTime: string,
@@ -294,10 +294,10 @@ class HomeworkEditHandler extends HomeworkHandler {
     @param('penaltySinceDate', Types.Date)
     @param('penaltySinceTime', Types.Time)
     @param('extensionDays', Types.Float)
-    @param('penaltyRules', Types.String, validatePenaltyRules, convertPenaltyRules)
-    @param('title', Types.String, isTitle)
-    @param('content', Types.String, isContent)
-    @param('pids', Types.String)
+    @param('penaltyRules', Types.Content, validatePenaltyRules, convertPenaltyRules)
+    @param('content', Types.Title)
+    @param('content', Types.Content)
+    @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
@@ -364,7 +364,7 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
 
 class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
-    @param('ext', Types.String)
+    @param('ext', Types.Name)
     async get(domainId: string, tid: ObjectID, ext: string) {
         const getContent = {
             csv: (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,

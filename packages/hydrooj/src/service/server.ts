@@ -30,6 +30,7 @@ import {
     NotFoundError, HydroError,
 } from '../error';
 import * as misc from '../lib/misc';
+import { isContent, isName, isTitle } from '../lib/validator';
 import user from '../model/user';
 import domain from '../model/domain';
 import * as system from '../model/system';
@@ -57,6 +58,9 @@ interface ParamOption {
 type Type = [Converter, Validator, boolean?];
 
 export interface Types {
+    Content: Type,
+    Name: Type,
+    Title: Type,
     String: Type,
     Int: Type,
     UnsignedInt: Type,
@@ -73,6 +77,9 @@ export interface Types {
 }
 
 export const Types: Types = {
+    Content: [(v) => v.toString(), isContent],
+    Name: [(v) => v.toString(), isName],
+    Title: [(v) => v.toString(), isTitle],
     String: [(v) => v.toString(), null],
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
     UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
