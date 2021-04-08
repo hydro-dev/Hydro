@@ -111,20 +111,24 @@ class MarkdownHandler extends Handler {
   }
 }
 
-const getUrl = (files) => files.map((i) => {
+const getHash = (i) => {
   const shasum = crypto.createHash('sha1');
   const file = readFileSync(join(tmpdir(), 'hydro', 'public', i));
   shasum.update(file);
-  const hash = shasum.digest('hex').substr(0, 10);
-  return `/${i}?${hash}`;
-});
+  return shasum.digest('hex').substr(0, 10);
+};
+
+const getUrl = (files) => files.map((i) => `/${i}?${getHash(i)}`);
 
 bus.on('app/started', () => {
   const files = readdirSync(join(tmpdir(), 'hydro', 'public'));
   const pages = files.filter((file) => file.endsWith('.page.js'));
   const themes = files.filter((file) => file.endsWith('.theme.js'));
   UiContextBase.extraPages = getUrl(pages);
-  UiContextBase.themes = getUrl(themes);
+  UiContextBase.themes = {};
+  for (const theme of themes) {
+    UiContextBase.themes[theme] = `/${theme}?${getHash(theme)}`;
+  }
 });
 
 global.Hydro.handler.ui = async () => {

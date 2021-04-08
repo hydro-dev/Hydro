@@ -26,7 +26,10 @@
   <meta property="og:url" content="{{ handler.ctx.request.href }}" />
   <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
   {% endblock %}
-  <link rel="stylesheet" media="all" href="{{ static_url(handler.user.theme|default('default') + '.theme.js') }}">
+  {% if not isIE(handler.request.headers['user-agent']) %}
+    <script src="{{ static_url(handler.user.theme|default('default') + '.theme.js') }}"></script>
+  {% endif %}
+  <link rel="stylesheet" media="all" href="{{ static_url(handler.user.theme|default('default') + '.theme.css') }}">
   <link rel="stylesheet" media="all" href="{{ url('ui_extracss') }}">
   <title>{{ handler.renderTitle(page_name) }}</title>
   {% if not isIE(handler.request.headers['user-agent']) %}

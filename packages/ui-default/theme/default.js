@@ -26,4 +26,4 @@ import 'vj/components/katex/katex.styl';
 const pageStyleReq = require.context('../', true, /\.page\.styl$/i);
 pageStyleReq.keys().map((key) => pageStyleReq(key));
 const pageStyleReqDefault = require.context('../', true, /\.page\.default\.styl$/i);
-pageStyleReqDefault.keys().map((key) => pageStyleReq(key));
+pageStyleReqDefault.keys().map((key) => pageStyleReqDefault(key));

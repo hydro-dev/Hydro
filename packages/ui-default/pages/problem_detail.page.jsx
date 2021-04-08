@@ -216,7 +216,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   async function loadSubjective() {
     try {
       const props = yaml.load(base64.decode(document.getElementsByClassName('section__body typo')[0].innerText));
-      $('.loader-container').show();
+      $('.outer-loader-container').show();
       const { default: Subjective } = await import('vj/components/subjective-question/index');
       const React = await import('react');
       const ReactDOM = await import('react-dom');
@@ -227,11 +227,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         </div>,
         $('.problem-content').get(0),
       );
-      $('.loader-container').hide();
+      $('.outer-loader-container').hide();
       // eslint-disable-next-line no-empty
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { }
   }
 
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
