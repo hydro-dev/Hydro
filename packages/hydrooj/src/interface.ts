@@ -95,7 +95,11 @@ export interface User extends Dictionary<any> {
 export type Udict = NumericDictionary<User>;
 
 export interface FileInfo {
+    /** duplicate to filename */
+    _id: string,
+    /** filename */
     name: string,
+    /** file size (in bytes) */
     size: number,
     etag: string,
     lastModified: Date,
@@ -139,6 +143,7 @@ export interface ProblemConfig {
     interactor?: string,
     user_extra_files?: string[],
     judge_extra_files?: string[],
+    outputs?: [string, number][],
     cases?: TestCaseConfig[],
     subtasks?: SubtaskConfig[],
 }
@@ -189,8 +194,8 @@ declare module './model/problem' {
         difficulty?: number,
         /** @deprecated */
         category?: string[],
-        /** @deprecated */
-        config: any,
+
+        config: string,
     }
 }
 export type { Pdoc } from './model/problem';
