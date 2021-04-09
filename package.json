@@ -10,7 +10,6 @@
         "build:watch": "node build/build.js --watch",
         "build:ui": "node packages/ui-default/build",
         "build:ui:dev": "node packages/ui-default/build --dev",
-        "build:ui:watch": "node packages/ui-default/build --watch",
         "build:ui:production": "node packages/ui-default/build --production",
         "lint": "eslint packages --ext ts --fix",
         "lint:ci": "eslint packages --ext ts",
@@ -19,7 +18,7 @@
         "snowpack": "cd packages/ui-default && snowpack dev",
         "pub": "node build/publish",
         "jest": "node build/jest",
-        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug",
+        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug --template",
         "start": "node build/start",
         "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
     },

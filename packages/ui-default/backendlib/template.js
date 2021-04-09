@@ -88,9 +88,19 @@ class Loader extends nunjucks.Loader {
       };
     }
     let fullpath = null;
+    if (typeof argv.template !== 'string') argv.template = path.resolve(__dirname, '..', 'template');
     const p = path.resolve(process.cwd(), argv.template, name);
     if (fs.existsSync(p)) fullpath = p;
-    if (!fullpath) throw new Error(`Cannot get template ${name}`);
+    if (!fullpath) {
+      if (global.Hydro.ui.template[name]) {
+        return {
+          src: global.Hydro.ui.template[name],
+          path: name,
+          noCache: true,
+        };
+      }
+      throw new Error(`Cannot get template ${name}`);
+    }
     return {
       src: fs.readFileSync(fullpath, 'utf-8').toString(),
       path: fullpath,
