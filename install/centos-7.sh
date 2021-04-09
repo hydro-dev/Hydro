@@ -1,6 +1,11 @@
 #!/bin/bash
 
 echo "Running Hydro Installer for centos 7"
+echo "CENTOS IS NOT RECOMMENDED TO USE."
+echo "PLEASE USE UBUNTU INSTEAD."
+echo "THIS SCRIPT MAY NOT WORK PROPERLY."
+echo "Will continue installation in 10 secs, press Ctrl-C to exit"
+sleep 10
 db_password=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 MINIO_SECRET_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
