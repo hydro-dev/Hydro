@@ -5,10 +5,11 @@ tasks:
       yarn
       pm2 start mongod
       pm2 start "MINIO_ACCESS_KEY=hydro MINIO_SECRET_KEY=hydrohydro minio server /home/gitpod/file" --name minio
-      pm2 start "/workspace/.cargo/bin/sonic -c /workspace/.cargo/registry/src/github.com-1ecc6299db9ec823/sonic-server-1.3.0/config.cfg" --name sonic
-      systemctl start sonic-server
+      pm2 start "/home/gitpod/.cargo/bin/sonic -c /home/gitpod/.cargo/registry/src/github.com-1ecc6299db9ec823/sonic-server-1.3.0/config.cfg" --name sonic
       yarn build
       yarn build:ui
+      npx hydrooj cli user create root@hydro.local root rootroot
+      npx hydrooj cli user setSuperAdmin 2
       yarn debug
 vscode:
   extensions:
