@@ -216,6 +216,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   async function loadSubjective() {
     try {
       const props = yaml.load(base64.decode(document.getElementsByClassName('section__body typo')[0].innerText));
+      if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
       const { default: Subjective } = await import('vj/components/subjective-question/index');
       const React = await import('react');
