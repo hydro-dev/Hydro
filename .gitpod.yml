@@ -1,8 +1,20 @@
-image: gitpod/workspace-mongodb
+image:
+  file: .gitpod.Dockerfile
 tasks:
-  - init: yarn && yarn build
+  - init: |
+      yarn
+      pm2 start mongod
+      pm2 start "MINIO_ACCESS_KEY=hydro MINIO_SECRET_KEY=hydrohydro minio server /home/gitpod/file" --name minio
+      pm2 start "/home/gitpod/.cargo/bin/sonic -c /home/gitpod/.cargo/registry/src/github.com-1ecc6299db9ec823/sonic-server-1.3.0/config.cfg" --name sonic
+      yarn build
+      yarn build:ui
+      npx hydrooj cli user create root@hydro.local root rootroot
+      npx hydrooj cli user setSuperAdmin 2
+      yarn debug
 vscode:
   extensions:
     - dbaeumer.vscode-eslint@2.1.3:1NRvj3UKNTNwmYjptmUmIw==
     - vscode-icons-team.vscode-icons@10.2.0:DrQUJPtFm0woSFiyitha8Q==
     - samuelcolvin.jinjahtml@0.12.0:lFI6zKplznEZPdWvFvRHwg==
+    - tabnine.tabnine-vscode
+    - gruntfuggly.todo-tree
