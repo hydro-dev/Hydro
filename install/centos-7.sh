@@ -70,7 +70,7 @@ pm2 start "./minio server /data/file" --name minio
 # TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
-wget https://github.com/criyle/go-judge/releases/download/v1.0.5/executorserver-amd64 -O /usr/bin/sandbox_
+wget https://s3.undefined.moe/file/executor-amd64 -O /usr/bin/sandbox_
 chmod +x /usr/bin/sandbox_
 pm2 start "/usr/bin/sandbox_"
 mkdir ~/.hydro

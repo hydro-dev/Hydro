@@ -79,7 +79,7 @@ logAndRun('apt-get install -y g++ >/dev/null');
 
 log.info('正在安装 HydroOJ / Installing HydroOJ');
 logAndRunWithNvm('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge');
-http.download('https://github.com/criyle/go-judge/releases/download/v1.0.5/executorserver-amd64', '/usr/bin/sandbox');
+http.download('https://s3.undefined.moe/file/executor-amd64', '/usr/bin/sandbox');
 exec('chmod +x /usr/bin/sandbox');
 logAndRunWithNvm('pm2 start sandbox');
 fs.writefile('/root/.hydro/config.json', JSON.stringify({
