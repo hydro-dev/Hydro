@@ -138,7 +138,10 @@ const scripts: UpgradeScript[] = [
                 storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
                 storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`),
             ]);
-            await problem.edit(pdoc.domainId, pdoc.docId, { data, additional_file });
+            await problem.edit(
+                pdoc.domainId, pdoc.docId,
+                { data: data.map((d) => ({ ...d, _id: d.name })), additional_file: additional_file.map((d) => ({ ...d, _id: d.name })) },
+            );
             if (!pdoc.config) return;
             if (data.map((d) => d.name).includes('config.yaml')) return;
             const cfg = yaml.dump(pdoc.config);

@@ -6,7 +6,9 @@ import * as document from './document';
 import domain from './domain';
 import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, Pdict, Document } from '../interface';
-import { ArrayKeys, NumberKeys, Projection } from '../typeutils';
+import {
+    ArrayKeys, MaybeArray, NumberKeys, Projection,
+} from '../typeutils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
@@ -149,7 +151,7 @@ export class ProblemModel {
         const names = (name instanceof Array) ? name : [name];
         await storage.del(names.map((t) => `problem/${domainId}/${pid}/testdata/${t}`));
         await ProblemModel.pull(domainId, pid, 'data', names);
-        await bus.emit('problem/delTestdata', domainId, pid, name);
+        await bus.emit('problem/delTestdata', domainId, pid, names);
     }
 
     static async addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
@@ -164,11 +166,11 @@ export class ProblemModel {
         await bus.emit('problem/addAdditionalFile', domainId, pid, name, payload);
     }
 
-    static async delAdditionalFile(domainId: string, pid: number, name: string | string[]) {
+    static async delAdditionalFile(domainId: string, pid: number, name: MaybeArray<string>) {
         const names = (name instanceof Array) ? name : [name];
         await storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`));
         await ProblemModel.pull(domainId, pid, 'additional_file', names);
-        await bus.emit('problem/delAdditionalFile', domainId, pid, name);
+        await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }
 
     static async random(domainId: string, query: FilterQuery<Pdoc>): Promise<string | null> {
@@ -255,7 +257,7 @@ ProblemModel.extend((docId, pid) => ({
     data: [],
     additional_file: [],
     hidden: true,
-    config: {},
+    config: '',
     acMsg: '',
     difficulty: 0,
 }));

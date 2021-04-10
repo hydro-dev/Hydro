@@ -100,7 +100,7 @@ export async function run({
             await problem.edit('system', pid, {
                 nAccept: pdoc.accepted,
                 nSubmit: pdoc.submit,
-                config: { time: `${pdoc.time_limit}s`, memory: `${pdoc.memory_limit}m` },
+                config: `time: ${pdoc.time_limit}s\nmemory: ${pdoc.memory_limit}m`,
                 owner: uidMap[cdoc[0].user_id],
             });
         }

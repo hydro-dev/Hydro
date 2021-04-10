@@ -79,10 +79,10 @@ export interface EventMap extends Record<string, any> {
     'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
     'problem/get': (doc: Pdoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
-    'problem/addTestdata': (domainId: string, docId: number, name: string, payload: FileInfo) => VoidReturn
-    'problem/delTestdata': (domainId: string, docId: number, name: string) => VoidReturn
-    'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: FileInfo) => VoidReturn
-    'problem/delAdditionalFile': (domainId: string, docId: number, name: string) => VoidReturn
+    'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
+    'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
     'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
