@@ -189,7 +189,6 @@ declare module './model/problem' {
         data: FileInfo[],
         additional_file: FileInfo[],
         hidden: boolean,
-        acMsg?: string,
         html?: boolean,
         difficulty?: number,
         /** @deprecated */

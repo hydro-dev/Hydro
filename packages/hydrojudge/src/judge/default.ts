@@ -50,8 +50,8 @@ function judgeCase(c, sid) {
                 stderr,
                 copyIn,
                 copyOut,
-                time_limit_ms: ctxSubtask.subtask.time_limit_ms * ctx.execute.time,
-                memory_limit_mb: ctxSubtask.subtask.memory_limit_mb,
+                time: ctxSubtask.subtask.time * ctx.execute.time,
+                memory: ctxSubtask.subtask.memory,
             },
         );
         const { code, time_usage_ms, memory_usage_kb } = res;
@@ -62,9 +62,9 @@ function judgeCase(c, sid) {
         let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
-            if (time_usage_ms > ctxSubtask.subtask.time_limit_ms * ctx.execute.time) {
+            if (time_usage_ms > ctxSubtask.subtask.time * ctx.execute.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-            } else if (memory_usage_kb > ctxSubtask.subtask.memory_limit_mb * 1024) {
+            } else if (memory_usage_kb > ctxSubtask.subtask.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 [status, score, message] = await check({

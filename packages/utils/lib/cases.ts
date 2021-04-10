@@ -35,8 +35,8 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     } else if (cfg.cases) {
         config.subtasks = [{
             score: parseInt(cfg.score, 10) || Math.floor(100 / cfg.cases.length),
-            time_limit_ms: parseTimeMS(cfg.time || '1s'),
-            memory_limit_mb: parseMemoryMB(cfg.memory || '512m'),
+            time: parseTimeMS(cfg.time || '1s'),
+            memory: parseMemoryMB(cfg.memory || '256m'),
             cases: [],
             type: 'sum',
         }];
@@ -63,11 +63,13 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                 score: parseInt(subtask.score, 10),
                 if: subtask.if || [],
                 cases,
-                time_limit_ms: parseTimeMS(subtask.time || cfg.time || '1s'),
-                memory_limit_mb: parseMemoryMB(subtask.memory || cfg.memory || '512m'),
+                time: parseTimeMS(subtask.time || cfg.time || '1s'),
+                memory: parseMemoryMB(subtask.memory || cfg.memory || '256m'),
             });
         }
     }
+    if (cfg.time) config.time = parseTimeMS(cfg.time);
+    if (cfg.memory) config.memory = parseMemoryMB(cfg.memory);
     if (config.type === 'submit_answer' && !cfg.outputs) throw new Error('outputs config not found');
     return Object.assign(cfg, config);
 }
@@ -83,7 +85,7 @@ export function convertIniConfig(ini: string) {
             cases: [{ input: `input/${input.toLowerCase()}`, output: `output/${output.toLowerCase()}` }],
             score: parseInt(score, 10),
             time: `${time}s`,
-            memory: '512m',
+            memory: '256m',
         };
         if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
         res.subtasks.push(cur);

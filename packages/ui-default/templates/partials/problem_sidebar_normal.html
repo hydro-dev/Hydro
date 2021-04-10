@@ -126,10 +126,6 @@
       {% else %}
         {{ _('(None)') }}
       {% endif %}
-      {% if pdoc['acMsg'] and pdoc['psdoc']['status'] == STATUS.STATUS_ACCEPTED %}
-        <dt>{{ _('AC Message') }}</dt>
-        <dd>{{ pdoc['acMsg'] }}</dd>
-      {% endif %}
       </dd>
     {% endif %}
     {% endif %}

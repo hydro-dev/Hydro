@@ -11,6 +11,7 @@ import {
 import paginate from '../lib/paginate';
 import { isPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
+import { parseConfig } from '../lib/testdataConfig';
 import * as system from '../model/system';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -189,6 +190,12 @@ export class ProblemDetailHandler extends ProblemHandler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
             .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        // Get time and memory limit
+        try {
+            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
+        } catch (e) {
+            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
+        }
     }
 
     @param('pid', Types.UnsignedInt)

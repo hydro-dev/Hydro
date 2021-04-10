@@ -28,8 +28,7 @@ export class ProblemModel {
 
     static PROJECTION_PUBLIC: Field[] = [
         ...ProblemModel.PROJECTION_LIST,
-        'content', 'html', 'data', 'config', 'acMsg',
-        'additional_file',
+        'content', 'html', 'data', 'config', 'additional_file',
     ];
 
     static extend(getter: Getter) {
@@ -258,7 +257,6 @@ ProblemModel.extend((docId, pid) => ({
     additional_file: [],
     hidden: true,
     config: '',
-    acMsg: '',
     difficulty: 0,
 }));
 

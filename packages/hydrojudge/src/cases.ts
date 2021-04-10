@@ -88,8 +88,8 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
     const config = {
         count: 0,
         subtasks: [{
-            time_limit_ms: parseTimeMS(cfg.time || '1s'),
-            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
+            time: parseTimeMS(cfg.time || '1s'),
+            memory: parseMemoryMB(cfg.memory || '256m'),
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length),
@@ -105,8 +105,8 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
     }
     if (extra < cases.length) {
         config.subtasks.push({
-            time_limit_ms: parseTimeMS(cfg.time || '1s'),
-            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
+            time: parseTimeMS(cfg.time || '1s'),
+            memory: parseMemoryMB(cfg.memory || '256m'),
             type: 'sum',
             cases: [],
             score: Math.floor(100 / cases.length) + 1,
@@ -134,8 +134,8 @@ async function read1(folder: string, files: string[], checkFile, cfg) {
                 if (fs.existsSync(path.resolve(folder, c.output))) {
                     if (!subtask[REG.subtask(data)]) {
                         subtask[REG.subtask(data)] = [{
-                            time_limit_ms: parseTimeMS(cfg.time || '1s'),
-                            memory_limit_mb: parseMemoryMB(cfg.memory || '256m'),
+                            time: parseTimeMS(cfg.time || '1s'),
+                            memory: parseMemoryMB(cfg.memory || '256m'),
                             type: 'min',
                             cases: [c],
                         }];
@@ -199,7 +199,7 @@ function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
-    const total_time = sum(config.subtasks.map((subtask) => subtask.time_limit_ms * subtask.cases.length));
+    const total_time = sum(config.subtasks.map((subtask) => subtask.time * subtask.cases.length));
     if (total_time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }

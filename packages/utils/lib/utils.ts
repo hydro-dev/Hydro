@@ -161,13 +161,15 @@ const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
 const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 
-export function parseTimeMS(str: string) {
+export function parseTimeMS(str: string | number) {
+    if (typeof str === 'number') return str;
     const match = TIME_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing time`);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
 }
 
-export function parseMemoryMB(str: string) {
+export function parseMemoryMB(str: string | number) {
+    if (typeof str === 'number') return str;
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
     return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
