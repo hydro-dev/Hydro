@@ -5,3 +5,4 @@ port:
   value: 1491
 auth:
   type: text
+  value: SecretPassword
