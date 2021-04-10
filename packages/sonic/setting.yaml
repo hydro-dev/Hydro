@@ -1,5 +1,5 @@
 host:
-  value: localhost
+  value: ::1
 port:
   type: number
   value: 1491

@@ -47,9 +47,9 @@ class SonicService implements BaseService {
     async start() {
         const [host, port, auth] = system.getMany(['sonic.host', 'sonic.port', 'sonic.auth']);
         const cfg = {
-            host: host || '127.0.0.1',
+            host: host || '::1',
             port: port || 1491,
-            auth: auth || 'sonic-passwd',
+            auth: auth || '',
         };
         this.search = new Search(cfg);
         this.ingest = new Ingest(cfg);

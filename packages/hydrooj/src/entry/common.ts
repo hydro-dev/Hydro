@@ -98,9 +98,9 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
         if (!fs.existsSync(p)) p = path.resolve(i, 'settings.yaml');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
-                const cfg: any = yaml.load(fs.readFileSync(p).toString());
+                const cfg: any = yaml.load(fs.readFileSync(p, 'utf-8'));
                 for (const key in cfg) {
-                    let val = cfg[key].default;
+                    let val = cfg[key].default || cfg[key].value;
                     if (typeof val === 'string') {
                         val = val
                             .replace(/\$TEMP/g, os.tmpdir())
