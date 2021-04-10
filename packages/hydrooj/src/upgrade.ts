@@ -4,21 +4,21 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
+import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { Progress } from './ui';
+import { Rdoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
 import { iterateAllDomain, iterateAllProblem } from './pipelineUtils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
+import difficultyAlgorithm from './lib/difficulty';
 import problem from './model/problem';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
-import difficultyAlgorithm from './lib/difficulty';
 import { STATUS } from './model/builtin';
-import RecordModel from './model/record';
-import { Rdoc } from './interface';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
@@ -260,6 +260,33 @@ const scripts: UpgradeScript[] = [
             }
             await db.collection('record').updateMany(filter, { $set: { effective: true } });
         }
+        return true;
+    },
+    async function _20_21() {
+        await iterateAllProblem([], async (pdoc) => {
+            let config: string;
+            try {
+                const file = await storage.get(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/config.yaml`);
+                config = (await streamToBuffer(file)).toString('utf-8');
+                logger.info(`Loaded config for ${pdoc.domainId}/${pdoc.docId} from config.yaml`);
+            } catch (e) {
+                try {
+                    const file = await storage.get(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/config.yml`);
+                    config = (await streamToBuffer(file)).toString('utf-8');
+                    logger.info(`Loaded config for ${pdoc.domainId}/${pdoc.docId} from config.yml`);
+                } catch (err) {
+                    try {
+                        const file = await storage.get(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/config.ini`);
+                        config = yaml.dump(convertIniConfig((await streamToBuffer(file)).toString('utf-8')));
+                        logger.info(`Loaded config for ${pdoc.domainId}/${pdoc.docId} from config.ini`);
+                    } catch (error) {
+                        logger.warn('Config for %s/%s(%s) not found', pdoc.domainId, pdoc.docId, pdoc.pid || pdoc.docId);
+                        // no config found
+                    }
+                }
+            }
+            if (config) await problem.edit(pdoc.domainId, pdoc.docId, { config });
+        });
         return true;
     },
 ];

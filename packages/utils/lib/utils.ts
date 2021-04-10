@@ -297,6 +297,12 @@ export function formatSeconds(_seconds = '0') {
     );
 }
 
+export function changeErrorType(err: Error, Err: any) {
+    const e = new Err(err.message);
+    e.stack = err.stack;
+    return e;
+}
+
 export async function retry(func: Function, ...args: any[]): Promise<any>;
 export async function retry(times: number, func: Function, ...args: any[]): Promise<any>;
 // eslint-disable-next-line consistent-return

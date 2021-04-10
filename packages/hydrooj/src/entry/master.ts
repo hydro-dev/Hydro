@@ -65,7 +65,7 @@ export async function load(call: Entry) {
         endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
     };
     const storage = require('../service/storage');
-    storage.start(sopts);
+    await storage.start(sopts);
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const scripts = require('../upgrade').default;

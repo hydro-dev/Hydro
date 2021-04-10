@@ -1,22 +1,6 @@
-import Zip from 'adm-zip';
+import readYamlCases from '@hydrooj/utils/lib/cases';
 import { load } from 'js-yaml';
 import type { ProblemConfig } from '../interface';
-
-export async function readConfig(file: string | Buffer) {
-    const data = new Zip(file);
-    const entries = data.getEntries();
-    for (const entry of entries) {
-        if (entry.name.toLowerCase() === 'config.yaml') {
-            return entry.getData().toString();
-        }
-        if (entry.name.toLowerCase() === 'config.ini') {
-            const ini = entry.getData().toString();
-            const conv = global.Hydro.lib['testdata.convert.ini'];
-            return conv(ini);
-        }
-    }
-    return '';
-}
 
 interface ParseResult {
     count: number,
@@ -37,7 +21,7 @@ export async function parseConfig(config: string | ProblemConfig) {
     let cfg: ProblemConfig = {};
     if (typeof config === 'string') {
         // TODO should validate here?
-        cfg = load(config) as ProblemConfig;
+        cfg = readYamlCases(load(config) as Record<string, any>) as ProblemConfig;
     } else cfg = config;
     if (cfg.cases) {
         for (const c of cfg.cases) {
@@ -57,4 +41,4 @@ export async function parseConfig(config: string | ProblemConfig) {
     }
 }
 
-global.Hydro.lib.testdataConfig = { readConfig, parseConfig };
+global.Hydro.lib.testdataConfig = { parseConfig };
