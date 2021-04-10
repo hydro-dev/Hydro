@@ -296,3 +296,25 @@ export function formatSeconds(_seconds = '0') {
         _digit2(seconds % 60),
     );
 }
+
+export async function retry(func: Function, ...args: any[]): Promise<any>;
+export async function retry(times: number, func: Function, ...args: any[]): Promise<any>;
+// eslint-disable-next-line consistent-return
+export async function retry(arg0: number | Function, func: any, ...args: any[]) {
+    let res;
+    if (typeof arg0 !== 'number') {
+        args = [func, ...args];
+        func = arg0;
+        arg0 = 3;
+    }
+    for (let i = 1; i <= arg0; i++) {
+        try {
+            // eslint-disable-next-line no-await-in-loop
+            res = await func(...args);
+        } catch (e) {
+            if (i === arg0) throw e;
+            continue;
+        }
+        return res;
+    }
+}

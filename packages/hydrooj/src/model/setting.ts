@@ -2,6 +2,7 @@
 import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
 import yaml from 'js-yaml';
+import { retry } from '@hydrooj/utils/lib/utils';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -193,8 +194,7 @@ bus.once('app/started', async () => {
         if (setting.value) {
             const current = await global.Hydro.service.db.collection('system').findOne({ _id: setting.key });
             if (!current || current.value == null || current.value === '') {
-                // @ts-ignore
-                await system.set(setting.key, setting.value);
+                await retry(system.set, setting.key, setting.value);
             }
         }
     }
