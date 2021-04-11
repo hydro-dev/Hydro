@@ -581,6 +581,15 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
+export class ProblemPrefixListHandler extends Handler {
+    @param('prefix', Types.Name)
+    async get(domainId: string, prefix: string) {
+        this.response.body = {
+            pdocs: await problem.getPrefixList(domainId, prefix),
+        };
+    }
+}
+
 export async function apply() {
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
@@ -596,6 +605,7 @@ export async function apply() {
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
+    Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 

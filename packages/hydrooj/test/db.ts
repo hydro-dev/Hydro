@@ -11,7 +11,7 @@ export async function connect() {
     while (dbVer < expected) {
         const func = scripts[dbVer];
         dbVer++;
-        if (func.toString().includes('_FRESH_INSTALL_IGNORE')) continue;
+        if (typeof func !== 'function' || func.toString().includes('_FRESH_INSTALL_IGNORE')) continue;
         // eslint-disable-next-line no-await-in-loop
         await func();
     }

@@ -1,4 +1,5 @@
 import { Collection } from 'mongodb';
+import { escapeRegExp } from 'lodash';
 import * as system from './system';
 import token from './token';
 import * as setting from './setting';
@@ -224,7 +225,7 @@ class UserModel {
     @ArgMethod
     static async getPrefixList(domainId: string, prefix: string, limit: number = 50) {
         prefix = prefix.toLowerCase();
-        const $regex = new RegExp(`\\A\\Q${prefix}\\E`, 'gmi');
+        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
         const uids = await coll.find({ unameLower: { $regex } })
             .limit(limit).map((doc) => doc._id).toArray();
         const users = [];

@@ -1,6 +1,6 @@
 import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
-import { Dictionary, pick } from 'lodash';
+import { Dictionary, escapeRegExp, pick } from 'lodash';
 import { STATUS } from './builtin';
 import * as document from './document';
 import domain from './domain';
@@ -206,6 +206,13 @@ export class ProblemModel {
             }
         }
         return Object.assign(r, l);
+    }
+
+    static async getPrefixList(domainId: string, prefix: string) {
+        prefix = prefix.toLowerCase();
+        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
+        const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
+        return await document.getMulti(domainId, document.TYPE_PROBLEM, filter, ['domainId', 'docId', 'pid', 'title']).toArray();
     }
 
     static async getListStatus(domainId: string, uid: number, pids: number[]) {
