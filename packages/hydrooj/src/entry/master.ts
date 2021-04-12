@@ -75,15 +75,9 @@ export async function load(call: Entry) {
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
         const func = scripts[dbVer];
-        if (typeof func !== 'function') {
+        if (typeof func !== 'function' || (isFresh && func.toString().includes('_FRESH_INSTALL_IGNORE'))) {
             dbVer++;
             continue;
-        }
-        if (isFresh) {
-            if (func.toString().includes('_FRESH_INSTALL_IGNORE')) {
-                dbVer++;
-                continue;
-            }
         }
         const result = await func();
         if (!result) break;

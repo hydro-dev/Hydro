@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 import { argv } from 'yargs';
+import { ObjectID } from 'mongodb';
 import {
     lib, service, model,
     builtinLib, builtinModel,
@@ -21,7 +22,7 @@ function parseParameters(fn: Function) {
 }
 
 async function cli() {
-    const [, modelName, func, ...args] = argv._;
+    const [, modelName, func, ...args] = argv._ as [string, string, string, ...any[]];
     if (!global.Hydro.model[modelName]) {
         return console.error(`Model ${modelName} doesn't exist.`);
     }
@@ -44,6 +45,11 @@ async function cli() {
     if (args.length < parameterMin) {
         console.error(`Too few arguments. Min ${parameterMin}`);
         return console.error(parameters.join(', '));
+    }
+    for (let i = 0; i < args.length; i++) {
+        if (ObjectID.isValid(args[i])) {
+            args[i] = new ObjectID(args[i]);
+        }
     }
     let result = global.Hydro.model[modelName][func](...args);
     if (result instanceof Promise) result = await result;
