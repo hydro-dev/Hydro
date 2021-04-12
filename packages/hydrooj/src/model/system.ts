@@ -67,7 +67,7 @@ export async function runConfig() {
     }
     const config = await coll.find().toArray();
     for (const i of config) cache[i._id] = i.value;
-    bus.emit('database/config');
+    await bus.emit('database/config');
 }
 
 bus.on('system/setting', (args) => {

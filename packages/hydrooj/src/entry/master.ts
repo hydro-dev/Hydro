@@ -57,15 +57,8 @@ export async function load(call: Entry) {
         await modelSystem.set('file.secretKey', process.env.MINIO_SECRET_KEY);
         await modelSystem.set('file.endPoint', 'http://localhost:9000/');
     }
-    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
-        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-        'file.endPointForUser', 'file.endPointForJudge',
-    ]);
-    const sopts = {
-        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
-    };
     const storage = require('../service/storage');
-    await storage.start(sopts);
+    await storage.start();
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const scripts = require('../upgrade').default;

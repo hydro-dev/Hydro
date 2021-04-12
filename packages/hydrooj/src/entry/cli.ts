@@ -3,10 +3,11 @@
 import { argv } from 'yargs';
 import { ObjectID } from 'mongodb';
 import {
-    lib, service, model,
-    builtinLib, builtinModel,
+    lib, service, model, script,
+    builtinLib, builtinModel, builtinScript,
 } from './common';
 import options from '../options';
+import { validate } from '../lib/validator';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
@@ -21,8 +22,23 @@ function parseParameters(fn: Function) {
     return result === null ? [] : result;
 }
 
+async function runScript(name: string, arg: any) {
+    if (!global.Hydro.script[name]) return console.error('Script %s not found.', name);
+    validate(global.Hydro.script[name].validate, arg);
+    return await global.Hydro.script[name].run(arg, console.info);
+}
+
 async function cli() {
     const [, modelName, func, ...args] = argv._ as [string, string, string, ...any[]];
+    if (modelName === 'script') {
+        let arg: any;
+        try {
+            arg = JSON.parse(args.join(' '));
+        } catch (e) {
+            return console.error('Invalid argument');
+        }
+        return await runScript(func, arg);
+    }
     if (!global.Hydro.model[modelName]) {
         return console.error(`Model ${modelName} doesn't exist.`);
     }
@@ -65,22 +81,18 @@ export async function load() {
     require('../options');
     const opts = options();
     await db.start(opts);
-    const modelSystem = require('../model/system');
-    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
-        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-        'file.endPointForUser', 'file.endPointForJudge',
-    ]);
-    const sopts = {
-        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
-    };
     const storage = require('../service/storage');
-    await storage.start(sopts);
+    await storage.start();
     for (const i of builtinLib) require(`../lib/${i}`);
     await lib(pending, fail);
+    const systemModel = require('../model/system');
+    await systemModel.runConfig();
     require('../service/gridfs');
     await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     await model(pending, fail);
+    for (const i of builtinScript) require(`../script/${i}`);
+    await script(pending, fail, []);
     await bus.parallel('app/started');
     await cli();
 }

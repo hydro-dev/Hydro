@@ -34,15 +34,8 @@ export async function load() {
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
     if (argv.loaderDetail) logger.info('finish: config');
-    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
-        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-        'file.endPointForUser', 'file.endPointForJudge',
-    ]);
-    const sopts = {
-        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
-    };
     const storage = require('../service/storage');
-    storage.start(sopts);
+    await storage.start();
     if (argv.loaderDetail) logger.info('finish: storage.connect');
     for (const i of builtinLib) {
         let t;

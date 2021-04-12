@@ -79,9 +79,15 @@ class StorageService {
     private opts: StorageOptions;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
 
-    async start(opts: StorageOptions) {
+    async start() {
         try {
-            this.opts = opts;
+            const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = system.getMany([
+                'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
+                'file.endPointForUser', 'file.endPointForJudge',
+            ]);
+            this.opts = {
+                endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
+            };
             this.client = new Client({
                 ...parseMainEndpointUrl(this.opts.endPoint),
                 accessKey: this.opts.accessKey,
@@ -103,14 +109,7 @@ class StorageService {
             logger.warn('Storage init fail. will retry later.');
             this.error = e.toString();
             setTimeout(async () => {
-                const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = system.getMany([
-                    'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-                    'file.endPointForUser', 'file.endPointForJudge',
-                ]);
-                const sopts = {
-                    endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
-                };
-                await this.start(sopts);
+                await this.start();
             }, 10000);
         }
     }
