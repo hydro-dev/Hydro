@@ -591,9 +591,7 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        this.response.body = {
-            pdocs: await problem.getPrefixList(domainId, prefix),
-        };
+        this.response.body = await problem.getPrefixList(domainId, prefix);
     }
 }
 
