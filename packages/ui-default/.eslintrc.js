@@ -50,18 +50,19 @@ module.exports = {
   rules: {
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
+    indent: 'off',
 
     'comma-dangle': [
       'error',
       'always-multiline',
     ],
-    indent: [
-      'error',
-      2,
-      {
-        SwitchCase: 0,
-      },
-    ],
+    // indent: [
+    //   'error',
+    //   2,
+    //   {
+    //     SwitchCase: 0,
+    //   },
+    // ],
     'max-len': ['error', 150],
     quotes: 'warn',
     'class-methods-use-this': 'off',

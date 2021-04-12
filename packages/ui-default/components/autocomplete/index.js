@@ -22,6 +22,7 @@ export default class AutoComplete extends DOMAttachedObject {
       clearDefaultValue: true,
       position: 'bottom left',
       classes: '',
+      multi: false,
       ...options,
     };
     this.clear(this.options.clearDefaultValue);
@@ -46,9 +47,7 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   clear(clearValue = true) {
-    if (clearValue) {
-      this.$dom.val('');
-    }
+    if (clearValue) this.$dom.val('');
     this._value = null;
     this.lastText = null;
   }
@@ -80,19 +79,14 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   onKeyUp(ev) {
-    if (ev.which === 27) {
-      // ESC
+    if (ev.which === 27 /* ESC */) {
       this.close();
       return;
     }
-    if (this.$dom.val() === this.lastText) {
-      return;
-    }
+    if (this.$dom.val() === this.lastText) return;
     this.lastText = this.$dom.val();
     this.updateOpenState();
-    if (this.isOpen) {
-      this.renderList();
-    }
+    if (this.isOpen) this.renderList();
   }
 
   onMenuClick(ev) {
@@ -109,7 +103,8 @@ export default class AutoComplete extends DOMAttachedObject {
     this._value = item;
     this.$dom.trigger('vjAutoCompleteSelect', item);
     if (text != null) {
-      this.$dom.val(text);
+      if (!this.options.multi) this.$dom.val(text);
+      else this.$dom.val(`${this.$dom.val() + text}, `);
     }
     this.close();
   }
@@ -141,7 +136,11 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   async renderList() {
-    const val = this.$dom.val();
+    let val = this.$dom.val();
+    if (this.options.multi) {
+      const elems = val.split(',').map((i) => i.trim());
+      val = elems[elems.length - 1];
+    }
     const items = await this.getItems(val);
     const html = this.getHtml(items);
     this.currentItems = items;
