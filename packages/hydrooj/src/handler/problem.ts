@@ -6,7 +6,7 @@ import {
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
 } from '../error';
 import {
-    Pdoc, User, Rdoc, PathComponent,
+    Pdoc, User, Rdoc, PathComponent, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid } from '../lib/validator';
@@ -157,8 +157,12 @@ export class ProblemRandomHandler extends ProblemHandler {
     }
 }
 
+export interface PdocWithPsdoc extends Pdoc {
+    psdoc?: ProblemStatusDoc
+}
+
 export class ProblemDetailHandler extends ProblemHandler {
-    pdoc: Pdoc;
+    pdoc: PdocWithPsdoc;
     udoc: User;
 
     @route('pid', Types.Name, true, null, parsePid)
@@ -195,6 +199,9 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
         } catch (e) {
             this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
+        }
+        if (this.pdoc.psdoc) {
+            this.response.body.rdoc = await record.get(this.domainId, this.pdoc.psdoc.rid);
         }
     }
 

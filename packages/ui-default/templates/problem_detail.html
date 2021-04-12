@@ -24,28 +24,18 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="problem-content-container"><div class="problem-content" data-marker-enabled>
-        <div class="section__header non-scratchpad--hide">
-          <h1 class="section__title">
-            {%- if rdoc -%}
-              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
-              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-                {{ rdoc.score }}
-              </span>
-            {%- endif %}
-            {{ pdoc.title }}
-          </h1>
-        </div>
-        <div class="section__header scratchpad--hide">
+        <div class="section__header">
           {% if rdoc %}
-            <h1 class="section__title">
+            <h1 class="section__title scratchpad--hide">
                 <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
                 <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-                  {{ rdoc.score }}
+                  {{ 'Accepted' if rdoc.status == model.builtin.STATUS.STATUS_ACCEPTED else rdoc.score }}
                 </span>
             </h1>
           {% endif %}
-          <span class="record-status--text">{{ _('Time Limit') }}: {{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax  }}ms</span>
-          <span class="record-status--text">{{ _('Memory Limit') }}: {{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+          <h1 class="section__title non-scratchpad--hide">
+            {{ pdoc.title }}
+          </h1>
         </div>
         <div class="section__body typo">
         {% if tdoc %}
