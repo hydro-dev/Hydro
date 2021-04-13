@@ -70,23 +70,24 @@ export interface Udoc extends Dictionary<any> {
     loginip: string,
 }
 
-export interface User extends Dictionary<any> {
-    udoc: () => Udoc,
-    dudoc: () => any,
+export interface User extends Record<string, any> {
     _id: number,
+    _udoc: Udoc,
+    _dudoc: any,
+    _salt: string,
+    _hash: string,
+    _regip: string,
+    _loginip: string,
+
     mail: string,
     uname: string,
-    salt: () => string,
-    hash: () => string,
     hashType: string,
     priv: number,
     regat: Date,
     loginat: Date,
-    perm: () => bigint,
-    scope: () => bigint,
+    perm: bigint,
+    scope: bigint,
     role: string,
-    regip: () => string,
-    loginip: () => string,
     hasPerm: (...perm: bigint[]) => boolean,
     hasPriv: (...priv: number[]) => boolean,
     checkPassword: (password: string) => void,
@@ -296,14 +297,14 @@ export interface TrainingDoc extends Tdoc {
     dag: TrainingNode[],
 }
 
-export interface DomainDoc extends Dictionary<any> {
+export interface DomainDoc extends Record<string, any> {
     _id: string,
     owner: number,
     roles: Dictionary<string>,
     gravatar: string,
     bulletin: string,
     pidCounter: number,
-    join?: any,
+    _join?: any,
     host?: string,
 }
 

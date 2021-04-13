@@ -18,40 +18,44 @@ const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');
 
 class User implements _User {
-    udoc: () => any;
-    dudoc: () => any;
     _id: number;
+
+    _udoc: Udoc;
+    _dudoc: any;
+    _salt: string;
+    _hash: string;
+    _regip: string;
+    _loginip: string;
+
     mail: string;
     uname: string;
-    salt: () => string;
-    hash: () => string;
     hashType: string;
     priv: number;
     regat: Date;
     loginat: Date;
-    perm: () => bigint;
+    perm: bigint;
     role: string;
-    regip: () => string;
-    loginip: () => string;
-    scope: () => bigint;
+    scope: bigint;
     [key: string]: any;
 
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
-        this.udoc = () => udoc;
-        this.dudoc = () => dudoc;
         this._id = udoc._id;
+
+        this._udoc = udoc;
+        this._dudoc = dudoc;
+        this._salt = udoc.salt;
+        this._hash = udoc.hash;
+        this._regip = udoc.regip;
+        this._loginip = udoc.loginip;
+
         this.mail = udoc.mail;
         this.uname = udoc.uname;
-        this.salt = () => udoc.salt;
-        this.hash = () => udoc.hash;
         this.hashType = udoc.hashType || 'hydro';
         this.priv = udoc.priv;
         this.regat = udoc.regat;
-        this.regip = () => udoc.regip;
         this.loginat = udoc.loginat;
-        this.loginip = () => udoc.loginip;
-        this.perm = () => dudoc.perm;
-        this.scope = () => (typeof scope === 'string' ? BigInt(scope) : scope);
+        this.perm = dudoc.perm;
+        this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
 
         for (const key in setting.SETTINGS_BY_KEY) {
@@ -67,7 +71,7 @@ class User implements _User {
 
     hasPerm(...perm: bigint[]) {
         for (const i in perm) {
-            if ((this.perm() & this.scope() & perm[i]) === perm[i]) return true;
+            if ((this.perm & this.scope & perm[i]) === perm[i]) return true;
         }
         return false;
     }
@@ -82,7 +86,7 @@ class User implements _User {
     checkPassword(password: string) {
         const h = global.Hydro.lib[`hash.${this.hashType}`];
         if (!h) throw new Error('Unknown hash method');
-        if (h(password, this.salt(), this) !== this.hash()) {
+        if (h(password, this._salt, this) !== this._hash) {
             throw new LoginError(this.uname);
         } else if (this.hashType !== 'hydro') {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define

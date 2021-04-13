@@ -281,6 +281,12 @@ export const UiContextBase = {
     url_prefix: '/',
 };
 
+function serializer(k: string, v: any) {
+    if (k.startsWith('_') && k !== '_id') return undefined;
+    if (typeof k === 'bigint') return `BigInt::${v.toString()}`;
+    return v;
+}
+
 export class HandlerCommon {
     domainId: string;
     domain: DomainDoc;
@@ -321,7 +327,7 @@ export class HandlerCommon {
             perm: this.user.perm.toString(),
             viewLang: this.translate('__id'),
         };
-        if (!global.Hydro.lib.template) return JSON.stringify(context);
+        if (!global.Hydro.lib.template) return JSON.stringify(context, serializer);
         const res = await global.Hydro.lib.template.render(name, {
             handler: this,
             UserContext,

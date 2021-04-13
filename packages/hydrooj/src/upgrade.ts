@@ -4,6 +4,7 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
+import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { Progress } from './ui';
 import { Rdoc } from './interface';
@@ -286,6 +287,15 @@ const scripts: UpgradeScript[] = [
                 }
             }
             if (config) await problem.edit(pdoc.domainId, pdoc.docId, { config });
+        });
+        return true;
+    },
+    async function _21_22() {
+        const coll = db.collection('domain');
+        await iterateAllDomain(async (ddoc) => {
+            if (ddoc.join) {
+                await coll.updateOne(pick(ddoc, '_id'), { $set: { _join: ddoc.join }, $unset: { join: '' } });
+            }
         });
         return true;
     },

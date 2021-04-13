@@ -248,7 +248,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
             else joinSettings.expire = moment().add(expire, 'hours').toDate();
             if (method === domain.JOIN_METHOD_CODE) joinSettings.code = invitationCode;
         }
-        await domain.edit(domainId, { join: joinSettings });
+        await domain.edit(domainId, { _join: joinSettings });
         this.back();
     }
 }
