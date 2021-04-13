@@ -96,6 +96,14 @@ class ContestDetailHandler extends ContestHandler {
         await contest.attend(domainId, tid, this.user._id);
         this.back();
     }
+
+    @param('tid', Types.ObjectID)
+    async postDelete(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        await contest.del(domainId, tid);
+        this.response.redirect = this.url('contest_main');
+    }
 }
 
 class ContestBoardcastHandler extends ContestHandler {

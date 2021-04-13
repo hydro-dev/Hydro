@@ -108,6 +108,14 @@ class HomeworkDetailHandler extends HomeworkHandler {
         await contest.attend(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK);
         this.back();
     }
+
+    @param('tid', Types.ObjectID)
+    async postDelete(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        await contest.del(domainId, tid, document.TYPE_HOMEWORK);
+        this.response.redirect = this.url('homework_main');
+    }
 }
 
 class HomeworkDetailProblemHandler extends HomeworkHandler {
