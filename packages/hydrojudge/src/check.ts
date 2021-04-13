@@ -1,9 +1,11 @@
 import fs from 'fs-extra';
-import { resolve } from 'path';
+import { findFileSync } from '@hydrooj/utils/lib/utils';
 import checkers from './checkers';
 import compile from './compile';
 import { SystemError } from './error';
 import { parseFilename } from './utils';
+
+const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 
 export async function check(config): Promise<[number, number, string]> {
     if (!checkers[config.checker_type]) throw new SystemError(`未知比较器类型：${config.checker_type}`);
@@ -24,7 +26,7 @@ export async function check(config): Promise<[number, number, string]> {
 
 export async function compileChecker(checkerType: string, checker: string, copyIn: any) {
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
-    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: resolve(__dirname, '../vendor/testlib/testlib.h') };
+    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
     return await compile(parseFilename(checker).split('.')[1], file.toString(), 'checker', copyIn);

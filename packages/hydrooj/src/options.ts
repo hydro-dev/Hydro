@@ -1,6 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { findFileSync } from '@hydrooj/utils/lib/utils';
 import { Logger } from './logger';
 
 const logger = new Logger('options');
@@ -13,13 +14,8 @@ export = function load() {
             process.env[line.split('=')[0]] = line.split('=')[1];
         }
     }
-
-    let f = path.resolve(process.cwd(), 'config.json');
-    if (!fs.existsSync(f)) f = path.resolve(__dirname, 'config.json');
-    if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.config', 'hydro', 'config.json');
-    if (!fs.existsSync(f)) f = path.resolve(os.homedir(), '.hydro', 'config.json');
-    if (!fs.existsSync(f)) f = path.resolve('/config/config.json');
-    if (!fs.existsSync(f)) return null;
+    const f = findFileSync('config.json', false);
+    if (!f) return null;
     let result: any = {};
     try {
         result = JSON.parse(fs.readFileSync(f).toString());

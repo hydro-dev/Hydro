@@ -6,6 +6,7 @@ const nunjucks = require('nunjucks');
 const { filter } = require('lodash');
 const { argv } = require('yargs');
 const Xss = require('xss');
+const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const markdown = require('./markdown');
 
 const { misc, buildContent } = global.Hydro.lib;
@@ -76,6 +77,9 @@ const xss = new Xss.FilterXSS({
   },
 });
 
+if (argv.template && argv.template !== 'string') argv.template = findFileSync('@hydrooj/ui-default/templates');
+else argv.template = findFileSync(argv.template);
+
 class Loader extends nunjucks.Loader {
   // eslint-disable-next-line class-methods-use-this
   getSource(name) {
@@ -88,8 +92,7 @@ class Loader extends nunjucks.Loader {
       };
     }
     let fullpath = null;
-    if (typeof argv.template !== 'string') argv.template = path.resolve(__dirname, '..', 'templates');
-    const p = path.resolve(process.cwd(), argv.template, name);
+    const p = path.resolve(argv.template, name);
     if (fs.existsSync(p)) fullpath = p;
     if (!fullpath) {
       if (global.Hydro.ui.template[name]) {

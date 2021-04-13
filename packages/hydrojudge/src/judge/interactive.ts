@@ -1,14 +1,14 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
-import { resolve } from 'path';
 import * as STATUS from '../status';
 import { parse } from '../testlib';
-import { parseFilename } from '../utils';
+import { findFileSync, parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
 import { getConfig } from '../config';
 
+const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {
     sum: (a, b) => (a + b),
     max: Math.max,
@@ -19,7 +19,7 @@ function judgeCase(c) {
     return async (ctx, ctxSubtask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        ctx.executeInteractor.copyIn['testlib.h'] = { src: resolve(__dirname, '../../vendor/testlib/testlib.h') };
+        ctx.executeInteractor.copyIn['testlib.h'] = { src: testlibSrc };
         const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await run([
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),

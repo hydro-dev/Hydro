@@ -43,6 +43,7 @@
         "@types/inquirer": "^7.3.1",
         "@types/js-yaml": "^4.0.0",
         "@types/koa": "^2.13.1",
+        "@types/koa-compress": "^4.0.1",
         "@types/koa-router": "^7.4.1",
         "@types/koa-static-cache": "^5.1.0",
         "@types/lodash": "^4.14.168",

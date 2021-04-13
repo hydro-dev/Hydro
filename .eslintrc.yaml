@@ -7,52 +7,55 @@ globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
   BigInt: readonly
-parser: '@typescript-eslint/parser'
+parser: "@typescript-eslint/parser"
 plugins:
-  - '@typescript-eslint'
+  - "@typescript-eslint"
 rules:
-  '@typescript-eslint/dot-notation': off
-  '@typescript-eslint/no-implied-eval': off
-  '@typescript-eslint/no-throw-literal': off
-  '@typescript-eslint/return-await': off
+  "@typescript-eslint/dot-notation": 0
+  "@typescript-eslint/no-implied-eval": 0
+  "@typescript-eslint/no-throw-literal": 0
+  "@typescript-eslint/return-await": 0
 
-  '@typescript-eslint/indent':
+  "@typescript-eslint/indent":
     - warn
     - 4
-  '@typescript-eslint/lines-between-class-members':
+  "@typescript-eslint/lines-between-class-members":
     - error
     - always
     - exceptAfterSingleLine: true
-  '@typescript-eslint/naming-convention': off
-  '@typescript-eslint/no-redeclare': off
+  "@typescript-eslint/naming-convention": 0
+  "@typescript-eslint/no-redeclare": 0
 
-  class-methods-use-this: off
-  global-require: off
-  guard-for-in: off
-  implicit-arrow-linebreak: off
-  import/no-cycle: off
-  import/no-extraneous-dependencies: off
-  import/no-named-as-default: off
-  import/prefer-default-export: off
-  max-classes-per-file: off
+  class-methods-use-this: 0
+  global-require: 0
+  guard-for-in: 0
+  implicit-arrow-linebreak: 0
+  import/no-cycle: 0
+  import/no-extraneous-dependencies: 0
+  import/no-named-as-default: 0
+  import/prefer-default-export: 0
+  max-classes-per-file: 0
   max-len:
     - warn
     - 150
-  no-bitwise: off
-  no-console: off
-  no-continue: off
-  no-extend-native: off
-  no-multi-assign: off
-  no-nested-ternary: off
-  no-param-reassign: off
-  no-plusplus: off
-  no-restricted-syntax: off
-  no-return-await: off
-  no-underscore-dangle: off
-  prefer-destructuring: off
+  no-bitwise: 0
+  no-console: 0
+  no-continue: 0
+  no-extend-native: 0
+  no-empty:
+    - warn
+    - allowEmptyCatch: true
+  no-multi-assign: 0
+  no-nested-ternary: 0
+  no-param-reassign: 0
+  no-plusplus: 0
+  no-restricted-syntax: 0
+  no-return-await: 0
+  no-underscore-dangle: 0
+  prefer-destructuring: 0
 settings:
   import/parsers:
-    '@typescript-eslint/parser':
+    "@typescript-eslint/parser":
       - .ts
       - .js
       - .jsx

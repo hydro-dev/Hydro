@@ -1,5 +1,6 @@
 import path, { sep } from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
+import os from 'os';
 import { Duplex } from 'stream';
 import { ObjectID } from 'bson';
 import { isMoment } from 'moment';
@@ -303,6 +304,54 @@ export function changeErrorType(err: Error, Err: any) {
     const e = new Err(err.message);
     e.stack = err.stack;
     return e;
+}
+
+export async function findFile(pathname: string, doThrow = true) {
+    if (await fs.pathExists(path.resolve(pathname))) return path.resolve(pathname);
+    if (await fs.pathExists(path.resolve(process.cwd(), pathname))) return path.resolve(process.cwd(), pathname);
+    if (await fs.pathExists(path.resolve(__dirname, pathname))) return path.resolve(__dirname, pathname);
+    try {
+        return require.resolve(pathname);
+    } catch (e) { }
+    if (pathname.includes('/')) {
+        const eles = pathname.split('/');
+        let pkg = eles.shift();
+        if (pkg.startsWith('@')) pkg = `${pkg}/${eles.shift()}`;
+        const rest = eles.join('/');
+        try {
+            const p = require.resolve(pkg);
+            if (await fs.pathExists(path.resolve(p, rest))) return path.resolve(p, rest);
+        } catch (e) { }
+    }
+    if (await fs.pathExists(path.resolve(os.homedir(), pathname))) return path.resolve(__dirname, pathname);
+    if (await fs.pathExists(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (await fs.pathExists(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (doThrow) throw new Error(`File ${pathname} not found`);
+    return null;
+}
+
+export function findFileSync(pathname: string, doThrow = true) {
+    if (fs.pathExistsSync(path.resolve(pathname))) return path.resolve(pathname);
+    if (fs.pathExistsSync(path.resolve(process.cwd(), pathname))) return path.resolve(process.cwd(), pathname);
+    if (fs.pathExistsSync(path.resolve(__dirname, pathname))) return path.resolve(__dirname, pathname);
+    try {
+        return require.resolve(pathname);
+    } catch (e) { }
+    if (pathname.includes('/')) {
+        const eles = pathname.split('/');
+        let pkg = eles.shift();
+        if (pkg.startsWith('@')) pkg = `${pkg}/${eles.shift()}`;
+        const rest = eles.join('/');
+        try {
+            const p = require.resolve(pkg);
+            if (fs.pathExistsSync(path.resolve(p, rest))) return path.resolve(p, rest);
+        } catch (e) { }
+    }
+    if (fs.pathExistsSync(path.resolve(os.homedir(), pathname))) return path.resolve(__dirname, pathname);
+    if (fs.pathExistsSync(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (fs.pathExistsSync(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (doThrow) throw new Error(`File ${pathname} not found`);
+    return null;
 }
 
 export async function retry(func: Function, ...args: any[]): Promise<any>;

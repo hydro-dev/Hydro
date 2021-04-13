@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
 /* eslint-disable import/no-extraneous-dependencies */
-import path from 'path';
 import globby from 'globby';
 import spawn from 'cross-spawn';
 
-export const cwd = path.resolve(__dirname, '..');
+export const cwd = process.cwd();
 
 export function getWorkspaces() {
     return globby(require('../package').workspaces, {

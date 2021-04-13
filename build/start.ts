@@ -19,7 +19,7 @@ if (!cluster.isMaster) {
     fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
     const addonPath = path.resolve(os.homedir(), '.hydro', 'addon.json');
     let addons = filter(
-        fs.readdirSync(path.resolve(__dirname, '../packages')),
+        fs.readdirSync(path.resolve(process.cwd(), 'packages')),
         (i) => i !== 'hydrooj',
     ).map((i) => `@hydrooj/${i}`);
     fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
