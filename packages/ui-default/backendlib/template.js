@@ -88,7 +88,7 @@ class Loader extends nunjucks.Loader {
       };
     }
     let fullpath = null;
-    if (typeof argv.template !== 'string') argv.template = path.resolve(__dirname, '..', 'template');
+    if (typeof argv.template !== 'string') argv.template = path.resolve(__dirname, '..', 'templates');
     const p = path.resolve(process.cwd(), argv.template, name);
     if (fs.existsSync(p)) fullpath = p;
     if (!fullpath) {

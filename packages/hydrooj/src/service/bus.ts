@@ -38,7 +38,7 @@ export interface EventMap extends Record<string, any> {
     'message/run': (command: string) => VoidReturn
 
     'database/connect': (db: Db) => void
-    'database/config': () => void
+    'database/config': () => VoidReturn
 
     'system/setting': (args: Record<string, any>) => VoidReturn
 

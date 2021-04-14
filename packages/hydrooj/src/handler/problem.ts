@@ -6,11 +6,12 @@ import {
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
 } from '../error';
 import {
-    Pdoc, User, Rdoc, PathComponent,
+    Pdoc, User, Rdoc, PathComponent, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
+import { parseConfig } from '../lib/testdataConfig';
 import * as system from '../model/system';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -156,8 +157,12 @@ export class ProblemRandomHandler extends ProblemHandler {
     }
 }
 
+export interface PdocWithPsdoc extends Pdoc {
+    psdoc?: ProblemStatusDoc
+}
+
 export class ProblemDetailHandler extends ProblemHandler {
-    pdoc: Pdoc;
+    pdoc: PdocWithPsdoc;
     udoc: User;
 
     @route('pid', Types.Name, true, null, parsePid)
@@ -189,6 +194,15 @@ export class ProblemDetailHandler extends ProblemHandler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
             .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        // Get time and memory limit
+        try {
+            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
+        } catch (e) {
+            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
+        }
+        if (this.pdoc.psdoc) {
+            this.response.body.rdoc = await record.get(this.domainId, this.pdoc.psdoc.rid);
+        }
     }
 
     @param('pid', Types.UnsignedInt)
@@ -574,6 +588,13 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
+export class ProblemPrefixListHandler extends Handler {
+    @param('prefix', Types.Name)
+    async get(domainId: string, prefix: string) {
+        this.response.body = await problem.getPrefixList(domainId, prefix);
+    }
+}
+
 export async function apply() {
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
@@ -589,6 +610,7 @@ export async function apply() {
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
+    Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
     Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 

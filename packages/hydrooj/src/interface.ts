@@ -189,7 +189,6 @@ declare module './model/problem' {
         data: FileInfo[],
         additional_file: FileInfo[],
         hidden: boolean,
-        acMsg?: string,
         html?: boolean,
         difficulty?: number,
         /** @deprecated */
@@ -546,7 +545,6 @@ export interface Lib extends Record<string, any> {
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),
     testdataConfig: typeof import('./lib/testdataConfig'),
-    'testdata.convert.ini': typeof import('./lib/testdata.convert.ini'),
     useragent: typeof import('./lib/useragent'),
     validator: typeof import('./lib/validator'),
     template?: any,

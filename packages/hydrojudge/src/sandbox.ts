@@ -25,8 +25,8 @@ const statusMap = {
 
 function proc({
     execute = '',
-    time_limit_ms = 16000,
-    memory_limit_mb = 1024,
+    time = 16000,
+    memory = 1024,
     process_limit = 32,
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
@@ -39,9 +39,9 @@ function proc({
             { name: 'stdout', max: 1024 * 1024 * size },
             { name: 'stderr', max: 1024 * 1024 * size },
         ],
-        cpuLimit: time_limit_ms * 1000 * 1000,
-        realCpuLimit: time_limit_ms * 3000 * 1000,
-        memoryLimit: memory_limit_mb * 1024 * 1024,
+        cpuLimit: time * 1000 * 1000,
+        realCpuLimit: time * 3000 * 1000,
+        memoryLimit: memory * 1024 * 1024,
         procLimit: process_limit,
         copyIn,
         copyOut,
@@ -58,7 +58,7 @@ async function adaptResult(result, params) {
         files: result.files,
         code: result.exitStatus,
     };
-    if (ret.time_usage_ms >= (params.time_limit_ms || 16000)) {
+    if (ret.time_usage_ms >= (params.time || 16000)) {
         ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
     }
     ret.files = result.files || {};

@@ -24,8 +24,18 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="problem-content-container"><div class="problem-content" data-marker-enabled>
-        <div class="section__header non-scratchpad--hide">
-          <h1>{{ pdoc.title }}</h1>
+        <div class="section__header">
+          {% if rdoc %}
+            <h1 class="section__title scratchpad--hide">
+                <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+                <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+                  {{ 'Accepted' if rdoc.status == model.builtin.STATUS.STATUS_ACCEPTED else rdoc.score }}
+                </span>
+            </h1>
+          {% endif %}
+          <h1 class="section__title non-scratchpad--hide">
+            {{ pdoc.title }}
+          </h1>
         </div>
         <div class="section__body typo">
         {% if tdoc %}

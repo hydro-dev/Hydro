@@ -47,6 +47,7 @@
 {% set disabled = args.disabled or false %}
 {% set required = args.required or false %}
 {% set autofocus = args.autofocus or false %}
+{% set noAutocomplete = args.noAutocomplete or false %}
 {% set extra_style = args.extra_style or false %}
 {% set date = args.date or false %}
 {% set time = args.time or false %}
@@ -54,6 +55,7 @@
   {% if disabled %}disabled{% endif %}
   {% if required %}required{% endif %}
   {% if autofocus %}autofocus data-autofocus{% endif %}
+  {% if noAutocomplete %}autocomplete="off"{% endif %}
   {% if date %}data-pick-date{% endif %}
   {% if time %}data-pick-time{% endif %}
   {% if extra_style %}style="{{extra_style}}"{% endif %}

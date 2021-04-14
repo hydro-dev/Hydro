@@ -62,7 +62,9 @@
                columns:null,
                label:'Problems',
                name:'pids',
-               value:pids
+               value:pids,
+               noAutocomplete:true,
+               placeholder:_("Seperated with ','")
              }) }}
           {{ form.form_textarea({
                columns:null,
@@ -77,6 +79,11 @@
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}
             </button>
+            {% if tdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
+              <button name="operation" value="delete" type="submit" class="rounded button">
+                {{ _('Delete') }}
+              </button>
+            {% endif %}
           {% else %}
             <button type="submit" class="rounded primary button">
               {{ _('Create') }}

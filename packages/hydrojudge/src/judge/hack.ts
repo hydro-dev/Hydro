@@ -77,8 +77,8 @@ export const judge = async (ctx) => {
             stderr,
             copyIn: execute.copyIn,
             copyOut,
-            time_limit_ms: 1000,
-            memory_limit_mb: 512,
+            time: 1000,
+            memory: 512,
         },
     );
     const { code, time_usage_ms, memory_usage_kb } = res;

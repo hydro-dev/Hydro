@@ -57,15 +57,8 @@ export async function load(call: Entry) {
         await modelSystem.set('file.secretKey', process.env.MINIO_SECRET_KEY);
         await modelSystem.set('file.endPoint', 'http://localhost:9000/');
     }
-    const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = modelSystem.getMany([
-        'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-        'file.endPointForUser', 'file.endPointForJudge',
-    ]);
-    const sopts = {
-        endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
-    };
     const storage = require('../service/storage');
-    storage.start(sopts);
+    await storage.start();
     require('../service/monitor');
     for (const i of builtinModel) require(`../model/${i}`);
     const scripts = require('../upgrade').default;
@@ -75,15 +68,9 @@ export async function load(call: Entry) {
     while (dbVer < expected) {
         logger.info('Upgrading database: from %d to %d', dbVer, expected);
         const func = scripts[dbVer];
-        if (typeof func !== 'function') {
+        if (typeof func !== 'function' || (isFresh && func.toString().includes('_FRESH_INSTALL_IGNORE'))) {
             dbVer++;
             continue;
-        }
-        if (isFresh) {
-            if (func.toString().includes('_FRESH_INSTALL_IGNORE')) {
-                dbVer++;
-                continue;
-            }
         }
         const result = await func();
         if (!result) break;

@@ -74,7 +74,6 @@ const tasks = {
                 return res;
             },
         },
-        ac_msg: 'acMsg',
         parent_doc_id: {
             field: 'parentId',
             processer: (parentId, doc) => {

@@ -114,6 +114,10 @@
     <dl class="large horizontal">
       <dt>{{ _('ID') }}</dt>
       <dd>{{ pdoc.docId }}</dd>
+      <dt>{{ _('Time') }}</dt>
+      <dd>{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax  }}ms</dd>
+      <dt>{{ _('Memory') }}</dt>
+      <dd>{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</dd>
     {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
     {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <dt>{{ _('Submission') }}</dt>
@@ -125,10 +129,6 @@
         </a>
       {% else %}
         {{ _('(None)') }}
-      {% endif %}
-      {% if pdoc['acMsg'] and pdoc['psdoc']['status'] == STATUS.STATUS_ACCEPTED %}
-        <dt>{{ _('AC Message') }}</dt>
-        <dd>{{ pdoc['acMsg'] }}</dd>
       {% endif %}
       </dd>
     {% endif %}

@@ -24,21 +24,21 @@ function judgeCase(c) {
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
                 copyIn: ctx.executeUser.copyIn,
-                time_limit_ms: ctxSubtask.subtask.time_limit_ms,
-                memory_limit_mb: ctxSubtask.subtask.memory_limit_mb,
+                time: ctxSubtask.subtask.time,
+                memory: ctxSubtask.subtask.memory,
             }, {
                 execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout`,
                 copyIn: ctx.executeInteractor.copyIn,
-                time_limit_ms: ctxSubtask.subtask.time_limit_ms * 2,
-                memory_limit_mb: ctxSubtask.subtask.memory_limit_mb * 2,
+                time: ctxSubtask.subtask.time * 2,
+                memory: ctxSubtask.subtask.memory * 2,
             },
         ]);
         let status;
         let score = 0;
         let message: any = '';
-        if (time_usage_ms > ctxSubtask.subtask.time_limit_ms) {
+        if (time_usage_ms > ctxSubtask.subtask.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > ctxSubtask.subtask.memory_limit_mb * 1024) {
+        } else if (memory_usage_kb > ctxSubtask.subtask.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else if (code) {
             status = STATUS.STATUS_RUNTIME_ERROR;
