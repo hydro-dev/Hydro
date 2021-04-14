@@ -89,6 +89,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
         system: modelSetting.SystemSetting,
         account: modelSetting.AccountSetting,
         preference: modelSetting.PreferenceSetting,
+        domain: modelSetting.DomainSetting,
     };
     for (const i of pending) {
         let p = path.resolve(i, 'setting.yaml');
@@ -105,9 +106,10 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                             .replace(/\$TEMP/g, os.tmpdir())
                             .replace(/\$HOME/g, os.homedir());
                     }
-                    map[cfg[key].category || 'system'](
+                    const category = cfg[key].category || 'system';
+                    map[category](
                         modelSetting.Setting(
-                            name, `${name}.${key}`, val, cfg[key].type || 'text',
+                            name, category === 'system' ? `${name}.${key}` : key, val, cfg[key].type || 'text',
                             cfg[key].name || key, cfg[key].desc || '',
                         ),
                     );

@@ -81,3 +81,7 @@ lang_monaco_modes:
     go: go
     rb: ruby
     jl: julia
+showInvisibleChar:
+  type: boolean
+  desc: show invisible characters when formatting code
+  category: preference

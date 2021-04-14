@@ -51,6 +51,49 @@ try {
   // snowpack
 }
 
+const invisibles = {
+  tab: /\t/,
+  crlf: /\r\n/,
+  lf: /\n/,
+  cr: /\r/,
+  space: / /,
+};
+
+function addInvisibles(grammar) {
+  if (!grammar || grammar.tab) return;
+  for (const name in invisibles) {
+    if (Object.prototype.hasOwnProperty.call(invisibles, name)) {
+      grammar[name] = invisibles[name];
+    }
+  }
+  for (const name in grammar) {
+    if (Object.prototype.hasOwnProperty.call(grammar, name) && !invisibles[name]) {
+      if (name === 'rest') addInvisibles(grammar.rest);
+      else handlerInvisiblesToken(grammar, name); // eslint-disable-line no-use-before-define
+    }
+  }
+}
+
+function handlerInvisiblesToken(tokens, name) {
+  const value = tokens[name];
+  const type = Prism.util.type(value);
+  if (type === 'RegExp') {
+    const inside = {};
+    tokens[name] = { pattern: value, inside };
+    addInvisibles(inside);
+  } else if (type === 'Array') {
+    for (let i = 0, l = value.length; i < l; i++) handlerInvisiblesToken(value, i);
+  } else {
+    const inside = value.inside || (value.inside = {});
+    addInvisibles(inside);
+  }
+}
+
+Prism.hooks.add('before-highlight', (env) => {
+  console.log(UserContext.showInvisibleChar);
+  if (UserContext.showInvisibleChar) addInvisibles(env.grammar);
+});
+
 const prismjsApiWrap = {
   highlightBlocks: ($dom) => {
     $dom.find('pre code').get().forEach((code) => {

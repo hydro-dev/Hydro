@@ -11,7 +11,7 @@
         "node": ">=14"
     },
     "dependencies": {
-        "@hydrooj/utils": "^1.0.1",
+        "@hydrooj/utils": "^1.0.3",
         "adm-zip": "^0.5.5",
         "ansi_up": "^5.0.1",
         "cookies": "^0.8.0",
