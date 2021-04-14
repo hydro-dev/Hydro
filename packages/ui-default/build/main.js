@@ -17,6 +17,7 @@ function runWebpack({
     const server = new WebpackDevServer(compiler, {
       compress: true,
       hot: true,
+      disableHostCheck: true,
       stats: 'errors-warnings',
       index: '',
       proxy: {

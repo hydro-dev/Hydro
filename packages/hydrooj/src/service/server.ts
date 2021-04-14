@@ -283,7 +283,7 @@ export const UiContextBase = {
 
 function serializer(k: string, v: any) {
     if (k.startsWith('_') && k !== '_id') return undefined;
-    if (typeof k === 'bigint') return `BigInt::${v.toString()}`;
+    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
     return v;
 }
 

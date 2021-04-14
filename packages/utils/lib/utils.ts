@@ -319,13 +319,14 @@ export async function findFile(pathname: string, doThrow = true) {
         if (pkg.startsWith('@')) pkg = `${pkg}/${eles.shift()}`;
         const rest = eles.join('/');
         try {
-            const p = require.resolve(pkg);
+            const p = path.dirname(require.resolve(path.join(pkg, 'package.json')));
             if (await fs.pathExists(path.resolve(p, rest))) return path.resolve(p, rest);
         } catch (e) { }
     }
-    if (await fs.pathExists(path.resolve(os.homedir(), pathname))) return path.resolve(__dirname, pathname);
-    if (await fs.pathExists(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(__dirname, pathname);
-    if (await fs.pathExists(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (await fs.pathExists(path.resolve(os.homedir(), pathname))) return path.resolve(os.homedir(), pathname);
+    if (await fs.pathExists(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(os.homedir(), '.hydro', pathname);
+    // eslint-disable-next-line max-len
+    if (await fs.pathExists(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(os.homedir(), '.config', 'hydro', pathname);
     if (doThrow) throw new Error(`File ${pathname} not found`);
     return null;
 }
@@ -343,13 +344,13 @@ export function findFileSync(pathname: string, doThrow = true) {
         if (pkg.startsWith('@')) pkg = `${pkg}/${eles.shift()}`;
         const rest = eles.join('/');
         try {
-            const p = require.resolve(pkg);
-            if (fs.pathExistsSync(path.resolve(p, rest))) return path.resolve(p, rest);
+            const p = path.dirname(require.resolve(path.join(pkg, 'package.json')));
+            if (fs.statSync(path.resolve(p, rest))) return path.resolve(p, rest);
         } catch (e) { }
     }
-    if (fs.pathExistsSync(path.resolve(os.homedir(), pathname))) return path.resolve(__dirname, pathname);
-    if (fs.pathExistsSync(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(__dirname, pathname);
-    if (fs.pathExistsSync(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(__dirname, pathname);
+    if (fs.pathExistsSync(path.resolve(os.homedir(), pathname))) return path.resolve(os.homedir(), pathname);
+    if (fs.pathExistsSync(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(os.homedir(), '.hydro', pathname);
+    if (fs.pathExistsSync(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(os.homedir(), '.config', 'hydro', pathname);
     if (doThrow) throw new Error(`File ${pathname} not found`);
     return null;
 }

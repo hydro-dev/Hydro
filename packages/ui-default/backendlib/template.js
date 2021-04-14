@@ -112,10 +112,16 @@ class Loader extends nunjucks.Loader {
   }
 }
 
+const replacer = (k, v) => {
+  if (k.startsWith('_') && k !== '_id') return undefined;
+  if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+  return v;
+};
+
 class Nunjucks extends nunjucks.Environment {
   constructor() {
     super(new Loader(), { autoescape: true, trimBlocks: true });
-    this.addFilter('json', (self) => JSON.stringify(self));
+    this.addFilter('json', (self) => JSON.stringify(self, replacer));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
     this.addFilter('xss', (self) => xss.process(self));
@@ -127,7 +133,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
     this.addFilter('bitand', (self, val) => self & val);
-    this.addFilter('toString', (self) => (typeof self === 'string' ? self : JSON.stringify(self)));
+    this.addFilter('toString', (self) => (typeof self === 'string' ? self : JSON.stringify(self, replacer)));
     this.addFilter('content', (content, language, html) => {
       let s = '';
       try {
