@@ -231,14 +231,19 @@ class ProblemImportSYZOJHandler extends Handler {
         prefix: string, start: number, end: number,
     ) {
         if (prefix) {
+            let version = 2;
             if (!prefix.endsWith('/')) prefix += '/';
+            if (prefix.endsWith('/p/')) version = 3;
+            else if (!prefix.endsWith('/problem/')) prefix += 'problem/';
             const base = `${prefix}${start}/`;
             assert(base.match(RE_SYZOJ), new ValidationError('prefix'));
             const [, protocol, host] = RE_SYZOJ.exec(base);
             (async () => {
                 for (let i = start; i <= end; i++) {
                     // eslint-disable-next-line no-await-in-loop
-                    await this.v3(domainId, undefined, hidden, protocol, host, i, true);
+                    if (version === 3) await this.v3(domainId, undefined, hidden, protocol, host, i, true);
+                    // eslint-disable-next-line no-await-in-loop
+                    else await this.v2(domainId, undefined, hidden, prefix + i);
                     logger.info('%s %d-%d-%d', prefix, start, i, end);
                 }
             })().catch(logger.error);
