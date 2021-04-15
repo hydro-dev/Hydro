@@ -149,7 +149,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
 
     @param('type', Types.Name)
     @param('name', Types.Name)
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)

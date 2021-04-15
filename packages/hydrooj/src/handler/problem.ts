@@ -342,7 +342,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     }
 
     @route('pid', Types.Name, null, parsePid)
-    @post('content', Types.Title)
+    @post('title', Types.Title)
     @post('content', Types.Content)
     @post('pid', Types.Name, isPid, true)
     @post('hidden', Types.Boolean)
