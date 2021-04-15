@@ -48,11 +48,11 @@ lang_highlight_id:
   name: lang_highlight_id
   desc: Language Highlight ID
   default:
-    c: c
-    cc: cpp
-    cs: csharp
+    c: c astyle-c
+    cc: cpp astyle-c
+    cs: csharp astyle-cs
     pas: pascal
-    java: java
+    java: java astyle-java
     py: python
     py3: python
     php: php
@@ -85,3 +85,12 @@ showInvisibleChar:
   type: boolean
   desc: show invisible characters when formatting code
   category: preference
+astyleOptions:
+  type: text
+  desc: astyle formatting options
+  category: preference
+  value: >
+    style=java attach-namespaces attach-classes attach-inlines attach-extern-c attach-closing-while 
+    indent-col1-comments break-blocks pad-oper pad-comma pad-header unpad-paren align-pointer=name 
+    break-one-line-headers attach-return-type attach-return-type-decl convert-tabs close-templates 
+    max-code-length=110 break-after-logical

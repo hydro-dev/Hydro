@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const child = require('child_process');
 const { argv } = require('yargs');
+const { sync } = require('cross-spawn');
 
 const compilerOptionsBase = {
     target: 'es2019',
@@ -52,7 +52,7 @@ for (const package of packages) {
     if (package === 'ui-default') continue;
     const basedir = path.resolve(process.cwd(), 'packages', package);
     const files = fs.readdirSync(basedir);
-    if (!files.includes('src') && !files.map(n => n.split('.')[1]).includes('ts') && package !== 'utils') continue;
+    if (!files.includes('src') && !files.map((n) => n.split('.')[1]).includes('ts') && package !== 'utils') continue;
     if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
     fs.writeFileSync(
         path.resolve(basedir, 'tsconfig.json'),
@@ -64,17 +64,17 @@ for (const package of packages) {
             if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
             const name = file.split('.')[0];
             if (['handler', 'service', 'lib', 'model', 'script'].includes(name)) {
-                fs.writeFileSync(path.resolve(basedir, name + '.js'), `module.exports = require('./dist/${name}');\n`);
+                fs.writeFileSync(path.resolve(basedir, `${name}.js`), `module.exports = require('./dist/${name}');\n`);
             }
         }
     }
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
 
-child.execSync('./node_modules/.bin/tsc -b packages/hydrooj', { stdio: 'inherit' });
+sync('./node_modules/.bin/tsc -b packages/hydrooj', { stdio: 'inherit' });
 
 if (argv.watch) {
-    child.execSync('./node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
+    sync('./node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
 } else {
-    child.execSync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
+    sync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
 }

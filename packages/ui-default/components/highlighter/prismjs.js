@@ -11,7 +11,7 @@ To add a new language to highlight:
 import Prism from 'prismjs';
 
 import Clipboard from 'clipboard';
-import Notification from 'vj/components/notification';
+import Notification from 'vj/components/notification/index';
 import i18n from 'vj/utils/i18n';
 
 import languageMeta from './meta';
@@ -95,16 +95,24 @@ Prism.hooks.add('before-highlight', (env) => {
 });
 
 const prismjsApiWrap = {
-  highlightBlocks: ($dom) => {
+  highlightBlocks: ($dom, format) => {
     $dom.find('pre code').get().forEach((code) => {
-      const $pre = $(code).parent();
+      const $code = $(code);
+      const $pre = $code.parent();
       $pre.addClass('syntax-hl');
       if ($pre.closest('[data-syntax-hl-show-line-number]')) {
         $pre.addClass('line-numbers');
       }
+      const language = ($(code).attr('class') || '').trim();
+      const astyle = language.match(/astyle-([a-z]+)/);
+      if (format && astyle && astyle[1]) {
+        const [success, result] = format($code.text(), `${UserContext.astyleOptions.trim()} mode=${astyle[1]}`);
+        console.log(success.result);
+        if (!success) Notification.error('Code format fail');
+        else $code.text(result.replace(/^#(include|import)[\t ]*(<|")/gm, (match, p1, p2) => `#${p1} ${p2}`));
+      }
       // try to map the language name
-      const language = $(code).attr('class');
-      const m = (language || '').trim().match(/^language-(.+)$/);
+      const m = language.match(/language-([a-z]+)/);
       if (m && m[1]) {
         const languageName = m[1].toLowerCase();
         if (languageExtMap[languageName]) {

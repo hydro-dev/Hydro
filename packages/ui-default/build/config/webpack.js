@@ -103,6 +103,11 @@ export default function (env = {}) {
           test: /\.css$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader()],
         },
+        {
+          test: /\.wasm$/,
+          use: [fileLoader()],
+          type: 'javascript/auto',
+        },
       ],
     },
     optimization: {
