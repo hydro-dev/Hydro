@@ -178,7 +178,7 @@ class TrainingCreateHandler extends Handler {
         this.response.body = { page_name: 'training_create', path };
     }
 
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.String, isContent)
     @param('description', Types.String, isDescription)

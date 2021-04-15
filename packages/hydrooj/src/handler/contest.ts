@@ -209,7 +209,7 @@ class ContestEditHandler extends ContestHandler {
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('duration', Types.Float)
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
     @param('rule', Types.Range(contest.RULES))
     @param('pids', Types.Content)
