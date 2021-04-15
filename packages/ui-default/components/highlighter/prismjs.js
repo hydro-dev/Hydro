@@ -108,6 +108,7 @@ const prismjsApiWrap = {
       if (format && astyle && astyle[1]) {
         const [success, result] = format($code.text(), `${UserContext.astyleOptions.trim()} mode=${astyle[1]}`);
         console.log(success.result);
+        code.original = $code.text();
         if (!success) Notification.error('Code format fail');
         else $code.text(result.replace(/^#(include|import)[\t ]*(<|")/gm, (match, p1, p2) => `#${p1} ${p2}`));
       }

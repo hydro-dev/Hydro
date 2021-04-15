@@ -83,10 +83,12 @@ lang_monaco_modes:
     jl: julia
 showInvisibleChar:
   type: boolean
+  family: highlight
   desc: show invisible characters when formatting code
   category: preference
 astyleOptions:
   type: text
+  family: highlight
   desc: astyle formatting options
   category: preference
   value: >

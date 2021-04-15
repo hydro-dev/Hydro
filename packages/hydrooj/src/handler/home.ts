@@ -1,9 +1,11 @@
 import { ObjectID } from 'mongodb';
+import yaml from 'js-yaml';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError, UserNotFoundError, PermissionError, DomainAlreadyExistsError,
+    NotFoundError, UserNotFoundError, PermissionError,
+    DomainAlreadyExistsError, ValidationError,
 } from '../error';
-import { Mdoc } from '../interface';
+import { Mdoc, Setting } from '../interface';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
@@ -188,6 +190,30 @@ class HomeSecurityHandler extends Handler {
     }
 }
 
+function set(s: Setting, key: string, value: any) {
+    if (s) {
+        if (s.flag & setting.FLAG_DISABLED) return undefined;
+        if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
+        if (s.type === 'boolean') {
+            if (value === 'on') return true;
+            return false;
+        }
+        if (s.type === 'number') {
+            if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
+            return +value;
+        }
+        if (s.subType === 'yaml') {
+            try {
+                yaml.load(value);
+            } catch (e) {
+                throw new ValidationError(key);
+            }
+        }
+        return value;
+    }
+    return undefined;
+}
+
 class HomeSettingsHandler extends Handler {
     @param('category', Types.Name)
     async get(domainId: string, category: string) {
@@ -213,23 +239,18 @@ class HomeSettingsHandler extends Handler {
 
     async post(args: any) {
         const $set = {};
-        if (args.category === 'domain') {
-            for (const key in args) {
-                if (setting.DOMAIN_USER_SETTINGS_BY_KEY[key]
-                    && !(setting.DOMAIN_USER_SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
-                    $set[key] = args[key];
-                }
-            }
-            await domain.setUserInDomain(args.domainId, this.user._id, $set);
-        } else {
-            for (const key in args) {
-                if (setting.SETTINGS_BY_KEY[key]
-                    && !(setting.SETTINGS_BY_KEY[key].flag & setting.FLAG_DISABLED)) {
-                    $set[key] = args[key];
-                }
-            }
-            await user.setById(this.user._id, $set);
+        const booleanKeys = args.booleanKeys || {};
+        delete args.booleanKeys;
+        const setter = args.category === 'domain'
+            ? (s) => domain.setUserInDomain(args.domainId, this.user._id, s)
+            : (s) => user.setById(this.user._id, s);
+        const settings = args.category === 'domain' ? setting.DOMAIN_USER_SETTINGS_BY_KEY : setting.SETTINGS_BY_KEY;
+        for (const key in args) {
+            const val = set(settings[key], key, args[key]);
+            if (val) $set[key] = val;
         }
+        for (const key in booleanKeys) if (!args[key]) $set[key] = false;
+        await setter($set);
         this.back();
     }
 }

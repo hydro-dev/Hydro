@@ -109,7 +109,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                     const category = cfg[key].category || 'system';
                     map[category](
                         modelSetting.Setting(
-                            name, category === 'system' ? `${name}.${key}` : key, val, cfg[key].type || 'text',
+                            cfg[key].family || name, category === 'system' ? `${name}.${key}` : key, val, cfg[key].type || 'text',
                             cfg[key].name || key, cfg[key].desc || '',
                         ),
                     );
