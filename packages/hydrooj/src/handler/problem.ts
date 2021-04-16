@@ -575,7 +575,7 @@ export class ProblemCreateHandler extends Handler {
         };
     }
 
-    @post('content', Types.Title)
+    @post('title', Types.Title)
     @post('content', Types.Content)
     @post('pid', Types.Name, true, isPid)
     @post('hidden', Types.Boolean)

@@ -224,9 +224,9 @@ class TrainingEditHandler extends Handler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
-    @param('dag', Types.String, isContent)
+    @param('dag', Types.Content)
     @param('description', Types.String, isDescription)
     async post(
         domainId: string, tid: ObjectID,
