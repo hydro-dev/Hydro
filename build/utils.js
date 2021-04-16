@@ -14,7 +14,7 @@ function getWorkspaces() {
     });
 }
 
-function spawnSync(command: string, silent?: boolean) {
+function spawnSync(command, silent) {
     if (!silent) console.log(`$ ${command}`);
     const args = command.split(/\s+/);
     const result = spawn.sync(args[0], [...args.slice(1), '--color'], { cwd, encoding: 'utf8' });
@@ -26,7 +26,7 @@ function spawnSync(command: string, silent?: boolean) {
     }
 }
 
-function spawnAsync(command: string) {
+function spawnAsync(command) {
     const args = command.split(/\s+/);
     const child = spawn(args[0], args.slice(1), { stdio: 'inherit' });
     return new Promise((resolve, reject) => {
