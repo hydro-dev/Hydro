@@ -302,7 +302,7 @@ class HomeworkEditHandler extends HomeworkHandler {
     @param('penaltySinceTime', Types.Time)
     @param('extensionDays', Types.Float)
     @param('penaltyRules', Types.Content, validatePenaltyRules, convertPenaltyRules)
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)

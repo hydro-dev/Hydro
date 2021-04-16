@@ -326,7 +326,7 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 
     @param('did', Types.ObjectID)
-    @param('content', Types.Title)
+    @param('title', Types.Title)
     @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
