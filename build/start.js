@@ -1,13 +1,12 @@
 /* eslint-disable no-console */
 /* eslint-disable import/no-extraneous-dependencies */
-import os from 'os';
-import path from 'path';
-import cluster from 'cluster';
-import fs from 'fs-extra';
-import { filter } from 'lodash';
-import { argv } from 'yargs';
-// @ts-ignore
-import * as hydro from 'hydrooj';
+const os = require('os');
+const path = require('path');
+const cluster = require('cluster');
+const fs = require('fs-extra');
+const { filter } = require('lodash');
+const { argv } = require('yargs');
+const hydro = require('hydrooj');
 
 if (!cluster.isMaster) {
     // Forked by hydro
@@ -25,7 +24,7 @@ if (!cluster.isMaster) {
     fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
 
     try {
-        const ui = argv.ui as string || '@hydrooj/ui-default';
+        const ui = argv.ui || '@hydrooj/ui-default';
         require.resolve(ui);
         addons = [ui, ...addons];
     } catch (e) {

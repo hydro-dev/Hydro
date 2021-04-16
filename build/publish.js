@@ -3,12 +3,11 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
-import { gt } from 'semver';
-import latest from 'latest-version';
-import ora from 'ora';
-import {
-    PackageJson, getWorkspaces, spawnAsync,
-} from './utils';
+
+const { gt } = require('semver');
+const latest = require('latest-version');
+const ora = require('ora');
+const { getWorkspaces, spawnAsync } = require('./utils');
 
 const {
     CI, GITHUB_EVENT_NAME, GITHUB_REF,
@@ -28,12 +27,12 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
     }
 
     const spinner = ora();
-    const bumpMap: Record<string, string> = {};
+    const bumpMap = {};
 
     let progress = 0;
     spinner.start(`Loading workspaces (0/${folders.length})`);
     await Promise.all(folders.map(async (name) => {
-        let meta: PackageJson;
+        let meta;
         try {
             meta = require(`../${name}/package.json`);
             if (!meta.private) {

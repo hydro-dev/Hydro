@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import spawn from 'cross-spawn';
+const spawn = require('cross-spawn');
 
 const args = ['jest', '--coverage'];
-
 const [, , argv2, argv3] = process.argv;
 
 if (argv2 && !argv2.startsWith('-')) {

@@ -24,7 +24,7 @@ tsconfig.json
 # Project Rules
 ## Core
 packages/**/*.js
-!/build/build.js
+!/build/*.js
 !**/bin/*.js
 !*.page.js
 !/install/jssh.d.ts

@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
 /* eslint-disable import/no-extraneous-dependencies */
-import globby from 'globby';
-import spawn from 'cross-spawn';
+const globby = require('globby');
+const spawn = require('cross-spawn');
 
-export const cwd = process.cwd();
+const cwd = process.cwd();
 
-export function getWorkspaces() {
+function getWorkspaces() {
     return globby(require('../package').workspaces, {
         cwd,
         deep: 0,
@@ -14,15 +14,7 @@ export function getWorkspaces() {
     });
 }
 
-export type DependencyType = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
-
-export interface PackageJson extends Partial<Record<DependencyType, Record<string, string>>> {
-    name?: string
-    private?: boolean
-    version?: string
-}
-
-export function spawnSync(command: string, silent?: boolean) {
+function spawnSync(command: string, silent?: boolean) {
     if (!silent) console.log(`$ ${command}`);
     const args = command.split(/\s+/);
     const result = spawn.sync(args[0], [...args.slice(1), '--color'], { cwd, encoding: 'utf8' });
@@ -34,7 +26,7 @@ export function spawnSync(command: string, silent?: boolean) {
     }
 }
 
-export function spawnAsync(command: string) {
+function spawnAsync(command: string) {
     const args = command.split(/\s+/);
     const child = spawn(args[0], args.slice(1), { stdio: 'inherit' });
     return new Promise((resolve, reject) => {
@@ -42,3 +34,7 @@ export function spawnAsync(command: string) {
         child.on('error', reject);
     });
 }
+
+module.exports = {
+    cwd, spawnSync, spawnAsync, getWorkspaces,
+};

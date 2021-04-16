@@ -18,7 +18,6 @@ const compilerOptionsBase = {
 const config = {
     compilerOptions: compilerOptionsBase,
     references: [
-        { path: 'tsconfig.build.json' },
         { path: 'packages/hydrooj' },
     ],
     files: [],
