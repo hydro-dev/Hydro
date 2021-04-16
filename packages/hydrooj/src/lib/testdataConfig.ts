@@ -10,7 +10,7 @@ interface ParseResult {
     timeMin: number,
 }
 
-export async function parseConfig(config: string | ProblemConfig) {
+export async function parseConfig(config: string | ProblemConfig = {}) {
     const result: ParseResult = {
         count: 0,
         memoryMin: Number.MAX_SAFE_INTEGER,
@@ -19,10 +19,10 @@ export async function parseConfig(config: string | ProblemConfig) {
         timeMax: 0,
     };
     let cfg: ProblemConfig = {};
-    if (typeof config === 'string') {
+    if (typeof config === 'string' && config.length) {
         // TODO should validate here?
         cfg = await readYamlCases(load(config) as Record<string, any>) as ProblemConfig;
-    } else cfg = config;
+    } else if (typeof config === 'object') cfg = config;
     if (cfg.subtasks.length) {
         for (const subtask of cfg.subtasks) {
             result.memoryMax = Math.max(result.memoryMax, subtask.memory);
