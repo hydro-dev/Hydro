@@ -249,14 +249,12 @@ class UserModel {
 
     @ArgMethod
     static async setSuperAdmin(uid: number) {
-        await UserModel.setPriv(uid, PRIV.PRIV_ALL);
-        return uid;
+        return await UserModel.setPriv(uid, PRIV.PRIV_ALL);
     }
 
     @ArgMethod
     static async setJudge(uid: number) {
-        await UserModel.setPriv(uid, PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE);
-        return uid;
+        return await UserModel.setPriv(uid, PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE);
     }
 
     @ArgMethod

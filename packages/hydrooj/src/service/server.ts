@@ -16,7 +16,6 @@ import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import type { SetOption } from 'cookies';
-import serialize, { SerializeJSOptions } from 'serialize-javascript';
 import { argv } from 'yargs';
 import { createHash } from 'crypto';
 import * as bus from './bus';
@@ -27,7 +26,7 @@ import {
     UserNotFoundError, BlacklistedError, PermissionError,
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
-    NotFoundError, HydroError,
+    NotFoundError, HydroError, SystemError,
 } from '../error';
 import * as misc from '../lib/misc';
 import { isContent, isName, isTitle } from '../lib/validator';
@@ -483,7 +482,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (!argv.benchmark) await this.limitRate('global', 10, 50);
+        if (!argv.benchmark) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
@@ -551,11 +550,9 @@ export class Handler extends HandlerCommon {
             this.request.json || this.response.redirect
             || this.request.query.noTemplate || !this.response.template) {
             try {
-                this.response.body = JSON.stringify(this.response.body);
+                this.response.body = JSON.stringify(this.response.body, serializer, 2);
             } catch (e) {
-                const opt: SerializeJSOptions = { ignoreFunction: true };
-                if (this.request.query.noTemplate) opt.space = 2;
-                this.response.body = serialize(this.response.body, opt);
+                this.response.body = new SystemError('Serialize failure', e.message);
             }
             this.response.type = 'application/json';
         } else if (this.response.body || this.response.template) {
