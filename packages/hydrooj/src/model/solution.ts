@@ -13,7 +13,7 @@ class SolutionModel {
 
     static async get(domainId: string, psid: ObjectID) {
         const psdoc = await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
-        if (!psdoc) throw new SolutionNotFoundError();
+        if (!psdoc) throw new SolutionNotFoundError(domainId, psid);
         return psdoc;
     }
 
