@@ -3,6 +3,8 @@ import * as bus from 'hydrooj/src/service/bus';
 import { PRIV } from 'hydrooj/src/model/builtin';
 import { connect, dispose } from './db';
 
+jest.setTimeout(30000);
+
 describe('Model.User', () => {
     let user: typeof import('hydrooj/src/model/user').default;
 
