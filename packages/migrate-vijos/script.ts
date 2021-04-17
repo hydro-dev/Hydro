@@ -258,7 +258,6 @@ const tasks = {
         },
         gravatar: 'gravatar',
         bulletin: 'bulletin',
-        pid_counter: 'pidCounter',
     },
     'fs.files': async (doc) => doc,
     'fs.chunks': async (doc) => doc,

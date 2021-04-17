@@ -48,8 +48,10 @@ export class ProblemModel {
         domainId: string, pid: string = null, title: string, content: string, owner: number,
         tag: string[] = [], hidden = false,
     ) {
-        const pidCounter = await domain.inc(domainId, 'pidCounter', 1);
-        const result = await ProblemModel.addWithId(domainId, pidCounter, pid, title, content, owner, tag, hidden);
+        const [doc] = await ProblemModel.getMulti(domainId, {})
+            .sort({ docId: -1 }).limit(1).project({ docId: 1 })
+            .toArray();
+        const result = await ProblemModel.addWithId(domainId, (doc?.docId || 0) + 1, pid, title, content, owner, tag, hidden);
         return result;
     }
 

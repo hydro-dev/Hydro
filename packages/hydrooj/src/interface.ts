@@ -303,7 +303,6 @@ export interface DomainDoc extends Record<string, any> {
     roles: Dictionary<string>,
     gravatar: string,
     bulletin: string,
-    pidCounter: number,
     _join?: any,
     host?: string,
 }

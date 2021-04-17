@@ -124,7 +124,6 @@ DomainSetting(
     Setting('setting_domain', 'name', 'New domain', 'text', 'name'),
     Setting('setting_domain', 'gravatar', '', 'text', 'gravatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'bulletin', '', 'markdown', 'Bulletin'),
-    Setting('setting_storage', 'pidCounter', 0, 'number', 'Problem ID Counter', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'host', '', 'text', 'Custom host', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
