@@ -114,13 +114,9 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   async getItems(val) {
-    if (this.cache[val] !== undefined) {
-      return this.cache[val];
-    }
+    if (this.cache[val] !== undefined) return this.cache[val];
     const data = await this.options.items(val);
-    if (this.options.cache) {
-      this.cache[val] = data;
-    }
+    if (this.options.cache) this.cache[val] = data;
     return data;
   }
 
@@ -148,9 +144,7 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   open() {
-    if (this.isOpen) {
-      return;
-    }
+    if (this.isOpen) return;
     this.dropInstance.open();
     this.isOpen = true;
   }

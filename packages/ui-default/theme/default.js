@@ -1,6 +1,5 @@
 import 'normalize.css/normalize.css';
-import 'codemirror/lib/codemirror.css';
-import 'vj-simplemde/src/css/simplemde.css';
+import 'vditor/dist/index.css';
 import 'pickadate/lib/themes/classic.css';
 import 'pickadate/lib/themes/classic.date.css';
 import 'pickadate/lib/themes/classic.time.css';

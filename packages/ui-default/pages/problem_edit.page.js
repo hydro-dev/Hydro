@@ -57,7 +57,6 @@ function parseCategorySelection() {
   $txt.val().split(',').map((name) => name.trim()).forEach((name) => {
     if (!name) return;
     const [category, subcategory] = findCategory(name);
-    console.log(name, category, subcategory);
     if (!category) tags.push(name);
     else if (!subcategory) {
       categories[category].select = true;
