@@ -93,7 +93,7 @@ export async function count(domainId: string, query: FilterQuery<TrainingDoc>) {
 
 export async function get(domainId: string, tid: ObjectID) {
     const tdoc = await document.get(domainId, document.TYPE_TRAINING, tid);
-    if (!tdoc) throw new TrainingNotFoundError(tid);
+    if (!tdoc) throw new TrainingNotFoundError(domainId, tid);
     for (const i in tdoc.dag) {
         for (const j in tdoc.dag[i].pids) {
             if (Number.isSafeInteger(parseInt(tdoc.dag[i].pids[j], 10))) {

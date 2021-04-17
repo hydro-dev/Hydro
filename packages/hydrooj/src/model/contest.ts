@@ -380,7 +380,7 @@ export async function edit(
         if (!this.RULES[$set.rule]) throw new ValidationError('rule');
     }
     const tdoc = await document.get(domainId, type, tid);
-    if (!tdoc) throw new ContestNotFoundError(tid);
+    if (!tdoc) throw new ContestNotFoundError(domainId, tid);
     this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
     return await document.set(domainId, type, tid, $set);
 }

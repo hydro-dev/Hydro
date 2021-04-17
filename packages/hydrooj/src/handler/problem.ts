@@ -510,7 +510,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('content', Types.Content)
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
-        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
+        if ((!psdoc) || psdoc.pid !== this.pdoc.docId) throw new SolutionNotFoundError(domainId, psid);
         if (!(psrdoc.owner === this.user._id
             && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
             throw new PermissionError(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF);
