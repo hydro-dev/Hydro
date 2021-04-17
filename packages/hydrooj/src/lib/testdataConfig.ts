@@ -21,8 +21,8 @@ export async function parseConfig(config: string | ProblemConfig = {}) {
     let cfg: ProblemConfig = {};
     if (typeof config === 'string' && config.length) {
         // TODO should validate here?
-        cfg = await readYamlCases(load(config) as Record<string, any>) as ProblemConfig;
-    } else if (typeof config === 'object') cfg = config;
+        cfg = await readYamlCases(load(config) as Record<string, any>);
+    } else if (typeof config === 'object') cfg = await readYamlCases(config);
     if (cfg.subtasks.length) {
         for (const subtask of cfg.subtasks) {
             result.memoryMax = Math.max(result.memoryMax, subtask.memory);

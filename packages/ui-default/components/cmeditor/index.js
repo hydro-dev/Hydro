@@ -5,8 +5,8 @@ export const config = {
   toolbar: [
     'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
     'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
-    'quote', 'line', 'code', 'inline-code', '|',
-    'upload', 'record', 'table', '|',
+    'quote', 'line', 'code', 'inline-code', 'table', '|',
+    'upload', 'record', '|',
     'edit-mode', 'content-theme', 'code-theme', 'export', 'preview',
   ],
   mode: 'ir',
@@ -38,20 +38,11 @@ export default class CmEditor extends DOMAttachedObject {
     await new Promise((resolve) => {
       this.editor = new Vditor(ele, {
         ...config,
+        ...this.options,
         after: resolve,
         input(v) { $dom.text(v); },
         value,
         cache: { id: Math.random().toString() },
-        upload: {
-          accept: 'image/*,.mp3, .wav, .zip',
-          url: '/api/upload/editor',
-          linkToImgUrl: '/api/upload/fetch',
-          filename(name) {
-            return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-              .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-              .replace('/\\s/g', '');
-          },
-        },
       });
     });
     $(ele).addClass('textbox');
@@ -69,10 +60,6 @@ export default class CmEditor extends DOMAttachedObject {
     this.ensureValid();
     const ret = this.editor.value(...argv);
     return ret;
-  }
-
-  destory() {
-    this.editor.destory();
   }
 
   focus() {

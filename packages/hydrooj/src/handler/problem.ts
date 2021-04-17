@@ -389,10 +389,11 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.response.body.links = links;
     }
 
-    @post('filename', Types.Name)
-    @post('type', Types.Content, true)
+    @post('filename', Types.Name, true)
+    @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (!this.request.files.file) throw new ValidationError('file');
+        if (!filename) filename = this.request.files.file.name || String.random(16);
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
