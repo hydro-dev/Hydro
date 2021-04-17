@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { PermissionError, RecordNotFoundError } from '../error';
+import { ContestNotFoundError, PermissionError, RecordNotFoundError } from '../error';
 import { Rdoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
@@ -25,6 +25,11 @@ class RecordListHandler extends RecordHandler {
     async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, all = false) {
         this.response.template = 'record_main.html';
         const q: FilterQuery<Rdoc> = { 'contest.tid': tid, hidden: false };
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid, -1);
+            if (!tdoc) throw new ContestNotFoundError(domainId, pid);
+            if (!this.canShowScoreboard(tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
         if (uidOrName) {
             let udoc = await user.getById(domainId, +uidOrName);
             if (udoc) q.uid = udoc._id;
