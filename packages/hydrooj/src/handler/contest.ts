@@ -261,7 +261,7 @@ class ContestProblemHandler extends ContestHandler {
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
         if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
-            throw new ProblemNotFoundError(domainId, pid, this.tdoc.docId);
+            throw new ProblemNotFoundError(domainId, this.tdoc.docId);
         }
     }
 
