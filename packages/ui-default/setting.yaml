@@ -86,6 +86,12 @@ showInvisibleChar:
   family: highlight
   desc: show invisible characters when formatting code
   category: preference
+formatCode:
+  type: boolean
+  family: highlight
+  desc: Auto format code
+  category: preference
+  value: true
 astyleOptions:
   type: text
   family: highlight

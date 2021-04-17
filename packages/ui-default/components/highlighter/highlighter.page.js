@@ -5,7 +5,7 @@ import Notification from 'vj/components/notification/index';
 const highlighterPage = new AutoloadPage('highlighterPage', async () => {
   const [{ default: prismjs }, [success, format]] = await Promise.all([
     import('./prismjs'),
-    load(),
+    UserContext.formatCode ? load() : [true, null],
   ]);
   if (!success) Notification.error(`Astyle load fail: ${format}`);
   function runHighlight($container) {
