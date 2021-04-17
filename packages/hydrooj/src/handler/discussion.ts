@@ -42,17 +42,17 @@ class DiscussionHandler extends Handler {
         this.checkPerm(PERM.PERM_VIEW_DISCUSSION);
         if (did) {
             this.ddoc = await discussion.get(domainId, did);
-            if (!this.ddoc) throw new DiscussionNotFoundError(did);
+            if (!this.ddoc) throw new DiscussionNotFoundError(domainId, did);
             type = discussion.typeDisplay[this.ddoc.parentType];
             name = this.ddoc.parentId.toString();
             if (drrid) {
                 [this.drdoc, this.drrdoc] = await discussion.getTailReply(domainId, drid, drrid);
-                if (!this.drrdoc) throw new DiscussionNotFoundError(drrid);
+                if (!this.drrdoc) throw new DiscussionNotFoundError(domainId, drrid);
             } else if (drid) {
                 this.drdoc = await discussion.getReply(domainId, drid);
-                if (!this.drdoc) throw new DiscussionNotFoundError(drid);
+                if (!this.drdoc) throw new DiscussionNotFoundError(domainId, drid);
                 if (!this.drdoc.parentId.equals(this.ddoc._id)) {
-                    throw new DocumentNotFoundError(drid);
+                    throw new DocumentNotFoundError(domainId, drid);
                 }
             }
         }
