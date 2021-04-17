@@ -153,7 +153,7 @@ export async function editReply(
 
 export async function delReply(domainId: string, drid: ObjectID) {
     const drdoc = await getReply(domainId, drid);
-    if (!drdoc) throw new DocumentNotFoundError(drid);
+    if (!drdoc) throw new DocumentNotFoundError(domainId, drid);
     return await Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION_REPLY, drid),
         document.inc(domainId, document.TYPE_DISCUSSION, drdoc.parentId, 'nReply', -1),
