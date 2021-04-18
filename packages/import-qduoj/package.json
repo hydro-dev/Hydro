@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/import-qduoj",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "description": "Import QDUOJ problem export",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",

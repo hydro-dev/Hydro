@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/login-with-github",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
