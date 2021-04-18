@@ -31,7 +31,7 @@ jobs:
       run: yarn
     - name: Build
       run: |
-        yarn build
+        yarn build --verbose
         yarn build:ui:production
     - name: Lint
       run: yarn lint:ci

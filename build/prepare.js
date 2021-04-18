@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { argv } = require('yargs');
-const { sync } = require('cross-spawn');
 
 const compilerOptionsBase = {
     target: 'es2019',
@@ -69,11 +67,3 @@ for (const package of packages) {
     }
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
-
-sync('./node_modules/.bin/tsc -b packages/hydrooj', { stdio: 'inherit' });
-
-if (argv.watch) {
-    sync('./node_modules/.bin/tsc -b --watch', { stdio: 'inherit' });
-} else {
-    sync('./node_modules/.bin/tsc -b', { stdio: 'inherit' });
-}
