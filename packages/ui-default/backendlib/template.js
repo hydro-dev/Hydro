@@ -78,7 +78,7 @@ const xss = new Xss.FilterXSS({
 });
 
 if (argv.template && argv.template !== 'string') argv.template = findFileSync('@hydrooj/ui-default/templates');
-else argv.template = findFileSync(argv.template);
+else if (argv.template) argv.template = findFileSync(argv.template);
 
 class Loader extends nunjucks.Loader {
   // eslint-disable-next-line class-methods-use-this
