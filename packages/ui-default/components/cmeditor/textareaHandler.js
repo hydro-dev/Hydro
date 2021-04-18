@@ -11,7 +11,7 @@ export default class TextareaHandler extends DOMAttachedObject {
 
   isCmEditor() {
     const editor = this.getCmEditor();
-    return (editor !== undefined && editor.isValid());
+    return (editor && editor.isValid);
   }
 
   val(...argv) {

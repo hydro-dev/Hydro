@@ -9,7 +9,7 @@ export const config = {
     'upload', 'record', '|',
     'edit-mode', 'content-theme', 'code-theme', 'export', 'preview',
   ],
-  mode: 'ir',
+  mode: UserContext.preferedEditorType || 'ir',
   toolbarConfig: {
     pin: true,
   },

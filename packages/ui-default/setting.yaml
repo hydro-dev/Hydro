@@ -81,6 +81,14 @@ lang_monaco_modes:
     go: go
     rb: ruby
     jl: julia
+preferedEditorType:
+  type:
+    wysiwyg: WYSIWYG
+    ir: Instant Rendering
+    sv: Split View
+  family: markdown
+  category: preference
+  value: ir
 showInvisibleChar:
   type: boolean
   family: highlight
