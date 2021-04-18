@@ -20,17 +20,17 @@ interface Re1 extends Re0 {
 
 const RE0: Re0[] = [
     {
-        reg: /^([a-z+_\-A-Z]*)([0-9]+).in$/,
+        reg: /^([^\d]*)([0-9]+).in$/,
         output: (a) => `${a[1] + a[2]}.out`,
         id: (a) => parseInt(a[2], 10),
     },
     {
-        reg: /^([a-z+_\-A-Z]*)([0-9]+).in$/,
+        reg: /^([^\d]*)([0-9]+).in$/,
         output: (a) => `${a[1] + a[2]}.ans`,
         id: (a) => parseInt(a[2], 10),
     },
     {
-        reg: /^([a-z+_\-A-Z0-9]*)\.in([0-9]+)$/,
+        reg: /^([^\d]*)\.in([0-9]+)$/,
         output: (a) => `${a[1]}.ou${a[2]}`,
         id: (a) => parseInt(a[2], 10),
     },
@@ -40,17 +40,17 @@ const RE0: Re0[] = [
         id: (a) => parseInt(a[2], 10),
     },
     {
-        reg: /^input\/([a-z+_\-A-Z]*)([0-9]+).in$/,
+        reg: /^input\/([^\d]*)([0-9]+).in$/,
         output: (a) => `output/${a[1] + a[2]}.out`,
         id: (a) => parseInt(a[2], 10),
     },
     {
-        reg: /^input\/([a-z+_\-A-Z]*)([0-9]+).in$/,
+        reg: /^input\/([^\d]*)([0-9]+).in$/,
         output: (a) => `output/${a[1] + a[2]}.ans`,
         id: (a) => parseInt(a[2], 10),
     },
     {
-        reg: /^input\/([a-z+_\-A-Z0-9]*)\.in([0-9]+)$/,
+        reg: /^input\/([^\d]*)\.in([0-9]+)$/,
         output: (a) => `output/${a[1]}.ou${a[2]}`,
         id: (a) => parseInt(a[2], 10),
     },
@@ -228,9 +228,9 @@ export default async function readCases(folder: string, cfg: Record<string, any>
         throw changeErrorType(e, FormatError);
     }
     if (!(result.outputs || result.subtasks.length)) {
-        const c = await readAutoCases(folder, args, cfg);
-        config.subtasks = c.subtasks;
-        config.count = c.count;
+        const c = await readAutoCases(folder, args, config);
+        result.subtasks = c.subtasks;
+        result.count = c.count;
     }
     isValidConfig(result);
     return result;

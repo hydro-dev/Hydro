@@ -186,6 +186,12 @@ export class ProblemDetailHandler extends ProblemHandler {
             ],
         };
         this.extraTitleContent = this.pdoc.title;
+        // Get time and memory limit
+        try {
+            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
+        } catch (e) {
+            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -194,12 +200,6 @@ export class ProblemDetailHandler extends ProblemHandler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
             .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
-        // Get time and memory limit
-        try {
-            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
-        } catch (e) {
-            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
-        }
         if (this.pdoc.psdoc) {
             this.response.body.rdoc = await record.get(this.domainId, this.pdoc.psdoc.rid);
         }
