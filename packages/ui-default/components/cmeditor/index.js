@@ -13,6 +13,7 @@ export const config = {
   toolbarConfig: {
     pin: true,
   },
+  cdn: `${UiContext.cdn_prefix}vditor`,
   counter: {
     enable: true,
     max: 65536,
