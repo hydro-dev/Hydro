@@ -46,7 +46,7 @@ export default function (env = {}) {
   function fileLoader() {
     return {
       loader: 'file-loader',
-      options: { name: '[path][name].[ext]?[sha1:hash:hex:10]' },
+      options: { name: 'files/[name].[sha1:hash:hex:10].[ext]' },
     };
   }
 

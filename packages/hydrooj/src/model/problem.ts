@@ -1,6 +1,7 @@
 import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary, escapeRegExp, pick } from 'lodash';
+import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { STATUS } from './builtin';
 import * as document from './document';
 import { buildProjection } from '../utils';
@@ -247,6 +248,16 @@ export class ProblemModel {
         return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
     }
 }
+
+bus.on('problem/addTestdata', async (domainId, docId, name) => {
+    if (!['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(name)) return;
+    const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${name}`);
+    await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
+});
+bus.on('problem/delTestdata', async (domainId, docId, names) => {
+    if (!names.includes('config.yaml')) return;
+    await ProblemModel.edit(domainId, docId, { config: '' });
+});
 
 ProblemModel.extend((docId, pid) => ({
     _id: new ObjectID(),
