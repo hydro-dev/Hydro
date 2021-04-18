@@ -18,6 +18,11 @@ export const config = {
     enable: true,
     max: 65536,
   },
+  preview: {
+    math: {
+      inlineDigit: true,
+    },
+  },
 };
 
 export default class CmEditor extends DOMAttachedObject {
