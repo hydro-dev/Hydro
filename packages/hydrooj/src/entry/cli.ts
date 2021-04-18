@@ -63,7 +63,7 @@ async function cli() {
         return console.error(parameters.join(', '));
     }
     for (let i = 0; i < args.length; i++) {
-        if (ObjectID.isValid(args[i])) {
+        if (args[i].length === 24 && ObjectID.isValid(args[i])) {
             args[i] = new ObjectID(args[i]);
         }
     }
