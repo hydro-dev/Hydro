@@ -6,8 +6,7 @@ export const config = {
     'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
     'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
     'quote', 'line', 'code', 'inline-code', 'table', '|',
-    'upload', 'record', '|',
-    'edit-mode', 'content-theme', 'code-theme', 'export', 'preview',
+    'upload', 'edit-mode', 'content-theme', 'code-theme', 'export',
   ],
   mode: UserContext.preferedEditorType || 'ir',
   toolbarConfig: {
@@ -40,13 +39,13 @@ export default class CmEditor extends DOMAttachedObject {
     const hasFocus = $dom.is(':focus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
-    const value = $dom.text();
+    const value = $dom.val();
     await new Promise((resolve) => {
       this.editor = new Vditor(ele, {
         ...config,
         ...this.options,
         after: resolve,
-        input(v) { $dom.text(v); },
+        input(v) { $dom.val(v); $dom.text(v); },
         value,
         cache: { id: Math.random().toString() },
       });
@@ -54,18 +53,18 @@ export default class CmEditor extends DOMAttachedObject {
     $(ele).addClass('textbox');
     $dom.hide();
     origin.parentElement.appendChild(ele);
-    if (hasFocus) this.focus();
     this.isValid = true;
+    if (hasFocus) this.focus();
   }
 
   ensureValid() {
     if (!this.isValid) throw new Error('Editor is not loaded');
   }
 
-  value(...argv) {
+  value(val) {
     this.ensureValid();
-    const ret = this.editor.value(...argv);
-    return ret;
+    if (val) return this.editor.setValue(val);
+    return this.editor.getValue();
   }
 
   focus() {

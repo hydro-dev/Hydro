@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import CmEditor from '.';
+import CmEditor from './index';
 
 export default class TextareaHandler extends DOMAttachedObject {
   static DOMAttachKey = 'vjTextareaHandlerInstance';
@@ -11,7 +11,7 @@ export default class TextareaHandler extends DOMAttachedObject {
 
   isCmEditor() {
     const editor = this.getCmEditor();
-    return (editor && editor.isValid);
+    return !!(editor && editor.isValid);
   }
 
   val(...argv) {

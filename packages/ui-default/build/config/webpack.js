@@ -50,7 +50,7 @@ export default function (env = {}) {
         name(resourcePath) {
           if (resourcePath.includes('node_modules')) {
             const extra = resourcePath.split('node_modules')[1];
-            return `modules/${extra.substr(1, extra.length - 1)}?[contenthash]`;
+            return `modules/${extra.substr(1, extra.length - 1).replace(/\\/g, '/')}?[contenthash]`;
           }
           return '[path][name].[ext]?[contenthash]';
         },

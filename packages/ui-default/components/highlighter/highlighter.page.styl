@@ -1,4 +1,4 @@
-@import 'prismjs/themes/prism.css'
+@import 'prism-themes/themes/prism-vs.css'
 
 pre, code
   background: $syntax-hl-bg-color
@@ -6,6 +6,13 @@ pre, code
 pre > code
   background: none
   line-height: 1.5
+  color: black
+  text-align: left
+  white-space: pre-wrap
+  word-spacing: normal
+  word-break: normal
+  tab-size: 4
+  hyphens: none
 
 pre
   position: relative
@@ -14,15 +21,6 @@ pre
 code
   color: $code-color
   font-size: rem($font-size-secondary)
-
-pre > code
-  color: black
-  text-align: left
-  white-space: pre-wrap
-  word-spacing: normal
-  word-break: normal
-  tab-size: 4
-  hyphens: none
 
 [data-syntax-hl-show-line-number] pre.line-numbers > code
   white-space: pre

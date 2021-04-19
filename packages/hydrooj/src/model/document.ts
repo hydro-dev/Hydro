@@ -225,7 +225,7 @@ export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
     });
     if (!doc) return [null, null];
     for (const sdoc of doc[key] || []) {
-        if (sdoc._id === subId) return [doc, sdoc];
+        if (sdoc._id.toString() === subId.toString()) return [doc, sdoc];
     }
     return [doc, null];
 }
