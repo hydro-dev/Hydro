@@ -255,19 +255,8 @@ PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE
     + PRIV.PRIV_CREATE_FILE
     + PRIV.PRIV_DELETE_FILE_SELF;
 
-// [10, 1] means that people whose rank is less than 1% will get Level 10
-export const LEVELS = [
-    [10, 1],
-    [9, 2],
-    [8, 10],
-    [7, 20],
-    [6, 30],
-    [5, 40],
-    [4, 70],
-    [3, 90],
-    [2, 95],
-    [1, 100],
-];
+// people whose rank is less than 1% will get Level 10
+export const LEVELS = [100, 90, 70, 55, 40, 30, 20, 10, 5, 2, 1];
 
 export const BUILTIN_USERS: Udoc[] = [
     {

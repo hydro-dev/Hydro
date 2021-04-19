@@ -84,36 +84,34 @@ async function runContest(...arg: any[]) {
 }
 
 export async function calcLevel(domainId: string, report: Function) {
-    const dudocs = await domain.getMultiUserInDomain(domainId).sort('rp', -1).toArray();
-    if (!dudocs.length) return;
+    const ducnt = await domain.getMultiUserInDomain(domainId).count();
+    if (!ducnt) return;
     let last = { rp: null };
     let rank = 0;
     let count = 0;
     const coll = global.Hydro.service.db.collection('domain.user');
+    const ducur = domain.getMultiUserInDomain(domainId).project({ rp: 1 }).sort({ rp: -1 });
     let bulk = coll.initializeUnorderedBulkOp();
-    for (const dudoc of dudocs) {
+    while (await ducur.hasNext()) {
+        const dudoc = await ducur.next();
         count++;
         if (!dudoc.rp) dudoc.rp = null;
         if (dudoc.rp !== last.rp) rank = count;
         bulk.find({ _id: dudoc._id }).updateOne({ $set: { rank } });
         last = dudoc;
-        if (count % 1000 === 0) report({ message: `#${count}: Rank ${rank}` });
+        if (count % 100 === 0) report({ message: `#${count}: Rank ${rank}` });
     }
     await bulk.execute();
-    if (!rank) {
-        report({ message: 'No one has rp' });
-        return;
-    }
     const levels = global.Hydro.model.builtin.LEVELS;
     bulk = coll.initializeUnorderedBulkOp();
     for (let i = 0; i < levels.length; i++) {
-        report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
+        report({ message: 'Updating users levelled {0}'.format(i) });
         const query: FilterQuery<Udoc> = {
             domainId,
-            $and: [{ rank: { $lte: (levels[i][1] * rank) / 100 } }],
+            $and: [{ rank: { $lte: (levels[i] * count) / 100 } }],
         };
-        if (i < levels.length - 1) query.$and.push({ rank: { $gt: (levels[i + 1][1] * rank) / 100 } });
-        bulk.find(query).update({ $set: { level: levels[i][0] } });
+        if (i < levels.length) query.$and.push({ rank: { $gt: (levels[i + 1] * count) / 100 } });
+        bulk.find(query).update({ $set: { level: i } });
     }
     await bulk.execute();
 }
