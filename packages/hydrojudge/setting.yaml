@@ -28,6 +28,10 @@ total_time_limit:
   name: total_time_limit
   desc: Total time limit per problem
   default: 60
+memoryMax:
+  type: text
+  name: memoryMax
+  default: 512m
 retry_delay_sec:
   type: number
   name: retry_delay_sec

@@ -14,6 +14,7 @@ let config = {
     tmp_dir: path.resolve(os.tmpdir(), 'hydro', 'judge'),
     tmpfs_size: '256m',
     stdio_size: '32m',
+    memoryMax: '512m',
     retry_delay_sec: 15,
     sandbox_host: 'http://localhost:5050',
     testcases_max: 100,

@@ -2,7 +2,7 @@ import Axios from 'axios';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import * as STATUS from './status';
-import { SystemError } from './error';
+import { FormatError, SystemError } from './error';
 import { cmd, parseMemoryMB } from './utils';
 import { getConfig } from './config';
 import { Logger } from './log';
@@ -31,6 +31,8 @@ function proc({
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
     const size = parseMemoryMB(getConfig('stdio_size'));
+    const memoryMax = parseMemoryMB(getConfig('memoryMax'));
+    if (memory > memoryMax) throw new FormatError('Memory limit larger than memory_max');
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
         env,
