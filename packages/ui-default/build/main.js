@@ -71,7 +71,7 @@ async function runGulp() {
 async function main() {
   const dir = process.cwd();
   process.chdir(root());
-  await runGulp({});
+  await runGulp();
   await runWebpack(argv);
   process.chdir(dir);
 }

@@ -1,4 +1,4 @@
-import path, { sep } from 'path';
+import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
 import { Duplex } from 'stream';

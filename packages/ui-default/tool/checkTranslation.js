@@ -25,8 +25,8 @@ function _(str, format) {
   if (!texts[str]) texts[str] = [currentFile];
   else texts[str].push(currentFile);
 }
-const i18n = _;
-const Setting = _;
+const i18n = _; // lgtm [js/unused-local-variable]
+const Setting = _; // lgtm [js/unused-local-variable]
 
 function scanTemplate(folder, relative = 'templates') {
   const files = fs.readdirSync(folder);

@@ -310,10 +310,11 @@ class HomeDomainCreateHandler extends Handler {
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
     @param('avatar', Types.Content, true, isEmail)
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);
-        avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}` || 'gravatar:guest@hydro.local';
+        avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
         await domain.edit(domainId, { avatar });
         await domain.setUserRole(domainId, this.user._id, 'root');

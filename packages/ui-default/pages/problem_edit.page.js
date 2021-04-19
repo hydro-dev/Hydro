@@ -62,7 +62,7 @@ function parseCategorySelection() {
     else if (!subcategory) {
       categories[category].select = true;
       dirtyCategories.push({ type: 'category', category });
-    } else if (category) {
+    } else {
       categories[category].children[subcategory].select = true;
       dirtyCategories.push({ type: 'subcategory', subcategory, category });
     }
