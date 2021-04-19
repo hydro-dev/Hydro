@@ -9,7 +9,7 @@ export const providers: Record<string, AvatarProvider> = {
 };
 
 function avatar(src: string, size = 64) {
-    const index = src.indexOf(':');
+    const index = (src || '').indexOf(':');
     if (index === -1) return providers.gravatar('', size);
     const [provider, str] = [src.substr(0, index), src.substr(index + 1, src.length)];
     if (!providers[provider] || !str) return providers.gravatar('', size);
