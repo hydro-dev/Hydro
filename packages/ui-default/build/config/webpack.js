@@ -46,7 +46,15 @@ export default function (env = {}) {
   function fileLoader() {
     return {
       loader: 'file-loader',
-      options: { name: 'files/[name].[sha1:hash:hex:10].[ext]' },
+      options: {
+        name(resourcePath) {
+          if (resourcePath.includes('node_modules')) {
+            const extra = resourcePath.split('node_modules')[1];
+            return `modules/${extra.substr(1, extra.length - 1)}?[contenthash]`;
+          }
+          return '[path][name].[ext]?[contenthash]';
+        },
+      },
     };
   }
 
