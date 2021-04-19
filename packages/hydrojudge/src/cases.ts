@@ -10,7 +10,7 @@ import { getConfig } from './config';
 
 interface Re0 {
     reg: RegExp,
-    output: (a: RegExpExecArray) => string,
+    output: ((a: RegExpExecArray) => string)[],
     id: (a: RegExpExecArray) => number,
 }
 
@@ -20,52 +20,30 @@ interface Re1 extends Re0 {
 
 const RE0: Re0[] = [
     {
-        reg: /^([^\d]*)([0-9]+).in$/,
-        output: (a) => `${a[1] + a[2]}.out`,
-        id: (a) => parseInt(a[2], 10),
+        reg: /^([^\d]*)(\d+).(in|txt)$/,
+        output: [
+            (a) => `${a[1] + a[2]}.out`,
+            (a) => `${a[1] + a[2]}.ans`,
+            (a) => `${a[1] + a[2]}.out`.replace(/input/g, 'output'),
+            (a) => `${a[1] + a[2]}.txt`.replace(/input/g, 'output'),
+        ],
+        id: (a) => +a[2],
     },
     {
-        reg: /^([^\d]*)([0-9]+).in$/,
-        output: (a) => `${a[1] + a[2]}.ans`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^([^\d]*)\.in([0-9]+)$/,
-        output: (a) => `${a[1]}.ou${a[2]}`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^(input)([0-9]+).txt$/,
-        output: (a) => `output${a[2]}.txt`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^input\/([^\d]*)([0-9]+).in$/,
-        output: (a) => `output/${a[1] + a[2]}.out`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^input\/([^\d]*)([0-9]+).in$/,
-        output: (a) => `output/${a[1] + a[2]}.ans`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^input\/([^\d]*)\.in([0-9]+)$/,
-        output: (a) => `output/${a[1]}.ou${a[2]}`,
-        id: (a) => parseInt(a[2], 10),
-    },
-    {
-        reg: /^input\/(input)([0-9]+).txt$/,
-        output: (a) => `output/output${a[2]}.txt`,
-        id: (a) => parseInt(a[2], 10),
+        reg: /^([^\d]*)\.in(\d+)$/,
+        output: [
+            (a) => `${a[1]}.ou${a[2]}`,
+            (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
+        ],
+        id: (a) => +a[2],
     },
 ];
 const RE1: Re1[] = [
     {
-        reg: /^([a-z+_\-A-Z]*)([0-9]+)-([0-9]+).in$/,
-        output: (a) => `${a[1] + a[2]}-${a[3]}.out`,
-        subtask: (a) => parseInt(a[2], 10),
-        id: (a) => parseInt(a[3], 10),
+        reg: /^([^\d]*)([0-9]+)-([0-9]+).in$/,
+        output: [(a) => `${a[1] + a[2]}-${a[3]}.out`],
+        subtask: (a) => +a[2],
+        id: (a) => +a[3],
     },
 ];
 
@@ -75,10 +53,13 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
         for (const REG of RE0) {
             if (REG.reg.test(file)) {
                 const data = REG.reg.exec(file);
-                const c = { input: file, output: REG.output(data), id: REG.id(data) };
-                if (fs.existsSync(path.resolve(folder, c.output))) {
-                    cases.push(c);
-                    break;
+                const c = { input: file, output: '', id: REG.id(data) };
+                for (const func of REG.output) {
+                    c.output = func(data);
+                    if (fs.existsSync(path.resolve(folder, c.output))) {
+                        cases.push(c);
+                        break;
+                    }
                 }
             }
         }
@@ -130,17 +111,20 @@ async function read1(folder: string, files: string[], checkFile, cfg) {
         for (const REG of RE1) {
             if (REG.reg.test(file)) {
                 const data = REG.reg.exec(file);
-                const c = { input: file, output: REG.output(data), id: REG.id(data) };
-                if (fs.existsSync(path.resolve(folder, c.output))) {
-                    if (!subtask[REG.subtask(data)]) {
-                        subtask[REG.subtask(data)] = [{
-                            time: parseTimeMS(cfg.time || '1s'),
-                            memory: parseMemoryMB(cfg.memory || '256m'),
-                            type: 'min',
-                            cases: [c],
-                        }];
-                    } else subtask[REG.subtask(data)].cases.push(c);
-                    break;
+                const c = { input: file, output: '', id: REG.id(data) };
+                for (const func of REG.output) {
+                    c.output = func(data);
+                    if (fs.existsSync(path.resolve(folder, c.output))) {
+                        if (!subtask[REG.subtask(data)]) {
+                            subtask[REG.subtask(data)] = [{
+                                time: parseTimeMS(cfg.time || '1s'),
+                                memory: parseMemoryMB(cfg.memory || '256m'),
+                                type: 'min',
+                                cases: [c],
+                            }];
+                        } else subtask[REG.subtask(data)].cases.push(c);
+                        break;
+                    }
                 }
             }
         }
