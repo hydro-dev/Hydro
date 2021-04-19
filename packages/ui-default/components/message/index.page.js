@@ -23,7 +23,7 @@ const messagePage = new AutoloadPage('messagePage', () => {
       console.log('Received message', msg);
       if (msg.mdoc.flag & FLAG_ALERT) {
         // Is alert
-       new InfoDialog({
+        new InfoDialog({
           $body: tpl`
             <div class="typo">
               <p>${i18n('Message from {0}:', msg.mdoc.from)}</p>
@@ -34,7 +34,7 @@ const messagePage = new AutoloadPage('messagePage', () => {
         // Is message
         new Notification({
           title: msg.udoc.uname,
-          avatar: msg.udoc.gravatar_url,
+          avatar: msg.udoc.avatarUrl,
           message: msg.mdoc.content,
           duration: 15000,
           action: () => window.open(`/home/messages?uid=${msg.udoc._id}`, '_blank'),

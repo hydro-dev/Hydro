@@ -47,7 +47,7 @@ class DomainModel {
             name,
             bulletin,
             roles: {},
-            gravatar: '',
+            avatar: '',
         };
         await bus.serial('domain/create', ddoc);
         await coll.insertOne(ddoc);

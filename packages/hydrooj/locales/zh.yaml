@@ -35,7 +35,6 @@ __langname: 简体中文
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
-'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '我们使用 <a href="https://cn.gravatar.com/" target="_blank">Gravatar</a> 服务来呈现您的头像。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ',' '.'": 由“, ”或“，”分隔。
@@ -81,6 +80,7 @@ Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
+Avatar: 头像
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -326,7 +326,6 @@ Formula blocks: 公式区块
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
-Gravatar Email: Gravatar Email 地址
 Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限

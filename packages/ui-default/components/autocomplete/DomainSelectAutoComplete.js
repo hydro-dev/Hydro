@@ -16,7 +16,7 @@ function renderItem(domain) {
   return tpl`
     <div class="media">
       <div class="media__left medium">
-        <img class="small domain-profile-avatar" src="${domain.gravatar}" width="30" height="30">
+        <img class="small domain-profile-avatar" src="${domain.avatarUrl}" width="30" height="30">
       </div>
       <div class="media__body medium">
         <div class="domain-select__name">${domain.name}</div>

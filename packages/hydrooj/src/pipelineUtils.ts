@@ -1,11 +1,17 @@
 /* eslint-disable no-await-in-loop */
-import { DomainDoc } from './loader';
+import type { DomainDoc, Udoc } from './interface';
 import domain from './model/domain';
+import user from './model/user';
 import problem, { Field, Pdoc } from './model/problem';
 
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().project({ _id: 1, owner: 1 }).toArray();
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
+}
+
+export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
+    const udocs = await user.getMulti().toArray();
+    for (const i in udocs) await cb(udocs[i], +i, udocs.length);
 }
 
 interface PartialPdoc extends Pdoc {

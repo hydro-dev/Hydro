@@ -301,7 +301,7 @@ export interface DomainDoc extends Record<string, any> {
     _id: string,
     owner: number,
     roles: Dictionary<string>,
-    gravatar: string,
+    avatar: string,
     bulletin: string,
     _join?: any,
     host?: string,

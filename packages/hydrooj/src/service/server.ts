@@ -28,8 +28,8 @@ import {
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError, SystemError,
 } from '../error';
-import * as misc from '../lib/misc';
 import { isContent, isName, isTitle } from '../lib/validator';
+import avatar from '../lib/avatar';
 import user from '../model/user';
 import domain from '../model/domain';
 import * as system from '../model/system';
@@ -322,7 +322,7 @@ export class HandlerCommon {
     async renderHTML(name: string, context: any): Promise<string> {
         const UserContext: any = {
             ...this.user,
-            gravatar: misc.gravatar(this.user.gravatar || '', 128),
+            avatar: avatar(this.user.avatar || '', 128),
             perm: this.user.perm.toString(),
             viewLang: this.translate('__id'),
         };
@@ -508,6 +508,7 @@ export class Handler extends HandlerCommon {
             this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
         if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
+        this.user.avatarUrl = avatar(this.user.avatar, 128);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UiContext.csrfToken = this.csrfToken;
         this.loginMethods = filter(Object.keys(global.Hydro.lib), (str) => str.startsWith('oauth_'))

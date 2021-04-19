@@ -23,7 +23,7 @@ const tasks = {
         hash: doc.hash.split('|')[1],
         hashType: doc.hash.split('|')[0] === 'vj4' ? 'hydro' : doc.hash.split('|')[0],
         priv: doc.priv,
-        gravatar: doc.gravatar,
+        avatar: `gravatar:${doc.gravatar}`,
         mail: doc.mail,
         mailLower: doc.mail_lower,
         regat: doc.regat,
@@ -256,7 +256,10 @@ const tasks = {
                 return res;
             },
         },
-        gravatar: 'gravatar',
+        gravatar: {
+            field: 'avatar',
+            processer: (gravatar) => `gavatar:${gravatar}`,
+        },
         bulletin: 'bulletin',
     },
     'fs.files': async (doc) => doc,

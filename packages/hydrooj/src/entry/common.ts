@@ -13,6 +13,7 @@ export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',
     'crypto', 'misc', 'paginate', 'hash.hydro', 'rank',
     'validator', 'ui', 'testdataConfig', 'difficulty', 'content',
+    'avatar',
 ];
 
 export const builtinModel = [

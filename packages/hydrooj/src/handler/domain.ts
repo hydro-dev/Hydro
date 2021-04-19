@@ -14,7 +14,7 @@ import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import {
     DEFAULT_NODES, PERM, PERMS_BY_FAMILY, PRIV,
 } from '../model/builtin';
-import { gravatar } from '../lib/misc';
+import avatar from '../lib/avatar';
 import paginate from '../lib/paginate';
 import {
     Route, Handler, Types, param, query, post,
@@ -297,7 +297,7 @@ class DomainSearchHandler extends Handler {
     async get(domainId: string, q: string) {
         const ddocs = await domain.getPrefixSearch(q, 20);
         for (let i = 0; i < ddocs.length; i++) {
-            ddocs[i].gravatar = ddocs[i].gravatar ? gravatar(ddocs[i].gravatar) : '/img/team_avatar.png';
+            ddocs[i].avatarUrl = ddocs[i].avatar ? avatar(ddocs[i].avatar, 64) : '/img/team_avatar.png';
         }
         this.response.body = ddocs;
     }

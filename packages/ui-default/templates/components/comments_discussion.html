@@ -31,7 +31,7 @@
 <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
-      <img src="{{ gravatar(handler.user.gravatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
+      <img src="{{ avatarUrl(handler.user.avatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
       <div class="hasjs--hide">
@@ -55,7 +55,7 @@
         <li class="dczcomments__reply commentbox-container">
           <div class="media">
             <div class="media__left top">
-              <img src="{{ gravatar(handler.user.gravatar, 50) }}" width="50" height="50" class="medium user-profile-avatar">
+              <img src="{{ avatarUrl(handler.user.avatar, 50) }}" width="50" height="50" class="medium user-profile-avatar">
             </div>
             <div class="media__body top no-heading">
               <div class="commentbox-placeholder"></div>
@@ -72,7 +72,7 @@
   <li class="dczcomments__item">
   <div class="media">
     <div class="media__left top">
-      <img src="{{ gravatar(udoc.gravatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
+      <img src="{{ avatarUrl(udoc.avatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top no-heading">
       <div class="clearfix">
@@ -108,7 +108,7 @@
         <li class="dczcomments__reply{% if mode_create %} commentbox-container{% endif %}">
           <div class="media">
             <div class="media__left top">
-              <img src="{{ gravatar(udoc.gravatar, 50) }}" width="50" height="50" class="medium user-profile-avatar">
+              <img src="{{ avatarUrl(udoc.avatar, 50) }}" width="50" height="50" class="medium user-profile-avatar">
             </div>
             <div class="media__body top no-heading">
               <div class="clearfix">

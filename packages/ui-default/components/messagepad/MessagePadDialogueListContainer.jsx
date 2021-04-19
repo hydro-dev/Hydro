@@ -39,7 +39,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDial
             key={dialogue._id}
             userName={dialogue.udoc.uname}
             summary={(_.last(dialogue.messages)?.content) || ''}
-            faceUrl={dialogue.udoc.gravatar}
+            faceUrl={dialogue.udoc.avatarUrl}
             active={dialogue._id === this.props.activeId}
             onClick={() => this.props.handleClick(dialogue._id)}
           />

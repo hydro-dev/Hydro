@@ -104,8 +104,8 @@ export class QueryProblemSetAPIHandler extends Handler {
                 nickname: udoc.displayName || udoc.uname,
                 bio: udoc.bio,
                 avatar: {
-                    type: 'gravatar',
-                    key: udoc.gravatar,
+                    type: udoc.avatar.split(':')[0],
+                    key: udoc.avatar.split(':')[1],
                 },
                 isAdmin: udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN) || udoc.hasPerm(PERM.PERM_ADMIN),
                 acceptedProblemCount: udoc.nAccept,

@@ -35,7 +35,6 @@ __langname: 한국어
 'Role {1} already exists in domain {0}.': '역할 {1}이(가) 이미 {0}에 존재합니다.'
 'Solved {0} problems, RP: {1} (No. {2})': '총 {0} 문제 해결.RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 의 값 `{1}` 이 이미 존재합니다.'
-'We use <a href="https://en.gravatar.com/" target="_blank">Gravatar</a> to present your avatar icon.': '<a href="https://cn.gravatar.com/" target="_blank">Gravatar</a>를 만들어 보세요.'
 'Yes': 예
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 난이도가 알고리즘에 의해 정해지지 않은 경우에만 적용됩니다.
 "Split by ', '.": “, ”“，”으로 구분
@@ -312,7 +311,6 @@ Formula blocks: 공식 블록
 fs_upload: 업로드
 Gender Visibility: 성별 공개
 Gender: 성
-Gravatar Email: Gravatar 이메일
 Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한

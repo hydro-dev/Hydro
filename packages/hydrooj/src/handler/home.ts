@@ -10,8 +10,9 @@ import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
-import * as misc from '../lib/misc';
 import { md5 } from '../lib/crypto';
+import { isPassword, isEmail } from '../lib/validator';
+import avatar from '../lib/avatar';
 import * as mail from '../lib/mail';
 import * as contest from '../model/contest';
 import message from '../model/message';
@@ -24,7 +25,6 @@ import * as discussion from '../model/discussion';
 import token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
-import { isPassword, isEmail } from '../lib/validator';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -309,13 +309,13 @@ class HomeDomainCreateHandler extends Handler {
     @param('id', Types.Name)
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
-    @param('gravatar', Types.Content, true, isEmail)
-    async post(_: string, id: string, name: string, bulletin: string, gravatar: string) {
+    @param('avatar', Types.Content, true, isEmail)
+    async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);
-        gravatar = gravatar || this.user.gravatar || this.user.mail || 'guest@hydro.local';
+        avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}` || 'gravatar:guest@hydro.local';
         const domainId = await domain.add(id, this.user._id, name, bulletin);
-        await domain.edit(domainId, { gravatar });
+        await domain.edit(domainId, { avatar });
         await domain.setUserRole(domainId, this.user._id, 'root');
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
@@ -338,7 +338,7 @@ class HomeMessagesHandler extends Handler {
             if (!parsed[target]) {
                 parsed[target] = {
                     _id: target,
-                    udoc: { ...udict[target], gravatar: misc.gravatar(udict[target].gravatar) },
+                    udoc: { ...udict[target], avatarUrl: avatar(udict[target].avatar) },
                     messages: [],
                 };
             }
@@ -358,7 +358,7 @@ class HomeMessagesHandler extends Handler {
     async postSend(domainId: string, uid: number, content: string) {
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
-        if (udoc.gravatar) udoc.gravatar = misc.gravatar(udoc.gravatar);
+        if (udoc.avatar) udoc.avatarUrl = avatar(udoc.avatar);
         const mdoc = await message.send(this.user._id, uid, content, message.FLAG_UNREAD);
         this.back({ mdoc, udoc });
     }
@@ -391,7 +391,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     async onMessageReceived(uid: number, mdoc: Mdoc) {
         if (uid !== this.user._id) return;
         const udoc = await user.getById(this.domainId, mdoc.from);
-        udoc.gravatar_url = misc.gravatar(udoc.gravatar, 64);
+        udoc.avatarUrl = avatar(udoc.avatar, 64);
         this.send({ udoc, mdoc });
     }
 

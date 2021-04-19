@@ -101,7 +101,7 @@ class UserModel {
         _id: 0,
         uname: 'Unknown User',
         unameLower: 'unknown user',
-        gravatar: 'unknown@hydro.local',
+        avatar: 'gravatar:unknown@hydro.local',
         mail: 'unknown@hydro.local',
         mailLower: 'unknown@hydro.local',
         salt: '',
@@ -213,7 +213,7 @@ class UserModel {
                 loginat: new Date(),
                 loginip: regip,
                 priv,
-                gravatar: mail,
+                avatar: `gravatar:${mail}`,
             });
         } catch (e) {
             logger.warn('%o', e);

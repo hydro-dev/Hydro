@@ -7,7 +7,7 @@
     "main": "package.json",
     "scripts": {
         "build": "node build/prepare.js && tsc -b",
-        "build:watch": "node build/build.js && tsc -b --watch",
+        "build:watch": "node build/prepare.js && tsc -b --watch",
         "build:ui": "node packages/ui-default/build",
         "build:ui:dev": "node packages/ui-default/build --dev",
         "build:ui:production": "node packages/ui-default/build --production",

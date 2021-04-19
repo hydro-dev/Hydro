@@ -4,6 +4,7 @@ import {
     UserNotFoundError, SystemError, BlacklistedError,
     UserFacingError, LoginError,
 } from '../error';
+import { User } from '../interface';
 import {
     Route, Handler, Types, param, post,
 } from '../service/server';
@@ -17,9 +18,8 @@ import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
-import * as misc from '../lib/misc';
 import paginate from '../lib/paginate';
-import { User } from '../interface';
+import avatar from '../lib/avatar';
 
 class UserLoginHandler extends Handler {
     async get() {
@@ -241,7 +241,7 @@ class UserSearchHandler extends Handler {
         if (udoc) udocs.push(udoc);
         if (!exactMatch) udocs.push(...await user.getPrefixList(domainId, q, 20));
         for (const i in udocs) {
-            udocs[i].gravatar = misc.gravatar(udocs[i].gravatar || '');
+            udocs[i].avatarUrl = avatar(udocs[i].avatar);
         }
         this.response.body = udocs;
     }

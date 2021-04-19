@@ -10,12 +10,13 @@ import { Progress } from './ui';
 import { Rdoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
-import { iterateAllDomain, iterateAllProblem } from './pipelineUtils';
+import { iterateAllDomain, iterateAllProblem, iterateAllUser } from './pipelineUtils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
 import difficultyAlgorithm from './lib/difficulty';
 import problem from './model/problem';
+import user from './model/user';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
@@ -296,6 +297,13 @@ const scripts: UpgradeScript[] = [
             if (ddoc.join) {
                 await coll.updateOne(pick(ddoc, '_id'), { $set: { _join: ddoc.join }, $unset: { join: '' } });
             }
+        });
+        return true;
+    },
+    async function _22_23() {
+        await iterateAllUser(async (udoc) => {
+            if (!udoc.gravatar) return;
+            await user.setById(udoc._id, { avatar: `gravatar:${udoc.gravatar}` }, { gravatar: '' });
         });
         return true;
     },

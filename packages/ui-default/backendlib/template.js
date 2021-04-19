@@ -9,7 +9,7 @@ const Xss = require('xss');
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const markdown = require('./markdown');
 
-const { misc, buildContent } = global.Hydro.lib;
+const { misc, buildContent, avatar } = global.Hydro.lib;
 
 const xss = new Xss.FilterXSS({
   whiteList: {
@@ -187,7 +187,7 @@ env.addGlobal('typeof', (o) => typeof o);
 env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
-env.addGlobal('gravatar', misc.gravatar);
+env.addGlobal('avatarUrl', avatar);
 env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('model', global.Hydro.model);
 env.addGlobal('ui', global.Hydro.ui);

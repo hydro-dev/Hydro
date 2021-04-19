@@ -1,7 +1,6 @@
 import AnsiUp from 'ansi_up';
 import { ObjectID } from 'mongodb';
 import { size, formatSeconds } from '@hydrooj/utils/lib/utils';
-import { md5 } from './crypto';
 
 export { size, formatSeconds } from '@hydrooj/utils/lib/utils';
 
@@ -9,10 +8,6 @@ const AU = new AnsiUp();
 
 export function ansiToHtml(str: string) {
     return AU.ansi_to_html(str);
-}
-
-export function gravatar(email: string, s = 32) {
-    return `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${s}`;
 }
 
 export function datetimeSpan(dt: Date | ObjectID, relative = true, format = '%Y-%m-%d %H:%M:%S') {
@@ -53,5 +48,5 @@ export function* paginate(page: number, numPages: number) {
 }
 
 global.Hydro.lib.misc = {
-    gravatar, datetimeSpan, paginate, size, formatSeconds, ansiToHtml,
+    datetimeSpan, paginate, size, formatSeconds, ansiToHtml,
 };

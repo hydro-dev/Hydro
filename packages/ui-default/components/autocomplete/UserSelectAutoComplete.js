@@ -16,7 +16,7 @@ function renderItem(user) {
   return tpl`
     <div class="media">
       <div class="media__left medium">
-        <img class="small user-profile-avatar" src="${user.gravatar}" width="30" height="30">
+        <img class="small user-profile-avatar" src="${user.avatarUrl}" width="30" height="30">
       </div>
       <div class="media__body medium">
         <div class="user-select__uname">${user.uname}</div>

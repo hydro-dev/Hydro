@@ -52,8 +52,8 @@ export default connect(mapStateToProps, null)(class MessagePadDialogueContentCon
         isSelf={reply.from === UserContext._id}
         faceUrl={
           reply.from === UserContext._id
-            ? UserContext.gravatar
-            : this.props.item.udoc.gravatar
+            ? UserContext.avatarUrl
+            : this.props.item.udoc.avatarUrl
         }
       >
         <div>{reply.content}</div>

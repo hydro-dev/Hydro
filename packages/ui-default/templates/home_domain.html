@@ -30,7 +30,7 @@
       {%- for ddoc in ddocs -%}
         <tr>
           <td class="col--icon">
-            <img src="{{ gravatar(ddoc.gravatar) }}" width="32" height="32">
+            <img src="{{ avatarUrl(ddoc.avatar, 32) }}" width="32" height="32">
           </td>
           <td class="col--name">
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})

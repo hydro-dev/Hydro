@@ -10,7 +10,7 @@ const name = process.argv[2];
 
 const IGNORE_CHECK = ['en'];
 const IGNORE_MISSING = [
-  '?', 'AC', 'Gravatar', 'ID', 'MD5', 'URL',
+  '?', 'AC', 'ID', 'MD5', 'URL',
 ];
 const RE_TEMPLATE = /_\(['"]([\s\S])*?['"]\)/gmi;
 const RE_UI = /i18n\(['"]([\s\S])*?['"](,.*?)?\)/gmi;

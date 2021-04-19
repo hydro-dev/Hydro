@@ -265,14 +265,14 @@ export namespace Time {
 
 export function errorMessage(err: Error | string) {
     const t = typeof err === 'string' ? err : err.stack;
-    const q = t.split('\n');
-    for (let i = 0; i < q.length; i++) {
-        if (!q[i].startsWith('    at')) continue;
-        if (q[i].includes(`${sep}@hydrooj${sep}`)) q[i] = q[i].split(`@hydrooj${sep}`)[1];
-        else if (q[i].includes(`${sep}hydrooj${sep}`)) q[i] = `    at hydrooj${sep}${q[i].split(`hydrooj${sep}`)[1]}`;
-    }
-    if (typeof err === 'string') return q.join('\n');
-    err.stack = q.join('\n');
+    const parsed = t
+        .replace(/[A-Z]:\\.+\\@hydrooj\\/g, '\\')
+        .replace(/\/.+\/@hydrooj\//g, '\\')
+        .replace(/[A-Z]:\\.+\\hydrooj\\/g, 'hydrooj\\')
+        .replace(/\/.+\/hydrooj\//g, 'hydrooj/')
+        .replace(/\\/g, '/');
+    if (typeof err === 'string') return parsed;
+    err.stack = parsed;
     return err;
 }
 
@@ -376,3 +376,17 @@ export async function retry(arg0: number | Function, func: any, ...args: any[]) 
         return res;
     }
 }
+
+export function CallableInstance(property = '__call__') {
+    let func;
+    if (typeof property === 'function') func = property;
+    else func = this.constructor.prototype[property];
+    const apply = function __call__(...args) { return func.apply(apply, ...args); };
+    Object.setPrototypeOf(apply, this.constructor.prototype);
+    Object.getOwnPropertyNames(func).forEach((p) => {
+        Object.defineProperty(apply, p, Object.getOwnPropertyDescriptor(func, p));
+    });
+    return apply;
+}
+
+CallableInstance.prototype = Object.create(Function.prototype);
