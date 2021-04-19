@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
 import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
+import serialize from 'serialize-javascript';
 import { argv } from 'yargs';
 import type { Handler } from './server';
 import { Logger } from '../logger';
@@ -179,13 +180,15 @@ export function boardcast<K extends keyof EventMap>(event: K, ...payload: Parame
         process.send({
             event: 'bus',
             eventName: event,
-            payload,
+            payload: serialize(payload),
         });
     } else parallel(event, ...payload);
 }
 
 async function messageHandler(worker: cluster.Worker, msg: any) {
     if (!msg) msg = worker;
+    // eslint-disable-next-line no-eval
+    if (typeof msg.payload === 'string') msg.payload = eval(msg.payload);
     if (msg.event) {
         if (msg.event === 'bus') {
             if (cluster.isMaster) {

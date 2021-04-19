@@ -110,13 +110,11 @@ export async function calcLevel(domainId: string, report: Function) {
         report({ message: 'Updating users levelled {0}'.format(levels[i][0]) });
         const query: FilterQuery<Udoc> = {
             domainId,
-            $and: [{ rank: { $lte: levels[i][1] } }],
+            $and: [{ rank: { $lte: (levels[i][1] * rank) / 100 } }],
         };
-        if (i < levels.length - 1) query.$and.push({ rank: { $gt: levels[i + 1][1] } });
+        if (i < levels.length - 1) query.$and.push({ rank: { $gt: (levels[i + 1][1] * rank) / 100 } });
         bulk.find(query).update({ $set: { level: levels[i][0] } });
     }
-    const i = levels.length - 1;
-    bulk.find({ domainId, rank: { $lte: levels[i][1] } }).update({ $set: { level: levels[i][0] } });
     await bulk.execute();
 }
 
