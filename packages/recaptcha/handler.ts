@@ -1,10 +1,11 @@
 import superagent from 'superagent';
-import { ValidationError } from 'hydrooj/dist/error';
+import { ValidationError, ForbiddenError } from 'hydrooj/dist/error';
 import { PRIV } from 'hydrooj/dist/model/builtin';
 import * as system from 'hydrooj/dist/model/system';
 import * as bus from 'hydrooj/dist/service/bus';
 
 bus.on('handler/before/UserRegister', async (thisArg) => {
+    if (!system.get('recaptcha.key')) return;
     if (thisArg.request.method !== 'post') {
         thisArg.UiContext.recaptchaKey = system.get('recaptcha.key');
         return;
@@ -15,7 +16,7 @@ bus.on('handler/before/UserRegister', async (thisArg) => {
         .field('secret', system.get('recaptcha.secret'))
         .field('response', thisArg.args.captcha)
         .field('remoteip', thisArg.request.ip);
-    if (!response.body.success) throw new ValidationError('captcha fail');
+    if (!response.body.success) throw new ForbiddenError('captcha fail');
 });
 
 bus.on('handler/after/UserRegister', async (thisArg) => {
