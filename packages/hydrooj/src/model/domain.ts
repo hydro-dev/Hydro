@@ -216,7 +216,7 @@ class DomainModel {
     }
 
     static getJoinSettings(ddoc: DomainDoc, roles: string[]) {
-        if (!ddoc.join) return null;
+        if (!ddoc._join) return null;
         const joinSettings = ddoc._join;
         if (joinSettings.method === DomainModel.JOIN_METHOD_NONE) return null;
         if (!roles.includes(joinSettings.role)) return null;
