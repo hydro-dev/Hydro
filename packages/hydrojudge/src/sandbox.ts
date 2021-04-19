@@ -98,6 +98,7 @@ export async function runMultiple(execute) {
         res = await axios.post('/run', body);
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
     } catch (e) {
+        if (e instanceof FormatError) throw e;
         throw new SystemError('Sandbox Error');
     }
     return await Promise.all(res.data.map((i) => adaptResult(i, {})));
@@ -121,6 +122,7 @@ export async function run(execute, params?) {
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
         [result] = res.data;
     } catch (e) {
+        if (e instanceof FormatError) throw e;
         // FIXME request body larger than maxBodyLength limit
         throw new SystemError('Sandbox Error', e.message);
     }
