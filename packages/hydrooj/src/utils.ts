@@ -32,4 +32,14 @@ export function logAndReturn(logger: Logger) {
     };
 }
 
+const RE_USER = /(?:^|\s)(@)([^ ]{3,255}?)(?=\s|$)/g;
+
+export function getRelatedUsers(content: string) {
+    const results = [];
+    let res: string[];
+    // eslint-disable-next-line no-cond-assign
+    while (res = RE_USER.exec(content)) results.push(res[2]);
+    return results;
+}
+
 export * from '@hydrooj/utils/lib/utils';

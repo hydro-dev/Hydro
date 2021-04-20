@@ -84,13 +84,14 @@ async function runContest(...arg: any[]) {
 }
 
 export async function calcLevel(domainId: string, report: Function) {
-    const ducnt = await domain.getMultiUserInDomain(domainId).count();
+    const filter = { rp: { $ne: 1500, $exists: true } };
+    const ducnt = await domain.getMultiUserInDomain(domainId, filter).count();
     if (!ducnt) return;
     let last = { rp: null };
     let rank = 0;
     let count = 0;
     const coll = global.Hydro.service.db.collection('domain.user');
-    const ducur = domain.getMultiUserInDomain(domainId).project({ rp: 1 }).sort({ rp: -1 });
+    const ducur = domain.getMultiUserInDomain(domainId, filter).project({ rp: 1 }).sort({ rp: -1 });
     let bulk = coll.initializeUnorderedBulkOp();
     while (await ducur.hasNext()) {
         const dudoc = await ducur.next();
