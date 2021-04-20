@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'js-yaml';
-import { max, maxBy, sum } from 'lodash';
+import { max, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
 import { FormatError, SystemError } from './error';
