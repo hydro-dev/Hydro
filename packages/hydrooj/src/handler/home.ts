@@ -150,7 +150,7 @@ class HomeSecurityHandler extends Handler {
         this.response.redirect = this.url('user_login');
     }
 
-    @param('currentPassword', Types.String)
+    @param('password', Types.String)
     @param('mail', Types.Name, isEmail)
     async postChangeMail(domainId: string, current: string, email: string) {
         await this.limitRate('send_mail', 3600, 30);
