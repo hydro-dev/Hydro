@@ -394,6 +394,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
+        if (filename.includes('/')) throw new ValidationError('filename', 'Bad filename');
         if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);

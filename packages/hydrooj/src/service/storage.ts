@@ -115,6 +115,7 @@ class StorageService {
     }
 
     async put(target: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (typeof file === 'string') file = createReadStream(file);
         try {
             return await this.client.putObject(this.opts.bucket, target, file, meta);
@@ -125,6 +126,7 @@ class StorageService {
     }
 
     async get(target: string, path?: string) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
             if (path) return await this.client.fGetObject(this.opts.bucket, target, path);
             return await this.client.getObject(this.opts.bucket, target);
@@ -135,6 +137,13 @@ class StorageService {
     }
 
     async del(target: string | string[]) {
+        if (typeof target === 'string') {
+            if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        } else {
+            for (const t of target) {
+                if (t.includes('..') || t.includes('//')) throw new Error('Invalid path');
+            }
+        }
         try {
             if (typeof target === 'string') return await this.client.removeObject(this.opts.bucket, target);
             return await this.client.removeObjects(this.opts.bucket, target);
@@ -145,6 +154,7 @@ class StorageService {
     }
 
     async list(target: string, recursive = true) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
             const stream = this.client.listObjects(this.opts.bucket, target, recursive);
             return await new Promise<BucketItem[]>((resolve, reject) => {
@@ -168,6 +178,7 @@ class StorageService {
     }
 
     async getMeta(target: string) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
             const result = await this.client.statObject(this.opts.bucket, target);
             return { ...result.metaData, ...result };
@@ -178,6 +189,7 @@ class StorageService {
     }
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
             const url = await this.client.presignedGetObject(
                 this.opts.bucket,

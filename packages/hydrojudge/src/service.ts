@@ -24,6 +24,7 @@ declare module 'hydrooj/dist/interface' {
         'hydrojudge.tmpfs_size': string,
         'hydrojudge.retry_delay_sec': number,
         'hydrojudge.sandbox_host': string,
+        'hydrojudge.memoryMax': string,
         'hydrojudge.testcases_max': number,
         'hydrojudge.total_time_limit': number,
         'hydrojudge.parallelism': number,
@@ -81,11 +82,16 @@ async function postInit() {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
         } catch (e) { /* ignore */ }
         const version = {};
+        const filenames = new Set<string>();
         for (const file of files) {
+            filenames.add(file.name);
             version[file.name] = file.etag;
             if (etags[file.name] !== file.etag) {
                 await storage.get(`problem/${domainId}/${pid}/testdata/${file.name}`, path.join(filePath, file.name));
             }
+        }
+        for (const name in etags) {
+            if (!filenames.has(name)) await fs.rm(path.join(filePath, name));
         }
         fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
         fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
