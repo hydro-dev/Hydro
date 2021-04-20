@@ -26,13 +26,11 @@ const statusMap = {
 function proc({
     execute = '',
     time = 16000,
-    memory = 1024,
+    memory = parseMemoryMB(getConfig('memoryMax')),
     process_limit = 32,
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
     const size = parseMemoryMB(getConfig('stdio_size'));
-    const memoryMax = parseMemoryMB(getConfig('memoryMax'));
-    if (memory > memoryMax) throw new FormatError('Memory limit larger than memory_max');
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
         env,

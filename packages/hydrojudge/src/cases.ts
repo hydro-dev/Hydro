@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'js-yaml';
-import { sum } from 'lodash';
+import { max, maxBy, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
 import { FormatError, SystemError } from './error';
@@ -187,6 +187,8 @@ function isValidConfig(config) {
     if (total_time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
+    const memMax = max(config.subtasks.map((subtask) => subtask.memory));
+    if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
 }
 
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
