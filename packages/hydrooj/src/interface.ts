@@ -31,6 +31,7 @@ export interface SystemKeys {
     'server.name': string,
     'server.url': string,
     'server.xff': string,
+    'server.xhost': string,
     'server.worker': number,
     'server.port': number,
     'server.language': string,

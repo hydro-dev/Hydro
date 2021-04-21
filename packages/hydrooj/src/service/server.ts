@@ -443,8 +443,9 @@ export class Handler extends HandlerCommon {
         this.UiContext = cloneDeep(UiContextBase);
         this.UiContext.cdn_prefix = system.get('server.cdn');
         this.session = {};
-        const xff = system.get('server.xff');
+        const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
+        if (xhost) this.request.hostname = this.request.headers[xhost.toLowerCase()] || this.request.hostname;
         this.noCheckPermView = true;
     }
 
