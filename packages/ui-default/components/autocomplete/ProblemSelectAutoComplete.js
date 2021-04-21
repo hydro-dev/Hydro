@@ -9,7 +9,7 @@ function getText(pdoc) {
 }
 
 function getItems(prefix) {
-  return request.get('/problem/list', { prefix });
+  return request.get(`/d/${UiContext.domainId}/problem/list`, { prefix });
 }
 
 function renderItem(pdoc) {
