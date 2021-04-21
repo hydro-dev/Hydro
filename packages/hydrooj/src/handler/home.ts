@@ -250,7 +250,7 @@ class HomeSettingsHandler extends Handler {
         const settings = args.category === 'domain' ? setting.DOMAIN_USER_SETTINGS_BY_KEY : setting.SETTINGS_BY_KEY;
         for (const key in args) {
             const val = set(settings[key], key, args[key]);
-            if (val) $set[key] = val;
+            if (val !== undefined) $set[key] = val;
         }
         for (const key in booleanKeys) if (!args[key]) $set[key] = false;
         await setter($set);

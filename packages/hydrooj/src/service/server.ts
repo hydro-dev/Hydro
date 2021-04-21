@@ -445,7 +445,7 @@ export class Handler extends HandlerCommon {
         this.session = {};
         const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
-        if (xhost) this.request.hostname = this.request.headers[xhost.toLowerCase()] || this.request.hostname;
+        if (xhost) this.request.host = this.request.headers[xhost.toLowerCase()] || this.request.host;
         this.noCheckPermView = true;
     }
 
