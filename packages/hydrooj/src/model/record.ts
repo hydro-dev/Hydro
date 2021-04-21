@@ -3,7 +3,7 @@ import {
     PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
     FilterQuery,
 } from 'mongodb';
-import { Dictionary } from 'lodash';
+import { sum } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
@@ -15,6 +15,13 @@ import db from '../service/db';
 
 class RecordModel {
     static coll: Collection<Rdoc> = db.collection('record');
+
+    static async submissionPriority(uid: number) {
+        const pending = await task.count({ uid });
+        const timeRecent = await RecordModel.coll
+            .find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, uid }).project({ time: 1 }).toArray();
+        return -(pending * (sum(timeRecent) / 1000));
+    }
 
     static async get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
         const res = await RecordModel.coll.findOne({ _id });
@@ -86,7 +93,10 @@ class RecordModel {
             data.hidden = true;
         } else data.contest = contestOrConfig;
         const res = await RecordModel.coll.insertOne(data);
-        if (addTask) await RecordModel.judge(domainId, res.insertedId);
+        if (addTask) {
+            const priority = await RecordModel.submissionPriority(uid);
+            await RecordModel.judge(domainId, res.insertedId, 1 - priority);
+        }
         return res.insertedId;
     }
 
@@ -151,7 +161,7 @@ class RecordModel {
 
     static async getList(
         domainId: string, rids: ObjectID[], showHidden: boolean,
-    ): Promise<Dictionary<Rdoc>> {
+    ): Promise<Record<string, Rdoc>> {
         const r = {};
         rids = Array.from(new Set(rids));
         const rdocs = await RecordModel.coll.find({ domainId, _id: { $in: rids } }).toArray();

@@ -13,7 +13,7 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
             ident,
             beginAt,
             expireAt,
-            op: { $not: { $gte: maxOperations } },
+            op: { $lt: maxOperations },
         }, { $inc: { op: 1 } }, { upsert: true });
     } catch (e) {
         throw new OpcountExceededError(op, periodSecs, maxOperations);

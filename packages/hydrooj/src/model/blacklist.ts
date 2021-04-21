@@ -9,7 +9,7 @@ class BlackListModel {
     @ArgMethod
     static async add(id: string, expire?: Date | number) {
         let expireAt;
-        if (expire === 0) expireAt = moment().add(1000, 'years').toDate();
+        if (expire === 0) expireAt = moment().add(1000, 'months').toDate();
         if (typeof expire === 'number') expireAt = moment().add(expire, 'months').toDate();
         else if (expire instanceof Date) expireAt = expire;
         else expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
