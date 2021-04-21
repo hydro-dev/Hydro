@@ -243,6 +243,9 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editReply(domainId, drid, content);
+        await oplog.add({
+            ...this.drdoc, operator: this.user._id, operateIp: this.request.ip, type: 'edit',
+        });
         this.back();
     }
 
@@ -255,7 +258,9 @@ class DiscussionDetailHandler extends DiscussionHandler {
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
         await discussion.delReply(domainId, drid);
-        await oplog.add({ ...this.drdoc, operator: this.user._id, type: 'drdoc' });
+        await oplog.add({
+            ...this.drdoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
+        });
         this.back();
     }
 
@@ -264,8 +269,12 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.Content)
     async postEditTailReply(domainId: string, drid: ObjectID, drrid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
-        if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        if (this.drrdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editTailReply(domainId, drid, drrid, content);
+        // TODO: history?
+        await oplog.add({
+            ...this.drrdoc, operator: this.user._id, operateIp: this.request.ip, type: 'edit',
+        });
         this.back();
     }
 
@@ -274,7 +283,9 @@ class DiscussionDetailHandler extends DiscussionHandler {
     async postDeleteTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
         if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         await discussion.delTailReply(domainId, drid, drrid);
-        await oplog.add({ ...this.drrdoc, operator: this.user._id, type: 'drrdoc' });
+        await oplog.add({
+            ...this.drrdoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
+        });
         this.back();
     }
 
@@ -339,6 +350,9 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
         await discussion.edit(domainId, did, title, content, highlight, pin);
+        await oplog.add({
+            ...this.ddoc, operator: this.user._id, type: 'edit',
+        });
         this.response.body = { did };
         this.response.redirect = this.url('discussion_detail', { did });
     }
@@ -348,7 +362,9 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         await discussion.del(domainId, did);
-        await oplog.add({ ...this.ddoc, operator: this.user._id, type: 'ddoc' });
+        await oplog.add({
+            ...this.ddoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
+        });
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
         this.response.redirect = this.url('discussion_node', {
             type: discussion.typeDisplay[this.ddoc.parentType],

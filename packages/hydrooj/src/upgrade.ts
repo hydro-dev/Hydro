@@ -307,6 +307,10 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _23_24() {
+        await db.collection('oplog').updateMany({}, { $set: { type: 'delete', operateIp: '127.0.0.1' } });
+        return true;
+    },
 ];
 
 export default scripts;
