@@ -106,7 +106,6 @@ export async function calcLevel(domainId: string, report: Function) {
     const levels = global.Hydro.model.builtin.LEVELS;
     bulk = coll.initializeUnorderedBulkOp();
     for (let i = 0; i < levels.length; i++) {
-        report({ message: 'Updating users levelled {0}'.format(i) });
         const query: FilterQuery<Udoc> = {
             domainId,
             $and: [{ rank: { $lte: (levels[i] * count) / 100 } }],
@@ -184,10 +183,7 @@ export async function run({ domainId }, report: Function) {
 }
 
 export const validate = {
-    $or: [
-        { domainId: 'string' },
-        { domainId: 'undefined' },
-    ],
+    domainId: 'string?',
 };
 
 global.Hydro.script.rp = { run, description, validate };

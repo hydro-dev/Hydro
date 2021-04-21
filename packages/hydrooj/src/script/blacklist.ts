@@ -51,7 +51,7 @@ async function _user(
     if (!udoc) return;
     report({ message: `user ${udoc._id} ${udoc.uname}` });
     await _address(udoc.loginip(), bset, uset, dset, dryrun, report);
-    const ddocs = await db.collection('document').find({ docType: document.TYPE_DISCUSSION })
+    const ddocs = await db.collection('document').find({ docType: document.TYPE_DISCUSSION, owner: uid })
         .sort({ domainId: 1, docId: 1 }).toArray();
     const tasks = [];
     for (const ddoc of ddocs) {
@@ -76,12 +76,12 @@ export async function run({
 }
 
 export const validate = {
-    $or: {
-        address: 'string',
-        discuss: ObjectID,
-        user: 'number',
-    },
-    dryrun: 'boolean',
+    $or: [
+        { address: 'string' },
+        { discuss: ObjectID },
+        { user: 'number' },
+    ],
+    dryrun: 'boolean?',
 };
 
 global.Hydro.script.blacklist = { run, description, validate };

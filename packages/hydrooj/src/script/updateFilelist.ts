@@ -24,10 +24,7 @@ export async function run({ domainId }, report: Function) {
 }
 
 export const validate = {
-    $or: [
-        { domainId: 'string' },
-        { domainId: 'undefined' },
-    ],
+    domainId: 'string?',
 };
 
 global.Hydro.script.updateFilelist = { run, description, validate };

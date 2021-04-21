@@ -16,26 +16,14 @@ function _validate(scheme: any, arg: any, base: string): void {
     }
     if (scheme.$group) _validate(scheme.$group, arg, base);
     if (scheme.$or) {
-        if (scheme.$or instanceof Array) {
-            for (const s of scheme.$or) {
-                let success = false;
-                try {
-                    _validate(s, arg, base);
-                    success = true;
-                } catch { }
-                // TODO beautify output
-                if (!success) throw new ValidationError(scheme.$or);
-            }
-        } else {
-            for (const skey in scheme.$or) {
-                let success = false;
-                try {
-                    _validate(scheme.$or[skey], arg[skey], `${base}.${skey}`);
-                    success = true;
-                } catch { }
-                // TODO beautify output
-                if (!success) throw new ValidationError(base, scheme.$or);
-            }
+        for (const s of scheme.$or) {
+            let success = false;
+            try {
+                _validate(s, arg, base);
+                success = true;
+            } catch { }
+            // TODO beautify output
+            if (!success) throw new ValidationError(scheme.$or);
         }
     }
     if (scheme.$and) for (const s of scheme.$and) _validate(s, arg, base);
