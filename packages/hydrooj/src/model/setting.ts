@@ -182,7 +182,6 @@ SystemSetting(
     Setting('setting_session', 'session.unsaved_expire_seconds', 3600 * 3,
         'number', 'session.unsaved_expire_seconds', 'Unsaved session expire seconds'),
     Setting('setting_storage', 'db.ver', 0, 'number', 'db.ver', 'Database version', FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'user', 1, 'number', 'user', 'User Counter', FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'installid', String.random(64), 'text', 'installid', 'Installation ID', FLAG_HIDDEN | FLAG_DISABLED),
 );
 

@@ -76,11 +76,9 @@ export async function run({
 }
 
 export const validate = {
-    $or: [
-        { address: 'string' },
-        { discuss: ObjectID },
-        { user: 'number' },
-    ],
+    address: 'string?',
+    discuss: 'string?',
+    user: 'number?',
     dryrun: 'boolean?',
 };
 

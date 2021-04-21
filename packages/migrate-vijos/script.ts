@@ -489,11 +489,6 @@ export async function run({
         report({ message: 'No valid installation found' });
         return false;
     }
-    await dst.collection('system').updateOne(
-        { _id: 'user' },
-        { $set: { value: userCounter.value } },
-        { upsert: true },
-    );
     await report({ progress: 1, message: 'Collection:system done.' });
     if (!await dst.collection('system').findOne({ _id: 'migrateVijosFs' })) {
         const f = ['fs.files', 'fs.chunks'] as any;

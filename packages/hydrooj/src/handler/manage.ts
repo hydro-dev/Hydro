@@ -108,7 +108,7 @@ class SystemScriptHandler extends SystemHandler {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
         const args = JSON.parse(raw);
         validate(global.Hydro.script[id].validate, args);
-        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, 'raw');
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, raw);
         const report = (data) => judge.next({ domainId, rid, ...data });
         report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = new Date().getTime();
