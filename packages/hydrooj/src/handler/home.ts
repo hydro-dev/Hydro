@@ -3,7 +3,7 @@ import yaml from 'js-yaml';
 import {
     VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
     NotFoundError, UserNotFoundError, PermissionError,
-    DomainAlreadyExistsError, ValidationError,
+    DomainAlreadyExistsError, ValidationError, BlacklistedError,
 } from '../error';
 import { Mdoc, Setting } from '../interface';
 import * as bus from '../service/bus';
@@ -25,6 +25,7 @@ import * as discussion from '../model/discussion';
 import token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
+import BlackListModel from '../model/blacklist';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -153,10 +154,12 @@ class HomeSecurityHandler extends Handler {
     @param('password', Types.String)
     @param('mail', Types.Name, isEmail)
     async postChangeMail(domainId: string, current: string, email: string) {
-        await this.limitRate('send_mail', 3600, 30);
+        const mailDomain = email.split('@')[1];
+        if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
         this.user.checkPassword(current);
         const udoc = await user.getByEmail(domainId, email);
         if (udoc) throw new UserAlreadyExistError(email);
+        await this.limitRate('send_mail', 3600, 30);
         const [code] = await token.add(
             token.TYPE_CHANGEMAIL,
             system.get('session.unsaved_expire_seconds'),

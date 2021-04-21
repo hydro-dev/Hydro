@@ -477,7 +477,7 @@ export class Handler extends HandlerCommon {
     }
 
     async getBdoc() {
-        const bdoc = await blacklist.get(this.request.ip);
+        const bdoc = await blacklist.get(`ip::${this.request.ip}`);
         if (bdoc) throw new BlacklistedError(this.request.ip);
     }
 

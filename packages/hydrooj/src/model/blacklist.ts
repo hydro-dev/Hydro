@@ -6,10 +6,10 @@ const coll = db.collection('blacklist');
 
 class BlackListModel {
     @ArgMethod
-    static async add(ip: string) {
+    static async add(id: string) {
         const expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
         const res = await coll.findOneAndUpdate(
-            { _id: ip },
+            { _id: id },
             { $set: { expireAt } },
             { upsert: true, returnOriginal: false },
         );
@@ -17,8 +17,8 @@ class BlackListModel {
     }
 
     @ArgMethod
-    static async get(ip: string) {
-        return await coll.findOne({ _id: ip });
+    static async get(id: string) {
+        return await coll.findOne({ _id: id });
     }
 
     @ArgMethod

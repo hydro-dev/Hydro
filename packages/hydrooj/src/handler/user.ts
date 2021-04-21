@@ -16,6 +16,7 @@ import problem, { Pdoc } from '../model/problem';
 import task from '../model/task';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
+import BlackListModel from '../model/blacklist';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
 import paginate from '../lib/paginate';
@@ -67,6 +68,8 @@ export class UserRegisterHandler extends Handler {
     async post(domainId: string, mail: string, phoneNumber: string) {
         if (mail) {
             if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
+            const mailDomain = mail.split('@')[1];
+            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             await this.limitRate('send_mail', 3600, 30);
             const t = await token.add(
                 token.TYPE_REGISTRATION,
