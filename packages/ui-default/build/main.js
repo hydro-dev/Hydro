@@ -23,6 +23,7 @@ function runWebpack({
       proxy: {
         context: () => true,
         target: 'http://localhost:2333',
+        ws: true,
       },
     });
     return server.listen(8000);

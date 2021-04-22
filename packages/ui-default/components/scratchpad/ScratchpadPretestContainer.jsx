@@ -45,6 +45,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadPret
           <DataInput
             title={i18n('Output')}
             value={this.props.output}
+            html
           />
         </div>
       </Panel>

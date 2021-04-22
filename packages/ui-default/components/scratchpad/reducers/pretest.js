@@ -1,3 +1,5 @@
+import { STATUS_TEXTS } from '@hydrooj/utils/lib/status';
+
 export default function reducer(state = {
   input: '',
   output: '',
@@ -12,10 +14,13 @@ export default function reducer(state = {
   }
   if (action.type === 'SCRATCHPAD_RECORDS_PUSH') {
     const { rdoc } = action.payload;
-    if (rdoc._id === state.rid && rdoc.testCases[0]) {
+    if (rdoc._id === state.rid) {
+      const output = [`${STATUS_TEXTS[rdoc.status]} ${rdoc.time}ms ${rdoc.memory}MiB`];
+      if (rdoc.compilerTexts.length) output.push(rdoc.compilerTexts.join('\n'));
+      if (rdoc.testCases.length) output.push(rdoc.testCases[0].message || '');
       return {
         ...state,
-        output: rdoc.testCases[0].message,
+        output: output.join('\n'),
       };
     }
   }
