@@ -22,11 +22,7 @@ class MessageModel {
         const mdoc = {
             from, to, content, _id: res.insertedId, flag,
         };
-        if (from !== to) {
-            // ENHANCE domainId?
-            const udoc = await user.getById('system', to);
-            bus.boardcast('user/message', to, mdoc, udoc);
-        }
+        if (from !== to) bus.boardcast('user/message', to, mdoc);
         await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }

@@ -45,7 +45,7 @@ export interface EventMap extends Record<string, any> {
 
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
 
-    'user/message': (uid: number, mdoc: Mdoc, udoc: User) => void
+    'user/message': (uid: number, mdoc: Mdoc) => void
     'user/get': (udoc: User) => void
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn

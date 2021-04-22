@@ -446,7 +446,7 @@ export class Handler extends HandlerCommon {
         const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
         if (xhost) this.request.host = this.request.headers[xhost.toLowerCase()] || this.request.host;
-        this.noCheckPermView = true;
+        this.noCheckPermView = false;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -468,7 +468,7 @@ export class Handler extends HandlerCommon {
         this.response.body = data;
         this.response.template = null;
         this.response.type = 'application/octet-stream';
-        this.response.disposition = `attachment; filename="${name}"`;
+        if (name) this.response.disposition = `attachment; filename="${name}"`;
     }
 
     async getSession() {
@@ -477,19 +477,15 @@ export class Handler extends HandlerCommon {
         if (!this.session) this.session = { uid: 0 };
     }
 
-    async getBdoc() {
-        const bdoc = await blacklist.get(`ip::${this.request.ip}`);
-        if (bdoc) throw new BlacklistedError(this.request.ip);
-    }
-
     async init({ domainId }) {
-        if (!argv.benchmark) await this.limitRate('global', 10, 1);
-        const [absoluteDomain, inferDomain] = await Promise.all([
+        if (!argv.benchmark) await this.limitRate('global', 10, 88);
+        const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
+            blacklist.get(`ip::${this.request.ip}`),
             this.getSession(),
-            this.getBdoc(),
         ]);
+        if (bdoc) throw new BlacklistedError(this.request.ip);
         if (inferDomain && !this.request.path.startsWith('/d/')) {
             this.domainId = inferDomain._id;
             this.args.domainId = inferDomain._id;
@@ -553,7 +549,7 @@ export class Handler extends HandlerCommon {
             this.request.json || this.response.redirect
             || this.request.query.noTemplate || !this.response.template) {
             try {
-                this.response.body = JSON.stringify(this.response.body, serializer, 2);
+                this.response.body = JSON.stringify(this.response.body, serializer);
             } catch (e) {
                 this.response.body = new SystemError('Serialize failure', e.message);
             }
@@ -738,7 +734,7 @@ export class ConnectionHandler extends HandlerCommon {
     }
 
     send(data: any) {
-        this.conn.write(JSON.stringify(data));
+        this.conn.write(JSON.stringify(data, serializer));
     }
 
     close(code: number, reason: string) {
