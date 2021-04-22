@@ -296,7 +296,6 @@ export class HandlerCommon {
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
-        logger.info(op, periodSecs, maxOperations, this.request.ip);
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
@@ -484,7 +483,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (!argv.benchmark) await this.limitRate('global', 10, 88);
+        if (!argv.benchmark) await this.limitRate('global', 10, 1);
         const [absoluteDomain, inferDomain] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),

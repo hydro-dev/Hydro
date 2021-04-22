@@ -10,18 +10,22 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
     const expireAt = new Date(beginAt.getTime() + periodSecs * 1000);
     try {
         await coll.findOneAndUpdate({
+            op,
             ident,
             beginAt,
             expireAt,
-            op: { $lt: maxOperations },
-        }, { $inc: { op: 1 } }, { upsert: true });
+            opcount: { $lt: maxOperations },
+        }, { $inc: { opcount: 1 } }, { upsert: true });
     } catch (e) {
         throw new OpcountExceededError(op, periodSecs, maxOperations);
     }
 }
 
 function ensureIndexes() {
-    return coll.createIndex('expireAt', { expireAfterSeconds: 0 });
+    return Promise.all([
+        coll.createIndex('expireAt', { expireAfterSeconds: 0 }),
+        coll.createIndex({ op: 1, ident: 1 }, { unique: true }),
+    ]);
 }
 
 bus.once('app/started', ensureIndexes);
