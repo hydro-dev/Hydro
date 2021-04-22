@@ -29,7 +29,7 @@
             <h1 class="section__title scratchpad--hide">
                 <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
                 <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-                  {{ 'Accepted' if rdoc.status == model.builtin.STATUS.STATUS_ACCEPTED else rdoc.score }}
+                  {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
                 </span>
             </h1>
           {% endif %}

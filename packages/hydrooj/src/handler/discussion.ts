@@ -1,9 +1,7 @@
 import { ObjectID } from 'mongodb';
 import { isSafeInteger } from 'lodash';
 import { DiscussionNotFoundError, DocumentNotFoundError, PermissionError } from '../error';
-import {
-    Mdoc, Drdoc, Ddoc, Drrdoc,
-} from '../interface';
+import { Drdoc, Ddoc, Drrdoc } from '../interface';
 import paginate from '../lib/paginate';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -215,16 +213,13 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
         // Notify related users
-        const replies: Drdoc[] = await discussion.getMultiReply(domainId, did).toArray();
-        const uids = Array.from(new Set(replies.map((drdoc) => drdoc.owner)));
-        const tasks = uids.map((uid) => {
-            if (uid !== this.user._id) {
-                return message.send(1, uid, `Discussion update: ${domainId} ${did}`);
-            }
-            return Promise.resolve(null as Mdoc);
-        });
-        await Promise.all(tasks);
         await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
+        const replies: Drdoc[] = await discussion.getMultiReply(domainId, did).toArray();
+        const uids = new Set(replies.map((drdoc) => drdoc.owner));
+        uids.delete(this.user._id);
+        const str = JSON.stringify({ message: '{0} replied to discussion {1}{2}.', params: [this.user._id, domainId, did] });
+        const tasks = Array.from(uids).map((uid) => message.send(1, uid, str));
+        await Promise.all(tasks);
         this.back();
     }
 
@@ -234,6 +229,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
+        const str = JSON.stringify({ message: '{0} replied to discussion reply {1}{2}.', params: [this.user._id, domainId, drid] });
+        if (this.drdoc.owner !== this.user._id) await message.send(1, this.drdoc.owner, str);
         this.back();
     }
 

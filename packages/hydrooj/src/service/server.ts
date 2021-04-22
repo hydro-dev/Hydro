@@ -344,11 +344,11 @@ export class HandlerCommon {
         const query: any = {};
         for (const key in kwargs) {
             if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
-            else args[key] = kwargs[key].toString();
+            else args[key] = encodeURIComponent(kwargs[key].toString());
         }
         for (const key in kwargs.query || {}) {
             if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = kwargs.query[key].toString();
+            else query[key] = encodeURIComponent(kwargs.query[key].toString());
         }
         try {
             const { anchor } = args;
