@@ -121,7 +121,7 @@ export const judge = async (ctx) => {
     }
     await Promise.all(tasks);
     ctx.stat.done = new Date();
-    ctx.next({ message: JSON.stringify(ctx.stat) });
+    if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
     console.log({
         status: ctx.total_status,
         score: ctx.total_score,
