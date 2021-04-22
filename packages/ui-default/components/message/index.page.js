@@ -1,16 +1,24 @@
 import { AutoloadPage } from 'vj/misc/Page';
 import { InfoDialog } from 'vj/components/dialog';
-import Notification from 'vj/components/notification';
+import VjNotification from 'vj/components/notification/index';
 import { FLAG_ALERT } from 'vj/constant/message';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
 
 const messagePage = new AutoloadPage('messagePage', () => {
+  let visible = true;
+  document.addEventListener('visibilitychange', () => {
+    const state = document.visibilityState;
+    if (state === 'hidden' && visible) visible = false;
+    if (state === 'visible' && !visible) visible = true;
+  });
+
   async function init() {
     if (UserContext.unreadMsg) {
-      new Notification({
+      new VjNotification({
         type: 'info',
-        message: i18n('You have mew message.'),
+        message: i18n(`You have ${UserContext.unreadMsg > 1 ? 'new messages' : 'a new message'}.`),
+        duration: 5000,
         action: () => window.open('/home/messages', '_blank'),
       }).show();
     }
@@ -32,7 +40,7 @@ const messagePage = new AutoloadPage('messagePage', () => {
         }).open();
       } else {
         // Is message
-        new Notification({
+        new VjNotification({
           title: msg.udoc.uname,
           avatar: msg.udoc.avatarUrl,
           message: msg.mdoc.content,
