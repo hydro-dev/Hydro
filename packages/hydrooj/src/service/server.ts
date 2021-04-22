@@ -296,6 +296,7 @@ export class HandlerCommon {
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
+        logger.info(op, periodSecs, maxOperations, this.request.ip);
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 

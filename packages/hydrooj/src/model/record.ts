@@ -16,11 +16,11 @@ import db from '../service/db';
 class RecordModel {
     static coll: Collection<Rdoc> = db.collection('record');
 
-    static async submissionPriority(uid: number) {
+    static async submissionPriority(uid: number, base: number = 0) {
         const pending = await task.count({ uid });
         const timeRecent = await RecordModel.coll
             .find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, uid }).project({ time: 1 }).toArray();
-        return -(pending * (sum(timeRecent.map((i) => i.time || 0)) / 100000));
+        return base - ((pending + 0.5) * (sum(timeRecent.map((i) => i.time || 0)) / 10000));
     }
 
     static async get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
@@ -45,7 +45,7 @@ class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rid: ObjectID, priority = 1, config: ProblemConfig = {}) {
+    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfig = {}) {
         const rdoc = await RecordModel.get(domainId, rid);
         let data = [];
         if (rdoc.pid) {
@@ -87,15 +87,19 @@ class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
+        let isContest = false;
         if (typeof contestOrConfig === 'string') {
             // is Run
             data.input = contestOrConfig;
             data.hidden = true;
-        } else data.contest = contestOrConfig;
+        } else {
+            data.contest = contestOrConfig;
+            isContest = true;
+        }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid);
-            await RecordModel.judge(domainId, res.insertedId, 1 + priority);
+            const priority = await RecordModel.submissionPriority(uid, isContest ? 50 : 0);
+            await RecordModel.judge(domainId, res.insertedId, priority);
         }
         return res.insertedId;
     }

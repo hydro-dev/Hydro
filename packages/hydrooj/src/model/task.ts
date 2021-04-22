@@ -12,7 +12,7 @@ class TaskModel {
         const t: Task = {
             ...task,
             count: task.count ?? 1,
-            priority: task.priority ?? 1,
+            priority: task.priority ?? 0,
             executeAfter: task.executeAfter || new Date(),
             _id: new ObjectID(),
         };

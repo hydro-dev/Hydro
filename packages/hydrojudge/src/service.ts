@@ -243,6 +243,7 @@ async function postInit() {
     }
 
     task.consume({ type: 'judge' }, (t) => (new JudgeTask(t)).handle().catch(logger.error));
+    task.consume({ type: 'judge', priority: { $gt: -50 } }, (t) => (new JudgeTask(t)).handle().catch(logger.error));
 }
 
 global.Hydro.service.bus.once('app/started', postInit);

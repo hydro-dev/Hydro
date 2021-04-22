@@ -211,7 +211,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         // TODO maybe async?
         await record.getMulti(domainId, { pid }).forEach(async (doc) => {
             await record.reset(domainId, doc._id, true);
-            await record.judge(domainId, doc._id, -1);
+            await record.judge(domainId, doc._id, -50);
         });
         this.back();
     }
