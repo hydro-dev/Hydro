@@ -76,7 +76,7 @@ function judgeCase(c, sid) {
                     checker: ctx.config.checker,
                     checker_type: ctx.config.checker_type,
                     score: ctxSubtask.subtask.score,
-                    detail: ctx.config.detail || true,
+                    detail: ctx.config.detail ?? true,
                 });
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {

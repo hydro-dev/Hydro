@@ -67,8 +67,7 @@ class JudgeTask {
         tmpfs.mount(this.tmpdir, '512m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
         try {
-            if (this.input) await this.doPretest();
-            else await this.doSubmission();
+            await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
@@ -104,17 +103,6 @@ class JudgeTask {
             { next: this.next },
         );
         this.stat.judge = new Date();
-        await judge[this.config.type || 'default'].judge(this);
-    }
-
-    async doPretest() {
-        this.folder = path.resolve(this.tmpdir, 'data');
-        await this.session.recordPretestData(this.rid, this.folder);
-        this.config = await readCases(
-            this.folder,
-            { detail: this.session.config.detail },
-            { next: this.next },
-        );
         await judge[this.config.type || 'default'].judge(this);
     }
 

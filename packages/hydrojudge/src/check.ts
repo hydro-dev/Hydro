@@ -8,7 +8,7 @@ import { parseFilename } from './utils';
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 
 export async function check(config): Promise<[number, number, string]> {
-    if (!checkers[config.checker_type]) throw new SystemError(`未知比较器类型：${config.checker_type}`);
+    if (!checkers[config.checker_type]) throw new SystemError('Unknown checker type {0}', [config.checker_type]);
     const {
         code, status, score, message,
     } = await checkers[config.checker_type]({
