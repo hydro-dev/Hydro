@@ -180,6 +180,7 @@ async function readAutoCases(folder, { next }, cfg) {
 }
 
 function isValidConfig(config) {
+    if (config.type === 'submit_answer' && !config.outputs.length) throw new FormatError('Problem data not found.');
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
@@ -213,7 +214,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
-    if (!(result.outputs || result.subtasks.length)) {
+    if (!(result.outputs?.length || result.subtasks.length)) {
         const c = await readAutoCases(folder, args, config);
         result.subtasks = c.subtasks;
         result.count = c.count;

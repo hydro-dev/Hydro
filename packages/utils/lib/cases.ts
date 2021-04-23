@@ -70,7 +70,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     }
     if (cfg.time) config.time = parseTimeMS(cfg.time);
     if (cfg.memory) config.memory = parseMemoryMB(cfg.memory);
-    if (config.type === 'submit_answer' && !cfg.outputs) throw new Error('outputs config not found');
+    if (config.type === 'submit_answer' && !cfg.outputs?.length) throw new Error('outputs config not found');
     return Object.assign(cfg, config);
 }
 
