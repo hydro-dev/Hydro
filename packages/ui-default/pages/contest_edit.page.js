@@ -6,7 +6,7 @@ import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 
 const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
-  ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true });
+  ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
   if (pagename.endsWith('edit')) {
     let confirmed = false;
     $(document).on('click', '[name="operation"]', (ev) => {

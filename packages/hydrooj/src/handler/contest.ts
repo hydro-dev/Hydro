@@ -218,7 +218,7 @@ class ContestEditHandler extends ContestHandler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        let pids = _pids.split(',').map((i) => {
+        let pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });
@@ -422,7 +422,7 @@ class ContestCreateHandler extends ContestHandler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        let pids = _pids.split(',').map((i) => {
+        let pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });

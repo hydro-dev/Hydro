@@ -244,7 +244,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.split(',').map((i) => {
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });
@@ -311,7 +311,7 @@ class HomeworkEditHandler extends HomeworkHandler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: string, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.split(',').map((i) => {
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });

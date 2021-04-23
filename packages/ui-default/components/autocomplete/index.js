@@ -95,16 +95,21 @@ export default class AutoComplete extends DOMAttachedObject {
 
   onItemClick(ev) {
     const idx = $(ev.currentTarget).attr('data-idx');
-    if (idx === undefined) {
-      return;
-    }
+    if (idx === undefined) return;
     const item = this.currentItems[idx];
     const text = this.options.text(item);
     this._value = item;
     this.$dom.trigger('vjAutoCompleteSelect', item);
     if (text != null) {
       if (!this.options.multi) this.$dom.val(text);
-      else this.$dom.val(`${this.$dom.val() + text}, `);
+      else {
+        const current = this.$dom.val().replace(/，/g, ',');
+        if (current.indexOf(',') !== -1) {
+          const items = current.split(',');
+          items[items.length - 1] = text;
+          this.$dom.val(items.join(', '));
+        } else this.$dom.val(`${text}, `);
+      }
     }
     this.close();
   }
@@ -150,24 +155,23 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   close() {
-    if (!this.isOpen) {
-      return;
-    }
+    if (!this.isOpen) return;
     this.dropInstance.close();
     this.isOpen = false;
   }
 
   updateOpenState() {
-    if (this.isFocus && this.$dom.val().length >= this.options.minChar) {
+    let content = this.$dom.val();
+    if (this.options.multi) {
+      content = content.split(',');
+      content = content[content.length - 1].trim();
+    }
+    if (this.isFocus && content >= this.options.minChar) {
       if (!this.isOpen) {
         this.open();
         this.renderList();
       }
-    } else {
-      if (this.isOpen) {
-        this.close();
-      }
-    }
+    } else if (this.isOpen) this.close();
   }
 
   detach() {
