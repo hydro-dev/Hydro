@@ -71,6 +71,7 @@ module.exports = {
     'import/first': 'off',
     'import/no-extraneous-dependencies': 'off',
     'max-classes-per-file': 'off',
+    'no-empty': ['warn', { allowEmptyCatch: true }],
     'no-unused-vars': 'warn',
     'no-console': 'off',
     'no-continue': 'off',

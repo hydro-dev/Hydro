@@ -1,4 +1,3 @@
-/* eslint-disable no-empty */
 import { ValidationError } from '../error';
 
 const RE_UID = /^-?\d+$/i;

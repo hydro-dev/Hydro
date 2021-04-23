@@ -1,10 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import AnsiUp from 'ansi_up';
 
 import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
 import Panel from './PanelComponent';
 import DataInput from './DataInputComponent';
+
+const AU = new AnsiUp();
 
 const mapStateToProps = (state) => ({
   input: state.pretest.input,
@@ -44,7 +47,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadPret
           />
           <DataInput
             title={i18n('Output')}
-            value={this.props.output}
+            value={AU.ansi_to_html(this.props.output)}
             html
           />
         </div>

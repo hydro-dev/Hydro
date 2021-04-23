@@ -229,7 +229,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         $('.problem-content').get(0),
       );
       $('.outer-loader-container').hide();
-      // eslint-disable-next-line no-empty
     } catch (e) { }
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.6.12",
+  "version": "4.6.13",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -23,6 +23,7 @@
     "@babel/register": "^7.13.14",
     "@babel/runtime-corejs2": "^7.13.10",
     "@hydrooj/utils": "^1.0.7",
+    "ansi_up": "^5.0.1",
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.2.2",
     "babel-plugin-lodash": "^3.3.4",

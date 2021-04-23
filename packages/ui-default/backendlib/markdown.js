@@ -35,7 +35,7 @@ class Markdown extends MarkdownIt {
         if (lang && Prism.languages[lang]) {
           try {
             return Prism.highlight(str, Prism.languages[lang], lang);
-          } catch (__) { } // eslint-disable-line no-empty
+          } catch (__) { }
         }
         return '';
       },

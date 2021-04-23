@@ -77,7 +77,7 @@ class FpsProblemImportHandler extends Handler {
                     const content = buf.toString();
                     const result = await xml2js.parseStringPromise(content);
                     tasks.push(result);
-                } catch { } // eslint-disable-line no-empty
+                } catch { }
             }
         }
         if (!tasks.length) throw new ValidationError('file');

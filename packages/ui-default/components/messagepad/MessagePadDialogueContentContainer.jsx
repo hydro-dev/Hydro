@@ -5,7 +5,6 @@ import TimeAgo from 'timeago-react';
 import moment from 'moment';
 import 'jquery-scroll-lock';
 import 'jquery.easing';
-
 import i18n from 'vj/utils/i18n';
 import { parse as parseMongoId } from 'vj/utils/mongoId';
 import Message from './MessageComponent';
@@ -17,7 +16,7 @@ const mapStateToProps = (state) => ({
     : null,
 });
 
-export default connect(mapStateToProps, null)(class MessagePadDialogueContentContainer extends React.PureComponent {
+export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
   componentDidMount() {
     $(this.refs.list).scrollLock({ strict: true });
   }
@@ -42,23 +41,33 @@ export default connect(mapStateToProps, null)(class MessagePadDialogueContentCon
     }
   }
 
-  renderInner() {
-    if (this.props.activeId === null) {
-      return [];
+  renderContent(msg) {
+    if (msg.from === 1) {
+      // Is system message
+      try {
+        const data = JSON.parse(msg.content);
+        return i18n(data.message, ...data.params);
+      } catch (e) { }
+      return i18n(msg.content);
     }
-    return _.map(this.props.item.messages, (reply) => (
+    return msg.content;
+  }
+
+  renderInner() {
+    if (this.props.activeId === null) return [];
+    return _.map(this.props.item.messages, (msg) => (
       <Message
-        key={reply._id}
-        isSelf={reply.from === UserContext._id}
+        key={msg._id}
+        isSelf={msg.from === UserContext._id}
         faceUrl={
-          reply.from === UserContext._id
+          msg.from === UserContext._id
             ? UserContext.avatarUrl
             : this.props.item.udoc.avatarUrl
         }
       >
-        <div>{reply.content}</div>
-        <time data-tooltip={moment(parseMongoId(reply._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
-          <TimeAgo datetime={parseMongoId(reply._id).timestamp * 1000} locale={i18n('timeago_locale')} />
+        <div>{this.renderContent(msg)}</div>
+        <time data-tooltip={moment(parseMongoId(msg._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
+          <TimeAgo datetime={parseMongoId(msg._id).timestamp * 1000} locale={i18n('timeago_locale')} />
         </time>
       </Message>
     ));

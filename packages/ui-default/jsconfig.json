@@ -1,9 +1,10 @@
 {
   "exclude": [
-    "node_modules"
+    "./node_modules",
+    "./public",
+    "../../node_modules"
   ],
   "compilerOptions": {
-    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES6",
     "baseUrl": ".",
