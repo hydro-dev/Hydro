@@ -6,7 +6,11 @@
  * NodeJS doesn't support some of this new features.
  * e.g.: object?.property
  */
-import { STATUS, STATUS_TEXTS, STATUS_CODES } from '@hydrooj/utils/lib/status';
+import {
+    STATUS, STATUS_TEXTS, STATUS_CODES,
+    USER_GENDER_MALE, USER_GENDER_FEMALE, USER_GENDER_OTHER,
+    USER_GENDER_ICONS, USER_GENDERS, USER_GENDER_RANGE,
+} from '@hydrooj/utils/lib/status';
 import type { Udoc } from '../interface';
 
 export * from '@hydrooj/utils/lib/status';
