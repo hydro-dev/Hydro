@@ -14,10 +14,7 @@ const formPage = new AutoloadPage('formPage', () => {
 
   const submitting = {};
   $(document).on('click', '[type="submit"]', (ev) => {
-    const $dom = $(ev.currentTarget);
-    if ($dom.attr('name') && $dom.attr('value')) return;
-    ev.preventDefault();
-    if (!submitting[ev.currentTarget]) $dom.closest('form').trigger('submit');
+    if (!submitting[ev.currentTarget]) ev.preventDefault();
     submitting[ev.currentTarget] = true;
     delay(5000).then(() => { submitting[ev.currentTarget] = false; });
   });
