@@ -107,7 +107,6 @@ export default class Tab extends DOMAttachedObject {
       .addClass('section__tab-header-wrapper')
       .appendTo($container);
     const $contentWrapper = $(document.createElement('div'))
-      .addClass('section__tab-content-wrapper')
       .appendTo($container);
     this.$header = $(document.createElement('ul'))
       .addClass('section__tab-header')

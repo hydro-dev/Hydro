@@ -88,7 +88,7 @@ preferedEditorType:
     sv: Split View
   family: markdown
   category: preference
-  value: ir
+  value: sv
 showInvisibleChar:
   type: boolean
   family: highlight

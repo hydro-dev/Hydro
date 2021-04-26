@@ -6,9 +6,9 @@ export const config = {
     'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
     'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
     'quote', 'line', 'code', 'inline-code', 'table', '|',
-    'upload', 'edit-mode', 'content-theme', 'code-theme', 'export',
+    'upload', 'edit-mode', 'fullscreen', 'export',
   ],
-  mode: UserContext.preferedEditorType || 'ir',
+  mode: UserContext.preferedEditorType || 'sv',
   toolbarConfig: {
     pin: true,
   },
