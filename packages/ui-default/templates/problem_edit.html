@@ -37,12 +37,31 @@
                name:'tag',
                value:pdoc['tag']|default([])|join(', ')
              }) }}
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Content') }}
-              <textarea name="content" class="textbox" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
-            </label>
-          </div></div>
+          <div class="section__tab-container nojs--hide">
+            <ul class="section__tabs immersive">
+              <li class="section__tab-item">
+                <h1 class="section__tab-title">{{ _('__langname') }}</h1>
+                <div class="section__tab-main">
+                  <div class="section__body">
+                    <textarea data-content="{{ _('__id') }}" class="textbox" style="height: 500px"></textarea>
+                  </div>
+                </div>
+              </li>
+              {% for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range %}
+                {% if k != handler.user.viewLang %}
+                  <li class="section__tab-item">
+                    <h1 class="section__tab-title">{{ v }}</h1>
+                    <div class="section__tab-main">
+                      <div class="section__body">
+                        <textarea data-content="{{ k }}" class="textbox" style="height: 500px"></textarea>
+                      </div>
+                    </div>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
           <div class="row"><div class="columns">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           {% if page_name == 'problem_edit' %}

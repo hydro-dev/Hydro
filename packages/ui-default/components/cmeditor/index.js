@@ -40,12 +40,17 @@ export default class CmEditor extends DOMAttachedObject {
     const origin = $dom.get(0);
     const ele = document.createElement('div');
     const value = $dom.val();
+    const onChange = this.options.onChange;
     await new Promise((resolve) => {
       this.editor = new Vditor(ele, {
         ...config,
         ...this.options,
         after: resolve,
-        input(v) { $dom.val(v); $dom.text(v); },
+        input(v) {
+          $dom.val(v);
+          $dom.text(v);
+          if (onChange) onChange(v);
+        },
         value,
         cache: { id: Math.random().toString() },
       });

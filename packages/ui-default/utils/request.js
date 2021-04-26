@@ -1,4 +1,5 @@
 import i18n from './i18n';
+import substitute from './substitute';
 
 const request = {
   /**
@@ -21,7 +22,14 @@ const request = {
           } else if (errorThrown instanceof Error) {
             reject(errorThrown);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
-            reject(new Error(jqXHR.responseJSON.error.message));
+            const error = jqXHR.responseJSON.error;
+            if (error.params) {
+              const message = substitute(error.message, ...error.params);
+              const err = new Error(message);
+              err.rawMessage = error.message;
+              err.params = error.params;
+              reject(err);
+            } else reject(new Error(jqXHR.responseJSON.error.message));
           } else {
             reject(new Error(textStatus));
           }

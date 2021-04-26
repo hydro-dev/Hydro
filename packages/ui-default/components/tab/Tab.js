@@ -28,12 +28,8 @@ export default class Tab extends DOMAttachedObject {
   }
 
   async switchToTab(idx) {
-    if (idx === this.currentIndex) {
-      return;
-    }
-    if (this.isAnimating) {
-      return;
-    }
+    if (idx === this.currentIndex) return;
+    if (this.isAnimating) return;
 
     const $tabs = this.$content.children();
     const $currentTab = $tabs.eq(this.currentIndex);
