@@ -231,9 +231,10 @@ export default class Hydro {
         this.ws.on('open', () => {
             this.ws.send(this.config.cookie);
             global.onDestory.push(() => this.ws.close());
-            setInterval(() => {
-                this.ws.send(`{"key":"prio","prio":${this.config.minPriority || -50}}`);
-            }, 30000);
+            const content = this.config.minPriority !== undefined
+                ? `{"key":"prio","prio":${this.config.minPriority}}`
+                : '{"key":"ping"}';
+            setInterval(() => this.ws.send(content), 30000);
         });
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
