@@ -22,6 +22,6 @@ bus.on('problem/del', async (domainId, docId) => {
 global.Hydro.lib.problemSearch = async (domainId: string, query: string) => {
     const c = system.get('pagination.problem');
     const docIds = await sonic.query('problem', `${domainId}@title`, query, { limit: c });
-    docIds.push(...await sonic.query('problem', `${domainId}@content`, query, { limit: c - docIds.length }));
+    if (c - docIds.length > 0) docIds.push(...await sonic.query('problem', `${domainId}@content`, query, { limit: c - docIds.length }));
     return docIds.map(Number);
 };
