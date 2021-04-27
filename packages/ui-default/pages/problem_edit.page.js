@@ -236,19 +236,23 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (isObject) {
       if (content[i]) c = content[i];
       else {
-        const list = Object.keys(content).filter(l => l.startsWith(i));
+        const list = Object.keys(content).filter((l) => l.startsWith(i));
         if (list.length) c = content[list[0]];
-        i = list[0];
+        [i] = list;
       }
     } else c = content;
     if (typeof c !== 'string') c = JSON.stringify(c);
     $dom.val(c);
     function onChange(val) {
+      if (!isObject) {
+        content = { [i]: val };
+        isObject = true;
+      }
       const empty = /^\s*$/g.test(val);
       if (empty) delete content[i];
       else content[i] = val;
       $main.val(JSON.stringify(content));
     }
     CmEditor.getOrConstruct($dom, { upload, onChange });
-  })
+  });
 });
