@@ -19,7 +19,7 @@ export async function parseConfig(config: string | ProblemConfig = {}) {
         timeMax: 0,
     };
     let cfg: ProblemConfig = {};
-    if (typeof config === 'string' && config.length) {
+    if (typeof config === 'string') {
         // TODO should validate here?
         cfg = await readYamlCases(load(config) as Record<string, any>);
     } else if (typeof config === 'object') cfg = await readYamlCases(config);

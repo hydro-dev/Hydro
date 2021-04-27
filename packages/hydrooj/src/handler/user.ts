@@ -123,7 +123,7 @@ class UserRegisterWithCodeHandler extends Handler {
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         this.session.uid = uid;
-        this.session.scpoe = PERM.PERM_ALL;
+        this.session.scpoe = PERM.PERM_ALL.toString();
         this.response.redirect = this.url('homepage');
     }
 }

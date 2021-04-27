@@ -115,12 +115,13 @@ class UserModel {
     };
 
     @ArgMethod
-    static async getById(domainId: string, _id: number, scope: bigint = PERM.PERM_ALL): Promise<User | null> {
+    static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
         const udoc = _id === 0 || _id === 1
             ? BUILTIN_USERS[_id]
             : await coll.findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
+        if (typeof scope === 'string') scope = BigInt(scope);
         return new User(udoc, dudoc, scope);
     }
 
@@ -197,7 +198,10 @@ class UserModel {
         uid: number = 0, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
     ) {
         const salt = String.random();
-        if (!uid) uid = await system.inc('user');
+        if (!uid) {
+            const [udoc] = await coll.find({}).sort({ _id: -1 }).limit(1).toArray();
+            uid = Math.max((udoc._id || 0) + 1, 2);
+        }
         try {
             await coll.insertOne({
                 _id: uid,

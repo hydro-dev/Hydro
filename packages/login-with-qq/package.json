@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "MIT",
     "dependencies": {
-        "ws": "^7.4.4"
+        "ws": "^7.4.5"
     },
     "devDependencies": {
         "@types/ws": "^7.4.1"

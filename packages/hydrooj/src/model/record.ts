@@ -10,6 +10,7 @@ import task from './task';
 import problem from './problem';
 import { Rdoc, ContestInfo, ProblemConfig } from '../interface';
 import { ArgMethod, Time } from '../utils';
+import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
@@ -109,7 +110,7 @@ class RecordModel {
     }
 
     static async update(
-        domainId: string, _id: ObjectID,
+        domainId: string, _id: MaybeArray<ObjectID>,
         $set?: MatchKeysAndValues<Rdoc>,
         $push?: PushOperator<Rdoc>,
         $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
@@ -118,6 +119,10 @@ class RecordModel {
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
+        if (_id instanceof Array) {
+            await RecordModel.coll.updateMany({ _id: { $in: _id }, domainId }, $update);
+            return null;
+        }
         if (Object.keys($update).length) {
             const res = await RecordModel.coll.findOneAndUpdate(
                 { _id, domainId },
@@ -143,7 +148,7 @@ class RecordModel {
         return res.modifiedCount;
     }
 
-    static reset(domainId: string, rid: ObjectID, isRejudge: boolean) {
+    static reset(domainId: string, rid: MaybeArray<ObjectID>, isRejudge: boolean) {
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,

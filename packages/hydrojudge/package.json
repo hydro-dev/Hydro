@@ -15,7 +15,7 @@
         "lodash": "^4.17.21",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
-        "ws": "^7.4.4",
+        "ws": "^7.4.5",
         "yargs": "^16.2.0"
     },
     "license": "AGPL-3.0-only",
