@@ -57,10 +57,10 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                 if (c.file) {
                     try {
                         checkFile(`${c.file}.out`, 'generic error');
-                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1] = `${c.file}.out`;
+                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1].output = `${c.file}.out`;
                     } catch (error) {
                         checkFile(`${c.file}.ans`, 'Cannot find input file {0}.');
-                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1] = `${c.file}.ans`;
+                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1].output = `${c.file}.ans`;
                     }
                 }
             }
@@ -85,10 +85,10 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                     if (c.file) {
                         try {
                             checkFile(`${c.file}.out`, 'generic error');
-                            cases[cases.length - 1] = `${c.file}.out`;
+                            cases[cases.length - 1].output = `${c.file}.out`;
                         } catch (error) {
                             checkFile(`${c.file}.ans`, 'Cannot find input file {0}.');
-                            cases[cases.length - 1] = `${c.file}.ans`;
+                            cases[cases.length - 1].output = `${c.file}.ans`;
                         }
                     }
                 }
