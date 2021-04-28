@@ -42,22 +42,56 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         }];
         for (const c of cfg.cases) {
             config.count++;
-            config.subtasks[0].cases.push({
-                input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
-                output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
-                id: config.count,
-            });
+            if (c.input || c.output) {
+                config.subtasks[0].cases.push({
+                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
+                    id: config.count,
+                });
+            } else {
+                config.subtasks[0].cases.push({
+                    input: c.file ? checkFile(`${c.file}.in`, 'Cannot find input file {0}.') : '/dev/null',
+                    output: '/dev/null',
+                    id: config.count,
+                });
+                if (c.file) {
+                    try {
+                        checkFile(`${c.file}.out`, 'generic error');
+                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1] = `${c.file}.out`;
+                    } catch (error) {
+                        checkFile(`${c.file}.ans`, 'Cannot find input file {0}.');
+                        config.subtasks[0].cases[config.subtasks[0].cases.length - 1] = `${c.file}.ans`;
+                    }
+                }
+            }
         }
     } else if (cfg.subtasks) {
         for (const subtask of cfg.subtasks) {
             const cases = [];
             for (const c of subtask.cases) {
                 config.count++;
-                cases.push({
-                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
-                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
-                    id: config.count,
-                });
+                if (c.input || c.output) {
+                    cases.push({
+                        input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                        output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
+                        id: config.count,
+                    });
+                } else {
+                    cases.push({
+                        input: c.file ? checkFile(`${c.file}.in`, 'Cannot find input file {0}.') : '/dev/null',
+                        output: '/dev/null',
+                        id: config.count,
+                    });
+                    if (c.file) {
+                        try {
+                            checkFile(`${c.file}.out`, 'generic error');
+                            cases[cases.length - 1] = `${c.file}.out`;
+                        } catch (error) {
+                            checkFile(`${c.file}.ans`, 'Cannot find input file {0}.');
+                            cases[cases.length - 1] = `${c.file}.ans`;
+                        }
+                    }
+                }
             }
             config.subtasks.push({
                 score: parseInt(subtask.score, 10),
