@@ -1,9 +1,0 @@
-{
-    "name": "@hydrooj/syzoj-ng-api",
-    "version": "0.0.2",
-    "description": "A syzoj-ng API interface",
-    "main": "package.json",
-    "repository": "https://github.com/hydro-dev/Hydro.git",
-    "author": "undefined <i@undefined.moe>",
-    "license": "AGPL-3.0.only"
-}
