@@ -200,7 +200,7 @@ class UserModel {
         const salt = String.random();
         if (!uid) {
             const [udoc] = await coll.find({}).sort({ _id: -1 }).limit(1).toArray();
-            uid = Math.max((udoc._id || 0) + 1, 2);
+            uid = udoc ? Math.max(udoc._id + 1, 2) : 2;
         }
         try {
             await coll.insertOne({
