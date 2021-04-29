@@ -55,7 +55,8 @@ export class ProblemHandler extends Handler {
 export class ProblemMainHandler extends ProblemHandler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
-    async get(domainId: string, page = 1, q = '') {
+    @param('category', Types.Name, true, null, parseCategory)
+    async get(domainId: string, page = 1, q = '', category = []) {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: FilterQuery<Pdoc> = {};
@@ -66,9 +67,17 @@ export class ProblemMainHandler extends ProblemHandler {
         ];
         const search = global.Hydro.lib.problemSearch;
         let sort: number[];
-        if (q) {
+        if (category.length) {
+            query.$and = [];
+            for (const tag of category) query.$and.push({ tag });
+        }
+        if (q) category.push(q);
+        if (category.length) {
+            this.extraTitleContent = category.join('+');
             path[1][1] = 'problem_main';
-            path.push([`${this.translate('Keyword')}: ${q}`, null, null, true]);
+            path.push([category.join('+'), null, null, true]);
+        }
+        if (q) {
             if (search) {
                 const result = await search(domainId, q);
                 query.docId = { $in: result };
@@ -94,7 +103,7 @@ export class ProblemMainHandler extends ProblemHandler {
             );
         }
         this.response.body = {
-            path, page, pcount, ppcount, pdocs, psdict, category: q,
+            path, page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
         };
     }
 
@@ -109,37 +118,41 @@ export class ProblemMainHandler extends ProblemHandler {
         await problem.setStar(domainId, pid, this.user._id, false);
         this.back({ star: false });
     }
-}
 
-export class ProblemCategoryHandler extends ProblemHandler {
-    @param('page', Types.PositiveInt, true)
-    @param('category', Types.Name, null, parseCategory)
-    async get(domainId: string, page = 1, category: string[]) {
-        this.response.template = 'problem_main.html';
-        const q: any = { $and: [] };
-        for (const tag of category) q.$and.push({ tag });
-        let psdict = {};
-        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
-        await bus.serial('problem/list', q, this);
-        const [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(domainId, q).sort({ pid: 1, docId: 1 }),
-            page,
-            system.get('pagination.problem'),
-        );
-        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            psdict = await problem.getListStatus(
-                domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
-            );
+    @param('pids', Types.NumericArray)
+    async postDelete(domainId: string, pids: number[]) {
+        for (const pid of pids) {
+            // eslint-disable-next-line no-await-in-loop
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            // eslint-disable-next-line no-await-in-loop
+            await problem.del(domainId, pid);
         }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['problem_main', 'problem_main'],
-            [category, null, null, true],
-        ];
-        this.response.body = {
-            path, page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
-        };
-        this.extraTitleContent = category.join('+');
+        this.back();
+    }
+
+    @param('pids', Types.NumericArray)
+    async postHide(domainId: string, pids: number[]) {
+        for (const pid of pids) {
+            // eslint-disable-next-line no-await-in-loop
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            // eslint-disable-next-line no-await-in-loop
+            await problem.edit(domainId, pid, { hidden: true });
+        }
+        this.back();
+    }
+
+    @param('pids', Types.NumericArray)
+    async postUnhide(domainId: string, pids: number[]) {
+        for (const pid of pids) {
+            // eslint-disable-next-line no-await-in-loop
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            // eslint-disable-next-line no-await-in-loop
+            await problem.edit(domainId, pid, { hidden: false });
+        }
+        this.back();
     }
 }
 
@@ -599,7 +612,7 @@ export class ProblemPrefixListHandler extends Handler {
 
 export async function apply() {
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
-    Route('problem_category', '/p/category/:category', ProblemCategoryHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_category', '/p/category/:category', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);

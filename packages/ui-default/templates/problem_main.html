@@ -16,14 +16,42 @@
       </div>
     </div>
     <div class="medium-3 columns">
+      {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+        <div class="section side">
+          <ol class="menu">
+            <a href="javascript:;" class="menu__link edit-mode-hide" name="enter-edit-mode">
+              <span class="icon icon-edit"></span>
+              {{ _('Enter Edit Mode') }}
+            </a>
+            <a href="javascript:;" class="menu__link display-mode-hide" name="leave-edit-mode">
+              <span class="icon icon-edit"></span>
+              {{ _('Leave Edit Mode') }}
+            </a>
+            {% if pdocs.length %}
+              <a href="javascript:;" class="menu__link display-mode-hide" name="hide_selected_problems">
+                <span class="icon icon-close"></span>
+                {{ _('Hide Selected') }}
+              </a>
+              <a href="javascript:;" class="menu__link display-mode-hide" name="unhide_selected_problems">
+                <span class="icon icon-check"></span>
+                {{ _('Unhide Selected') }}
+              </a>
+              <a href="javascript:;" class="menu__link display-mode-hide" name="remove_selected_problems">
+                <span class="icon icon-delete"></span>
+                {{ _('Remove Selected') }}
+              </a>
+            {% endif %}
+          </ol>
+        </div>
+      {% endif %}
       <div class="section side">
-        <div class="section__header">
+        <div class="section__header edit-mode-hide">
           <h1 class="section__title">{{ _('Categories') }}</h1>
         </div>
         <div class="section__body">
           {% include "partials/category.html" %}
         </div>
-        <div class="section__body">
+        <div class="section__body edit-mode-hide">
           {% include "partials/problem_lucky.html" %}
         </div>
       </div>
@@ -36,7 +64,7 @@
             <label>
               <input name="q" type="text" class="textbox" value="{{ category }}" placeholder="1001">
             </label>
-            <button type="submit" class="primary button">{{ _('Search') }}</button>
+            <button type="submit" id="search" class="primary button">{{ _('Search') }}</button>
           </div>
         </form>
       </div>

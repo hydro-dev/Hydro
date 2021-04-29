@@ -1,9 +1,15 @@
 import _ from 'lodash';
 
 import { NamedPage } from 'vj/misc/Page';
+import Notification from 'vj/components/notification';
+import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import pjax from 'vj/utils/pjax';
 import substitute from 'vj/utils/substitute';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
+import delay from 'vj/utils/delay';
+import i18n from 'vj/utils/i18n';
 
 const categories = {};
 const dirtyCategories = [];
@@ -56,6 +62,8 @@ async function updateSelection(sendRequest = true) {
           .join('+'), // build a beautiful URL
       });
     }
+    const q = $('[name="q"]').val();
+    if (q) url += `?q=${q}`;
     pjax.request({ url });
   }
 }
@@ -160,9 +168,58 @@ function parseCategorySelection() {
   updateSelection(false);
 }
 
+function ensureAndGetSelectedPids() {
+  const pids = _.map(
+    $(`tbody [data-checkbox-group="problem"]:checked`),
+    (ch) => $(ch).closest('tr').attr('data-pid'),
+  );
+  if (pids.length === 0) {
+    Notification.error(i18n('Please select at least one problem to perform this operation.'));
+    return null;
+  }
+  return pids;
+}
+
+async function handleOperation(operation) {
+  const pids = ensureAndGetSelectedPids();
+  if (pids === null) return;
+  if (operation === 'delete') {
+    const action = await new ConfirmDialog({
+      $body: tpl`
+      <div class="typo">
+        <p>${i18n('Confirm to delete the selected problems?')}</p>
+      </div>`,
+    }).open();
+    if (action !== 'yes') return;
+  }
+  try {
+    await request.post('', { operation, pids });
+    Notification.success(i18n(`Selected problems have been ${operation}d.`));
+    await delay(2000);
+    window.location.reload();
+  } catch (error) {
+    Notification.error(error.message);
+  }
+}
+
 const page = new NamedPage(['problem_main', 'problem_category'], () => {
+  const doc = document.documentElement;
+  doc.className = doc.className + ' display-mode';
   buildCategoryFilter();
   parseCategorySelection();
+  $('[name="leave-edit-mode"]').on('click', () => {
+    doc.className = doc.className.replace(' edit-mode', ' display-mode');
+  });
+  $('[name="enter-edit-mode"]').on('click', () => {
+    doc.className = doc.className.replace(' display-mode', ' edit-mode');
+  });
+  $('[name="remove_selected_problems"]').on('click', () => handleOperation('delete'));
+  $('[name="hide_selected_problems"]').on('click', () => handleOperation('hide'));
+  $('[name="unhide_selected_problems"]').on('click', () => handleOperation('unhide'));
+  $('#search').on('click', (ev) => {
+    ev.preventDefault();
+    updateSelection();
+  });
 });
 
 export default page;
