@@ -98,6 +98,7 @@ langs:
         code_file: Main.java
         target: Main.class
         execute: /usr/bin/java Main
+        time_limit_rate: 2
     py:
         type: compiler
         compile: /usr/bin/python -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"

@@ -1,6 +1,7 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
+import yaml from 'js-yaml';
 import * as STATUS from '../status';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
@@ -8,6 +9,7 @@ import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
 import { getConfig } from '../config';
+import { SystemError } from '../error';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {
@@ -70,6 +72,7 @@ function judgeCase(c) {
 
 function judgeSubtask(subtask) {
     return async (ctx) => {
+        subtask.time *= ctx.time_limit_rate;
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -90,6 +93,10 @@ function judgeSubtask(subtask) {
 
 export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
+    const LANGS = yaml.load(getConfig('langs'));
+    if (!LANGS[ctx.lang]) throw new SystemError('Unsupported language {0}.', [ctx.lang]);
+    const info = LANGS[ctx.lang];
+    ctx.time_limit_rate = info.time_limit_rate || 1;
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (async () => {
             const copyIn = {};

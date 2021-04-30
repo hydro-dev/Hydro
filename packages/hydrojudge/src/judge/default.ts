@@ -1,5 +1,6 @@
 import Queue from 'p-queue';
 import path from 'path';
+import yaml from 'js-yaml';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import * as STATUS from '../status';
@@ -102,6 +103,7 @@ function judgeCase(c, sid) {
 
 function judgeSubtask(subtask, sid) {
     return async (ctx) => {
+        subtask.time *= ctx.time_limit_rate;
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -132,6 +134,10 @@ export const judge = async (ctx) => {
             ctx.code = tpl[0] + ctx.code + tpl[1];
         } else throw new CompileError('Language not supported by provided templates');
     }
+    const LANGS = yaml.load(getConfig('langs'));
+    if (!LANGS[ctx.lang]) throw new SystemError('Unsupported language {0}.', [ctx.lang]);
+    const info = LANGS[ctx.lang];
+    ctx.time_limit_rate = info.time_limit_rate || 1;
     ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.execute, ctx.checker] = await Promise.all([
         (async () => {
