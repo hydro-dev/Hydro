@@ -100,7 +100,7 @@ class ContestDetailHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
     async postDelete(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
         this.response.redirect = this.url('contest_main');
     }
@@ -110,7 +110,7 @@ class ContestBoardcastHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
-        if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
+        if (!this.user.own(tdoc)) throw new PermissionError('Boardcast Message');
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
@@ -125,7 +125,7 @@ class ContestBoardcastHandler extends ContestHandler {
     @param('content', Types.Content)
     async post(domainId: string, tid: ObjectID, content: string) {
         const tdoc = await contest.get(domainId, tid);
-        if (tdoc.owner !== this.user._id) throw new PermissionError('Boardcast Message');
+        if (!this.user.own(tdoc)) throw new PermissionError('Boardcast Message');
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
         const uids: number[] = Array.from(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
         await Promise.all(
@@ -176,7 +176,7 @@ class ContestEditHandler extends ContestHandler {
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
         this.tdoc = await contest.get(domainId, tid);
-        if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         else this.checkPerm(PERM.PERM_EDIT_CONTEST_SELF);
     }
 
@@ -294,7 +294,7 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
-        if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        if (type === 'testdata' && !this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.redirect = await storage.signDownloadLink(
             `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
             noDisposition ? undefined : filename, false, 'user',

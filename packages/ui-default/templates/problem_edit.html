@@ -68,7 +68,7 @@
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}
             </button>
-            {% if pdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+            {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
               <button name="operation" value="delete" type="submit" class="rounded button">
                 {{ _('Delete') }}
               </button>

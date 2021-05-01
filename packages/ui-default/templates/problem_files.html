@@ -6,7 +6,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Testdata') }}</h1>
         <div class="section__tools">
-          {% if handler.user._id == pdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+          {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="primary rounded button" name="upload_testdata">{{ _('Add File') }}</button>
           {% endif %}
         </div>
@@ -48,14 +48,14 @@
             </tbody>
           </table>
         {% else %}
-          {% if handler.user._id == pdoc.owner or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
+          {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
             {{ nothing.render('No testdata at current.') }}
           {% else %}
             {{ nothing.render("You don't have permission to read testdata.")}}
           {% endif %}
         {% endif %}
       </div>
-      {% if handler.user._id == pdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+      {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
         {% if testdata.length %}
           <div class="section__body">
             <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
@@ -70,7 +70,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Additional Files') }}</h1>
         <div class="section__tools">
-          {% if handler.user._id == pdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+          {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="primary rounded button" name="upload_file">{{ _('Add File') }}</button>
           {% endif %}
         </div>
@@ -117,7 +117,7 @@
       {% if additional_file.length %}
         <div class="section__body">
           <button class="rounded button" name="download_selected_file">{{ _('Download Selected') }}</button>
-          {% if handler.user._id == pdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+          {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="rounded button" name="remove_selected_file">{{ _('Remove Selected') }}</button>
           {% endif %}
         </div>

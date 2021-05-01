@@ -52,7 +52,7 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if tdoc.owner == handler.user._id or handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+    {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
       </a></li>

@@ -112,7 +112,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
     async postDelete(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         await contest.del(domainId, tid, document.TYPE_HOMEWORK);
         this.response.redirect = this.url('homework_main');
     }
@@ -268,7 +268,7 @@ class HomeworkEditHandler extends HomeworkHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         const extensionDays = Math.round(
             (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / 36000 / 24,
@@ -316,7 +316,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             return i;
         });
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         let beginAt;
         let penaltySince;

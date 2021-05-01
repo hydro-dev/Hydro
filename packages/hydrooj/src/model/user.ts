@@ -65,8 +65,17 @@ class User implements _User {
         for (const key in setting.DOMAIN_USER_SETTINGS_BY_KEY) {
             this[key] = dudoc[key] ?? setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
         }
+    }
 
-        bus.serial('user/get', this);
+    async init() {
+        await bus.serial('user/get', this);
+        return this;
+    }
+
+    own<T extends { owner: number, maintainer?: number[] }>(doc: T, exact = false) {
+        return exact
+            ? doc.owner === this._id
+            : doc.owner === this._id || (doc.maintainer || []).includes(this._id);
     }
 
     hasPerm(...perm: bigint[]) {
@@ -122,7 +131,7 @@ class UserModel {
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         if (typeof scope === 'string') scope = BigInt(scope);
-        return new User(udoc, dudoc, scope);
+        return new UserModel.User(udoc, dudoc, scope).init();
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
@@ -143,7 +152,7 @@ class UserModel {
                 : await coll.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        return new UserModel.User(udoc, dudoc);
+        return new UserModel.User(udoc, dudoc).init();
     }
 
     @ArgMethod
@@ -156,7 +165,7 @@ class UserModel {
                 : await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        return new UserModel.User(udoc, dudoc);
+        return new UserModel.User(udoc, dudoc).init();
     }
 
     @ArgMethod
@@ -233,7 +242,7 @@ class UserModel {
     @ArgMethod
     static async getPrefixList(domainId: string, prefix: string, limit: number = 50) {
         prefix = prefix.toLowerCase();
-        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
+        const $regex = new RegExp(`^${escapeRegExp(prefix)}`, 'gmi');
         const uids = await coll.find({ unameLower: { $regex } })
             .limit(limit).map((doc) => doc._id).toArray();
         const users = [];

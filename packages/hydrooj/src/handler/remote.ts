@@ -34,10 +34,10 @@ export class ProblemSendHandler extends Handler {
         const pids = new Set<number>();
         for (const key in pdocs) {
             pids.add(pdocs[key].docId);
-            if (pdocs[key].hidden && !getHidden && pdocs[key].owner !== this.user._id) {
+            if (pdocs[key].hidden && !getHidden && !this.user.own(pdocs[key])) {
                 throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
             }
-            if (!getData && pdocs[key].owner !== this.user._id) {
+            if (!getData && !this.user.own(pdocs[key])) {
                 throw new PermissionError(PERM.PERM_READ_PROBLEM_DATA);
             }
         }

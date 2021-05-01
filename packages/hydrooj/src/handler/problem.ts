@@ -124,7 +124,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.del(domainId, pid);
         }
@@ -136,7 +136,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: true });
         }
@@ -148,7 +148,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: false });
         }
@@ -183,7 +183,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.response.template = 'problem_detail.html';
         this.pdoc = await problem.get(domainId, pid, this.user._id);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
-        if (this.pdoc.hidden && this.pdoc.owner !== this.user._id) {
+        if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         await bus.serial('problem/get', this.pdoc, this);
@@ -230,7 +230,7 @@ export class ProblemDetailHandler extends ProblemHandler {
     }
 
     async postDelete() {
-        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
     }
@@ -338,7 +338,7 @@ export class ProblemStatisticsHandler extends ProblemDetailHandler {
 
 export class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
-        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
     }
 }
@@ -379,7 +379,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
-        const canReadData = this.user._id === this.pdoc.owner || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const canReadData = !this.user.own(this.pdoc) || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.body.testdata = (getTestdata && canReadData) ? this.pdoc.data : [];
         this.response.body.additional_file = (getAdditionalFile ? this.pdoc.additional_file : []);
         this.response.template = 'problem_files.html';
@@ -388,7 +388,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Set)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
-        if (type === 'testdata' && this.user._id !== this.pdoc.owner) {
+        if (type === 'testdata' && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
         const links = {};
@@ -408,7 +408,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/')) throw new ValidationError('filename', 'Bad filename');
-        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
@@ -433,7 +433,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Array)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
-        if (this.pdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
         this.back();
@@ -445,7 +445,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
-        if (type === 'testdata' && this.user._id !== this.pdoc.owner) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        if (type === 'testdata' && !this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.redirect = await storage.signDownloadLink(
             `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
             noDisposition ? undefined : filename, false, 'user',
@@ -496,7 +496,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('psid', Types.ObjectID)
     async postEditSolution(domainId: string, content: string, psid: ObjectID) {
         let psdoc = await solution.get(domainId, psid);
-        if (psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
+        if (!this.user.own(psdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_SELF);
         psdoc = await solution.edit(domainId, psdoc.docId, content);
         this.back({ psdoc });
@@ -505,7 +505,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('psid', Types.ObjectID)
     async postDeleteSolution(domainId: string, psid: ObjectID) {
         const psdoc = await solution.get(domainId, psid);
-        if (psdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
+        if (!this.user.own(psdoc)) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_SELF);
         await solution.del(domainId, psdoc.docId);
         this.back();
@@ -526,7 +526,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(domainId, psid);
-        if (!(psrdoc.owner === this.user._id
+        if (!(!this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
             throw new PermissionError(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF);
         }
@@ -539,7 +539,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postDeleteReply(domainId: string, psid: ObjectID, psrid: ObjectID) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (!(psrdoc.owner === this.user._id
+        if (!(!this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF))) {
             this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
         }

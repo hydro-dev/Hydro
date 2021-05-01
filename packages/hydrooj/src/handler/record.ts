@@ -99,7 +99,7 @@ class RecordDetailHandler extends RecordHandler {
         if (!(pdoc && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM))) {
             pdoc = problem.create(pdoc?.docId || 0, pdoc?.pid || '*');
         }
-        if (!rdoc.contest && pdoc.hidden && pdoc.owner !== this.user._id) {
+        if (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc)) {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
                 pdoc = problem.create(pdoc.docId, pdoc.pid);
             }

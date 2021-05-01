@@ -29,7 +29,7 @@
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) or (ddoc.owner == handler.user._id and handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION_SELF)) %}
+      {% if handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) or (handler.user.own(ddoc) and handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION_SELF)) %}
         <li>
           <a href="{{ url('discussion_edit', did=ddoc.docId) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
         </li>
@@ -71,12 +71,12 @@
           reply_delete_op = 'delete_tail_reply',
           comment_post_perm = perm.PERM_REPLY_DISCUSSION,
           comment_edit_perm = perm.PERM_NEVER,
-          comment_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
+          comment_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
           comment_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
           comment_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
           reply_post_perm = perm.PERM_REPLY_DISCUSSION,
           reply_edit_perm = perm.PERM_NEVER,
-          reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if ddoc.owner == handler.user._id else perm.PERM_DELETE_DISCUSSION_REPLY,
+          reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
           reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF
         ) }}

@@ -52,7 +52,7 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if user._id == tdoc.owner or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
+    {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
       </a></li>

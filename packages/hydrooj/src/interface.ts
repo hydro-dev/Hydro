@@ -89,6 +89,7 @@ export interface User extends Record<string, any> {
     perm: bigint,
     scope: bigint,
     role: string,
+    own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
     hasPerm: (...perm: bigint[]) => boolean,
     hasPriv: (...priv: number[]) => boolean,
     checkPassword: (password: string) => void,
@@ -171,11 +172,12 @@ export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode
 export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
 
 export interface Document {
-    _id: ObjectID,
-    docId: any,
-    docType: number,
-    domainId: string,
-    owner: number,
+    _id: ObjectID;
+    docId: any;
+    docType: number;
+    domainId: string;
+    owner: number;
+    maintainer?: number[];
 }
 
 declare module './model/problem' {

@@ -161,7 +161,7 @@ class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     async postDelete(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
-        if (tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         await training.del(domainId, tid);
         this.response.redirect = this.url('training_main');
     }
@@ -205,7 +205,7 @@ class TrainingEditHandler extends Handler {
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
         this.tdoc = await training.get(domainId, tid);
-        if (this.tdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
     }
 

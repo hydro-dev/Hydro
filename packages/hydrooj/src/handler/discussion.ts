@@ -230,7 +230,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         await this.limitRate('add_discussion', 3600, 60);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
         const str = JSON.stringify({ message: '{0} replied to discussion reply {1}/{2}.', params: [this.user._id, domainId, drid] });
-        if (this.drdoc.owner !== this.user._id) await message.send(1, this.drdoc.owner, str);
+        if (!this.user.own(this.drdoc)) await message.send(1, this.drdoc.owner, str);
         this.back();
     }
 
@@ -238,7 +238,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.Content)
     async postEditReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
-        if (this.drdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        if (!this.user.own(this.drdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editReply(domainId, drid, content);
         await oplog.add({
             ...this.drdoc, operator: this.user._id, operateIp: this.request.ip, type: 'edit',
@@ -248,9 +248,9 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     @param('drid', Types.ObjectID)
     async postDeleteReply(domainId: string, drid: ObjectID) {
-        if (!(this.ddoc.owner === this.user._id
+        if (!(this.user.own(this.ddoc)
             && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
-            if (this.drdoc.owner !== this.user._id) {
+            if (!this.user.own(this.drdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
@@ -266,7 +266,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.Content)
     async postEditTailReply(domainId: string, drid: ObjectID, drrid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
-        if (this.drrdoc.owner !== this.user._id) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
+        if (!this.user.own(this.drrdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await discussion.editTailReply(domainId, drid, drrid, content);
         // TODO: history?
         await oplog.add({
@@ -278,7 +278,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID)
     @param('drrid', Types.ObjectID)
     async postDeleteTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
-        if (this.drrdoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+        if (!this.user.own(this.drrdoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         await discussion.delTailReply(domainId, drid, drrid);
         await oplog.add({
             ...this.drrdoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
@@ -342,7 +342,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         domainId: string, did: ObjectID, title: string, content: string,
         highlight = false, pin = false,
     ) {
-        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
+        if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
@@ -356,7 +356,7 @@ class DiscussionEditHandler extends DiscussionHandler {
 
     @param('did', Types.ObjectID)
     async postDelete(domainId: string, did: ObjectID) {
-        if (this.ddoc.owner !== this.user._id) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
+        if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         await discussion.del(domainId, did);
         await oplog.add({
