@@ -168,7 +168,7 @@ class HomeSecurityHandler extends Handler {
         const m = await this.renderHTML('user_changemail_mail.html', {
             path: `home/changeMail/${code}`,
             uname: this.user.uname,
-            url_prefix: system.get('server.url'),
+            url_prefix: (this.domain.host || [])[0] || system.get('server.url'),
         });
         await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m);
         this.response.template = 'user_changemail_mail_sent.html';

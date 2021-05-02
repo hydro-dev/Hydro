@@ -51,7 +51,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     } else if (cfg.subtasks) {
         for (const subtask of cfg.subtasks) {
             const cases = [];
-            for (const c of subtask.cases) {
+            for (const c of subtask.cases || []) {
                 config.count++;
                 cases.push({
                     input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',

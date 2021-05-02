@@ -104,8 +104,9 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
     return config;
 }
 
-async function read1(folder: string, files: string[], checkFile, cfg) {
+async function read1(folder: string, files: string[], checkFile, cfg, rst) {
     const subtask = {};
+    for (const s of rst.subtasks) if (s.id) subtask[s.id] = s;
     const subtasks = [];
     for (const file of files) {
         for (const REG of RE1) {
@@ -150,7 +151,7 @@ async function read1(folder: string, files: string[], checkFile, cfg) {
     return config;
 }
 
-async function readAutoCases(folder, { next }, cfg) {
+async function readAutoCases(folder, { next }, cfg, rst) {
     const config = {
         checker_type: 'default',
         count: 0,
@@ -170,7 +171,7 @@ async function readAutoCases(folder, { next }, cfg) {
             files.push(...outputs.map((i) => `output/${i}`));
         }
         let result = await read0(folder, files, checkFile, cfg);
-        if (!result.count) result = await read1(folder, files, checkFile, cfg);
+        if (!result.count) result = await read1(folder, files, checkFile, cfg, rst);
         Object.assign(config, result);
         next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
@@ -214,8 +215,12 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
-    if (!(result.outputs?.length || result.subtasks.length)) {
-        const c = await readAutoCases(folder, args, config);
+    let auto = !result.outputs?.length;
+    if (!result.subtasks.length) {
+        auto = !Math.sum(result.subtasks.map((subtask) => subtask.cases.length));
+    }
+    if (auto) {
+        const c = await readAutoCases(folder, args, config, result);
         result.subtasks = c.subtasks;
         result.count = c.count;
     }

@@ -173,7 +173,7 @@ export default class VJ4 {
 
     constructor(config) {
         this.config = config;
-        this.config.detail = this.config.detail || true;
+        this.config.detail = this.config.detail ?? true;
         this.config.cookie = this.config.cookie || '';
         this.config.last_update_at = this.config.last_update_at || 0;
         if (!this.config.server_url.startsWith('http')) this.config.server_url = `http://${this.config.server_url}`;
