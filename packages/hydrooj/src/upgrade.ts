@@ -311,6 +311,12 @@ const scripts: UpgradeScript[] = [
         await db.collection('oplog').updateMany({}, { $set: { type: 'delete', operateIp: '127.0.0.1' } });
         return true;
     },
+    async function _24_25() {
+        await iterateAllDomain(async (ddoc) => {
+            if (typeof ddoc.host === 'string') await domain.edit(ddoc._id, { host: [ddoc.host] });
+        });
+        return true;
+    },
 ];
 
 export default scripts;

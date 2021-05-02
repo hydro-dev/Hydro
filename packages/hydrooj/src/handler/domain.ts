@@ -219,7 +219,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         if (!this.response.body.joinSettings) {
             delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
         }
-        this.response.body.url_prefix = system.get('server.url');
+        this.response.body.url_prefix = (this.domain.host || [])[0] || system.get('server.url');
         this.response.body.path = [
             ['Hydro', 'homepage'],
             ['domain', null],

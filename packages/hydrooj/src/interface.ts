@@ -305,7 +305,7 @@ export interface DomainDoc extends Record<string, any> {
     avatar: string,
     bulletin: string,
     _join?: any,
-    host?: string,
+    host?: string[],
 }
 
 // Message
