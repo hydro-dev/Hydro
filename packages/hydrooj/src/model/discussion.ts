@@ -4,7 +4,7 @@ import problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';
-import { DocumentNotFoundError } from '../error';
+import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { Drdoc, Drrdoc, Document } from '../interface';
 import { buildProjection } from '../utils';
 import * as bus from '../service/bus';
@@ -225,37 +225,20 @@ export function getNode(domainId: string, _id: string) {
 
 export async function getVnode(domainId: string, type: number, id: string) {
     if (type === document.TYPE_PROBLEM) {
-        // @ts-ignore
-        if (Number.isSafeInteger(parseInt(id, 10))) id = parseInt(id, 10);
-        const pdoc = await problem.get(domainId, id);
-        if (!pdoc) return null;
+        const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
+        if (!pdoc) throw new DiscussionNodeNotFoundError(id);
         return { ...pdoc, type, id };
     }
-    if (type === document.TYPE_CONTEST) {
-        const tdoc = await contest.get(domainId, new ObjectID(id));
-        return { ...tdoc, type, id };
-    }
-    if (type === document.TYPE_DISCUSSION_NODE) {
-        const ndoc = await getNode(domainId, id);
-        return {
-            ...ndoc,
-            title: id,
-            type,
-            id,
-        };
-    }
-    if (type === document.TYPE_TRAINING) {
-        const tdoc = await training.get(domainId, new ObjectID(id));
-        return { ...tdoc, type, id };
-    }
-    if (type === document.TYPE_HOMEWORK) {
-        const tdoc = await contest.get(domainId, new ObjectID(id), document.TYPE_HOMEWORK);
+    if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
+        const tdoc = await (type === document.TYPE_TRAINING ? training : contest).get(domainId, new ObjectID(id), type as any);
+        if (!tdoc) throw new DiscussionNodeNotFoundError(id);
         return { ...tdoc, type, id };
     }
     return {
-        title: 'Missing Node',
-        type: 'Unknown',
-        id: new ObjectID(),
+        ...await getNode(domainId, id),
+        title: id,
+        type,
+        id,
     };
 }
 

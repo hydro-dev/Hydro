@@ -28,7 +28,7 @@
         "@shelf/jest-mongodb": "^1.2.3",
         "@types/cross-spawn": "^6.0.2",
         "@types/jest": "^26.0.23",
-        "@types/node": "^14.14.41",
+        "@types/node": "^15.0.1",
         "@types/semver": "^7.3.5",
         "@typescript-eslint/eslint-plugin": "^4.21.0",
         "@typescript-eslint/parser": "^4.21.0",

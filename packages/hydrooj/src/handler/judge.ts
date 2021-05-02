@@ -143,7 +143,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        logger.info('%o', msg);
+        if (msg.key !== 'ping') logger.info('%o', msg);
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
             await end({ judger: this.user._id, ...msg });
