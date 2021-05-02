@@ -8,7 +8,9 @@ import {
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } from '../error';
 import {
-    ContestRule, ContestRules, ScoreboardNode, ScoreboardRow, Tdoc, Udict,
+    ContestRule, ContestRules, Pdict,
+    ScoreboardNode, ScoreboardRow, Tdoc,
+    Udict,
 } from '../interface';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
@@ -50,7 +52,10 @@ const acm: ContestRule = {
         }
         return { accept, time, detail };
     },
-    scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
         const columns: ScoreboardRow = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
@@ -93,7 +98,7 @@ const acm: ContestRule = {
             for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
             const row: ScoreboardRow = [];
             row.push(
-                { type: 'string', value: rank },
+                { type: 'string', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
                 { type: 'string', value: tsdoc.accept || 0 },
             );
@@ -134,9 +139,11 @@ const acm: ContestRule = {
             row.raw = tsdoc;
             rows.push(row);
         }
-        return rows;
+        return [rows, udict];
     },
-    rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
+    async ranked(tdoc, cursor) {
+        return await ranked.all(cursor, (a, b) => a.score === b.score);
+    },
 };
 
 const oi: ContestRule = {
@@ -154,7 +161,10 @@ const oi: ContestRule = {
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
@@ -195,9 +205,11 @@ const oi: ContestRule = {
             }
             rows.push(row);
         }
-        return rows;
+        return [rows, udict];
     },
-    rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
+    async ranked(tdoc, cursor) {
+        return await ranked.all(cursor, (a, b) => a.score === b.score);
+    },
 };
 
 const ioi: ContestRule = {
@@ -255,7 +267,10 @@ const homework: ContestRule = {
     },
     showScoreboard: () => true,
     showRecord: () => true,
-    scoreboard(isExport, _, tdoc, rankedTsdocs, udict, pdict) {
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList.call(this, tdoc.domainId, uids);
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
@@ -343,9 +358,11 @@ const homework: ContestRule = {
             }
             rows.push(row);
         }
-        return rows;
+        return [rows, udict];
     },
-    rank: (tsdocs) => ranked(tsdocs, (a, b) => a.score === b.score),
+    async ranked(tdoc, cursor) {
+        return await ranked.all(cursor, (a, b) => a.score === b.score);
+    },
 };
 
 export const RULES: ContestRules = {
@@ -483,62 +500,6 @@ export function isExtended(tdoc: Tdoc) {
     return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
-export const ContestHandlerMixin = (c) => class extends c {
-    canViewHiddenScoreboard() {
-        return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-    }
-
-    canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
-        if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
-        if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
-        return false;
-    }
-
-    canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
-        if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
-        if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
-        return false;
-    }
-
-    async getScoreboard(
-        domainId: string, tid: ObjectID,
-        isExport = false, docType: 30 | 60 = document.TYPE_CONTEST,
-    ): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict]> {
-        const {
-            tdoc, udict, pdict, rankedTsdocs,
-        } = await this.getRawStatus(domainId, tid, docType);
-        const rows = RULES[tdoc.rule].scoreboard(
-            isExport, this.translate.bind(this),
-            tdoc, rankedTsdocs, udict, pdict,
-        );
-        return [tdoc, rows, udict];
-    }
-
-    async getRawStatus(domainId: string, tid: ObjectID, docType: 30 | 60 = document.TYPE_CONTEST) {
-        const tdoc = await get(domainId, tid, docType);
-        if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        if (!this.canShowRecord(tdoc)) throw new ContestScoreboardHiddenError(tid);
-        const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort).toArray();
-        const uids = tsdocs.map((tsdoc) => tsdoc.uid);
-        const [udict, pdict] = await Promise.all([
-            user.getList(domainId, uids),
-            problem.getList(domainId, tdoc.pids, true),
-        ]);
-        const rankedTsdocs = RULES[tdoc.rule].rank(tsdocs);
-        return {
-            tdoc, tsdocs, udict, pdict, rankedTsdocs,
-        };
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async verifyProblems(domainId: string, pids: Array<number | string>) {
-        const pdict = await problem.getList(domainId, pids, true);
-        const _pids: Set<number> = new Set();
-        for (const i in pdict) _pids.add(pdict[i].docId);
-        return Array.from(_pids);
-    }
-};
-
 export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: any) {
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
@@ -584,6 +545,45 @@ export async function recalcStatus(domainId: string, tid: ObjectID, type: Type =
     return await Promise.all(tasks);
 }
 
+export function canViewHiddenScoreboard() {
+    return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+}
+
+export function canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+    if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
+    if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
+    return false;
+}
+
+export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+    if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
+    if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
+    return false;
+}
+
+export async function getScoreboard(
+    domainId: string, tid: ObjectID,
+    isExport = false, page: number, docType: 30 | 60 = document.TYPE_CONTEST,
+): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, Pdict]> {
+    const tdoc = await get(domainId, tid, docType);
+    if (!this.canShowScoreboard(tdoc)) throw new ContestScoreboardHiddenError(tid);
+    if (!this.canShowRecord(tdoc)) throw new ContestScoreboardHiddenError(tid);
+    const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort);
+    const pdict = await problem.getList(domainId, tdoc.pids, true);
+    const [rows, udict] = await RULES[tdoc.rule].scoreboard(
+        isExport, this.translate.bind(this),
+        tdoc, pdict, tsdocs, page,
+    );
+    return [tdoc, rows, udict, pdict];
+}
+
+export async function verifyProblems(domainId: string, pids: Array<number | string>) {
+    const pdict = await problem.getList(domainId, pids, true);
+    const _pids: Set<number> = new Set();
+    for (const i in pdict) _pids.add(pdict[i].docId);
+    return Array.from(_pids);
+}
+
 export const statusText = (tdoc: Tdoc) => (
     isNew(tdoc)
         ? 'New'
@@ -602,7 +602,6 @@ export const getStatusText = (tdoc: Tdoc) => (
 
 global.Hydro.model.contest = {
     RULES,
-    ContestHandlerMixin,
     add,
     getListStatus,
     getMultiStatus,
@@ -617,6 +616,11 @@ global.Hydro.model.contest = {
     setStatus,
     getAndListStatus,
     recalcStatus,
+    canShowRecord,
+    canShowScoreboard,
+    canViewHiddenScoreboard,
+    getScoreboard,
+    verifyProblems,
     isNew,
     isUpcoming,
     isNotStarted,

@@ -94,17 +94,18 @@ export async function add(
 }
 
 // FIXME typings doesn't work
-export function get<T extends Ddoc.Field>(domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any): Promise<Pick<Ddoc, T>> {
-    return document.get(domainId, document.TYPE_DISCUSSION, did, projection);
+export async function get<T extends Ddoc.Field>(domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any): Promise<Pick<Ddoc, T>> {
+    return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
 export function edit(
     domainId: string, did: ObjectID,
     title: string, content: string, highlight: boolean, pin: boolean,
 ): Promise<Ddoc | null> {
-    return document.set(domainId, document.TYPE_DISCUSSION, did, {
+    const payload = {
         title, content, highlight, pin,
-    });
+    };
+    return document.set(domainId, document.TYPE_DISCUSSION, did, payload);
 }
 
 export function del(domainId: string, did: ObjectID): Promise<never> {

@@ -1,4 +1,5 @@
 import { Collection } from 'mongodb';
+import LRU from 'lru-cache';
 import { escapeRegExp } from 'lodash';
 import * as system from './system';
 import token from './token';
@@ -16,6 +17,16 @@ import * as bus from '../service/bus';
 
 const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');
+const cache = new LRU<string, User>(500);
+
+function deleteUserCache(udoc: User | Udoc) {
+    if (udoc) {
+        const id = [udoc._id.toString(), udoc.uname.toLowerCase(), udoc.mail.toLowerCase()];
+        for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
+            cache.del(key);
+        }
+    }
+}
 
 class User implements _User {
     _id: number;
@@ -125,13 +136,18 @@ class UserModel {
 
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
+        if (cache.has(`${_id}/${domainId}`)) return cache.get(`${_id}/${domainId}`);
         const udoc = _id === 0 || _id === 1
             ? BUILTIN_USERS[_id]
             : await coll.findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         if (typeof scope === 'string') scope = BigInt(scope);
-        return new UserModel.User(udoc, dudoc, scope).init();
+        const res = await new User(udoc, dudoc, scope).init();
+        cache.set(`${res._id}/${domainId}`, res);
+        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        return res;
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
@@ -145,6 +161,7 @@ class UserModel {
     @ArgMethod
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
+        if (cache.has(`${unameLower}/${domainId}`)) return cache.get(`${unameLower}/${domainId}`);
         const udoc = (unameLower === 'guest')
             ? BUILTIN_USERS[0]
             : unameLower === 'hydro'
@@ -152,12 +169,17 @@ class UserModel {
                 : await coll.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        return new UserModel.User(udoc, dudoc).init();
+        const res = await new UserModel.User(udoc, dudoc).init();
+        cache.set(`${res._id}/${domainId}`, res);
+        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        return res;
     }
 
     @ArgMethod
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
         const mailLower = mail.trim().toLowerCase();
+        if (cache.has(`${mailLower}/${domainId}`)) return cache.get(`${mailLower}/${domainId}`);
         const udoc = (mailLower === 'guest@hydro.local')
             ? BUILTIN_USERS[0]
             : mailLower === 'hydro@hydro.local'
@@ -165,7 +187,11 @@ class UserModel {
                 : await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        return new UserModel.User(udoc, dudoc).init();
+        const res = await new UserModel.User(udoc, dudoc).init();
+        cache.set(`${res._id}/${domainId}`, res);
+        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        return res;
     }
 
     @ArgMethod
@@ -173,7 +199,9 @@ class UserModel {
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
-        return await coll.findOneAndUpdate({ _id: uid }, op);
+        const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnOriginal: false });
+        deleteUserCache(res.value);
+        return res;
     }
 
     @ArgMethod
@@ -189,6 +217,7 @@ class UserModel {
             { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
             { returnOriginal: false },
         );
+        deleteUserCache(res.value);
         return res.value;
     }
 
@@ -198,6 +227,7 @@ class UserModel {
         if (!udoc) throw new UserNotFoundError(_id);
         udoc[field] = udoc[field] + n || n;
         await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
+        deleteUserCache(udoc);
         return udoc;
     }
 
@@ -252,12 +282,13 @@ class UserModel {
 
     @ArgMethod
     static async setPriv(uid: number, priv: number): Promise<Udoc | null> {
-        const udoc = await coll.findOneAndUpdate(
+        const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { priv } },
             { returnOriginal: false },
         );
-        return udoc.value;
+        deleteUserCache(res.value);
+        return res.value;
     }
 
     @ArgMethod

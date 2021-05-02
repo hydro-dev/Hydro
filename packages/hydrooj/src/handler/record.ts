@@ -14,9 +14,7 @@ import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
 
-const RecordHandler = contest.ContestHandlerMixin(Handler);
-
-class RecordListHandler extends RecordHandler {
+class RecordListHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.Name, true)
     @param('tid', Types.ObjectID, true)
@@ -28,7 +26,7 @@ class RecordListHandler extends RecordHandler {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
-            if (!this.canShowScoreboard(tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (uidOrName) {
             let udoc = await user.getById(domainId, +uidOrName);
@@ -55,7 +53,7 @@ class RecordListHandler extends RecordHandler {
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             canViewProblem
                 ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false)
-                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.create(rdoc.pid, rdoc.pid)])]),
+                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.create(rdoc.pid, rdoc.pid.toString())])]),
         ]);
         const path = [
             ['Hydro', 'homepage'],
@@ -80,7 +78,7 @@ class RecordListHandler extends RecordHandler {
     }
 }
 
-class RecordDetailHandler extends RecordHandler {
+class RecordDetailHandler extends Handler {
     @param('rid', Types.ObjectID)
     async get(domainId: string, rid: ObjectID) {
         this.response.template = 'record_detail.html';
@@ -88,7 +86,7 @@ class RecordDetailHandler extends RecordHandler {
         if (!rdoc) throw new RecordNotFoundError(rid);
         if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
-            if (!this.canShowRecord(tdoc, true)) throw new PermissionError(rid);
+            if (!contest.canShowRecord.call(this, tdoc, true)) throw new PermissionError(rid);
         }
         if (rdoc.uid !== this.user._id && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
         // eslint-disable-next-line prefer-const
@@ -148,16 +146,15 @@ class RecordDetailHandler extends RecordHandler {
     }
 }
 
-const RecordConnectionHandler = contest.ContestHandlerMixin(ConnectionHandler);
-
-class RecordMainConnectionHandler extends RecordConnectionHandler {
+class RecordMainConnectionHandler extends ConnectionHandler {
     dispose: bus.Disposable;
+    tid: string;
 
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid?: ObjectID) {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
-            if (this.canShowRecord(tdoc)) this.tid = tid.toHexString();
+            if (contest.canShowRecord.call(this, tdoc)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
@@ -192,15 +189,16 @@ class RecordMainConnectionHandler extends RecordConnectionHandler {
     }
 }
 
-class RecordDetailConnectionHandler extends contest.ContestHandlerMixin(ConnectionHandler) {
+class RecordDetailConnectionHandler extends ConnectionHandler {
     dispose: bus.Disposable;
+    rid: string;
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
         if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
-            if (!this.canShowRecord(tdoc)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!contest.canShowRecord.call(this, tdoc)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         this.rid = rid.toString();
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));

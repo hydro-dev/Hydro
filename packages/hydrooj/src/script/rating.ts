@@ -42,8 +42,8 @@ async function runProblem(...arg: any[]) {
         );
         const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
         for (const psdoc of psdocs) {
-            if (rdict[psdoc.rid]) {
-                const rp = rdict[psdoc.rid].score * p;
+            if (rdict[psdoc.rid.toHexString()]) {
+                const rp = rdict[psdoc.rid.toHexString()].score * p;
                 udict[psdoc.uid] = (udict[psdoc.uid] || 1500) + rp;
             }
         }
@@ -61,10 +61,10 @@ async function runContest(...arg: any[]) {
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
-    const tsdocs = await contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
-        .sort(contest.RULES[tdoc.rule].statusSort).toArray();
-    if (!tsdocs.length) return;
-    const rankedTsdocs = contest.RULES[tdoc.rule].rank(tsdocs);
+    const cursor = await contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
+        .sort(contest.RULES[tdoc.rule].statusSort);
+    if (!await cursor.count()) return;
+    const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
     const users = [];
     for (const result of rankedTsdocs) {
         users.push({ uid: result[1].uid, rank: result[0], old: udict[result[1].uid] || 1500 });

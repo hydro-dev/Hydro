@@ -84,7 +84,7 @@ class TrainingMainHandler extends Handler {
                 tdict = await training.getList(domainId, Array.from(enrolledTids));
             }
         }
-        for (const tdoc of tdocs) tdict[tdoc.docId] = tdoc;
+        for (const tdoc of tdocs) tdict[tdoc.docId.toHexString()] = tdoc;
         const path = [
             ['Hydro', 'homepage'],
             ['training_main', null],

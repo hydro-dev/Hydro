@@ -7,7 +7,7 @@ import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
 } from '../error';
-import { PenaltyRules } from '../interface';
+import { PenaltyRules, Tdoc, Pdoc } from '../interface';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -29,9 +29,7 @@ const validatePenaltyRules = (input: string) => {
 };
 const convertPenaltyRules = validatePenaltyRules;
 
-const HomeworkHandler = contest.ContestHandlerMixin(Handler);
-
-class HomeworkMainHandler extends HomeworkHandler {
+class HomeworkMainHandler extends Handler {
     async get({ domainId }) {
         const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK).toArray();
         const calendar = [];
@@ -54,7 +52,7 @@ class HomeworkMainHandler extends HomeworkHandler {
     }
 }
 
-class HomeworkDetailHandler extends HomeworkHandler {
+class HomeworkDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -72,7 +70,7 @@ class HomeworkDetailHandler extends HomeworkHandler {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
             }
-            if (this.canShowRecord(tdoc) && tsdoc.journal) {
+            if (contest.canShowRecord.call(this, tdoc) && tsdoc.journal) {
                 rdict = await record.getList(
                     domainId,
                     tsdoc.journal.map((pdetail) => pdetail.rid),
@@ -118,7 +116,11 @@ class HomeworkDetailHandler extends HomeworkHandler {
     }
 }
 
-class HomeworkDetailProblemHandler extends HomeworkHandler {
+class HomeworkDetailProblemHandler extends Handler {
+    tdoc: Tdoc<60>;
+    pdoc: Pdoc;
+    tsdoc: any;
+
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async prepare(domainId: string, tid: ObjectID, pid: number) {
@@ -162,7 +164,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         if (!attended) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
         if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
-        const rdocs = this.canShowRecord(this.tdoc)
+        const rdocs = contest.canShowRecord.call(this, this.tdoc)
             ? await record.getUserInProblemMulti(domainId, this.user._id, pid, true)
                 .sort('_id', -1).limit(10).toArray()
             : [];
@@ -202,12 +204,12 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         ]);
         bus.boardcast('record/change', rdoc);
         this.response.body = { tid, rid };
-        if (this.canShowRecord(this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
+        if (contest.canShowRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
         else this.response.redirect = this.url('homework_detail', { tid });
     }
 }
 
-class HomeworkCreateHandler extends HomeworkHandler {
+class HomeworkCreateHandler extends Handler {
     async get() {
         const beginAt = moment().add(1, 'day');
         const penaltySince = beginAt.clone().add(7, 'days');
@@ -255,7 +257,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        const verified = await this.verifyProblems(domainId, pids);
+        const verified = await contest.verifyProblems(domainId, pids);
         const tid = await contest.add(domainId, title, content, this.user._id,
             'homework', beginAt.toDate(), endAt.toDate(), verified, rated,
             { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
@@ -264,7 +266,7 @@ class HomeworkCreateHandler extends HomeworkHandler {
     }
 }
 
-class HomeworkEditHandler extends HomeworkHandler {
+class HomeworkEditHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
@@ -316,7 +318,7 @@ class HomeworkEditHandler extends HomeworkHandler {
             return i;
         });
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         let beginAt;
         let penaltySince;
@@ -332,7 +334,7 @@ class HomeworkEditHandler extends HomeworkHandler {
         }
         let endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
-        const verified = await this.verifyProblems(domainId, pids);
+        const verified = await contest.verifyProblems(domainId, pids);
         beginAt = beginAt.toDate();
         endAt = endAt.toDate();
         penaltySince = penaltySince.toDate();
@@ -350,11 +352,12 @@ class HomeworkEditHandler extends HomeworkHandler {
     }
 }
 
-class HomeworkScoreboardHandler extends HomeworkHandler {
+class HomeworkScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
-        const [tdoc, rows, udict] = await this.getScoreboard(
-            domainId, tid, false, document.TYPE_HOMEWORK,
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, tid: ObjectID, page = 1) {
+        const [tdoc, rows, udict] = await contest.getScoreboard(
+            domainId, tid, false, page, document.TYPE_HOMEWORK,
         );
         const path = [
             ['Hydro', 'homepage'],
@@ -369,7 +372,7 @@ class HomeworkScoreboardHandler extends HomeworkHandler {
     }
 }
 
-class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
+class HomeworkScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Name)
     async get(domainId: string, tid: ObjectID, ext: string) {
@@ -378,12 +381,12 @@ class HomeworkScoreboardDownloadHandler extends HomeworkHandler {
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [tdoc, rows] = await this.getScoreboard(domainId, tid, true, document.TYPE_HOMEWORK);
+        const [tdoc, rows] = await contest.getScoreboard(domainId, tid, true, 0, document.TYPE_HOMEWORK);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }
 
-class HomeworkCodeHandler extends HomeworkHandler {
+class HomeworkCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         this.checkPerm(PERM.PERM_READ_RECORD_CODE);

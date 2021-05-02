@@ -6,6 +6,7 @@ import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError,
 } from '../error';
+import { Pdoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -22,9 +23,7 @@ import {
 import * as bus from '../service/bus';
 import storage from '../service/storage';
 
-const ContestHandler = contest.ContestHandlerMixin(Handler);
-
-class ContestListHandler extends ContestHandler {
+class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
@@ -54,7 +53,7 @@ class ContestListHandler extends ContestHandler {
     }
 }
 
-class ContestDetailHandler extends ContestHandler {
+class ContestDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -70,7 +69,7 @@ class ContestDetailHandler extends ContestHandler {
         if (tsdoc) {
             attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
-            if (this.canShowRecord(tdoc)) {
+            if (contest.canShowRecord.call(this, tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
                 rdict = await record.getList(domainId, q, true);
@@ -106,7 +105,7 @@ class ContestDetailHandler extends ContestHandler {
     }
 }
 
-class ContestBoardcastHandler extends ContestHandler {
+class ContestBoardcastHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
@@ -135,10 +134,11 @@ class ContestBoardcastHandler extends ContestHandler {
     }
 }
 
-class ContestScoreboardHandler extends ContestHandler {
+class ContestScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
-        const [tdoc, rows, udict] = await this.getScoreboard(domainId, tid);
+    @param('page', Types.PositiveInt)
+    async get(domainId: string, tid: ObjectID, page = 1) {
+        const [tdoc, rows, udict] = await contest.getScoreboard(domainId, tid, false, page);
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
@@ -152,14 +152,7 @@ class ContestScoreboardHandler extends ContestHandler {
     }
 }
 
-class ContestScoreboardRawHandler extends ContestHandler {
-    @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
-        this.response.body = await this.getRawStatus(domainId, tid);
-    }
-}
-
-class ContestScoreboardDownloadHandler extends ContestHandler {
+class ContestScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html']))
     async get(domainId: string, tid: ObjectID, ext: string) {
@@ -167,12 +160,14 @@ class ContestScoreboardDownloadHandler extends ContestHandler {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
-        const [tdoc, rows] = await this.getScoreboard(domainId, tid, true);
+        const [tdoc, rows] = await contest.getScoreboard(domainId, tid, true, 0);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }
 
-class ContestEditHandler extends ContestHandler {
+class ContestEditHandler extends Handler {
+    tdoc: Tdoc;
+
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
         this.tdoc = await contest.get(domainId, tid);
@@ -229,7 +224,7 @@ class ContestEditHandler extends ContestHandler {
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        pids = await this.verifyProblems(domainId, pids);
+        pids = await contest.verifyProblems(domainId, pids);
         await contest.edit(domainId, this.tdoc.docId, {
             title, content, rule, beginAt, endAt, pids, rated,
         });
@@ -242,7 +237,13 @@ class ContestEditHandler extends ContestHandler {
     }
 }
 
-class ContestProblemHandler extends ContestHandler {
+class ContestProblemHandler extends Handler {
+    tdoc: Tdoc<30 | 60>;
+    pdoc: Pdoc;
+    tsdoc: any;
+    udoc: User;
+    attended: boolean;
+
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async _prepare(domainId: string, tid: ObjectID, pid: number) {
@@ -308,7 +309,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     async prepare(domainId: string, tid: ObjectID, pid: number) {
         if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         let rdocs = [];
-        if (this.canShowRecord(this.tdoc)) {
+        if (contest.canShowRecord.call(this, this.tdoc)) {
             rdocs = await record.getUserInProblemMulti(
                 domainId, this.user._id,
                 this.pdoc.docId, true,
@@ -326,7 +327,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             tdoc: this.tdoc,
             pdoc: this.pdoc,
             udoc: this.udoc,
-            attended: this.attend,
+            attended: this.attended,
             path,
             rdocs,
             page_name: 'contest_detail_problem_submit',
@@ -349,7 +350,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
         ]);
         bus.boardcast('record/change', rdoc);
-        if (!this.canShowRecord(this.tdoc)) {
+        if (!contest.canShowRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });
         } else {
@@ -359,7 +360,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     }
 }
 
-class ContestCodeHandler extends ContestHandler {
+class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
@@ -386,7 +387,7 @@ class ContestCodeHandler extends ContestHandler {
     }
 }
 
-class ContestCreateHandler extends ContestHandler {
+class ContestCreateHandler extends Handler {
     async get() {
         this.response.template = 'contest_edit.html';
         const rules = {};
@@ -431,7 +432,7 @@ class ContestCreateHandler extends ContestHandler {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         const endAt = beginAt.clone().add(duration, 'hours');
-        pids = await this.verifyProblems(domainId, pids);
+        pids = await contest.verifyProblems(domainId, pids);
         const tid = await contest.add(
             domainId, title, content,
             this.user._id, rule, beginAt.toDate(), endAt.toDate(), pids, rated,
@@ -448,7 +449,6 @@ export async function apply() {
     Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_scoreboard_raw', '/contest/:tid/scoreboard/raw', ContestScoreboardRawHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail_problem_file_download', '/contest/:tid/p/:pid/file/:filename', ContestProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);

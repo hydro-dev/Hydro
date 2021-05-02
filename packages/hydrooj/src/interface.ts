@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'stream';
-import type { ObjectID } from 'mongodb';
+import type { Cursor, ObjectID } from 'mongodb';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type * as Koa from 'koa';
@@ -400,17 +400,17 @@ export interface ContestStat extends Record<string, any> {
 }
 
 export interface ContestRule {
-    TEXT: string,
-    check: (args: any) => any,
-    statusSort: any,
-    showScoreboard: (tdoc: Tdoc<30 | 60>, now: Date) => boolean,
-    showRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean,
-    stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat,
+    TEXT: string;
+    check: (args: any) => any;
+    statusSort: any;
+    showScoreboard: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
+    showRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
+    stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat;
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30 | 60>, rankedTsdocs: any[], udict: Udict, pdict: Pdict
-    ) => ScoreboardRow[],
-    rank: (tsdocs: any[]) => any[],
+        tdoc: Tdoc<30 | 60>, pdict: Pdict, cursor: Cursor<any>, page: number,
+    ) => Promise<[board: ScoreboardRow[], udict: Udict]>;
+    ranked: (tdoc: Tdoc<30 | 60>, cursor: Cursor<any>) => Promise<any[]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
