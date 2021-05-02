@@ -136,9 +136,9 @@ class ContestBoardcastHandler extends Handler {
 
 class ContestScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
-    @param('page', Types.PositiveInt)
+    @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
-        const [tdoc, rows, udict] = await contest.getScoreboard(domainId, tid, false, page);
+        const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(this, domainId, tid, false, page);
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
@@ -147,7 +147,7 @@ class ContestScoreboardHandler extends Handler {
         ];
         this.response.template = 'contest_scoreboard.html';
         this.response.body = {
-            tdoc, rows, path, udict,
+            tdoc, rows, path, udict, nPages, page,
         };
     }
 }
@@ -156,11 +156,12 @@ class ContestScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html']))
     async get(domainId: string, tid: ObjectID, ext: string) {
+        await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
-        const [tdoc, rows] = await contest.getScoreboard(domainId, tid, true, 0);
+        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }

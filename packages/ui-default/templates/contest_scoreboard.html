@@ -1,3 +1,4 @@
+{% import "components/paginator.html" as paginator with context %}
 {% extends "layout/basic.html" %}
 {% set type = 'homework' if tdoc.docType == 60 else 'contest' %}
 {% block content %}
@@ -32,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-        {%- for row in rows -%}{% if loop.index0>0 %}
+        {%- for row in rows -%}{% if loop.index0 > 0 %}
           <tr>
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}">
@@ -49,6 +50,7 @@
         {% endif %}{%- endfor -%}
         </tbody>
       </table>
+      {{ paginator.render(page, nPages) }}
     </div>
   </div>
 </div></div>

@@ -409,7 +409,7 @@ export interface ContestRule {
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30 | 60>, pdict: Pdict, cursor: Cursor<any>, page: number,
-    ) => Promise<[board: ScoreboardRow[], udict: Udict]>;
+    ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
     ranked: (tdoc: Tdoc<30 | 60>, cursor: Cursor<any>) => Promise<any[]>;
 }
 

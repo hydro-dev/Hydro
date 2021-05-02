@@ -356,8 +356,9 @@ class HomeworkScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
-        const [tdoc, rows, udict] = await contest.getScoreboard(
-            domainId, tid, false, page, document.TYPE_HOMEWORK,
+        const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(
+            this, domainId, tid, false,
+            page, document.TYPE_HOMEWORK,
         );
         const path = [
             ['Hydro', 'homepage'],
@@ -367,7 +368,7 @@ class HomeworkScoreboardHandler extends Handler {
         ];
         this.response.template = 'contest_scoreboard.html';
         this.response.body = {
-            tdoc, rows, path, udict, page_name: 'homework_scoreboard',
+            tdoc, rows, path, udict, page, nPages, page_name: 'homework_scoreboard',
         };
     }
 }
@@ -376,12 +377,13 @@ class HomeworkScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Name)
     async get(domainId: string, tid: ObjectID, ext: string) {
+        await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
             csv: (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [tdoc, rows] = await contest.getScoreboard(domainId, tid, true, 0, document.TYPE_HOMEWORK);
+        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0, document.TYPE_HOMEWORK);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }

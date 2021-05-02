@@ -468,7 +468,7 @@ export class Handler extends HandlerCommon {
         this.response.body = data;
         this.response.template = null;
         this.response.type = 'application/octet-stream';
-        if (name) this.response.disposition = `attachment; filename="${name}"`;
+        if (name) this.response.disposition = `attachment; filename="${encodeURIComponent(name)}"`;
     }
 
     async getSession() {
@@ -567,7 +567,7 @@ export class Handler extends HandlerCommon {
     }
 
     async putResponse() {
-        if (this.response.disposition) this.ctx.set('Content-Disposition', encodeURIComponent(this.response.disposition));
+        if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
         if (!this.response.body) return;
         if (this.response.redirect && !this.request.json) {
             this.ctx.response.type = 'application/octet-stream';
