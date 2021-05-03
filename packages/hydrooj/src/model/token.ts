@@ -78,13 +78,12 @@ class TokenModel {
 
     @ArgMethod
     static getSessionListByUid(uid: number) {
-        return TokenModel.coll.find({ uid, tokenType: TokenModel.TYPE_SESSION }).sort('updateAt', -1).toArray();
+        return TokenModel.coll.find({ uid, tokenType: TokenModel.TYPE_SESSION }).sort('updateAt', -1).limit(100).toArray();
     }
 
     @ArgMethod
     static async getMostRecentSessionByUid(uid: number) {
-        const res = await TokenModel.coll.find({ uid, tokenType: TokenModel.TYPE_SESSION }).sort('updateAt', -1).toArray();
-        return res[0];
+        return await TokenModel.coll.findOne({ uid, tokenType: TokenModel.TYPE_SESSION }, { sort: { updateAt: -1 } });
     }
 
     @ArgMethod
