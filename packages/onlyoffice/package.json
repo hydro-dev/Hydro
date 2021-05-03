@@ -1,0 +1,8 @@
+{
+    "name": "@hydrooj/onlyoffice",
+    "version": "1.0.0",
+    "main": "package.json",
+    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "author": "undefined <i@undefined.moe>",
+    "license": "AGPL-3.0-only"
+}

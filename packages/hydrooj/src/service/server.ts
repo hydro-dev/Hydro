@@ -275,7 +275,11 @@ export async function prepare() {
     }));
 }
 
-export const UiContextBase = {
+export interface UiContextBase {
+    cdn_prefix: string;
+    url_prefix: string;
+}
+export const UiContextBase: UiContextBase = {
     cdn_prefix: '/',
     url_prefix: '/',
 };

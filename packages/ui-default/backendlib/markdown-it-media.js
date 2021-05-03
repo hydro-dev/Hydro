@@ -1,5 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable prefer-destructuring */
+
+const { escapeHtml } = require('vj/../../node_modules/markdown-it/lib/common/utils');
+
 /* eslint-disable no-restricted-properties */
 const ytRegex = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
 function youtubeParser(url) {
@@ -41,49 +44,49 @@ function extractVideoParameters(url) {
 }
 function videoUrl(service, videoID, url, options) {
   switch (service) {
-  case 'youtube': {
-    const parameters = extractVideoParameters(url);
-    if (options.youtube.parameters) {
-      Object.keys(options.youtube.parameters).forEach((key) => {
-        parameters.set(key, options.youtube.parameters[key]);
-      });
-    }
-    const timeParameter = parameters.get('t');
-    if (timeParameter !== undefined) {
-      let startTime = 0;
-      const timeParts = timeParameter.match(/[0-9]+/g);
-      let j = 0;
-      while (timeParts.length > 0) {
-        startTime += Number(timeParts.pop()) * Math.pow(60, j);
-        j += 1;
+    case 'youtube': {
+      const parameters = extractVideoParameters(url);
+      if (options.youtube.parameters) {
+        Object.keys(options.youtube.parameters).forEach((key) => {
+          parameters.set(key, options.youtube.parameters[key]);
+        });
       }
-      parameters.set('start', startTime);
-      parameters.delete('t');
+      const timeParameter = parameters.get('t');
+      if (timeParameter !== undefined) {
+        let startTime = 0;
+        const timeParts = timeParameter.match(/[0-9]+/g);
+        let j = 0;
+        while (timeParts.length > 0) {
+          startTime += Number(timeParts.pop()) * Math.pow(60, j);
+          j += 1;
+        }
+        parameters.set('start', startTime);
+        parameters.delete('t');
+      }
+      parameters.delete('v');
+      parameters.delete('feature');
+      parameters.delete('origin');
+      const parameterArray = Array.from(parameters, (p) => p.join('='));
+      const parameterPos = videoID.indexOf('?');
+      let finalUrl = 'https://www.youtube';
+      if (options.youtube.nocookie || url.indexOf('youtube-nocookie.com') > -1) finalUrl += '-nocookie';
+      finalUrl += `.com/embed/${parameterPos > -1 ? videoID.substr(0, parameterPos) : videoID}`;
+      if (parameterArray.length > 0) finalUrl += `?${parameterArray.join('&')}`;
+      return finalUrl;
     }
-    parameters.delete('v');
-    parameters.delete('feature');
-    parameters.delete('origin');
-    const parameterArray = Array.from(parameters, (p) => p.join('='));
-    const parameterPos = videoID.indexOf('?');
-    let finalUrl = 'https://www.youtube';
-    if (options.youtube.nocookie || url.indexOf('youtube-nocookie.com') > -1) finalUrl += '-nocookie';
-    finalUrl += `.com/embed/${parameterPos > -1 ? videoID.substr(0, parameterPos) : videoID}`;
-    if (parameterArray.length > 0) finalUrl += `?${parameterArray.join('&')}`;
-    return finalUrl;
-  }
-  case 'vimeo':
-    return `https://player.vimeo.com/video/${videoID}`;
-  case 'vine':
-    return `https://vine.co/v/${videoID}/embed/${options.vine.embed}`;
-  case 'prezi':
-    return `https://prezi.com/embed/${videoID
-    }/?bgcolor=ffffff&amp;lock_to_path=0&amp;autoplay=0&amp;autohide_ctrls=0&amp;`
+    case 'vimeo':
+      return `https://player.vimeo.com/video/${videoID}`;
+    case 'vine':
+      return `https://vine.co/v/${videoID}/embed/${options.vine.embed}`;
+    case 'prezi':
+      return `https://prezi.com/embed/${videoID
+        }/?bgcolor=ffffff&amp;lock_to_path=0&amp;autoplay=0&amp;autohide_ctrls=0&amp;`
         + 'landing_data=bHVZZmNaNDBIWnNjdEVENDRhZDFNZGNIUE43MHdLNWpsdFJLb2ZHanI5N1lQVHkxSHFxazZ0UUNCRHloSXZROHh3PT0&amp;'
         + 'landing_sign=1kD6c0N6aYpMUS0wxnQjxzSqZlEB8qNFdxtdjYhwSuI';
-  case 'osf':
-    return `https://mfr.osf.io/render?url=https://osf.io/${videoID}/?action=download`;
-  default:
-    return service;
+    case 'osf':
+      return `https://mfr.osf.io/render?url=https://osf.io/${videoID}/?action=download`;
+    default:
+      return service;
   }
 }
 
@@ -115,11 +118,13 @@ module.exports = function videoPlugin(md) {
         + '    }); </script>';
     }
     if (service === 'pdf') return `<iframe src="${videoID}?noDisposition=on#view=fit" width="100%" style="min-height: 100vh;border: none;"></iframe>`;
-    return videoID === '' ? ''
-      : `<div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width
-      }" height="${options[service].height
-      }" src="${options.url(service, videoID, tokens[idx].url, options)
-      }" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>`;
+    if (service === 'video') {
+      return `<div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width
+        }" height="${options[service].height
+        }" src="${options.url(service, videoID, tokens[idx].url, options)
+        }" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>`;
+    }
+    return `<div data-${service}>${escapeHtml(videoID)}</div>`;
   };
   md.inline.ruler.before('emphasis', 'video', (state, silent) => {
     let token;
@@ -140,7 +145,6 @@ module.exports = function videoPlugin(md) {
     else if (serviceLower === 'vine') videoID = vineParser(videoID);
     else if (serviceLower === 'prezi') videoID = preziParser(videoID);
     else if (serviceLower === 'osf') videoID = mfrParser(videoID);
-    else if (!options[serviceLower]) return false;
     if (videoID === ')') videoID = '';
     const serviceStart = oldPos + 2;
     const serviceEnd = md.helpers.parseLinkLabel(state, oldPos + 1, false);
