@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, SystemError, BlacklistedError,
-    UserFacingError, LoginError,
+    UserFacingError, LoginError, NotFoundError,
 } from '../error';
 import { User } from '../interface';
 import {
@@ -178,6 +178,7 @@ class UserLostPassWithCodeHandler extends Handler {
 class UserDetailHandler extends Handler {
     @param('uid', Types.Int)
     async get(domainId: string, uid: number) {
+        if (uid === 0) throw new NotFoundError(this.request.path);
         const isSelfProfile = this.user._id === uid;
         const udoc = await user.getById(domainId, uid);
         if (!udoc) throw new UserNotFoundError(uid);
