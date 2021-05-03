@@ -473,7 +473,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
             }
         }
         const udict = await user.getList(domainId, uids);
-        const pssdict = solution.getListStatus(domainId, docids, this.user._id);
+        const pssdict = await solution.getListStatus(domainId, docids, this.user._id);
         const path = [
             ['problem_main', 'problem_main'],
             [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid || this.pdoc.docId }, true],

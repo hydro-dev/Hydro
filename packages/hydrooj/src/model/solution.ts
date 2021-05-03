@@ -72,7 +72,7 @@ class SolutionModel {
     }
 
     static async getListStatus(domainId: string, psids: ObjectID[], uid: number) {
-        const result = {};
+        const result: any = {};
         const res = await document.getMultiStatus(
             domainId, document.TYPE_PROBLEM_SOLUTION, { uid, psid: { $in: psids } },
         ).toArray();
