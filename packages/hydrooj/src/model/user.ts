@@ -276,11 +276,11 @@ class UserModel {
     @ArgMethod
     static async getPrefixList(domainId: string, prefix: string, limit: number = 50) {
         prefix = prefix.toLowerCase();
-        const $regex = new RegExp(`^${escapeRegExp(prefix)}`, 'gmi');
-        const uids = await coll.find({ unameLower: { $regex } })
-            .limit(limit).map((doc) => doc._id).toArray();
+        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
+        const udocs = await coll.find({ unameLower: { $regex } })
+            .limit(limit).project({ _id: 1 }).toArray();
         const users = [];
-        for (const uid of uids) users.push(UserModel.getById(domainId, uid));
+        for (const { _id } of udocs) users.push(UserModel.getById(domainId, _id));
         return await Promise.all(users);
     }
 
