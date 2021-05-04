@@ -1,5 +1,4 @@
 const MarkdownIt = require('markdown-it');
-const Prism = require('prismjs');
 
 // For math: $a\times b\eq 10$
 // Specific image size: ![image](image.png =100x100)
@@ -31,14 +30,6 @@ class Markdown extends MarkdownIt {
   constructor() {
     super({
       linkify: true,
-      highlight(str, lang) {
-        if (lang && Prism.languages[lang]) {
-          try {
-            return Prism.highlight(str, Prism.languages[lang], lang);
-          } catch (__) { }
-        }
-        return '';
-      },
     });
     this.linkify.tlds('.py', false);
     this.use(Media);

@@ -24,34 +24,31 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="problem-content-container"><div class="problem-content" data-marker-enabled>
-        <div class="section__header">
-          {% if rdoc %}
-            <h1 class="section__title scratchpad--hide">
-                <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
-                <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-                  {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
-                </span>
+        {% if rdoc %}
+          <div class="section__header scratchpad--hide">
+            <h1 class="section__title">
+              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+                {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
+              </span>
             </h1>
-          {% endif %}
-          <h1 class="section__title non-scratchpad--hide">
-            {{ pdoc.title }}
-          </h1>
+          </div>
+        {% else %}
+        <div class="section__header non-scratchpad--hide">
+          <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
+        {% endif %}
         <div class="section__body typo">
         {% if not pdoc.data.length %}
           <blockquote class="warn">
             <p>{{ _('No testdata at current.') }}</p>
           </blockquote>
         {% endif %}
-        {% if tdoc %}
-        {% if tdoc.docType == model.document.TYPE_CONTEST %}
-        {% if model.contest.isDone(tdoc) %}
+        {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
-        {% endif %}{# handler.isDone(tdoc) #}
-        {% endif %}{# tdoc['docType'] == model.document.TYPE_CONTEST #}
-        {% endif %}{# tdoc #}
+        {% endif %}
         {{ pdoc.content|content(handler.user.viewLang, pdoc.html)|safe }}
         </div>
       </div></div>

@@ -11,6 +11,11 @@ const { system, domain, user } = global.Hydro.model;
 const { Route, Handler, UiContextBase } = global.Hydro.service.server;
 
 class WikiHelpHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get() {
     const [langstr, langtexts] = system.getMany(['hydrojudge.langs', 'lang.texts']);
     if (langstr) {
@@ -31,12 +36,22 @@ class WikiHelpHandler extends Handler {
 }
 
 class WikiAboutHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get() {
     this.response.template = 'about.html';
   }
 }
 
 class UiConstantsHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get() {
     const [LANG_TEXTS, LANG_HIGHLIGHT_ID, MONACO_MODES] = system.getMany([
       'lang.texts',
@@ -53,6 +68,11 @@ window.MONACO_MODES=${JSON.stringify(yaml.load(MONACO_MODES))}`;
 }
 
 class UiSettingsHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get({ domainId }) {
     const [
       header_logo, header_logo_2x,
@@ -83,6 +103,11 @@ class UiSettingsHandler extends Handler {
 }
 
 class LocaleHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get({ id }) {
     // eslint-disable-next-line prefer-destructuring
     id = id.split('.')[0];
@@ -95,6 +120,11 @@ class LocaleHandler extends Handler {
 }
 
 class SetThemeHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async get({ theme }) {
     await user.setById(this.user._id, { theme });
     this.back();
@@ -102,6 +132,11 @@ class SetThemeHandler extends Handler {
 }
 
 class MarkdownHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
   async post({ text, html = false, inline = false }) {
     this.response.body = inline
       ? markdown.renderInline(text, html)
