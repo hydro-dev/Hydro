@@ -81,7 +81,7 @@ lang_monaco_modes:
     go: go
     rb: ruby
     jl: julia
-preferedEditorType:
+preferredEditorType:
   type:
     wysiwyg: WYSIWYG
     ir: Instant Rendering

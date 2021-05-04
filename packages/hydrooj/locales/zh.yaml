@@ -42,6 +42,8 @@ __langname: 简体中文
 (All Problems): (所有题目)
 (None): (无)
 (Not changed): 未更改
+1 Hour: 1 小时
+5 Min: 5 分钟
 Aborted: 已放弃
 About Hydro: 关于 Hydro
 About Markdown: 关于 Markdown
@@ -67,6 +69,7 @@ All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All: 全部
 Allow builtin-login: 启用内置登录
+Allow using gravatar:email qq:id github:name format.: 允许使用 gravatar:email，qq:id，github:name 格式。
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
@@ -75,11 +78,13 @@ Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
+astyle formatting options: Astyle 格式化选项
 At least 4 characters: 至少 4 个字符
 Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
+Auto format code: 自动格式化代码
 Avatar: 头像
 Be Copied: 被复制
 Begin at: 开始于
@@ -200,6 +205,7 @@ Default Code Language: 默认代码语言
 Default Code Template: 默认代码模板
 Default display language: 默认显示语言
 Default Privilege: 用户默认全站权限
+Delay: 延迟
 Delete a user: 删除用户
 Delete discussion replies of own discussion: 删除自己讨论中的回复
 Delete discussion replies: 删除讨论回复
@@ -305,6 +311,7 @@ English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
+Enter Edit Mode: 进入编辑模式
 error: 错误
 Evaluated difficulty: 估计的难度
 expand: 展开
@@ -334,7 +341,9 @@ Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
 Hide categorical tags: 隐藏分类标签
+Hide Selected: 隐藏选中
 Highlight discussions: 高亮讨论
+highlight: 高亮
 Highlight: 高亮
 Hint: 提示
 home_account: 账户设置
@@ -389,6 +398,7 @@ Input Format: 输入格式
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
+Instant Rendering: 即时渲染
 Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 虽然测试数据不会被复制，但是系统会将题目的测试数据链接到原题。因此在原题的数据被改动的时候，复制后的题目的数据也会同时改动。链接后的测试数据的权限以原题为准，比如您可能依旧无法下载数据，但是评测机可以。在题目设置页面中可以通过上传新的测试数据的方式，这个数据链接会被删除，以后将使用您的新测试数据。
 Introduce must not exceed 500 characters and it will be shown in the list view.: 简介不能超过 500 个字符，将显示在列表页面中。
 Introduce: 简介
@@ -417,6 +427,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
+Leave Edit Mode: 离开编辑模式
 Limit And Hint: 数据范围与提示
 Limitations: 限制
 Links: 链接
@@ -544,6 +555,7 @@ Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
+preferredEditorType: 首选编辑模式
 Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试
 Pretest: 自测
@@ -681,6 +693,7 @@ Settings: 设置
 Share: 分享
 She: 她
 Show all tags: 显示所有标签
+show invisible characters when formatting code: 在格式化后的代码中显示不可见字符
 Show MOD badge: 展示 MOD 徽章
 Show: 显示
 Sign In: 登录
@@ -697,6 +710,7 @@ Solutions per page: 每页展示的题解数量
 Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
+Split View: 分屏预览
 Star Topic: 收藏讨论
 Star: 收藏
 Start at: 开始于
@@ -715,6 +729,7 @@ Submissions: 递交
 Submit: 递交
 Submitted: 已递交
 Support: 支持
+Sync problem filelist from s3 service: 从 S3 同步题目文件列表。
 Tags: 标签
 Target: 目标
 Technical Information: 技术信息
@@ -770,6 +785,7 @@ Trainings per page: 每页展示的训练数量
 Type: 类型
 UI Language: 用户界面语言
 Uncompleted: 未完成
+Unhide Selected: 取消隐藏选中
 Unique: 唯一
 Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
@@ -852,6 +868,7 @@ With this feature, you can import problems that you can view from a site to here
 With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported.: 您可以通过这个功能将其他 OJ 的题目导入到本站。题目的标题、题面、标签和分类都将会被自动导入。
 Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
+WYSIWYG: 所见即所得
 Year: 年
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
 You can create your own training plans and share with others.: 您可以创建您自己的训练计划并且与他人分享。
