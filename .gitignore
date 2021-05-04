@@ -36,7 +36,6 @@ packages/ui-default/static/locale
 
 # Data files
 *.mmdb
-data/*
 
 # Base
 node_modules/

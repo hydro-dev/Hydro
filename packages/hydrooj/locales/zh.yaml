@@ -205,7 +205,7 @@ Default Code Language: 默认代码语言
 Default Code Template: 默认代码模板
 Default display language: 默认显示语言
 Default Privilege: 用户默认全站权限
-Delay: 预测评测剩余时间
+Delay: 延迟
 Delete a user: 删除用户
 Delete discussion replies of own discussion: 删除自己讨论中的回复
 Delete discussion replies: 删除讨论回复
@@ -311,7 +311,7 @@ English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
-Enter Edit Mode: 进入批量编辑模式
+Enter Edit Mode: 进入编辑模式
 error: 错误
 Evaluated difficulty: 估计的难度
 expand: 展开
@@ -341,9 +341,9 @@ Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
 Hide categorical tags: 隐藏分类标签
-Hide Selected: 隐藏选中题目
+Hide Selected: 隐藏选中
 Highlight discussions: 高亮讨论
-highlight: 代码高亮
+highlight: 高亮
 Highlight: 高亮
 Hint: 提示
 home_account: 账户设置
@@ -427,7 +427,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
-Leave Edit Mode: 离开批量编辑模式
+Leave Edit Mode: 离开编辑模式
 Limit And Hint: 数据范围与提示
 Limitations: 限制
 Links: 链接
@@ -785,7 +785,7 @@ Trainings per page: 每页展示的训练数量
 Type: 类型
 UI Language: 用户界面语言
 Uncompleted: 未完成
-Unhide Selected: 公开选中题目
+Unhide Selected: 取消隐藏选中
 Unique: 唯一
 Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
