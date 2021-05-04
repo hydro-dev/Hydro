@@ -8,7 +8,7 @@ export const config = {
     'quote', 'line', 'code', 'inline-code', 'table', '|',
     'upload', 'edit-mode', 'fullscreen', 'export',
   ],
-  mode: UserContext.preferedEditorType || 'sv',
+  mode: UserContext.preferredEditorType || 'sv',
   toolbarConfig: {
     pin: true,
   },
