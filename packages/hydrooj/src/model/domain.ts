@@ -114,7 +114,8 @@ class DomainModel {
     static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
         if (!(uid instanceof Array)) {
             const res = await collUser.findOneAndUpdate({ domainId, uid }, { $set: { role } }, { upsert: true, returnOriginal: false });
-            deleteUserCache(res.value);
+            const udoc = await UserModel.getById(domainId, uid);
+            deleteUserCache(udoc);
             return res;
         }
         const filter = { domainId, uid: { $in: uid } };
