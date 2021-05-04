@@ -1,6 +1,7 @@
 import { NamedPage } from 'vj/misc/Page';
 import load from 'vj/components/wastyle/index';
 import code from 'vj/components/highlighter/code-example';
+import i18n from 'vj/utils/i18n';
 
 const page = new NamedPage('home_preference', async () => {
   async function mountComponent() {
@@ -26,7 +27,7 @@ const page = new NamedPage('home_preference', async () => {
           <>
             <div className="medium-4 columns form__item end">
               <label htmlFor="astyleOptions_input">
-                astyleOptions
+                {i18n('astyleOptions')}
                 <div id="astyleOptions_input" name="form_item_astyleOptions" className="textbox-container">
                   <textarea
                     type="textarea"
@@ -46,11 +47,11 @@ const page = new NamedPage('home_preference', async () => {
                   />
                 </div>
               </label>
-              <p className="help-text">astyle formatting options</p>
+              <p className="help-text">{i18n('astyle formatting options')}</p>
             </div>
             <div className="medium-8 columns form__item end">
               <label htmlFor="astylePreview">
-                Preview {/* eslint-disable-next-line */}
+                {i18n('Preview') /* eslint-disable-next-line */}
                 <pre id="astylePreview" style={{ height: '400px' }}><code dangerouslySetInnerHTML={{ __html: this.state.highlight }}></code></pre>
               </label>
             </div>
