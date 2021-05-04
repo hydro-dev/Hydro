@@ -38,6 +38,11 @@
           </h1>
         </div>
         <div class="section__body typo">
+        {% if not pdoc.data.length %}
+          <blockquote class="warn">
+            <p>{{ _('No testdata at current.') }}</p>
+          </blockquote>
+        {% endif %}
         {% if tdoc %}
         {% if tdoc.docType == model.document.TYPE_CONTEST %}
         {% if model.contest.isDone(tdoc) %}
