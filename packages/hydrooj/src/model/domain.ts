@@ -118,10 +118,9 @@ class DomainModel {
             deleteUserCache(udoc);
             return res;
         }
-        const filter = { domainId, uid: { $in: uid } };
-        const affected = await UserModel.getMulti(filter).project({ mail: 1, uname: 1 }).toArray();
+        const affected = await UserModel.getMulti({ _id: { $in: uid } }).project({ mail: 1, uname: 1 }).toArray();
         affected.forEach((udoc) => deleteUserCache(udoc));
-        return await collUser.updateMany(filter, { $set: { role } }, { upsert: true });
+        return await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
     }
 
     static async getRoles(domainId: string, count?: boolean): Promise<any[]>;
