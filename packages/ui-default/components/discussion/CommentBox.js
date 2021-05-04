@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import request from 'vj/utils/request';
-import TextareaHandler from 'vj/components/cmeditor/textareaHandler';
+import TextareaHandler from 'vj/components/editor/textareaHandler';
 import Notification from 'vj/components/notification';
 
 let initialized = false;

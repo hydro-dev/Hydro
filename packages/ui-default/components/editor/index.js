@@ -24,23 +24,62 @@ export const config = {
   },
 };
 
-export default class CmEditor extends DOMAttachedObject {
-  static DOMAttachKey = 'vjCmEditorInstance';
+export default class Editor extends DOMAttachedObject {
+  static DOMAttachKey = 'vjEditorInstance';
 
   constructor($dom, options = {}) {
     super($dom);
     this.options = options;
-    this.init();
+    if (UserContext.preferredEditorType === 'monaco') this.initMonaco();
+    else this.initVditor();
   }
 
-  async init() {
+  async initMonaco() {
+    const monaco = await import('monaco-editor/esm/vs/editor/editor.api');
+    const { $dom } = this;
+    const hasFocus = $dom.is(':focus');
+    const origin = $dom.get(0);
+    const ele = document.createElement('div');
+    $(ele).height(550);
+    $(ele).width('100%');
+    $(ele).addClass('textbox');
+    $dom.hide();
+    origin.parentElement.appendChild(ele);
+    const value = $dom.val();
+    const {
+      onChange, language = 'markdown', theme = 'vs-light', model = `file://model-${Math.random().toString(16)}`,
+    } = this.options;
+    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(model));
+    this.editor = monaco.editor.create(
+      ele,
+      {
+        theme,
+        lineNumbers: true,
+        glyphMargin: true,
+        lightbulb: {
+          enabled: true,
+        },
+        model: this.model,
+      }
+    );
+    this._subscription = this.editor.onDidChangeModelContent(() => {
+      const val = this.editor.getValue();
+      $dom.val(val);
+      $dom.text(val);
+      if (onChange) onChange(val);
+    });
+    this.isValid = true;
+    if (hasFocus) this.editor.focus();
+  }
+
+  async initVditor() {
     const { default: Vditor } = await import('vditor');
     const { $dom } = this;
     const hasFocus = $dom.is(':focus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
     const value = $dom.val();
-    const onChange = this.options.onChange;
+    const { onChange } = this.options;
     await new Promise((resolve) => {
       this.editor = new Vditor(ele, {
         ...config,
@@ -78,4 +117,4 @@ export default class CmEditor extends DOMAttachedObject {
   }
 }
 
-_.assign(CmEditor, DOMAttachedObject);
+_.assign(Editor, DOMAttachedObject);

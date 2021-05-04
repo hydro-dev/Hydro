@@ -5,7 +5,7 @@ import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
-import CmEditor from 'vj/components/cmeditor/index';
+import Editor from 'vj/components/editor/index';
 
 const categories = {};
 const dirtyCategories = [];
@@ -253,6 +253,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
       else content[i] = val;
       $main.val(JSON.stringify(content));
     }
-    CmEditor.getOrConstruct($dom, { upload, onChange });
+    Editor.getOrConstruct($dom, { upload, onChange });
   });
 });

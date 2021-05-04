@@ -86,6 +86,7 @@ preferredEditorType:
     wysiwyg: WYSIWYG
     ir: Instant Rendering
     sv: Split View
+    monaco: Monaco Editor
   family: markdown
   category: preference
   value: sv
