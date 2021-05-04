@@ -6,6 +6,7 @@ import { ArgMethod } from '../utils';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
@@ -110,11 +111,16 @@ class DomainModel {
     }
 
     @ArgMethod
-    static setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
+    static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
         if (!(uid instanceof Array)) {
-            return collUser.updateOne({ domainId, uid }, { $set: { role } }, { upsert: true });
+            const res = await collUser.findOneAndUpdate({ domainId, uid }, { $set: { role } }, { upsert: true, returnOriginal: false });
+            deleteUserCache(res.value);
+            return res;
         }
-        return collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
+        const filter = { domainId, uid: { $in: uid } };
+        const affected = await UserModel.getMulti(filter).project({ mail: 1, uname: 1 }).toArray();
+        affected.forEach((udoc) => deleteUserCache(udoc));
+        return await collUser.updateMany(filter, { $set: { role } }, { upsert: true });
     }
 
     static async getRoles(domainId: string, count?: boolean): Promise<any[]>;
@@ -147,6 +153,7 @@ class DomainModel {
     }
 
     static async setRoles(domainId: string, roles: Dictionary<bigint>) {
+        deleteUserCache(domainId);
         const current = await DomainModel.get(domainId);
         for (const role in roles) {
             current.roles[role] = roles[role].toString();
@@ -167,6 +174,7 @@ class DomainModel {
             coll.updateOne({ _id: domainId }, { $set: current }),
             collUser.updateMany({ domainId, role: { $in: roles } }, { $set: { role: 'default' } }),
         ]);
+        deleteUserCache(domainId);
     }
 
     static async getDomainUser(domainId: string, udoc: DomainUserArg) {
@@ -183,6 +191,7 @@ class DomainModel {
     }
 
     static setMultiUserInDomain(domainId: string, query: any, params: any) {
+        deleteUserCache(domainId);
         return collUser.updateMany({ domainId, ...query }, { $set: params }, { upsert: true });
     }
 
@@ -190,8 +199,10 @@ class DomainModel {
         return collUser.find({ domainId, ...query });
     }
 
-    static setUserInDomain(domainId: string, uid: number, params: any) {
-        return collUser.updateOne({ domainId, uid }, { $set: params }, { upsert: true });
+    static async setUserInDomain(domainId: string, uid: number, params: any) {
+        const udoc = await UserModel.getById(domainId, uid);
+        deleteUserCache(udoc);
+        return await collUser.updateOne({ domainId, uid }, { $set: params }, { upsert: true });
     }
 
     @ArgMethod

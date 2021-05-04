@@ -19,8 +19,12 @@ const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
-function deleteUserCache(udoc: User | Udoc) {
-    if (udoc) {
+export function deleteUserCache(udoc: User | Udoc | string) {
+    if (typeof udoc === 'string') {
+        for (const key of cache.keys().filter((k) => k.endsWith(`/${udoc}`))) {
+            cache.del(key);
+        }
+    } else if (udoc) {
         const id = [udoc._id.toString(), udoc.uname.toLowerCase(), udoc.mail.toLowerCase()];
         for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
             cache.del(key);
