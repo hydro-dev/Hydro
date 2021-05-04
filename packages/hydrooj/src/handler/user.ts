@@ -23,6 +23,8 @@ import paginate from '../lib/paginate';
 import avatar from '../lib/avatar';
 
 class UserLoginHandler extends Handler {
+    noCheckPermView = true;
+
     async get() {
         if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         this.response.template = 'user_login.html';
@@ -59,6 +61,8 @@ class UserLogoutHandler extends Handler {
 }
 
 export class UserRegisterHandler extends Handler {
+    noCheckPermView = true;
+
     async get() {
         this.response.template = 'user_register.html';
     }
