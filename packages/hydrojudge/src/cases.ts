@@ -123,7 +123,8 @@ async function read1(folder: string, files: string[], checkFile, cfg, rst) {
                                 type: 'min',
                                 cases: [c],
                             }];
-                        } else subtask[REG.subtask(data)].cases.push(c);
+                        } else if (!subtask[REG.subtask(data)].cases) subtask[REG.subtask(data)].cases = [c];
+                        else subtask[REG.subtask(data)].cases.push(c);
                         break;
                     }
                 }
