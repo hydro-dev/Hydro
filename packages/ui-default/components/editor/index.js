@@ -78,7 +78,6 @@ export default class Editor extends DOMAttachedObject {
       label: 'Use light theme',
       run: () => monaco.editor.setTheme('vs-light'),
     });
-
     let prevHeight = 0;
     const updateEditorHeight = () => {
       const editorElement = this.editor.getDomNode();
@@ -92,12 +91,10 @@ export default class Editor extends DOMAttachedObject {
         this.editor.layout();
       }
     };
-
     this.editor.onDidChangeModelDecorations(() => {
       updateEditorHeight(); // typing
       requestAnimationFrame(updateEditorHeight); // folding
     });
-
     this._subscription = this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue();
       $dom.val(val);
@@ -105,7 +102,7 @@ export default class Editor extends DOMAttachedObject {
       if (onChange) onChange(val);
     });
     this.isValid = true;
-    if (hasFocus) this.editor.focus();
+    if (hasFocus) this.focus();
   }
 
   async initVditor() {
@@ -150,6 +147,8 @@ export default class Editor extends DOMAttachedObject {
   focus() {
     this.ensureValid();
     this.editor.focus();
+    const range = this.model.getFullModelRange();
+    this.editor.setPosition({ lineNumber: range.endLineNumber, column: range.endColumn });
   }
 }
 

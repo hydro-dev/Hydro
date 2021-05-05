@@ -118,7 +118,7 @@ async function onCommentClickReplyReply(ev) {
   $evTarget
     .closest('.dczcomments__item')
     .find('[name="dczcomments__op-reply-comment"]').eq(0)
-    .trigger('click', { initialText: `@${username}: ` });
+    .trigger('click', { initialText: `@${username.trim()}: ` });
 }
 
 async function onCommentClickEdit(mode, ev) {
