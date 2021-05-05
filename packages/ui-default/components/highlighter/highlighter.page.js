@@ -23,11 +23,11 @@ const highlighterPage = new AutoloadPage('highlighterPage', async () => {
           const $output = $container.find(`pre.language-output${id}`);
           if ($output.length) {
             const $c = $(document.createElement('div')).addClass('row');
-            $root.clone(true).prepend($(tpl`<h2>${i18n('Sample Input')} ${id}</h2>`))
+            $root.after($c);
+            $root.prepend($(tpl`<h2>${i18n('Sample Input')} ${id}</h2>`))
               .addClass('medium-6 columns sample').appendTo($c);
             $output.parent().prepend($(tpl`<h2>${i18n('Sample Output')} ${id}</h2>`))
               .addClass('medium-6 columns sample').appendTo($c);
-            $root.replaceWith($c);
           }
         }
       }

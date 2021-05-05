@@ -33,23 +33,19 @@ languageMeta.forEach((meta) => {
 });
 
 // Copy to Clipboard
-try {
-  Prism.plugins.toolbar.registerButton('copy-to-clipboard', (env) => {
-    const linkCopy = document.createElement('a');
-    linkCopy.href = 'javascript:;'; // eslint-disable-line no-script-url
-    linkCopy.textContent = 'Copy';
-    const clip = new Clipboard(linkCopy, { text: () => env.code });
-    clip.on('success', () => {
-      Notification.success(i18n('Content copied to clipboard!'), 1000);
-    });
-    clip.on('error', () => {
-      Notification.error(i18n('Copy failed :('));
-    });
-    return linkCopy;
+Prism.plugins.toolbar.registerButton('copy-to-clipboard', (env) => {
+  const linkCopy = document.createElement('a');
+  linkCopy.href = 'javascript:;'; // eslint-disable-line no-script-url
+  linkCopy.textContent = 'Copy';
+  const clip = new Clipboard(linkCopy, { text: () => env.code });
+  clip.on('success', () => {
+    Notification.success(i18n('Content copied to clipboard!'), 1000);
   });
-} catch (e) {
-  // snowpack
-}
+  clip.on('error', () => {
+    Notification.error(i18n('Copy failed :('));
+  });
+  return linkCopy;
+});
 
 const invisibles = {
   tab: /\t/,
@@ -90,7 +86,6 @@ function handlerInvisiblesToken(tokens, name) {
 }
 
 Prism.hooks.add('before-highlight', (env) => {
-  console.log(UserContext.showInvisibleChar);
   if (UserContext.showInvisibleChar) addInvisibles(env.grammar);
 });
 

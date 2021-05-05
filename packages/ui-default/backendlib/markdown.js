@@ -24,8 +24,6 @@ const Anchor = require('markdown-it-anchor');
 const Media = require('./markdown-it-media');
 const Katex = require('./markdown-it-katex');
 
-require('prismjs/components/index');
-
 class Markdown extends MarkdownIt {
   constructor() {
     super({
