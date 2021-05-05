@@ -41,7 +41,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
         ? [
             ...source.description ? [`<h2>${_('Description')}</h2>`, source.description] : [],
             ...source.input ? [`<h2>${_('Input Format')}</h2>`, source.input] : [],
-            ...source.output ? [`<h2>'${_('Output Format')}</h2>`, source.output] : [],
+            ...source.output ? [`<h2>${_('Output Format')}</h2>`, source.output] : [],
             ...(source.samples).map((sample, i) => [
                 `<h2>${_('Sample Input')} ${i + 1}</h2><pre>`,
                 sample[0],
