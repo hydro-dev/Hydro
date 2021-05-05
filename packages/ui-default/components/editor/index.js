@@ -119,7 +119,7 @@ export default class Editor extends DOMAttachedObject {
 
   value(val) {
     this.ensureValid();
-    if (val) return this.editor.setValue(val);
+    if (typeof val === 'string') return this.editor.setValue(val);
     return this.editor.getValue();
   }
 

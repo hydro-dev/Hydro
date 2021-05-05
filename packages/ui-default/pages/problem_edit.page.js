@@ -177,14 +177,17 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     });
   }, 50);
 
-  const $main = $('textarea[data-markdown-upload]');
-  let content = $main.val();
+  const $main = $('textarea[data-editor]');
+  const $field = $('textarea[data-markdown-upload]');
+  let content = $field.val();
   let isObject = false;
+  let activeTab = $('[data-lang]').first().attr('data-lang');
   try {
     content = JSON.parse(content);
     isObject = !(content instanceof Array);
     if (!isObject) content = JSON.stringify(content);
   } catch (e) { }
+  if (!isObject) content = { [activeTab]: content };
   const upload = {
     accept: 'image/*,.mp3, .wav, .zip',
     url: './files',
@@ -229,30 +232,35 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     },
     validate: () => (pagename === 'problem_create' ? i18n('Cannot upload file before problem is created.') : true),
   };
-  $('textarea[data-content]').each(function () {
-    const $dom = $(this);
-    let i = $dom.attr('data-content');
+  function getContent(lang) {
     let c = '';
-    if (isObject) {
-      if (content[i]) c = content[i];
-      else {
-        const list = Object.keys(content).filter((l) => l.startsWith(i));
-        if (list.length) c = content[list[0]];
-        [i] = list;
-      }
-    } else c = content;
-    if (typeof c !== 'string') c = JSON.stringify(c);
-    $dom.val(c);
-    function onChange(val) {
-      if (!isObject) {
-        content = { [i]: val };
-        isObject = true;
-      }
-      const empty = /^\s*$/g.test(val);
-      if (empty) delete content[i];
-      else content[i] = val;
-      $main.val(JSON.stringify(content));
+    if (content[lang]) c = content[lang];
+    else {
+      const list = Object.keys(content).filter((l) => l.startsWith(lang));
+      if (list.length) c = content[list[0]];
     }
-    Editor.getOrConstruct($dom, { upload, onChange });
+    if (typeof c !== 'string') c = JSON.stringify(c);
+    return c;
+  }
+  $main.val(getContent(activeTab));
+  function onChange(val) {
+    console.log('onChange', activeTab, val);
+    try {
+      val = JSON.parse(val);
+      if (!(val instanceof Array)) val = JSON.stringify(val);
+    } catch { }
+    const empty = /^\s*$/g.test(val);
+    if (empty) delete content[activeTab];
+    else content[activeTab] = val;
+    console.log(content);
+    if (!Object.keys(content).length) $field.text('');
+    else $field.text(JSON.stringify(content));
+  }
+  const editor = Editor.getOrConstruct($main, { upload, onChange });
+  $('[data-lang]').on('click', (ev) => {
+    const lang = $(ev.currentTarget).attr('data-lang');
+    activeTab = lang;
+    const val = getContent(lang);
+    editor.value(val);
   });
 });

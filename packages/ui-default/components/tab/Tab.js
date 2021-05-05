@@ -13,7 +13,7 @@ export default class Tab extends DOMAttachedObject {
   }
 
   static initEventListeners() {
-    $(document).on('click', '.section__tab-header-item', (ev) => {
+    $(document).on('click', '[data-tab-index]', (ev) => {
       const targetIndex = $(ev.currentTarget).attr('data-tab-index');
       const $container = $(ev.currentTarget).closest('.section__tab-container');
       const tabInstance = Tab.get($container);
@@ -61,19 +61,21 @@ export default class Tab extends DOMAttachedObject {
 
     // 2. Animate transition
     $currentTab
-      .transition({
-        opacity: 0,
-      }, {
-        duration: TAB_TRANSITION_DURATION,
-        easing: 'linear',
-      });
+      .transition(
+        { opacity: 0 },
+        {
+          duration: TAB_TRANSITION_DURATION,
+          easing: 'linear',
+        }
+      );
     $newTab
-      .transition({
-        opacity: 1,
-      }, {
-        duration: TAB_TRANSITION_DURATION,
-        easing: 'linear',
-      });
+      .transition(
+        { opacity: 1 },
+        {
+          duration: TAB_TRANSITION_DURATION,
+          easing: 'linear',
+        }
+      );
     await this.$content
       .transition({
         x: animateParameter.to,
@@ -97,9 +99,7 @@ export default class Tab extends DOMAttachedObject {
   }
 
   attach() {
-    if (this.attached) {
-      return false;
-    }
+    if (this.attached) return false;
 
     const $container = this.$dom
       .closest('.section__tab-container');
