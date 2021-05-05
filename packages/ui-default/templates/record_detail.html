@@ -10,26 +10,9 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Code') }}</h1>
       </div>
-      <div class="section__body" data-syntax-hl-show-line-number>
-        <pre><code class="language-{{ (model.system.get('ui-default.lang_highlight_id')|parseYaml)[rdoc['lang']] }}">{{ rdoc['code'] }}</code></pre>
+      <div class="section__body">
+        <pre><code class="line-numbers language-{{ (model.system.get('ui-default.lang_highlight_id')|parseYaml)[rdoc['lang']] }}">{{ rdoc['code'] }}</code></pre>
       </div>
-    </div>
-    {% endif %}
-    {% if rdoc['stdout'] or rdoc['stderr'] %}
-    <div class="section">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Stdout') }}</h1>
-      </div>
-      {% if rdoc['stdout'] %}
-      <div class="section__body" data-syntax-hl-show-line-number>
-        <pre><code>{{ rdoc['stdout']|ansi|safe }}</code></pre>
-      </div>
-      {% endif %}
-      {% if rdoc['stderr'] %}
-      <div class="section__body" data-syntax-hl-show-line-number>
-        <pre><code>{{ rdoc['stderr']|ansi|safe }}</code></pre>
-      </div>
-      {% endif %}
     </div>
     {% endif %}
   </div>

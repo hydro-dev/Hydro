@@ -7,6 +7,7 @@ const { filter } = require('lodash');
 const { argv } = require('yargs');
 const Xss = require('xss');
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
+const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
@@ -143,7 +144,7 @@ class Nunjucks extends nunjucks.Environment {
       }
       if (typeof s === 'object' && !(s instanceof Array)) {
         const langs = Object.keys(s);
-        const f = langs.filter(i => i.startsWith(language));
+        const f = langs.filter((i) => i.startsWith(language));
         if (s[language]) s = s[language];
         else if (f.length) s = s[f[0]];
         else s = s[langs[0]];
@@ -190,6 +191,7 @@ env.addGlobal('typeof', (o) => typeof o);
 env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
+env.addGlobal('utils', { status });
 env.addGlobal('avatarUrl', avatar);
 env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('model', global.Hydro.model);

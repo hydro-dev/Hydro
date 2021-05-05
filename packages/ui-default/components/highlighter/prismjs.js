@@ -95,9 +95,6 @@ const prismjsApiWrap = {
       const $code = $(code);
       const $pre = $code.parent();
       $pre.addClass('syntax-hl');
-      if ($pre.closest('[data-syntax-hl-show-line-number]')) {
-        $pre.addClass('line-numbers');
-      }
       const language = ($(code).attr('class') || '').trim();
       const astyle = language.match(/astyle-([a-z]+)/);
       if (format && astyle && astyle[1]) {

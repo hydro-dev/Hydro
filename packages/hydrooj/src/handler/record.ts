@@ -19,8 +19,9 @@ class RecordListHandler extends Handler {
     @param('pid', Types.Name, true)
     @param('tid', Types.ObjectID, true)
     @param('uidOrName', Types.Name, true)
+    @param('status', Types.Int, true)
     @param('allDomain', Types.Boolean, true)
-    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, all = false) {
+    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, status?: number, all = false) {
         this.response.template = 'record_main.html';
         const q: FilterQuery<Rdoc> = { 'contest.tid': tid, hidden: false };
         if (tid) {
@@ -42,6 +43,7 @@ class RecordListHandler extends Handler {
             if (pdoc) q.pid = pdoc.docId;
             else q.pid = null;
         }
+        if (status) q.status = status;
         const [rdocs] = await paginate(
             record.getMulti(domainId, q).sort('_id', -1),
             page,

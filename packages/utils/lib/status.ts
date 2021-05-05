@@ -55,6 +55,22 @@ export const STATUS_CODES = {
     30: 'ignored',
 };
 
+export function getScoreColor(score: number | string): string {
+    return [
+        '#ff4f4f',
+        '#ff694f',
+        '#f8603a',
+        '#fc8354',
+        '#fa9231',
+        '#f7bb3b',
+        '#ecdb44',
+        '#e2ec52',
+        '#b0d628',
+        '#93b127',
+        '#25ad40',
+    ][Math.floor((Number(score) || 0) / 10)];
+}
+
 export const USER_GENDER_MALE = 0;
 export const USER_GENDER_FEMALE = 1;
 export const USER_GENDER_OTHER = 2;

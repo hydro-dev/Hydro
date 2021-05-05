@@ -16,23 +16,39 @@
         <div class="section__body">
           <div class="row">
             <!-- TODO: replace with form_builder -->
-            <div class="medium-4 columns">
+            <div class="medium-3 columns">
               <label class="filter-user">
                 {{ _('By Username / UID') }}
                 <input name="uidOrName" type="text" class="textbox" value="{{ filterUidOrName }}" autocomplete="off" data-autofocus>
               </label>
             </div>
-            <div class="medium-4 columns">
+            <div class="medium-3 columns">
               <label>
                 {{ _('By Problem') }}
                 <input name="pid" type="text" class="textbox" value="{{ filterPid }}">
               </label>
             </div>
-            <div class="medium-4 columns">
+            <div class="medium-3 columns">
               <label>
                 {{ _('By Contest') }}
                 <input name="tid" type="text" class="textbox" value="{{ filterTid }}">
               </label>
+            </div>
+            <div class="medium-3 columns">
+              <label>
+                {{ _('By Status') }}
+              </label>
+              <select class="inline compact select" name="status">
+                  <option value="">{{ _('All Submissions') }}</option>
+                  <option value="1">{{ _('Accepted') }}</option>
+                  <option value="2">{{ _('Wrong Answer') }}</option>
+                  <option value="3">{{ _('Time Limit Exceeded') }}</option>
+                  <option value="4">{{ _('Memory Limit Exceeded') }}</option>
+                  <option value="6">{{ _('Runtime Error') }}</option>
+                  <option value="7">{{ _('Compile Error') }}</option>
+                  <option value="8">{{ _('System Error') }}</option>
+              </select>
+              
             </div>
           </div>
         </div>

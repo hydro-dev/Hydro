@@ -11,6 +11,7 @@ export interface ProblemSource {
 
 export function buildContent(source: ProblemSource | ContentNode[], type: 'markdown' | 'html' = 'markdown', translate?: Function) {
     const _ = translate || ((s: string) => s);
+    let cnt = 0;
     if (source instanceof Array) {
         return type === 'html'
             ? source.map((node) => [
@@ -25,11 +26,11 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 ...node.type === 'Sample'
                     ? [
                         `## ${_('Sample Input')}`,
-                        '```',
+                        `\`\`\`input${++cnt}`,
                         node.payload[0],
                         '```',
                         `## ${_('Sample Output')}`,
-                        '```',
+                        `\`\`\`output${cnt}`,
                         node.payload[1],
                         '```',
                     ]
@@ -43,11 +44,11 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
             ...source.input ? [`<h2>${_('Input Format')}</h2>`, source.input] : [],
             ...source.output ? [`<h2>${_('Output Format')}</h2>`, source.output] : [],
             ...(source.samples).map((sample, i) => [
-                `<h2>${_('Sample Input')} ${i + 1}</h2><pre>`,
+                `<pre><code class="language-input${i + 1}">`,
                 sample[0],
-                `</pre><h2>${_('Sample Output')} ${i + 1}</h2><pre>`,
+                `</code></pre><pre><code class="language-output${i + 1}">`,
                 sample[1],
-                '</pre>',
+                '</code></pre>',
             ].join('\n')),
             ...source.hint ? [`<h2>${_('Hint')}</h2>`, source.hint] : [],
             ...source.source ? [`<h2>${_('Source')}</h2>`, source.source] : [],
