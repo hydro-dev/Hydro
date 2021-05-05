@@ -9,7 +9,7 @@
             <div class="medium-7 columns">
               <label>
                 {{ _('Title') }}
-                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox" autofocus>
+                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox"{% if page_name == 'problem_create' %} autofocus{% endif %}>
               </label>
             </div>
             <div class="medium-3 columns">
@@ -49,7 +49,7 @@
             </ul>
             </div>
           </div>
-          <div><textarea data-editor class="nojs--hide"></textarea></div>
+          <div><textarea data-editor{% if page_name == 'problem_edit' %} autofocus{% endif %} class="textbox auto-resize nojs--hide"></textarea></div>
           <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
           <div class="row"><div class="columns">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">

@@ -40,7 +40,6 @@ export default class Editor extends DOMAttachedObject {
     const hasFocus = $dom.is(':focus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
-    $(ele).height(550);
     $(ele).width('100%');
     $(ele).addClass('textbox');
     $dom.hide();
@@ -50,20 +49,25 @@ export default class Editor extends DOMAttachedObject {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
       model = `file://model-${Math.random().toString(16)}`,
+      autoResize = $dom.hasClass('auto-resize'),
     } = this.options;
     this.model = typeof model === 'string' ? monaco.editor.createModel(value, language, monaco.Uri.parse(model)) : model;
-    this.editor = monaco.editor.create(
-      ele,
-      {
-        theme,
-        lineNumbers: true,
-        glyphMargin: true,
-        lightbulb: {
-          enabled: true,
-        },
-        model: this.model,
-      }
-    );
+    const cfg = {
+      theme,
+      lineNumbers: true,
+      glyphMargin: true,
+      lightbulb: { enabled: true },
+      model: this.model,
+      automaticLayout: true,
+    };
+    if (autoResize) {
+      cfg.scrollbar = {
+        vertical: 'hidden',
+        handleMouseWheel: false,
+      };
+      cfg.scrollBeyondLastLine = false;
+    }
+    this.editor = monaco.editor.create(ele, cfg);
     this.editor.addAction({
       id: 'theme-dark',
       label: 'Use dark theme',
@@ -74,6 +78,26 @@ export default class Editor extends DOMAttachedObject {
       label: 'Use light theme',
       run: () => monaco.editor.setTheme('vs-light'),
     });
+
+    let prevHeight = 0;
+    const updateEditorHeight = () => {
+      const editorElement = this.editor.getDomNode();
+      if (!editorElement) return;
+      const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
+      const lineCount = this.editor.getModel()?.getLineCount() || 1;
+      const height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
+      if (prevHeight !== height) {
+        prevHeight = height;
+        editorElement.style.height = `${height}px`;
+        this.editor.layout();
+      }
+    };
+
+    this.editor.onDidChangeModelDecorations(() => {
+      updateEditorHeight(); // typing
+      requestAnimationFrame(updateEditorHeight); // folding
+    });
+
     this._subscription = this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue();
       $dom.val(val);
