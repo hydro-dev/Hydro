@@ -89,7 +89,14 @@ preferredEditorType:
     monaco: Monaco Editor
   family: markdown
   category: preference
-  value: sv
+  value: monaco
+monacoTheme:
+  type:
+    vs-dark: VS Dark
+    vs-light: VS Light
+  category: preference
+  value: vs-light
+  family: markdown
 showInvisibleChar:
   type: boolean
   family: highlight

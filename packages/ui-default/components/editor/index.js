@@ -8,7 +8,7 @@ export const config = {
     'quote', 'line', 'code', 'inline-code', 'table', '|',
     'upload', 'edit-mode', 'fullscreen', 'export',
   ],
-  mode: UserContext.preferredEditorType || 'sv',
+  mode: UserContext.preferredEditorType || 'ir',
   toolbarConfig: {
     pin: true,
   },
@@ -47,9 +47,11 @@ export default class Editor extends DOMAttachedObject {
     origin.parentElement.appendChild(ele);
     const value = $dom.val();
     const {
-      onChange, language = 'markdown', theme = 'vs-light', model = `file://model-${Math.random().toString(16)}`,
+      onChange, language = 'markdown',
+      theme = UserContext.monacoTheme || 'vs-light',
+      model = `file://model-${Math.random().toString(16)}`,
     } = this.options;
-    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(model));
+    this.model = typeof model === 'string' ? monaco.editor.createModel(value, language, monaco.Uri.parse(model)) : model;
     this.editor = monaco.editor.create(
       ele,
       {
@@ -62,6 +64,16 @@ export default class Editor extends DOMAttachedObject {
         model: this.model,
       }
     );
+    this.editor.addAction({
+      id: 'theme-dark',
+      label: 'Use dark theme',
+      run: () => monaco.editor.setTheme('vs-dark'),
+    });
+    this.editor.addAction({
+      id: 'theme-light',
+      label: 'Use light theme',
+      run: () => monaco.editor.setTheme('vs-light'),
+    });
     this._subscription = this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue();
       $dom.val(val);
