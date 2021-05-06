@@ -230,9 +230,11 @@ export class ProblemModel {
         domainId: string, pid: number, uid: number,
         rid: ObjectID, status: number, score: number,
     ) {
-        const res = await document.setIfNotStatus(
+        const current = await document.getStatus(domainId, document.TYPE_PROBLEM, pid, uid);
+        const filter: FilterQuery<ProblemStatusDoc> = { rid: { $ne: rid }, score: { $gt: current.score } };
+        const res = await document.setStatusIfNotCondition(
             domainId, document.TYPE_PROBLEM, pid, uid,
-            'status', status, STATUS.STATUS_ACCEPTED, { rid, score },
+            filter, { rid, status, score },
         );
         return !!res;
     }

@@ -313,6 +313,20 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     return res.value;
 }
 
+export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    filter: FilterQuery<DocStatusType[T]>, args: Partial<DocStatusType[T]>,
+): Promise<DocStatusType[T]> {
+    const match = await collStatus.findOne({ domainId, docType, docId, uid, ...filter });
+    if (match) return null;
+    const res = await collStatus.findOneAndUpdate(
+        { domainId, docType, docId, uid },
+        { $set: args },
+        { upsert: true, returnOriginal: false },
+    );
+    return res.value;
+}
+
 export async function cappedIncStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: NumberKeys<DocStatusType[T]>, value: number, minValue = -1, maxValue = 1,
@@ -442,6 +456,7 @@ global.Hydro.model.document = {
     revSetStatus,
     set,
     setIfNotStatus,
+    setStatusIfNotCondition,
     setStatus,
     setMultiStatus,
     setSub,
