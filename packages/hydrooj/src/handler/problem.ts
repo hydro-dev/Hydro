@@ -382,8 +382,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
         const canReadData = !this.user.own(this.pdoc) || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        this.response.body.testdata = (getTestdata && canReadData) ? sortFiles(this.pdoc.data) : [];
-        this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file) : [];
+        this.response.body.testdata = (getTestdata && canReadData) ? sortFiles(this.pdoc.data || []) : [];
+        this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         this.response.template = 'problem_files.html';
     }
 

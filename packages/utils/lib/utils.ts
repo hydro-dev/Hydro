@@ -393,6 +393,7 @@ CallableInstance.prototype = Object.create(Function.prototype);
 
 const fSortR = /[^\d]+|\d+/g;
 export function sortFiles(files: { _id: string }[] | string[]) {
+    if (!files?.length) return [];
     const isString = typeof files[0] === 'string';
     const result = files
         .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: i._id.match(fSortR) }))
