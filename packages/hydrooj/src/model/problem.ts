@@ -228,11 +228,11 @@ export class ProblemModel {
 
     static async updateStatus(
         domainId: string, pid: number, uid: number,
-        rid: ObjectID, status: number,
+        rid: ObjectID, status: number, score: number,
     ) {
         const res = await document.setIfNotStatus(
             domainId, document.TYPE_PROBLEM, pid, uid,
-            'status', status, STATUS.STATUS_ACCEPTED, { rid },
+            'status', status, STATUS.STATUS_ACCEPTED, { rid, score },
         );
         return !!res;
     }

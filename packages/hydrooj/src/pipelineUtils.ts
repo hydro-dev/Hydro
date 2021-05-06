@@ -1,6 +1,8 @@
 /* eslint-disable no-await-in-loop */
+import { FilterQuery } from 'mongodb';
 import type { DomainDoc, Udoc } from './interface';
 import domain from './model/domain';
+import * as document from './model/document';
 import user from './model/user';
 import problem, { Field, Pdoc } from './model/problem';
 
@@ -12,6 +14,16 @@ export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, t
 export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
     const udocs = await user.getMulti().toArray();
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
+}
+
+export async function iterateAllPsdoc(filter: FilterQuery<any>, cb: (psdoc: any) => Promise<any>) {
+    await iterateAllDomain(async ({ _id: domainId }) => {
+        const cursor = document.getMultiStatus(domainId, document.TYPE_PROBLEM, filter);
+        while (await cursor.hasNext()) {
+            const psdoc = await cursor.next();
+            await cb(psdoc);
+        }
+    });
 }
 
 interface PartialPdoc extends Pdoc {

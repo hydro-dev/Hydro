@@ -10,7 +10,9 @@ import { Progress } from './ui';
 import { Rdoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
-import { iterateAllDomain, iterateAllProblem, iterateAllUser } from './pipelineUtils';
+import {
+    iterateAllDomain, iterateAllProblem, iterateAllPsdoc, iterateAllUser,
+} from './pipelineUtils';
 import gridfs from './service/gridfs';
 import storage from './service/storage';
 import db from './service/db';
@@ -21,6 +23,7 @@ import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
 import { STATUS } from './model/builtin';
+import RecordModel from './model/record';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
@@ -314,6 +317,13 @@ const scripts: UpgradeScript[] = [
     async function _24_25() {
         await iterateAllDomain(async (ddoc) => {
             if (typeof ddoc.host === 'string') await domain.edit(ddoc._id, { host: [ddoc.host] });
+        });
+        return true;
+    },
+    async function _25_26() {
+        await iterateAllPsdoc({ rid: { $exists: true } }, async (psdoc) => {
+            const rdoc = await RecordModel.get(psdoc.domainId, psdoc.rid);
+            await document.setStatus(psdoc.domainId, document.TYPE_PROBLEM, rdoc.pid, rdoc.uid, { score: rdoc.score });
         });
         return true;
     },

@@ -21,7 +21,7 @@ const logger = new Logger('judge');
 async function _postJudge(rdoc: Rdoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status);
+    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
         await contest.updateStatus(
             rdoc.domainId, rdoc.contest.tid, rdoc.uid,
