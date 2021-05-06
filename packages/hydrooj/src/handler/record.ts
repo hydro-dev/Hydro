@@ -13,6 +13,7 @@ import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
+import { buildProjection } from '../utils';
 
 class RecordListHandler extends Handler {
     @param('page', Types.PositiveInt, true)
@@ -45,7 +46,7 @@ class RecordListHandler extends Handler {
         }
         if (status) q.status = status;
         const [rdocs] = await paginate(
-            record.getMulti(domainId, q).sort('_id', -1),
+            record.getMulti(domainId, q).sort('_id', -1).project(buildProjection(record.PROJECTION_LIST)),
             page,
             system.get('pagination.record'),
         );
@@ -70,6 +71,7 @@ class RecordListHandler extends Handler {
             filterPid: pid,
             filterTid: tid,
             filterUidOrName: uidOrName,
+            filterStatus: status,
         };
         if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS)) {
             this.response.body.statistics = {

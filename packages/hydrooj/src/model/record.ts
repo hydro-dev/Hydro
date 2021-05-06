@@ -9,13 +9,18 @@ import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
 import { Rdoc, ContestInfo, ProblemConfig } from '../interface';
-import { ArgMethod, Time } from '../utils';
+import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
 class RecordModel {
     static coll: Collection<Rdoc> = db.collection('record');
+    static PROJECTION_LIST: (keyof Rdoc)[] = [
+        '_id', 'score', 'time', 'memory', 'lang',
+        'uid', 'pid', 'rejudged', 'hidden', 'progress',
+        'contest', 'effective', 'judger', 'judgeAt',
+    ];
 
     static async submissionPriority(uid: number, base: number = 0) {
         const pending = await task.count({ uid });
@@ -169,11 +174,13 @@ class RecordModel {
     }
 
     static async getList(
-        domainId: string, rids: ObjectID[], showHidden: boolean,
-    ): Promise<Record<string, Rdoc>> {
+        domainId: string, rids: ObjectID[], showHidden: boolean, fields?: (keyof Rdoc)[],
+    ): Promise<Record<string, Partial<Rdoc>>> {
         const r = {};
         rids = Array.from(new Set(rids));
-        const rdocs = await RecordModel.coll.find({ domainId, _id: { $in: rids } }).toArray();
+        let cursor = RecordModel.coll.find({ domainId, _id: { $in: rids } });
+        if (fields) cursor = cursor.project(buildProjection(fields));
+        const rdocs = await cursor.toArray();
         for (const rdoc of rdocs) {
             if (rdoc.hidden && !showHidden) r[rdoc._id.toHexString()] = null;
             else r[rdoc._id.toHexString()] = rdoc;
