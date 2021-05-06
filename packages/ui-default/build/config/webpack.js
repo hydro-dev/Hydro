@@ -173,10 +173,7 @@ export default function (env = {}) {
           customInterpolateName: (url) => beautifyOutputUrl(url),
         },
       }),
-      new MonacoWebpackPlugin({
-        // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-        languages: ['markdown', 'yaml', 'cpp', 'csharp', 'java', 'javascript', 'python', 'rust', 'ruby', 'php', 'pascal', 'go', 'julia'],
-      }),
+      new MonacoWebpackPlugin({}),
       new StaticManifestPlugin({
         fileName: 'static-manifest.json',
         ignore: [

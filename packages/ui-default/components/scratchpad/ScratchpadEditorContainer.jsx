@@ -19,6 +19,22 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
+monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+  noSemanticValidation: false,
+  noSyntaxValidation: false,
+});
+monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+  target: monaco.languages.typescript.ScriptTarget.ES6,
+  allowNonTsExtensions: true,
+});
+const libSource = [
+  'declare function readline(): string;',
+  'declare function print(content: string): void',
+].join('\n');
+const libUri = 'ts:filename/basic.d.ts';
+monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
+monaco.editor.createModel(libSource, 'typescript', monaco.Uri.parse(libUri));
+
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
   componentDidMount() {
     const value = this.props.value || '';
