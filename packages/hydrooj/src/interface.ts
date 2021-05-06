@@ -213,13 +213,14 @@ export interface StatusDoc {
 }
 
 export interface ProblemStatusDoc extends StatusDoc {
-    docId: number,
-    docType: 10,
-    rid?: ObjectID,
-    status?: number,
-    nSubmit?: number,
-    nAccept?: number,
-    star?: boolean,
+    docId: number;
+    docType: 10;
+    rid?: ObjectID;
+    score?: number;
+    status?: number;
+    nSubmit?: number;
+    nAccept?: number;
+    star?: boolean;
 }
 
 export interface TestCase {

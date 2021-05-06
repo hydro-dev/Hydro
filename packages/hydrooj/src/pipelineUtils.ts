@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { FilterQuery } from 'mongodb';
-import type { DomainDoc, Udoc } from './interface';
+import type { DomainDoc, Udoc, ProblemStatusDoc } from './interface';
 import domain from './model/domain';
 import * as document from './model/document';
 import user from './model/user';
@@ -16,7 +16,7 @@ export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: 
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
 }
 
-export async function iterateAllPsdoc(filter: FilterQuery<any>, cb: (psdoc: any) => Promise<any>) {
+export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
     await iterateAllDomain(async ({ _id: domainId }) => {
         const cursor = document.getMultiStatus(domainId, document.TYPE_PROBLEM, filter);
         while (await cursor.hasNext()) {
