@@ -37,7 +37,7 @@ export default class Editor extends DOMAttachedObject {
   async initMonaco() {
     const monaco = await import('monaco-editor/esm/vs/editor/editor.api');
     const { $dom } = this;
-    const hasFocus = $dom.is(':focus');
+    const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
     $(ele).width('100%');
@@ -103,12 +103,13 @@ export default class Editor extends DOMAttachedObject {
     });
     this.isValid = true;
     if (hasFocus) this.focus();
+    updateEditorHeight();
   }
 
   async initVditor() {
     const { default: Vditor } = await import('vditor');
     const { $dom } = this;
-    const hasFocus = $dom.is(':focus');
+    const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
     const value = $dom.val();

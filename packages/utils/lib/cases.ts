@@ -32,9 +32,9 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     }
     if (cfg.outputs) {
         config.type = 'submit_answer';
-    } else if (cfg.cases) {
+    } else if (cfg.cases?.length) {
         config.subtasks = [{
-            score: parseInt(cfg.score, 10) || Math.floor(100 / cfg.cases.length),
+            score: +cfg.score || Math.floor(100 / cfg.cases.length),
             time: parseTimeMS(cfg.time || '1s'),
             memory: parseMemoryMB(cfg.memory || '256m'),
             cases: [],
