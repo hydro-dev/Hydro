@@ -164,6 +164,7 @@ class UserLostPassWithCodeHandler extends Handler {
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
         const udoc = await user.getById(domainId, tdoc.uid);
         this.response.body = { uname: udoc.uname };
+        this.response.template = 'user_lostpass_with_code.html';
     }
 
     @param('code', Types.String)
