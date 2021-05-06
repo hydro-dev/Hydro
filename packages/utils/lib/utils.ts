@@ -395,7 +395,7 @@ const fSortR = /[^\d]+|\d+/g;
 export function sortFiles(files: { _id: string }[] | string[]) {
     const isString = typeof files[0] === 'string';
     const result = files
-        .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: i.match(fSortR) }))
+        .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: i._id.match(fSortR) }))
         .sort((a, b) => {
             let pos = 0;
             const weightsA = a.weights;

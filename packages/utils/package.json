@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "description": "hydrooj utils",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
