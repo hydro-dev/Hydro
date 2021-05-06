@@ -12,17 +12,13 @@ Two integers x and y, satisfying $0\leq x,y\leq 32767$ .
 ## Output
 One integer, the sum of x and y.
 
-# Sample 1
+# Samples
 
-## Input
-
-```
+```input1
 123 500
 ```
 
-## Output
-
-```
+```outpu1
 623
 ```
 

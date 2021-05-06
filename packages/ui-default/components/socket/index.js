@@ -8,7 +8,10 @@ export default class Sock {
     this.isreconnect = false;
     this.init();
     this.notification = null;
-    this.showNotification = showNotification;
+    this.showNotification = false;
+    setTimeout(() => {
+      this.showNotification = showNotification;
+    }, 10000);
   }
 
   onauth() {

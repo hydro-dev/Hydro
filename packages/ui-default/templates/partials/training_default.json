@@ -3,12 +3,12 @@
     "_id": 1,
     "title": "最初的最初 - A+B Problem",
     "requireNids": [],
-    "pids": [1000, "56c52ade2fefd90539000005"]
+    "pids": [1, "P1001"]
   },
   {
     "_id": 2,
     "title": "最初的进阶",
     "requireNids": [1],
-    "pids": [1001, 1002]
+    "pids": [2, 3]
   }
 ]

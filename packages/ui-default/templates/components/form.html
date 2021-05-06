@@ -49,6 +49,7 @@
 {% set autofocus = args.autofocus or false %}
 {% set noAutocomplete = args.noAutocomplete or false %}
 {% set extra_style = args.extra_style or false %}
+{% set extra_class = args.extra_class %}
 {% set date = args.date or false %}
 {% set time = args.time or false %}
   class="{{ form_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
