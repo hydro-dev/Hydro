@@ -35,6 +35,7 @@ export interface SystemKeys {
     'server.worker': number,
     'server.port': number,
     'server.language': string,
+    'limit.problem_files_max': number,
     'problem.categories': string,
     'session.keys': string[],
     'session.secure': boolean,

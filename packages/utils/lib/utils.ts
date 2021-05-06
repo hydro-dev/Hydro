@@ -390,3 +390,27 @@ export function CallableInstance(property = '__call__') {
 }
 
 CallableInstance.prototype = Object.create(Function.prototype);
+
+const fSortR = /[^\d]+|\d+/g;
+export function sortFiles(files: { _id: string }[] | string[]) {
+    const isString = typeof files[0] === 'string';
+    const result = files
+        .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: i.match(fSortR) }))
+        .sort((a, b) => {
+            let pos = 0;
+            const weightsA = a.weights;
+            const weightsB = b.weights;
+            let weightA = weightsA[pos];
+            let weightB = weightsB[pos];
+            while (weightA && weightB) {
+                const v = weightA - weightB;
+                if (!Number.isNaN(v) && v !== 0) return v;
+                if (weightA !== weightB) return weightA > weightB ? 1 : -1;
+                pos += 1;
+                weightA = weightsA[pos];
+                weightB = weightsB[pos];
+            }
+            return weightA ? 1 : -1;
+        });
+    return isString ? result.map((x) => x.name) : result;
+}

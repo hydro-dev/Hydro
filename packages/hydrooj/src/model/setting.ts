@@ -162,6 +162,7 @@ SystemSetting(
     Setting('setting_server', 'server.xhost', null, 'text', 'server.xhost', 'Hostname Header'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'server.language', 'Default display language'),
     Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login'),
+    Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
     Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'lang.texts', 'LANG_TEXTS'),

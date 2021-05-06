@@ -1,9 +1,11 @@
 import { isSafeInteger, flatten } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
+import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
     NoProblemError, PermissionError, ValidationError,
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
+    ForbiddenError,
 } from '../error';
 import {
     Pdoc, User, Rdoc, PathComponent, ProblemStatusDoc,
@@ -380,8 +382,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
         const canReadData = !this.user.own(this.pdoc) || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        this.response.body.testdata = (getTestdata && canReadData) ? this.pdoc.data : [];
-        this.response.body.additional_file = (getAdditionalFile ? this.pdoc.additional_file : []);
+        this.response.body.testdata = (getTestdata && canReadData) ? sortFiles(this.pdoc.data) : [];
+        this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file) : [];
         this.response.template = 'problem_files.html';
     }
 
@@ -405,9 +407,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
+        if (this.pdoc.data.length + this.pdoc.additional_file.length >= system.get('limit.problem_files_max')) {
+            throw new ForbiddenError('File limit exceeded.');
+        }
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
-        if (filename.includes('/')) throw new ValidationError('filename', 'Bad filename');
+        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', 'Bad filename');
         if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
