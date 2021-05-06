@@ -2,8 +2,8 @@ import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary, escapeRegExp, pick } from 'lodash';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
-import { STATUS } from './builtin';
 import * as document from './document';
+import { STATUS } from './builtin';
 import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, Pdict, Document } from '../interface';
 import {
@@ -230,8 +230,7 @@ export class ProblemModel {
         domainId: string, pid: number, uid: number,
         rid: ObjectID, status: number, score: number,
     ) {
-        const current = await document.getStatus(domainId, document.TYPE_PROBLEM, pid, uid);
-        const filter: FilterQuery<ProblemStatusDoc> = { rid: { $ne: rid }, score: { $gt: current.score } };
+        const filter: FilterQuery<ProblemStatusDoc> = { rid: { $ne: rid }, status: STATUS.STATUS_ACCEPTED };
         const res = await document.setStatusIfNotCondition(
             domainId, document.TYPE_PROBLEM, pid, uid,
             filter, { rid, status, score },
