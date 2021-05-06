@@ -1,15 +1,26 @@
 /* eslint-disable no-undef */
 /// <reference types="./jssh" />
 
-const NVM_NODEJS_ORG_MIRROR = 'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release';
-const MONGODB_REPO = 'https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/ubuntu';
-const MINIO_DOWNLOAD = 'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio';
-
 log.info('开始运行 HydroOJ 安装工具 / Starting HydroOJ installation tool');
 let MINIO_ACCESS_KEY = randomstring(32);
 let MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 let SYSTEM_VER = 'focal';
+
+if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
+const china = (cli.prompt('此服务器是否位于国内？(Y/n)') || 'y') === 'y';
+const NVM_NODEJS_ORG_MIRROR = china
+    ? 'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release'
+    : 'https://nodejs.org/dist';
+const MONGODB_REPO = china
+    ? 'https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/ubuntu'
+    : 'https://repo.mongodb.org/apt/ubuntu';
+const MINIO_DOWNLOAD = china
+    ? 'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio'
+    : 'https://s3.undefined.moe/public/minio';
+const SANDBOX_DOWNLOAD = china
+    ? 'https://s3.undefined.moe/file/executor-amd64'
+    : 'https://github.com/criyle/go-judge/releases/download/v1.1.8/executorserver-amd64';
 
 const steps = [
     {
@@ -22,6 +33,7 @@ const steps = [
     },
     {
         init: '正在安装 MongoDB / Installing MongoDB',
+        skip: () => fs.exist('/usr/bin/mongo'),
         operations: [
             () => {
                 const map = {
@@ -35,7 +47,8 @@ const steps = [
             },
             `echo "deb [ arch=amd64 ] ${MONGODB_REPO} ${SYSTEM_VER}/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list`,
             'wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -',
-            'apt-get -qq install -y mongodb-org',
+            'apt-get -qq update',
+            'apt-get -q install -y mongodb-org',
         ],
     },
     {
@@ -73,6 +86,7 @@ const steps = [
     },
     {
         init: '正在创建数据库用户 / Creating database user',
+        skip: () => fs.exist('/root/.hydro/config.json'),
         operations: [
             'pm2 start mongod',
             () => sleep(5000),
@@ -96,12 +110,14 @@ const steps = [
     },
     {
         init: '正在安装 MinIO / Installing MinIO',
-        skip: () => fs.exist('/usr/bin/minio'),
+        skip: () => fs.exist('/root/.hydro/env'),
         operations: [
-            () => http.download(MINIO_DOWNLOAD, '/usr/bin/minio'),
+            `wget ${MINIO_DOWNLOAD} -O /usr/bin/minio`,
             'chmod +x /usr/bin/minio',
-            () => fs.writefile('/root/.hydro/env', `MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-            MINIO_SECRET_KEY=${MINIO_SECRET_KEY}`),
+            () => fs.writefile(
+                '/root/.hydro/env',
+                [`MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}`, `MINIO_SECRET_KEY=${MINIO_SECRET_KEY}`].join('\n'),
+            ),
         ],
     },
     {
@@ -114,7 +130,7 @@ const steps = [
         init: '正在安装 HydroOJ / Installing HydroOJ',
         operations: [
             'yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge',
-            () => http.download('https://s3.undefined.moe/file/executor-amd64', '/usr/bin/sandbox'),
+            () => http.download(SANDBOX_DOWNLOAD, '/usr/bin/sandbox'),
             'chmod +x /usr/bin/sandbox',
             () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
@@ -151,11 +167,7 @@ const steps = [
     },
 ];
 
-const { major } = fs.exist('/root/.hydro/install.cfg')
-    ? loadconfig('/root/.hydro/install.cfg', 'yaml')
-    : { major: 0 };
-
-for (let i = major; i < steps.length; i++) {
+for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     log.info(step.init);
     if (!(step.skip && step.skip())) {
@@ -166,8 +178,6 @@ for (let i = major; i < steps.length; i++) {
             } else op();
         }
     } else log.info('已跳过该步骤 / Step skipped');
-    fs.writefile('/root/.hydro/install.cfg', `major: ${i + 1}`);
 }
 
-exec1('rm /root/.hydro/install.cfg');
 exit(0);
