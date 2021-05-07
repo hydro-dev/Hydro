@@ -2,12 +2,13 @@
 const { readdirSync, readFileSync } = require('fs');
 const { join } = require('path');
 const crypto = require('crypto');
-const yaml = require('js-yaml');
 const { tmpdir } = require('os');
 const bus = require('hydrooj/dist/service/bus');
 const markdown = require('./backendlib/markdown.js');
 
-const { system, domain, user } = global.Hydro.model;
+const {
+  system, domain, user, setting,
+} = global.Hydro.model;
 const { Route, Handler, UiContextBase } = global.Hydro.service.server;
 
 class WikiHelpHandler extends Handler {
@@ -17,20 +18,13 @@ class WikiHelpHandler extends Handler {
   }
 
   async get() {
-    const [langstr, langtexts] = system.getMany(['hydrojudge.langs', 'lang.texts']);
-    if (langstr) {
-      const languages = {};
-      const LANGS = yaml.load(langstr);
-      const TEXTS = yaml.load(langtexts);
-      // eslint-disable-next-line guard-for-in
-      for (const key in LANGS) {
-        const name = TEXTS[key] || key;
-        languages[name] = LANGS[key].type === 'compiler'
-          ? LANGS[key].compile
-          : LANGS[key].execute;
-      }
-      this.response.body = { languages };
+    const LANGS = system.get('hydrooj.langs');
+    const languages = {};
+    // eslint-disable-next-line guard-for-in
+    for (const key in LANGS) {
+      languages[LANGS[key].display] = LANGS[key].compile || LANGS[key].execute;
     }
+    this.response.body = { languages };
     this.response.template = 'wiki_help.html';
   }
 }
@@ -53,15 +47,7 @@ class UiConstantsHandler extends Handler {
   }
 
   async get() {
-    const [LANG_TEXTS, LANG_HIGHLIGHT_ID, MONACO_MODES] = system.getMany([
-      'lang.texts',
-      'ui-default.lang_highlight_id',
-      'ui-default.lang_monaco_modes',
-    ]);
-    this.response.body = `\
-window.LANG_TEXTS=${JSON.stringify(yaml.load(LANG_TEXTS))};
-window.LANG_HIGHLIGHT_ID=${JSON.stringify(yaml.load(LANG_HIGHLIGHT_ID))};
-window.MONACO_MODES=${JSON.stringify(yaml.load(MONACO_MODES))}`;
+    this.response.body = `window.LANGS=${JSON.stringify(setting.langs)}`;
     this.response.type = 'text/javascript';
     this.ctx.set('nolog', '1');
   }
@@ -79,7 +65,7 @@ class UiSettingsHandler extends Handler {
       nav_logo_dark, nav_logo_light,
       nav_logo_dark_2x, nav_logo_light_2x,
       header_background, header_background_2x,
-    ] = await system.getMany([
+    ] = system.getMany([
       'ui-default.header_logo', 'ui-default.header_logo_2x',
       'ui-default.nav_logo_dark', 'ui-default.nav_logo_light',
       'ui-default.nav_logo_dark_2x', 'ui-default.nav_logo_light_2x',

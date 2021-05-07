@@ -12,7 +12,7 @@ export const judge = async (ctx) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     try {
-        ctx.execute = await compile(ctx.lang, ctx.code, 'code', {}, ctx.next);
+        ctx.execute = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', {}, ctx.next);
     } catch (e) {
         if (e instanceof CompileError) {
             ctx.next({

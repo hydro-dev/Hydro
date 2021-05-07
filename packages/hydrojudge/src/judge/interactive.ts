@@ -1,7 +1,6 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
-import yaml from 'js-yaml';
 import * as STATUS from '../status';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
@@ -9,7 +8,6 @@ import { run } from '../sandbox';
 import compile from '../compile';
 import signals from '../signals';
 import { getConfig } from '../config';
-import { SystemError } from '../error';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {
@@ -93,27 +91,22 @@ function judgeSubtask(subtask) {
 
 export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    const LANGS = yaml.load(getConfig('langs'));
-    if (!LANGS[ctx.lang]) throw new SystemError('Unsupported language {0}.', [ctx.lang]);
-    const info = LANGS[ctx.lang];
-    ctx.time_limit_rate = info.time_limit_rate || 1;
+    ctx.time_limit_rate = ctx.getLang(ctx.lang).time_limit_rate;
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (async () => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.lang, ctx.code, 'code', copyIn, ctx.next);
+            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         (async () => {
-            const copyIn = {
-                'testlib.h': testlibSrc,
-            };
+            const copyIn = { 'testlib.h': testlibSrc };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return await compile(
-                parseFilename(ctx.config.interactor).split('.')[1],
+                ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1]),
                 fs.readFileSync(ctx.config.interactor).toString(),
                 'interactor',
                 copyIn,

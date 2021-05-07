@@ -1,10 +1,9 @@
 import Queue from 'p-queue';
 import path from 'path';
-import yaml from 'js-yaml';
 import fs from 'fs-extra';
 import { argv } from 'yargs';
 import * as STATUS from '../status';
-import { CompileError, SystemError } from '../error';
+import { SystemError } from '../error';
 import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -128,15 +127,7 @@ function judgeSubtask(subtask, sid) {
 
 export const judge = async (ctx) => {
     if (!ctx.config.subtasks.length) throw new SystemError('Problem data not found.');
-    if (ctx.config.template) {
-        if (ctx.config.template[ctx.lang]) {
-            const tpl = ctx.config.template[ctx.lang];
-            ctx.code = tpl[0] + ctx.code + tpl[1];
-        } else throw new CompileError('Language not supported by provided templates');
-    }
-    const LANGS = yaml.load(getConfig('langs'));
-    if (!LANGS[ctx.lang]) throw new SystemError('Unsupported language {0}.', [ctx.lang]);
-    const info = LANGS[ctx.lang];
+    const info = ctx.getLang(ctx.lang);
     ctx.time_limit_rate = info.time_limit_rate || 1;
     ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.execute, ctx.checker] = await Promise.all([
@@ -145,7 +136,7 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.lang, ctx.code, 'code', copyIn, ctx.next);
+            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         (async () => {
             if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
@@ -156,6 +147,7 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return await compileChecker(
+                ctx.getLang,
                 ctx.config.checker_type,
                 ctx.config.checker,
                 copyIn,

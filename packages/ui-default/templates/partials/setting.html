@@ -52,7 +52,8 @@
           name:setting.key,
           value:'' if secret else (current[setting.key]|default(setting.value)),
           disabled:setting.disabled,
-          placeholder:_('(Not changed)') if secret else ''
+          placeholder:_('(Not changed)') if secret else '',
+          extra_attr: 'data-yaml' if setting.subType == 'yaml' else ''
         }) }}
   {% elif setting.type == 'markdown' %}
     {{ form.form_textarea({

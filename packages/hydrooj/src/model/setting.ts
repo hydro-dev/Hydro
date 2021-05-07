@@ -3,6 +3,7 @@ import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
 import yaml from 'js-yaml';
 import { retry } from '@hydrooj/utils/lib/utils';
+import { parseLang } from '@hydrooj/utils/lib/lang';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -98,10 +99,22 @@ export const SystemSetting = (...settings: _Setting[]) => {
     }
 };
 
+const LangSettingNode = {
+    family: 'setting_usage',
+    key: 'codeLang',
+    value: 'c',
+    name: 'codeLang',
+    desc: 'Default Code Language',
+    flag: 0,
+    subType: '',
+    type: 'select',
+    range: {},
+};
+
 PreferenceSetting(
     Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
     Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
-    Setting('setting_usage', 'codeLang', 'c', builtin.LANG_TEXTS, 'Default Code Language'),
+    LangSettingNode,
     Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
@@ -165,7 +178,6 @@ SystemSetting(
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
-    Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'lang.texts', 'LANG_TEXTS'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'pagination.problem', 'Problems per page'),
     Setting('setting_basic', 'pagination.contest', 20, 'number', 'pagination.contest', 'Contests per page'),
     Setting('setting_basic', 'pagination.discussion', 50, 'number', 'pagination.discussion', 'Discussions per page'),
@@ -187,6 +199,9 @@ SystemSetting(
     Setting('setting_storage', 'installid', String.random(64), 'text', 'installid', 'Installation ID', FLAG_HIDDEN | FLAG_DISABLED),
 );
 
+// eslint-disable-next-line import/no-mutable-exports
+export let langs = {};
+
 bus.once('app/started', async () => {
     logger.debug('Ensuring settings');
     const system = global.Hydro.model.system;
@@ -199,13 +214,22 @@ bus.once('app/started', async () => {
         }
     }
     try {
-        SETTINGS_BY_KEY['codeLang'].range = yaml.load(system.get('lang.texts')) as any;
+        langs = parseLang(system.get('hydrooj.langs'));
+        global.Hydro.model.setting.langs = langs;
+        const range = {};
+        for (const key in langs) range[key] = langs[key].display;
+        LangSettingNode.range = range;
     } catch (e) { /* Ignore */ }
 });
 
 bus.on('system/setting', (args) => {
-    if (!args.lang?.texts) return;
-    SETTINGS_BY_KEY['codeLang'].range = yaml.load(args.lang.texts) as any;
+    if (args.hydrooj?.langs) {
+        langs = parseLang(args.hydrooj.langs);
+        global.Hydro.model.setting.langs = langs;
+        const range = {};
+        for (const key in langs) range[key] = langs[key].display;
+        LangSettingNode.range = range;
+    }
 });
 
 global.Hydro.model.setting = {
@@ -228,4 +252,5 @@ global.Hydro.model.setting = {
     DOMAIN_SETTINGS_BY_KEY,
     DOMAIN_USER_SETTINGS,
     DOMAIN_USER_SETTINGS_BY_KEY,
+    langs,
 };

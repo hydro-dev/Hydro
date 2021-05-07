@@ -136,8 +136,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             value={this.props.editorLang}
             onChange={(ev) => this.props.setEditorLanguage(ev.target.value)}
           >
-            {_.map(window.LANG_TEXTS, (val, key) => (
-              <option value={key} key={key}>{val}</option>
+            {_.map(window.LANGS, (val, key) => (
+              <option value={key} key={key}>{val.display}</option>
             ))}
           </select>
         </ToolbarItem>

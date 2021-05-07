@@ -1,25 +1,21 @@
-import yaml from 'js-yaml';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as STATUS from './status';
 import { run, del } from './sandbox';
-import { CompileError, SystemError } from './error';
+import { CompileError } from './error';
 import { compilerText } from './utils';
 import { Execute } from './interface';
-import { getConfig } from './config';
 
 export = async function compile(
-    lang: string, code: string, target: string, copyIn: any, next?: Function,
+    lang: LangConfig, code: string, target: string, copyIn: any, next?: Function,
 ): Promise<Execute> {
-    const LANGS = yaml.load(getConfig('langs'));
-    if (!LANGS[lang]) throw new SystemError('Unsupported language {0}.', [lang]);
-    const info = LANGS[lang];
-    target = info.target || target;
+    target = lang.target || target;
     const f = {};
-    if (info.type === 'compiler') {
-        copyIn[info.code_file] = { content: code };
+    if (lang.compile) {
+        copyIn[lang.code_file] = { content: code };
         const {
             status, stdout, stderr, fileIds,
         } = await run(
-            info.compile.replace(/\$\{name\}/g, target),
+            lang.compile.replace(/\$\{name\}/g, target),
             { copyIn, copyOutCached: [target] },
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
@@ -27,13 +23,11 @@ export = async function compile(
         if (next) next({ compiler_text: compilerText(stdout, stderr) });
         f[target] = { fileId: fileIds[target] };
         return {
-            execute: info.execute, copyIn: f, clean: () => del(fileIds[target]), time: info.time || 1,
-        };
-    } if (info.type === 'interpreter') {
-        f[target] = { content: code };
-        return {
-            execute: info.execute, copyIn: f, clean: () => Promise.resolve(null), time: info.time || 1,
+            execute: lang.execute, copyIn: f, clean: () => del(fileIds[target]), time: lang.time_limit_rate || 1,
         };
     }
-    throw new SystemError('Unknown language type.');
+    f[target] = { content: code };
+    return {
+        execute: lang.execute, copyIn: f, clean: () => Promise.resolve(null), time: lang.time_limit_rate || 1,
+    };
 };

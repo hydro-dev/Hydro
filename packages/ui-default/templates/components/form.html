@@ -50,6 +50,7 @@
 {% set noAutocomplete = args.noAutocomplete or false %}
 {% set extra_style = args.extra_style or false %}
 {% set extra_class = args.extra_class %}
+{% set extra_attr = args.extra_attr %}
 {% set date = args.date or false %}
 {% set time = args.time or false %}
   class="{{ form_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
@@ -59,6 +60,7 @@
   {% if noAutocomplete %}autocomplete="off"{% endif %}
   {% if date %}data-pick-date{% endif %}
   {% if time %}data-pick-time{% endif %}
+  {% if extra_attr %}{{ extra_attr }}{% endif %}
   {% if extra_style %}style="{{extra_style}}"{% endif %}
 {% endmacro %}
 
@@ -181,7 +183,7 @@
 {% endmacro %}
 
 {% macro form_textarea(args) %}
-{{ form_begin({columns:8}|assign(args)) }}
+{{ form_begin({columns:10}|assign(args)) }}
 {{ textarea(args) }}
 {{ form_end(args) }}
 {% endmacro %}

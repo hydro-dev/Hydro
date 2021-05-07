@@ -39,7 +39,7 @@ async function postInit() {
     if (!global.Hydro.isFirstWorker) return;
     const judge = require('./judge');
 
-    const { task, system } = global.Hydro.model;
+    const { task, system, setting } = global.Hydro.model;
     const { storage } = global.Hydro.service;
     const _judge = global.Hydro.handler.judge as any;
 
@@ -153,6 +153,11 @@ async function postInit() {
         };
     }
 
+    function getLang(lang: string) {
+        if (setting.langs[lang]) return setting.langs[lang];
+        throw new SystemError('Unsupported language {0}.', [lang]);
+    }
+
     class JudgeTask {
         stat: any;
         request: any;
@@ -170,11 +175,13 @@ async function postInit() {
         tmpdir: string;
         clean: any[];
         folder: string;
+        getLang: (lang: string) => any;
 
         constructor(request) {
             this.stat = {};
             this.stat.receive = new Date();
             this.request = request;
+            this.getLang = getLang;
             logger.debug('%o', request);
         }
 

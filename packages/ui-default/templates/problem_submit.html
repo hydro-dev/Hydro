@@ -42,12 +42,32 @@
       </div>
       <div class="section__body">
         <form method="post">
-          {{ form.form_select({
-               label:'Code language',
-               options:model.system.get('lang.texts')|parseYaml,
-               name:'lang',
-               value:handler.user.codeLang
-             }) }}
+          <div class="hasjs--hide">
+            {{ form.form_select({
+                label:'Code language',
+                options:model.setting.SETTINGS_BY_KEY['codeLang'].range,
+                name:'lang',
+                value:handler.user.codeLang
+              }) }}
+          </div>
+          <div class="row nojs--hide">
+            <div class="medium-5 columns form__item end">
+              <label>
+                {{ _('Code language') }}
+                <div name="form_item_lang" class="select-container">
+                  <select id="codelang-main-select" class="select"></select>
+                </div>
+              </label>
+            </div>
+            <div class="medium-5 columns form__item end" style="display: none" id="codelang-sub-container">
+              <label>
+                {{ _('Code language') }}
+                <div name="form_item_lang" class="select-container">
+                  <select id="codelang-sub-select" class="select"></select>
+                </div>
+              </label>
+            </div>
+          </div>
           {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">

@@ -15,22 +15,22 @@ export function get(key: string): any {
 
 export function getMany<
     A extends keyof SystemKeys, B extends keyof SystemKeys,
->(keys: [A, B]): [SystemKeys[A], SystemKeys[B]];
+    >(keys: [A, B]): [SystemKeys[A], SystemKeys[B]];
 export function getMany<
     A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
->(keys: [A, B, C]): [SystemKeys[A], SystemKeys[B], SystemKeys[C]];
+    >(keys: [A, B, C]): [SystemKeys[A], SystemKeys[B], SystemKeys[C]];
 export function getMany<
     A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
     D extends keyof SystemKeys,
->(keys: [A, B, C, D]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D]];
+    >(keys: [A, B, C, D]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D]];
 export function getMany<
     A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
     D extends keyof SystemKeys, E extends keyof SystemKeys,
->(keys: [A, B, C, D, E]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E]];
+    >(keys: [A, B, C, D, E]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E]];
 export function getMany<
     A extends keyof SystemKeys, B extends keyof SystemKeys, C extends keyof SystemKeys,
     D extends keyof SystemKeys, E extends keyof SystemKeys, F extends keyof SystemKeys,
->(keys: [A, B, C, D, E, F]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E], SystemKeys[F]];
+    >(keys: [A, B, C, D, E, F]): [SystemKeys[A], SystemKeys[B], SystemKeys[C], SystemKeys[D], SystemKeys[E], SystemKeys[F]];
 export function getMany(keys: (keyof SystemKeys)[]): any[];
 export function getMany(keys: string[]): any[] {
     return keys.map((key) => cache[key]);

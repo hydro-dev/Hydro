@@ -6,14 +6,13 @@ let MINIO_ACCESS_KEY = randomstring(32);
 let MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 
-const default_nvm_source_command = `\
-# load nvm env(by hydro installer)
+const source_nvm = `\
+# load nvm env (by hydro installer)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-`;
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`;
 
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
-const china = (cli.prompt('此服务器是否位于中国大陆？(Y/n) ') || 'y') === 'y';
+const china = (cli.prompt('此服务器是否位于中国大陆？(Y/n) ') || 'y').toLowerCase().trim() === 'y';
 const NVM_NODEJS_ORG_MIRROR = china
     ? 'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release'
     : 'https://nodejs.org/dist';
@@ -34,7 +33,7 @@ const values = {};
 for (const line of lines) {
     if (!line.trim()) continue;
     const d = line.split('=');
-    if (d[1].startsWith('"')) values[d[0]] = d[1].substr(1, d[1].length - 2);
+    if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
 if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('不支持的系统');
@@ -64,7 +63,7 @@ const steps = [
                 () => {
                     fs.writefile(
                         '/etc/apt/sources.list.d/mongodb-org-4.4.list',
-                        `deb [ arch=amd64 ] ${MONGODB_REPO} ${values.UBUNTU_CODENAME}/mongodb-org/4.4 multiverse`,
+                        `deb [ arch=amd64 ] ${MONGODB_REPO} ${values.ubuntu_codename}/mongodb-org/4.4 multiverse`,
                     );
                 },
                 'wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -',
@@ -97,13 +96,10 @@ const steps = [
                 const ver = res.output.split('Now using node v')[1].split(' ')[0];
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
                 const rc_path = `/root/.${__env['SHELL'].endsWith('zsh') ? 'zsh' : 'bash'}rc`;
-                if (!fs.exist(rc_path)) {
-                    fs.writefile(rc_path, default_nvm_source_command);
-                } else {
+                if (!fs.exist(rc_path)) fs.writefile(rc_path, source_nvm);
+                else {
                     const rc_file = fs.readfile(rc_path);
-                    if (!rc_file.includes(default_nvm_source_command)) {
-                        fs.appendfile(default_nvm_source_command);
-                    }
+                    if (!rc_file.includes(source_nvm)) fs.appendfile(rc_path, source_nvm);
                 }
             },
             'npm i yarn -g',
