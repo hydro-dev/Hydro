@@ -219,7 +219,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     let auto = !result.outputs?.length;
     if (!result.subtasks.length) {
         auto = !Math.sum(result.subtasks.map((subtask) => subtask.cases.length));
-    }
+    } else auto = false;
     if (auto) {
         const c = await readAutoCases(folder, args, config, result);
         result.subtasks = c.subtasks;
