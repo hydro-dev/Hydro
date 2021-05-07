@@ -111,14 +111,6 @@ const LangSettingNode = {
     range: {},
 };
 
-bus.on('system/setting', (args) => {
-    if (!args['hydrooj.lang']) return;
-    const lang = parseLang(args['hydrooj.lang']);
-    const range = {};
-    for (const key in lang) range[key] = lang[key].display;
-    LangSettingNode.range = range;
-});
-
 PreferenceSetting(
     Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
     Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
@@ -207,6 +199,9 @@ SystemSetting(
     Setting('setting_storage', 'installid', String.random(64), 'text', 'installid', 'Installation ID', FLAG_HIDDEN | FLAG_DISABLED),
 );
 
+// eslint-disable-next-line import/no-mutable-exports
+export let langs = {};
+
 bus.once('app/started', async () => {
     logger.debug('Ensuring settings');
     const system = global.Hydro.model.system;
@@ -219,13 +214,22 @@ bus.once('app/started', async () => {
         }
     }
     try {
-        SETTINGS_BY_KEY['codeLang'].range = yaml.load(system.get('lang.texts')) as any;
+        langs = parseLang(system.get('hydrooj.langs'));
+        global.Hydro.model.setting.langs = langs;
+        const range = {};
+        for (const key in langs) range[key] = langs[key].display;
+        LangSettingNode.range = range;
     } catch (e) { /* Ignore */ }
 });
 
 bus.on('system/setting', (args) => {
-    if (!args.lang?.texts) return;
-    SETTINGS_BY_KEY['codeLang'].range = yaml.load(args.lang.texts) as any;
+    if (args.hydrooj?.langs) {
+        langs = parseLang(args.hydrooj.langs);
+        global.Hydro.model.setting.langs = langs;
+        const range = {};
+        for (const key in langs) range[key] = langs[key].display;
+        LangSettingNode.range = range;
+    }
 });
 
 global.Hydro.model.setting = {
@@ -248,4 +252,5 @@ global.Hydro.model.setting = {
     DOMAIN_SETTINGS_BY_KEY,
     DOMAIN_USER_SETTINGS,
     DOMAIN_USER_SETTINGS_BY_KEY,
+    langs,
 };

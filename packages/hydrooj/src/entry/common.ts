@@ -115,6 +115,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                         ),
                     );
                 }
+                logger.info('Config load: %s', i);
             } catch (e) {
                 logger.error('Config Load Fail: %s', i);
                 logger.error(e);

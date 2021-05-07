@@ -24,6 +24,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
             const baseCfg = file[base];
             if (baseCfg) {
                 for (const bkey in baseCfg) {
+                    if (bkey === 'sub') continue;
                     if (!(bkey in entry)) entry[bkey] = baseCfg[bkey];
                 }
                 if (baseCfg.sub) baseCfg.sub.push(entry);

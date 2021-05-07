@@ -1,11 +1,11 @@
 import { ObjectID } from 'mongodb';
-import { parseLang } from '@hydrooj/utils/lib/lang';
 import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import { sleep } from '../utils';
 import { Logger } from '../logger';
 import difficultyAlgorithm from '../lib/difficulty';
 import record from '../model/record';
 import problem from '../model/problem';
+import * as setting from '../model/setting';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
@@ -127,14 +127,14 @@ class JudgeConnectionHandler extends ConnectionHandler {
         const xff = system.get('server.xff');
         this.ip = xff ? this.request.headers[xff] || this.request.ip : this.request.ip;
         logger.info('Judge daemon connected from ', this.ip);
-        this.send({ language: system.lang });
+        this.send({ language: setting.langs });
         this.sendLanguageConfig = this.sendLanguageConfig.bind(this);
         bus.on('system/setting', this.sendLanguageConfig);
         this.newTask();
     }
 
     async sendLanguageConfig() {
-        this.send({ language: system.lang });
+        this.send({ language: setting.langs });
     }
 
     async newTask() {
