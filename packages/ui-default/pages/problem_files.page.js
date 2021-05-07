@@ -11,12 +11,12 @@ import tpl from 'vj/utils/tpl';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 
-try {
-  // Firefox have no WritableStream
-  if (!window.WritableStream) streamsaver.WritableStream = WritableStream;
+// Firefox have no WritableStream
+if (!window.WritableStream) streamsaver.WritableStream = WritableStream;
+if (window.location.protocol === 'https:'
+  || window.location.protocol === 'chrome-extension:'
+  || window.location.hostname === 'localhost') {
   streamsaver.mitm = '/streamsaver/mitm.html';
-} catch (e) {
-  // Extending not allowed in snowpack
 }
 
 async function downloadProblemFilesAsArchive(type, files) {
