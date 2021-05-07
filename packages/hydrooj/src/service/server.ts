@@ -482,10 +482,6 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (this.request.headers.referer) {
-            const hostname = new URL(this.request.headers.referer).hostname;
-            if (hostname !== this.request.hostname) throw new CsrfTokenError();
-        }
         if (!argv.benchmark) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
@@ -524,6 +520,10 @@ export class Handler extends HandlerCommon {
                 text: global.Hydro.lib[key].text,
             }));
         if (!this.noCheckPermView) this.checkPerm(PERM.PERM_VIEW);
+        if (this.request.method === 'POST' && this.request.headers.referer) {
+            const hostname = new URL(this.request.headers.referer).hostname;
+            if (hostname !== this.request.hostname) throw new CsrfTokenError(hostname);
+        }
     }
 
     async finish() {
