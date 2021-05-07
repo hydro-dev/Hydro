@@ -19,7 +19,7 @@ class RecordModel {
     static PROJECTION_LIST: (keyof Rdoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'hidden', 'progress',
-        'contest', 'effective', 'judger', 'judgeAt',
+        'contest', 'effective', 'judger', 'judgeAt', 'status',
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {
