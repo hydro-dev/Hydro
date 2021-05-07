@@ -98,7 +98,7 @@ const page = new NamedPage('home_preference', async () => {
       $('[name="codeLang"]').val(this.value);
       const options = {};
       for (const key in window.LANGS) {
-        if (`${key.startsWith(this.value)}.` && key !== this.value) options[key] = window.LANGS[key].display;
+        if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
       }
       if (Object.keys(options).length > 1) {
         setOptions($('#codelang-sub-select'), options);

@@ -16,7 +16,7 @@ const page = new NamedPage('problem_submit', async () => {
     $('[name="lang"]').val(this.value);
     const options = {};
     for (const key in window.LANGS) {
-      if (`${key.startsWith(this.value)}.` && key !== this.value) options[key] = window.LANGS[key].display;
+      if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     if (Object.keys(options).length > 1) {
       setOptions($('#codelang-sub-select'), options);
@@ -32,7 +32,6 @@ const page = new NamedPage('problem_submit', async () => {
   }
   setOptions($('#codelang-main-select'), main);
   const current = $('[name="lang"]').val();
-  console.log(current);
   if (current.includes('.')) {
     const [m, s] = current.split('.');
     $('#codelang-main-select').val(m);
