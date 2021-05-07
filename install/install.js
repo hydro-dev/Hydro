@@ -6,19 +6,11 @@ let MINIO_ACCESS_KEY = randomstring(32);
 let MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 
-const default_nvm_source_command = '\n# load nvm env(by hydro installer)\nexport NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"\n';
-
-let install_env = function () {
-    let rc_path = '/root/.' + (__env["SHELL"].endsWith('zsh') ? 'zsh' : 'bash') + 'rc';
-    if (!fs.exist(rc_path)) {
-        fs.writefile(rc_path, default_nvm_source_command);
-        return;
-    }
-    let rc_file = fs.readfile(rc_path);
-    if (!rc_file.includes(default_nvm_source_command)) {
-        fs.appendfile(default_nvm_source_command);
-    }
-}
+const default_nvm_source_command = `\
+# load nvm env(by hydro installer)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+`;
 
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
 const china = (cli.prompt('此服务器是否位于中国大陆？(Y/n) ') || 'y') === 'y';
@@ -40,10 +32,8 @@ const osinfoFile = fs.readfile('/etc/os-release');
 const lines = osinfoFile.split('\n');
 const values = {};
 for (const line of lines) {
+    if (!line.trim()) continue;
     const d = line.split('=');
-    if (d.length == 1) {
-        continue
-    }
     if (d[1].startsWith('"')) values[d[0]] = d[1].substr(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
@@ -62,14 +52,15 @@ const steps = [
     {
         init: '正在安装 MongoDB / Installing MongoDB',
         skip: () => fs.exist('/usr/bin/mongo'),
-        operations: Arch ?
-            [
+        operations: Arch
+            ? [
                 'curl -fSLO https://s3.undefined.moe/hydro/arch/libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst',
                 'curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst',
                 'curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
-                'pacman --noconfirm -U libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst'
-            ] :
-            [
+                'pacman --noconfirm -U libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst'
+                + 'mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
+            ]
+            : [
                 () => {
                     fs.writefile(
                         '/etc/apt/sources.list.d/mongodb-org-4.4.list',
@@ -105,7 +96,15 @@ const steps = [
                 const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', { NVM_NODEJS_ORG_MIRROR });
                 const ver = res.output.split('Now using node v')[1].split(' ')[0];
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
-                install_env();
+                const rc_path = `/root/.${__env['SHELL'].endsWith('zsh') ? 'zsh' : 'bash'}rc`;
+                if (!fs.exist(rc_path)) {
+                    fs.writefile(rc_path, default_nvm_source_command);
+                } else {
+                    const rc_file = fs.readfile(rc_path);
+                    if (!rc_file.includes(default_nvm_source_command)) {
+                        fs.appendfile(default_nvm_source_command);
+                    }
+                }
             },
             'npm i yarn -g',
         ],
