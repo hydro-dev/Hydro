@@ -43,7 +43,7 @@ class UserLoginHandler extends Handler {
         this.session.uid = udoc._id;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = this.request.referer.endsWith('/login')
+        this.response.redirect = (this.request.referer || '/login').endsWith('/login')
             ? this.url('homepage')
             : this.request.referer;
     }
