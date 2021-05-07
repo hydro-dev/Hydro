@@ -5,7 +5,6 @@ log.info('开始运行 HydroOJ 安装工具 / Starting HydroOJ installation tool
 let MINIO_ACCESS_KEY = randomstring(32);
 let MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
-let SYSTEM_VER = 'focal';
 
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
 const china = (cli.prompt('此服务器是否位于国内？(Y/n)') || 'y') === 'y';
@@ -22,6 +21,18 @@ const SANDBOX_DOWNLOAD = china
     ? 'https://s3.undefined.moe/file/executor-amd64'
     : 'https://github.com/criyle/go-judge/releases/download/v1.1.8/executorserver-amd64';
 
+if (!fs.exist('/etc/os-release')) log.fatal('/etc/os-release 文件未找到');
+const osinfoFile = fs.readfile('/etc/os-release');
+const lines = osinfoFile.split('\n');
+const values = {};
+for (const line of lines) {
+    const d = line.split('=');
+    if (d[1].startsWith('"')) values[d[0]] = d[1].substr(1, d[1].length - 2);
+    else values[d[0]] = d[1];
+}
+if (['ubuntu', 'arch'].includes(values.id)) log.fatal('不支持的系统');
+const Arch = values.id === 'arch';
+
 const steps = [
     {
         init: '正在初始化安装 / Preparing',
@@ -36,16 +47,11 @@ const steps = [
         skip: () => fs.exist('/usr/bin/mongo'),
         operations: [
             () => {
-                const map = {
-                    16.04: 'xenial',
-                    18.04: 'bionic',
-                    20.04: 'focal',
-                };
-                const ver = cli.prompt('请选择系统版本：输入 16.04/18.04/20.04 中的一个并按下Enter:');
-                if (!map[ver]) log.fatal('无效输入 / Invalid input');
-                SYSTEM_VER = map[ver];
+                fs.writefile(
+                    '/etc/apt/sources.list.d/mongodb-org-4.4.list',
+                    `deb [ arch=amd64 ] ${MONGODB_REPO} ${values.UBUNTU_CODENAME}/mongodb-org/4.4 multiverse`,
+                );
             },
-            `echo "deb [ arch=amd64 ] ${MONGODB_REPO} ${SYSTEM_VER}/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list`,
             'wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -',
             'apt-get -qq update',
             'apt-get -q install -y mongodb-org',

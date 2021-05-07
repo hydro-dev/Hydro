@@ -63,6 +63,7 @@ export default class Editor extends DOMAttachedObject {
     if (autoResize) {
       cfg.scrollbar = {
         vertical: 'hidden',
+        alwaysConsumeMouseWheel: false,
         handleMouseWheel: false,
       };
       cfg.scrollBeyondLastLine = false;
