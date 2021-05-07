@@ -520,9 +520,9 @@ export class Handler extends HandlerCommon {
                 text: global.Hydro.lib[key].text,
             }));
         if (!this.noCheckPermView) this.checkPerm(PERM.PERM_VIEW);
-        if (this.request.method === 'POST' && this.request.headers.referer) {
-            const hostname = new URL(this.request.headers.referer).hostname;
-            if (hostname !== this.request.hostname) throw new CsrfTokenError(hostname);
+        if (this.request.method === 'post' && this.request.headers.referer !== '/') {
+            const host = new URL(this.request.headers.referer).host;
+            if (host !== this.request.host) throw new CsrfTokenError(host);
         }
     }
 
