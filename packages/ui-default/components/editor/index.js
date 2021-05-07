@@ -40,8 +40,7 @@ export default class Editor extends DOMAttachedObject {
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
-    $(ele).width('100%');
-    $(ele).addClass('textbox');
+    $(ele).width('100%').addClass('textbox');
     $dom.hide();
     origin.parentElement.appendChild(ele);
     const value = $dom.val();
@@ -49,7 +48,7 @@ export default class Editor extends DOMAttachedObject {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
       model = `file://model-${Math.random().toString(16)}`,
-      autoResize = $dom.hasClass('auto-resize'),
+      autoResize = true,
     } = this.options;
     this.model = typeof model === 'string' ? monaco.editor.createModel(value, language, monaco.Uri.parse(model)) : model;
     const cfg = {
@@ -63,7 +62,6 @@ export default class Editor extends DOMAttachedObject {
     if (autoResize) {
       cfg.scrollbar = {
         vertical: 'hidden',
-        alwaysConsumeMouseWheel: false,
         handleMouseWheel: false,
       };
       cfg.scrollBeyondLastLine = false;

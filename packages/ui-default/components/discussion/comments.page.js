@@ -50,9 +50,7 @@ function onClickDummyBox(ev) {
   const $evTarget = $(ev.currentTarget);
 
   if (CommentBox.get($evTarget)) {
-    CommentBox
-      .get($evTarget)
-      .focus();
+    CommentBox.get($evTarget).focus();
     return;
   }
 
@@ -125,9 +123,7 @@ async function onCommentClickEdit(mode, ev) {
   const $evTarget = $(ev.currentTarget);
 
   if (CommentBox.get($evTarget)) {
-    CommentBox
-      .get($evTarget)
-      .focus();
+    CommentBox.get($evTarget).focus();
     return;
   }
 
@@ -174,9 +170,7 @@ async function onCommentClickDelete(type, ev) {
         <p>${i18n(message)}</p>
       </div>`,
   }).open();
-  if (action !== 'yes') {
-    return;
-  }
+  if (action !== 'yes') return;
 
   const $evTarget = $(ev.currentTarget);
   const form = JSON.parse($evTarget.attr('data-form'));

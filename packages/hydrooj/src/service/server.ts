@@ -423,7 +423,7 @@ export class Handler extends HandlerCommon {
             query: ctx.query,
             path: ctx.path,
             params: ctx.params,
-            referer: ctx.request.headers.referer || '/',
+            referer: ctx.request.headers.referer,
             json: (ctx.request.headers.accept || '').includes('application/json'),
         };
         this.response = {
@@ -520,7 +520,7 @@ export class Handler extends HandlerCommon {
                 text: global.Hydro.lib[key].text,
             }));
         if (!this.noCheckPermView) this.checkPerm(PERM.PERM_VIEW);
-        if (this.request.method === 'post' && this.request.headers.referer !== '/') {
+        if (this.request.method === 'post' && this.request.headers.referer) {
             const host = new URL(this.request.headers.referer).host;
             if (host !== this.request.host) throw new CsrfTokenError(host);
         }
