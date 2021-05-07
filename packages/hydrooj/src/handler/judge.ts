@@ -1,4 +1,5 @@
 import { ObjectID } from 'mongodb';
+import { parseLang } from '@hydrooj/utils/lib/lang';
 import { JudgeResultBody, Rdoc, TestCase } from '../interface';
 import { sleep } from '../utils';
 import { Logger } from '../logger';
@@ -9,6 +10,7 @@ import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
 import task from '../model/task';
+import * as system from '../model/system';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, post, Types,
@@ -119,10 +121,20 @@ class JudgeConnectionHandler extends ConnectionHandler {
     processing: any = null;
     closed = false;
     query: any = { type: 'judge' };
+    ip: string;
 
     async prepare() {
-        logger.info('Judge daemon connected from ', this.request.ip);
+        const xff = system.get('server.xff');
+        this.ip = xff ? this.request.headers[xff] || this.request.ip : this.request.ip;
+        logger.info('Judge daemon connected from ', this.ip);
+        this.send({ language: system.lang });
+        this.sendLanguageConfig = this.sendLanguageConfig.bind(this);
+        bus.on('system/setting', this.sendLanguageConfig);
         this.newTask();
+    }
+
+    async sendLanguageConfig() {
+        this.send({ language: system.lang });
     }
 
     async newTask() {
@@ -157,7 +169,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        logger.info('Judge daemon disconnected from ', this.request.ip);
+        logger.info('Judge daemon disconnected from ', this.ip);
+        bus.off('system/setting', this.sendLanguageConfig);
         if (this.processing) {
             await record.reset(this.processing.domainId, this.processing.rid, false);
             await task.add(this.processing);

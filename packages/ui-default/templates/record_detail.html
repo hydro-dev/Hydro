@@ -11,7 +11,7 @@
         <h1 class="section__title">{{ _('Code') }}</h1>
       </div>
       <div class="section__body">
-        <pre><code class="line-numbers language-{{ (model.system.get('ui-default.lang_highlight_id')|parseYaml)[rdoc['lang']] }}">{{ rdoc['code'] }}</code></pre>
+        <pre><code class="line-numbers language-{{ model.system.langs[rdoc.lang].highlight }}">{{ rdoc['code'] }}</code></pre>
       </div>
     </div>
     {% endif %}

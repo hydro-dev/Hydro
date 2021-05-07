@@ -53,15 +53,7 @@ class UiConstantsHandler extends Handler {
   }
 
   async get() {
-    const [LANG_TEXTS, LANG_HIGHLIGHT_ID, MONACO_MODES] = system.getMany([
-      'lang.texts',
-      'ui-default.lang_highlight_id',
-      'ui-default.lang_monaco_modes',
-    ]);
-    this.response.body = `\
-window.LANG_TEXTS=${JSON.stringify(yaml.load(LANG_TEXTS))};
-window.LANG_HIGHLIGHT_ID=${JSON.stringify(yaml.load(LANG_HIGHLIGHT_ID))};
-window.MONACO_MODES=${JSON.stringify(yaml.load(MONACO_MODES))}`;
+    this.response.body = `window.LANGS=${JSON.stringify(system.langs)}`;
     this.response.type = 'text/javascript';
     this.ctx.set('nolog', '1');
   }

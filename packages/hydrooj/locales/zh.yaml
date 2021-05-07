@@ -125,6 +125,7 @@ Click here to chat with me: 点击这里与我聊天
 click to add: 点击添加
 CLOSE: 关闭
 Code blocks: 代码区块
+Code language settings: 编程语言设置
 Code language: 代码语言
 Code: 代码
 collapse: 收缩
@@ -416,9 +417,6 @@ Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
-LANG_TEXTS: 编译语言代号 -> 语言名称
-Language file settings: 评测机语言（langs.yaml）
-Language Highlight ID: 编译语言代号 -> 高亮语言代号
 Language: 语言
 last active at: 最后活动于
 last login at: 最后登录于

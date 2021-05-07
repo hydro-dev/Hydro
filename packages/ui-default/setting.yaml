@@ -43,44 +43,6 @@ nav_logo_dark_2x:
   name: nav_logo_dark_2x
   desc: Nav Logo Dark@2x
   default: /components/navigation/nav-logo-small@2x_dark.png
-lang_highlight_id:
-  type: yaml
-  name: lang_highlight_id
-  desc: Language Highlight ID
-  default:
-    c: c astyle-c
-    cc: cpp astyle-c
-    cs: csharp astyle-cs
-    pas: pascal
-    java: java astyle-java
-    py: python
-    py3: python
-    php: php
-    rs: rust
-    hs: haskell
-    js: javascript
-    go: go
-    rb: ruby
-    jl: julia
-lang_monaco_modes:
-  type: yaml
-  name: lang_monaco_modes
-  desc: Monaco language modes
-  default:
-    c: cpp
-    cc: cpp
-    cs: csharp
-    pas: pascal
-    java: java
-    py: python
-    py3: python
-    php: php
-    rs: rust
-    hs: haskell
-    js: javascript
-    go: go
-    rb: ruby
-    jl: julia
 preferredEditorType:
   type:
     wysiwyg: WYSIWYG

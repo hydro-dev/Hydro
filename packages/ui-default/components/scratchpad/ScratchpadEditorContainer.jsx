@@ -4,7 +4,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
-  language: window.MONACO_MODES[state.editor.lang],
+  language: window.LANGS[state.editor.lang].monaco,
   theme: 'vs-light',
   mainSize: state.ui.main.size,
   pretestSize: state.ui.pretest.size,

@@ -519,23 +519,6 @@ export const CATEGORIES = {
     ],
 };
 
-export const LANG_TEXTS = {
-    c: 'C',
-    cc: 'C++',
-    cs: 'C#',
-    pas: 'Pascal',
-    java: 'Java',
-    py: 'Python',
-    py3: 'Python 3',
-    php: 'PHP',
-    rs: 'Rust',
-    hs: 'Haskell',
-    js: 'JavaScript',
-    go: 'Go',
-    rb: 'Ruby',
-    jl: 'Julia',
-};
-
 global.Hydro.model.builtin = {
     Permission,
     PERM,
@@ -547,7 +530,6 @@ global.Hydro.model.builtin = {
     BUILTIN_ROLES,
     DEFAULT_NODES,
     CATEGORIES,
-    LANG_TEXTS,
     STATUS,
     STATUS_TEXTS,
     STATUS_CODES,

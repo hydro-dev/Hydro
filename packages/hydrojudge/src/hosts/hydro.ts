@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import { argv } from 'yargs';
 import { noop } from 'lodash';
 import { ObjectID } from 'bson';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
 import { compilerText, Queue } from '../utils';
@@ -37,6 +38,7 @@ class JudgeTask {
     config: any;
     nextId = 1;
     nextWaiting = [];
+    getLang: (name: string) => LangConfig;
 
     constructor(session: Hydro, request, ws: WebSocket) {
         this.stat = {};
@@ -45,6 +47,7 @@ class JudgeTask {
         this.host = session.config.host;
         this.request = request;
         this.ws = ws;
+        this.getLang = session.getLang;
     }
 
     async handle() {
@@ -160,10 +163,9 @@ class JudgeTask {
 
 export default class Hydro {
     config: any;
-
     axios: any;
-
     ws: WebSocket;
+    language: Record<string, LangConfig>;
 
     constructor(config) {
         this.config = config;
@@ -172,6 +174,7 @@ export default class Hydro {
         this.config.last_update_at = this.config.last_update_at || 0;
         if (!this.config.server_url.startsWith('http')) this.config.server_url = `http://${this.config.server_url}`;
         if (!this.config.server_url.endsWith('/')) this.config.server_url = `${this.config.server_url}/`;
+        this.getLang = this.getLang.bind(this);
     }
 
     async init() {
@@ -224,6 +227,11 @@ export default class Hydro {
         return filePath;
     }
 
+    getLang(name: string) {
+        if (this.language[name]) return this.language[name];
+        throw new SystemError('Unsupported language {0}', [name]);
+    }
+
     async consume(queue: Queue<any>) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         const res = await this.axios.get('judge/conn/info');
@@ -238,19 +246,16 @@ export default class Hydro {
         });
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
+            if (request.language) this.language = request.language;
             if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
         });
         this.ws.on('close', (data, reason) => {
             log.warn(`[${this.config.host}] Websocket 断开:`, data, reason);
-            setTimeout(() => {
-                this.retry(queue);
-            }, 30000);
+            setTimeout(() => this.retry(queue), 30000);
         });
         this.ws.on('error', (e) => {
             log.error(`[${this.config.host}] Websocket 错误:`, e);
-            setTimeout(() => {
-                this.retry(queue);
-            }, 30000);
+            setTimeout(() => this.retry(queue), 30000);
         });
         await new Promise((resolve) => {
             this.ws.once('open', async () => {
@@ -327,9 +332,7 @@ export default class Hydro {
 
     async retry(queue: Queue<any>) {
         this.consume(queue).catch(() => {
-            setTimeout(() => {
-                this.retry(queue);
-            }, 30000);
+            setTimeout(() => this.retry(queue), 30000);
         });
     }
 }

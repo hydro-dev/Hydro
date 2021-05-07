@@ -25,7 +25,7 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.lang, ctx.code, 'code', copyIn, ctx.next);
+            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         // Validator
         (async () => {
@@ -34,7 +34,7 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             const file = await fs.readFile(ctx.config.validator);
-            return await compile(parseFilename(ctx.config.validator).split('.')[1], file.toString(), 'validator', copyIn);
+            return await compile(ctx.getLang(parseFilename(ctx.config.validator).split('.')[1]), file.toString(), 'validator', copyIn);
         })(),
         // Std
         (async () => {
@@ -43,7 +43,7 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             const file = await fs.readFile(ctx.config.std);
-            return await compile(parseFilename(ctx.config.std).split('.')[1], file.toString(), 'std', copyIn);
+            return await compile(ctx.getLang(parseFilename(ctx.config.std).split('.')[1]), file.toString(), 'std', copyIn);
         })(),
         // Checker
         (async () => {
@@ -53,6 +53,7 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return await compileChecker(
+                ctx.getLang,
                 ctx.config.checker_type,
                 ctx.config.checker,
                 copyIn,

@@ -1,0 +1,98 @@
+langs:
+  type: yaml
+  desc: Code language settings
+  default:
+    __hint__:
+      - All keys started with _ will be ignored
+      - Entries named like [foo], [foo].[bar] [foo].[baz] will be merged into one category.
+      - A entry named [foo].[bar] will inhert all options defined in entry [foo] if not overwritten
+      - code_file option defaults to foo.[name]
+      - highlight option defaults to [name]
+      - if highlight option was set, monaco option defaults to [highlight], otherwise defaults to [name] 
+      - Compile step will be ignored if compile option was not set
+      - Key marked with a ? means the option is optional
+      - (name):
+          compile?: Compile Command
+          code_file?: Where to write code file when compiling
+          execute?: Command to execute the program
+          highlight?: PrismJS highlight mode
+          monaco?: Monaco editor mode
+          time_limit_rate: Time limit rate
+          target: Compiler output file
+          display: Display name
+    c:
+      compile: /usr/bin/gcc -Wall --std=c99 -o ${name} foo.c -lm
+      highlight: c astyle-c
+      monaco: cpp
+      display: C
+    cc:
+      compile: /usr/bin/g++ -Wall -std=c++11 -o ${name} foo.cc -lm
+      code_file: foo.cc
+      highlight: cpp astyle-c
+      monaco: cpp
+      display: C++
+    cc.std98:
+      compile: /usr/bin/g++ -Wall -std=c++98 -o ${name} foo.cc -lm
+      display: C++ 98
+    cc.std11:
+      display: C++ 11
+    cc.std17:
+      compile: /usr/bin/g++ -Wall -std=c++17 -o ${name} foo.cc -lm
+      display: C++ 17
+    pas:
+      compile: /usr/bin/fpc -O2 -o${dir}/${name} foo.pas
+      highlight: pascal
+      display: Pascal
+    java:
+      compile: /usr/bin/javac -d ${dir} -encoding utf8 ./Main.java
+      code_file: Main.java
+      target: Main.class
+      execute: /usr/bin/java Main
+      time_limit_rate: 2
+      highlight: java astyle-java
+      monaco: java
+      display: Java
+    py:
+      compile: /usr/bin/python -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+      code_file: foo.py
+      execute: /usr/bin/python ${name}
+      highlight: python
+      display: Python
+    py.py2:
+      display: Python 2
+    py.py3:
+      compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+      execute: /usr/bin/python3 ${name}
+      display: Python 3
+    php:
+      execute: /usr/bin/php foo.php
+      display: PHP
+    rs:
+      compile: /usr/bin/rustc -O -o ${dir}/${name} ${dir}/foo.rs
+      highlight: rust
+      display: Rust
+    hs:
+      compile: /usr/bin/ghc -O -outputdir /tmp -o ${name} foo.hs
+      highlight: haskell
+      display: Haskell
+    js:
+      execute: /usr/bin/jsc ${dir}/foo.js
+      highlight: javascript
+      display: Javascript (JSC)
+    go:
+      compile: /usr/bin/go build -o ${name} foo.go
+      display: Golang
+    rb:
+      execute: /usr/bin/ruby foo.rb
+      highlight: ruby
+      display: Ruby
+    cs:
+      compile: /usr/bin/mcs -optimize+ -out:${dir}/${name} ${dir}/foo.cs
+      execute: /usr/bin/mono ${name}
+      highlight: csharp astyle-cs
+      monaco: csharp
+      display: Csharp
+    jl:
+      execute: /usr/bin/julia ${dir}/foo.jl
+      highlight: julia
+      display: Julia

@@ -3,6 +3,7 @@ import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
 import yaml from 'js-yaml';
 import { retry } from '@hydrooj/utils/lib/utils';
+import { parseLang } from '@hydrooj/utils/lib/lang';
 import * as builtin from './builtin';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -98,10 +99,30 @@ export const SystemSetting = (...settings: _Setting[]) => {
     }
 };
 
+const LangSettingNode = {
+    family: 'setting_usage',
+    key: 'codeLang',
+    value: 'c',
+    name: 'codeLang',
+    desc: 'Default Code Language',
+    flag: 0,
+    subType: '',
+    type: 'select',
+    range: {},
+};
+
+bus.on('system/setting', (args) => {
+    if (!args['hydrooj.lang']) return;
+    const lang = parseLang(args['hydrooj.lang']);
+    const range = {};
+    for (const key in lang) range[key] = lang[key].display;
+    LangSettingNode.range = range;
+});
+
 PreferenceSetting(
     Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
     Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
-    Setting('setting_usage', 'codeLang', 'c', builtin.LANG_TEXTS, 'Default Code Language'),
+    LangSettingNode,
     Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',
         'If left blank, the built-in template of the corresponding language will be used.'),
 );
@@ -165,7 +186,6 @@ SystemSetting(
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
-    Setting('setting_basic', 'lang.texts', builtin.LANG_TEXTS, 'yaml', 'lang.texts', 'LANG_TEXTS'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'pagination.problem', 'Problems per page'),
     Setting('setting_basic', 'pagination.contest', 20, 'number', 'pagination.contest', 'Contests per page'),
     Setting('setting_basic', 'pagination.discussion', 50, 'number', 'pagination.discussion', 'Discussions per page'),

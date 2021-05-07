@@ -1,3 +1,4 @@
+import { parseLang } from '@hydrooj/utils/lib/lang';
 import { SYSTEM_SETTINGS } from './setting';
 import { NumberKeys } from '../typeutils';
 import { SystemKeys } from '../interface';
@@ -70,8 +71,13 @@ export async function runConfig() {
     await bus.emit('database/config');
 }
 
+// eslint-disable-next-line import/no-mutable-exports
+export let lang = {};
+
 bus.on('system/setting', (args) => {
     for (const key in args) set(key, args[key], false);
+    if (!args['hydrooj.lang']) return;
+    lang = parseLang(args['hydrooj.lang']);
 });
 
 global.Hydro.model.system = {
@@ -80,4 +86,5 @@ global.Hydro.model.system = {
     getMany,
     inc,
     set,
+    lang,
 };
