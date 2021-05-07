@@ -58,10 +58,16 @@ export default class Editor extends DOMAttachedObject {
       lightbulb: { enabled: true },
       model: this.model,
       automaticLayout: true,
+      wordWarp: 'bounded',
+      minimap: { enabled: false },
+      hideCursorInOverviewRuler: true,
+      overviewRulerLanes: 0,
+      overviewRulerBorder: false,
     };
     if (autoResize) {
       cfg.scrollbar = {
         vertical: 'hidden',
+        horizontal: 'hidden',
         handleMouseWheel: false,
       };
       cfg.scrollBeyondLastLine = false;
