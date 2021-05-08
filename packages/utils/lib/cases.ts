@@ -48,7 +48,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                 id: config.count,
             });
         }
-    } else if (cfg.subtasks) {
+    } else if (cfg.subtasks?.length) {
         for (const subtask of cfg.subtasks) {
             const cases = [];
             for (const c of subtask.cases || []) {

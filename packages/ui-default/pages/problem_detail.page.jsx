@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import { NamedPage } from 'vj/misc/Page';
 import Navigation from 'vj/components/navigation';
+import Notification from 'vj/components/notification/index';
 import { ActionDialog } from 'vj/components/dialog';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
@@ -244,7 +245,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $(ev.currentTarget).hide();
     $('[name="problem-sidebar__categories"]').show();
   });
-  $('[name="problem-sidebar__send-to"]').click(() => handleClickCopyProblem());
+  $('[name="problem-sidebar__send-to"]').on('click', handleClickCopyProblem);
   loadSubjective();
 });
 
