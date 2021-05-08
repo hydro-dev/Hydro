@@ -72,6 +72,8 @@ export interface Udoc extends Dictionary<any> {
     loginip: string,
 }
 
+export type ownerInfo = { owner: number, maintainer?: number[] };
+
 export interface User extends Record<string, any> {
     _id: number,
     _udoc: Udoc,
@@ -90,6 +92,9 @@ export interface User extends Record<string, any> {
     perm: bigint,
     scope: bigint,
     role: string,
+    own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean
+    own<T extends ownerInfo>(doc: T, exact: boolean): boolean
+    own<T extends ownerInfo>(doc: T): boolean
     own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
     hasPerm: (...perm: bigint[]) => boolean,
     hasPriv: (...priv: number[]) => boolean,

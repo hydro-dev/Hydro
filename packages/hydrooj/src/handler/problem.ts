@@ -126,7 +126,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.del(domainId, pid);
         }
@@ -138,7 +138,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: true });
         }
@@ -150,7 +150,7 @@ export class ProblemMainHandler extends ProblemHandler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
-            if (!this.user.own(pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+            if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: false });
         }
@@ -232,7 +232,7 @@ export class ProblemDetailHandler extends ProblemHandler {
     }
 
     async postDelete() {
-        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
     }
@@ -340,8 +340,7 @@ export class ProblemStatisticsHandler extends ProblemDetailHandler {
 
 export class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
-        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SELF);
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
     }
 }
 
@@ -413,7 +412,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', 'Bad filename');
-        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
@@ -438,7 +437,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Array)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
-        if (!this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
         this.back();

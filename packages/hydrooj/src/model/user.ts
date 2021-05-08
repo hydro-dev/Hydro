@@ -87,8 +87,9 @@ class User implements _User {
         return this;
     }
 
-    own<T extends { owner: number, maintainer?: number[] }>(doc: T, exact = false) {
-        return exact
+    own(doc: any, arg1: any = false): boolean {
+        if (typeof arg1 === 'bigint' && !this.hasPerm(arg1)) return false;
+        return (typeof arg1 === 'boolean' && arg1)
             ? doc.owner === this._id
             : doc.owner === this._id || (doc.maintainer || []).includes(this._id);
     }
