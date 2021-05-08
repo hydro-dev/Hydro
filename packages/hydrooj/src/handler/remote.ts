@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import superagent from 'superagent';
 import { PassThrough } from 'stream';
+import { argv } from 'yargs';
 import { PermissionError, InvalidTokenError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import { logAndReturn } from '../utils';
@@ -42,7 +43,7 @@ export class ProblemSendHandler extends Handler {
             }
         }
         const [url, expire] = system.getMany(['server.url', 'session.saved_expire_seconds']);
-        const tokenId = await token.createOrUpdate(token.TYPE_EXPORT, expire, { domainId, pids: Array.from(pids) });
+        const tokenId = await token.createOrUpdate(token.TYPE_EXPORT, expire, { creator: this.user._id, domainId, pids: Array.from(pids) });
         const res = system.get('server.proxy')
             ? await superagent.post(`${system.get('server.center')}/send`)
                 .send({
@@ -157,15 +158,20 @@ export class ProblemReceiveHandler extends Handler {
         const files = res.body.links;
         const source = new URL(data.source);
         const baseUrl = `${source.protocol}//${source.host}`;
+        const exportToken = await token.get(data.tokenId, token.TYPE_EXPORT);
         for (let i = 0; i < pdocs.length; i++) {
             const pdoc = pdocs[i];
             if (pdoc.pid) {
                 const exist = await problem.get(domainId, pdoc.pid);
                 if (exist) pdoc.pid = undefined;
             }
-            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, this.user._id, pdoc.tag);
+            const pid = await problem.add(domainId, pdoc.pid, pdoc.title, pdoc.content, exportToken?.creator || this.user._id, pdoc.tag);
             pids.push(pid);
-            this.syncFiles(domainId, baseUrl, pid, files[i]).catch(logAndReturn(logger));
+            this.syncFiles(
+                domainId,
+                exportToken ? baseUrl : `http://127.0.0.1:${argv.port || system.get('server.port')}`,
+                pid, files[i],
+            ).catch(logAndReturn(logger));
             await problem.edit(domainId, pid, { html: pdoc.html });
         }
         this.back();
