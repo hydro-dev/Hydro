@@ -26,11 +26,11 @@ const coll = db.collection('dataReport');
 class DataReportHandler extends Handler {
     noCheckPermView = true;
 
-    @post('instanceId', Types.String)
+    @post('installId', Types.String)
     @post('payload', Types.String)
-    async post(domainId: string, instanceId: string, _payload: string) {
+    async post(domainId: string, installId: string, _payload: string) {
         const payload: any = yaml.load(decrypt(_payload));
-        await coll.updateOne({ _id: instanceId }, {
+        await coll.updateOne({ _id: installId }, {
             $set: {
                 version: payload.version,
                 name: payload.name,
