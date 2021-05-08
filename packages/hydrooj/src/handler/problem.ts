@@ -407,7 +407,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (this.pdoc.data.length + this.pdoc.additional_file.length >= system.get('limit.problem_files_max')) {
+        if ((this.pdoc.data?.length || 0) + (this.pdoc.additional_file?.length || 0) >= system.get('limit.problem_files_max')) {
             throw new ForbiddenError('File limit exceeded.');
         }
         if (!this.request.files.file) throw new ValidationError('file');
