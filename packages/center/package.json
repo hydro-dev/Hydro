@@ -1,0 +1,12 @@
+{
+    "name": "@hydrooj/center",
+    "version": "0.0.1",
+    "main": "package.json",
+    "repository": "https://github.com/hydro-dev/Hydro.git",
+    "author": "undefined <i@undefined.moe>",
+    "license": "MIT",
+    "dependencies": {
+        "js-yaml": "^4.1.0",
+        "superagent": "^6.1.0"
+    }
+}

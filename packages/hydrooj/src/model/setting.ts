@@ -164,6 +164,8 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.port', 465, 'number', 'smtp.port', 'SMTP Server Port'),
     Setting('setting_smtp', 'smtp.from', null, 'text', 'smtp.from', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', false, 'boolean', 'smtp.secure', 'SSL'),
+    Setting('setting_server', 'server.center', 'https://hydro.undefined.moe:8443/center', 'text', 'server.center', '', FLAG_HIDDEN),
+    Setting('setting_server', 'server.proxy', false, 'boolean', 'server.proxy', 'Use hydro center proxy to send problems'),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
     Setting('setting_server', 'server.worker', 1, 'number', 'server.worker', 'Server Workers Number'),
     Setting('setting_server', 'server.hostname', 'oj.undefined.moe', 'text', 'server.hostname', 'Server Hostname'),

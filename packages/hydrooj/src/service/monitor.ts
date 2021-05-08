@@ -24,7 +24,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
     } = global.Hydro.model;
     const version = require('hydrooj/package.json').version;
     const [mid, $update, inf] = await sysinfo.update();
-    const [installid, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
+    const [installId, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
     const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
         domain.getMulti().count(),
         user.getMulti().count(),
@@ -33,7 +33,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         record.coll.find().count(),
     ]);
     const payload = crypt(dump({
-        _id: installid + mid.toString(),
+        mid: mid.toString(),
         version,
         name,
         url,
@@ -47,11 +47,12 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         osinfo: inf.osinfo,
         cpu: inf.cpu,
     }));
-    superagent.post('https://feedback.undefined.moe/')
-        .send({ payload })
-        .catch(() => {
-            logger.warn('Cannot connect to hydro center.');
-        });
+    superagent.post(`${system.get('server.center')}/report`)
+        .send({ installId, payload })
+        .then((res) => {
+            if (res.body.updateUrl) system.set('server.center', res.body.updateUrl);
+        })
+        .catch(() => logger.warn('Cannot connect to hydro center.'));
     return [mid, $update];
 }
 

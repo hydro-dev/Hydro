@@ -43,10 +43,20 @@ export class ProblemSendHandler extends Handler {
         }
         const [url, expire] = system.getMany(['server.url', 'session.saved_expire_seconds']);
         const tokenId = await token.createOrUpdate(token.TYPE_EXPORT, expire, { domainId, pids: Array.from(pids) });
-        await superagent.post(`${target[1]}/d/${target[0]}/problem/receive`)
-            .send({
-                operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
-            }).catch(logAndReturn(logger));
+        const res = system.get('server.proxy')
+            ? await superagent.post(`${system.get('server.center')}/send`)
+                .send({
+                    endpoint: `${target[1]}/d/${target[0]}`,
+                    domainId,
+                    url,
+                    tokenId,
+                    expire,
+                }).catch(logAndReturn(logger))
+            : await superagent.post(`${target[1]}/d/${target[0]}/problem/receive`)
+                .send({
+                    operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
+                }).catch(logAndReturn(logger));
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
         this.back();
     }
 
