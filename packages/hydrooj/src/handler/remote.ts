@@ -96,6 +96,8 @@ export class ProblemSendHandler extends Handler {
 }
 
 export class ProblemReceiveHandler extends Handler {
+    noCheckPermView = true;
+
     async get({ domainId }) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM);
         let requests = await token.getMulti(token.TYPE_IMPORT, { domainId }).toArray();
