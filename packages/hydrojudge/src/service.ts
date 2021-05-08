@@ -85,8 +85,8 @@ async function postInit() {
         const filenames = new Set<string>();
         for (const file of files) {
             filenames.add(file.name);
-            version[file.name] = file.etag;
-            if (etags[file.name] !== file.etag) {
+            version[file.name] = file.etag + file.lastModified;
+            if (etags[file.name] !== file.etag + file.lastModified) {
                 await storage.get(`problem/${domainId}/${pid}/testdata/${file.name}`, path.join(filePath, file.name));
             }
         }

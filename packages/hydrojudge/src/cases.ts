@@ -55,8 +55,9 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
                 const data = REG.reg.exec(file);
                 const c = { input: file, output: '', id: REG.id(data) };
                 for (const func of REG.output) {
-                    c.output = func(data);
-                    if (fs.existsSync(path.resolve(folder, c.output))) {
+                    if (cfg.noOutputFile) c.output = '/dev/null';
+                    else c.output = func(data);
+                    if (c.output === '/dev/null' || fs.existsSync(path.resolve(folder, c.output))) {
                         cases.push(c);
                         break;
                     }
@@ -114,8 +115,9 @@ async function read1(folder: string, files: string[], checkFile, cfg, rst) {
                 const data = REG.reg.exec(file);
                 const c = { input: file, output: '', id: REG.id(data) };
                 for (const func of REG.output) {
-                    c.output = func(data);
-                    if (fs.existsSync(path.resolve(folder, c.output))) {
+                    if (cfg.noOutputFile) c.output = '/dev/null';
+                    else c.output = func(data);
+                    if (c.output === '/dev/null' || fs.existsSync(path.resolve(folder, c.output))) {
                         if (!subtask[REG.subtask(data)]) {
                             subtask[REG.subtask(data)] = [{
                                 time: parseTimeMS(cfg.time || '1s'),

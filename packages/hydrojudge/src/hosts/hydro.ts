@@ -196,8 +196,8 @@ export default class Hydro {
         const allFiles = new Set<string>();
         for (const file of files) {
             allFiles.add(file.name);
-            version[file.name] = file.etag;
-            if (etags[file.name] !== file.etag) filenames.push(file.name);
+            version[file.name] = file.etag + file.lastModified;
+            if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
         }
         for (const name in etags) {
             if (!allFiles.has(name)) await fs.rm(path.join(filePath, name));
