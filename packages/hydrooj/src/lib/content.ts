@@ -25,11 +25,9 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 node.type !== 'Plain' ? `## ${node.sectionTitle}` : '',
                 ...node.type === 'Sample'
                     ? [
-                        `## ${_('Sample Input')}`,
                         `\`\`\`input${++cnt}`,
                         node.payload[0],
                         '```',
-                        `## ${_('Sample Output')}`,
                         `\`\`\`output${cnt}`,
                         node.payload[1],
                         '```',
@@ -58,12 +56,10 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
             ...source.input ? [`## ${_('Input Format')}`, source.input] : [],
             ...source.output ? [`## '${_('Output Format')}`, source.output] : [],
             ...(source.samples).map((sample, i) => [
-                `## ${_('Sample Input')} ${i + 1}`,
-                '```',
+                `\`\`\`input${i + 1}`,
                 sample[0],
                 '```',
-                `## ${_('Sample Output')} ${i + 1}`,
-                '```',
+                `\`\`\`output${i + 1}`,
                 sample[1],
                 '```',
             ].join('\n')),
