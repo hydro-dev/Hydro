@@ -1,14 +1,10 @@
 import 'hydrooj';
 import * as superagent from 'superagent';
-import superagentProxy from 'superagent-proxy';
-
-superagentProxy(superagent);
 
 declare module 'hydrooj' {
     interface SystemKeys {
         'login-with-osu.id': string,
         'login-with-osu.secret': string,
-        'login-with-osu.proxy': string,
     }
     interface Lib {
         oauth_osu: typeof import('./lib'),
@@ -32,17 +28,15 @@ async function get() {
 async function callback({ state, code }) {
     const { system, token } = global.Hydro.model;
     const { UserFacingError } = global.Hydro.error;
-    const [[appid, secret, proxy, url], s] = await Promise.all([
+    const [[appid, secret, url], s] = await Promise.all([
         system.getMany([
             'login-with-osu.id',
             'login-with-osu.secret',
-            'login-with-osu.proxy',
             'server.url',
         ]),
         token.get(state, token.TYPE_OAUTH),
     ]);
     const res = await superagent.post(`${BASE_URL}oauth/token`)
-        .proxy(proxy)
         .send({
             client_id: appid,
             client_secret: secret,
@@ -58,7 +52,6 @@ async function callback({ state, code }) {
     }
     const t = res.body.access_token;
     const userInfo = await superagent.get(`${BASE_URL}api/v2/me`)
-        .proxy(proxy)
         .set('User-Agent', 'Hydro-OAuth')
         .set('Authorization', `Bearer ${t}`);
     const ret = {

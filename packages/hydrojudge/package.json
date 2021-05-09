@@ -9,13 +9,13 @@
         "@hydrooj/utils": "^1.0.14",
         "axios": "^0.21.1",
         "bson": "^4.3.0",
-        "fs-extra": "^9.1.0",
+        "fs-extra": "^10.0.0",
         "js-yaml": "^4.0.0",
         "lodash": "^4.17.21",
         "p-queue": "^6.6.1",
         "shell-quote": "^1.7.2",
         "ws": "^7.4.5",
-        "yargs": "^16.2.0"
+        "yargs": "^17.0.1"
     },
     "license": "AGPL-3.0-only",
     "devDependencies": {

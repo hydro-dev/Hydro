@@ -8,8 +8,3 @@ secret:
     category: system
     desc: Github OAuth Secret
     name: secret
-proxy:
-    type: text
-    category: system
-    desc: Github OAuth Proxy
-    name: proxy

@@ -1,14 +1,10 @@
 import 'hydrooj';
 import * as superagent from 'superagent';
-import proxy from 'superagent-proxy';
-
-proxy(superagent);
 
 declare module 'hydrooj' {
     interface SystemKeys {
         'login-with-google.id': string,
         'login-with-google.secret': string,
-        'login-with-google.proxy': string,
     }
     interface Lib {
         oauth_google: typeof import('./lib'),
@@ -33,16 +29,15 @@ async function callback({
     const { UserFacingError } = global.Hydro.error;
     if (error) throw new UserFacingError(error);
     const [
-        [appid, secret, url, proxyUrl],
+        [appid, secret, url],
         s,
     ] = await Promise.all([
         system.getMany([
-            'login-with-google.id', 'login-with-google.secret', 'server.url', 'login-with-google.proxy',
+            'login-with-google.id', 'login-with-google.secret', 'server.url',
         ]),
         token.get(state, token.TYPE_OAUTH),
     ]);
     const res = await superagent.post('https://oauth2.googleapis.com/token')
-        .proxy(proxyUrl)
         .send({
             client_id: appid,
             client_secret: secret,

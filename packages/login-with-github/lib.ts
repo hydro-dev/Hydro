@@ -1,14 +1,10 @@
 import 'hydrooj';
 import * as superagent from 'superagent';
-import superagentProxy from 'superagent-proxy';
-
-superagentProxy(superagent);
 
 declare module 'hydrooj' {
     interface SystemKeys {
         'login-with-github.id': string,
         'login-with-github.secret': string,
-        'login-with-github.proxy': string,
     }
     interface Lib {
         oauth_github: typeof import('./lib'),
@@ -27,17 +23,15 @@ async function get() {
 async function callback({ state, code }) {
     const { system, token } = global.Hydro.model;
     const { UserFacingError } = global.Hydro.error;
-    const [[appid, secret, proxy, url], s] = await Promise.all([
+    const [[appid, secret, url], s] = await Promise.all([
         system.getMany([
             'login-with-github.id',
             'login-with-github.secret',
-            'login-with-github.proxy',
             'server.url',
         ]),
         token.get(state, token.TYPE_OAUTH),
     ]);
     const res = await superagent.post('https://github.com/login/oauth/access_token')
-        .proxy(proxy)
         .send({
             client_id: appid,
             client_secret: secret,
@@ -53,7 +47,6 @@ async function callback({ state, code }) {
     }
     const t = res.body.access_token;
     const userInfo = await superagent.get('https://api.github.com/user')
-        .proxy(proxy)
         .set('User-Agent', 'Hydro-OAuth')
         .set('Authorization', `token ${t}`);
     const ret = {
