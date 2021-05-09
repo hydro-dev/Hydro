@@ -18,7 +18,7 @@ function runWebpack({
       compress: true,
       hot: true,
       disableHostCheck: true,
-      stats: 'errors-warnings',
+      stats: 'none',
       index: '',
       proxy: {
         context: () => true,
@@ -60,10 +60,7 @@ async function runGulp() {
     gulp.on('stop', ({ uid, name }) => {
       log(chalk.green('Finished: %s'), chalk.reset(name));
       taskList[uid] = false;
-
-      if (Object.values(taskList).filter((b) => b).length === 0) {
-        resolve();
-      }
+      if (Object.values(taskList).filter((b) => b).length === 0) resolve();
     });
     gulpTasks.default();
   });

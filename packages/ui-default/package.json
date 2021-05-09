@@ -21,7 +21,7 @@
     "@babel/preset-env": "^7.14.1",
     "@babel/preset-react": "^7.13.13",
     "@babel/register": "^7.13.14",
-    "@babel/runtime-corejs2": "^7.14.0",
+    "@babel/runtime-corejs3": "^7.14.0",
     "@hydrooj/utils": "^1.0.15",
     "ansi_up": "^5.0.1",
     "autoprefixer": "^9.8.6",
@@ -96,7 +96,8 @@
     "wastyle": "^0.0.5",
     "webpack": "^4.44.2",
     "webpack-bundle-analyzer": "^4.4.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "webpackbar": "^5.0.0-3"
   },
   "dependencies": {
     "98.css": "^0.1.16",

@@ -8,6 +8,7 @@ import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
+import WebpackBar from 'webpackbar';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import StaticManifestPlugin from '../plugins/manifest.webpack';
 import root from '../utils/root';
@@ -124,7 +125,7 @@ export default function (env = {}) {
       },
     },
     plugins: [
-      new webpack.ProgressPlugin(),
+      new WebpackBar(),
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery',
