@@ -178,7 +178,7 @@ async function readAutoCases(folder, { next }, cfg, rst) {
         Object.assign(config, result);
         next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
-        throw new SystemError('Cannot parse testdata.', [e]);
+        throw new SystemError('Cannot parse testdata.', [e.message, ...e.params]);
     }
     return config;
 }
@@ -220,7 +220,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     }
     let auto = !result.outputs?.length;
     if (auto) {
-        if (result.subtasks.length && !Math.sum(result.subtasks.map((subtask) => subtask.cases.length))) {
+        if (result.subtasks.length && Math.sum(result.subtasks.map((subtask) => subtask.cases.length))) {
             auto = false;
         }
     }

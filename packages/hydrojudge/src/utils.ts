@@ -72,6 +72,7 @@ export function restrictFile(p: string) {
 
 export function ensureFile(folder: string) {
     return (file: string, message: string) => {
+        if (file === '/dev/null') return file;
         // Historical issue
         if (file.includes('/')) {
             const f = path.join(folder, restrictFile(file.split('/')[1]));
