@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import {
-    Rdoc, TestCase, Mdoc, Drrdoc, TrainingNode,
+    RecordDoc, TestCase, MessageDoc, DiscussionTailReplyDoc, TrainingNode,
 } from 'hydrooj';
 import mongodb, { Db, Cursor } from 'mongodb';
 
@@ -62,7 +62,7 @@ const tasks = {
             processer: (reply) => {
                 const res = [];
                 for (const r of reply) {
-                    const drrdoc: Drrdoc = {
+                    const drrdoc: DiscussionTailReplyDoc = {
                         _id: r._id,
                         content: r.content,
                         owner: r.owner_uid,
@@ -211,7 +211,7 @@ const tasks = {
                 message: (c.judge_text || '') + (c.message || ''),
             });
         }
-        const rdoc: Rdoc = {
+        const rdoc: RecordDoc = {
             _id: doc._id,
             status: doc.status,
             score: doc.score,
@@ -365,7 +365,7 @@ async function message(src: Db, report: Function) {
             .toArray();
         for (const doc of docs) {
             for (const msg of doc.reply) {
-                const mdoc: Mdoc = {
+                const mdoc: MessageDoc = {
                     _id: objid(msg.at),
                     from: msg.sender_uid,
                     to: msg.sender_uid === doc.sender_uid ? doc.sendee_uid : doc.sender_uid,

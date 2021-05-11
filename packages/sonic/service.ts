@@ -1,9 +1,9 @@
 import { BaseService } from 'hydrooj';
 import * as system from 'hydrooj/dist/model/system';
+import { Logger } from 'hydrooj/dist/logger';
 import {
     Search, Ingest, QueryOptions, SuggestOptions, PushOptions,
 } from 'sonic-channel';
-import { Logger } from 'hydrooj/dist/logger';
 
 const logger = new Logger('sonic');
 
