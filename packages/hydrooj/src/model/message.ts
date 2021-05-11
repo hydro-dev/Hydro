@@ -1,6 +1,6 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import user from './user';
-import { Mdoc } from '../interface';
+import { MessageDoc } from '../interface';
 import { ArgMethod } from '../utils';
 import db from '../service/db';
 import * as bus from '../service/bus';
@@ -15,7 +15,7 @@ class MessageModel {
     static async send(
         from: number, to: number,
         content: string, flag: number = MessageModel.FLAG_UNREAD,
-    ): Promise<Mdoc> {
+    ): Promise<MessageDoc> {
         const res = await coll.insertOne({
             from, to, content, flag,
         });
@@ -27,22 +27,22 @@ class MessageModel {
         return mdoc;
     }
 
-    static async get(_id: ObjectID): Promise<Mdoc | null> {
+    static async get(_id: ObjectID): Promise<MessageDoc | null> {
         return await coll.findOne({ _id });
     }
 
     @ArgMethod
-    static async getByUser(uid: number): Promise<Mdoc[]> {
+    static async getByUser(uid: number): Promise<MessageDoc[]> {
         return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', 1).toArray();
     }
 
-    static async getMany(query: FilterQuery<Mdoc>, sort: any, page: number, limit: number): Promise<Mdoc[]> {
+    static async getMany(query: FilterQuery<MessageDoc>, sort: any, page: number, limit: number): Promise<MessageDoc[]> {
         return await coll.find(query).sort(sort)
             .skip((page - 1) * limit).limit(limit)
             .toArray();
     }
 
-    static async setFlag(messageId: ObjectID, flag: number): Promise<Mdoc | null> {
+    static async setFlag(messageId: ObjectID, flag: number): Promise<MessageDoc | null> {
         const result = await coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
@@ -56,7 +56,7 @@ class MessageModel {
     }
 
     @ArgMethod
-    static count(query: FilterQuery<Mdoc> = {}) {
+    static count(query: FilterQuery<MessageDoc> = {}) {
         return coll.find(query).count();
     }
 

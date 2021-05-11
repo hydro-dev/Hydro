@@ -5,7 +5,7 @@ import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import * as document from './document';
 import { STATUS } from './builtin';
 import { buildProjection } from '../utils';
-import type { ProblemStatusDoc, Pdict, Document } from '../interface';
+import type { ProblemStatusDoc, ProblemDict, Document } from '../interface';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
@@ -13,10 +13,10 @@ import { ProblemNotFoundError, ValidationError } from '../error';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 
-export interface Pdoc extends Document { }
-export type Field = keyof Pdoc;
+export interface ProblemDoc extends Document { }
+export type Field = keyof ProblemDoc;
 const fields: Field[] = [];
-export type Getter = (docId?: number, pid?: string) => Partial<Pdoc>;
+export type Getter = (docId?: number, pid?: string) => Partial<ProblemDoc>;
 const getters: Getter[] = [];
 
 export class ProblemModel {
@@ -37,7 +37,7 @@ export class ProblemModel {
     }
 
     static create(docId?: number, pid?: string) {
-        const result = {} as Pdoc;
+        const result = {} as ProblemDoc;
         for (const getter of getters) {
             Object.assign(result, getter(docId, pid));
         }
@@ -59,7 +59,7 @@ export class ProblemModel {
         domainId: string, docId: number, pid: string = null, title: string,
         content: string, owner: number, tag: string[] = [], hidden = false,
     ) {
-        const args: Partial<Pdoc> = {
+        const args: Partial<ProblemDoc> = {
             title, tag, hidden, nSubmit: 0, nAccept: 0,
         };
         if (pid) args.pid = pid;
@@ -74,8 +74,8 @@ export class ProblemModel {
 
     static async get(
         domainId: string, pid: string | number,
-        uid: number = null, projection: Projection<Pdoc> = ProblemModel.PROJECTION_PUBLIC,
-    ): Promise<Pdoc> {
+        uid: number = null, projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
+    ): Promise<ProblemDoc> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
         }
@@ -89,15 +89,15 @@ export class ProblemModel {
         return pdoc;
     }
 
-    static getMulti(domainId: string, query: FilterQuery<Pdoc>, projection = ProblemModel.PROJECTION_LIST) {
+    static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection);
     }
 
-    static getMultiStatus(domainId: string, query: FilterQuery<Pdoc>) {
+    static getMultiStatus(domainId: string, query: FilterQuery<ProblemDoc>) {
         return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
     }
 
-    static async edit(domainId: string, _id: number, $set: Partial<Pdoc>): Promise<Pdoc> {
+    static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
         if (delpid) delete $set.pid;
         await bus.serial('problem/before-edit', $set);
@@ -106,19 +106,19 @@ export class ProblemModel {
         return result;
     }
 
-    static push<T extends ArrayKeys<Pdoc>>(domainId: string, _id: number, key: ArrayKeys<Pdoc>, value: Pdoc[T][0]) {
+    static push<T extends ArrayKeys<ProblemDoc>>(domainId: string, _id: number, key: ArrayKeys<ProblemDoc>, value: ProblemDoc[T][0]) {
         return document.push(domainId, document.TYPE_PROBLEM, _id, key, value);
     }
 
-    static pull<T extends ArrayKeys<Pdoc>>(domainId: string, pid: number, key: ArrayKeys<Pdoc>, values: Pdoc[T][0][]) {
+    static pull<T extends ArrayKeys<ProblemDoc>>(domainId: string, pid: number, key: ArrayKeys<ProblemDoc>, values: ProblemDoc[T][0][]) {
         return document.deleteSub(domainId, document.TYPE_PROBLEM, pid, key, values);
     }
 
-    static inc(domainId: string, _id: number, field: NumberKeys<Pdoc>, n: number): Promise<Pdoc> {
+    static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc>, n: number): Promise<ProblemDoc> {
         return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
     }
 
-    static count(domainId: string, query: FilterQuery<Pdoc>) {
+    static count(domainId: string, query: FilterQuery<ProblemDoc>) {
         return document.count(domainId, document.TYPE_PROBLEM, query);
     }
 
@@ -174,7 +174,7 @@ export class ProblemModel {
         await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }
 
-    static async random(domainId: string, query: FilterQuery<Pdoc>): Promise<string | null> {
+    static async random(domainId: string, query: FilterQuery<ProblemDoc>): Promise<string | null> {
         const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
         const pcount = await cursor.count();
         if (pcount) {
@@ -186,7 +186,7 @@ export class ProblemModel {
     static async getList(
         domainId: string, pids: Array<number | string>,
         getHidden = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
-    ): Promise<Pdict> {
+    ): Promise<ProblemDict> {
         pids = Array.from(new Set(pids)).map((i) => (+i ? +i : i));
         const r = {};
         const l = {};

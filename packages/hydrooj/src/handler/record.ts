@@ -1,6 +1,6 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import { ContestNotFoundError, PermissionError, RecordNotFoundError } from '../error';
-import { Rdoc } from '../interface';
+import { RecordDoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
 import problem from '../model/problem';
@@ -24,7 +24,7 @@ class RecordListHandler extends Handler {
     @param('allDomain', Types.Boolean, true)
     async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, status?: number, all = false) {
         this.response.template = 'record_main.html';
-        const q: FilterQuery<Rdoc> = { 'contest.tid': tid, hidden: false };
+        const q: FilterQuery<RecordDoc> = { 'contest.tid': tid, hidden: false };
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
@@ -178,7 +178,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (this.dispose) this.dispose();
     }
 
-    async onRecordChange(rdoc: Rdoc) {
+    async onRecordChange(rdoc: RecordDoc) {
         if (rdoc.input) return;
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (rdoc.domainId !== this.domainId) return;
@@ -212,7 +212,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     }
 
     // eslint-disable-next-line
-    async onRecordChange(rdoc: Rdoc, $set?: any, $push?: any) {
+    async onRecordChange(rdoc: RecordDoc, $set?: any, $push?: any) {
         if (rdoc._id.toString() !== this.rid) return;
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });

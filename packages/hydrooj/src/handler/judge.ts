@@ -1,5 +1,5 @@
 import { ObjectID } from 'mongodb';
-import { JudgeResultBody, Rdoc, TestCase } from '../interface';
+import { JudgeResultBody, RecordDoc, TestCase } from '../interface';
 import { sleep } from '../utils';
 import { Logger } from '../logger';
 import difficultyAlgorithm from '../lib/difficulty';
@@ -20,7 +20,7 @@ import { updateJudge } from '../service/monitor';
 
 const logger = new Logger('judge');
 
-async function _postJudge(rdoc: Rdoc) {
+async function _postJudge(rdoc: RecordDoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
@@ -45,7 +45,7 @@ async function _postJudge(rdoc: Rdoc) {
 export async function next(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.domainId, body.rid);
-    const $set: Partial<Rdoc> = {};
+    const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     if (body.case) {
         const c: TestCase = {
@@ -77,7 +77,7 @@ export async function next(body: JudgeResultBody) {
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.domainId, body.rid);
-    const $set: Partial<Rdoc> = {};
+    const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     const $unset: any = { progress: '' };
     if (body.message) {

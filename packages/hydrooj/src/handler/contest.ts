@@ -6,7 +6,7 @@ import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError,
 } from '../error';
-import { Pdoc, Tdoc, User } from '../interface';
+import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -240,7 +240,7 @@ class ContestEditHandler extends Handler {
 
 class ContestProblemHandler extends Handler {
     tdoc: Tdoc<30 | 60>;
-    pdoc: Pdoc;
+    pdoc: ProblemDoc;
     tsdoc: any;
     udoc: User;
     attended: boolean;

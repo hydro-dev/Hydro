@@ -8,7 +8,7 @@ import {
     ForbiddenError,
 } from '../error';
 import {
-    Pdoc, User, Rdoc, PathComponent, ProblemStatusDoc,
+    ProblemDoc, User, RecordDoc, PathComponent, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid } from '../lib/validator';
@@ -61,7 +61,7 @@ export class ProblemMainHandler extends ProblemHandler {
     async get(domainId: string, page = 1, q = '', category = []) {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const query: FilterQuery<Pdoc> = {};
+        const query: FilterQuery<ProblemDoc> = {};
         let psdict = {};
         const path: PathComponent[] = [
             ['Hydro', 'homepage'],
@@ -161,7 +161,7 @@ export class ProblemMainHandler extends ProblemHandler {
 export class ProblemRandomHandler extends ProblemHandler {
     @param('category', Types.Name, true, null, parseCategory)
     async get(domainId: string, category: string[] = []) {
-        const q: FilterQuery<Pdoc> = category.length ? { $and: [] } : {};
+        const q: FilterQuery<ProblemDoc> = category.length ? { $and: [] } : {};
         for (const tag of category) q.$and.push({ tag });
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
         await bus.serial('problem/list', q, this);
@@ -172,7 +172,7 @@ export class ProblemRandomHandler extends ProblemHandler {
     }
 }
 
-export interface PdocWithPsdoc extends Pdoc {
+export interface PdocWithPsdoc extends ProblemDoc {
     psdoc?: ProblemStatusDoc
 }
 
@@ -309,7 +309,7 @@ export class ProblemPretestConnectionHandler extends ConnectionHandler {
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
-    async onRecordChange(rdoc: Rdoc) {
+    async onRecordChange(rdoc: RecordDoc) {
         if (
             rdoc.uid !== this.user._id
             || rdoc.pid.toString() !== this.pid
@@ -366,7 +366,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
         newPid: string = '', hidden = false, tag: string[] = [],
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
-        const $update: Partial<Pdoc> = {
+        const $update: Partial<ProblemDoc> = {
             title, content, pid: newPid, hidden, tag: tag ?? [],
         };
         let pdoc = await problem.get(domainId, pid);

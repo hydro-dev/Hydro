@@ -5,7 +5,7 @@ import {
     NotFoundError, UserNotFoundError, PermissionError,
     DomainAlreadyExistsError, ValidationError, BlacklistedError,
 } from '../error';
-import { Mdoc, Setting, DomainDoc } from '../interface';
+import { MessageDoc, Setting, DomainDoc } from '../interface';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
@@ -399,7 +399,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
         this.dispose = bus.on('user/message', this.onMessageReceived.bind(this));
     }
 
-    async onMessageReceived(uid: number, mdoc: Mdoc) {
+    async onMessageReceived(uid: number, mdoc: MessageDoc) {
         if (uid !== this.user._id) return;
         const udoc = await user.getById(this.domainId, mdoc.from);
         udoc.avatarUrl = avatar(udoc.avatar, 64);

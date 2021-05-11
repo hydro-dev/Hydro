@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { NumericDictionary } from 'lodash';
 import { ObjectID, FilterQuery } from 'mongodb';
-import { Tdoc, Pdoc, Udoc } from '../interface';
+import { Tdoc, ProblemDoc, Udoc } from '../interface';
 import domain from '../model/domain';
 import * as contest from '../model/contest';
 import problem from '../model/problem';
@@ -14,10 +14,10 @@ export const description = 'Calculate rp of a domain, or all domains';
 
 type ND = NumericDictionary<number>;
 
-async function runProblem(pdoc: Pdoc, udict: ND): Promise<void>;
+async function runProblem(pdoc: ProblemDoc, udict: ND): Promise<void>;
 async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>;
 async function runProblem(...arg: any[]) {
-    const pdoc: Pdoc = (typeof arg[0] === 'string')
+    const pdoc: ProblemDoc = (typeof arg[0] === 'string')
         ? await problem.get(arg[0], arg[1], -1)
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];

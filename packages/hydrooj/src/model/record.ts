@@ -8,15 +8,15 @@ import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
-import { Rdoc, ContestInfo, ProblemConfig } from '../interface';
+import { RecordDoc, ContestInfo, ProblemConfig } from '../interface';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
 class RecordModel {
-    static coll: Collection<Rdoc> = db.collection('record');
-    static PROJECTION_LIST: (keyof Rdoc)[] = [
+    static coll: Collection<RecordDoc> = db.collection('record');
+    static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'hidden', 'progress',
         'contest', 'effective', 'judger', 'judgeAt', 'status',
@@ -29,7 +29,7 @@ class RecordModel {
         return base - ((pending + 0.5) * (sum(timeRecent.map((i) => i.time || 0)) / 10000));
     }
 
-    static async get(domainId: string, _id: ObjectID): Promise<Rdoc | null> {
+    static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null> {
         const res = await RecordModel.coll.findOne({ _id });
         if (res && res.domainId === domainId) return res;
         return null;
@@ -74,7 +74,7 @@ class RecordModel {
         domainId: string, pid: number, uid: number,
         lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
     ) {
-        const data: Rdoc = {
+        const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
             _id: new ObjectID(),
             uid,
@@ -116,11 +116,11 @@ class RecordModel {
 
     static async update(
         domainId: string, _id: MaybeArray<ObjectID>,
-        $set?: MatchKeysAndValues<Rdoc>,
-        $push?: PushOperator<Rdoc>,
-        $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
-    ): Promise<Rdoc | null> {
-        const $update: UpdateQuery<Rdoc> = {};
+        $set?: MatchKeysAndValues<RecordDoc>,
+        $push?: PushOperator<RecordDoc>,
+        $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
+    ): Promise<RecordDoc | null> {
+        const $update: UpdateQuery<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -140,12 +140,12 @@ class RecordModel {
     }
 
     static async updateMulti(
-        domainId: string, $match: FilterQuery<Rdoc>,
-        $set?: MatchKeysAndValues<Rdoc>,
-        $push?: PushOperator<Rdoc>,
-        $unset?: OnlyFieldsOfType<Rdoc, any, true | '' | 1>,
+        domainId: string, $match: FilterQuery<RecordDoc>,
+        $set?: MatchKeysAndValues<RecordDoc>,
+        $push?: PushOperator<RecordDoc>,
+        $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
     ) {
-        const $update: UpdateQuery<Rdoc> = {};
+        const $update: UpdateQuery<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -174,8 +174,8 @@ class RecordModel {
     }
 
     static async getList(
-        domainId: string, rids: ObjectID[], showHidden: boolean, fields?: (keyof Rdoc)[],
-    ): Promise<Record<string, Partial<Rdoc>>> {
+        domainId: string, rids: ObjectID[], showHidden: boolean, fields?: (keyof RecordDoc)[],
+    ): Promise<Record<string, Partial<RecordDoc>>> {
         const r = {};
         rids = Array.from(new Set(rids));
         let cursor = RecordModel.coll.find({ domainId, _id: { $in: rids } });
@@ -202,7 +202,7 @@ class RecordModel {
     }
 
     @ArgMethod
-    static getByUid(domainId: string, uid: number, limit: number): Promise<Rdoc[]> {
+    static getByUid(domainId: string, uid: number, limit: number): Promise<RecordDoc[]> {
         return RecordModel.coll.find({ domainId, uid, hidden: false }).sort({ _id: -1 }).limit(limit).toArray();
     }
 }

@@ -12,7 +12,7 @@ import user from '../model/user';
 import oauth from '../model/oauth';
 import token from '../model/token';
 import record from '../model/record';
-import problem, { Pdoc } from '../model/problem';
+import problem, { ProblemDoc } from '../model/problem';
 import task from '../model/task';
 import * as system from '../model/system';
 import { PERM, PRIV } from '../model/builtin';
@@ -196,7 +196,7 @@ class UserDetailHandler extends Handler {
                     1,
                     100,
                 )
-                : [[], 0, 0] as [Pdoc[], number, number],
+                : [[], 0, 0] as [ProblemDoc[], number, number],
         ]);
         const pdict = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
             ? await problem.getList(

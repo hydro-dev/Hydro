@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { Progress } from './ui';
-import { Rdoc } from './interface';
+import { RecordDoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
 import {
@@ -254,7 +254,7 @@ const scripts: UpgradeScript[] = [
         while (await data.hasNext()) {
             const d: any = await data.next();
             logger.info('%o', d);
-            const filter: FilterQuery<Rdoc> = { domainId: d._id.domainId, pid: d._id.pid, uid: d._id.uid };
+            const filter: FilterQuery<RecordDoc> = { domainId: d._id.domainId, pid: d._id.pid, uid: d._id.uid };
             if (d.nAccept) {
                 const [first] = await db.collection('record')
                     .find({ ...filter, status: STATUS.STATUS_ACCEPTED })

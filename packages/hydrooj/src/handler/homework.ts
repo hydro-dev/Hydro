@@ -7,7 +7,7 @@ import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError,
 } from '../error';
-import { PenaltyRules, Tdoc, Pdoc } from '../interface';
+import { PenaltyRules, Tdoc, ProblemDoc } from '../interface';
 import {
     Route, Handler, Types, param,
 } from '../service/server';
@@ -118,7 +118,7 @@ class HomeworkDetailHandler extends Handler {
 
 class HomeworkDetailProblemHandler extends Handler {
     tdoc: Tdoc<60>;
-    pdoc: Pdoc;
+    pdoc: ProblemDoc;
     tsdoc: any;
 
     @param('tid', Types.ObjectID)

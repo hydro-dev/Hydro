@@ -5,15 +5,15 @@ import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
-import { Drdoc, Drrdoc, Document } from '../interface';
+import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
 import { buildProjection } from '../utils';
 import * as bus from '../service/bus';
 
-export interface Ddoc extends Document { }
-export namespace Ddoc {
-    export type Field = keyof Ddoc;
+export interface DiscussionDoc extends Document { }
+export namespace DiscussionDoc {
+    export type Field = keyof DiscussionDoc;
     export const fields: Field[] = [];
-    type Getter = () => Partial<Ddoc>;
+    type Getter = () => Partial<DiscussionDoc>;
     const getters: Getter[] = [];
     export function extend(getter: Getter) {
         getters.push(getter);
@@ -39,7 +39,7 @@ export namespace Ddoc {
     }));
 
     export function create() {
-        const result = {} as Ddoc;
+        const result = {} as DiscussionDoc;
         for (const getter of getters) {
             Object.assign(result, getter());
         }
@@ -47,12 +47,12 @@ export namespace Ddoc {
     }
 }
 
-export const PROJECTION_LIST: Ddoc.Field[] = [
+export const PROJECTION_LIST: DiscussionDoc.Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'highlight',
     'nReply', 'views', 'pin', 'updateAt', 'owner',
     'parentId', 'parentType', 'title',
 ];
-export const PROJECTION_PUBLIC: Ddoc.Field[] = [
+export const PROJECTION_PUBLIC: DiscussionDoc.Field[] = [
     ...PROJECTION_LIST, 'content', 'history',
 ];
 
@@ -69,7 +69,7 @@ export async function add(
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean, pin: boolean,
 ): Promise<ObjectID> {
-    const payload: Partial<Ddoc> = {
+    const payload: Partial<DiscussionDoc> = {
         domainId,
         content,
         owner,
@@ -93,15 +93,16 @@ export async function add(
     return payload.docId;
 }
 
-// FIXME typings doesn't work
-export async function get<T extends Ddoc.Field>(domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any): Promise<Pick<Ddoc, T>> {
+export async function get<T extends DiscussionDoc.Field>(
+    domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any,
+): Promise<Pick<DiscussionDoc, T>> {
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
 export function edit(
     domainId: string, did: ObjectID,
     title: string, content: string, highlight: boolean, pin: boolean,
-): Promise<Ddoc | null> {
+): Promise<DiscussionDoc | null> {
     const payload = {
         title, content, highlight, pin,
     };
@@ -118,11 +119,11 @@ export function del(domainId: string, did: ObjectID): Promise<never> {
     ]) as any;
 }
 
-export function count(domainId: string, query: FilterQuery<Ddoc>) {
+export function count(domainId: string, query: FilterQuery<DiscussionDoc>) {
     return document.count(domainId, document.TYPE_DISCUSSION, query);
 }
 
-export function getMulti(domainId: string, query: FilterQuery<Ddoc> = {}, projection = PROJECTION_LIST) {
+export function getMulti(domainId: string, query: FilterQuery<DiscussionDoc> = {}, projection = PROJECTION_LIST) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
         .sort({ pin: -1, updateAt: -1 })
         .project(buildProjection(projection));
@@ -142,13 +143,13 @@ export async function addReply(
     return drid;
 }
 
-export function getReply(domainId: string, drid: ObjectID): Promise<Drdoc | null> {
+export function getReply(domainId: string, drid: ObjectID): Promise<DiscussionReplyDoc | null> {
     return document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
 }
 
 export async function editReply(
     domainId: string, drid: ObjectID, content: string,
-): Promise<Drdoc | null> {
+): Promise<DiscussionReplyDoc | null> {
     return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content });
 }
 
@@ -168,14 +169,14 @@ export function getMultiReply(domainId: string, did: ObjectID) {
     ).sort('_id', -1);
 }
 
-export function getListReply(domainId: string, did: ObjectID): Promise<Drdoc[]> {
+export function getListReply(domainId: string, did: ObjectID): Promise<DiscussionReplyDoc[]> {
     return getMultiReply(domainId, did).toArray();
 }
 
 export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
-): Promise<[Drdoc, ObjectID]> {
+): Promise<[DiscussionReplyDoc, ObjectID]> {
     const [drdoc, subId] = await document.push(
         domainId, document.TYPE_DISCUSSION_REPLY, drid,
         'reply', content, owner, { ip },
@@ -189,14 +190,14 @@ export async function addTailReply(
 
 export function getTailReply(
     domainId: string, drid: ObjectID, drrid: ObjectID,
-): Promise<[Drdoc, Drrdoc] | [null, null]> {
+): Promise<[DiscussionReplyDoc, DiscussionTailReplyDoc] | [null, null]> {
     // @ts-ignore
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
 export function editTailReply(
     domainId: string, drid: ObjectID, drrid: ObjectID, content: string,
-): Promise<Drrdoc> {
+): Promise<DiscussionTailReplyDoc> {
     return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid, { content });
 }
 
@@ -249,7 +250,7 @@ export function getNodes(domainId: string) {
 export async function getListVnodes(domainId: string, ddocs: any, getHidden: boolean) {
     const tasks = [];
     const res = {};
-    async function task(ddoc: Ddoc) {
+    async function task(ddoc: DiscussionDoc) {
         const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId.toString());
         if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
         if (vnode.hidden && !getHidden) return;
@@ -278,7 +279,7 @@ bus.on('problem/delete', async (domainId, docId) => {
 
 global.Hydro.model.discussion = {
     typeDisplay,
-    Ddoc,
+    DiscussionDoc,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
 

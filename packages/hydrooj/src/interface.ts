@@ -3,7 +3,7 @@ import type { Cursor, ObjectID } from 'mongodb';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type * as Koa from 'koa';
-import type { Pdoc } from './model/problem';
+import type { ProblemDoc } from './model/problem';
 
 type document = typeof import('./model/document');
 
@@ -187,7 +187,7 @@ export interface Document {
 }
 
 declare module './model/problem' {
-    interface Pdoc {
+    interface ProblemDoc {
         docType: document['TYPE_PROBLEM'],
         docId: number,
         pid: string,
@@ -207,8 +207,8 @@ declare module './model/problem' {
         config: string,
     }
 }
-export type { Pdoc } from './model/problem';
-export type Pdict = NumericDictionary<Pdoc>;
+export type { ProblemDoc } from './model/problem';
+export type ProblemDict = NumericDictionary<ProblemDoc>;
 
 export interface StatusDoc {
     _id: ObjectID,
@@ -241,7 +241,7 @@ export interface ContestInfo {
     tid: ObjectID,
 }
 
-export interface Rdoc {
+export interface RecordDoc {
     _id: ObjectID,
     domainId: string,
     pid: number
@@ -318,7 +318,7 @@ export interface DomainDoc extends Record<string, any> {
 }
 
 // Message
-export interface Mdoc {
+export interface MessageDoc {
     _id: ObjectID,
     from: number,
     to: number,
@@ -326,31 +326,25 @@ export interface Mdoc {
     flag: number,
 }
 
-// Userfile
-export interface Ufdoc {
-    _id: ObjectID,
-    secret: string,
-    md5?: string,
-    owner: number,
-    size?: number,
-    filename: string,
-}
-
 // Blacklist
-export interface Bdoc {
-    _id: string, // ip
-    expireAt: Date,
+export interface BlacklistDoc {
+    /**
+     * @example ip:1.1.1.1
+     * @example mail:foo.com
+     */
+    _id: string;
+    expireAt: Date;
 }
 
 export interface HistoryDoc {
-    content: string,
-    time: Date,
+    content: string;
+    time: Date;
 }
 
 // Discussion
-export type { Ddoc } from './model/discussion';
+export type { DiscussionDoc } from './model/discussion';
 declare module './model/discussion' {
-    interface Ddoc {
+    interface DiscussionDoc {
         docType: document['TYPE_DISCUSSION'],
         docId: ObjectID,
         parentType: number,
@@ -367,20 +361,18 @@ declare module './model/discussion' {
     }
 }
 
-// Discussion reply
-export interface Drdoc extends Document {
+export interface DiscussionReplyDoc extends Document {
     docType: document['TYPE_DISCUSSION_REPLY'],
     docId: ObjectID,
     parentType: document['TYPE_DISCUSSION'],
     parentId: ObjectID,
     ip: string,
     content: string,
-    reply: Drrdoc[],
+    reply: DiscussionTailReplyDoc[],
     history: HistoryDoc[],
 }
 
-// Discussion Tail Reply
-export interface Drrdoc {
+export interface DiscussionTailReplyDoc {
     _id: ObjectID,
     owner: number,
     content: string,
@@ -415,13 +407,13 @@ export interface ContestRule {
     stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat;
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30 | 60>, pdict: Pdict, cursor: Cursor<any>, page: number,
+        tdoc: Tdoc<30 | 60>, pdict: ProblemDict, cursor: Cursor<any>, page: number,
     ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
     ranked: (tdoc: Tdoc<30 | 60>, cursor: Cursor<any>) => Promise<any[]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
-export type ProblemImporter = (url: string, handler: any) => Promise<[Pdoc, fs.ReadStream?]> | [Pdoc, fs.ReadStream?];
+export type ProblemImporter = (url: string, handler: any) => Promise<[ProblemDoc, fs.ReadStream?]> | [ProblemDoc, fs.ReadStream?];
 
 export interface Script {
     run: (args: any, report: Function) => any,
@@ -481,18 +473,17 @@ export interface BaseService {
 }
 
 export interface Collections {
-    'blacklist': Bdoc,
+    'blacklist': BlacklistDoc,
     'contest': Tdoc,
     'domain': DomainDoc,
     'domain.user': any,
-    'record': Rdoc,
+    'record': RecordDoc,
     'document': any,
-    'problem': Pdoc,
+    'problem': ProblemDoc,
     'user': Udoc,
     'check': any,
-    'message': Mdoc,
+    'message': MessageDoc,
     'token': TokenDoc,
-    'file': Ufdoc,
     'status': any,
     'oauth': any,
     'system': System,

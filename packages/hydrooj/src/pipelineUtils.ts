@@ -4,7 +4,7 @@ import type { DomainDoc, Udoc, ProblemStatusDoc } from './interface';
 import domain from './model/domain';
 import * as document from './model/document';
 import user from './model/user';
-import problem, { Field, Pdoc } from './model/problem';
+import problem, { Field, ProblemDoc } from './model/problem';
 
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().toArray();
@@ -26,14 +26,14 @@ export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb:
     });
 }
 
-interface PartialPdoc extends Pdoc {
+interface PartialProblemDoc extends ProblemDoc {
     [key: string]: any,
 }
 
 export async function iterateAllProblemInDomain(
     domainId: string,
     fields: (Field | string)[],
-    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
+    cb: (pdoc: PartialProblemDoc, current?: number, total?: number) => Promise<any>,
 ) {
     if (!fields.includes('domainId')) fields.push('domainId');
     if (!fields.includes('docId')) fields.push('docId');
@@ -50,7 +50,7 @@ export async function iterateAllProblemInDomain(
 
 export async function iterateAllProblem(
     fields: (Field | string)[],
-    cb: (pdoc: PartialPdoc, current?: number, total?: number) => Promise<any>,
+    cb: (pdoc: PartialProblemDoc, current?: number, total?: number) => Promise<any>,
 ) {
     await iterateAllDomain(async (d) => {
         await iterateAllProblemInDomain(d._id, fields, cb);

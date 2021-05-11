@@ -4,7 +4,7 @@ import {
     ObjectID, Cursor, FilterQuery, UpdateQuery, OnlyFieldsOfType,
 } from 'mongodb';
 import {
-    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc,
+    ProblemDoc, DiscussionDoc, DiscussionReplyDoc, Tdoc, TrainingDoc,
     ProblemStatusDoc, Content,
 } from '../interface';
 import { buildProjection } from '../utils';
@@ -28,12 +28,12 @@ export const TYPE_TRAINING: 40 = 40;
 export const TYPE_HOMEWORK: 60 = 60;
 
 export interface DocType {
-    [TYPE_PROBLEM]: Pdoc,
+    [TYPE_PROBLEM]: ProblemDoc,
     [TYPE_PROBLEM_SOLUTION]: any,
     [TYPE_PROBLEM_LIST]: any,
     [TYPE_DISCUSSION_NODE]: any,
-    [TYPE_DISCUSSION]: Ddoc,
-    [TYPE_DISCUSSION_REPLY]: Drdoc,
+    [TYPE_DISCUSSION]: DiscussionDoc,
+    [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc,
     [TYPE_CONTEST]: Tdoc,
     [TYPE_TRAINING]: TrainingDoc,
     [TYPE_HOMEWORK]: Tdoc,

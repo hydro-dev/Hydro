@@ -8,7 +8,7 @@ import {
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } from '../error';
 import {
-    ContestRule, ContestRules, Pdict,
+    ContestRule, ContestRules, ProblemDict,
     ScoreboardNode, ScoreboardRow, Tdoc,
     Udict,
 } from '../interface';
@@ -564,7 +564,7 @@ export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true)
 export async function getScoreboard(
     domainId: string, tid: ObjectID,
     isExport = false, page: number, docType: 30 | 60 = document.TYPE_CONTEST,
-): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, Pdict, number]> {
+): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict, number]> {
     const tdoc = await get(domainId, tid, docType);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     if (!canShowRecord.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);

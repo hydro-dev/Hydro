@@ -6,7 +6,9 @@ import { argv } from 'yargs';
 import type { Handler } from './server';
 import { Logger } from '../logger';
 import type {
-    Mdoc, Pdoc, Rdoc, TrainingDoc, User, Ddoc, DomainDoc, FileInfo,
+    MessageDoc, ProblemDoc, RecordDoc,
+    TrainingDoc, User, DiscussionDoc,
+    DomainDoc, FileInfo,
 } from '../interface';
 import type { DocType } from '../model/document';
 import type { ProblemSolutionHandler } from '../handler/problem';
@@ -45,7 +47,7 @@ export interface EventMap extends Record<string, any> {
 
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
 
-    'user/message': (uid: number, mdoc: Mdoc) => void
+    'user/message': (uid: number, mdoc: MessageDoc) => void
     'user/get': (udoc: User) => void
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn
@@ -68,17 +70,17 @@ export interface EventMap extends Record<string, any> {
     'handler/finish/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
     'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
-    'discussion/before-add': (payload: Partial<Ddoc>) => VoidReturn
-    'discussion/add': (payload: Partial<Ddoc>) => VoidReturn
+    'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn
+    'discussion/add': (payload: Partial<DiscussionDoc>) => VoidReturn
 
-    'problem/before-add': (doc: Partial<Pdoc>) => VoidReturn
-    'problem/add': (doc: Partial<Pdoc>, docId: number) => VoidReturn
-    'problem/before-edit': (doc: Partial<Pdoc>) => VoidReturn
-    'problem/edit': (doc: Pdoc) => VoidReturn
+    'problem/before-add': (doc: Partial<ProblemDoc>) => VoidReturn
+    'problem/add': (doc: Partial<ProblemDoc>, docId: number) => VoidReturn
+    'problem/before-edit': (doc: Partial<ProblemDoc>) => VoidReturn
+    'problem/edit': (doc: ProblemDoc) => VoidReturn
     'problem/before-del': (domainId: string, docId: number) => VoidReturn
     'problem/del': (domainId: string, docId: number) => VoidReturn
-    'problem/list': (query: FilterQuery<Pdoc>, handler: any) => VoidReturn
-    'problem/get': (doc: Pdoc, handler: any) => VoidReturn
+    'problem/list': (query: FilterQuery<ProblemDoc>, handler: any) => VoidReturn
+    'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
@@ -88,8 +90,8 @@ export interface EventMap extends Record<string, any> {
     'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
-    'record/change': (rdoc: Rdoc, $set?: any, $push?: any) => void
-    'record/judge': (rdoc: Rdoc, updated: boolean) => VoidReturn
+    'record/change': (rdoc: RecordDoc, $set?: any, $push?: any) => void
+    'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {
