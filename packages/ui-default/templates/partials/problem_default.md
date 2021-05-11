@@ -18,7 +18,7 @@ One integer, the sum of x and y.
 123 500
 ```
 
-```outpu1
+```output1
 623
 ```
 
