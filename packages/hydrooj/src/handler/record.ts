@@ -92,7 +92,9 @@ class RecordDetailHandler extends Handler {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
             if (!contest.canShowRecord.call(this, tdoc, true)) throw new PermissionError(rid);
         }
-        if (rdoc.uid !== this.user._id && !this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
+        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
+            if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
+        }
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
             problem.get(domainId, rdoc.pid),

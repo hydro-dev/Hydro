@@ -303,7 +303,11 @@ class UserModel {
 
     @ArgMethod
     static async setJudge(uid: number) {
-        return await UserModel.setPriv(uid, PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE);
+        return await UserModel.setPriv(
+            uid,
+            PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE | PRIV.PRIV_VIEW_ALL_DOMAIN
+            | PRIV.PRIV_READ_PROBLEM_DATA,
+        );
     }
 
     @ArgMethod

@@ -519,7 +519,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.lib[key].icon,
                 text: global.Hydro.lib[key].text,
             }));
-        if (!this.noCheckPermView) this.checkPerm(PERM.PERM_VIEW);
+        if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         if (this.request.method === 'post' && this.request.headers.referer) {
             const host = new URL(this.request.headers.referer).host;
             if (host !== this.request.host) throw new CsrfTokenError(host);

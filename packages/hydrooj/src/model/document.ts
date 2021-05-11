@@ -4,13 +4,13 @@ import {
     ObjectID, Cursor, FilterQuery, UpdateQuery, OnlyFieldsOfType,
 } from 'mongodb';
 import {
-    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc, ProblemStatusDoc,
+    Pdoc, Ddoc, Drdoc, Tdoc, TrainingDoc,
+    ProblemStatusDoc, User, Content,
 } from '../interface';
 import { buildProjection } from '../utils';
 import { NumberKeys, ArrayKeys, Projection, MaybeArray } from '../typeutils';
 import db from '../service/db';
 import * as bus from '../service/bus';
-import { Content } from '../loader';
 
 type DocID = ObjectID | string | number;
 
@@ -42,6 +42,11 @@ export interface DocType {
 export interface DocStatusType {
     [TYPE_PROBLEM]: ProblemStatusDoc,
     [key: number]: any
+}
+
+export async function canView<T extends keyof DocType>(doc: DocType[T], user: User): Promise<boolean> {
+    if (doc.owner === user._id || doc.maintainers.includes(user._id) || doc.participants.includes(user._id)) return true;
+    if ()
 }
 
 export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(

@@ -380,7 +380,9 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true) {
-        const canReadData = !this.user.own(this.pdoc) || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const canReadData = this.user.own(this.pdoc)
+            || this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)
+            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         this.response.body.testdata = (getTestdata && canReadData) ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         this.response.template = 'problem_files.html';
@@ -390,7 +392,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
-            this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+            if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
         const links = {};
         for (const file of files) {
@@ -449,7 +451,9 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
-        if (type === 'testdata' && !this.user.own(this.pdoc)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        if (type === 'testdata' && !this.user.own(this.pdoc)) {
+            if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        }
         this.response.redirect = await storage.signDownloadLink(
             `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
             noDisposition ? undefined : filename, false, 'user',

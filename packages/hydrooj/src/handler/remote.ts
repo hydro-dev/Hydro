@@ -6,7 +6,7 @@ import { PermissionError, InvalidTokenError, RemoteOnlineJudgeError } from '../e
 import { Logger } from '../logger';
 import { logAndReturn } from '../utils';
 import { ProblemAdd } from '../lib/ui';
-import { PERM } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import token from '../model/token';
 import problem from '../model/problem';
 import * as system from '../model/system';
@@ -30,7 +30,7 @@ export class ProblemSendHandler extends Handler {
         const target = _target.split('@');
         if (target[1].endsWith('/')) target[1] = target[1].substr(0, target[1].length - 1);
         const getHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        const getData = this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
+        const getData = this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
         const pdocs = await problem.getList(domainId, _pids, true, true, ['docId', 'owner', 'hidden']);
         const pids = new Set<number>();
         for (const key in pdocs) {
@@ -38,7 +38,7 @@ export class ProblemSendHandler extends Handler {
             if (pdocs[key].hidden && !getHidden && !this.user.own(pdocs[key])) {
                 throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
             }
-            if (!getData && !this.user.own(pdocs[key])) {
+            if (!getData && !this.user.own(pdocs[key]) && !this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) {
                 throw new PermissionError(PERM.PERM_READ_PROBLEM_DATA);
             }
         }

@@ -227,8 +227,6 @@ export const PRIV = {
     PRIV_USER_PROFILE: 1 << 2,
     PRIV_REGISTER_USER: 1 << 3,
     PRIV_READ_PROBLEM_DATA: 1 << 4,
-    PRIV_READ_PRETEST_DATA: 1 << 5, // deprecated
-    PRIV_READ_PRETEST_DATA_SELF: 1 << 6, // deprecated
     PRIV_READ_RECORD_CODE: 1 << 7,
     PRIV_VIEW_HIDDEN_RECORD: 1 << 8,
     PRIV_JUDGE: 1 << 9, // (renamed)
@@ -239,11 +237,16 @@ export const PRIV = {
     PRIV_VIEW_USER_SECRET: 1 << 14,
     PRIV_VIEW_JUDGE_STATISTICS: 1 << 15,
     PRIV_UNLIMITED_ACCESS: 1 << 22,
+    PRIV_VIEW_SYSTEM_NOTIFICATION: 1 << 23,
 
     PRIV_ALL: -1,
     PRIV_DEFAULT: 0,
     PRIV_NEVER: 1 << 20,
 
+    /** @deprecated */
+    PRIV_READ_PRETEST_DATA: 1 << 5,
+    /** @deprecated */
+    PRIV_READ_PRETEST_DATA_SELF: 1 << 6,
     /** @deprecated */
     PRIV_CREATE_FILE: 1 << 16,
     /** @deprecated */

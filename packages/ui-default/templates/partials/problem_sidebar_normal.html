@@ -84,7 +84,7 @@
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
     {% endif %}
-    {% if page_name == 'problem_detail' and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
+    {% if page_name == 'problem_detail' and (handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
       <div style="display: none" class="dialog__body--send-to">
         <div>
           <div class="row"><div class="columns">

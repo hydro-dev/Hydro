@@ -5,7 +5,7 @@ import {
     NotFoundError, UserNotFoundError, PermissionError,
     DomainAlreadyExistsError, ValidationError, BlacklistedError,
 } from '../error';
-import { Mdoc, Setting } from '../interface';
+import { Mdoc, Setting, DomainDoc } from '../interface';
 import * as bus from '../service/bus';
 import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
@@ -281,9 +281,16 @@ class HomeDomainHandler extends Handler {
             ['Hydro', 'homepage'],
             ['home_domain', null],
         ];
-        const dudict = await domain.getDictUserByDomainId(this.user._id);
-        const dids = Object.keys(dudict);
-        const ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
+        let ddocs: DomainDoc[];
+        let dudict: Record<string, DomainDoc>;
+        if (!this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) {
+            dudict = await domain.getDictUserByDomainId(this.user._id);
+            const dids = Object.keys(dudict);
+            ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
+        } else {
+            ddocs = await domain.getMulti().toArray();
+            for (const ddoc of ddocs) dudict[ddoc._id] = ddoc;
+        }
         const canManage = {};
         for (const ddoc of ddocs) {
             // eslint-disable-next-line no-await-in-loop

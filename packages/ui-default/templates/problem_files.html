@@ -48,7 +48,7 @@
             </tbody>
           </table>
         {% else %}
-          {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
+          {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
             {{ nothing.render('No testdata at current.') }}
           {% else %}
             {{ nothing.render("You don't have permission to read testdata.")}}

@@ -13,7 +13,7 @@ import {
 } from '../service/server';
 import * as bus from '../service/bus';
 import domain from '../model/domain';
-import { PERM } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import user from '../model/user';
 import * as system from '../model/system';
 import * as contest from '../model/contest';
@@ -391,7 +391,7 @@ class HomeworkScoreboardDownloadHandler extends Handler {
 class HomeworkCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
-        this.checkPerm(PERM.PERM_READ_RECORD_CODE);
+        if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         await this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(
             domainId, tid, document.TYPE_HOMEWORK,
