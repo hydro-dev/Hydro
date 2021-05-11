@@ -114,11 +114,10 @@ const page = new NamedPage('home_preference', async () => {
     }
     setOptions($('#codelang-main-select'), main);
     const current = $('[name="codeLang"]').val();
-    console.log(current);
     if (current.includes('.')) {
       const [m, s] = current.split('.');
       $('#codelang-main-select').val(m);
-      $('#codelang-sub-select').val(s);
+      $('#codelang-sub-select').val(s).show();
     } else $('#codelang-main-select').val(current);
 
     if (success) {

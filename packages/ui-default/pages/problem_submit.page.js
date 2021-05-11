@@ -35,7 +35,7 @@ const page = new NamedPage('problem_submit', async () => {
   if (current.includes('.')) {
     const [m, s] = current.split('.');
     $('#codelang-main-select').val(m);
-    $('#codelang-sub-select').val(s);
+    $('#codelang-sub-select').val(s).show();
   } else $('#codelang-main-select').val(current);
 });
 
