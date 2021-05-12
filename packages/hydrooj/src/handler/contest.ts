@@ -307,10 +307,13 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
 }
 
 class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
+    async prepare() {
+        if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+    }
+
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
-    async prepare(domainId: string, tid: ObjectID, pid: number) {
-        if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+    async get(domainId: string, tid: ObjectID, pid: number) {
         let rdocs = [];
         if (contest.canShowRecord.call(this, this.tdoc)) {
             rdocs = await record.getUserInProblemMulti(
@@ -318,7 +321,6 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
                 this.pdoc.docId, true,
             ).sort({ _id: -1 }).limit(10).toArray();
         }
-        this.response.template = 'problem_submit.html';
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
@@ -335,6 +337,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             rdocs,
             page_name: 'contest_detail_problem_submit',
         };
+        this.response.template = 'problem_submit.html';
     }
 
     @param('tid', Types.ObjectID)

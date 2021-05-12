@@ -2,7 +2,7 @@ import _ from 'lodash';
 import tpl from 'vj/utils/tpl';
 import request from 'vj/utils/request';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import AutoComplete from '.';
+import AutoComplete from './index';
 
 function getText(user) {
   return user.uname;

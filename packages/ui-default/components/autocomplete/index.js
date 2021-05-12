@@ -166,7 +166,7 @@ export default class AutoComplete extends DOMAttachedObject {
       content = content.split(',');
       content = content[content.length - 1].trim();
     }
-    if (this.isFocus && content >= this.options.minChar) {
+    if (this.isFocus && content.length >= this.options.minChar) {
       if (!this.isOpen) {
         this.open();
         this.renderList();
@@ -175,9 +175,7 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   detach() {
-    if (this.detached) {
-      return;
-    }
+    if (this.detached) return;
     super.detach();
     this.$dom.off(`focus.${this.eventNS}`);
     this.$dom.off(`blur.${this.eventNS}`);

@@ -39,9 +39,9 @@ const acm: ContestRule = {
         for (const key in effective) {
             const j = effective[key];
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
-            const penalty = 20 * 60 * naccept[j.pid];
+            const penalty = 20 * 60 * (naccept[j.pid] || 0);
             detail.push({
-                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
+                ...j, naccept: naccept[j.pid] || 0, time: real + penalty, real, penalty,
             });
         }
         for (const d of detail) {
@@ -53,7 +53,7 @@ const acm: ContestRule = {
         return { accept, time, detail };
     },
     async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time, page);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getList(tdoc.domainId, uids);
         const columns: ScoreboardRow = [
@@ -109,20 +109,21 @@ const acm: ContestRule = {
                 );
             }
             for (const pid of tdoc.pids) {
+                const doc = tsddict[pid] || {};
                 let rid;
                 let colAccepted;
                 let colTime;
                 let colTimeStr;
-                if (tsddict[pid]?.accept) {
-                    rid = tsddict[pid].rid;
+                if (doc.accept) {
+                    rid = doc.rid;
                     colAccepted = _('Accepted');
-                    colTime = tsddict[pid].time;
-                    colTimeStr = misc.formatSeconds(colTime);
+                    colTime = doc.time;
+                    colTimeStr = misc.formatSeconds(colTime) + (doc.naccept ? ` (-${doc.naccept})` : '');
                 } else {
                     rid = null;
                     colAccepted = '-';
                     colTime = '-';
-                    colTimeStr = '-';
+                    colTimeStr = doc.naccept ? `(-${doc.naccept})` : '-';
                 }
                 if (isExport) {
                     row.push({ type: 'string', value: colAccepted });

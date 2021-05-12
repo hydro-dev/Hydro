@@ -117,6 +117,9 @@ class RecordDetailHandler extends Handler {
             rdoc,
             pdoc,
         };
+        if (rdoc.contest) {
+            this.response.body.tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
+        }
     }
 
     @param('rid', Types.ObjectID)

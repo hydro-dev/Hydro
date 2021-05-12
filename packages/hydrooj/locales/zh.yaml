@@ -150,6 +150,7 @@ Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显�
 Contest Scoreboard: 比赛成绩表
 contest_create: 创建比赛
 contest_detail_problem_submit: 递交比赛题目
+contest_detail_problem: 题目详情
 contest_detail: 比赛详情
 contest_edit: 编辑比赛
 contest_main: 比赛
