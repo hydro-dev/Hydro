@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { createZipStream } from 'vj/utils/zip';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { ConfirmDialog, ActionDialog } from 'vj/components/dialog/index';
 import request from 'vj/utils/request';
 import pipeStream from 'vj/utils/pipeStream';
 import tpl from 'vj/utils/tpl';
@@ -166,6 +166,54 @@ const page = new NamedPage('problem_files', () => {
     handleClickUpload(type, files);
   }
 
+  async function startEdit(filename, value) {
+    console.log(filename, value);
+    const { default: Editor } = await import('vj/components/editor/index');
+    const promise = new ActionDialog({
+      $body: tpl`
+        <div class="typo" style="width: 100%; height: 100%">
+          <textarea name="fileContent" style="width: 100%; height: 100%"></textarea>
+        </div>`,
+      width: `${window.innerWidth - 200}px`,
+      height: `${window.innerHeight - 100}px`,
+    }).open();
+    const editor = new Editor($('[name="fileContent"]'), { value, autoResize: false, autoLayout: false });
+    const action = await promise;
+    value = editor.value();
+    editor.destory();
+    if (action !== 'ok') return null;
+    return value;
+  }
+  /**
+   * @param {string} type
+   * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
+   */
+  async function handleEdit(type, ev) {
+    ev.preventDefault();
+    const filename = ev.currentTarget.closest('[data-filename]').getAttribute('data-filename');
+    const filesize = +ev.currentTarget.closest('[data-size]').getAttribute('data-size');
+    const link = $(ev.currentTarget).find('a').attr('href');
+    if (filesize > 8 * 1024 * 1024) Notification.error(i18n('file too large'));
+    Notification.info(i18n('Loading file...'));
+    const res = await request.get(link);
+    const content = await request.get(res.url, undefined, { dataType: 'text' });
+    const val = await startEdit(filename, content);
+    console.log(val);
+    if (typeof val !== 'string') return;
+    Notification.info(i18n('Saving file...'));
+    const data = new FormData();
+    data.append('filename', filename);
+    data.append('file', new Blob([val], { type: 'text/plain' }));
+    data.append('type', type);
+    data.append('operation', 'upload_file');
+    await request.postFile('', data);
+    Notification.success(i18n('File saved.'));
+    await delay(2000);
+    window.location.reload();
+  }
+
+  $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
+  $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
   $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
   $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
   $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));

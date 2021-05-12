@@ -22,7 +22,7 @@ const request = {
           } else if (errorThrown instanceof Error) {
             reject(errorThrown);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
-            const error = jqXHR.responseJSON.error;
+            const { error } = jqXHR.responseJSON;
             if (error.params) {
               const message = substitute(error.message, ...error.params);
               const err = new Error(message);

@@ -10,10 +10,13 @@ export default class Dialog {
       $action: null,
       ...options,
     };
+    let box = '';
+    if (options.width) box += `width:${options.width};max-width:${options.width};`;
+    if (options.height) box += `height:${options.height};max-height:${options.height};`;
     this.$dom = $(tpl`
       <div class="dialog withBg ${this.options.classes}" style="display:none">
-        <div class="dialog__content">
-          <div class="dialog__body"></div>
+        <div class="dialog__content" style="${box}">
+          <div class="dialog__body" style="height:calc(100% - 45px);"></div>
           <div class="row"><div class="columns clearfix">
             <div class="float-right dialog__action"></div>
           </div></div>

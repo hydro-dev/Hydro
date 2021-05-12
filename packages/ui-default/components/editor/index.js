@@ -37,20 +37,21 @@ export default class Editor extends DOMAttachedObject {
 
   async initMonaco() {
     const monaco = await import('monaco-editor/esm/vs/editor/editor.api');
+    const {
+      onChange, language = 'markdown',
+      theme = UserContext.monacoTheme || 'vs-light',
+      model = `file://model-${Math.random().toString(16)}`,
+      autoResize = true, autoLayout = true,
+    } = this.options;
     const { $dom } = this;
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
     $(ele).width('100%').addClass('textbox');
+    if (!autoResize && $dom.height()) $(ele).height($dom.height());
     $dom.hide();
     origin.parentElement.appendChild(ele);
-    const value = $dom.val();
-    const {
-      onChange, language = 'markdown',
-      theme = UserContext.monacoTheme || 'vs-light',
-      model = `file://model-${Math.random().toString(16)}`,
-      autoResize = true,
-    } = this.options;
+    const value = this.options.value || $dom.val();
     this.model = typeof model === 'string' ? monaco.editor.createModel(value, language, monaco.Uri.parse(model)) : model;
     const cfg = {
       theme,
@@ -58,11 +59,24 @@ export default class Editor extends DOMAttachedObject {
       glyphMargin: true,
       lightbulb: { enabled: true },
       model: this.model,
-      automaticLayout: true,
       minimap: { enabled: false },
       hideCursorInOverviewRuler: true,
       overviewRulerLanes: 0,
       overviewRulerBorder: false,
+    };
+    if (autoLayout) cfg.automaticLayout = true;
+    let prevHeight = 0;
+    const updateEditorHeight = () => {
+      const editorElement = this.editor.getDomNode();
+      if (!editorElement) return;
+      const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
+      const lineCount = this.editor.getModel()?.getLineCount() || 1;
+      const height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
+      if (prevHeight !== height) {
+        prevHeight = height;
+        editorElement.style.height = `${height}px`;
+        this.editor.layout();
+      }
     };
     if (autoResize) {
       cfg.scrollbar = {
@@ -84,23 +98,12 @@ export default class Editor extends DOMAttachedObject {
       label: 'Use light theme',
       run: () => monaco.editor.setTheme('vs-light'),
     });
-    let prevHeight = 0;
-    const updateEditorHeight = () => {
-      const editorElement = this.editor.getDomNode();
-      if (!editorElement) return;
-      const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
-      const lineCount = this.editor.getModel()?.getLineCount() || 1;
-      const height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
-      if (prevHeight !== height) {
-        prevHeight = height;
-        editorElement.style.height = `${height}px`;
-        this.editor.layout();
-      }
-    };
-    this.editor.onDidChangeModelDecorations(() => {
-      updateEditorHeight(); // typing
-      requestAnimationFrame(updateEditorHeight); // folding
-    });
+    if (autoResize) {
+      this.editor.onDidChangeModelDecorations(() => {
+        updateEditorHeight(); // typing
+        requestAnimationFrame(updateEditorHeight); // folding
+      });
+    }
     this._subscription = this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue();
       $dom.val(val);
@@ -109,7 +112,7 @@ export default class Editor extends DOMAttachedObject {
     });
     this.isValid = true;
     if (hasFocus) this.focus();
-    updateEditorHeight();
+    if (autoResize) updateEditorHeight();
   }
 
   async initVditor() {
@@ -141,10 +144,20 @@ export default class Editor extends DOMAttachedObject {
     if (hasFocus) this.focus();
   }
 
+  destory() {
+    this.detach();
+    if (this.editor?.destory) this.editor.destory();
+    else if (this.editor?.dispose) this.editor.dispose();
+  }
+
   ensureValid() {
     if (!this.isValid) throw new Error('Editor is not loaded');
   }
 
+  /**
+   * @param {string?} val
+   * @returns {string}
+   */
   value(val) {
     this.ensureValid();
     if (typeof val === 'string') return this.editor.setValue(val);

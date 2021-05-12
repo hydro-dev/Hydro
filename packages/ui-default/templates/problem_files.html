@@ -33,7 +33,7 @@
             </thead>
             <tbody>
               {%- for file in testdata -%}
-              <tr data-filename="{{ file.name }}">
+              <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
                 <td class="col--checkbox">
                   <label class="compact checkbox">
                     <input type="checkbox" data-checkbox-group="testdata" data-checkbox-range>
@@ -96,7 +96,7 @@
             </thead>
             <tbody>
               {%- for file in additional_file -%}
-              <tr data-filename="{{ file.name }}">
+              <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
                 <td class="col--checkbox">
                   <label class="compact checkbox">
                     <input type="checkbox" data-checkbox-group="additional_file" data-checkbox-range>
