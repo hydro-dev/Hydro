@@ -551,13 +551,13 @@ export function canViewHiddenScoreboard() {
 
 export function canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
-    if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
     return false;
 }
 
 export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
-    if (allowPermOverride && this.canViewHiddenScoreboard()) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
     return false;
 }
 
