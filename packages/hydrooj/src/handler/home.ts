@@ -319,7 +319,7 @@ class HomeDomainCreateHandler extends Handler {
     @param('id', Types.Name)
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
-    @param('avatar', Types.Content, true, isEmail)
+    @param('avatar', Types.Content, true)
     // eslint-disable-next-line @typescript-eslint/no-shadow
     async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
