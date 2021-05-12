@@ -23,11 +23,13 @@ const Anchor = require('markdown-it-anchor');
 // @[pdf](https://foo.com/bar.pdf)
 const Media = require('./markdown-it-media');
 const Katex = require('./markdown-it-katex');
+const { xssProtector } = require('./markdown-it-xss');
 
 class Markdown extends MarkdownIt {
   constructor() {
     super({
       linkify: true,
+      html: true,
     });
     this.linkify.tlds('.py', false);
     this.use(Media);
@@ -37,6 +39,7 @@ class Markdown extends MarkdownIt {
     this.use(Anchor);
     this.use(TOC);
     this.use(Katex);
+    this.use(xssProtector);
   }
 }
 
@@ -46,13 +49,11 @@ function plugin(func, ...args) {
   md.use(func, ...args);
 }
 
-function render(text, html = false) {
-  md.set({ html: !!html });
+function render(text) {
   return md.render(text);
 }
 
-function renderInline(text, html = false) {
-  md.set({ html: !!html });
+function renderInline(text) {
   return md.renderInline(text);
 }
 

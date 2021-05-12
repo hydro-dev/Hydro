@@ -59,7 +59,6 @@ export default class Editor extends DOMAttachedObject {
       lightbulb: { enabled: true },
       model: this.model,
       automaticLayout: true,
-      wordWarp: 'bounded',
       minimap: { enabled: false },
       hideCursorInOverviewRuler: true,
       overviewRulerLanes: 0,
@@ -71,6 +70,7 @@ export default class Editor extends DOMAttachedObject {
         horizontal: 'hidden',
         handleMouseWheel: false,
       };
+      cfg.wordWrap = 'bounded';
       cfg.scrollBeyondLastLine = false;
     }
     this.editor = monaco.editor.create(ele, cfg);

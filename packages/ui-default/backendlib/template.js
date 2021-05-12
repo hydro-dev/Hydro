@@ -5,78 +5,11 @@ const serialize = require('serialize-javascript');
 const nunjucks = require('nunjucks');
 const { filter } = require('lodash');
 const { argv } = require('yargs');
-const Xss = require('xss');
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
-
-const xss = new Xss.FilterXSS({
-  whiteList: {
-    a: ['target', 'href', 'title'],
-    abbr: ['title'],
-    address: [],
-    area: ['shape', 'coords', 'href', 'alt'],
-    article: [],
-    aside: [],
-    audio: ['autoplay', 'controls', 'loop', 'preload', 'src'],
-    b: [],
-    bdi: ['dir'],
-    bdo: ['dir'],
-    big: [],
-    blockquote: ['cite'],
-    br: [],
-    caption: [],
-    center: [],
-    cite: [],
-    code: [],
-    col: ['align', 'valign', 'span', 'width'],
-    colgroup: ['align', 'valign', 'span', 'width'],
-    dd: [],
-    del: ['datetime'],
-    details: ['open'],
-    div: [],
-    dl: [],
-    dt: [],
-    em: [],
-    font: ['color', 'size', 'face'],
-    h1: [],
-    h2: [],
-    h3: [],
-    h4: [],
-    h5: [],
-    h6: [],
-    header: [],
-    hr: [],
-    i: [],
-    img: ['src', 'alt', 'title', 'width', 'height'],
-    ins: ['datetime'],
-    li: [],
-    mark: [],
-    ol: [],
-    p: [],
-    pre: [],
-    s: [],
-    section: [],
-    small: [],
-    span: ['class'],
-    sub: [],
-    sup: [],
-    strong: [],
-    table: ['width', 'border', 'align', 'valign'],
-    tbody: ['align', 'valign'],
-    td: ['width', 'rowspan', 'colspan', 'align', 'valign'],
-    tfoot: ['align', 'valign'],
-    th: ['width', 'rowspan', 'colspan', 'align', 'valign'],
-    thead: ['align', 'valign'],
-    tr: ['rowspan', 'align', 'valign'],
-    tt: [],
-    u: [],
-    ul: [],
-    video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
-  },
-});
 
 if (argv.template && argv.template !== 'string') argv.template = findFileSync('@hydrooj/ui-default/templates');
 else if (argv.template) argv.template = findFileSync(argv.template);
@@ -125,7 +58,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('json', (self) => JSON.stringify(self, replacer));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
-    this.addFilter('xss', (self) => xss.process(self));
     this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
     this.addFilter('markdown', (self, html = false) => markdown.render(self, html));
@@ -150,7 +82,7 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
-      return html ? xss.process(s) : markdown.render(s);
+      return markdown.render(s);
     });
     this.addFilter('log', (self) => {
       console.log(self);

@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.8.9",
+  "version": "4.8.10",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -23,6 +23,7 @@
     "@babel/register": "^7.13.14",
     "@babel/runtime-corejs3": "^7.14.0",
     "@hydrooj/utils": "^1.0.15",
+    "@undefined-moe/monaco-yaml": "^2.5.0",
     "ansi_up": "^5.0.1",
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.2.2",

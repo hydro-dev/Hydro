@@ -2,7 +2,7 @@
 import { dirname } from 'path';
 import webpack from 'webpack';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
-import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
+// import { languagesArr } from 'monaco-editor-webpack-plugin/out/languages';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -12,6 +12,17 @@ import WebpackBar from 'webpackbar';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import StaticManifestPlugin from '../plugins/manifest.webpack';
 import root from '../utils/root';
+
+// const yamlLang = languagesArr.find((t) => t.label === 'yaml');
+// yamlLang.entry = [
+//   yamlLang.entry,
+//   require.resolve('@undefined-moe/monaco-yaml/lib/esm/monaco.contribution'),
+// ];
+// yamlLang.worker = {
+//   id: 'vs/language/yaml/yamlWorker',
+//   entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/yaml.worker.js'),
+// };
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 const beautifyOutputUrl = mapWebpackUrlPrefix([
   { prefix: 'node_modules/katex/dist/', replace: './katex/' },
