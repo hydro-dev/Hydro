@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /p/*/submit
+Disallow: /p/*/edit
+Disallow: /problem/
+Disallow: /record/
+Disallow: /d/*/user/*
+Disallow: /manage/
