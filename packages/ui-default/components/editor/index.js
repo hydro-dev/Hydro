@@ -31,6 +31,7 @@ export default class Editor extends DOMAttachedObject {
     super($dom);
     this.options = options;
     if (UserContext.preferredEditorType === 'monaco') this.initMonaco();
+    else if (options.language && options.langua !== 'markdown') this.initMonaco();
     else this.initVditor();
   }
 
