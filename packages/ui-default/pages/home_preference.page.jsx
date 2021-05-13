@@ -95,7 +95,6 @@ const page = new NamedPage('home_preference', async () => {
       .after($el);
 
     $('#codelang-main-select').on('change', function () {
-      $('[name="codeLang"]').val(this.value);
       const options = {};
       for (const key in window.LANGS) {
         if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
@@ -103,7 +102,11 @@ const page = new NamedPage('home_preference', async () => {
       if (Object.keys(options).length > 1) {
         setOptions($('#codelang-sub-select'), options);
         $('#codelang-sub-container').show();
-      } else $('#codelang-sub-container').hide();
+        $('[name="codeLang"]').val($('#codelang-sub-container').val());
+      } else {
+        $('#codelang-sub-container').hide();
+        $('[name="codeLang"]').val(this.value);
+      }
     });
     $('#codelang-sub-select').on('change', function () {
       $('[name="codeLang"]').val(this.value);
