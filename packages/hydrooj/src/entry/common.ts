@@ -18,9 +18,9 @@ export const builtinLib = [
 
 export const builtinModel = [
     'builtin', 'document', 'domain', 'blacklist', 'opcount',
-    'setting', 'token', 'user', 'problem', 'record',
-    'contest', 'message', 'solution', 'training', 'oplog',
-    'discussion', 'system',
+    'setting', 'token', 'user', 'storage', 'problem',
+    'record', 'contest', 'message', 'solution', 'training',
+    'discussion', 'system', 'oplog',
 ];
 
 export const builtinHandler = [

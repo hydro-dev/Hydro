@@ -1,4 +1,4 @@
-import storage from '../service/storage';
+import storage from '../model/storage';
 import { iterateAllProblem, iterateAllProblemInDomain } from '../pipelineUtils';
 
 export const description = 'Sync problem filelist from s3 service';

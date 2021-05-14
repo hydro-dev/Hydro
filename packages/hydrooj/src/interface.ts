@@ -3,6 +3,7 @@ import type { Cursor, ObjectID } from 'mongodb';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type * as Koa from 'koa';
+import { ItemBucketMetadata } from 'minio';
 import type { ProblemDoc } from './model/problem';
 
 type document = typeof import('./model/document');
@@ -472,6 +473,21 @@ export interface BaseService {
     stop?: Function;
 }
 
+export interface FileNode {
+    /** File Path In MinIO */
+    _id: string
+    /** Actual File Path */
+    path: string
+    lastUsage?: Date
+    lastModified?: Date
+    etag?: string
+    /** Size: in bytes */
+    size?: number
+    /** AutoDelete */
+    autoDelete?: Date
+    meta?: ItemBucketMetadata,
+}
+
 export interface Collections {
     'blacklist': BlacklistDoc,
     'contest': Tdoc,
@@ -488,6 +504,7 @@ export interface Collections {
     'oauth': any,
     'system': System,
     'task': Task,
+    'storage': FileNode,
     'oplog': OplogDoc,
     'opcount': any,
     'fs.chunks': any,
@@ -515,6 +532,7 @@ export interface Model {
     training: typeof import('./model/training'),
     user: typeof import('./model/user').default,
     oauth: typeof import('./model/oauth').default,
+    storage: typeof import('./model/storage').default,
 }
 
 export interface Service {

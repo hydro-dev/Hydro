@@ -10,10 +10,10 @@ import { PERM, PRIV } from '../model/builtin';
 import token from '../model/token';
 import problem from '../model/problem';
 import * as system from '../model/system';
+import storage from '../model/storage';
 import {
     Handler, Types, Route, post,
 } from '../service/server';
-import storage from '../service/storage';
 
 const logger = new Logger('remote');
 

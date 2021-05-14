@@ -76,7 +76,7 @@ function encodeRFC5987ValueChars(str: string) {
 class StorageService {
     public client: Client;
     public error = '';
-    private opts: StorageOptions;
+    public opts: StorageOptions;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
 
     async start() {
@@ -153,6 +153,7 @@ class StorageService {
         }
     }
 
+    /** @deprecated use StorageModel.list instead. */
     async list(target: string, recursive = true) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {

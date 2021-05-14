@@ -6,6 +6,7 @@ import Queue from 'p-queue';
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
+import { BucketItem } from 'minio';
 import { Progress } from './ui';
 import { RecordDoc } from './interface';
 import { Logger } from './logger';
@@ -24,6 +25,8 @@ import * as document from './model/document';
 import * as system from './model/system';
 import { STATUS } from './model/builtin';
 import RecordModel from './model/record';
+import StorageModel from './model/storage';
+import { size } from './lib/misc';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
@@ -324,6 +327,28 @@ const scripts: UpgradeScript[] = [
         await iterateAllPsdoc({ rid: { $exists: true } }, async (psdoc) => {
             const rdoc = await RecordModel.get(psdoc.domainId, psdoc.rid);
             await document.setStatus(psdoc.domainId, document.TYPE_PROBLEM, rdoc.pid, rdoc.uid, { score: rdoc.score });
+        });
+        return true;
+    },
+    async function _26_27() {
+        const stream = storage.client.listObjects(storage.opts.bucket, '', true);
+        await new Promise<BucketItem[]>((resolve, reject) => {
+            stream.on('data', (result) => {
+                if (result.size) {
+                    logger.debug('File found: %s %s', result.name, size(result.size));
+                    StorageModel.coll.insertOne({
+                        _id: result.name,
+                        path: result.name,
+                        size: result.size,
+                        lastModified: result.lastModified,
+                        lastUsage: new Date(),
+                        etag: result.etag,
+                        meta: {},
+                    });
+                }
+            });
+            stream.on('end', () => resolve(null));
+            stream.on('error', reject);
         });
         return true;
     },

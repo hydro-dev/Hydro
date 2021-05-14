@@ -4,13 +4,13 @@ import { Dictionary, escapeRegExp, pick } from 'lodash';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import * as document from './document';
 import { STATUS } from './builtin';
+import storage from './storage';
 import { buildProjection } from '../utils';
 import type { ProblemStatusDoc, ProblemDict, Document } from '../interface';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
 import { ProblemNotFoundError, ValidationError } from '../error';
-import storage from '../service/storage';
 import * as bus from '../service/bus';
 
 export interface ProblemDoc extends Document { }
