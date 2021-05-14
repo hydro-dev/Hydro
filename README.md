@@ -1,6 +1,5 @@
 # Hydro
 
-![LICENSE](https://img.shields.io/github/license/hydro-dev/Hydro)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hydro-dev/hydro/CI)
 ![hydrooj](https://img.shields.io/npm/dm/hydrooj)
 ![npm](https://img.shields.io/npm/v/hydrooj?label=hydrooj)
@@ -25,14 +24,17 @@ bug和功能建议请在 Issues 提出。
 QQ [3402182471](https://wpa.qq.com/msgrd?v=3&uin=3402182471&site=qq&menu=yes)  
 Hydro 开发群：709572015  
 Hydro 用户群：1085853538  
+Discord [Hydro](https://discord.gg/c633mBUJwS)  
 Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
 
 ## 开源许可
 
-本项目基于 AGPL v3 开源。  
-对于小规模个人/学校用户，可提供免费评测服务（您无需本地安装评测机），详情请 [联系我们](#联系我们)  
+本项目基于 Hydro Public License 开源。（基于 AGPL v3 扩展，增加商用限制）  
+允许非营利性组织不受限制直接使用 Hydro。  
+营利性组织（培训机构等）需要购买商业许可（这不会十分昂贵，请您不要绕开本限制）。  
+详细信息请通过上方方式与开发者联系。  
 在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
-若您对源码做出修改，同样需要以 AGPL v3 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
+若您对源码做出修改，同样需要以 Hydro Public License 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
 此限制对以下模块仍然有效：  
 
 - Hydro 插件；
