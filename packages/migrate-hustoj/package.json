@@ -4,7 +4,7 @@
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE",
     "scripts": {
         "lint": "eslint lib.ts script.ts --fix",
         "build": "tsc"

@@ -17,7 +17,7 @@
         "ws": "^7.4.5",
         "yargs": "^17.0.1"
     },
-    "license": "AGPL-3.0-only",
+    "license": "SEE LICENSE IN LICENSE",
     "devDependencies": {
         "@types/bson": "^4.0.2",
         "@types/fs-extra": "^9.0.10",

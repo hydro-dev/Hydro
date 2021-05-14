@@ -6,7 +6,7 @@
     "typings": "service.d.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "AGPL-3.0-only",
+    "license": "SEE LICENSE IN LICENSE",
     "dependencies": {
         "sonic-channel": "^1.2.6"
     }

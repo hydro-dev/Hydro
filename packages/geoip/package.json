@@ -4,7 +4,7 @@
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE",
     "dependencies": {
         "maxmind": "^4.3.1"
     },

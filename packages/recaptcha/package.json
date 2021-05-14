@@ -5,7 +5,7 @@
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined",
-    "license": "AGPL-3.0-only",
+    "license": "SEE LICENSE IN LICENSE",
     "dependencies": {
         "superagent": "^6.1.0"
     }

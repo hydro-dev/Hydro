@@ -34,13 +34,8 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 营利性组织（培训机构等）需要购买商业许可（这不会十分昂贵，请您不要绕开本限制）。  
 详细信息请通过上方方式与开发者联系。  
 在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
-若您对源码做出修改，同样需要以 Hydro Public License 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
-此限制对以下模块仍然有效：  
-
-- Hydro 插件；
-- 包括但不限于使用 http 协议与 Hydro 进行交互的组件；
-
-若您需要对这些模块闭源处理，请考虑联系我们以购买商业许可。  
+若您对源码做出修改/扩展，同样需要以 Hydro Public License 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
+若您需要进行闭源处理，请考虑联系我们以购买商业许可。  
 鉴于 Mirai 处的 [不和谐事件](https://github.com/mamoe/mirai/issues/850) 对此项目做如下声明：
 
 - 项目开源不代表开发者有义务为您提供服务。  
