@@ -81,6 +81,8 @@ export const checkIntro = (s) => { if (!isIntro()) throw new ValidationError('in
 export const isDescription = (s: any) => s && s.length < 65536;
 export const checkDescription = (s) => { if (!(s && s.length < 65536)) throw new ValidationError('description'); else return s; };
 
+export const parsePid = (s) => (Number.isNaN(+s) ? s : `P${s}`);
+
 global.Hydro.lib.validator = {
     validate,
     isTitle,
@@ -105,4 +107,6 @@ global.Hydro.lib.validator = {
     checkIntro,
     isDescription,
     checkDescription,
+
+    parsePid,
 };

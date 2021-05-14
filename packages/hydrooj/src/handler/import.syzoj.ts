@@ -15,7 +15,7 @@ import { PERM } from '../model/builtin';
 import {
     Route, Handler, Types, post,
 } from '../service/server';
-import { isPid } from '../lib/validator';
+import { isPid, parsePid } from '../lib/validator';
 import download from '../lib/download';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
@@ -221,7 +221,7 @@ class ProblemImportSYZOJHandler extends Handler {
     }
 
     @post('url', Types.Content, true)
-    @post('pid', Types.Name, true, isPid)
+    @post('pid', Types.Name, true, isPid, parsePid)
     @post('hidden', Types.Boolean)
     @post('prefix', Types.Name, true)
     @post('start', Types.UnsignedInt, true)

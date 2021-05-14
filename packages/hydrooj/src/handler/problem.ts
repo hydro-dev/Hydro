@@ -11,7 +11,7 @@ import {
     ProblemDoc, User, RecordDoc, PathComponent, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
-import { isPid } from '../lib/validator';
+import { isPid, parsePid as convertPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
 import { parseConfig } from '../lib/testdataConfig';
 import * as system from '../model/system';
@@ -358,7 +358,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @route('pid', Types.Name, null, parsePid)
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.Name, isPid, true)
+    @post('pid', Types.Name, isPid, convertPid, true)
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     async post(
@@ -600,7 +600,7 @@ export class ProblemCreateHandler extends Handler {
 
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.Name, true, isPid)
+    @post('pid', Types.Name, true, isPid, convertPid)
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
