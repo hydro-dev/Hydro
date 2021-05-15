@@ -24,6 +24,7 @@
     "@babel/runtime-corejs3": "^7.14.0",
     "@blueprintjs/core": "^3.44.2",
     "@blueprintjs/icons": "^3.26.0",
+    "@blueprintjs/select": "^3.16.2",
     "@hydrooj/utils": "^1.0.15",
     "@undefined-moe/monaco-yaml": "^2.5.0",
     "ansi_up": "^5.0.1",

@@ -39,12 +39,13 @@
       </div>
       <div class="section__body">
         <ul class="problem__tags">
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Time') }}: {{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</p></li>
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Memory') }}: {{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</p></li>
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Accepted') }}: {{ pdoc.nAccept }}</p></li>
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Accepted Ratio') }}: {% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</p></li>
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</p></li>
-          <li class="problem__tag"><p class="problem__tag-link">{{ _('Uploaded By') }}: {{ user.render_inline(owner_udoc, badge=false) }}</p></li>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Time') }}: {{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Memory') }}: {{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Submitted') }}: {{ pdoc.nSubmit }}</a>
+          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept }}</a>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Accepted Ratio') }}: {% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</span>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</span>
+          <span class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
         </ul>
       </div>
     </div>

@@ -105,13 +105,14 @@
     </ol>
   </div>
 </div>
-
+{% if pagename != 'problem_detail' %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Information') }}</h1>
   </div>
   {% include "partials/problem-sidebar-information.html" %}
 </div>
+{% endif %}
 {% if page_name == 'problem_detail' and (tdocs or ctdocs) %}
 <div class="section side">
   <div class="section__header">

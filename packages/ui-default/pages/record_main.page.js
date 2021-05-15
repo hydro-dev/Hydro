@@ -1,5 +1,6 @@
 import { NamedPage } from 'vj/misc/Page';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 
 const page = new NamedPage('record_main', async () => {
   const { default: SockJs } = await import('../components/socket');
@@ -24,7 +25,10 @@ const page = new NamedPage('record_main', async () => {
       $newTr.trigger('vjContentNew');
     }
   };
-  UserSelectAutoComplete.getOrConstruct($('.filter-user [name="uidOrName"]'), {
+  UserSelectAutoComplete.getOrConstruct($('[name="uidOrName"]'), {
+    clearDefaultValue: false,
+  });
+  ProblemSelectAutoComplete.getOrConstruct($('[name="pid"]'), {
     clearDefaultValue: false,
   });
 });
