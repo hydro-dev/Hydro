@@ -50,7 +50,7 @@ export class StorageModel {
 
     static async list(target: string, recursive = true) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        if (target?.length && !target.endsWith('/')) target += '/';
+        if (target.length && !target.endsWith('/')) target += '/';
         const results = recursive
             ? await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') } }).toArray()
             : await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) } }).toArray();

@@ -70,12 +70,15 @@ pjax.request = async (opt) => {
   }
   incProgress();
   try {
-    const data = await request.ajax({
+    const params = {
       beforeSend(xhr) {
         currentXHR = xhr;
       },
       ...options,
-    });
+    };
+    if (params.url && params.url.includes('?')) params.url += '&pjax=1';
+    else params.url = `${params.url || ''}?pjax=1`;
+    const data = await request.ajax(params);
     const meta = extractMetaData(options, data);
     currentState = {
       id: uuid(),
@@ -84,7 +87,7 @@ pjax.request = async (opt) => {
     if (options.push) {
       window.history.replaceState(currentState, null, meta.url);
     }
-    document.title = meta.title;
+    if (meta.title) document.title = meta.title;
     data.fragments.forEach((fragment) => {
       if (process.env.NODE_ENV !== 'production') {
         if (fragment.html === undefined) {
@@ -120,7 +123,7 @@ pjax.request = async (opt) => {
   } catch (err) {
     if (!err.aborted) {
       Notification.error(err.message);
-      console.log(err);
+      console.error(err);
     }
   } finally {
     decProgress();
@@ -128,13 +131,9 @@ pjax.request = async (opt) => {
 };
 
 function handlePopState(ev) {
-  if (!ev.originalEvent) {
-    return;
-  }
+  if (!ev.originalEvent) return;
   const { state } = ev.originalEvent;
-  if (!state) {
-    return;
-  }
+  if (!state) return;
   if (!state.id || (currentState && state.id === currentState.id)) {
     return;
   }

@@ -28,6 +28,7 @@ for (const lang in global.Hydro.locales) {
 export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
 export const FLAG_SECRET = 4;
+export const FLAG_PRO = 8;
 
 export const PREFERENCE_SETTINGS: _Setting[] = [];
 export const ACCOUNT_SETTINGS: _Setting[] = [];
@@ -167,7 +168,8 @@ SystemSetting(
     Setting('setting_server', 'server.center', 'https://hydro.undefined.moe:8443/center', 'text', 'server.center', '', FLAG_HIDDEN),
     Setting('setting_server', 'server.proxy', false, 'boolean', 'server.proxy', 'Use hydro center proxy to send problems'),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
-    Setting('setting_server', 'server.worker', 1, 'number', 'server.worker', 'Server Workers Number'),
+    Setting('setting_server', 'server.displayName', 'Hydro', 'text', 'server.name', 'Server Name (Global Display)', FLAG_PRO),
+    Setting('setting_server', 'server.worker', 1, 'number', 'server.worker', 'Server Workers Number', FLAG_PRO),
     Setting('setting_server', 'server.hostname', 'oj.undefined.moe', 'text', 'server.hostname', 'Server Hostname'),
     Setting('setting_server', 'server.host', 'oj.undefined.moe', 'text', 'server.host', 'Server Host'),
     Setting('setting_server', 'server.url', '/', 'text', 'server.url', 'Server BaseURL'),
@@ -176,9 +178,9 @@ SystemSetting(
     Setting('setting_server', 'server.xff', null, 'text', 'server.xff', 'IP Header'),
     Setting('setting_server', 'server.xhost', null, 'text', 'server.xhost', 'Hostname Header'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'server.language', 'Default display language'),
-    Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login'),
+    Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login', FLAG_PRO),
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
-    Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege'),
+    Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege', FLAG_PRO),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'pagination.problem', 'Problems per page'),
     Setting('setting_basic', 'pagination.contest', 20, 'number', 'pagination.contest', 'Contests per page'),
@@ -244,6 +246,7 @@ global.Hydro.model.setting = {
     FLAG_HIDDEN,
     FLAG_DISABLED,
     FLAG_SECRET,
+    FLAG_PRO,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
     SETTINGS,

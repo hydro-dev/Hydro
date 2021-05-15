@@ -1,0 +1,66 @@
+{% import "components/record.html" as record with context %}
+{% import "components/problem.html" as problem with context %}
+{% import "components/user.html" as user with context %}
+<div class="section__body typo" data-fragment-id="problem-sidebar-information">
+  <dl class="large horizontal">
+    <dt>{{ _('ID') }}</dt>
+    <dd>{{ pdoc.docId }}</dd>
+    <dt>{{ _('Time') }}</dt>
+    <dd>{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax  }}ms</dd>
+    <dt>{{ _('Memory') }}</dt>
+    <dd>{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</dd>
+  {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
+  {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+    <dt>{{ _('Submission') }}</dt>
+    <dd>
+    {% if pdoc.psdoc.status %}
+      <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
+      <a href="{{ url('record_detail', rid=pdoc.psdoc.rid) }}" class="record-status--text {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
+        {{ model.builtin.STATUS_TEXTS[pdoc['psdoc']['status']] }}
+      </a>
+    {% else %}
+      {{ _('(None)') }}
+    {% endif %}
+    </dd>
+  {% endif %}
+  {% endif %}
+    <dt>{{ _('Difficulty') }}</dt>
+    <dd>{{ pdoc['difficulty'] or _('(None)') }}</dd>
+    <dt>{{ _('Category') }}</dt>
+    <dd>
+      {% if pdoc['category'] %}
+        <span class="hasjs--hide" name="problem-sidebar__categories">
+        {%- for category in pdoc['category'] -%}
+          <a href="{{ url('problem_category', category=category) }}">{{ category }}</a>
+          {% if loop.index < pdoc['category']|length %}
+            {{ _('problem-subcategory-delim') }}
+          {% endif %}
+        {%- endfor -%}
+        </span>
+        <span class="nojs--hide">
+          <a href="javascript:;" name="problem-sidebar__show-category">{{ _('page.problem_detail.sidebar.show_category') }}</a>
+        </span>
+      {% else %}
+        {{ _('(None)') }}
+      {% endif %}
+    </dd>
+    <dt>{{ _('Tags') }}</dt>
+    <dd>
+      {{ problem.render_problem_tags(pdoc, true) }}
+    </dd>
+    <dt>{{ _('# Submissions') }}</dt>
+    <dd><a href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ pdoc.nSubmit }}</a></dd>
+    {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
+    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+    <dt>{{ _('# My Submissions') }}</dt>
+    <dd><a href="{{ url('record_main', query={pid:pdoc.docId, uidOrName:handler.user._id}) }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
+    {% endif %}
+    {% endif %}
+    <dt>{{ _('Accepted') }}</dt>
+    <dd>{{ pdoc.nAccept }}</dd>
+    <dt>{{ _('Accepted Ratio') }}</dt>
+    <dd>{% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
+    <dt>{{ _('Uploaded By') }}</dt>
+    <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
+  </dl>
+</div>

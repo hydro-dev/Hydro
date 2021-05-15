@@ -8,6 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES6",
     "baseUrl": ".",
+    "moduleResolution": "node",
     "paths": {
       "vj/*": [
         "./*"

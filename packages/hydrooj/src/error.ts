@@ -92,6 +92,7 @@ export const ValidationError = Err('ValidationError', ForbiddenError, function (
     return 'Field {0} or {1} validation failed.';
 });
 export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenError, "You haven't attended this contest yet.");
+export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');
 export const ContestAlreadyAttendedError = Err('ContestAlreadyAttendedError', ForbiddenError, "You've already attended this contest.");
 export const ContestNotLiveError = Err('ContestNotLiveError', ForbiddenError, 'This contest is not live.');
 export const ContestScoreboardHiddenError = Err('ContestScoreboardHiddenError', ForbiddenError, 'Contest scoreboard is not visible.');
@@ -142,6 +143,7 @@ global.Hydro.error = {
     OpcountExceededError,
     PermissionError,
     PrivilegeError,
+    RequireProError,
     NoProblemError,
     ValidationError,
     ProblemNotFoundError,

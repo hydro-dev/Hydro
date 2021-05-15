@@ -1,5 +1,18 @@
+import { Position, Toaster, Intent } from '@blueprintjs/core';
 import tpl from 'vj/utils/tpl';
 import zIndexManager from 'vj/utils/zIndexManager';
+
+const ToasterContainer = document.createElement('div');
+ToasterContainer.style.position = 'fixed';
+ToasterContainer.style.bottom = '0px';
+ToasterContainer.style.zIndex = '9999';
+document.body.append(ToasterContainer);
+
+export const AppToaster = Toaster.create({
+  className: 'recipe-toaster',
+  position: Position.LEFT_BOTTOM,
+  usePortal: true,
+}, ToasterContainer);
 
 export default class Notification {
   constructor({
@@ -37,19 +50,19 @@ export default class Notification {
   }
 
   static success(message, duration) {
-    return new Notification({ type: 'success', message, duration }).show();
+    return AppToaster.show({ message, timeout: duration, intent: Intent.SUCCESS });
   }
 
   static info(message, duration) {
-    return new Notification({ type: 'info', message, duration }).show();
+    return AppToaster.show({ message, timeout: duration, intent: Intent.PRIMARY });
   }
 
   static warn(message, duration) {
-    return new Notification({ type: 'warn', message, duration }).show();
+    return AppToaster.show({ message, timeout: duration, intent: Intent.WARNING });
   }
 
   static error(message, duration) {
-    return new Notification({ type: 'error', message, duration }).show();
+    return AppToaster.show({ message, timeout: duration, intent: Intent.DANGER });
   }
 }
 

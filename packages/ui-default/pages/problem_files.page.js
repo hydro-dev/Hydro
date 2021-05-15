@@ -6,9 +6,9 @@ import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog, ActionDialog } from 'vj/components/dialog/index';
 import request from 'vj/utils/request';
+import pjax from 'vj/utils/pjax';
 import pipeStream from 'vj/utils/pipeStream';
 import tpl from 'vj/utils/tpl';
-import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 
 // Firefox have no WritableStream
@@ -96,8 +96,7 @@ const page = new NamedPage('problem_files', () => {
       }
       await Promise.all(tasks);
       Notification.success('File uploaded successfully.');
-      await delay(2000);
-      window.location.reload();
+      await pjax.request({ push: false });
     } catch (e) {
       console.error(e);
       Notification.error(`File upload fail: ${e.toString()}`);
@@ -127,8 +126,7 @@ const page = new NamedPage('problem_files', () => {
         type,
       });
       Notification.success(i18n('Selected files have been deleted.'));
-      await delay(2000);
-      window.location.reload();
+      await pjax.request({ push: false });
     } catch (error) {
       Notification.error(error.message);
     }
@@ -189,14 +187,22 @@ const page = new NamedPage('problem_files', () => {
    * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
    */
   async function handleEdit(type, ev) {
-    ev.preventDefault();
-    const filename = ev.currentTarget.closest('[data-filename]').getAttribute('data-filename');
-    const filesize = +ev.currentTarget.closest('[data-size]').getAttribute('data-size');
-    const link = $(ev.currentTarget).find('a').attr('href');
-    if (filesize > 8 * 1024 * 1024) Notification.error(i18n('file too large'));
-    Notification.info(i18n('Loading file...'));
-    const res = await request.get(link);
-    const content = await request.get(res.url, undefined, { dataType: 'text' });
+    if (ev) ev.preventDefault();
+    const filename = ev
+      ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
+      // eslint-disable-next-line no-alert
+      : prompt('Filename');
+    const filesize = ev
+      ? +ev.currentTarget.closest('[data-size]').getAttribute('data-size')
+      : 0;
+    let content = '';
+    if (ev) {
+      const link = $(ev.currentTarget).find('a').attr('href');
+      if (filesize > 8 * 1024 * 1024) Notification.error(i18n('file too large'));
+      Notification.info(i18n('Loading file...'));
+      const res = await request.get(link);
+      content = await request.get(res.url, undefined, { dataType: 'text' });
+    } else Notification.info(i18n('Loading editor...'));
     const val = await startEdit(filename, content);
     console.log(val);
     if (typeof val !== 'string') return;
@@ -208,8 +214,7 @@ const page = new NamedPage('problem_files', () => {
     data.append('operation', 'upload_file');
     await request.postFile('', data);
     Notification.success(i18n('File saved.'));
-    await delay(2000);
-    window.location.reload();
+    await pjax.request({ push: false });
   }
 
   $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
@@ -219,9 +224,11 @@ const page = new NamedPage('problem_files', () => {
   $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
   $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
   $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
+  $('[name="create_testdata"]').on('click', () => handleEdit('testdata'));
   $('[name="download_selected_testdata"]').on('click', () => handleClickDownloadSelected('testdata'));
   $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
   $('[name="upload_file"]').on('click', () => handleClickUpload('additional_file'));
+  $('[name="create_file"]').on('click', () => handleEdit('additional_file'));
   $('[name="download_selected_file"]').on('click', () => handleClickDownloadSelected('additional_file'));
   $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
 });
