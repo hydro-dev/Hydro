@@ -1,7 +1,7 @@
-import type { Readable } from 'stream';
 import { ObjectID, FilterQuery } from 'mongodb';
 import { Dictionary, escapeRegExp, pick } from 'lodash';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
+import type { Readable } from 'stream';
 import * as document from './document';
 import { STATUS } from './builtin';
 import storage from './storage';

@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
-import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import serialize from 'serialize-javascript';
 import { argv } from 'yargs';
+import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import type { Handler } from './server';
 import { Logger } from '../logger';
 import type {

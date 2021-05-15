@@ -4,13 +4,13 @@ import xml2js from 'xml2js';
 import fs from 'fs-extra';
 import { filter } from 'lodash';
 import decodeHTML from 'decode-html';
-import type { ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
 import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import solution from 'hydrooj/dist/model/solution';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { FileTooLargeError, ValidationError } from 'hydrooj/dist/error';
+import type { ProblemConfig } from 'hydrooj';
 
 class FpsProblemImportHandler extends Handler {
     async get() {

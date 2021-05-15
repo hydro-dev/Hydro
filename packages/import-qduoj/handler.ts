@@ -4,12 +4,12 @@ import os from 'os';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
-import type { ContentNode, ProblemConfig } from 'hydrooj';
 import { Route, Handler } from 'hydrooj/dist/service/server';
 import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
+import type { ContentNode, ProblemConfig } from 'hydrooj';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
