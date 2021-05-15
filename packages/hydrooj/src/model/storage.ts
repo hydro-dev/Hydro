@@ -19,7 +19,7 @@ export class StorageModel {
             const { metaData, size, etag } = await storage.getMeta(current._id);
             await StorageModel.coll.updateOne({ path }, {
                 $set: {
-                    meta: metaData, size, etag, lastModified: new Date(),
+                    meta: metaData, size, etag, lastModified: new Date(), autoDelete: null,
                 },
             });
             return path;
@@ -76,7 +76,20 @@ export class StorageModel {
     }
 }
 
-bus.on('app/started', () => StorageModel.coll.createIndex({ path: 1 }, { unique: true }));
+async function clean() {
+    let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
+    while (res.value) {
+        // eslint-disable-next-line no-await-in-loop
+        // await storage.del(res.value._id);
+        // eslint-disable-next-line no-await-in-loop
+        res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
+    }
+    setTimeout(clean, 10000);
+}
+bus.on('app/started', () => {
+    clean();
+    return StorageModel.coll.createIndex({ path: 1 }, { unique: true });
+});
 
 global.Hydro.model.storage = StorageModel;
 export default StorageModel;
