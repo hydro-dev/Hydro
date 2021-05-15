@@ -30,6 +30,7 @@ rules:
   global-require: 0
   guard-for-in: 0
   implicit-arrow-linebreak: 0
+  import/newline-after-import: 0
   import/no-cycle: 0
   import/no-extraneous-dependencies: 0
   import/no-named-as-default: 0

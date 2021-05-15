@@ -1,3 +1,4 @@
+{% set no_path_section = true %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <script>
@@ -23,21 +24,35 @@
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
+      <div class="section__header" style="align: center">
+        <h1 class="section__title">
+          {% if rdoc %}
+            <a href="{{ url('record_detail', {rid:rdoc._id}) }}">
+            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+            <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+              {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
+            </span>
+            </a>
+          {% endif %}
+          #{{ pdoc.docId }}. {{ pdoc.title }}
+        </h1>
+      </div>
+      <div class="section__body">
+        <ul class="problem__tags">
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Time') }}: {{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</p></li>
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Memory') }}: {{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</p></li>
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Accepted') }}: {{ pdoc.nAccept }}</p></li>
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Accepted Ratio') }}: {% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</p></li>
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</p></li>
+          <li class="problem__tag"><p class="problem__tag-link">{{ _('Uploaded By') }}: {{ user.render_inline(owner_udoc, badge=false) }}</p></li>
+        </ul>
+      </div>
+    </div>
+    <div class="section">
       <div class="problem-content-container"><div class="problem-content" data-marker-enabled>
-        {% if rdoc %}
-          <div class="section__header scratchpad--hide">
-            <h1 class="section__title">
-              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
-              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-                {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
-              </span>
-            </h1>
-          </div>
-        {% else %}
         <div class="section__header non-scratchpad--hide">
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
-        {% endif %}
         <div class="section__body typo">
         {% if not pdoc.data.length %}
           <blockquote class="warn">

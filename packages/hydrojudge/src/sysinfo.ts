@@ -12,7 +12,7 @@ async function stackSize() {
     let output = '';
     try {
         const context: any = {
-            lang: 'ccWithoutO2',
+            lang: 'cc',
             code: `#include <iostream>
 using namespace std;
 int i=1;
