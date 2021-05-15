@@ -29,7 +29,7 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 ## 开源许可
 
-本项目基于 Hydro Public License 开源。（基于 AGPL v3 扩展，增加商用限制）  
+本项目基于 Hydro Public License 开源。（基于 LGPL v3 扩展，增加商用限制）  
 允许非营利性组织不受限制直接使用 Hydro。  
 营利性组织（培训机构等）需要购买商业许可（这不会十分昂贵，请您不要绕开本限制）。  
 详细信息请通过上方方式与开发者联系。  
