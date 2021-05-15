@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.8.15",
+  "version": "4.8.16",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -38,6 +38,7 @@
     "copy-webpack-plugin": "^6.1.1",
     "css-loader": "^4.2.2",
     "diff-dom": "^4.2.2",
+    "echarts": "^5.1.1",
     "emojify.js": "^1.1.0",
     "eslint": "^7.26.0",
     "eslint-config-airbnb": "^18.2.1",

@@ -150,10 +150,9 @@ async function runInDomain(domainId: string, isSub: boolean, report: Function) {
     await domain.setMultiUserInDomain(domainId, {}, { rp: 1500 });
     const tasks = [];
     for (const uid in udict) {
+        const rp = udict[uid] + (deltaudict[uid] || 0);
         tasks.push(
-            domain.setUserInDomain(
-                domainId, parseInt(uid, 10), { rp: udict[uid] + (deltaudict[uid] || 0) },
-            ),
+            domain.updateUserInDomain(domainId, +uid, { $set: { rp }, $push: { ratingHistory: rp } }),
         );
     }
     await Promise.all(tasks);

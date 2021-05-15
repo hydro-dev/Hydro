@@ -17,7 +17,7 @@ export default class Tab extends DOMAttachedObject {
       const targetIndex = $(ev.currentTarget).attr('data-tab-index');
       const $container = $(ev.currentTarget).closest('.section__tab-container');
       const tabInstance = Tab.get($container);
-      tabInstance.switchToTab(parseInt(targetIndex, 10));
+      tabInstance.switchToTab(+targetIndex);
     });
   }
 

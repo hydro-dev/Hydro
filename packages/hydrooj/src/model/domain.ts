@@ -205,6 +205,12 @@ class DomainModel {
         return await collUser.updateOne({ domainId, uid }, { $set: params }, { upsert: true });
     }
 
+    static async updateUserInDomain(domainId: string, uid: number, update: any) {
+        const udoc = await UserModel.getById(domainId, uid);
+        deleteUserCache(udoc);
+        return await collUser.updateOne({ domainId, uid }, update, { upsert: true });
+    }
+
     @ArgMethod
     static async incUserInDomain(domainId: string, uid: number, field: string, n: number = 1) {
         // @ts-ignore
