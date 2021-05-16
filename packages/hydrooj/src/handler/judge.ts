@@ -38,6 +38,7 @@ async function _postJudge(rdoc: RecordDoc) {
     await Promise.all([
         record.update(rdoc.domainId, rdoc._id, { effective: true }),
         problem.edit(pdoc.domainId, pdoc.docId, { difficulty }),
+        problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
     ]);
     await bus.serial('record/judge', rdoc, updated);
 }

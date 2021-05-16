@@ -114,7 +114,7 @@ export class ProblemModel {
         return document.deleteSub(domainId, document.TYPE_PROBLEM, pid, key, values);
     }
 
-    static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc>, n: number): Promise<ProblemDoc> {
+    static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
         return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
     }
 
