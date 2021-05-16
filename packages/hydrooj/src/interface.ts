@@ -201,6 +201,7 @@ declare module './model/problem' {
         additional_file: FileInfo[],
         hidden: boolean,
         html?: boolean,
+        stats?: any,
         difficulty?: number,
         /** @deprecated */
         category?: string[],

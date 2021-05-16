@@ -148,7 +148,9 @@ DomainUserSetting(
     Setting('setting_storage', 'nLike', 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rp', 1500, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rpdelta', 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rank', 0, 'number', 'Rank', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'ratingHistory', [], 'text', 'Rating History', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 SystemSetting(

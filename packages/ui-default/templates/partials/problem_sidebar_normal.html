@@ -105,12 +105,19 @@
     </ol>
   </div>
 </div>
-{% if pagename != 'problem_detail' %}
+{% if page_name != 'problem_detail' %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Information') }}</h1>
   </div>
   {% include "partials/problem-sidebar-information.html" %}
+</div>
+{% else %}
+<div class="section side nojs-hide">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Statistics') }}</h1>
+  </div>
+  <div id="submission-detail-placeholder" style="width: 100%; height:230px"></div>
 </div>
 {% endif %}
 {% if page_name == 'problem_detail' and (tdocs or ctdocs) %}

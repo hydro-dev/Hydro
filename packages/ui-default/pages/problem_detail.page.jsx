@@ -1,4 +1,5 @@
 import yaml from 'js-yaml';
+import * as echarts from 'echarts';
 import { NamedPage } from 'vj/misc/Page';
 import Navigation from 'vj/components/navigation';
 import Notification from 'vj/components/notification/index';
@@ -105,7 +106,7 @@ class ProblemPageExtender {
   }
 }
 
-const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], () => {
+const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], async (pagename) => {
   let reactLoaded = false;
   let renderReact = null;
   let unmountReact = null;
@@ -247,6 +248,32 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   });
   $('[name="problem-sidebar__send-to"]').on('click', handleClickCopyProblem);
   loadSubjective();
+
+  if (pagename === 'contest_detail_problem') return;
+  const data = await request.get('');
+  const $dom = document.getElementById('submission-detail-placeholder');
+  const chart = echarts.init($dom);
+  chart.setOption({
+    tooltip: { trigger: 'item' },
+    series: [
+      {
+        name: 'Submissions',
+        type: 'pie',
+        radius: [10, 70],
+        roseType: 'radius',
+        data: [
+          { value: data.pdoc.stats?.TLE, name: 'TLE' },
+          { value: data.pdoc.stats?.AC, name: 'AC' },
+          { value: data.pdoc.stats?.MLE, name: 'MLE' },
+          { value: data.pdoc.stats?.WA, name: 'WA' },
+          { value: data.pdoc.stats?.RE, name: 'RE' },
+          { value: data.pdoc.stats?.CE, name: 'CE' },
+          { value: data.pdoc.stats?.SE, name: 'SE' },
+          { value: data.pdoc.stats?.IGN, name: 'IGN' },
+        ],
+      },
+    ],
+  });
 });
 
 export default page;

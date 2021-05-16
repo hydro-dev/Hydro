@@ -23,7 +23,7 @@ export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
         'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
-        'tag', 'hidden',
+        'tag', 'hidden', 'stats',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
@@ -275,6 +275,7 @@ ProblemModel.extend((docId, pid) => ({
     tag: [],
     data: [],
     additional_file: [],
+    stats: {},
     hidden: true,
     config: '',
     difficulty: 0,

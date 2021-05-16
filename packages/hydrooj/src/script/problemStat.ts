@@ -5,18 +5,17 @@ import * as document from '../model/document';
 
 export const description = 'Recalculates nSubmit and nAccept in problem status.';
 
-export async function udoc() {
+const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
+
+export async function udoc(report) {
+    report({ message: 'Udoc' });
     const pipeline = [
         { $match: { hidden: false, type: { $ne: 'run' } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
                 nSubmit: { $sum: 1 },
-                nAccept: {
-                    $sum: {
-                        $cond: [{ $eq: ['$status', STATUS.STATUS_ACCEPTED] }, 1, 0],
-                    },
-                },
+                nAccept: sumStatus(STATUS.STATUS_ACCEPTED),
             },
         },
         {
@@ -48,7 +47,8 @@ export async function udoc() {
     if (bulk.length) await bulk.execute();
 }
 
-export async function psdoc() {
+export async function psdoc(report) {
+    report({ message: 'Psdoc' });
     const pipeline = [
         { $match: { hidden: false, type: { $ne: 'run' } } },
         {
@@ -65,18 +65,22 @@ export async function psdoc() {
     }
 }
 
-export async function pdoc() {
+export async function pdoc(report) {
+    report({ message: 'Pdoc' });
     const pipeline = [
         { $match: { hidden: false, type: { $ne: 'run' }, effective: true } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
                 nSubmit: { $sum: 1 },
-                nAccept: {
-                    $sum: {
-                        $cond: [{ $eq: ['$status', STATUS.STATUS_ACCEPTED] }, 1, 0],
-                    },
-                },
+                nAccept: sumStatus(STATUS.STATUS_ACCEPTED),
+                WA: sumStatus(STATUS.STATUS_WRONG_ANSWER),
+                TLE: sumStatus(STATUS.STATUS_TIME_LIMIT_EXCEEDED),
+                MLE: sumStatus(STATUS.STATUS_MEMORY_LIMIT_EXCEEDED),
+                RE: sumStatus(STATUS.STATUS_RUNTIME_ERROR),
+                SE: sumStatus(STATUS.STATUS_SYSTEM_ERROR),
+                IGN: sumStatus(STATUS.STATUS_CANCELED),
+                CE: sumStatus(STATUS.STATUS_COMPILE_ERROR),
             },
         },
         {
@@ -84,11 +88,20 @@ export async function pdoc() {
                 _id: { domainId: '$_id.domainId', pid: '$_id.pid' },
                 nSubmit: { $sum: '$nSubmit' },
                 nAccept: { $sum: { $min: ['$nAccept', 1] } },
+                AC: { $sum: '$nAccept' },
+                WA: { $sum: '$WA' },
+                TLE: { $sum: '$TLE' },
+                MLE: { $sum: '$MLE' },
+                RE: { $sum: '$RE' },
+                SE: { $sum: '$SE' },
+                IGN: { $sum: '$IGN' },
+                CE: { $sum: '$CE' },
             },
         },
     ];
     let bulk = db.collection('document').initializeUnorderedBulkOp();
     const data = db.collection('record').aggregate(pipeline);
+    let cnt = 0;
     while (await data.hasNext()) {
         const adoc = await data.next() as any;
         bulk.find({
@@ -99,20 +112,37 @@ export async function pdoc() {
             $set: {
                 nSubmit: adoc.nSubmit,
                 nAccept: adoc.nAccept,
+                'stats.AC': adoc.AC,
+                'stats.WA': adoc.WA,
+                'stats.TLE': adoc.TLE,
+                'stats.MLE': adoc.MLE,
+                'stats.RE': adoc.RE,
+                'stats.SE': adoc.SE,
+                'stats.IGN': adoc.IGN,
+                'stats.CE': adoc.CE,
             },
         });
         if (bulk.length > 100) {
             await bulk.execute();
-            bulk = db.collection('domain.user').initializeUnorderedBulkOp();
+            cnt++;
+            report({ message: `${cnt * 100} pdocs updated` });
+            bulk = db.collection('document').initializeUnorderedBulkOp();
         }
     }
     if (bulk.length) await bulk.execute();
 }
 
-export async function run() {
-    return await Promise.all([udoc(), pdoc(), psdoc()]);
+export async function run(arg, report) {
+    if (arg.pdoc === undefined || arg.pdoc) await pdoc(report);
+    if (arg.udoc === undefined || arg.udoc) await udoc(report);
+    if (arg.psdoc === undefined || arg.psdoc) await psdoc(report);
+    return true;
 }
 
-export const validate = {};
+export const validate = {
+    udoc: 'boolean?',
+    pdoc: 'boolean?',
+    psdoc: 'boolean?',
+};
 
 global.Hydro.script.problemStat = { run, description, validate };
