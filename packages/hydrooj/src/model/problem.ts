@@ -115,7 +115,7 @@ export class ProblemModel {
     }
 
     static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
-        return document.inc(domainId, document.TYPE_PROBLEM, _id, field, n);
+        return document.inc(domainId, document.TYPE_PROBLEM, _id, field as any, n);
     }
 
     static count(domainId: string, query: FilterQuery<ProblemDoc>) {
