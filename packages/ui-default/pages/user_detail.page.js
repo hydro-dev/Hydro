@@ -80,7 +80,7 @@ const page = new NamedPage('user_detail', async () => {
     series: {
       name: 'Rating',
       type: 'line',
-      data: history,
+      data: history.map((i) => Math.floor(i)),
     },
   });
 });
