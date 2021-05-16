@@ -21,7 +21,7 @@ const page = new NamedPage('user_detail', async () => {
     });
   });
   const data = await request.get('');
-  const history = data.udoc?.history || [];
+  const history = data.udoc?.ratingHistory || [];
   while (history.length > 30) history.shift();
   while (history.length < 30) history.unshift(1500);
   const $dom = document.getElementById('rating-placeholder');
@@ -38,7 +38,7 @@ const page = new NamedPage('user_detail', async () => {
       bottom: '10%',
     },
     xAxis: { data: history.map((x, i) => moment().add(-30 + i, 'days').fromNow()) },
-    yAxis: {},
+    yAxis: { type: 'category' },
     toolbox: {
       right: 10,
       feature: {
