@@ -27,7 +27,7 @@ export async function udoc(report) {
         },
     ];
     let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
-    const cursor = db.collection('record').aggregate(pipeline);
+    const cursor = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
     while (await cursor.hasNext()) {
         const adoc = await cursor.next() as any;
         bulk.find({
@@ -58,7 +58,7 @@ export async function psdoc(report) {
             },
         },
     ];
-    const data = db.collection('record').aggregate(pipeline);
+    const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
     while (await data.hasNext()) {
         const adoc = await data.next() as any;
         await document.setStatus(adoc._id.domainId, document.TYPE_PROBLEM, adoc._id.pid, adoc._id.uid, { nSubmit: adoc.nSubmit });
@@ -99,29 +99,33 @@ export async function pdoc(report) {
             },
         },
     ];
+    for (let i = 0; i <= 100; i++) {
+        pipeline[1].$group[`s${i}`] = { $sum: { $cond: [{ $eq: ['$score', i] }, 1, 0] } };
+        pipeline[2].$group[`s${i}`] = { $sum: `$s${i}` };
+    }
     let bulk = db.collection('document').initializeUnorderedBulkOp();
-    const data = db.collection('record').aggregate(pipeline);
+    const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
     let cnt = 0;
     while (await data.hasNext()) {
         const adoc = await data.next() as any;
+        const $set = {
+            nSubmit: adoc.nSubmit,
+            nAccept: adoc.nAccept,
+            'stats.AC': adoc.AC,
+            'stats.WA': adoc.WA,
+            'stats.TLE': adoc.TLE,
+            'stats.MLE': adoc.MLE,
+            'stats.RE': adoc.RE,
+            'stats.SE': adoc.SE,
+            'stats.IGN': adoc.IGN,
+            'stats.CE': adoc.CE,
+        };
+        for (let i = 0; i <= 100; i++) if (adoc[`s${i}`]) $set[`stats.s${i}`] = adoc[`s${i}`];
         bulk.find({
             domainId: adoc._id.domainId,
             docType: document.TYPE_PROBLEM,
             docId: adoc._id.pid,
-        }).updateOne({
-            $set: {
-                nSubmit: adoc.nSubmit,
-                nAccept: adoc.nAccept,
-                'stats.AC': adoc.AC,
-                'stats.WA': adoc.WA,
-                'stats.TLE': adoc.TLE,
-                'stats.MLE': adoc.MLE,
-                'stats.RE': adoc.RE,
-                'stats.SE': adoc.SE,
-                'stats.IGN': adoc.IGN,
-                'stats.CE': adoc.CE,
-            },
-        });
+        }).updateOne({ $set });
         if (bulk.length > 100) {
             await bulk.execute();
             cnt++;

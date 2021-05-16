@@ -9,6 +9,7 @@ import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import base64 from 'vj/utils/base64';
+import { getScoreColor } from 'vj/../utils/lib/status';
 
 class ProblemPageExtender {
   constructor() {
@@ -251,9 +252,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
 
   if (pagename === 'contest_detail_problem') return;
   const data = await request.get('');
-  const $dom = document.getElementById('submission-detail-placeholder');
-  const chart = echarts.init($dom);
-  chart.setOption({
+  data.pdoc.stats = data.pdoc.stats || {};
+  const $status = document.getElementById('submission-status-placeholder');
+  const statusChart = echarts.init($status);
+  statusChart.setOption({
     tooltip: { trigger: 'item' },
     series: [
       {
@@ -262,17 +264,32 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         radius: [10, 70],
         roseType: 'radius',
         data: [
-          { value: data.pdoc.stats?.TLE, name: 'TLE' },
-          { value: data.pdoc.stats?.AC, name: 'AC' },
-          { value: data.pdoc.stats?.MLE, name: 'MLE' },
-          { value: data.pdoc.stats?.WA, name: 'WA' },
-          { value: data.pdoc.stats?.RE, name: 'RE' },
-          { value: data.pdoc.stats?.CE, name: 'CE' },
-          { value: data.pdoc.stats?.SE, name: 'SE' },
-          { value: data.pdoc.stats?.IGN, name: 'IGN' },
+          { value: data.pdoc.stats.TLE, name: 'TLE' },
+          { value: data.pdoc.stats.AC, name: 'AC' },
+          { value: data.pdoc.stats.MLE, name: 'MLE' },
+          { value: data.pdoc.stats.WA, name: 'WA' },
+          { value: data.pdoc.stats.RE, name: 'RE' },
+          { value: data.pdoc.stats.CE, name: 'CE' },
+          { value: data.pdoc.stats.SE, name: 'SE' },
+          { value: data.pdoc.stats.IGN, name: 'IGN' },
         ],
       },
     ],
+  });
+  const $score = document.getElementById('submission-score-placeholder');
+  const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => data.pdoc.stats[`s${i}`]);
+  const scoreChart = echarts.init($score);
+  scoreChart.setOption({
+    tooltip: { trigger: 'item' },
+    xAxis: { data: x },
+    yAxis: {},
+    series: [{
+      data: x.map((i) => ({
+        value: data.pdoc.stats[`s${i}`],
+        itemStyle: { color: getScoreColor(i) },
+      })),
+      type: 'bar',
+    }],
   });
 });
 
