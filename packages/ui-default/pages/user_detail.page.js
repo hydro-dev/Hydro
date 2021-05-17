@@ -6,7 +6,6 @@ import substitute from 'vj/utils/substitute';
 import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
 import base64 from 'vj/utils/base64';
-import request from 'vj/utils/request';
 
 const page = new NamedPage('user_detail', async () => {
   $('[name="profile_contact_copy"]').get().forEach((el) => {
@@ -20,8 +19,7 @@ const page = new NamedPage('user_detail', async () => {
       Notification.error(substitute(i18n('Copy "{data}" failed :('), { data: decoded }));
     });
   });
-  const data = await request.get('');
-  const history = data.udoc?.ratingHistory || [];
+  const history = UiContext.udoc?.ratingHistory || [];
   while (history.length > 30) history.shift();
   while (history.length < 30) history.unshift(1500);
   const $dom = document.getElementById('rating-placeholder');

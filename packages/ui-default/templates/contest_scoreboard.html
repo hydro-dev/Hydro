@@ -41,7 +41,7 @@
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
                 <a href="{{ url('record_detail', rid=column.raw) }}">
-                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.value) }}">{{ column.value }}</span>
+                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.value) }}">{{ column.value|safe }}</span>
                 </a>
               {% else %}
                 {{ column.value }}

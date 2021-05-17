@@ -116,14 +116,14 @@ const acm: ContestRule = {
                 let colTimeStr;
                 if (doc.accept) {
                     rid = doc.rid;
-                    colAccepted = _('Accepted');
+                    colAccepted = `${_('Accepted')} ${doc.naccept ? ` (-${doc.naccept})` : ''}`;
                     colTime = doc.time;
-                    colTimeStr = misc.formatSeconds(colTime) + (doc.naccept ? ` (-${doc.naccept})` : '');
+                    colTimeStr = misc.formatSeconds(colTime);
                 } else {
                     rid = null;
-                    colAccepted = '-';
+                    colAccepted = doc.naccept ? `(-${doc.naccept})` : '-';
                     colTime = '-';
-                    colTimeStr = doc.naccept ? `(-${doc.naccept})` : '-';
+                    colTimeStr = '';
                 }
                 if (isExport) {
                     row.push({ type: 'string', value: colAccepted });
@@ -132,7 +132,7 @@ const acm: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        value: '{0}\n{1}'.format(colAccepted, colTimeStr),
+                        value: '{0}<br>{1}'.format(colAccepted, colTimeStr),
                         raw: rid,
                     });
                 }

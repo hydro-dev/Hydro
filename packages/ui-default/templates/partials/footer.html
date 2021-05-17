@@ -74,6 +74,11 @@
             <li class="footer__extra-link-item">{{ html|safe }}</li>
           {%- endfor -%}
           <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a></li>
+          {% if model.system.get('server.pro') %}
+            <li class="footer__extra-link-item">Professional Version</li>
+          {% else %}
+            <li class="footer__extra-link-item">Community Version (for non-commercial use only)</li>
+          {% endif %}
         </ol>
       </div>
     </div>

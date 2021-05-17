@@ -1,6 +1,7 @@
 {% import "components/home.html" as home with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
+{{ set(UiContext, 'udoc', udoc) }}
 <style>
   .user-profile-bg {
     background-image : url("{{ udoc.backgroundImage }}");
