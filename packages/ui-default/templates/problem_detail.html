@@ -29,13 +29,11 @@
         <h1 class="section__title">
           {% if rdoc %}
             <a href="{{ url('record_detail', {rid:rdoc._id}) }}">
-            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
-            <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
-              {{ model.builtin.STATUS_TEXTS[rdoc.status] }}{% if rdoc.status != model.builtin.STATUS.STATUS_ACCEPTED %} {{ rdoc.score }}{% endif %}
-            </span>
+              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">{{ rdoc.score }}</span>
             </a>
           {% endif %}
-          #{{ pdoc.docId }}. {{ pdoc.title }}
+          #{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
         </h1>
       </div>
       <div class="section__body">
