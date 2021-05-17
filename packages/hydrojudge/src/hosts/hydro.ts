@@ -70,7 +70,8 @@ class JudgeTask {
         tmpfs.mount(this.tmpdir, '512m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
         try {
-            await this.doSubmission();
+            if (typeof this.input === 'string') await this.run();
+            else await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
@@ -94,6 +95,11 @@ class JudgeTask {
         for (const clean of this.clean) await clean().catch(noop);
         tmpfs.umount(this.tmpdir);
         fs.removeSync(this.tmpdir);
+    }
+
+    async run() {
+        this.stat.judge = new Date();
+        await judge.run.judge(this);
     }
 
     async doSubmission() {
