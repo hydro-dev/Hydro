@@ -27,7 +27,11 @@
             </label>
           </td>
           <td class="col--name">
-            <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a>
+            {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
+              <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a>
+            {% else %}
+              <p>{{ file.name }}</p>
+            {% endif %}
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
         </tr>
@@ -35,10 +39,6 @@
       </tbody>
     </table>
   {% else %}
-    {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
-      {{ nothing.render('No testdata at current.') }}
-    {% else %}
-      {{ nothing.render("You don't have permission to read testdata.")}}
-    {% endif %}
+    {{ nothing.render('No testdata at current.') }}
   {% endif %}
 </div>

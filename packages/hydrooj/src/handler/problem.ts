@@ -381,10 +381,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('additional_file', Types.Boolean)
     @param('pjax', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false) {
-        const canReadData = this.user.own(this.pdoc)
-            || this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)
-            || this.user.hasPerm(PERM.PERM_READ_PROBLEM_DATA);
-        this.response.body.testdata = (getTestdata && canReadData) ? sortFiles(this.pdoc.data || []) : [];
+        this.response.body.testdata = getTestdata ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;

@@ -251,8 +251,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   loadSubjective();
 
   if (pagename === 'contest_detail_problem') return;
-  const data = await request.get('');
-  data.pdoc.stats = data.pdoc.stats || {};
+  UiContext.pdoc.stats = UiContext.pdoc.stats || {};
   const $status = document.getElementById('submission-status-placeholder');
   const statusChart = echarts.init($status);
   statusChart.setOption({
@@ -264,20 +263,20 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         radius: [10, 70],
         roseType: 'radius',
         data: [
-          { value: data.pdoc.stats.TLE, name: 'TLE' },
-          { value: data.pdoc.stats.AC, name: 'AC' },
-          { value: data.pdoc.stats.MLE, name: 'MLE' },
-          { value: data.pdoc.stats.WA, name: 'WA' },
-          { value: data.pdoc.stats.RE, name: 'RE' },
-          { value: data.pdoc.stats.CE, name: 'CE' },
-          { value: data.pdoc.stats.SE, name: 'SE' },
-          { value: data.pdoc.stats.IGN, name: 'IGN' },
+          { value: UiContext.pdoc.stats.TLE, name: 'TLE' },
+          { value: UiContext.pdoc.stats.AC, name: 'AC' },
+          { value: UiContext.pdoc.stats.MLE, name: 'MLE' },
+          { value: UiContext.pdoc.stats.WA, name: 'WA' },
+          { value: UiContext.pdoc.stats.RE, name: 'RE' },
+          { value: UiContext.pdoc.stats.CE, name: 'CE' },
+          { value: UiContext.pdoc.stats.SE, name: 'SE' },
+          { value: UiContext.pdoc.stats.IGN, name: 'IGN' },
         ],
       },
     ],
   });
   const $score = document.getElementById('submission-score-placeholder');
-  const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => data.pdoc.stats[`s${i}`]);
+  const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => UiContext.pdoc.stats[`s${i}`]);
   const scoreChart = echarts.init($score);
   scoreChart.setOption({
     tooltip: { trigger: 'item' },
@@ -285,7 +284,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     yAxis: {},
     series: [{
       data: x.map((i) => ({
-        value: data.pdoc.stats[`s${i}`],
+        value: UiContext.pdoc.stats[`s${i}`],
         itemStyle: { color: getScoreColor(i) },
       })),
       type: 'bar',
