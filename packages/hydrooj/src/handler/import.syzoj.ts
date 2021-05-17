@@ -11,6 +11,7 @@ import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
 import problem from '../model/problem';
+import TaskModel from '../model/task';
 import { PERM } from '../model/builtin';
 import {
     Route, Handler, Types, post,
@@ -20,6 +21,52 @@ import download from '../lib/download';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');
+
+async function syncFiles(info) {
+    const {
+        protocol, host, body, pid, domainId, docId,
+    } = info;
+    const judge = body.judgeInfo;
+    const r = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
+        .send({
+            problemId: +pid,
+            type: 'TestData',
+            filenameList: body.testData.map((node) => node.filename),
+        });
+    const urls = {};
+    if (r.body.error) return;
+    for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
+    for (const f of body.testData) {
+        const p = new PassThrough();
+        superagent.get(urls[f.filename]).pipe(p);
+        // eslint-disable-next-line no-await-in-loop
+        await problem.addTestdata(domainId, docId, f.filename, p);
+    }
+    if (judge) {
+        const config = {
+            time: `${judge.timeLimit}ms`,
+            memory: `${judge.memoryLimit}m`,
+            // TODO other config
+        };
+        await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+    }
+    const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
+        .send({
+            problemId: +pid,
+            type: 'AdditionalFile',
+            filenameList: body.additionalFiles.map((node) => node.filename),
+        });
+    const aurls = {};
+    if (a.body.error) return;
+    for (const t of a.body.downloadInfo) aurls[t.filename] = t.downloadUrl;
+    for (const f of body.additionalFiles) {
+        const p = new PassThrough();
+        superagent.get(aurls[f.filename]).pipe(p);
+        // eslint-disable-next-line no-await-in-loop
+        await problem.addAdditionalFile(domainId, docId, f.filename, p);
+    }
+}
+TaskModel.Worker.addHandler('import.syzoj', syncFiles);
 
 class ProblemImportSYZOJHandler extends Handler {
     async get() {
@@ -174,49 +221,11 @@ class ProblemImportSYZOJHandler extends Handler {
         const docId = await problem.add(
             domainId, target, title, JSON.stringify(content), this.user._id, tags || [], hidden,
         );
-        const syncFiles = async () => {
-            const judge = result.body.judgeInfo;
-            const r = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
-                .send({
-                    problemId: +pid,
-                    type: 'TestData',
-                    filenameList: result.body.testData.map((node) => node.filename),
-                });
-            const urls = {};
-            if (r.body.error) return;
-            for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
-            for (const f of result.body.testData) {
-                const p = new PassThrough();
-                superagent.get(urls[f.filename]).pipe(p);
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addTestdata(domainId, docId, f.filename, p);
-            }
-            if (judge) {
-                const config = {
-                    time: `${judge.timeLimit}ms`,
-                    memory: `${judge.memoryLimit}m`,
-                    // TODO other config
-                };
-                await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
-            }
-            const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
-                .send({
-                    problemId: +pid,
-                    type: 'AdditionalFile',
-                    filenameList: result.body.additionalFiles.map((node) => node.filename),
-                });
-            const aurls = {};
-            if (a.body.error) return;
-            for (const t of a.body.downloadInfo) aurls[t.filename] = t.downloadUrl;
-            for (const f of result.body.additionalFiles) {
-                const p = new PassThrough();
-                superagent.get(aurls[f.filename]).pipe(p);
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addAdditionalFile(domainId, docId, f.filename, p);
-            }
+        const payload = {
+            protocol, host, pid, domainId, docId, body: result.body,
         };
-        if (wait) await syncFiles();
-        else syncFiles().catch(logger.error);
+        if (wait) await syncFiles(payload);
+        else await TaskModel.add({ ...payload, type: 'schedule', subType: 'import.syzoj' });
         return docId;
     }
 
@@ -252,18 +261,11 @@ class ProblemImportSYZOJHandler extends Handler {
             assert(url.match(RE_SYZOJ), new ValidationError('url'));
             if (!url.endsWith('/')) url += '/';
             const [, protocol, host, n, pid] = RE_SYZOJ.exec(url);
-            if (n === 'p') {
-                const docId = await this.v3(
-                    domainId, targetPid, hidden,
-                    protocol, host, pid, false,
-                );
-                this.response.body = { pid: targetPid || docId };
-                this.response.redirect = this.url('problem_files', { pid: targetPid || docId });
-            } else {
-                const docId = await this.v2(domainId, targetPid, hidden, url);
-                this.response.body = { pid: targetPid || docId };
-                this.response.redirect = this.url('problem_files', { pid: targetPid || docId });
-            }
+            const docId = n === 'p'
+                ? await this.v3(domainId, targetPid, hidden, protocol, host, pid, false)
+                : await this.v2(domainId, targetPid, hidden, url);
+            this.response.body = { pid: targetPid || docId };
+            this.response.redirect = this.url('problem_detail', { pid: targetPid || docId });
         }
     }
 }

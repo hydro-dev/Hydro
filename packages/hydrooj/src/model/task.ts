@@ -1,11 +1,88 @@
 import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
-import { Task } from '../interface';
+import { BaseService, Task } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
 
 const logger = new Logger('model/task');
 const coll = db.collection('task');
+
+async function getFirst(query: FilterQuery<Task>) {
+    const q = { ...query };
+    q.executeAfter = q.executeAfter || { $lt: new Date() };
+    const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
+    if (res.value) {
+        logger.debug('%o', res.value);
+        if (res.value.interval) {
+            const executeAfter = moment(res.value.executeAfter).add(...res.value.interval).toDate();
+            await coll.insertOne({ ...res.value, executeAfter });
+        }
+        return res.value;
+    }
+    return null;
+}
+
+class Consumer {
+    consuming: boolean;
+    running?: any;
+    filter: any;
+    func: Function;
+    timeout: NodeJS.Timeout;
+
+    constructor(filter: any, func: Function) {
+        this.consuming = true;
+        this.filter = filter;
+        this.func = func;
+        this.get = this.get.bind(this);
+        this.get();
+    }
+
+    async get() {
+        if (this.running || !this.consuming) return;
+        try {
+            const res = await getFirst(this.filter);
+            if (res) {
+                this.running = res;
+                await this.func(res);
+                this.running = null;
+            }
+        } catch (e) {
+            logger.error(e);
+            this.destory();
+        }
+        this.timeout = setTimeout(this.get, 100);
+    }
+
+    async destory() {
+        this.consuming = false;
+        clearTimeout(this.timeout);
+    }
+}
+
+class WorkerService implements BaseService {
+    private handlers: Record<string, Function> = {};
+    public consumer: Consumer;
+    public started = false;
+
+    public start() {
+        this.consumer = new Consumer(
+            { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
+            (doc) => {
+                logger.debug('Worker task: %o', doc);
+                return this.handlers[doc.subType](doc);
+            },
+        );
+        this.started = true;
+    }
+
+    public addHandler(type: string, handler: Function) {
+        this.handlers[type] = handler;
+        this.consumer.filter = { type: 'schedule', subType: { $in: Object.keys(this.handlers) } };
+    }
+}
+
+const Worker = new WorkerService();
+Worker.start();
 
 class TaskModel {
     static async add(task: Partial<Task> & { type: string }) {
@@ -32,21 +109,7 @@ class TaskModel {
         return coll.deleteOne({ _id });
     }
 
-    static async getFirst(query: FilterQuery<Task>) {
-        const q = { ...query };
-        q.executeAfter = q.executeAfter || { $lt: new Date() };
-        const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
-        if (res.value) {
-            logger.debug('%o', res.value);
-            if (res.value.interval) {
-                await coll.insertOne({
-                    ...res.value, executeAfter: moment().add(...res.value.interval).toDate(),
-                });
-            }
-            return res.value;
-        }
-        return null;
-    }
+    static getFirst = getFirst;
 
     static async getDelay(query?: FilterQuery<Task>) {
         const now = new Date();
@@ -56,52 +119,12 @@ class TaskModel {
     }
 
     static async consume(query: any, cb: Function) {
-        let isRunning = false;
-        const interval = setInterval(async () => {
-            if (isRunning) return;
-            isRunning = true;
-            const res = await TaskModel.getFirst(query);
-            if (res) {
-                try {
-                    await cb(res);
-                } catch (e) {
-                    clearInterval(interval);
-                }
-            }
-            isRunning = false;
-        }, 100);
+        return new Consumer(query, cb);
     }
 
-    Consumer = class Consumer {
-        consuming: boolean;
-        running?: Promise<any>;
-        interval: NodeJS.Timeout;
-        filter: any;
-        func: Function;
-
-        constructor(filter: any, func: Function) {
-            this.consuming = true;
-            this.filter = filter;
-            this.func = func;
-            this.interval = setInterval(this.consume.bind(this), 100);
-        }
-
-        async consume() {
-            if (this.running || !this.consuming) return;
-            const res = await TaskModel.getFirst(this.filter);
-            if (res) {
-                this.running = this.func(res);
-                if (this.running instanceof Promise) await this.running;
-                this.running = null;
-            }
-        }
-
-        async destory() {
-            this.consuming = false;
-            clearInterval(this.interval);
-            if (this.running) await this.running;
-        }
-    };
+    static Consumer = Consumer;
+    static WorkerService = WorkerService;
+    static Worker = Worker;
 }
 
 export default TaskModel;
