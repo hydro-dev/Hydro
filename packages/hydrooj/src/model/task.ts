@@ -3,6 +3,7 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import { BaseService, Task } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
+import * as bus from '../service/bus';
 
 const logger = new Logger('model/task');
 const coll = db.collection('task');
@@ -31,6 +32,8 @@ class Consumer {
         this.consuming = true;
         this.get = this.get.bind(this);
         this.get();
+        this.destory = this.destory.bind(this);
+        bus.on('app/exit', this.destory);
     }
 
     async get() {

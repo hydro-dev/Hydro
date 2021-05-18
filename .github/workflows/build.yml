@@ -36,7 +36,7 @@ jobs:
     - name: Lint
       run: yarn lint:ci
     - name: Unit Test
-      run: yarn jest --runInBand
+      run: yarn jest
     - name: Report Coverage
       uses: codecov/codecov-action@v1
       with:

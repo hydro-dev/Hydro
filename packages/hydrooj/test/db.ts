@@ -1,4 +1,6 @@
+import cluster from 'cluster';
 import 'hydrooj/src/loader';
+import * as bus from 'hydrooj/src/service/bus';
 
 jest.mock('hydrooj/src/service/db');
 
@@ -20,4 +22,6 @@ export async function connect() {
 export async function dispose() {
     const db = require('hydrooj/src/service/db');
     await db.stop();
+    bus.emit('app/exit');
+    for (const key in cluster.workers) cluster.workers[key].destroy('SIGINT');
 }
