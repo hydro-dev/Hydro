@@ -257,9 +257,9 @@ class HomeworkCreateHandler extends Handler {
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        const verified = await contest.verifyProblems(domainId, pids);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
         const tid = await contest.add(domainId, title, content, this.user._id,
-            'homework', beginAt.toDate(), endAt.toDate(), verified, rated,
+            'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
             { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
         this.response.body = { tid };
         this.response.redirect = this.url('homework_detail', { tid });
@@ -334,17 +334,17 @@ class HomeworkEditHandler extends Handler {
         }
         let endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
-        const verified = await contest.verifyProblems(domainId, pids);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
         beginAt = beginAt.toDate();
         endAt = endAt.toDate();
         penaltySince = penaltySince.toDate();
         await contest.edit(domainId, tid, {
-            title, content, beginAt, endAt, pids: verified, penaltySince, penaltyRules, rated,
+            title, content, beginAt, endAt, pids, penaltySince, penaltyRules, rated,
         }, document.TYPE_HOMEWORK);
         if (tdoc.beginAt !== beginAt
             || tdoc.endAt !== endAt
             || tdoc.penaltySince !== penaltySince
-            || tdoc.pids.sort().join(' ') !== verified.sort().join(' ')) {
+            || tdoc.pids.sort().join(' ') !== pids.sort().join(' ')) {
             await contest.recalcStatus(domainId, tdoc.docId, document.TYPE_HOMEWORK);
         }
         this.response.body = { tid };

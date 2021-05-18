@@ -214,10 +214,11 @@ class ContestEditHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        let pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
@@ -225,7 +226,6 @@ class ContestEditHandler extends Handler {
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        pids = await contest.verifyProblems(domainId, pids);
         await contest.edit(domainId, this.tdoc.docId, {
             title, content, rule, beginAt, endAt, pids, rated,
         });
@@ -429,7 +429,7 @@ class ContestCreateHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        let pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
             return i;
         });
@@ -438,7 +438,7 @@ class ContestCreateHandler extends Handler {
             throw new ValidationError('beginAtDate', 'beginAtTime');
         }
         const endAt = beginAt.clone().add(duration, 'hours');
-        pids = await contest.verifyProblems(domainId, pids);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
         const tid = await contest.add(
             domainId, title, content,
             this.user._id, rule, beginAt.toDate(), endAt.toDate(), pids, rated,

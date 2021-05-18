@@ -2,6 +2,7 @@ import { escapeRegExp } from 'lodash';
 import { ItemBucketMetadata } from 'minio';
 import moment from 'moment';
 import type { Readable } from 'stream';
+import TaskModel from './task';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -76,19 +77,25 @@ export class StorageModel {
     }
 }
 
-async function clean() {
+async function cleanFiles() {
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     while (res.value) {
         // eslint-disable-next-line no-await-in-loop
-        // await storage.del(res.value._id);
+        await storage.del(res.value._id);
         // eslint-disable-next-line no-await-in-loop
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
-    setTimeout(clean, 10000);
 }
-bus.on('app/started', () => {
-    clean();
-    return StorageModel.coll.createIndex({ path: 1 }, { unique: true });
+TaskModel.Worker.addHandler('storage.prune', cleanFiles);
+bus.once('app/started', async () => {
+    if (!await TaskModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+        await TaskModel.add({
+            type: 'schedule',
+            subType: 'storage.prune',
+            executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
+            interval: [1, 'hour'],
+        });
+    }
 });
 
 global.Hydro.model.storage = StorageModel;

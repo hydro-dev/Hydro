@@ -569,20 +569,13 @@ export async function getScoreboard(
     const tdoc = await get(domainId, tid, docType);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     if (!canShowRecord.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
-    const tsdocs = await getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort);
+    const tsdocsCursor = getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
     const [rows, udict, nPages] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),
-        tdoc, pdict, tsdocs, page,
+        tdoc, pdict, tsdocsCursor, page,
     );
     return [tdoc, rows, udict, pdict, nPages];
-}
-
-export async function verifyProblems(domainId: string, pids: Array<number | string>) {
-    const pdict = await problem.getList(domainId, pids, true);
-    const _pids: Set<number> = new Set();
-    for (const i in pdict) _pids.add(pdict[i].docId);
-    return Array.from(_pids);
 }
 
 export const statusText = (tdoc: Tdoc) => (
@@ -621,7 +614,6 @@ global.Hydro.model.contest = {
     canShowScoreboard,
     canViewHiddenScoreboard,
     getScoreboard,
-    verifyProblems,
     isNew,
     isUpcoming,
     isNotStarted,
