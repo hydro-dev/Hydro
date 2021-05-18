@@ -130,7 +130,17 @@ const page = new NamedPage('problem_files', () => {
         }));
       }
       dialog.open();
+      let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
+      function onBeforeUnload(e) {
+        if (isBeforeUnloadTriggeredByLibrary) {
+          isBeforeUnloadTriggeredByLibrary = false;
+          return;
+        }
+        e.returnValue = '';
+      }
+      window.addEventListener('beforeunload', onBeforeUnload);
       await Promise.all(tasks);
+      window.removeEventListener('beforeunload', onBeforeUnload);
       Notification.success(i18n('File uploaded successfully.'));
       await delay(2000);
       window.location.reload();
