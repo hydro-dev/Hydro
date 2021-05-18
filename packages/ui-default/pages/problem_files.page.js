@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { createZipStream } from 'vj/utils/zip';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog, ActionDialog } from 'vj/components/dialog/index';
+import { ConfirmDialog, ActionDialog, Dialog } from 'vj/components/dialog/index';
 import request from 'vj/utils/request';
 import pjax from 'vj/utils/pjax';
 import pipeStream from 'vj/utils/pipeStream';
@@ -17,6 +17,15 @@ if (window.location.protocol === 'https:'
   || window.location.protocol === 'chrome-extension:'
   || window.location.hostname === 'localhost') {
   streamsaver.mitm = '/streamsaver/mitm.html';
+}
+
+let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
+function onBeforeUnload(e) {
+  if (isBeforeUnloadTriggeredByLibrary) {
+    isBeforeUnloadTriggeredByLibrary = false;
+    return;
+  }
+  e.returnValue = '';
 }
 
 async function downloadProblemFilesAsArchive(type, files) {
@@ -46,14 +55,6 @@ async function downloadProblemFilesAsArchive(type, files) {
   });
   const abortCallbackReceiver = {};
   function stopDownload() { abortCallbackReceiver.abort(); }
-  let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
-  function onBeforeUnload(e) {
-    if (isBeforeUnloadTriggeredByLibrary) {
-      isBeforeUnloadTriggeredByLibrary = false;
-      return;
-    }
-    e.returnValue = '';
-  }
   window.addEventListener('unload', stopDownload);
   window.addEventListener('beforeunload', onBeforeUnload);
   await pipeStream(zipStream, fileStream, abortCallbackReceiver);
@@ -85,65 +86,56 @@ const page = new NamedPage('problem_files', () => {
     }
     try {
       Notification.info(i18n('Uploading files...'));
-      const tasks = [];
+      window.addEventListener('beforeunload', onBeforeUnload);
       const dialog = new Dialog({
-        $body: `<div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
-                <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-                  <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
-                </div>
-                <div class="file-label" style="text-align: center;margin: 5px 0;color: gray;font-size: small;"></div>
-                <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-                  <div class="file-progress bp3-progress-meter" style="width: 0"></div>
-                </div>`,
+        $body: `\
+          <div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
+          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+            <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+          </div>
+          <div class="file-label" style="text-align: center;margin: 5px 0;color: gray;font-size: small;"></div>
+          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+            <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+          </div>`,
       });
+      dialog.open();
       const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
       const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
       const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
       const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
-      let processed = 0;
-      for (const file of files) {
+      for (const i in files) {
+        if (Number.isNaN(+i)) continue;
+        const file = files[i];
         const data = new FormData();
         data.append('filename', file.name);
         data.append('file', file);
         data.append('type', type);
         data.append('operation', 'upload_file');
-        tasks.push(request.postFile('', data, {
+        await request.postFile('', data, {
           xhr() {
-            const xhr = new window.XMLHttpRequest();
-            xhr.upload.addEventListener("loadstart", () => {
-              processed++;
-              $fileLabel.text(`[${processed}/${files.length}] ${file.name}`);
-              $fileProgress.css({ width: `${parseInt(processed / file.length * 100)}%` });
-              $uploadLabel.text(i18n("Uploading... ({0}%)", 0));
-              $uploadProgress.css({ width: 0 });
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('loadstart', () => {
+              $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name}`);
+              $fileProgress.width(`${Math.round((+i + 1) / file.length * 100)}%`);
+              $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
+              $uploadProgress.width(0);
             });
-            xhr.upload.addEventListener("progress", (e) => {
+            xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
-                let percentComplete = e.loaded / e.total;
-                percentComplete = parseInt(percentComplete * 100);
-                $uploadLabel.text(i18n("Uploading... ({0}%)", percentComplete));
-                $uploadProgress.css({ width: `${percentComplete}%` });
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                if (percentComplete === 100) $uploadLabel.text(i18n('Processing...'));
+                else $uploadLabel.text(i18n('Uploading... ({0}%)', percentComplete));
+                $uploadProgress.width(`${percentComplete}%`);
               }
             }, false);
             return xhr;
           },
-        }));
+        });
       }
-      dialog.open();
-      let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
-      function onBeforeUnload(e) {
-        if (isBeforeUnloadTriggeredByLibrary) {
-          isBeforeUnloadTriggeredByLibrary = false;
-          return;
-        }
-        e.returnValue = '';
-      }
-      window.addEventListener('beforeunload', onBeforeUnload);
-      await Promise.all(tasks);
+      dialog.close();
       window.removeEventListener('beforeunload', onBeforeUnload);
       Notification.success(i18n('File uploaded successfully.'));
-      await delay(2000);
-      window.location.reload();
+      await pjax.request({ push: false });
     } catch (e) {
       console.error(e);
       Notification.error(i18n('File upload failed: {0}', e.toString()));
@@ -193,6 +185,10 @@ const page = new NamedPage('problem_files', () => {
    * @param {JQuery.DropEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
    */
   function handleDrop(type, ev) {
+    if (!$('[name="remove_selected_testdata"]').length) {
+      Notification.error(i18n("You don't have permission to upload file."));
+      return;
+    }
     ev.preventDefault();
     ev = ev.originalEvent;
     const files = [];
@@ -268,10 +264,6 @@ const page = new NamedPage('problem_files', () => {
   if ($('[name="remove_selected_testdata"]').length) {
     $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
     $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
-    $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
-    $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
-    $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
-    $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
     $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
     $('[name="upload_file"]').on('click', () => handleClickUpload('additional_file'));
     $('[name="create_testdata"]').on('click', () => handleEdit('testdata'));
@@ -279,6 +271,10 @@ const page = new NamedPage('problem_files', () => {
     $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
     $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
   }
+  $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
+  $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
+  $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
+  $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
   $('[name="download_selected_testdata"]').on('click', () => handleClickDownloadSelected('testdata'));
   $('[name="download_selected_file"]').on('click', () => handleClickDownloadSelected('additional_file'));
 });

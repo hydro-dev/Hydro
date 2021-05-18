@@ -3,6 +3,10 @@ import 'jquery.transit';
 import _ from 'lodash';
 import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
+import base64 from 'vj/utils/base64';
+
+window.UiContext = JSON.parse(base64.decode(window.UiContext));
+window.UserContext = JSON.parse(base64.decode(window.UserContext));
 
 // eslint-disable-next-line
 try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }

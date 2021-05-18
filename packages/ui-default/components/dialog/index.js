@@ -2,7 +2,7 @@ import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 import DomDialog from './DomDialog';
 
-export default class Dialog {
+export class Dialog {
   constructor(options = {}) {
     this.options = {
       classes: '',
@@ -51,6 +51,8 @@ export default class Dialog {
     this.domDialogInstance.dispatchAction($(ev.currentTarget).attr('data-action'));
   }
 }
+
+export default Dialog;
 
 const buttonOk = tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`;
 const buttonCancel = tpl`<button class="rounded button" data-action="cancel">${i18n('Cancel')}</button>`;
