@@ -242,6 +242,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _19_20() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const data = db.collection('record').aggregate([
             { $match: { hidden: false, type: { $ne: 'run' } } },
             {
@@ -272,6 +273,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _20_21() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem([], async (pdoc) => {
             let config: string;
             try {
@@ -299,6 +301,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _21_22() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const coll = db.collection('domain');
         await iterateAllDomain(async (ddoc) => {
             if (ddoc.join) {
@@ -308,6 +311,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _22_23() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllUser(async (udoc) => {
             if (!udoc.gravatar) return;
             await user.setById(udoc._id, { avatar: `gravatar:${udoc.gravatar}` }, { gravatar: '' });
@@ -315,16 +319,19 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _23_24() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('oplog').updateMany({}, { $set: { type: 'delete', operateIp: '127.0.0.1' } });
         return true;
     },
     async function _24_25() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllDomain(async (ddoc) => {
             if (typeof ddoc.host === 'string') await domain.edit(ddoc._id, { host: [ddoc.host] });
         });
         return true;
     },
     async function _25_26() {
+        const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllPsdoc({ rid: { $exists: true } }, async (psdoc) => {
             const rdoc = await RecordModel.get(psdoc.domainId, psdoc.rid);
             await document.setStatus(psdoc.domainId, document.TYPE_PROBLEM, rdoc.pid, rdoc.uid, { score: rdoc.score });
@@ -332,6 +339,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _26_27() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const stream = storage.client.listObjects(storage.opts.bucket, '', true);
         await new Promise<BucketItem[]>((resolve, reject) => {
             stream.on('data', (result) => {
@@ -354,8 +362,9 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _27_28() {
+        const _FRESH_INSTALL_IGNORE = 1;
         const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-        while (cursor.hasNext()) {
+        while (await cursor.hasNext()) {
             const data = await cursor.next();
             const t = Math.exp(-0.15 * (((new Date().getTime() / 1000) - data._id.generationTime) / 3600));
             const rCount = await discussion.getMultiReply(data.domainId, data.docId).count();

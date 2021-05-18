@@ -1,6 +1,8 @@
 import 'hydrooj/src/loader';
 import { connect, dispose } from './db';
 
+jest.setTimeout(30000);
+
 const DOMAIN_ID = 'system';
 const TITLE = 'dummy_title';
 const CONTENT = 'dummy_content';
