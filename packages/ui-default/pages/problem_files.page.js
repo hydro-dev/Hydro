@@ -198,6 +198,7 @@ const page = new NamedPage('problem_files', () => {
     let content = '';
     if (ev) {
       const link = $(ev.currentTarget).find('a').attr('href');
+      if (!link) return;
       if (filesize > 8 * 1024 * 1024) Notification.error(i18n('file too large'));
       Notification.info(i18n('Loading file...'));
       const res = await request.get(link);
@@ -217,20 +218,22 @@ const page = new NamedPage('problem_files', () => {
     await pjax.request({ push: false });
   }
 
-  $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
-  $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
-  $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
-  $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
-  $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
-  $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
-  $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
-  $('[name="create_testdata"]').on('click', () => handleEdit('testdata'));
+  if ($('[name="remove_selected_testdata"]').length) {
+    $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
+    $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
+    $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
+    $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
+    $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
+    $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
+    $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
+    $('[name="upload_file"]').on('click', () => handleClickUpload('additional_file'));
+    $('[name="create_testdata"]').on('click', () => handleEdit('testdata'));
+    $('[name="create_file"]').on('click', () => handleEdit('additional_file'));
+    $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
+    $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
+  }
   $('[name="download_selected_testdata"]').on('click', () => handleClickDownloadSelected('testdata'));
-  $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
-  $('[name="upload_file"]').on('click', () => handleClickUpload('additional_file'));
-  $('[name="create_file"]').on('click', () => handleEdit('additional_file'));
   $('[name="download_selected_file"]').on('click', () => handleClickDownloadSelected('additional_file'));
-  $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
 });
 
 export default page;

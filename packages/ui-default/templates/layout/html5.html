@@ -23,7 +23,7 @@
   {% block ogp %}
   <meta property="og:site_name" content="{{ model.system.get('server.name') }}" />
   <meta property="og:title" content="{{ handler.renderTitle(page_name) }}" />
-  <meta property="og:url" content="{{ handler.ctx.request.href }}" />
+  <meta property="og:url" content="{{ model.system.get('server.url') }}{{ handler.ctx.request.path }}" />
   <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
   {% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
@@ -40,13 +40,12 @@
   {% endif %}
 </head>
 <body>
-  {{ handler.request.headers.hmr|default('')|safe }}
   {% block body %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
     var UiContext = {{ UiContext|json|safe }};
     var UserContext = {{ UserContext|json|safe }};
-    </script>
+  </script>
   <script type="text/javascript" src="{{ ('/locale/{0}.js'.format(handler.translate('__id'))) }}"></script>
   <script type="text/javascript" src="/ui-constants.js"></script>
   <script type="module" src="{{ static_url('hydro.js') }}"></script>
