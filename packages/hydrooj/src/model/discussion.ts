@@ -1,9 +1,11 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import { omit } from 'lodash';
+import moment from 'moment';
 import problem from './problem';
 import * as contest from './contest';
 import * as training from './training';
 import * as document from './document';
+import TaskModel from './task';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
 import { buildProjection } from '../utils';
@@ -82,6 +84,7 @@ export async function add(
         pin,
         updateAt: new Date(),
         views: 0,
+        sort: 100,
     };
     await bus.serial('discussion/before-add', payload);
     const res = await document.add(
@@ -125,7 +128,7 @@ export function count(domainId: string, query: FilterQuery<DiscussionDoc>) {
 
 export function getMulti(domainId: string, query: FilterQuery<DiscussionDoc> = {}, projection = PROJECTION_LIST) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
-        .sort({ pin: -1, updateAt: -1 })
+        .sort({ pin: -1, sort: -1 })
         .project(buildProjection(projection));
 }
 
@@ -275,6 +278,33 @@ bus.on('problem/delete', async (domainId, docId) => {
         document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
         document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
     ]);
+});
+
+const t = Math.exp(-0.15);
+
+async function updateSort() {
+    const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
+    while (cursor.hasNext()) {
+        // eslint-disable-next-line no-await-in-loop
+        const data = await cursor.next();
+        // eslint-disable-next-line no-await-in-loop
+        const rCount = await getMultiReply(data.domainId, data.docId).count();
+        const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
+        // eslint-disable-next-line no-await-in-loop
+        await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
+    }
+}
+TaskModel.Worker.addHandler('discussion.sort', updateSort);
+
+bus.once('app/started', async () => {
+    if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
+        await TaskModel.add({
+            type: 'schedule',
+            subType: 'discussion.sort',
+            executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
+            interval: [1, 'hour'],
+        });
+    }
 });
 
 global.Hydro.model.discussion = {

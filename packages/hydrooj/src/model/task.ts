@@ -25,14 +25,10 @@ async function getFirst(query: FilterQuery<Task>) {
 class Consumer {
     consuming: boolean;
     running?: any;
-    filter: any;
-    func: Function;
     timeout: NodeJS.Timeout;
 
-    constructor(filter: any, func: Function) {
+    constructor(public filter: any, public func: Function, public destoryOnError = true) {
         this.consuming = true;
-        this.filter = filter;
-        this.func = func;
         this.get = this.get.bind(this);
         this.get();
     }
@@ -48,7 +44,7 @@ class Consumer {
             }
         } catch (e) {
             logger.error(e);
-            this.destory();
+            if (this.destoryOnError) this.destory();
         }
         this.timeout = setTimeout(this.get, 100);
     }
@@ -71,6 +67,7 @@ class WorkerService implements BaseService {
                 logger.debug('Worker task: %o', doc);
                 return this.handlers[doc.subType](doc);
             },
+            false,
         );
         this.started = true;
     }
@@ -113,7 +110,7 @@ class TaskModel {
 
     static async getDelay(query?: FilterQuery<Task>) {
         const now = new Date();
-        const [res] = await coll.find(query).sort({ executeAfter: 1 }).limit(1).toArray();
+        const res = await coll.findOne(query, { sort: { executeAfter: 1 } });
         if (res) return [Math.max(0, now.getTime() - res.executeAfter.getTime()), res.executeAfter];
         return [0, now];
     }

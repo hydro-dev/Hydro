@@ -20,6 +20,7 @@ import db from './service/db';
 import difficultyAlgorithm from './lib/difficulty';
 import problem from './model/problem';
 import user from './model/user';
+import * as discussion from './model/discussion';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
@@ -350,6 +351,17 @@ const scripts: UpgradeScript[] = [
             stream.on('end', () => resolve(null));
             stream.on('error', reject);
         });
+        return true;
+    },
+    async function _27_28() {
+        const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
+        while (cursor.hasNext()) {
+            const data = await cursor.next();
+            const t = Math.exp(-0.15 * (((new Date().getTime() / 1000) - data._id.generationTime) / 3600));
+            const rCount = await discussion.getMultiReply(data.domainId, data.docId).count();
+            const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
+            await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
+        }
         return true;
     },
 ];

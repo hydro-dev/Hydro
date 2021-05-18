@@ -360,6 +360,8 @@ declare module './model/discussion' {
         nReply: number,
         views: number,
         history: HistoryDoc[],
+        sort: number,
+        lastRCount: number,
     }
 }
 

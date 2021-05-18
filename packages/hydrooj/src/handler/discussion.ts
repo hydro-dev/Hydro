@@ -158,7 +158,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
         await this.limitRate('add_discussion', 3600, 60);
         let name: ObjectID | string | number;
         if (ObjectID.isValid(_name)) name = new ObjectID(_name);
-        else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
+        else if (isSafeInteger(+name)) name = +name;
         else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
