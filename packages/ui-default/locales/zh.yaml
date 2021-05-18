@@ -24,6 +24,7 @@ __langname: 简体中文
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
+'File upload failed: {0}': 文件上传失败：{0}
 'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
 'Hello, {0}! You can click following link to active your new email of your Hydro account:': 您好，{0}！您可以点击以下链接来激活您 Hydro 账户的新电子邮件地址：
 'Hello, {0}! You can click following link to reset the password of your Hydro account:': 您好，{0}！您可以点击以下链接来重置您 Hydro 账户的密码：
@@ -305,6 +306,7 @@ Failed to join the domain. You are already a member.: 加入域失败，您已�
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
+File uploaded successfully.: 上传文件成功
 File: 文件
 Filename: 文件名
 Files: 文件
@@ -760,6 +762,8 @@ Upload File: 上传文件
 Upload Problem: 上传题目
 Upload: 上传
 Uploaded By: 上传者
+Uploading files...: 正在上传文件...
+Uploading... ({0}%): 正在上传... ({0}%)
 Upvote: 好评
 Usage exceeded.: 用量超限。
 Use admin specificed: 由管理员指定

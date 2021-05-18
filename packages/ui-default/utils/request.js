@@ -41,8 +41,9 @@ const request = {
   /**
    * @param {string} url
    * @param {FormData} FormData
+   * @param {object} options
    */
-  postFile(url, form) {
+   postFile(url, form, options = {}) {
     return this.ajax({
       url,
       data: form,
@@ -50,6 +51,7 @@ const request = {
       contentType: false,
       type: 'POST',
       dataType: undefined,
+      ...options,
     });
   },
 

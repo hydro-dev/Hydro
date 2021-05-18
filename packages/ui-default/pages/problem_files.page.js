@@ -84,22 +84,59 @@ const page = new NamedPage('problem_files', () => {
       files = input.files;
     }
     try {
-      Notification.info('Uploading files...');
+      Notification.info(i18n('Uploading files...'));
       const tasks = [];
+      const dialog = new Dialog({
+        $body: `<div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
+                <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+                  <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+                </div>
+                <div class="file-label" style="text-align: center;margin: 5px 0;color: gray;font-size: small;"></div>
+                <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+                  <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+                </div>`,
+      });
+      const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
+      const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
+      const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
+      const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
+      let processed = 0;
       for (const file of files) {
         const data = new FormData();
         data.append('filename', file.name);
         data.append('file', file);
         data.append('type', type);
         data.append('operation', 'upload_file');
-        tasks.push(request.postFile('', data));
+        tasks.push(request.postFile('', data, {
+          xhr() {
+            const xhr = new window.XMLHttpRequest();
+            xhr.upload.addEventListener("loadstart", () => {
+              processed++;
+              $fileLabel.text(`[${processed}/${files.length}] ${file.name}`);
+              $fileProgress.css({ width: `${parseInt(processed / file.length * 100)}%` });
+              $uploadLabel.text(i18n("Uploading... ({0}%)", 0));
+              $uploadProgress.css({ width: 0 });
+            });
+            xhr.upload.addEventListener("progress", (e) => {
+              if (e.lengthComputable) {
+                let percentComplete = e.loaded / e.total;
+                percentComplete = parseInt(percentComplete * 100);
+                $uploadLabel.text(i18n("Uploading... ({0}%)", percentComplete));
+                $uploadProgress.css({ width: `${percentComplete}%` });
+              }
+            }, false);
+            return xhr;
+          },
+        }));
       }
+      dialog.open();
       await Promise.all(tasks);
-      Notification.success('File uploaded successfully.');
-      await pjax.request({ push: false });
+      Notification.success(i18n('File uploaded successfully.'));
+      await delay(2000);
+      window.location.reload();
     } catch (e) {
       console.error(e);
-      Notification.error(`File upload fail: ${e.toString()}`);
+      Notification.error(i18n('File upload failed: {0}', e.toString()));
     }
   }
 
