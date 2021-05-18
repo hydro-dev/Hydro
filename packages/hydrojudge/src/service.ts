@@ -18,7 +18,6 @@ import { getConfig } from './config';
 
 declare module 'hydrooj/dist/interface' {
     interface SystemKeys {
-        'hydrojudge.langs': string,
         'hydrojudge.cache_dir': string,
         'hydrojudge.tmp_dir': string,
         'hydrojudge.tmpfs_size': string,

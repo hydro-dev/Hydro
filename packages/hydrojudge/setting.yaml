@@ -52,3 +52,10 @@ disable:
   name: disable
   desc: Disable builtin judge
   default: false
+env:
+  type: text
+  name: env
+  desc: Sandbox Env
+  default: |
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    HOME=/w

@@ -22,6 +22,9 @@ let config = {
     parallelism: 2,
     config: null,
     langs: null,
+    env: `\
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=/w`,
 };
 
 export function getConfig(key: string) {

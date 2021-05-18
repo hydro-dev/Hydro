@@ -8,8 +8,6 @@ import { getConfig } from './config';
 import { Logger } from './log';
 
 const logger = new Logger('sandbox');
-const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
-const axios = Axios.create({ baseURL: getConfig('sandbox_host') });
 let callId = 0;
 
 const statusMap = {
@@ -33,7 +31,7 @@ function proc({
     const size = parseMemoryMB(getConfig('stdio_size'));
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
-        env,
+        env: getConfig('env').split('\n'),
         files: [
             stdin ? { src: stdin } : { content: '' },
             { name: 'stdout', max: 1024 * 1024 * size },
@@ -93,7 +91,7 @@ export async function runMultiple(execute) {
         body.cmd[1].files[1] = null;
         const id = callId++;
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(body));
-        res = await axios.post('/run', body);
+        res = await Axios.create({ baseURL: getConfig('sandbox_host') }).post('/run', body);
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
     } catch (e) {
         if (e instanceof FormatError) throw e;
@@ -103,7 +101,7 @@ export async function runMultiple(execute) {
 }
 
 export async function del(fileId) {
-    const res = await axios.delete(`/file/${fileId}`);
+    const res = await Axios.create({ baseURL: getConfig('sandbox_host') }).delete(`/file/${fileId}`);
     return res.data;
 }
 
@@ -116,7 +114,7 @@ export async function run(execute, params?) {
         const body = { cmd: [proc({ execute, ...params })] };
         const id = callId++;
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(body));
-        const res = await axios.post('/run', body);
+        const res = await Axios.create({ baseURL: getConfig('sandbox_host') }).post('/run', body);
         if (argv['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
         [result] = res.data;
     } catch (e) {
