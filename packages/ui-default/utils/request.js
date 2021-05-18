@@ -43,7 +43,7 @@ const request = {
    * @param {FormData} FormData
    * @param {object} options
    */
-   postFile(url, form, options = {}) {
+  postFile(url, form, options = {}) {
     return this.ajax({
       url,
       data: form,
