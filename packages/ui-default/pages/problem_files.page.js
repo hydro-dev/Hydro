@@ -89,13 +89,13 @@ const page = new NamedPage('problem_files', () => {
       window.addEventListener('beforeunload', onBeforeUnload);
       const dialog = new Dialog({
         $body: `\
-          <div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
-          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-            <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
-          </div>
           <div class="file-label" style="text-align: center;margin: 5px 0;color: gray;font-size: small;"></div>
           <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
             <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+          </div>
+          <div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
+          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+            <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
           </div>`,
       });
       dialog.open();
@@ -116,7 +116,7 @@ const page = new NamedPage('problem_files', () => {
             const xhr = new XMLHttpRequest();
             xhr.upload.addEventListener('loadstart', () => {
               $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name}`);
-              $fileProgress.width(`${Math.round((+i + 1) / file.length * 100)}%`);
+              $fileProgress.width(`${Math.round((+i + 1) / files.length * 100)}%`);
               $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
               $uploadProgress.width(0);
             });
