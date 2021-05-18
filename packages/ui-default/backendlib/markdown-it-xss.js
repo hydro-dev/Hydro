@@ -54,7 +54,7 @@ const xss = new Xss.FilterXSS({
         strong: [],
         table: ['width', 'border', 'align', 'valign'],
         tbody: ['align', 'valign'],
-        td: ['width', 'rowspan', 'colspan', 'align', 'valign'],
+        td: ['width', 'rowspan', 'colspan', 'align', 'valign', 'bgcolor'],
         tfoot: ['align', 'valign'],
         th: ['width', 'rowspan', 'colspan', 'align', 'valign'],
         thead: ['align', 'valign'],
