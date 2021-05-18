@@ -15,12 +15,13 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit'], 
   $('#codelang-main-select').on('change', function () {
     const options = {};
     for (const key in window.LANGS) {
+      if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.includes(key)) continue;
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     if (Object.keys(options).length > 1) {
       setOptions($('#codelang-sub-select'), options);
       $('#codelang-sub-container').show();
-      $('[name="codeLang"]').val($('#codelang-sub-container').val());
+      $('[name="codeLang"]').val($('#codelang-sub-select').val());
     } else {
       $('#codelang-sub-container').hide();
       $('[name="codeLang"]').val(this.value);
@@ -31,6 +32,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit'], 
   });
   const main = {};
   for (const key in window.LANGS) {
+    if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.includes(key)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
   }
   setOptions($('#codelang-main-select'), main);
@@ -38,7 +40,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit'], 
   if (current.includes('.')) {
     const [m, s] = current.split('.');
     $('#codelang-main-select').val(m);
-    $('#codelang-sub-select').val(s).show();
+    $('#codelang-sub-select').val(s);
+    $('#codelang-sub-container').show();
   } else $('#codelang-main-select').val(current);
 });
 

@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 import { isSafeInteger } from 'lodash';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError, PermissionError,
+    ContestNotAttendedError, PermissionError, BadRequestError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
@@ -344,6 +344,9 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
+        if (this.response.body.pdoc.config.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
+            throw new BadRequestError('Language not allowed.');
+        }
         await this.limitRate('add_record', 60, 10);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, {
             type: document.TYPE_CONTEST,

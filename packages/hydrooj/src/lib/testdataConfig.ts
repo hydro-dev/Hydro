@@ -3,11 +3,12 @@ import { load } from 'js-yaml';
 import type { ProblemConfig } from '../interface';
 
 interface ParseResult {
-    count: number,
-    memoryMax: number,
-    memoryMin: number,
-    timeMax: number,
-    timeMin: number,
+    count: number;
+    memoryMax: number;
+    memoryMin: number;
+    timeMax: number;
+    timeMin: number;
+    langs?: string[];
 }
 
 export async function parseConfig(config: string | ProblemConfig = {}) {
@@ -40,6 +41,7 @@ export async function parseConfig(config: string | ProblemConfig = {}) {
     if (result.timeMax < result.timeMin) {
         result.timeMax = result.timeMin = 1000;
     }
+    if (cfg.langs) result.langs = cfg.langs;
     return result;
 }
 

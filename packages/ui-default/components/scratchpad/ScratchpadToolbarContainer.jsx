@@ -78,6 +78,11 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   }
 
   render() {
+    const LANGS = {};
+    for (const key in window.LANGS) {
+      if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
+      LANGS[key] = window.LANGS[key];
+    }
     return (
       <Toolbar>
         <ToolbarButton
@@ -136,7 +141,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             value={this.props.editorLang}
             onChange={(ev) => this.props.setEditorLanguage(ev.target.value)}
           >
-            {_.map(window.LANGS, (val, key) => (
+            {_.map(LANGS, (val, key) => (
               <option value={key} key={key}>{val.display}</option>
             ))}
           </select>

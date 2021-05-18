@@ -1,5 +1,6 @@
 {% extends "layout/basic.html" %}
 {% block content %}
+{{ set(UiContext, 'pdocConfig', pdoc.config) }}
 <div class="row">
   <div class="medium-9 columns">
   {% if not tdoc or rdocs.length %}

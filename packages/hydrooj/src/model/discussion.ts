@@ -284,7 +284,8 @@ const t = Math.exp(-0.15);
 
 async function updateSort() {
     const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-    while (cursor.hasNext()) {
+    // eslint-disable-next-line no-await-in-loop
+    while (await cursor.hasNext()) {
         // eslint-disable-next-line no-await-in-loop
         const data = await cursor.next();
         // eslint-disable-next-line no-await-in-loop

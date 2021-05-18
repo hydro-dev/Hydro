@@ -143,19 +143,20 @@ export interface SubtaskConfig {
 }
 
 export interface ProblemConfig {
-    type?: ProblemType,
-    score?: number,
-    time?: string,
-    memory?: string,
-    filename?: string,
-    checker_type?: string,
-    checker?: string,
-    interactor?: string,
-    user_extra_files?: string[],
-    judge_extra_files?: string[],
-    outputs?: [string, number][],
-    cases?: TestCaseConfig[],
-    subtasks?: SubtaskConfig[],
+    type?: ProblemType;
+    score?: number;
+    time?: string;
+    memory?: string;
+    filename?: string;
+    checker_type?: string;
+    checker?: string;
+    interactor?: string;
+    user_extra_files?: string[];
+    judge_extra_files?: string[];
+    outputs?: [string, number][];
+    cases?: TestCaseConfig[];
+    subtasks?: SubtaskConfig[];
+    langs?: string[];
 }
 
 export interface PlainContentNode {

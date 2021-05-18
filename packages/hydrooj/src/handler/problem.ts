@@ -264,6 +264,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     async post(domainId: string, lang: string, code: string) {
+        if (this.response.body.pdoc.config.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
+            throw new BadRequestError('Language not allowed.');
+        }
         await this.limitRate('add_record', 60, 5);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
         const [rdoc] = await Promise.all([
