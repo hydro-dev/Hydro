@@ -98,13 +98,17 @@ const page = new NamedPage('problem_files', () => {
             <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
           </div>`,
       });
-      dialog.open();
+      let isOpen = false;
       const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
       const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
       const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
       const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
       for (const i in files) {
         if (Number.isNaN(+i)) continue;
+        if (!isOpen) {
+          isOpen = true;
+          dialog.open();
+        }
         const file = files[i];
         const data = new FormData();
         data.append('filename', file.name);
@@ -271,6 +275,10 @@ const page = new NamedPage('problem_files', () => {
     $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
     $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
   }
+  $('.problem-files-testdata, .problem-files-additional_file').on(
+    'dragenter dragstart dragend dragleave dragover drag drop',
+    (ev) => ev.preventDefault()
+  );
   $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
   $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
   $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
