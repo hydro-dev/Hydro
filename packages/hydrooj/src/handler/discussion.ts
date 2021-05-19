@@ -214,12 +214,6 @@ class DiscussionDetailHandler extends DiscussionHandler {
         await this.limitRate('add_discussion', 3600, 60);
         // Notify related users
         await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
-        const replies: DiscussionReplyDoc[] = await discussion.getMultiReply(domainId, did).toArray();
-        const uids = new Set(replies.map((drdoc) => drdoc.owner));
-        uids.delete(this.user._id);
-        const str = JSON.stringify({ message: '{0} replied to discussion {1}/{2}.', params: [this.user._id, domainId, did] });
-        const tasks = Array.from(uids).map((uid) => message.send(1, uid, str));
-        await Promise.all(tasks);
         this.back();
     }
 
@@ -229,8 +223,6 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
-        const str = JSON.stringify({ message: '{0} replied to discussion reply {1}/{2}.', params: [this.user._id, domainId, drid] });
-        if (!this.user.own(this.drdoc)) await message.send(1, this.drdoc.owner, str);
         this.back();
     }
 
