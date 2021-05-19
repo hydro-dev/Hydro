@@ -292,7 +292,7 @@ function _digit2(number: number) {
 }
 
 export function formatSeconds(_seconds = '0') {
-    const seconds = parseInt(_seconds, 10);
+    const seconds = +_seconds;
     return '{0}:{1}:{2}'.format(
         _digit2(Math.floor(seconds / 3600)),
         _digit2(Math.floor((seconds % 3600) / 60)),

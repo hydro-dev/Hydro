@@ -110,21 +110,10 @@ const acm: ContestRule = {
             }
             for (const pid of tdoc.pids) {
                 const doc = tsddict[pid] || {};
-                let rid;
-                let colAccepted;
-                let colTime;
-                let colTimeStr;
-                if (doc.accept) {
-                    rid = doc.rid;
-                    colAccepted = `${_('Accepted')} ${doc.naccept ? ` (-${doc.naccept})` : ''}`;
-                    colTime = doc.time;
-                    colTimeStr = misc.formatSeconds(colTime);
-                } else {
-                    rid = null;
-                    colAccepted = doc.naccept ? `(-${doc.naccept})` : '-';
-                    colTime = '-';
-                    colTimeStr = '';
-                }
+                const rid = doc.accept ? doc.rid : null;
+                const colAccepted = `${doc.accept ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
+                const colTime = doc.accept ? doc.time : '-';
+                const colTimeStr = doc.accept ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {
                     row.push({ type: 'string', value: colAccepted });
                     row.push({ type: 'string', value: colTime });
@@ -132,7 +121,8 @@ const acm: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        value: '{0}<br>{1}'.format(colAccepted, colTimeStr),
+                        score: doc.accept ? 100 : 0,
+                        value: '{0}\n{1}'.format(colAccepted, colTimeStr),
                         raw: rid,
                     });
                 }
@@ -185,6 +175,19 @@ const oi: ContestRule = {
                 });
             }
         }
+        const psdict = {};
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        if (isDone(tdoc)) {
+            const psdocs = await problem.getMultiStatus(tdoc.domainId, {
+                $or: rankedTsdocs.map(([, i]) => ({
+                    uid: i.uid,
+                    docId: { $in: tdoc.pids },
+                })),
+            }).toArray();
+            for (const psdoc of psdocs) {
+                psdict[`${psdoc.uid}/${psdoc.docId}`] = psdoc;
+            }
+        }
         const rows = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
@@ -198,11 +201,29 @@ const oi: ContestRule = {
                 { type: 'string', value: tsdoc.score || 0 },
             );
             for (const pid of tdoc.pids) {
-                row.push({
-                    type: 'record',
-                    value: tsddict[pid]?.score ?? '-',
-                    raw: tsddict[pid]?.rid || null,
-                });
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                if (isDone(tdoc)) {
+                    row.push({
+                        type: 'records',
+                        value: '',
+                        raw: [
+                            {
+                                value: tsddict[pid]?.score ?? '-',
+                                raw: tsddict[pid]?.rid || null,
+                            },
+                            {
+                                value: psdict[`${tsdoc.uid}/${pid}`]?.score ?? '-',
+                                raw: psdict[`${tsdoc.uid}/${pid}`]?.rid ?? null,
+                            },
+                        ],
+                    });
+                } else {
+                    row.push({
+                        type: 'record',
+                        value: tsddict[pid]?.score ?? '-',
+                        raw: tsddict[pid]?.rid || null,
+                    });
+                }
             }
             rows.push(row);
         }
@@ -313,13 +334,13 @@ const homework: ContestRule = {
                 });
             }
         }
-        const rows = [columns];
+        const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
             for (const item of tsdoc.detail || []) {
                 tsddict[item.pid] = item;
             }
-            const row = [
+            const row: ScoreboardRow = [
                 { type: 'string', value: rank },
                 {
                     type: 'user',

@@ -41,10 +41,21 @@
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
                 <a href="{{ url('record_detail', rid=column.raw) }}">
-                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.value) }}">{{ column.value|safe }}</span>
+                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|replaceBr|safe }}</span>
                 </a>
+              {% elif column.type == 'records' %}
+                {%- for record in column.raw -%}
+                  {% if loop.index0 %}/{% endif %}
+                  {% if record.raw %}
+                    <a href="{{ url('record_detail', rid=record.raw) }}">
+                      <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|replaceBr|safe }}</span>
+                    </a>
+                  {% else %}
+                    {{ record.value|replaceBr|safe }}
+                  {% endif %}
+                {%- endfor -%}
               {% else %}
-                {{ column.value|safe }}
+                {{ column.value|replaceBr|safe }}
               {% endif %}
               </td>
             {%- endfor -%}

@@ -269,9 +269,10 @@ export interface RecordDoc {
 }
 
 export interface ScoreboardNode {
-    type: string,
-    value: string,
-    raw?: any,
+    type: string;
+    value: string;
+    raw?: any;
+    score?: number;
 }
 export type ScoreboardRow = ScoreboardNode[] & { raw?: any };
 
