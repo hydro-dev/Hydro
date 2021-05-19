@@ -266,34 +266,33 @@ class ContestProblemHandler extends Handler {
         if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
             throw new ProblemNotFoundError(domainId, this.tdoc.docId);
         }
-        try {
-            this.pdoc.config = await parseConfig(this.pdoc.config);
-        } catch (e) {
-            this.pdoc.config = `Cannot parse: ${e.message}`;
-        }
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
+            pdoc: this.pdoc,
+            udoc: this.udoc,
+            attended: this.attended,
+            page_name: 'contest_detail_problem',
+        };
     }
 
     // eslint-disable-next-line
     async get(...args: any[]) {
-        const path = [
+        this.response.body.path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
             [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
             [this.pdoc.title, null, null, true],
         ];
-        this.response.body = {
-            tdoc: this.tdoc,
-            pdoc: this.pdoc,
-            tsdoc: this.tsdoc,
-            udoc: this.udoc,
-            attended: this.attended,
-            path,
-            page_name: 'contest_detail_problem',
-        };
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
             .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        try {
+            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
+        } catch (e) {
+            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
+        }
     }
 }
 
@@ -320,29 +319,21 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.UnsignedInt)
     async get(domainId: string, tid: ObjectID, pid: number) {
-        let rdocs = [];
+        this.response.body.rdocs = [];
         if (contest.canShowRecord.call(this, this.tdoc)) {
-            rdocs = await record.getUserInProblemMulti(
+            this.response.body.rdocs = await record.getUserInProblemMulti(
                 domainId, this.user._id,
                 this.pdoc.docId, true,
             ).sort({ _id: -1 }).limit(10).toArray();
         }
-        const path = [
+        this.response.body.path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
             [this.tdoc.title, 'contest_detail', { tid }, true],
             [this.pdoc.title, 'contest_detail_problem', { tid, pid }, true],
             ['contest_detail_problem_submit', null],
         ];
-        this.response.body = {
-            tdoc: this.tdoc,
-            pdoc: this.pdoc,
-            udoc: this.udoc,
-            attended: this.attended,
-            path,
-            rdocs,
-            page_name: 'contest_detail_problem_submit',
-        };
+        this.response.body.page_name = 'contest_detail_problem_submit';
         this.response.template = 'problem_submit.html';
     }
 
@@ -350,7 +341,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
-        if (this.pdoc.config.langs && !this.pdoc.config.langs.includes('lang')) {
+        if (this.response.body.pdoc.config.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 10);
