@@ -8,6 +8,7 @@ import {
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
+import { parseConfig } from '../lib/testdataConfig';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as system from '../model/system';
@@ -265,6 +266,11 @@ class ContestProblemHandler extends Handler {
         if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
             throw new ProblemNotFoundError(domainId, this.tdoc.docId);
         }
+        try {
+            this.pdoc.config = await parseConfig(this.pdoc.config);
+        } catch (e) {
+            this.pdoc.config = `Cannot parse: ${e.message}`;
+        }
     }
 
     // eslint-disable-next-line
@@ -344,7 +350,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     async post(domainId: string, tid: ObjectID, lang: string, code: string) {
-        if (this.response.body.pdoc.config.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
+        if (this.pdoc.config.langs && !this.pdoc.config.langs.includes('lang')) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 10);
