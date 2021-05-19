@@ -5,7 +5,7 @@
     <img class="small user-profile-avatar v-center" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
   {% endif %}
   <a class="user-profile-name" href="{{ url('user_detail', uid=udoc._id) }}">
-    {% if udoc.displayName %}
+    {% if udoc.displayName and udoc.displayName != udoc.uname %}
       {{ udoc.displayName }} ({{ udoc.uname }})
     {% else %}
       {{ udoc.uname }}

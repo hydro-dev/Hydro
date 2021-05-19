@@ -73,10 +73,8 @@ const request = {
       postData = dataOrForm;
     } else {
       // {foo: 'bar'}
-      postData = $.param({
-        csrfToken: UiContext.csrfToken,
-        ...dataOrForm,
-      }, true);
+      postData = JSON.stringify(dataOrForm);
+      options.contentType = 'application/json';
     }
     return request.ajax({
       url,

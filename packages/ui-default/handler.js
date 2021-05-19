@@ -132,6 +132,24 @@ class MarkdownHandler extends Handler {
   }
 }
 
+class RichMediaHandler extends Handler {
+  constructor(args) {
+    super(args);
+    this.noCheckPermView = true;
+  }
+
+  async post({ domainId, items }) {
+    const res = [];
+    for (const item of items) {
+      if (item.type === 'user') {
+        const udoc = Number.isNaN(+item.id) ? await user.getByUname(domainId, item.id) : await user.getById(domainId, +item.id);
+        res.push(this.renderHTML('partials/user.html', { udoc }));
+      } else res.push('');
+    }
+    this.response.body = await Promise.all(res);
+  }
+}
+
 const getHash = (i) => {
   const shasum = crypto.createHash('sha1');
   const file = readFileSync(join(tmpdir(), 'hydro', 'public', i));
@@ -160,4 +178,5 @@ global.Hydro.handler.ui = async () => {
   Route('set_theme', '/set_theme/:id', SetThemeHandler);
   Route('ui_extracss', '/extra.css', UiSettingsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
+  Route('media', '/media', RichMediaHandler);
 };

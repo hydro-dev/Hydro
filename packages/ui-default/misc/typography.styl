@@ -251,7 +251,8 @@ small, figcaption
 
 .typo a, .typo .link, .typo-a
   &, &:visited, &:active, &:hover
-    color: $primary-color
+    :not(.user-profile-name)
+      color: $primary-color
 
 .typo p, .typo dl, .typo form, .typo hr, .typo table
   padding-top: 0.3em
