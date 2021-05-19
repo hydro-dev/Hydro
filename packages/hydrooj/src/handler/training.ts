@@ -123,7 +123,7 @@ class TrainingDetailHandler extends Handler {
         for (const node of tdoc.dag) {
             ndict[node._id] = node;
             const totalCount = node.pids.length;
-            const doneCount = Set.union(new Set(node.pids), donePids).size;
+            const doneCount = Set.intersection(new Set(node.pids), donePids).size;
             const nsdoc = {
                 progress: totalCount ? Math.floor(100 * (doneCount / totalCount)) : 100,
                 isDone: training.isDone(node, doneNids, donePids),
