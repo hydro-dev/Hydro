@@ -208,7 +208,7 @@ const page = new NamedPage('problem_files', () => {
         files.push(ev.dataTransfer.files[i]);
       }
     }
-    handleClickUpload(type, files);
+    if (file.length > 0) handleClickUpload(type, files);
   }
 
   async function startEdit(filename, value) {
