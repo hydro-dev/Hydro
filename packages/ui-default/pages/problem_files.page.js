@@ -213,7 +213,6 @@ const page = new NamedPage('problem_files', () => {
   }
 
   async function startEdit(filename, value) {
-    console.log(filename, value);
     const { default: Editor } = await import('vj/components/editor/index');
     const promise = new ActionDialog({
       $body: tpl`
@@ -223,7 +222,21 @@ const page = new NamedPage('problem_files', () => {
       width: `${window.innerWidth - 200}px`,
       height: `${window.innerHeight - 100}px`,
     }).open();
-    const editor = new Editor($('[name="fileContent"]'), { value, autoResize: false, autoLayout: false });
+    const language = {
+      yaml: 'yaml',
+      yml: 'yaml',
+      txt: 'plain',
+      in: 'plain',
+      out: 'plain',
+      ans: 'plain',
+    }[filename.split('.').pop()];
+    const editor = new Editor($('[name="fileContent"]'), {
+      value,
+      autoResize: false,
+      autoLayout: false,
+      language,
+      model: `hydro://problem/file/${filename}`,
+    });
     const action = await promise;
     value = editor.value();
     editor.destory();

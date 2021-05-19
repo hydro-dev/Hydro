@@ -142,6 +142,7 @@ export default function (env = {}) {
         'window.jQuery': 'jquery',
         katex: 'katex/dist/katex.js',
         React: 'react',
+        monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
         filename: '[name].css?[hash:10]',
@@ -184,7 +185,16 @@ export default function (env = {}) {
           customInterpolateName: (url) => beautifyOutputUrl(url),
         },
       }),
-      new MonacoWebpackPlugin({}),
+      new MonacoWebpackPlugin({
+        customLanguages: [{
+          label: 'yaml',
+          entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/monaco.contribution'),
+          worker: {
+            id: 'vs/language/yaml/yamlWorker',
+            entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/yaml.worker.js'),
+          },
+        }],
+      }),
       new StaticManifestPlugin({
         fileName: 'static-manifest.json',
         ignore: [

@@ -31,12 +31,12 @@ export default class Editor extends DOMAttachedObject {
     super($dom);
     this.options = options;
     if (UserContext.preferredEditorType === 'monaco') this.initMonaco();
-    else if (options.language && options.langua !== 'markdown') this.initMonaco();
+    else if (options.language && options.language !== 'markdown') this.initMonaco();
     else this.initVditor();
   }
 
   async initMonaco() {
-    const monaco = await import('monaco-editor/esm/vs/editor/editor.api');
+    const { default: monaco } = await import('vj/components/monaco/index');
     const {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
@@ -52,7 +52,14 @@ export default class Editor extends DOMAttachedObject {
     $dom.hide();
     origin.parentElement.appendChild(ele);
     const value = this.options.value || $dom.val();
-    this.model = typeof model === 'string' ? monaco.editor.createModel(value, language, monaco.Uri.parse(model)) : model;
+    // eslint-disable-next-line no-nested-ternary
+    this.model = typeof model === 'string'
+      ? monaco.editor.getModel(monaco.Uri.parse(model))
+        ? monaco.editor.getModel(monaco.Uri.parse(model))
+        : monaco.editor.createModel(value, language, monaco.Uri.parse(model))
+      : model;
+    this.model.setValue(value);
+    this.model.updateOptions({ language });
     const cfg = {
       theme,
       lineNumbers: true,

@@ -30,6 +30,7 @@ packages/**/*.js
 !/install/jssh.d.ts
 ## ui-default
 !packages/ui-default/**/*.js
+!examples/**
 packages/ui-default/public
 packages/ui-default/misc/.iconfont
 packages/ui-default/static/locale
