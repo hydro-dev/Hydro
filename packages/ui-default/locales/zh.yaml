@@ -52,6 +52,16 @@ AC Message: 通过消息
 Accepted Ratio: 通过率
 Accepted: 已通过
 Access Control: 访问控制
+Processing...: 处理中...
+Confirm to delete the selected files?: 确认删除所选文件吗？
+Selected files have been deleted.: 所选文件已被删除。
+You don't have permission to upload file.: 您没有权限上传文件。
+file too large: 文件过大
+Loading file...: 正在加载文件内容...
+Loading editor...: 正在加载编辑器...
+Saving file...: 正在保存文件...
+File saved.: 文件已成功保存。
+Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
 Account Settings: 账户设置
 Action: 动作
 Active Sessions: 活动会话
