@@ -186,9 +186,9 @@ async function handleOperation(operation) {
   if (operation === 'delete') {
     const action = await new ConfirmDialog({
       $body: tpl`
-      <div class="typo">
-        <p>${i18n('Confirm to delete the selected problems?')}</p>
-      </div>`,
+        <div class="typo">
+          <p>${i18n('Confirm to delete the selected problems?')}</p>
+        </div>`,
     }).open();
     if (action !== 'yes') return;
   }

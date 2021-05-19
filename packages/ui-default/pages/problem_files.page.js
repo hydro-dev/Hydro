@@ -88,12 +88,12 @@ const page = new NamedPage('problem_files', () => {
       Notification.info(i18n('Uploading files...'));
       window.addEventListener('beforeunload', onBeforeUnload);
       const dialog = new Dialog({
-        $body: `\
-          <div class="file-label" style="text-align: center;margin: 5px 0;color: gray;font-size: small;"></div>
+        $body: `
+          <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
           <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
             <div class="file-progress bp3-progress-meter" style="width: 0"></div>
           </div>
-          <div class="upload-label" style="text-align: center;margin-bottom: 8px;color: gray;"></div>
+          <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
           <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
             <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
           </div>`,
@@ -185,11 +185,11 @@ const page = new NamedPage('problem_files', () => {
    * @param {JQuery.DropEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
    */
   function handleDrop(type, ev) {
-    if (!$('[name="remove_selected_testdata"]').length) {
+    ev.preventDefault();
+    if (!$('[name="upload_testdata"]').length) {
       Notification.error(i18n("You don't have permission to upload file."));
       return;
     }
-    ev.preventDefault();
     ev = ev.originalEvent;
     const files = [];
     if (ev.dataTransfer.items) {
@@ -261,7 +261,7 @@ const page = new NamedPage('problem_files', () => {
     await pjax.request({ push: false });
   }
 
-  if ($('[name="remove_selected_testdata"]').length) {
+  if ($('[name="upload_testdata"]').length) {
     $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
     $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
     $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
