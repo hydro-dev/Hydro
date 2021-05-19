@@ -52,16 +52,6 @@ AC Message: 通过消息
 Accepted Ratio: 通过率
 Accepted: 已通过
 Access Control: 访问控制
-Processing...: 处理中...
-Confirm to delete the selected files?: 确认删除所选文件吗？
-Selected files have been deleted.: 所选文件已被删除。
-You don't have permission to upload file.: 您没有权限上传文件。
-file too large: 文件过大
-Loading file...: 正在加载文件内容...
-Loading editor...: 正在加载编辑器...
-Saving file...: 正在保存文件...
-File saved.: 文件已成功保存。
-Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
 Account Settings: 账户设置
 Action: 动作
 Active Sessions: 活动会话
@@ -142,6 +132,7 @@ Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this reply?: 确认删除这个回复吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
+Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
 Congratulations! Your submission is accepted.: 恭喜！您的递交已评测通过。
 Contact Us: 联系我们
@@ -316,6 +307,8 @@ Failed to join the domain. You are already a member.: 加入域失败，您已�
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
+File saved.: 文件已成功保存。
+file too large: 文件过大
 File uploaded successfully.: 上传文件成功
 File: 文件
 Filename: 文件名
@@ -416,6 +409,8 @@ Links: 链接
 List View: 列表视图
 Live: 正在进行
 Live...: 正在进行…
+Loading editor...: 正在加载编辑器...
+Loading file...: 正在加载文件内容...
 Location: 位置
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
@@ -535,6 +530,7 @@ Pick a problem randomly based on current filter: 根据当前过滤条件随机�
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
+Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Preference Settings: 偏好设置
@@ -570,6 +566,7 @@ problem.import.output_format: '## 输出格式'
 problem.import.problem_description: '## 题目描述'
 Problems Sets: 题库
 Problems: 题目
+Processing...: 处理中...
 Profile Background Image: 背景图片
 Progress: 进度
 Properties: 属性
@@ -635,6 +632,7 @@ Sample Input: 输入数据
 Sample Output: 输出数据
 Save All Changes: 保存所有修改
 Saved session: 已保存的会话
+Saving file...: 正在保存文件...
 score canceled: 成绩取消
 Score: 分数
 Scoreboard (Hidden): 成绩表 (隐藏)
@@ -648,6 +646,7 @@ Security: 安全
 Select a node to create discussion.: 选择一个节点来发表讨论。
 Select a role: 选择一个角色
 Select User: 选择用户
+Selected files have been deleted.: 所选文件已被删除。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
 Send Code after acceptance: 通过题目后发送源代码
@@ -845,6 +844,7 @@ You can create your own training plans and share with others.: 您可以创建�
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 该比赛已结束，您无法在比赛模式下递交该题目。您可以点击“在题库中打开”以普通模式查看和递交本题。
 You cannot submit for this problem because the homework's deadline is due.: 作业已超过截止时间，您无法递交本题目。
 You cannot visit this domain.: 您不能访问此域。
+You don't have permission to upload file.: 您没有权限上传文件。
 You don't have the required permission ({0}) in this domain.: 您在该域中无相应权限 ({0})。
 You don't have the required privilege.: 您没有相应的特权。
 You don't own any domain and don't have privilege to create domain.: 您不拥有任何域也没有创建域的特权。
