@@ -4,10 +4,11 @@ export function parse(output: string, fullscore: number) {
     let status = STATUS.STATUS_WRONG_ANSWER;
     let score = 0;
     let message = '';
-    if (output.startsWith('ok ')) status = STATUS.STATUS_ACCEPTED;
-    else if (output.startsWith('wrong answer ')) {
-        message = output.split('wrong answer ')[1] || '';
+    if (output.startsWith('ok ')) {
+        status = STATUS.STATUS_ACCEPTED;
         score = fullscore;
+    } else if (output.startsWith('wrong answer ')) {
+        message = output.split('wrong answer ')[1] || '';
     } else if (output.startsWith('wrong output format ')) {
         message = `PE ${output.split('wrong output format ')[1] || ''}`;
     } else if (output.startsWith('unexpected eof ')) {
