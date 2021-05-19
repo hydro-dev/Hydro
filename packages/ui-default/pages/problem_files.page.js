@@ -84,20 +84,24 @@ const page = new NamedPage('problem_files', () => {
       await new Promise((resolve) => { input.onchange = resolve; });
       files = input.files;
     }
+    if (!files.length) {
+      Notification.warn(i18n('No file selected.'));
+      return;
+    }
+    const dialog = new Dialog({
+      $body: `
+        <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
+        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+          <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+        </div>
+        <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
+        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
+          <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+        </div>`,
+    });
     try {
       Notification.info(i18n('Uploading files...'));
       window.addEventListener('beforeunload', onBeforeUnload);
-      const dialog = new Dialog({
-        $body: `
-          <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-            <div class="file-progress bp3-progress-meter" style="width: 0"></div>
-          </div>
-          <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-          <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-            <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
-          </div>`,
-      });
       dialog.open();
       const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
       const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
@@ -132,13 +136,14 @@ const page = new NamedPage('problem_files', () => {
           },
         });
       }
-      dialog.close();
       window.removeEventListener('beforeunload', onBeforeUnload);
       Notification.success(i18n('File uploaded successfully.'));
       await pjax.request({ push: false });
     } catch (e) {
       console.error(e);
       Notification.error(i18n('File upload failed: {0}', e.toString()));
+    } finally {
+      dialog.close();
     }
   }
 

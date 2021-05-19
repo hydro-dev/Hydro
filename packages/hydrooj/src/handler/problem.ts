@@ -388,11 +388,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
+            const owner_udoc = await user.getById(domainId, this.pdoc.owner);
             this.response.body = {
                 fragments: (await Promise.all([
                     this.renderHTML('partials/problem_files-testdata.html', { testdata, pdoc: this.pdoc }),
                     this.renderHTML('partials/problem_files-additional_file.html', { additional_file, pdoc: this.pdoc }),
-                    this.renderHTML('partials/problem-sidebar-information.html', { pdoc: this.pdoc }),
+                    this.renderHTML('partials/problem-sidebar-information.html', { pdoc: this.pdoc, owner_udoc }),
                 ])).map((i) => ({ html: i })),
             };
             this.response.template = '';
