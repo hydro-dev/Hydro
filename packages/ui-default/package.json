@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.8.28",
+  "version": "4.8.29",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -73,6 +73,7 @@
     "plugin-error": "^1.0.1",
     "postcss-loader": "^3.0.0",
     "prism-themes": "^1.7.0",
+    "prismjs": "^1.23.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -99,13 +100,13 @@
     "vditor": "^3.8.4",
     "vinyl-buffer": "^1.0.1",
     "wastyle": "^0.0.5",
+    "web-streams-polyfill": "^3.0.2",
     "webpack": "^4.44.2",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-dev-server": "^3.11.2",
     "webpackbar": "^5.0.0-3"
   },
   "dependencies": {
-    "98.css": "^0.1.16",
     "js-yaml": "^4.0.0",
     "katex": "^0.13.11",
     "lodash": "^4.17.21",
@@ -116,9 +117,7 @@
     "markdown-it-mark": "^3.0.1",
     "markdown-it-table-of-contents": "^0.5.2",
     "nunjucks": "^3.2.3",
-    "prismjs": "^1.23.0",
     "streamsaver": "^2.0.5",
-    "web-streams-polyfill": "^3.0.2",
     "xss": "^1.0.9",
     "yargs": "^17.0.1"
   }

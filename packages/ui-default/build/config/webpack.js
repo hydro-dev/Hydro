@@ -88,7 +88,6 @@ export default function (env = {}) {
     entry: {
       hydro: './entry.js',
       'default.theme': './theme/default.js',
-      // 'theme.98': './theme/98.js',
     },
     output: {
       path: root('public'),

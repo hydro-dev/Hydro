@@ -36,7 +36,7 @@ const page = new NamedPage('user_detail', async () => {
       bottom: '10%',
     },
     xAxis: { data: history.map((x, i) => moment().add(-30 + i, 'days').fromNow()) },
-    yAxis: { type: 'category' },
+    yAxis: { type: 'value', scale: true },
     toolbox: {
       right: 10,
       feature: {
