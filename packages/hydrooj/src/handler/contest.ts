@@ -1,7 +1,6 @@
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
-import { isSafeInteger } from 'lodash';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError, BadRequestError,
@@ -215,11 +214,8 @@ class ContestEditHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
-            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
-            return i;
-        });
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) {
             throw new ValidationError('beginAtDate', 'beginAtTime');
@@ -389,7 +385,7 @@ class ContestCodeHandler extends Handler {
         for (const rdoc of rdocs) {
             zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
         }
-        await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
+        this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }
 }
 
@@ -429,19 +425,14 @@ class ContestCreateHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
-            if (isSafeInteger(parseInt(i, 10))) return parseInt(i, 10);
-            return i;
-        });
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
         const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        if (!beginAt.isValid()) {
-            throw new ValidationError('beginAtDate', 'beginAtTime');
-        }
-        const endAt = beginAt.clone().add(duration, 'hours');
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false);
+        if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
+        const endAt = beginAt.clone().add(duration, 'hours').toDate();
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
         const tid = await contest.add(
             domainId, title, content,
-            this.user._id, rule, beginAt.toDate(), endAt.toDate(), pids, rated,
+            this.user._id, rule, beginAt.toDate(), endAt, pids, rated,
         );
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });

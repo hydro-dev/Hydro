@@ -251,7 +251,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   loadSubjective();
 
   if (pagename === 'contest_detail_problem') return;
-  UiContext.pdoc.stats = UiContext.pdoc.stats || {};
+  if (!Object.keys(UiContext.pdoc.stats || {}).length) {
+    $('#submission-status-placeholder').parent().hide();
+    return;
+  }
   const $status = document.getElementById('submission-status-placeholder');
   const statusChart = echarts.init($status);
   statusChart.setOption({

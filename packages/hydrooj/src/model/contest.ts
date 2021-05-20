@@ -444,6 +444,10 @@ export async function get(domainId: string, tid: ObjectID, type: Type | -1 = doc
     return tdoc;
 }
 
+export async function getRelated(domainId: string, pid: number, type: Type = document.TYPE_CONTEST) {
+    return await document.getMulti(domainId, type, { pids: pid }).toArray();
+}
+
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
     accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
@@ -624,6 +628,7 @@ global.Hydro.model.contest = {
     edit,
     del,
     get,
+    getRelated,
     updateStatus,
     getStatus,
     count,

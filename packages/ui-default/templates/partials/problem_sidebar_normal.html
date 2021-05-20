@@ -105,14 +105,14 @@
     </ol>
   </div>
 </div>
-{% if page_name != 'problem_detail' and page_name != 'homework_detail_problem' %}
+{% if page_name != 'problem_detail' and page_name != 'homework_detail_problem' and page_name != 'contest_detail_problem' %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Information') }}</h1>
   </div>
   {% include "partials/problem-sidebar-information.html" %}
 </div>
-{% else %}
+{% elif page_name != 'contest_detail_problem' %}
 <div class="section side nojs-hide">
   <div class="section__header">
     <h1 class="section__title">{{ _('Statistics') }}</h1>
@@ -121,22 +121,22 @@
   <div id="submission-score-placeholder" style="width: 100%; height:230px"></div>
 </div>
 {% endif %}
-{% if page_name == 'problem_detail' and (tdocs or ctdocs) %}
+{% if page_name == 'problem_detail' and (tdocs.length or ctdocs.length) %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Related') }}</h1>
   </div>
   <div class="section__body typo">
-  {% if tdocs %}
+  {% if tdocs.length %}
     <p>{{ _('In following training plans') }}: </p>
     {%- for tdoc in tdocs -%}
-    <p><a href="{{ url('training_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
+      <p><a href="{{ url('training_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
     {%- endfor -%}
   {% endif %}
-  {% if ctdocs %}
+  {% if ctdocs.length %}
     <p>{{ _('In following contests') }}: </p>
     {%- for tdoc in ctdocs -%}
-    <p><a href="{{ url('contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
+      <p><a href="{{ url('contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
     {%- endfor -%}
   {% endif %}
   </div>

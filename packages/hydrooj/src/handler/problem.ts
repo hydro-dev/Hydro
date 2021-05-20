@@ -19,6 +19,8 @@ import problem from '../model/problem';
 import record from '../model/record';
 import domain from '../model/domain';
 import user from '../model/user';
+import * as document from '../model/document';
+import * as contest from '../model/contest';
 import solution from '../model/solution';
 import { PERM, PRIV } from '../model/builtin';
 import storage from '../service/storage';
@@ -213,11 +215,14 @@ export class ProblemDetailHandler extends ProblemHandler {
     async get(..._args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        if (!this.request.json) {
+            this.response.body.pdoc.content = this.response.body.pdoc.content
+                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+        }
         if (this.pdoc.psdoc) {
             this.response.body.rdoc = await record.get(this.domainId, this.pdoc.psdoc.rid);
         }
+        this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
     }
 
     @param('pid', Types.UnsignedInt)
@@ -233,6 +238,12 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        const [ctdocs, htdocs] = await Promise.all([
+            contest.getRelated(this.domainId, this.pdoc.docId, document.TYPE_CONTEST),
+            contest.getRelated(this.domainId, this.pdoc.docId, document.TYPE_HOMEWORK),
+        ]);
+        if (ctdocs.length) throw new BadRequestError('Problem already used by contest {0}', ctdocs[0]._id);
+        if (htdocs.length) throw new BadRequestError('Problem already used by homwrork {0}', htdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
     }
@@ -264,7 +275,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     async post(domainId: string, lang: string, code: string) {
-        if (this.response.body.pdoc.config.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
+        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 5);
