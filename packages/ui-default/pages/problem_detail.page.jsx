@@ -1,4 +1,5 @@
 import yaml from 'js-yaml';
+import { getScoreColor } from '@hydrooj/utils/lib/status';
 import * as echarts from 'echarts';
 import { NamedPage } from 'vj/misc/Page';
 import Navigation from 'vj/components/navigation';
@@ -9,7 +10,6 @@ import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import base64 from 'vj/utils/base64';
-import { getScoreColor } from 'vj/../utils/lib/status';
 
 class ProblemPageExtender {
   constructor() {

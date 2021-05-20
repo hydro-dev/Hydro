@@ -101,7 +101,11 @@ export default function (env = {}) {
     resolve: {
       modules: [root('node_modules'), root('../../node_modules')],
       extensions: ['.js', '.jsx'],
-      alias: { vj: root() },
+      alias: {
+        vj: root(),
+        'js-yaml': root('utils/yamlCompact'),
+        'real-js-yaml': require.resolve('js-yaml'),
+      },
     },
     module: {
       rules: [
