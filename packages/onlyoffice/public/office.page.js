@@ -17,7 +17,7 @@
     }
 
     const page = new AutoloadPage('onlyoffice', async () => {
-        const res = $('div[data-doc]');
+        let res = $('div[data-doc]');
         if (res.length) await load();
         res.get().forEach(async (element) => {
             const id = `doc-${Math.random().toString()}`;
