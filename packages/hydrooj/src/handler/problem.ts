@@ -339,19 +339,6 @@ export class ProblemPretestConnectionHandler extends ConnectionHandler {
     }
 }
 
-export class ProblemStatisticsHandler extends ProblemDetailHandler {
-    async get(domainId: string) {
-        const udoc = await user.getById(domainId, this.pdoc.owner);
-        const path = [
-            ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid || this.pdoc.docId }, true],
-            ['problem_statistics', null],
-        ];
-        this.response.template = 'problem_statistics.html';
-        this.response.body = { pdoc: this.pdoc, udoc, path };
-    }
-}
-
 export class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -435,6 +422,10 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             throw new ForbiddenError('File limit exceeded.');
         }
         if (!this.request.files.file) throw new ValidationError('file');
+        const size = Math.sum((this.pdoc.data || []).map((i) => i.size), (this.pdoc.additional_file || []).map((i) => i.size));
+        if (size >= system.get('limit.problem_files_max_size')) {
+            throw new ForbiddenError('File size limit exceeded.');
+        }
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -648,7 +639,6 @@ export async function apply() {
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler, PERM.PERM_SUBMIT_PROBLEM);
-    Route('problem_statistics', '/p/:pid/statistics', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
