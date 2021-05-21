@@ -214,7 +214,7 @@ class ContestEditHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) {
@@ -425,7 +425,7 @@ class ContestCreateHandler extends Handler {
         domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAt.clone().add(duration, 'hours').toDate();

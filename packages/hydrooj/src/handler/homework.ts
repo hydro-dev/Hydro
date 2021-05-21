@@ -259,7 +259,7 @@ class HomeworkCreateHandler extends Handler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
@@ -323,7 +323,7 @@ class HomeworkEditHandler extends Handler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: string, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);

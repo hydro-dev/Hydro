@@ -629,6 +629,10 @@ export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
         this.response.body = await problem.getPrefixList(domainId, prefix);
+        if (!Number.isNaN(+prefix)) {
+            const pdoc = await problem.get(domainId, +prefix, undefined, ['domainId', 'docId', 'pid', 'title']);
+            if (pdoc) this.response.body.unshift(pdoc);
+        }
     }
 }
 
