@@ -8,6 +8,7 @@ import { Route, Handler } from 'hydrooj/dist/service/server';
 import { buildContent } from 'hydrooj/dist/lib/content';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import solution from 'hydrooj/dist/model/solution';
+import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { FileTooLargeError, ValidationError } from 'hydrooj/dist/error';
 import type { ProblemConfig } from 'hydrooj';
@@ -18,7 +19,6 @@ class FpsProblemImportHandler extends Handler {
     }
 
     async run(domainId: string, result: any) {
-        const problem = global.Hydro.model.problem;
         for (const p of result.fps.item) {
             const content = buildContent({
                 description: p.description,
