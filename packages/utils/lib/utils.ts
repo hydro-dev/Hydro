@@ -270,6 +270,8 @@ export function errorMessage(err: Error | string) {
         .replace(/\/.+\/@hydrooj\//g, '\\')
         .replace(/[A-Z]:\\.+\\hydrooj\\/g, 'hydrooj\\')
         .replace(/\/.+\/hydrooj\//g, 'hydrooj/')
+        .replace(/[A-Z]:\\.+\\node_modules\\/g, '')
+        .replace(/\/.+\/node_modules\//g, '')
         .replace(/\\/g, '/');
     if (typeof err === 'string') return parsed;
     err.stack = parsed;
