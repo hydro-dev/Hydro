@@ -665,17 +665,21 @@ async function handle(ctx, HandlerClass, checker) {
             throw new MethodNotAllowedError(method);
         }
 
-        await bus.serial('handler/init', h);
-        await bus.serial(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail('handler/init', h);
+        await bus.bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail('handler/before-prepare', h);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
-        await bus.serial(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail('handler/before', h);
         if (h[method]) await h[method](args);
         if (operation) await h[`post${operation}`](args);
-        await bus.serial(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail('handler/after', h);
         if (h.cleanup) await h.cleanup(args);
         if (h.finish) await h.finish(args);
-        await bus.serial(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bus.bail('handler/finish', h);
     } catch (e) {
         try {
             await h.onerror(e);
