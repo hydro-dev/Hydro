@@ -225,11 +225,9 @@ const page = new NamedPage('problem_files', () => {
     const language = {
       yaml: 'yaml',
       yml: 'yaml',
-      txt: 'plain',
-      in: 'plain',
-      out: 'plain',
-      ans: 'plain',
-    }[filename.split('.').pop()];
+      cc: 'cpp',
+      json: 'json',
+    }[filename.split('.').pop()] || 'plain';
     const editor = new Editor($('[name="fileContent"]'), {
       value,
       autoResize: false,
@@ -248,6 +246,7 @@ const page = new NamedPage('problem_files', () => {
    * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
    */
   async function handleEdit(type, ev) {
+    if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return;
     if (ev) ev.preventDefault();
     const filename = ev
       ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
@@ -266,7 +265,6 @@ const page = new NamedPage('problem_files', () => {
       content = await request.get(res.url, undefined, { dataType: 'text' });
     } else Notification.info(i18n('Loading editor...'));
     const val = await startEdit(filename, content);
-    console.log(val);
     if (typeof val !== 'string') return;
     Notification.info(i18n('Saving file...'));
     const data = new FormData();
@@ -280,21 +278,21 @@ const page = new NamedPage('problem_files', () => {
   }
 
   if ($('[name="upload_testdata"]').length) {
-    $('.problem-files-testdata .col--name').on('click', (ev) => handleEdit('testdata', ev));
-    $('.problem-files-additional_file .col--name').on('click', (ev) => handleEdit('additional_file', ev));
-    $('[name="upload_testdata"]').on('click', () => handleClickUpload('testdata'));
-    $('[name="upload_file"]').on('click', () => handleClickUpload('additional_file'));
-    $('[name="create_testdata"]').on('click', () => handleEdit('testdata'));
-    $('[name="create_file"]').on('click', () => handleEdit('additional_file'));
-    $('[name="remove_selected_testdata"]').on('click', () => handleClickRemoveSelected('testdata'));
-    $('[name="remove_selected_file"]').on('click', () => handleClickRemoveSelected('additional_file'));
+    $(document).on('click', '.problem-files-testdata .col--name', (ev) => handleEdit('testdata', ev));
+    $(document).on('click', '.problem-files-additional_file .col--name', (ev) => handleEdit('additional_file', ev));
+    $(document).on('click', '[name="upload_testdata"]', () => handleClickUpload('testdata'));
+    $(document).on('click', '[name="upload_file"]', () => handleClickUpload('additional_file'));
+    $(document).on('click', '[name="create_testdata"]', () => handleEdit('testdata'));
+    $(document).on('click', '[name="create_file"]', () => handleEdit('additional_file'));
+    $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));
+    $(document).on('click', '[name="remove_selected_file"]', () => handleClickRemoveSelected('additional_file'));
   }
-  $('.problem-files-testdata').on('dragover', (ev) => handleDragOver('testdata', ev));
-  $('.problem-files-additional_file').on('dragover', (ev) => handleDragOver('additional_file', ev));
-  $('.problem-files-testdata').on('drop', (ev) => handleDrop('testdata', ev));
-  $('.problem-files-additional_file').on('drop', (ev) => handleDrop('additional_file', ev));
-  $('[name="download_selected_testdata"]').on('click', () => handleClickDownloadSelected('testdata'));
-  $('[name="download_selected_file"]').on('click', () => handleClickDownloadSelected('additional_file'));
+  $(document).on('dragover', '.problem-files-testdata', (ev) => handleDragOver('testdata', ev));
+  $(document).on('dragover', '.problem-files-additional_file', (ev) => handleDragOver('additional_file', ev));
+  $(document).on('drop', '.problem-files-testdata', (ev) => handleDrop('testdata', ev));
+  $(document).on('drop', '.problem-files-additional_file', (ev) => handleDrop('additional_file', ev));
+  $(document).on('click', '[name="download_selected_testdata"]', () => handleClickDownloadSelected('testdata'));
+  $(document).on('click', '[name="download_selected_file"]', () => handleClickDownloadSelected('additional_file'));
 });
 
 export default page;

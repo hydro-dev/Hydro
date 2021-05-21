@@ -170,7 +170,7 @@ function parseCategorySelection() {
 
 function ensureAndGetSelectedPids() {
   const pids = _.map(
-    $(`tbody [data-checkbox-group="problem"]:checked`),
+    $('tbody [data-checkbox-group="problem"]:checked'),
     (ch) => $(ch).closest('tr').attr('data-pid'),
   );
   if (pids.length === 0) {
@@ -204,7 +204,7 @@ async function handleOperation(operation) {
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {
   const doc = document.documentElement;
-  doc.className = doc.className + ' display-mode';
+  doc.className += ' display-mode';
   buildCategoryFilter();
   parseCategorySelection();
   $('[name="leave-edit-mode"]').on('click', () => {
