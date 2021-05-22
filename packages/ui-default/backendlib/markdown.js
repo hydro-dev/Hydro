@@ -18,6 +18,7 @@ const Footnote = require('markdown-it-footnote');
 const Mark = require('markdown-it-mark');
 const TOC = require('markdown-it-table-of-contents');
 const Anchor = require('markdown-it-anchor');
+const MergeCells = require('markdown-it-merge-cells');
 // @[url](videourl)
 // @[youtube](https://youtube.com/watch?v=xxx)
 // @[pdf](https://foo.com/bar.pdf)
@@ -39,6 +40,7 @@ class Markdown extends MarkdownIt {
     this.use(Anchor);
     this.use(TOC);
     this.use(Katex);
+    this.use(MergeCells);
     this.use(xssProtector);
   }
 }
