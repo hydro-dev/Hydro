@@ -57,7 +57,7 @@ export class ProblemSendHandler extends Handler {
                 .send({
                     operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
                 }).catch(logAndReturn(logger));
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Target/Request] ${res.message}`);
         this.back();
     }
 
@@ -123,7 +123,7 @@ export class ProblemReceiveHandler extends Handler {
         const res = await superagent.post(url)
             .send({ operation: 'info', token: tokenId })
             .catch(logAndReturn(logger));
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Origin/Info] ${res.message}`);
         const [id] = await token.add(token.TYPE_IMPORT, expire, {
             domainId, tokenId, source: url, pdocs: res.body.pdocs, pids: res.body.pids,
         });
@@ -154,7 +154,7 @@ export class ProblemReceiveHandler extends Handler {
             token: data.tokenId,
             pids: filterPid.length ? filterPid.map((i) => (+i ? +i : i)) : data.pids,
         }).catch(logAndReturn(logger));
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Origin/Fetch] ${res.message}`);
         const pids = [];
         const { pdocs } = res.body;
         const files = res.body.links;

@@ -63,11 +63,11 @@ class ProxySendRequestHandler extends Handler {
         let res = await superagent.post(`${url}d/${domainId}/problem/send`)
             .send({ operation: 'info', token: tokenId })
             .catch((e) => e);
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Target/Send/Info] ${res.message}`);
         res = await superagent.post(`${endpoint}/problem/receive`).send({
             operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
         }).catch((e) => e);
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(res.message);
+        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Target/Receive/Request] ${res.message}`);
         this.response.body = { code: 0 };
     }
 }
