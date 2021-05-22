@@ -8,7 +8,7 @@ import {
     ForbiddenError,
 } from '../error';
 import {
-    ProblemDoc, User, RecordDoc, PathComponent, ProblemStatusDoc,
+    ProblemDoc, User, PathComponent, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -26,7 +26,7 @@ import { PERM, PRIV } from '../model/builtin';
 import storage from '../service/storage';
 import * as bus from '../service/bus';
 import {
-    Route, Connection, Handler, ConnectionHandler, Types, param, post, route, query,
+    Route, Handler, Types, param, post, route, query,
 } from '../service/server';
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
