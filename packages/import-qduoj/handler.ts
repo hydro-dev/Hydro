@@ -9,6 +9,7 @@ import { BadRequestError, ValidationError } from 'hydrooj/dist/error';
 import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
+import { buildContent } from 'hydrooj/dist/lib/content';
 import type { ContentNode, ProblemConfig } from 'hydrooj';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
@@ -76,7 +77,7 @@ class ImportQduojHandler extends Handler {
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const n = await problem.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
-                const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, JSON.stringify(content), this.user._id, pdoc.tags);
+                const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'), this.user._id, pdoc.tags);
                 const config: ProblemConfig = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,

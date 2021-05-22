@@ -18,6 +18,7 @@ import {
 } from '../service/server';
 import { isPid, parsePid } from '../lib/validator';
 import download from '../lib/download';
+import { buildContent } from '../lib/content';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');
@@ -142,8 +143,9 @@ class ProblemImportSYZOJHandler extends Handler {
                 text: `${url}download/additional_file`,
             });
         }
+        const c = buildContent(content, 'markdown');
         const docId = await problem.add(
-            domainId, target, p.title, JSON.stringify(content), this.user._id, p.tags || [], hidden,
+            domainId, target, p.title, c, this.user._id, p.tags || [], hidden,
         );
         const r = download(`${url}testdata/download`);
         const file = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${docId}.zip`);

@@ -28,6 +28,7 @@ import { STATUS } from './model/builtin';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import { size } from './lib/misc';
+import { buildContent } from './lib/content';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
@@ -371,6 +372,25 @@ const scripts: UpgradeScript[] = [
             const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
             await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
         }
+        return true;
+    },
+    async function _28_29() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['content', 'html'], async (pdoc) => {
+            try {
+                const parsed = JSON.parse(pdoc.content);
+                if (parsed instanceof Array) {
+                    await problem.edit(pdoc.domainId, pdoc.docId, { content: buildContent(parsed, pdoc.html ? 'html' : 'markdown') });
+                    return;
+                }
+                const res = {};
+                for (const key in parsed) {
+                    if (typeof parsed[key] === 'string') res[key] = parsed[key];
+                    else res[key] = buildContent(parsed[key]);
+                }
+                await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(res) });
+            } catch { }
+        });
         return true;
     },
 ];
