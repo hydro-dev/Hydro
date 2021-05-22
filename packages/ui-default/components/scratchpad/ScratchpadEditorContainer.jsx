@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import monaco from 'vj/components/monaco/index';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
@@ -19,45 +19,36 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
-monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-  noSemanticValidation: false,
-  noSyntaxValidation: false,
-});
-monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-  target: monaco.languages.typescript.ScriptTarget.ES6,
-  allowNonTsExtensions: true,
-});
-const libSource = [
-  'declare function readline(): string;',
-  'declare function print(content: string): void',
-].join('\n');
-const libUri = 'ts:filename/basic.d.ts';
-monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
-monaco.editor.createModel(libSource, 'typescript', monaco.Uri.parse(libUri));
-
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
+  disposable = [];
+
   componentDidMount() {
     const value = this.props.value || '';
     const { language, theme } = this.props;
     this.model = monaco.editor.createModel(value, language, monaco.Uri.parse('file://model'));
     if (this.containerElement) {
-      this.editor = monaco.editor.create(
-        this.containerElement,
-        {
-          theme,
-          lineNumbers: true,
-          glyphMargin: true,
-          lightbulb: {
-            enabled: true,
-          },
-          model: this.model,
-        }
+      /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
+      const config = {
+        theme,
+        lineNumbers: true,
+        glyphMargin: true,
+        lightbulb: { enabled: true },
+        model: this.model,
+      };
+      const fontSize = localStorage.getItem('scratchpad.editor.fontSize');
+      if (fontSize && !Number.isNaN(+fontSize)) config.fontSize = +fontSize;
+      this.editor = monaco.editor.create(this.containerElement, config);
+      this.disposable.push(
+        this.editor.onDidChangeModelContent((event) => {
+          if (!this.__prevent_trigger_change_event) {
+            this.props.handleUpdateCode(this.editor.getValue(), event);
+          }
+        }),
+        this.editor.onDidChangeConfiguration(() => {
+          const current = this.editor.getOptions()._values[40].fontSize;
+          localStorage.setItem('scratchpad.editor.fontSize', current);
+        })
       );
-      this._subscription = this.editor.onDidChangeModelContent((event) => {
-        if (!this.__prevent_trigger_change_event) {
-          this.props.handleUpdateCode(this.editor.getValue(), event);
-        }
-      });
       window.editor = this.editor;
     }
   }
@@ -97,7 +88,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   componentWillUnmount() {
     if (this.editor) this.editor.dispose();
     if (this.model) this.model.dispose();
-    if (this._subscription) this._subscription.dispose();
+    this.disposable.map((i) => i());
   }
 
   assignRef = (component) => {
