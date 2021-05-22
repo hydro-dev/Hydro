@@ -21,10 +21,10 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit'], 
     if (Object.keys(options).length > 1) {
       setOptions($('#codelang-sub-select'), options);
       $('#codelang-sub-container').show();
-      $('[name="codeLang"]').val($('#codelang-sub-select').val());
+      $('[name="lang"]').val($('#codelang-sub-select').val());
     } else {
       $('#codelang-sub-container').hide();
-      $('[name="codeLang"]').val(this.value);
+      $('[name="lang"]').val(this.value);
     }
   });
   $('#codelang-sub-select').on('change', function () {
