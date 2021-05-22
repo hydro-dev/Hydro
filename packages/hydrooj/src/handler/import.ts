@@ -1,4 +1,5 @@
-import fs from 'fs';
+/* eslint-disable no-await-in-loop */
+import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
 import assert from 'assert';
@@ -10,7 +11,7 @@ import yaml from 'js-yaml';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
-import problem from '../model/problem';
+import problem, { ProblemDoc } from '../model/problem';
 import TaskModel from '../model/task';
 import { PERM } from '../model/builtin';
 import {
@@ -19,11 +20,12 @@ import {
 import { isPid, parsePid } from '../lib/validator';
 import download from '../lib/download';
 import { buildContent } from '../lib/content';
+import { ProblemAdd } from '../lib/ui';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');
 
-async function syncFiles(info) {
+async function syzojSync(info) {
     const {
         protocol, host, body, pid, domainId, docId,
     } = info;
@@ -67,7 +69,7 @@ async function syncFiles(info) {
         await problem.addAdditionalFile(domainId, docId, f.filename, p);
     }
 }
-TaskModel.Worker.addHandler('import.syzoj', syncFiles);
+TaskModel.Worker.addHandler('import.syzoj', syzojSync);
 
 class ProblemImportSYZOJHandler extends Handler {
     async get() {
@@ -226,7 +228,7 @@ class ProblemImportSYZOJHandler extends Handler {
         const payload = {
             protocol, host, pid, domainId, docId, body: result.body,
         };
-        if (wait) await syncFiles(payload);
+        if (wait) await syzojSync(payload);
         else await TaskModel.add({ ...payload, type: 'schedule', subType: 'import.syzoj' });
         return docId;
     }
@@ -272,8 +274,67 @@ class ProblemImportSYZOJHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('problem_import_syzoj', '/problem/import/syzoj', ProblemImportSYZOJHandler, PERM.PERM_CREATE_PROBLEM);
+class ProblemImportHydroHandler extends Handler {
+    async get() {
+        this.response.template = 'problem_import.html';
+    }
+
+    async post({ domainId }) {
+        if (!this.request.files.file) throw new ValidationError('file');
+        const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
+        const zip = new AdmZip(this.request.files.file.path);
+        await new Promise((resolve, reject) => {
+            zip.extractAllToAsync(tmpdir, true, (err) => {
+                if (err) reject(err);
+                resolve(null);
+            });
+        });
+        try {
+            const problems = await fs.readdir(tmpdir);
+            for (const i of problems) {
+                const files = await fs.readdir(path.join(tmpdir, i));
+                if (!files.includes('problem.yaml')) continue;
+                const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
+                const pdoc: ProblemDoc = yaml.load(content) as any;
+                const current = await problem.get(domainId, pdoc.pid);
+                const pid = current ? undefined : pdoc.pid;
+                const docId = await problem.add(domainId, pid, pdoc.title, pdoc.content, pdoc.owner, pdoc.tag, pdoc.hidden);
+                if (files.includes('testdata')) {
+                    const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
+                    for (const f of datas) {
+                        if (f.isDirectory()) {
+                            const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
+                            for (const s of sub) {
+                                const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name, s));
+                                await problem.addTestdata(domainId, docId, `${f.name}/${s}`, stream);
+                            }
+                        } else if (f.isFile()) {
+                            const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name));
+                            await problem.addTestdata(domainId, docId, f.name, stream);
+                        }
+                    }
+                }
+                if (files.includes('additional_file')) {
+                    const datas = await fs.readdir(path.join(tmpdir, i, 'additional_file'), { withFileTypes: true });
+                    for (const f of datas) {
+                        if (f.isFile()) {
+                            const stream = fs.createReadStream(path.join(tmpdir, i, 'additional_file', f.name));
+                            await problem.addAdditionalFile(domainId, docId, f.name, stream);
+                        }
+                    }
+                }
+            }
+        } finally {
+            await fs.remove(tmpdir);
+        }
+        this.response.redirect = this.url('problem_main');
+    }
 }
 
-global.Hydro.handler['import.syzoj'] = apply;
+export async function apply() {
+    ProblemAdd('problem_import_hydro', {}, 'copy', 'Import From Hydro');
+    Route('problem_import_syzoj', '/problem/import/syzoj', ProblemImportSYZOJHandler, PERM.PERM_CREATE_PROBLEM);
+    Route('problem_import_hydro', '/problem/import/hydro', ProblemImportHydroHandler, PERM.PERM_CREATE_PROBLEM);
+}
+
+global.Hydro.handler.import = apply;

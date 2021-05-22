@@ -182,7 +182,7 @@ export class ProblemReceiveHandler extends Handler {
 }
 
 export async function apply() {
-    ProblemAdd('problem_receive', {}, 'copy', 'Import From Hydro');
+    ProblemAdd('problem_receive', {}, 'copy', 'Receive From Hydro');
     Route('problem_receive', '/problem/receive', ProblemReceiveHandler);
     Route('problem_send', '/problem/send', ProblemSendHandler);
 }

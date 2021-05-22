@@ -25,7 +25,7 @@ export const builtinModel = [
 
 export const builtinHandler = [
     'home', 'problem', 'record', 'judge', 'user',
-    'contest', 'training', 'discussion', 'manage', 'import.syzoj',
+    'contest', 'training', 'discussion', 'manage', 'import',
     'misc', 'homework', 'domain', 'remote', 'status',
 ];
 
