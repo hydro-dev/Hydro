@@ -157,16 +157,18 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           {' '}
           {i18n('Pretest')}
         </ToolbarButton>
-        <ToolbarButton
-          activated={this.props.recordsVisible}
-          onClick={() => this.props.togglePanel('records')}
-          data-global-hotkey="alt+r"
-          data-tooltip={`${i18n('Toggle Records Panel')} (Alt+R)`}
-        >
-          <Icon name="flag" />
-          {' '}
-          {i18n('Records')}
-        </ToolbarButton>
+        {UiContext.canViewRecord && (
+          <ToolbarButton
+            activated={this.props.recordsVisible}
+            onClick={() => this.props.togglePanel('records')}
+            data-global-hotkey="alt+r"
+            data-tooltip={`${i18n('Toggle Records Panel')} (Alt+R)`}
+          >
+            <Icon name="flag" />
+            {' '}
+            {i18n('Records')}
+          </ToolbarButton>
+        )}
       </Toolbar>
     );
   }

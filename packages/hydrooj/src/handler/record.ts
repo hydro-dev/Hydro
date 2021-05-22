@@ -1,5 +1,8 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { ContestNotFoundError, PermissionError, RecordNotFoundError } from '../error';
+import {
+    ContestNotFoundError, PermissionError, ProblemNotFoundError,
+    RecordNotFoundError, UserNotFoundError,
+} from '../error';
 import { RecordDoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
@@ -158,14 +161,44 @@ class RecordDetailHandler extends Handler {
 class RecordMainConnectionHandler extends ConnectionHandler {
     dispose: bus.Disposable;
     tid: string;
+    uid: number;
+    pid: number;
+    status: number;
+    pretest: boolean;
 
     @param('tid', Types.ObjectID, true)
-    async prepare(domainId: string, tid?: ObjectID) {
+    @param('pid', Types.Name, true)
+    @param('uidOrName', Types.Name, true)
+    @param('status', Types.Int, true)
+    @param('pretest', Types.Boolean)
+    async prepare(domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string, status?: number, pretest = false) {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (contest.canShowRecord.call(this, tdoc)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid, -1);
+            if (!tdoc) throw new ContestNotFoundError(domainId, tid);
+            if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            this.tid = tid.toHexString();
+        }
+        if (uidOrName) {
+            let udoc = await user.getById(domainId, +uidOrName);
+            if (udoc) this.uid = udoc._id;
+            else {
+                udoc = await user.getByUname(domainId, uidOrName);
+                if (udoc) this.uid = udoc._id;
+                else throw new UserNotFoundError(uidOrName);
+            }
+        }
+        if (pid) {
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) this.pid = pdoc.docId;
+            else throw new ProblemNotFoundError(domainId, pid);
+        }
+        if (status) this.status = status;
+        if (pretest) this.pretest = true;
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
@@ -182,9 +215,11 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(rdoc: RecordDoc) {
-        if (rdoc.input) return;
-        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (rdoc.domainId !== this.domainId) return;
+        if (!this.pretest && rdoc.input) return;
+        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (this.uid && rdoc.uid !== this.uid) return;
+        if (this.pid && rdoc.pid !== this.pid) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
@@ -194,7 +229,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
-        this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        if (this.pretest) this.send({ rdoc });
+        else this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
     }
 }
 

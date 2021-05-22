@@ -308,37 +308,6 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
     }
 }
 
-export class ProblemPretestConnectionHandler extends ConnectionHandler {
-    pid: string;
-    domainId: string;
-    dispose: bus.Disposable;
-
-    @param('pid', Types.Name)
-    async prepare(domainId: string, pid: string) {
-        const pdoc = await problem.get(domainId, pid);
-        if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
-        if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        this.pid = pdoc.docId.toString();
-        this.domainId = domainId;
-        this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
-    }
-
-    async onRecordChange(rdoc: RecordDoc) {
-        if (
-            rdoc.uid !== this.user._id
-            || rdoc.pid.toString() !== this.pid
-            || rdoc.domainId !== this.domainId
-        ) return;
-        // TODO handle update
-        if (rdoc.contest) return;
-        this.send({ rdoc });
-    }
-
-    async cleanup() {
-        if (this.dispose) this.dispose();
-    }
-}
-
 export class ProblemManageHandler extends ProblemDetailHandler {
     async prepare() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -651,7 +620,6 @@ export async function apply() {
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
-    Connection('problem_pretest_conn', '/conn/pretest', ProblemPretestConnectionHandler, PERM.PERM_SUBMIT_PROBLEM);
 }
 
 global.Hydro.handler.problem = apply;

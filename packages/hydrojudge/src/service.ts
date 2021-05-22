@@ -201,7 +201,7 @@ async function postInit() {
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
                 tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
-                logger.info(`Submission: ${this.rid}`, { pid: this.pid });
+                logger.info(`Submission: ${this.domainId}/${this.rid}`, { pid: this.pid });
                 if (typeof this.input === 'string') await this.run();
                 else await this.submission();
             } catch (e) {

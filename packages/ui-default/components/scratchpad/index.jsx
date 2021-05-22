@@ -14,9 +14,7 @@ function buildNestedPane([a, ...panes]) {
     a,
     ...panes.filter((p) => p.props.visible),
   ];
-  if (elements.length === 1) {
-    return a;
-  }
+  if (elements.length === 1) return a;
   return elements
     .reduce((prev, curr) => (
       <SplitPane

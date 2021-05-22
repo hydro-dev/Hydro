@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-undef */
 /// <reference types="./jssh" />
 
@@ -93,7 +94,13 @@ const steps = [
         operations: [
             () => {
                 const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', { NVM_NODEJS_ORG_MIRROR });
-                const ver = res.output.split('Now using node v')[1].split(' ')[0];
+                let ver;
+                try {
+                    ver = res.output.split('Now using node v')[1].split(' ')[0];
+                } catch (e) {
+                    log.error('Cannot parse version. Installation fail.');
+                    return 'retry';
+                }
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
                 const rc_path = `/root/.${__env['SHELL'].endsWith('zsh') ? 'zsh' : 'bash'}rc`;
                 if (!fs.exist(rc_path)) fs.writefile(rc_path, source_nvm);
@@ -153,11 +160,16 @@ const steps = [
         ],
     },
     {
+        init: '正在安装沙箱 / Installing sandbox',
+        operations: [
+            `curl -fSL ${SANDBOX_DOWNLOAD} -o /usr/bin/sandbox`,
+            'chmod +x /usr/bin/sandbox',
+        ],
+    },
+    {
         init: '正在安装 HydroOJ / Installing HydroOJ',
         operations: [
             'yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge',
-            () => http.download(SANDBOX_DOWNLOAD, '/usr/bin/sandbox'),
-            'chmod +x /usr/bin/sandbox',
             () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
     },
@@ -199,7 +211,11 @@ for (let i = 0; i < steps.length; i++) {
     if (!(step.skip && step.skip())) {
         for (const op of step.operations) {
             if (typeof op === 'string') {
-                exec(op);
+                let res = exec(op);
+                while (res === 'retry') {
+                    log.warn('Retry...');
+                    res = exec(op);
+                }
                 if (__code !== 0) log.fatal('Error when running %s', op);
             } else op();
         }
