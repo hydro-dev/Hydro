@@ -88,7 +88,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   componentWillUnmount() {
     if (this.editor) this.editor.dispose();
     if (this.model) this.model.dispose();
-    this.disposable.map((i) => i());
+    this.disposable.map((i) => i.dispose());
   }
 
   assignRef = (component) => {

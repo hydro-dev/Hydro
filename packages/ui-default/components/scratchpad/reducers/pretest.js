@@ -15,7 +15,7 @@ export default function reducer(state = {
   if (action.type === 'SCRATCHPAD_RECORDS_PUSH') {
     const { rdoc } = action.payload;
     if (rdoc._id === state.rid) {
-      const output = [`${STATUS_TEXTS[rdoc.status]} ${rdoc.time}ms ${rdoc.memory}MiB`];
+      const output = [`${STATUS_TEXTS[rdoc.status]} ${rdoc.time}ms ${rdoc.memory}KiB`];
       if (rdoc.compilerTexts.length) output.push(rdoc.compilerTexts.join('\n'));
       if (rdoc.testCases.length) output.push(rdoc.testCases[0].message || '');
       return {

@@ -14,7 +14,7 @@ export default function DataInputComponent(props) {
   return (
     <div {...rest} className={cn}>
       {html // eslint-disable-next-line react/no-danger
-        ? <div className="scratchpad__data-input" wrap="off" dangerouslySetInnerHTML={{ __html: value }} />
+        ? <div className="scratchpad__data-input" wrap="off"><pre dangerouslySetInnerHTML={{ __html: value }} /></div>
         : (
           <textarea
             className="scratchpad__data-input"

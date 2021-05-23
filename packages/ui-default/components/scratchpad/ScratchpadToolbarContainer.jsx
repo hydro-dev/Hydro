@@ -40,7 +40,7 @@ const mapDispatchToProps = (dispatch) => ({
     const req = request.post(UiContext.postPretestUrl, {
       lang: props.editorLang,
       code: props.editorCode,
-      input: props.pretestInput,
+      input: props.pretestInput || ' ',
     });
     dispatch({
       type: 'SCRATCHPAD_POST_PRETEST',
