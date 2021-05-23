@@ -14,6 +14,7 @@ export NVM_DIR="$HOME/.nvm"
 
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
 const china = (cli.prompt('此服务器是否位于中国大陆？(Y/n) ') || 'y').toLowerCase().trim() === 'y';
+const dev = (cli.prompt('您是否希望安装为开发模式？(y/N)') || 'n').toLowerCase().trim() === 'y';
 const NVM_NODEJS_ORG_MIRROR = china
     ? 'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release'
     : 'https://nodejs.org/dist';
@@ -54,9 +55,9 @@ const steps = [
         skip: () => fs.exist('/usr/bin/mongo'),
         operations: Arch
             ? [
-                'curl -fSLO https://s3.undefined.moe/hydro/arch/libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst',
-                'curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst',
-                'curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
+                ['curl -fSLO https://s3.undefined.moe/hydro/arch/libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst', { retry: true }],
+                ['curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst', { retry: true }],
+                ['curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst', { retry: true }],
                 'pacman --noconfirm -U libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst'
                 + 'mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
             ]
@@ -67,7 +68,7 @@ const steps = [
                         `deb [ arch=amd64 ] ${MONGODB_REPO} ${values.ubuntu_codename}/mongodb-org/4.4 multiverse`,
                     );
                 },
-                'wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -',
+                ['wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -', { retry: true }],
                 'apt-get -qq update',
                 'apt-get -q install -y mongodb-org',
             ],
@@ -109,7 +110,7 @@ const steps = [
                     if (!rc_file.includes(source_nvm)) fs.appendfile(rc_path, source_nvm);
                 }
             },
-            'npm i yarn -g',
+            ['npm i yarn -g', { retry: true }],
         ],
     },
     {
@@ -145,7 +146,7 @@ const steps = [
         init: '正在安装 MinIO / Installing MinIO',
         skip: () => fs.exist('/root/.hydro/env'),
         operations: [
-            `curl -fSL ${MINIO_DOWNLOAD} -o /usr/bin/minio`,
+            [`curl -fSL ${MINIO_DOWNLOAD} -o /usr/bin/minio`, { retry: true }],
             'chmod +x /usr/bin/minio',
             () => fs.writefile(
                 '/root/.hydro/env',
@@ -169,7 +170,15 @@ const steps = [
     {
         init: '正在安装 HydroOJ / Installing HydroOJ',
         operations: [
-            'yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge',
+            ...(dev
+                ? [
+                    ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
+                    ['yarn', { cwd: '/root/Hydro', retry: true }],
+                    ['yarn build', { cwd: '/root/Hydro' }],
+                    ['yarn build:ui', { cwd: '/root/Hydro' }],
+                    ['yarn global add npx', { retry: true }],
+                ]
+                : ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]),
             () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
     },
@@ -209,15 +218,19 @@ for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     log.info(step.init);
     if (!(step.skip && step.skip())) {
-        for (const op of step.operations) {
-            if (typeof op === 'string') {
-                let res = exec(op);
-                while (res === 'retry') {
-                    log.warn('Retry...');
-                    res = exec(op);
+        for (let op of step.operations) {
+            if (!(op instanceof Array)) op = [op, {}];
+            if (typeof op[0] === 'string') {
+                let retry = 0;
+                exec(op[0], op[1]);
+                while (__code !== 0) {
+                    if (op[1].retry && retry < 10) {
+                        log.warn('Retry...');
+                        exec(op[0]);
+                        retry++;
+                    } else log.fatal('Error when running %s', op[0]);
                 }
-                if (__code !== 0) log.fatal('Error when running %s', op);
-            } else op();
+            } else op[0](op[1]);
         }
     } else log.info('已跳过该步骤 / Step skipped');
 }
