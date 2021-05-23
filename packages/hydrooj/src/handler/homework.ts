@@ -196,7 +196,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     @param('code', Types.Content)
     @param('lang', Types.Name)
     async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
-        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes('lang')) {
+        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 5);
