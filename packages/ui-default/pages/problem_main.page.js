@@ -1,3 +1,4 @@
+import { WritableStream } from 'web-streams-polyfill/dist/ponyfill.es6';
 import _ from 'lodash';
 import { dump } from 'js-yaml';
 import * as streamsaver from 'streamsaver';
