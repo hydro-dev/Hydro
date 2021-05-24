@@ -7,27 +7,34 @@ let MINIO_ACCESS_KEY = randomstring(32);
 let MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 
+let retry = 0;
+
 const source_nvm = `\
 # load nvm env (by hydro installer)
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`;
-
+if (__user !== 'root') log.fatal('请使用 root 用户运行该工具。');
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
-const china = (cli.prompt('此服务器是否位于中国大陆？(Y/n) ') || 'y').toLowerCase().trim() === 'y';
 const dev = (cli.prompt('您是否希望安装为开发模式？(y/N)') || 'n').toLowerCase().trim() === 'y';
-const NVM_NODEJS_ORG_MIRROR = china
-    ? 'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release'
-    : 'https://nodejs.org/dist';
-const MONGODB_REPO = china
-    ? 'https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/ubuntu'
-    : 'https://repo.mongodb.org/apt/ubuntu';
-const MINIO_DOWNLOAD = china
-    ? 'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio'
-    : 'https://s3.undefined.moe/public/minio';
-const SANDBOX_DOWNLOAD = china
-    ? 'https://s3.undefined.moe/file/executor-amd64'
-    : 'https://github.com/criyle/go-judge/releases/download/v1.1.8/executorserver-amd64';
 
+const _NODE_ = [
+    'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release',
+    'https://mirrors.cloud.tencent.com/nodejs-release',
+    'https://nodejs.org/dist',
+];
+const _MONGODB_ = [
+    'https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/ubuntu',
+    'https://mirrors.cloud.tencent.com/mongodb/apt/ubuntu',
+    'https://repo.mongodb.org/apt/ubuntu',
+];
+const _MINIO_ = [
+    'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio',
+    'https://s3.undefined.moe/public/minio',
+];
+const _SANDBOX_ = [
+    'https://s3.undefined.moe/file/executor-amd64',
+    'https://github.com/criyle/go-judge/releases/download/v1.1.9/executorserver-amd64',
+];
 if (!fs.exist('/etc/os-release')) log.fatal('/etc/os-release 文件未找到');
 const osinfoFile = fs.readfile('/etc/os-release');
 const lines = osinfoFile.split('\n');
@@ -62,15 +69,10 @@ const steps = [
                 + 'mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
             ]
             : [
-                () => {
-                    fs.writefile(
-                        '/etc/apt/sources.list.d/mongodb-org-4.4.list',
-                        `deb [ arch=amd64 ] ${MONGODB_REPO} ${values.ubuntu_codename}/mongodb-org/4.4 multiverse`,
-                    );
-                },
                 ['wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -', { retry: true }],
-                'apt-get -qq update',
-                'apt-get -q install -y mongodb-org',
+                [`echo "deb [ arch=amd64 ] ${_MONGODB_[retry % _MONGODB_.length]} ${values.ubuntu_codename}\
+/mongodb-org/4.4 multiverse" >/etc/apt/sources.list.d/mongodb-org-4.4.list && \
+apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             ],
     },
     {
@@ -94,7 +96,9 @@ const steps = [
         init: '正在安装 NodeJS / Installing NodeJS',
         operations: [
             () => {
-                const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', { NVM_NODEJS_ORG_MIRROR });
+                const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', {
+                    NVM_NODEJS_ORG_MIRROR: _NODE_[retry % _NODE_.length],
+                });
                 let ver;
                 try {
                     ver = res.output.split('Now using node v')[1].split(' ')[0];
@@ -146,12 +150,9 @@ const steps = [
         init: '正在安装 MinIO / Installing MinIO',
         skip: () => fs.exist('/root/.hydro/env'),
         operations: [
-            [`curl -fSL ${MINIO_DOWNLOAD} -o /usr/bin/minio`, { retry: true }],
+            [`curl -fSL ${_MINIO_[retry % _MINIO_.length]} -o /usr/bin/minio`, { retry: true }],
             'chmod +x /usr/bin/minio',
-            () => fs.writefile(
-                '/root/.hydro/env',
-                [`MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}`, `MINIO_SECRET_KEY=${MINIO_SECRET_KEY}`].join('\n'),
-            ),
+            `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
         ],
     },
     {
@@ -163,7 +164,7 @@ const steps = [
     {
         init: '正在安装沙箱 / Installing sandbox',
         operations: [
-            `curl -fSL ${SANDBOX_DOWNLOAD} -o /usr/bin/sandbox`,
+            [`curl -fSL ${_SANDBOX_[retry % _SANDBOX_.length]} -o /usr/bin/sandbox`, { retry: true }],
             'chmod +x /usr/bin/sandbox',
         ],
     },
@@ -186,7 +187,7 @@ const steps = [
         init: '正在启动 / Starting',
         operations: [
             () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1]);
+                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1].trim());
             },
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
             'pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb',
@@ -201,7 +202,7 @@ const steps = [
         init: '安装完成 / Install done',
         operations: [
             () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1]);
+                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1].trim());
                 DATABASE_PASSWORD = loadconfig('/root/.hydro/config.json').password;
             },
             () => log.info('请重启终端并切换到 root 用户执行其他操作'),
@@ -221,10 +222,10 @@ for (let i = 0; i < steps.length; i++) {
         for (let op of step.operations) {
             if (!(op instanceof Array)) op = [op, {}];
             if (typeof op[0] === 'string') {
-                let retry = 0;
+                retry = 0;
                 exec(op[0], op[1]);
                 while (__code !== 0) {
-                    if (op[1].retry && retry < 10) {
+                    if (op[1].retry && retry < 30) {
                         log.warn('Retry...');
                         exec(op[0]);
                         retry++;
