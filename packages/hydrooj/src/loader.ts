@@ -135,7 +135,7 @@ process.on('uncaughtException', logger.error);
 
 const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
 
-export function addon(addonPath: string) {
+export function addon(addonPath: string, prepend = false) {
     if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
             // Is a npm package
@@ -143,7 +143,8 @@ export function addon(addonPath: string) {
             const modulePath = path.dirname(packagejson);
             const publicPath = path.resolve(modulePath, 'public');
             if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
-            global.addons.push(modulePath);
+            if (prepend) global.addons.unshift(modulePath);
+            else global.addons.push(modulePath);
         } catch (e) {
             logger.error(`Addon not found: ${addonPath}`);
         }
@@ -151,7 +152,7 @@ export function addon(addonPath: string) {
 }
 
 export async function load() {
-    addon(path.resolve(__dirname, '..'));
+    addon(path.resolve(__dirname, '..'), true);
     Error.stackTraceLimit = 50;
     if (cluster.isMaster || argv.startAsMaster) {
         logger.info(`Master ${process.pid} Starting`);
