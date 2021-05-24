@@ -1,0 +1,85 @@
+import { dump } from 'js-yaml';
+import { createZipStream } from 'vj/utils/zip';
+import pipeStream from 'vj/utils/pipeStream';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
+import Notification from 'vj/components/notification';
+
+let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
+function onBeforeUnload(e) {
+  if (isBeforeUnloadTriggeredByLibrary) {
+    isBeforeUnloadTriggeredByLibrary = false;
+    return;
+  }
+  e.returnValue = '';
+}
+
+export default async function download(name, targets) {
+  const streamsaver = await import('streamsaver');
+  if (window.location.protocol === 'https:'
+    || window.location.protocol === 'chrome-extension:'
+    || window.location.hostname === 'localhost') {
+    streamsaver.mitm = '/streamsaver/mitm.html';
+  }
+  if (!window.WritableStream) {
+    window.WritableStream = (await import('web-streams-polyfill/dist/ponyfill.es6')).WritableStream;
+    streamsaver.WritableStream = window.WritableStream;
+  }
+  const fileStream = streamsaver.createWriteStream(name);
+  let i = 0;
+  const zipStream = createZipStream({
+    // eslint-disable-next-line consistent-return
+    async pull(ctrl) {
+      if (i === targets.length) return ctrl.close();
+      try {
+        if (targets[i].url) {
+          const response = await fetch(targets[i].url);
+          if (!response.ok) throw response.statusText;
+          ctrl.enqueue({
+            name: targets[i].filename,
+            stream: () => response.body,
+          });
+        } else {
+          ctrl.enqueue({
+            name: targets[i].filename,
+            stream: () => new Blob([targets[i].content]).stream(),
+          });
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-use-before-define
+        stopDownload();
+        Notification.error(i18n('Download Error', [targets[i].filename, e.toString()]));
+      }
+      i++;
+    },
+  });
+  const abortCallbackReceiver = {};
+  function stopDownload() { abortCallbackReceiver.abort(); }
+  window.addEventListener('unload', stopDownload);
+  window.addEventListener('beforeunload', onBeforeUnload);
+  await pipeStream(zipStream, fileStream, abortCallbackReceiver);
+  window.removeEventListener('unload', stopDownload);
+  window.removeEventListener('beforeunload', onBeforeUnload);
+}
+
+export async function downloadProblemSet(pids) {
+  const targets = [];
+  for (const pid of pids) {
+    const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
+    targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/problem.yaml`, content: dump(pdoc) });
+    let { links } = await request.post(
+      `/d/${UiContext.domainId}/p/${pid}/files`,
+      { operation: 'get_links', files: pdoc.data.map((i) => i.name), type: 'testdata' }
+    );
+    for (const filename of Object.keys(links)) {
+      targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/testdata/${filename}`, url: links[filename] });
+    }
+    ({ links } = await request.post(`/d/${UiContext.domainId}/p/${pid}/files`, {
+      operation: 'get_links', files: pdoc.additional_file.map((i) => i.name), type: 'additional_file',
+    }));
+    for (const filename of Object.keys(links)) {
+      targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/additional_file/${filename}`, url: links[filename] });
+    }
+  }
+  await download('Export.zip', targets);
+}

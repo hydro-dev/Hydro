@@ -1,65 +1,22 @@
-import { WritableStream } from 'web-streams-polyfill/dist/ponyfill.es6';
-import * as streamsaver from 'streamsaver';
 import _ from 'lodash';
-import { createZipStream } from 'vj/utils/zip';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog, ActionDialog, Dialog } from 'vj/components/dialog/index';
+import download from 'vj/components/zipDownloader';
 import request from 'vj/utils/request';
 import pjax from 'vj/utils/pjax';
-import pipeStream from 'vj/utils/pipeStream';
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 
-// Firefox have no WritableStream
-if (!window.WritableStream) streamsaver.WritableStream = WritableStream;
-if (window.location.protocol === 'https:'
-  || window.location.protocol === 'chrome-extension:'
-  || window.location.hostname === 'localhost') {
-  streamsaver.mitm = '/streamsaver/mitm.html';
-}
-
-let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
-function onBeforeUnload(e) {
-  if (isBeforeUnloadTriggeredByLibrary) {
-    isBeforeUnloadTriggeredByLibrary = false;
-    return;
-  }
-  e.returnValue = '';
-}
-
 async function downloadProblemFilesAsArchive(type, files) {
   const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
-  const fileStream = streamsaver.createWriteStream(`${pdoc.docId} ${pdoc.title}.zip`);
-  let i = 0;
   const targets = [];
-  for (const filename of Object.keys(links)) targets.push({ filename, downloadUrl: links[filename] });
-  const zipStream = createZipStream({
-    // eslint-disable-next-line consistent-return
-    async pull(ctrl) {
-      if (i === targets.length) return ctrl.close();
-      try {
-        const response = await fetch(targets[i].downloadUrl);
-        if (!response.ok) throw response.statusText;
-        ctrl.enqueue({
-          name: targets[i].filename,
-          stream: () => response.body,
-        });
-      } catch (e) {
-        // eslint-disable-next-line no-use-before-define
-        stopDownload();
-        Notification.error(i18n('problem_files.download_as_archive_error', [targets[i].filename, e.toString()]));
-      }
-      i++;
-    },
-  });
-  const abortCallbackReceiver = {};
-  function stopDownload() { abortCallbackReceiver.abort(); }
-  window.addEventListener('unload', stopDownload);
-  window.addEventListener('beforeunload', onBeforeUnload);
-  await pipeStream(zipStream, fileStream, abortCallbackReceiver);
-  window.removeEventListener('unload', stopDownload);
-  window.removeEventListener('beforeunload', onBeforeUnload);
+  for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+  await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
+}
+
+function onBeforeUnload(e) {
+  e.returnValue = '';
 }
 
 const page = new NamedPage('problem_files', () => {

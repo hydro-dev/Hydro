@@ -85,21 +85,9 @@
       </a></li>
     {% endif %}
     {% if page_name == 'problem_detail' and (handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
-      <div style="display: none" class="dialog__body--send-to">
-        <div>
-          <div class="row"><div class="columns">
-            <h1>{{ _('Send Problem') }}</h1>
-          </div></div>
-          <div class="row"><div class="medium-12 columns">
-            <label>
-              {{ _('Target') }}
-              <input name="target" type="text" class="textbox" data-autofocus>
-            </label>
-          </div></div>
-        </div>
-      </div>
-      <li class="menu__item nojs--hide"><a class="menu__link" name="problem-sidebar__send-to" href="javascript:;">
-        <span class="icon icon-copy"></span> {{ _('Send Problem') }}
+      <li class="menu__seperator nojs--hide"></li>
+      <li class="menu__item nojs--hide"><a class="menu__link" href="javascript:;" name="problem-sidebar__download">
+        <span class="icon icon-download"></span> {{ _('Download') }}
       </a></li>
     {% endif %}
     </ol>

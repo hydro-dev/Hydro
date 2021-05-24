@@ -1,39 +1,19 @@
-import { WritableStream } from 'web-streams-polyfill/dist/ponyfill.es6';
 import _ from 'lodash';
-import { dump } from 'js-yaml';
-import * as streamsaver from 'streamsaver';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
-import { createZipStream } from 'vj/utils/zip';
+import { downloadProblemSet } from 'vj/components/zipDownloader';
 import pjax from 'vj/utils/pjax';
 import substitute from 'vj/utils/substitute';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
-import pipeStream from 'vj/utils/pipeStream';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 
 const categories = {};
 const dirtyCategories = [];
 const selections = [];
-// Firefox have no WritableStream
-if (!window.WritableStream) streamsaver.WritableStream = WritableStream;
-if (window.location.protocol === 'https:'
-  || window.location.protocol === 'chrome-extension:'
-  || window.location.hostname === 'localhost') {
-  streamsaver.mitm = '/streamsaver/mitm.html';
-}
-
-let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
-function onBeforeUnload(e) {
-  if (isBeforeUnloadTriggeredByLibrary) {
-    isBeforeUnloadTriggeredByLibrary = false;
-    return;
-  }
-  e.returnValue = '';
-}
 
 function setDomSelected($dom, selected) {
   if (selected) {
@@ -224,56 +204,7 @@ async function handleOperation(operation) {
 
 async function handleDownload() {
   const pids = ensureAndGetSelectedPids();
-  const fileStream = streamsaver.createWriteStream('Export.zip');
-  const targets = [];
-  for (const pid of pids) {
-    const { pdoc } = await request.get(`p/${pid}`);
-    targets.push({ filename: `${pid}/problem.yaml`, content: dump(pdoc) });
-    let { links } = await request.post(`p/${pid}/files`, { operation: 'get_links', files: pdoc.data.map((i) => i.name), type: 'testdata' });
-    for (const filename of Object.keys(links)) {
-      targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
-    }
-    ({ links } = await request.post(`p/${pid}/files`, {
-      operation: 'get_links', files: pdoc.additional_file.map((i) => i.name), type: 'additional_file',
-    }));
-    for (const filename of Object.keys(links)) {
-      targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
-    }
-  }
-  let i = 0;
-  const zipStream = createZipStream({
-    // eslint-disable-next-line consistent-return
-    async pull(ctrl) {
-      if (i === targets.length) return ctrl.close();
-      try {
-        if (targets[i].url) {
-          const response = await fetch(targets[i].url);
-          if (!response.ok) throw response.statusText;
-          ctrl.enqueue({
-            name: targets[i].filename,
-            stream: () => response.body,
-          });
-        } else {
-          ctrl.enqueue({
-            name: targets[i].filename,
-            stream: () => new Blob([targets[i].content], { type: 'application/json' }).stream(),
-          });
-        }
-      } catch (e) {
-        // eslint-disable-next-line no-use-before-define
-        stopDownload();
-        Notification.error(i18n('problem_files.download_as_archive_error', [targets[i].filename, e.toString()]));
-      }
-      i++;
-    },
-  });
-  const abortCallbackReceiver = {};
-  function stopDownload() { abortCallbackReceiver.abort(); }
-  window.addEventListener('unload', stopDownload);
-  window.addEventListener('beforeunload', onBeforeUnload);
-  await pipeStream(zipStream, fileStream, abortCallbackReceiver);
-  window.removeEventListener('unload', stopDownload);
-  window.removeEventListener('beforeunload', onBeforeUnload);
+  await downloadProblemSet(pids);
 }
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {

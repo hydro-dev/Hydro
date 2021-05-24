@@ -5,6 +5,7 @@ import { NamedPage } from 'vj/misc/Page';
 import Navigation from 'vj/components/navigation';
 import Notification from 'vj/components/notification/index';
 import { ActionDialog } from 'vj/components/dialog';
+import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
@@ -129,41 +130,25 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     return this;
   };
 
-  async function handleClickCopyProblem() {
-    const action = await copyProblemDialog.clear().open();
-    if (action !== 'ok') return;
-    const target = copyProblemDialog.$dom.find('[name="target"]').val();
-    try {
-      await request.post(UiContext.postCopyUrl, {
-        operation: 'send',
-        target,
-        pids: [UiContext.problemNumId],
-      });
-      Notification.send(i18n('Problem Sended.'));
-    } catch (error) {
-      Notification.error(error.message);
-    }
+  async function handleClickDownloadProblem() {
+    await downloadProblemSet([UiContext.problemNumId]);
   }
 
   async function scratchpadFadeIn() {
     await $('#scratchpad')
-      .transition({
-        opacity: 1,
-      }, {
-        duration: 200,
-        easing: 'easeOutCubic',
-      })
+      .transition(
+        { opacity: 1 },
+        { duration: 200, easing: 'easeOutCubic' }
+      )
       .promise();
   }
 
   async function scratchpadFadeOut() {
     await $('#scratchpad')
-      .transition({
-        opacity: 0,
-      }, {
-        duration: 200,
-        easing: 'easeOutCubic',
-      })
+      .transition(
+        { opacity: 0 },
+        { duration: 200, easing: 'easeOutCubic' }
+      )
       .promise();
   }
 
@@ -247,7 +232,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $(ev.currentTarget).hide();
     $('[name="problem-sidebar__categories"]').show();
   });
-  $('[name="problem-sidebar__send-to"]').on('click', handleClickCopyProblem);
+  $('[name="problem-sidebar__download').on('click', handleClickDownloadProblem);
   loadSubjective();
 
   if (pagename === 'contest_detail_problem') return;
