@@ -5,7 +5,6 @@
 {{ set(UiContext, {
   problemId: pdoc.pid|default(pdoc.docId),
   problemNumId: pdoc.docId,
-  postCopyUrl: url('problem_send'),
   postPretestUrl: url('problem_pretest', pid=pdoc.docId),
   codeLang: handler.user.codeLang,
   codeTemplate: handler.user.codeTemplate,

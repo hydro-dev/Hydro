@@ -1,11 +1,9 @@
 import db from 'hydrooj/dist/service/db';
 import {
-    Handler, param, post, Route, Types,
+    Handler, post, Route, Types,
 } from 'hydrooj/dist/service/server';
-import { RemoteOnlineJudgeError } from 'hydrooj/dist/error';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
-import superagent from 'superagent';
 
 function decrypt(encrypted: string) {
     if (!encrypted) throw new Error();
@@ -53,28 +51,8 @@ class DataReportHandler extends Handler {
     }
 }
 
-class ProxySendRequestHandler extends Handler {
-    @param('endpoint', Types.String)
-    @param('domainId', Types.String)
-    @param('url', Types.String)
-    @param('tokenId', Types.String)
-    @param('expire', Types.UnsignedInt)
-    async post(_d: string, endpoint: string, domainId: string, url: string, tokenId: string, expire: number) {
-        let res = await superagent.post(`${url}d/${domainId}/problem/send`)
-            .send({ operation: 'info', token: tokenId })
-            .catch((e) => e);
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Target/Send/Info] ${res.message}`);
-        res = await superagent.post(`${endpoint}/problem/receive`).send({
-            operation: 'request', url: `${url}d/${domainId}/problem/send`, tokenId, expire,
-        }).catch((e) => e);
-        if (res instanceof Error) throw new RemoteOnlineJudgeError(`[Post Target/Receive/Request] ${res.message}`);
-        this.response.body = { code: 0 };
-    }
-}
-
 export function apply() {
     Route('data_report', '/center/report', DataReportHandler);
-    Route('proxy_send', '/center/send', ProxySendRequestHandler);
 }
 
 global.Hydro.handler.center = apply;

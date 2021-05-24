@@ -13,7 +13,7 @@ const logger = new Logger('setup');
 const listenPort = argv.port || 8888;
 
 async function get(ctx: Context) {
-    ctx.body = `<!DOCTYPE html>
+  ctx.body = `<!DOCTYPE html>
     <html data-page="setup" data-layout="immersive" class="layout--immersive page--setup nojs">
     <head>
       <meta charset="UTF-8">
@@ -74,73 +74,63 @@ async function get(ctx: Context) {
     </div>
     </body>
     </html>`;
-    ctx.response.type = 'text/html';
+  ctx.response.type = 'text/html';
 }
 
 async function post(ctx: Context) {
-    const {
-        host, port, name, username, password,
-    } = ctx.request.body;
-    let mongourl = 'mongodb://';
-    if (username) mongourl += `${username}:${password}@`;
-    mongourl += `${host}:${port}/${name}`;
-    try {
-        const Database = await mongodb.MongoClient.connect(mongourl, {
-            useNewUrlParser: true, useUnifiedTopology: true,
-        });
-        const db = Database.db(name);
-        const coll = db.collection('system');
-        await Promise.all([
-            coll.updateOne(
-                { _id: 'server.host' },
-                { $set: { value: ctx.request.host } },
-                { upsert: true },
-            ),
-            coll.updateOne(
-                { _id: 'server.hostname' },
-                { $set: { value: ctx.request.hostname } },
-                { upsert: true },
-            ),
-            coll.updateOne(
-                { _id: 'server.url' },
-                { $set: { value: ctx.request.href } },
-                { upsert: true },
-            ),
-            coll.updateOne(
-                { _id: 'server.port' },
-                { $set: { value: parseInt(listenPort as string, 10) } },
-                { upsert: true },
-            ),
-        ]);
-        fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
-        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
-            host, port, name, username, password,
-        }));
-        ctx.body = `<h1>This page will reload in 3 secs.</h1>
+  const {
+    host, port, name, username, password,
+  } = ctx.request.body;
+  let mongourl = 'mongodb://';
+  if (username) mongourl += `${username}:${password}@`;
+  mongourl += `${host}:${port}/${name}`;
+  try {
+    const Database = await mongodb.MongoClient.connect(mongourl, {
+      useNewUrlParser: true, useUnifiedTopology: true,
+    });
+    const db = Database.db(name);
+    const coll = db.collection('system');
+    await Promise.all([
+      coll.updateOne(
+        { _id: 'server.url' },
+        { $set: { value: ctx.request.href } },
+        { upsert: true },
+      ),
+      coll.updateOne(
+        { _id: 'server.port' },
+        { $set: { value: parseInt(listenPort as string, 10) } },
+        { upsert: true },
+      ),
+    ]);
+    fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
+    fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
+      host, port, name, username, password,
+    }));
+    ctx.body = `<h1>This page will reload in 3 secs.</h1>
             <script>
             setTimeout(function (){
                 window.location.href = '/';
             }, 3000);
             </script>`;
-        setTimeout(() => process.exit(0), 500);
-    } catch (e) {
-        ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
-    }
+    setTimeout(() => process.exit(0), 500);
+  } catch (e) {
+    ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
+  }
 }
 
 export function load() {
-    const app = new Koa();
-    const server = http.createServer(app.callback());
-    app.keys = ['Hydro'];
-    app
-        .use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
-            maxAge: 365 * 24 * 60 * 60,
-        }))
-        .use(Body())
-        .use((ctx) => {
-            if (ctx.request.method.toLowerCase() === 'post') return post(ctx);
-            return get(ctx);
-        });
-    server.listen(listenPort);
-    logger.success('Server listening at: %d', listenPort);
+  const app = new Koa();
+  const server = http.createServer(app.callback());
+  app.keys = ['Hydro'];
+  app
+    .use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
+      maxAge: 365 * 24 * 60 * 60,
+    }))
+    .use(Body())
+    .use((ctx) => {
+      if (ctx.request.method.toLowerCase() === 'post') return post(ctx);
+      return get(ctx);
+    });
+  server.listen(listenPort);
+  logger.success('Server listening at: %d', listenPort);
 }
