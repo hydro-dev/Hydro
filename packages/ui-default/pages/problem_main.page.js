@@ -226,6 +226,12 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
     ev.preventDefault();
     updateSelection();
   });
+  $(document).on('click', 'a.pager__item', (ev) => {
+    ev.preventDefault();
+    pjax.request({ url: $(ev.currentTarget).attr('href') }).then(() => {
+      window.scrollTo(0, 0);
+    });
+  });
 });
 
 export default page;

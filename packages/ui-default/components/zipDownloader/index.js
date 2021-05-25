@@ -1,4 +1,5 @@
 import { dump } from 'js-yaml';
+import * as streamsaver from 'streamsaver';
 import { createZipStream } from 'vj/utils/zip';
 import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
@@ -13,14 +14,13 @@ function onBeforeUnload(e) {
   }
   e.returnValue = '';
 }
+if (window.location.protocol === 'https:'
+  || window.location.protocol === 'chrome-extension:'
+  || window.location.hostname === 'localhost') {
+  streamsaver.mitm = '/streamsaver/mitm.html';
+}
 
 export default async function download(name, targets) {
-  const streamsaver = await import('streamsaver');
-  if (window.location.protocol === 'https:'
-    || window.location.protocol === 'chrome-extension:'
-    || window.location.hostname === 'localhost') {
-    streamsaver.mitm = '/streamsaver/mitm.html';
-  }
   if (!window.WritableStream) {
     window.WritableStream = (await import('web-streams-polyfill/dist/ponyfill.es6')).WritableStream;
     streamsaver.WritableStream = window.WritableStream;
@@ -66,19 +66,19 @@ export async function downloadProblemSet(pids) {
   const targets = [];
   for (const pid of pids) {
     const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
-    targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/problem.yaml`, content: dump(pdoc) });
+    targets.push({ filename: `${pid}/problem.yaml`, content: dump(pdoc) });
     let { links } = await request.post(
       `/d/${UiContext.domainId}/p/${pid}/files`,
       { operation: 'get_links', files: pdoc.data.map((i) => i.name), type: 'testdata' }
     );
     for (const filename of Object.keys(links)) {
-      targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/testdata/${filename}`, url: links[filename] });
+      targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
     }
     ({ links } = await request.post(`/d/${UiContext.domainId}/p/${pid}/files`, {
       operation: 'get_links', files: pdoc.additional_file.map((i) => i.name), type: 'additional_file',
     }));
     for (const filename of Object.keys(links)) {
-      targets.push({ filename: `/d/${UiContext.domainId}/p/${pid}/additional_file/${filename}`, url: links[filename] });
+      targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
     }
   }
   await download('Export.zip', targets);

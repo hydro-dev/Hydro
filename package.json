@@ -19,9 +19,9 @@
         "jest": "node build/jest",
         "typedoc": "cross-env NODE_OPTIONS=--max_old_space_size=8192 typedoc",
         "debug:all": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug --template",
-        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps node_modules/.bin/hydrooj --debug --template",
+        "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps node_modules/hydrooj/bin/hydrooj --debug --template",
         "start:all": "node build/start",
-        "start": "node node_modules/.bin/hydrooj",
+        "start": "node_modules/.bin/hydrooj",
         "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
     },
     "version": "1.0.0",
