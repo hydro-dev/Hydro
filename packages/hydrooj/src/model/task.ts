@@ -127,5 +127,7 @@ class TaskModel {
     static Worker = Worker;
 }
 
+bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
+
 export default TaskModel;
 global.Hydro.model.task = TaskModel;

@@ -249,6 +249,13 @@ class DomainModel {
         }).limit(limit).toArray();
         return ddocs;
     }
+
+    @ArgMethod
+    static async del(domainId: string) {
+        await coll.deleteOne({ _id: domainId });
+        await collUser.deleteMany({ domainId });
+        await bus.parallel('domain/delete', domainId);
+    }
 }
 
 export default DomainModel;

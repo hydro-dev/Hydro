@@ -208,5 +208,7 @@ class RecordModel {
 }
 
 bus.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
+bus.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
+
 export default RecordModel;
 global.Hydro.model.record = RecordModel;

@@ -428,6 +428,11 @@ async function ensureIndexes() {
 }
 
 bus.once('app/started', ensureIndexes);
+bus.on('domain/delete', (domainId) => Promise.all([
+    coll.deleteMany({ domainId }),
+    collStatus.deleteMany({ domainId }),
+]));
+
 global.Hydro.model.document = {
     coll,
     collStatus,

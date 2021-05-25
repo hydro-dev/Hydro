@@ -97,6 +97,10 @@ bus.once('app/started', async () => {
         });
     }
 });
+bus.on('domain/delete', async (domainId) => {
+    const files = await StorageModel.list(`problem/${domainId}`);
+    await StorageModel.del(files.map((i) => i.path));
+});
 
 global.Hydro.model.storage = StorageModel;
 export default StorageModel;
