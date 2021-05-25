@@ -1,0 +1,40 @@
+{% if tdocs.length %}
+  <div class="section page--contest_main">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Contest') }}</h1>
+    </div>
+    <ol class="section__list contest__list">
+      {%- for tdoc in tdocs -%}
+        <li class="section__list__item contest__item contest-type--{{ tdoc.rule }}">
+          <div class="media">
+            <div class="media__left medium">
+              <div class="contest__date numbox">
+                <div class="numbox__num large">{{ datetimeSpan(tdoc['beginAt'], false, '%d')|safe }}</div>
+                <div class="numbox__text">{{ datetimeSpan(tdoc['beginAt'], false, '%Y-%m')|safe }}</div>
+              </div>
+            </div>
+            <div class="media__body medium">
+              <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <ul class="supplementary list">
+                <li>
+                  <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
+                </li>
+                <li>
+                  <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
+                </li>
+                <li>
+                  <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
+                </li>
+                {% if tsdict[tdoc.docId]['attend'] == 1 %}
+                  <li class="contest__info-attended">
+                    <span class="icon icon-check"></span> {{ _('Attended') }}
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </li>
+      {%- endfor -%}
+    </ol>
+  </div>
+{% endif %}

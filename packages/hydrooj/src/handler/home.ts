@@ -30,85 +30,90 @@ import BlackListModel from '../model/blacklist';
 const { geoip, useragent } = global.Hydro.lib;
 
 class HomeHandler extends Handler {
-    async homework(domainId: string) {
+    uids = new Set<number>();
+
+    collectUser(uids: number[]) {
+        uids.forEach((uid) => this.uids.add(uid));
+    }
+
+    async getHomework(domainId: string, limit: number = 5) {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
-                .sort('beginAt', -1)
-                .limit(system.get('pagination.homework_main'))
-                .toArray();
+                .sort('beginAt', -1).limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id,
                 tdocs.map((tdoc) => tdoc.docId), document.TYPE_HOMEWORK,
             );
-            return [tdocs, tsdict];
+            return ['homework', tdocs, tsdict];
         }
-        return [[], {}];
+        return ['homework', [], {}];
     }
 
-    async contest(domainId: string) {
+    async getContest(domainId: string, limit: number = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
-                .sort('beginAt', -1)
-                .limit(system.get('pagination.contest_main'))
-                .toArray();
+                .sort('beginAt', -1).limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
-            return [tdocs, tsdict];
+            return ['contest', tdocs, tsdict];
         }
-        return [[], {}];
+        return ['contest', [], {}];
     }
 
-    async training(domainId: string) {
+    async getTraining(domainId: string, limit: number = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti(domainId)
-                .sort('_id', 1)
-                .limit(system.get('pagination.training_main'))
-                .toArray();
+                .sort('_id', 1).limit(limit).toArray();
             const tsdict = await training.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
-            return [tdocs, tsdict];
+            return ['training', tdocs, tsdict];
         }
-        return [[], {}];
+        return ['training', [], {}];
     }
 
-    async discussion(domainId: string): Promise<[any[], any]> {
+    async getDiscussion(domainId: string, limit: number = 20) {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
-            const ddocs = await discussion.getMulti(domainId)
-                .limit(system.get('pagination.discussion_main'))
-                .toArray();
+            const ddocs = await discussion.getMulti(domainId).limit(limit).toArray();
             const vndict = await discussion.getListVnodes(
                 domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
             );
-            return [ddocs, vndict];
+            this.collectUser(ddocs.map((ddoc) => ddoc.owner));
+            return ['discussion', ddocs, vndict];
         }
-        return [[], {}];
+        return ['discussion', [], {}];
+    }
+
+    async getRanking(domainId: string, limit: number = 50) {
+        if (this.user.hasPerm(PERM.PERM_VIEW_RANKING)) {
+            const dudocs = await domain.getMultiUserInDomain(domainId)
+                .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
+            const uids = dudocs.map((dudoc) => dudoc.uid);
+            this.collectUser(uids);
+            return ['ranking', uids];
+        }
+        return ['ranking', []];
     }
 
     async get({ domainId }) {
-        const [
-            [htdocs, htsdict], [tdocs, tsdict],
-            [trdocs, trsdict], [ddocs, vndict],
-        ] = await Promise.all([
-            this.homework(domainId), this.contest(domainId),
-            this.training(domainId), this.discussion(domainId),
-        ]);
+        const homepageConfig = system.get('hydrooj.homepage');
+        const tasks = [];
+        const info = yaml.load(homepageConfig) as any;
+        for (const key in info) {
+            const func = `get${key.replace(/^[a-z]/, (i) => i.toUpperCase())}`;
+            if (!this[func]) continue;
+            tasks.push(this[func](domainId, +info[key]));
+        }
+        const contents = await Promise.all(tasks);
         const [udict, dodoc, vnodes] = await Promise.all([
-            user.getList(domainId, ddocs.map((ddoc) => ddoc.owner)),
+            user.getList(domainId, Array.from(this.uids)),
             domain.get(domainId),
             discussion.getNodes(domainId),
         ]);
         this.response.template = 'main.html';
         this.response.body = {
-            htdocs,
-            htsdict,
-            tdocs,
-            tsdict,
-            trdocs,
-            trsdict,
-            ddocs,
-            vndict,
+            contents,
             udict,
             domain: dodoc,
             vnodes,

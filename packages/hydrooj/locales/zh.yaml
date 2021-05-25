@@ -156,7 +156,6 @@ contest_edit: 编辑比赛
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
 Contest: 比赛
-Contests on main: 主页展示的比赛数量
 Contests per page: 每页展示的比赛数量
 Continue: 继续
 Contributed Problems: 贡献的题目
@@ -243,7 +242,6 @@ discussion_edit: 编辑讨论
 discussion_main: 讨论
 discussion_node: 讨论
 Discussion: 讨论
-Discussions on main: 主页展示的讨论数量
 Discussions per page: 每页展示的讨论数量
 Discussions: 讨论
 Display name {1} you want to set is used by others.: 您想要设置的显示名 {1} 已经被其他人使用了。
@@ -367,7 +365,6 @@ homework_main: 作业
 homework_scoreboard: 作业成绩表
 homework_status: 作业成绩表
 Homework: 作业
-Homeworks on main: 主页展示的作业数量
 Homeworks per page: 每页展示的作业数量
 Host: 主办人
 hour(s): 小时
@@ -779,7 +776,6 @@ training_detail: 训练详情
 training_edit: 编辑训练
 training_main: 训练
 Training: 训练
-Trainings on main: 主页展示的训练数量
 Trainings per page: 每页展示的训练数量
 Type: 类型
 UI Language: 用户界面语言

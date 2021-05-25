@@ -16,145 +16,35 @@
 {% endif %}
 <div class="row">
   <div class="large-9 columns">
-  {% if tdocs.length %}
-    <div class="section page--contest_main">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Contest') }}</h1>
-      </div>
-      <ol class="section__list contest__list">
-      {%- for tdoc in tdocs -%}
-        <li class="section__list__item contest__item contest-type--{{ tdoc.rule }}">
-          <div class="media">
-            <div class="media__left medium">
-              <div class="contest__date numbox">
-                <div class="numbox__num large">{{ datetimeSpan(tdoc['beginAt'], false, '%d')|safe }}</div>
-                <div class="numbox__text">{{ datetimeSpan(tdoc['beginAt'], false, '%Y-%m')|safe }}</div>
-              </div>
+    {% for node in contents %}
+      {% if node[0] == 'contest' %}
+        {% set tdocs = node[1] %}
+        {% set tsdict = node[2] %}
+        {% include "partials/homepage/contest.html" %}
+      {% elif node[0] == 'homework' %}
+        {% set htdocs = node[1] %}
+        {% set htsdict = node[2] %}
+        {% include "partials/homepage/homework.html" %}
+      {% elif node[0] == 'training' %}
+        {% set tdocs = node[1] %}
+        {% set tsdict = node[2] %}
+        {% include "partials/homepage/training.html" %}
+      {% elif node[0] == 'ranking' %}
+        {% set uids = node[1] %}
+        {% include "partials/homepage/ranking.html" %}
+      {% elif node[0] == 'discussion' %}
+        {% set ddocs = node[1] %}
+        {% set vndict = node[2] %}
+        {% if ddocs.length %}
+          <div class="section page--discussion_main">
+            <div class="section__header">
+              <h1 class="section__title">{{ _('Discussion') }}</h1>
             </div>
-            <div class="media__body medium">
-              <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
-              <ul class="supplementary list">
-                <li>
-                  <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
-                </li>
-                <li>
-                  <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
-                </li>
-                <li>
-                  <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
-                </li>
-              {% if tsdict[tdoc.docId]['attend'] == 1 %}
-                <li class="contest__info-attended">
-                  <span class="icon icon-check"></span> {{ _('Attended') }}
-                </li>
-              {% endif %}
-              </ul>
-            </div>
+            {% include "partials/discussion_list.html" %}
           </div>
-        </li>
-      {%- endfor -%}
-      </ol>
-    </div>
-  {% endif %}
-  {% if htdocs.length %}
-    <div class="section page--homework_main">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Homework') }}</h1>
-      </div>
-      <ol class="section__list homework__list">
-        {%- for tdoc in htdocs -%}
-          <li class="section__list__item homework__item">
-            <div class="media">
-              <div class="media__left medium">
-                <div class="homework__date numbox">
-                  <div class="numbox__num large">{{ datetimeSpan(tdoc['penaltySince'], false, '%d')|safe }}</div>
-                  <div class="numbox__text">{{ datetimeSpan(tdoc['penaltySince'], false, '%Y-%m')|safe }}</div>
-                </div>
-              </div>
-              <div class="media__body medium">
-                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
-                <ul class="supplementary list">
-                  <li>
-                    {{ _('Status') }}: <span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span>
-                  </li>
-                  <li>
-                    {{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}
-                  </li>
-                  <li>
-                  {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
-                    {{ _('Hard Deadline') }}: {{ datetimeSpan(tdoc['endAt'])|safe }}
-                  {% else %}
-                    {{ _('Deadline') }}: {{ datetimeSpan(tdoc['penaltySince'])|safe }}
-                  {% endif %}
-                  </li>
-                {% if htsdict[tdoc['docId']]['attend'] == 1 %}
-                  <li class="homework__info-attended">
-                    <span class="icon icon-check"></span> {{ _('Claimed') }}
-                  </li>
-                {% endif %}
-                </ul>
-              </div>
-            </div>
-          </li>
-        {%- endfor -%}
-      </ol>
-    </div>
-  {% endif %}
-  {% if trdocs.length %}
-    <div class="section page--training_main">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Training') }}</h1>
-      </div>
-      {% set tdocs = trdocs %}
-      {% set tsdict = trsdict %}
-      <ol class="section__list all primary training__list">
-        {%- for tdoc in tdocs -%}
-        <li class="section__list__item training__item">
-          <div class="media">
-            <div class="media__left middle">
-              <div class="training__participants numbox">
-                <div class="numbox__num large">{{ tdoc['enroll']|default(0) }}</div>
-                <div class="numbox__text">{{ _('Enrolled') }}</div>
-              </div>
-            </div>
-            <div class="media__body middle">
-              <h1 class="training__title"><a href="{{ url('training_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
-              <div class="training__intro typo">
-                <p>{{ tdoc['content'] }}</p>
-              </div>
-              <ul class="supplementary list training__progress">
-                <li>
-                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc.dag)|length) }}
-                </li>
-                <li>
-                {% if tsdict[tdoc.docId]['enroll'] %}
-                  {% if not tsdict[tdoc.docId]['done'] %}
-                  <span class="icon training-status--icon progress"></span>
-                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc.docId]['donePids']|length / model.training.getPids(tdoc.dag)|length)|round|int }}%</span>
-                  {% else %}
-                  <span class="icon training-status--icon done"></span>
-                  <span class="training-status--text done">{{ _('Completed') }} 100%</span>
-                  {% endif %}
-                {% elif handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-                  <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
-                {% endif %}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </li>
-        {%- endfor -%}
-      </ol>
-    </div>
-  {% endif %}
-  {% if ddocs.length %}
-    <div class="section page--discussion_main">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Discussion') }}</h1>
-      </div>
-      {% include "partials/discussion_list.html" %}
-    </div>
-  {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
   </div>
   <div class="large-3 columns">
     <div class="section side nojs--hide">

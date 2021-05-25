@@ -1,0 +1,45 @@
+{% if trdocs.length %}
+  <div class="section page--training_main">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Training') }}</h1>
+    </div>
+    <ol class="section__list all primary training__list">
+      {%- for tdoc in tdocs -%}
+        <li class="section__list__item training__item">
+          <div class="media">
+            <div class="media__left middle">
+              <div class="training__participants numbox">
+                <div class="numbox__num large">{{ tdoc['enroll']|default(0) }}</div>
+                <div class="numbox__text">{{ _('Enrolled') }}</div>
+              </div>
+            </div>
+            <div class="media__body middle">
+              <h1 class="training__title"><a href="{{ url('training_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+              <div class="training__intro typo">
+                <p>{{ tdoc['content'] }}</p>
+              </div>
+              <ul class="supplementary list training__progress">
+                <li>
+                  <span class="icon icon-flag text-blue"></span> {{ _('{0} sections').format(tdoc['dag']|length) }}, {{ _('{0} problems').format(model.training.getPids(tdoc.dag)|length) }}
+                </li>
+                <li>
+                {% if tsdict[tdoc.docId]['enroll'] %}
+                  {% if not tsdict[tdoc.docId]['done'] %}
+                  <span class="icon training-status--icon progress"></span>
+                  <span class="training-status--text progress">{{ _('Completed') }} {{ (100 * tsdict[tdoc.docId]['donePids']|length / model.training.getPids(tdoc.dag)|length)|round|int }}%</span>
+                  {% else %}
+                  <span class="icon training-status--icon done"></span>
+                  <span class="training-status--text done">{{ _('Completed') }} 100%</span>
+                  {% endif %}
+                {% elif handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                  <span class="icon training-status--icon outside"></span> <span class="training-status--text outside">{{ _('Not Enrolled') }}</span>
+                {% endif %}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </li>
+      {%- endfor -%}
+    </ol>
+  </div>
+{% endif %}
