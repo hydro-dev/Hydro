@@ -11,6 +11,32 @@
   transition: background .2s
   transition-timing-function: ease-out-cubic
   z-index: 500
+  background: rgba(#FFF, 0.98)
+
+  .nav__logo
+    width: rem($nav-logo-width + 10)
+    opacity: 1
+
+  .nav__item
+    color: $text-1-color
+    &.nav--active
+      border-color: $nav-item-active-color
+      &:before
+        box-shadow: 0 0 30px $nav-item-active-color,
+                    0 0 30px $nav-item-active-color
+    &:hover
+      border-color: $nav-item-hover-color
+      background: #F8F8F8
+      &:before
+        box-shadow: none
+
+  .nav__item--round
+    border-color: $primary-color
+    color: $primary-color
+
+    &:hover
+      background-color: $primary-color
+      color: #FFF
 
   .hasjs &
     position: fixed
@@ -32,6 +58,7 @@
   z-index: 300
   transition: box-shadow .2s
   transition-timing-function: ease-out-cubic
+  box-shadow: 0 0 6px rgba(#000, 0.3)
 
   .nojs &
     display: none
@@ -47,7 +74,7 @@
   line-height: rem($nav-item-height - 6)
   padding: rem(0 20px 3px 20px)
   border-top: 3px solid transparent
-  color: #FFF
+  color: #000
   transition: border-color .2s, background .2s, color .2s
   transition-timing-function: ease-out-cubic
   position: relative
@@ -61,7 +88,7 @@
     height: 1px
 
   &:visited, &:active
-    color: #FFF
+    color: #000
 
   &.nav--active
     border-color: $nav-item-active-immersive-color
@@ -108,9 +135,7 @@
   margin-left: rem(5px)
 
 .nav__logo__options
-  background-image: url(./nav-logo-small_light.png)
   background-image: url(./nav-logo-small_dark.png)
-  background-image: url(./nav-logo-small@2x_light.png)
   background-image: url(./nav-logo-small@2x_dark.png)
 
 .nav__logo
@@ -130,38 +155,6 @@
 
   +mobile()
     display: none
-
-.nav.showlogo, .layout--immersive
-  .nav__logo
-    width: rem($nav-logo-width + 10)
-    opacity: 1
-
-.nav.floating, .nojs .nav
-  background: rgba(#FFF, 0.98)
-
-  .nav__item
-    color: $text-1-color
-    &.nav--active
-      border-color: $nav-item-active-color
-      &:before
-        box-shadow: 0 0 30px $nav-item-active-color,
-                    0 0 30px $nav-item-active-color
-    &:hover
-      border-color: $nav-item-hover-color
-      background: #F8F8F8
-      &:before
-        box-shadow: none
-
-  .nav__item--round
-    border-color: $primary-color
-    color: $primary-color
-
-    &:hover
-      background-color: $primary-color
-      color: #FFF
-
-.nav--shadow.floating
-  box-shadow: 0 0 6px rgba(#000, 0.3)
 
 // For Mobile: show a slideout vertical arranged menu
 +mobile()

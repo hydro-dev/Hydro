@@ -1,8 +1,12 @@
 import 'sticky-kit/dist/sticky-kit';
 import _ from 'lodash';
-
-import Navigation from 'vj/components/navigation';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
+import { isBelow } from 'vj/utils/mediaQuery';
+import responsiveCutoff from 'vj/breakpoints.json';
+
+const navHeight = isBelow(responsiveCutoff.mobile)
+  ? 0
+  : $('.nav').height();
 
 export default class StyledTable extends DOMAttachedObject {
   static DOMAttachKey = 'vjStyledTableInstance';
@@ -33,7 +37,7 @@ export default class StyledTable extends DOMAttachedObject {
 
     const stickyOptions = {
       parent: this.$container,
-      offset_top: Navigation.instance.getHeight(),
+      offset_top: navHeight,
     };
     _.defer(() => this.$header.stick_in_parent(stickyOptions));
   }

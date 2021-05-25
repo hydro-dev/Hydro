@@ -1,10 +1,12 @@
 import 'sticky-kit/dist/sticky-kit';
 import _ from 'lodash';
-
+import { isBelow, isAbove } from 'vj/utils/mediaQuery';
 import { AutoloadPage } from 'vj/misc/Page';
-import Navigation from 'vj/components/navigation';
-import { isAbove } from 'vj/utils/mediaQuery';
 import responsiveCutoff from 'vj/breakpoints.json';
+
+const navHeight = isBelow(responsiveCutoff.mobile)
+  ? 0
+  : $('.nav').height();
 
 function updateStickies($stickies) {
   $stickies.get().forEach((element) => {
@@ -17,7 +19,7 @@ function updateStickies($stickies) {
       if ($stickyParent.length > 0) {
         stickyOptions.parent = $stickyParent;
       }
-      stickyOptions.offset_top = 10 + Navigation.instance.getHeight();
+      stickyOptions.offset_top = 10 + navHeight;
       $sticky.stick_in_parent(stickyOptions);
       $sticky.data('sticky-enabled', true);
     } else if (!shouldEnableSticky && stickyEnabled) {

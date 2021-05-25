@@ -2,14 +2,10 @@ import yaml from 'js-yaml';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
 import * as echarts from 'echarts';
 import { NamedPage } from 'vj/misc/Page';
-import Navigation from 'vj/components/navigation';
-import Notification from 'vj/components/notification/index';
 import { ActionDialog } from 'vj/components/dialog';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
 import base64 from 'vj/utils/base64';
 
 class ProblemPageExtender {
@@ -33,9 +29,6 @@ class ProblemPageExtender {
     this.$content.transition({ opacity: 0 }, { duration: 100 });
     await delay(100);
 
-    Navigation.instance.floating.set('scratchpad', true);
-    Navigation.instance.logoVisible.set('scratchpad', true);
-    Navigation.instance.expanded.set('scratchpad', true);
     $('body').addClass('header--collapsed mode--scratchpad');
     await this.$scratchpadContainer
       .css({
@@ -76,10 +69,6 @@ class ProblemPageExtender {
     const bound = this.$contentBound
       .get(0)
       .getBoundingClientRect();
-
-    Navigation.instance.floating.set('scratchpad', false);
-    Navigation.instance.logoVisible.set('scratchpad', false);
-    Navigation.instance.expanded.set('scratchpad', false);
 
     $('body').removeClass('header--collapsed mode--scratchpad');
 

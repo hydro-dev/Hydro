@@ -60,27 +60,13 @@ class UiSettingsHandler extends Handler {
   }
 
   async get({ domainId }) {
-    const [
-      header_logo, header_logo_2x,
-      nav_logo_dark, nav_logo_light,
-      nav_logo_dark_2x, nav_logo_light_2x,
-      header_background, header_background_2x,
-    ] = system.getMany([
-      'ui-default.header_logo', 'ui-default.header_logo_2x',
-      'ui-default.nav_logo_dark', 'ui-default.nav_logo_light',
-      'ui-default.nav_logo_dark_2x', 'ui-default.nav_logo_light_2x',
-      'ui-default.header_background', 'ui-default.header_background2x',
+    const [nav_logo_dark, nav_logo_dark_2x] = system.getMany([
+      'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
     ]);
     const ddoc = await domain.get(domainId);
     this.response.body = await this.renderHTML('extra.css', {
-      header_logo,
-      header_logo_2x,
       nav_logo_dark,
-      nav_logo_light,
       nav_logo_dark_2x,
-      nav_logo_light_2x,
-      header_background,
-      header_background_2x,
       ...ddoc,
     });
     this.response.type = 'text/css';

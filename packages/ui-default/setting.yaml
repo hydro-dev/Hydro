@@ -3,41 +3,11 @@ footer_extra_html:
   name: footer_extra_html
   desc: Footer Extra HTML
   default: ''
-header_logo:
-  type: text
-  name: header_logo
-  desc: Header Logo
-  default: /components/header/header-logo.png
-header_logo_2x:
-  type: text
-  name: header_logo_2x
-  desc: Header Logo@2x
-  default: /components/header/header-logo@2x.png
-header_background:
-  type: text
-  name: header_background
-  desc: Header Background
-  default: /components/header/header-background.png
-header_background_2x:
-  type: text
-  name: header_background_2x
-  desc: Header Background@2x
-  default: /components/header/header-background@2x.png
-nav_logo_light:
-  type: text
-  name: nav_logo_light
-  desc: Nav Logo Light
-  default: /components/navigation/nav-logo-small_light.png
 nav_logo_dark:
   type: text
   name: nav_logo_dark
   desc: Nav Logo Dark
   default: /components/navigation/nav-logo-small_dark.png
-nav_logo_light_2x:
-  type: text
-  name: nav_logo_light_2x
-  desc: Nav Logo Light@2x
-  default: /components/navigation/nav-logo-small@2x_light.png
 nav_logo_dark_2x:
   type: text
   name: nav_logo_dark_2x
