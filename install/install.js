@@ -174,12 +174,12 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             ...(dev
                 ? [
                     ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
-                    ['yarn', { cwd: '/root/Hydro', retry: true }],
-                    ['yarn build', { cwd: '/root/Hydro' }],
-                    ['yarn build:ui', { cwd: '/root/Hydro' }],
+                    ['cd /root/Hydro && yarn', { retry: true }],
+                    'cd /root/Hydro && yarn build',
+                    'cd /root/Hydro && yarn build:ui',
                     ['yarn global add npx', { retry: true }],
                 ]
-                : ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]),
+                : [['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]]),
             () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
     },
@@ -227,7 +227,7 @@ for (let i = 0; i < steps.length; i++) {
                 while (__code !== 0) {
                     if (op[1].retry && retry < 30) {
                         log.warn('Retry...');
-                        exec(op[0]);
+                        exec(op[0], op[1]);
                         retry++;
                     } else log.fatal('Error when running %s', op[0]);
                 }
