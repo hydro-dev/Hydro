@@ -98,7 +98,7 @@ export class ProblemMainHandler extends ProblemHandler {
         );
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(a.docId) - sort.indexOf(b.docId));
         if (q && +q) {
-            const pdoc = await problem.get(domainId, +q, this.user._id, problem.PROJECTION_LIST);
+            const pdoc = await problem.get(domainId, +q, problem.PROJECTION_LIST);
             if (pdoc) pdocs.unshift(pdoc);
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
@@ -174,24 +174,24 @@ export class ProblemRandomHandler extends ProblemHandler {
     }
 }
 
-export interface PdocWithPsdoc extends ProblemDoc {
-    psdoc?: ProblemStatusDoc
-}
-
 export class ProblemDetailHandler extends ProblemHandler {
-    pdoc: PdocWithPsdoc;
+    pdoc: ProblemDoc;
     udoc: User;
+    psdoc: ProblemStatusDoc;
 
     @route('pid', Types.Name, true, null, parsePid)
     async _prepare(domainId: string, pid: number | string) {
         this.response.template = 'problem_detail.html';
-        this.pdoc = await problem.get(domainId, pid, this.user._id);
+        this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         await bus.serial('problem/get', this.pdoc, this);
-        this.udoc = await user.getById(domainId, this.pdoc.owner);
+        [this.psdoc, this.udoc] = await Promise.all([
+            problem.getStatus(domainId, this.pdoc.docId, this.user._id),
+            user.getById(domainId, this.pdoc.owner),
+        ]);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
@@ -219,8 +219,8 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.response.body.pdoc.content = this.response.body.pdoc.content
                 .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
         }
-        if (this.pdoc.psdoc) {
-            this.response.body.rdoc = await record.get(this.domainId, this.pdoc.psdoc.rid);
+        if (this.psdoc) {
+            this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
         }
         this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
     }
@@ -599,7 +599,7 @@ export class ProblemPrefixListHandler extends Handler {
     async get(domainId: string, prefix: string) {
         this.response.body = await problem.getPrefixList(domainId, prefix);
         if (!Number.isNaN(+prefix)) {
-            const pdoc = await problem.get(domainId, +prefix, undefined, ['domainId', 'docId', 'pid', 'title']);
+            const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
             if (pdoc) this.response.body.unshift(pdoc);
         }
     }

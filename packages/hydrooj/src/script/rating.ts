@@ -18,7 +18,7 @@ async function runProblem(pdoc: ProblemDoc, udict: ND): Promise<void>;
 async function runProblem(domainId: string, pid: number, udict: ND): Promise<void>;
 async function runProblem(...arg: any[]) {
     const pdoc: ProblemDoc = (typeof arg[0] === 'string')
-        ? await problem.get(arg[0], arg[1], -1)
+        ? await problem.get(arg[0], arg[1])
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const [, nPages] = await paginate(

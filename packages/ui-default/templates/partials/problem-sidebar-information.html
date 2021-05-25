@@ -9,21 +9,6 @@
     <dd>{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax  }}ms</dd>
     <dt>{{ _('Memory') }}</dt>
     <dd>{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</dd>
-  {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-  {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-    <dt>{{ _('Submission') }}</dt>
-    <dd>
-    {% if pdoc.psdoc.status %}
-      <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}"></span>
-      <a href="{{ url('record_detail', rid=pdoc.psdoc.rid) }}" class="record-status--text {{ model.builtin.STATUS_CODES[pdoc['psdoc']['status']] }}">
-        {{ model.builtin.STATUS_TEXTS[pdoc['psdoc']['status']] }}
-      </a>
-    {% else %}
-      {{ _('(None)') }}
-    {% endif %}
-    </dd>
-  {% endif %}
-  {% endif %}
     <dt>{{ _('Difficulty') }}</dt>
     <dd>{{ pdoc['difficulty'] or _('(None)') }}</dd>
     <dt>{{ _('Category') }}</dt>

@@ -74,23 +74,22 @@ export class ProblemModel {
 
     static async get(
         domainId: string, pid: string | number,
-        uid: number = null, projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
+        projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
     ): Promise<ProblemDoc> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
         }
-        const pdoc = typeof pid === 'number'
+        return typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
             : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
-        if (!pdoc) return null;
-        if (uid) {
-            pdoc.psdoc = await document.getStatus(domainId, document.TYPE_PROBLEM, pdoc.docId, uid);
-        }
-        return pdoc;
     }
 
     static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection);
+    }
+
+    static getStatus(domainId: string, docId: number, uid: number) {
+        return document.getStatus(domainId, document.TYPE_PROBLEM, docId, uid);
     }
 
     static getMultiStatus(domainId: string, query: FilterQuery<ProblemDoc>) {

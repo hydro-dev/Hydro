@@ -247,7 +247,7 @@ class ContestProblemHandler extends Handler {
     async _prepare(domainId: string, tid: ObjectID, pid: number) {
         [this.tdoc, this.pdoc] = await Promise.all([
             contest.get(domainId, tid),
-            problem.get(domainId, pid, this.user._id),
+            problem.get(domainId, pid),
         ]);
         [this.tsdoc, this.udoc] = await Promise.all([
             contest.getStatus(domainId, this.tdoc.docId, this.user._id),

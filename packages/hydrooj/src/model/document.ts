@@ -129,7 +129,7 @@ export function deleteMultiStatus<K extends keyof DocStatusType>(
 export function getMulti<K extends keyof DocType>(
     domainId: string, docType: K, query?: FilterQuery<DocType[K]>, projection?: Projection<DocType[K]>,
 ): Cursor<DocType[K]> {
-    let cursor = coll.find({ ...query, docType, domainId });
+    let cursor = coll.find({ docType, domainId, ...query });
     if (projection) cursor = cursor.project(buildProjection(projection));
     return cursor;
 }

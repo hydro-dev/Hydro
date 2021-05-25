@@ -132,7 +132,7 @@ class HomeworkDetailProblemHandler extends Handler {
         this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         [this.tdoc, this.pdoc, this.tsdoc] = await Promise.all([
             contest.get(domainId, tid, document.TYPE_HOMEWORK),
-            problem.get(domainId, pid, this.user._id),
+            problem.get(domainId, pid),
             contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
         ]);
         this.udoc = await user.getById(domainId, this.tdoc.owner);
