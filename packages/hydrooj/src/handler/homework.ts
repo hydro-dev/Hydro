@@ -405,8 +405,8 @@ class HomeworkCodeHandler extends Handler {
         );
         const rnames = {};
         for (const tsdoc of tsdocs) {
-            for (const pdetail of tsdoc.detail || []) {
-                rnames[pdetail.rid] = `U${tsdoc.uid}_P${pdetail.pid}_R${pdetail.rid}`;
+            for (const pid in tsdoc.detail || {}) {
+                rnames[tsdoc.detail[pid].rid] = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
             }
         }
         const zip = new AdmZip();
@@ -418,7 +418,7 @@ class HomeworkCodeHandler extends Handler {
         for (const rdoc of rdocs) {
             zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
         }
-        await this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
+        this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }
 }
 

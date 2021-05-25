@@ -372,15 +372,13 @@ class ContestCodeHandler extends Handler {
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         const rnames = {};
         for (const tsdoc of tsdocs) {
-            for (const pdetail of tsdoc.detail || []) {
-                rnames[pdetail.rid] = `U${tsdoc.uid}_P${pdetail.pid}_R${pdetail.rid}`;
+            for (const pid in tsdoc.detail || {}) {
+                rnames[tsdoc.detail[pid].rid] = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
             }
         }
         const zip = new AdmZip();
         const rdocs = await record.getMulti(domainId, {
-            _id: {
-                $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)),
-            },
+            _id: { $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)) },
         }).toArray();
         for (const rdoc of rdocs) {
             zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
@@ -393,7 +391,7 @@ class ContestCreateHandler extends Handler {
     async get() {
         this.response.template = 'contest_edit.html';
         const rules = {};
-        for (const i in contest.RULES) { rules[i] = contest.RULES[i].TEXT; }
+        for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
         const now = new Date();
         let ts = now.getTime();
         ts = ts - (ts % (15 * 60 * 1000)) + 15 * 60 * 1000;
