@@ -8,10 +8,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   &.warning
     background: #ffe1a6
 
-.header__options
-  background-image: url(./header-background.png)
-  background-image: url(./header-background@2x.png)
-
 .header
   position: relative
   height: rem($header-bg-height)
@@ -32,12 +28,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
     .header__content
       display: none
 
-.header__logo__options
-  background-image: url(./header-logo.png)
-  background-image: url(./header-logo@2x.png)
-  background-image: url(./header-logo-summer.png)
-  background-image: url(./header-logo-summer@2x.png)
-
 .header__logo
   display: block
   width: rem($header-logo-width-real)
@@ -51,35 +41,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   opacity: 1
   +mobile()
     display: inline-block
-
-.header__logo--domain
-  font-size: rem(40px)
-  margin-top: rem($header-gap-mini-domain + $nav-item-height)
-  height: rem($header-logo-domain-lh)
-  line-height: rem($header-logo-domain-lh)
-
-  a
-    text-shadow: 1px 1px 5px rgba(#000, 0.4)
-
-    &, &:hover, &:visited, &:link
-      color: #FFF
-      text-decoration: none
-
-.header__logo--system
-  line-height: rem($header-logo-system-lh)
-  color: #FFF
-  font-size: rem($font-size-small)
-
-  a
-    opacity: 0.8
-
-    &, &:hover, &:visited, &:link
-      text-decoration: none
-      color: #FFF
-
-    &:hover
-      opacity: 1
-      text-decoration: underline
 
 .header--collapsed
 
@@ -115,30 +76,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
     +mobile()
       display: block
 
-.header.mini .location
-  display: none
-
-.location-path
-  color: rgba(#FFF, 0.3)
-  line-height: rem(30px)
-  margin-top: rem(10px)
-  a, a:visited
-    color: rgba(#FFF, 0.6)
-  a:hover
-    color: rgba(#FFF, 0.9)
-
-.location-current
-  color: #9ad4f1
-  line-height: rem(40px)
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
-
-  +mobile()
-    color: #91fcff
-    font-size: 1.7rem
-    white-space: normal
-
 .header--mobile
   display: none
 
@@ -161,13 +98,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   margin-top: rem(10px)
   +retina()
     background-size: $nav-logo-width $nav-logo-height // no rem
-
-.header--mobile__system
-  margin-left: rem(10px)
-  font-size: rem($font-size-secondary)
-
-  &, &:hover, &:visited
-    color: $supplementary-color
 
 .header__hamburger
   background: none

@@ -187,7 +187,8 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         init: '正在启动 / Starting',
         operations: [
             () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1].trim());
+                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env')
+                    .split('\n').filter((i) => i.trim()).map((i) => i.split('=')[1].trim());
             },
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
             'pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb',
@@ -202,7 +203,8 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         init: '安装完成 / Install done',
         operations: [
             () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env').split('\n').map((i) => i.split('=')[1].trim());
+                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env')
+                    .split('\n').filter((i) => i.trim()).map((i) => i.split('=')[1].trim());
                 DATABASE_PASSWORD = loadconfig('/root/.hydro/config.json').password;
             },
             () => log.info('请重启终端并切换到 root 用户执行其他操作'),
