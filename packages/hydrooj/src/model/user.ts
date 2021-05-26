@@ -204,7 +204,7 @@ class UserModel {
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
-        const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnOriginal: false });
+        const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
         deleteUserCache(res.value);
         return res;
     }
@@ -220,7 +220,7 @@ class UserModel {
         const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
-            { returnOriginal: false },
+            { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
         return res.value;
@@ -290,7 +290,7 @@ class UserModel {
         const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { priv } },
-            { returnOriginal: false },
+            { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
         return res.value;

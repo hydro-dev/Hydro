@@ -8,6 +8,15 @@ import 'reflect-metadata';
 const versionNum = +process.version.replace(/v/gim, '').split('.')[0];
 if (versionNum < 14) throw new Error('NodeJS >=v14 required');
 
+import cac from 'cac';
+
+const argv = cac().parse();
+
+if (argv.options.debug) {
+    process.env.NODE_ENV = 'development';
+    process.env.DEV = 'on';
+} else process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+
 if (!global.Hydro) {
     global.Hydro = {
         version: {
@@ -44,7 +53,6 @@ import os from 'os';
 import path from 'path';
 import cluster from 'cluster';
 import fs from 'fs-extra';
-import { argv } from 'yargs';
 import './utils';
 import { Logger } from './logger';
 import './ui';
@@ -95,7 +103,7 @@ async function stopWorker() {
 }
 
 async function startWorker(cnt: number, createFirst = true) {
-    if (argv.single) {
+    if (argv.options.single) {
         await entry({ entry: 'worker' });
     } else {
         await fork(createFirst ? ['--firstWorker'] : undefined);
@@ -154,7 +162,7 @@ export function addon(addonPath: string, prepend = false) {
 export async function load() {
     addon(path.resolve(__dirname, '..'), true);
     Error.stackTraceLimit = 50;
-    if (cluster.isMaster || argv.startAsMaster) {
+    if (cluster.isMaster || argv.options.startAsMaster) {
         logger.info(`Master ${process.pid} Starting`);
         const cnt = await entry({ entry: 'master' });
         logger.info('Master started');
@@ -173,14 +181,14 @@ export async function load() {
         });
         await startWorker(cnt);
     } else {
-        global.addons = JSON.parse(Buffer.from(argv.addons as string, 'base64').toString());
+        global.addons = JSON.parse(Buffer.from(argv.options.addons as string, 'base64').toString());
         logger.info('%o', global.addons);
-        if (argv.entry) {
-            logger.info(`Worker ${process.pid} Starting as ${argv.entry}`);
-            await entry({ entry: argv.entry as string });
-            logger.success(`Worker ${process.pid} Started as ${argv.entry}`);
+        if (argv.options.entry) {
+            logger.info(`Worker ${process.pid} Starting as ${argv.options.entry}`);
+            await entry({ entry: argv.options.entry });
+            logger.success(`Worker ${process.pid} Started as ${argv.options.entry}`);
         } else {
-            if (argv.firstWorker) global.Hydro.isFirstWorker = true;
+            if (argv.options.firstWorker) global.Hydro.isFirstWorker = true;
             else global.Hydro.isFirstWorker = false;
             logger.info(`Worker ${process.pid} Starting`);
             await entry({ entry: 'worker' });
@@ -195,8 +203,8 @@ export async function loadCli() {
     process.kill(process.pid, 'SIGINT');
 }
 
-if (argv.pandora || require.main === module) {
-    const func = argv._[0] === 'cli' ? load : loadCli;
+if (argv.options.pandora || require.main === module) {
+    const func = argv.args[0] === 'cli' ? load : loadCli;
     func().catch((e) => {
         logger.error(e);
         process.exit(1);

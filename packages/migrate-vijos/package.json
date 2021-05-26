@@ -4,11 +4,12 @@
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
+    "preferUnplugged": true,
     "license": "SEE LICENSE IN LICENSE",
     "devDependencies": {
-        "@types/mongodb": "^3.6.12"
+        "@types/mongodb": "^3.6.16"
     },
     "dependencies": {
-        "mongodb": "^3.6.6"
+        "mongodb": "^3.6.8"
     }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { argv } from 'yargs';
+import cac from 'cac';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
@@ -8,6 +8,8 @@ import chalk from 'chalk';
 import root from './utils/root';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
+
+const argv = cac().parse();
 
 function runWebpack({
   watch, production, measure, dev,
@@ -35,7 +37,7 @@ function runWebpack({
         if (err.details) console.error(err.details);
         reject(err);
       }
-      if (argv.detail) console.log(stats.toString());
+      if (argv.options.detail) console.log(stats.toString());
       if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
       resolve();
     }
@@ -70,7 +72,7 @@ async function main() {
   const dir = process.cwd();
   process.chdir(root());
   await runGulp();
-  await runWebpack(argv);
+  await runWebpack(argv.options);
   process.chdir(dir);
 }
 

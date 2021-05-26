@@ -4,20 +4,21 @@ const yaml = require('js-yaml');
 const serialize = require('serialize-javascript');
 const nunjucks = require('nunjucks');
 const { filter } = require('lodash');
-const { argv } = require('yargs');
+const argv = require('cac')().parse();
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
 
-if (argv.template && argv.template !== 'string') argv.template = findFileSync('@hydrooj/ui-default/templates');
-else if (argv.template) argv.template = findFileSync(argv.template);
+let template = argv.options.template;
+if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
+else if (template) template = findFileSync(template);
 
 class Loader extends nunjucks.Loader {
   // eslint-disable-next-line class-methods-use-this
   getSource(name) {
-    if (!argv.template) {
+    if (!template) {
       if (!global.Hydro.ui.template[name]) throw new Error(`Cannot get template ${name}`);
       return {
         src: global.Hydro.ui.template[name],
@@ -26,7 +27,7 @@ class Loader extends nunjucks.Loader {
       };
     }
     let fullpath = null;
-    const p = path.resolve(argv.template, name);
+    const p = path.resolve(template, name);
     if (fs.existsSync(p)) fullpath = p;
     if (!fullpath) {
       if (global.Hydro.ui.template[name]) {
@@ -147,7 +148,7 @@ async function render(name, state) {
       ...state,
       formatJudgeTexts: (texts) => texts.map((text) => {
         if (typeof text === 'string') return text;
-        return state._(text.message).format(...text.params || []) + ((argv.debug && text.stack) ? `\n${text.stack}` : '');
+        return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
       }).join('\n'),
       perm: global.Hydro.model.builtin.PERM,
       PRIV: global.Hydro.model.builtin.PRIV,

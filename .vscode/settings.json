@@ -8,6 +8,10 @@
     "typescript.tsdk": "node_modules/typescript/lib",
     "[json]": {
         "files.insertFinalNewline": true,
-        "files.trimFinalNewlines": false,
+        "files.trimFinalNewlines": false
+    },
+    "search.exclude": {
+        "**/.yarn": true,
+        "**/.pnp.*": true
     }
 }

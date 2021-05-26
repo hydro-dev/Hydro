@@ -16,7 +16,7 @@ class BlackListModel {
         const res = await coll.findOneAndUpdate(
             { _id: id },
             { $set: { expireAt } },
-            { upsert: true, returnOriginal: false },
+            { upsert: true, returnDocument: 'after' },
         );
         return res.value;
     }

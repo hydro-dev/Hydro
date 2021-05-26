@@ -53,7 +53,7 @@ class TokenModel {
                     tokenType,
                 },
             },
-            { returnOriginal: false },
+            { returnDocument: 'after' },
         );
         return res.value;
     }

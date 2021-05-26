@@ -1,5 +1,7 @@
 import { inspect, InspectOptions, format } from 'util';
-import { argv } from 'yargs';
+import cac from 'cac';
+
+const argv = cac().parse();
 
 namespace Time {
     export const second = 1000;
@@ -41,7 +43,7 @@ export class Logger {
     static readonly INFO = 2;
     static readonly WARN = 2;
     static readonly DEBUG = 3;
-    static baseLevel = argv.debug ? 3 : 2;
+    static baseLevel = argv.options.debug ? 3 : 2;
     static showDiff = false;
     static levels: Record<string, number> = {};
     static lastTime = 0;

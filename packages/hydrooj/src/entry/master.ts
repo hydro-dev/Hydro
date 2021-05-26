@@ -3,7 +3,7 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import { argv } from 'yargs';
+import cac from 'cac';
 import { builtinModel } from './common';
 import { Entry } from '../loader';
 import { Logger } from '../logger';
@@ -11,13 +11,14 @@ import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
+const argv = cac().parse();
 const logger = new Logger('entry/master');
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 const lockfile = path.resolve(tmpdir, 'lock.json');
 
 export async function load(call: Entry) {
     fs.ensureDirSync(tmpdir);
-    if (fs.existsSync(lockfile) && !argv.ignorelock) {
+    if (fs.existsSync(lockfile) && !argv.options.ignorelock) {
         try {
             const file = require(lockfile);
             process.kill(file.pid, 0);

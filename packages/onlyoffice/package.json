@@ -4,5 +4,6 @@
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
+    "preferUnplugged": true,
     "license": "SEE LICENSE IN LICENSE"
 }

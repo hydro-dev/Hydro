@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
-import { argv } from 'yargs';
 import { ObjectID } from 'mongodb';
+import cac from 'cac';
 import {
     lib, service, model, script,
     builtinLib, builtinModel, builtinScript,
@@ -11,6 +11,7 @@ import { validate } from '../lib/validator';
 import * as bus from '../service/bus';
 import db from '../service/db';
 
+const argv = cac().parse();
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
 function parseParameters(fn: Function) {
@@ -29,7 +30,7 @@ async function runScript(name: string, arg: any) {
 }
 
 async function cli() {
-    const [, modelName, func, ...args] = argv._ as [string, string, string, ...any[]];
+    const [, modelName, func, ...args] = argv.args as [string, string, string, ...any[]];
     if (modelName === 'script') {
         let arg: any;
         try {

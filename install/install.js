@@ -15,7 +15,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`;
 if (__user !== 'root') log.fatal('请使用 root 用户运行该工具。');
 if (__arch !== 'amd64') log.fatal('不支持的架构 %s ,请尝试手动安装', __arch);
-const dev = (cli.prompt('您是否希望安装为开发模式？(y/N)') || 'n').toLowerCase().trim() === 'y';
+const dev = !!cli.get('dev');
 
 const _NODE_ = [
     'https://mirrors.tuna.tsinghua.edu.cn/nodejs-release',

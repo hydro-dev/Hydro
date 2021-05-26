@@ -1,7 +1,6 @@
 import Queue from 'p-queue';
 import path from 'path';
 import fs from 'fs-extra';
-import { argv } from 'yargs';
 import * as STATUS from '../status';
 import { SystemError } from '../error';
 import { parseFilename } from '../utils';
@@ -173,7 +172,7 @@ export const judge = async (ctx) => {
         if (effective) ctx.total_score += scores[sid];
     }
     ctx.stat.done = new Date();
-    if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
+    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,

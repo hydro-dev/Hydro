@@ -3,9 +3,9 @@ import path from 'path';
 import axios from 'axios';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
-import { argv } from 'yargs';
+import cac from 'cac';
 import { noop } from 'lodash';
-import { ObjectID } from 'bson';
+import { ObjectID } from 'mongodb';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
@@ -16,6 +16,8 @@ import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import readCases from '../cases';
 import judge from '../judge';
 import * as sysinfo from '../sysinfo';
+
+const argv = cac().parse();
 
 class JudgeTask {
     stat: Record<string, Date>;
@@ -86,7 +88,7 @@ class JudgeTask {
                 });
             } else {
                 log.error(e);
-                this.next({ message: { message: e.message, params: e.params || [], ...argv.debug ? { stack: e.stack } : {} } });
+                this.next({ message: { message: e.message, params: e.params || [], ...argv.options.debug ? { stack: e.stack } : {} } });
                 this.end({
                     status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });

@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const cluster = require('cluster');
 const fs = require('fs-extra');
-const { argv } = require('yargs');
+const argv = require('cac')().parse();
 const child = require('child_process');
 
 function buildUrl(opts) {
@@ -29,24 +29,24 @@ if (!cluster.isMaster) {
     if (!fs.existsSync(addonPath)) fs.writeFileSync(addonPath, '[]');
     let addons = JSON.parse(fs.readFileSync(addonPath).toString());
 
-    if (argv._[0] === 'db') {
+    if (argv.args[0] === 'db') {
         const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
         const url = buildUrl(JSON.parse(dbConfig));
         return child.spawn('mongo', [url], { stdio: 'inherit' });
     }
 
     try {
-        const ui = argv.ui || '@hydrooj/ui-default';
+        const ui = argv.options.ui || '@hydrooj/ui-default';
         require.resolve(ui);
         addons.push(ui);
     } catch (e) {
         console.error('Please also install @hydrooj/ui-default');
     }
 
-    if (argv._[0] && argv._[0] !== 'cli') {
-        const operation = argv._[0];
-        const arg1 = argv._[1];
-        const arg2 = argv._[2];
+    if (argv.args[0] && argv.args[0] !== 'cli') {
+        const operation = argv.args[0];
+        const arg1 = argv.args[1];
+        const arg2 = argv.args[2];
         if (operation === 'addon') {
             if (arg1 === 'add') addons.push(arg2);
             else if (arg1 === 'remove') {
@@ -65,7 +65,7 @@ if (!cluster.isMaster) {
         const hydro = require('../dist/loader');
         addons = Array.from(new Set(addons));
         for (const addon of addons) hydro.addon(addon);
-        (argv._[0] === 'cli' ? hydro.loadCli : hydro.load)().catch((e) => {
+        (argv.args[0] === 'cli' ? hydro.loadCli : hydro.load)().catch((e) => {
             console.error(e);
             process.exit(1);
         });

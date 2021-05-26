@@ -1,5 +1,4 @@
 import { inspect, format, InspectOptions } from 'util';
-import { argv } from 'yargs';
 import { Time } from './utils';
 
 const colors = [
@@ -20,7 +19,7 @@ export class Logger {
     static readonly INFO = 2;
     static readonly WARN = 2;
     static readonly DEBUG = 3;
-    static baseLevel = argv.debug ? 3 : 2;
+    static baseLevel = process.env.DEV ? 3 : 2;
     static showDiff = false;
     static levels: Record<string, number> = {};
     static lastTime = 0;

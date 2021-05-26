@@ -6,10 +6,11 @@
     "author": "undefined <i@undefined.moe>",
     "license": "SEE LICENSE IN LICENSE",
     "dependencies": {
-        "maxmind": "^4.3.1"
+        "maxmind": "^4.3.2"
     },
+    "preferUnplugged": true,
     "scripts": {
-        "postinstall": "./download.sh"
+        "postinstall": "node download.js"
     },
     "peerDependencies": {
         "hydrooj": "^2.15.0"

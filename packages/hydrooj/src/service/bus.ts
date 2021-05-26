@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import cluster from 'cluster';
 import serialize from 'serialize-javascript';
-import { argv } from 'yargs';
+import cac from 'cac';
 import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
 import type { Handler } from './server';
 import { Logger } from '../logger';
@@ -16,6 +16,7 @@ import type { UserRegisterHandler } from '../handler/user';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus', true);
+const argv = cac().parse();
 
 function isBailed(value: any) {
     return value !== null && value !== false && value !== undefined;
@@ -146,9 +147,9 @@ export function off<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
 
 export async function parallel<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
     const tasks: Promise<any>[] = [];
-    if (argv.showBus) logger.debug('parallel: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('parallel: %s %o', name, args);
     for (const callback of _hooks[name] || []) {
-        if (argv.busDetail) logger.debug(callback.toString());
+        if (argv.options.busDetail) logger.debug(callback.toString());
         tasks.push(callback.apply(this, args));
     }
     await Promise.all(tasks);
@@ -159,16 +160,16 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
 }
 
 export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
-    if (argv.showBus) logger.debug('serial: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
-        if (argv.busDetail) logger.debug(callback.toString());
+        if (argv.options.busDetail) logger.debug(callback.toString());
         await callback.apply(this, args);
     }
 }
 
 export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
-    if (argv.showBus) logger.debug('bail: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('bail: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         const result = callback.apply(this, args);

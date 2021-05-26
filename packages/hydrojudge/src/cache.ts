@@ -1,18 +1,20 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { argv } from 'yargs';
+import cac from 'cac';
 import { Logger } from './log';
 import { getConfig } from './config';
+
+const argv = cac().parse();
 
 const logger = new Logger('cache');
 
 export = function main() {
     const CACHE_DIR = getConfig('cache_dir');
-    if (argv._[1] === 'clean') {
+    if (argv.args[1] === 'clean') {
         fs.emptyDirSync(CACHE_DIR);
         logger.info('Cleaned cache.');
-    } else if (argv._[1] === 'prune') {
-        const duration = +argv.duration || 30;
+    } else if (argv.args[1] === 'prune') {
+        const duration = +argv.options.duration || 30;
         const now = new Date().getTime();
         const hosts = fs.readdirSync(CACHE_DIR);
         let cnt = 0;

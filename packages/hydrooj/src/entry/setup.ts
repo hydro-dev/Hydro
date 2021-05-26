@@ -6,11 +6,11 @@ import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import cache from 'koa-static-cache';
 import mongodb from 'mongodb';
-import { argv } from 'yargs';
+import cac from 'cac';
 import { Logger } from '../logger';
 
 const logger = new Logger('setup');
-const listenPort = argv.port || 8888;
+const listenPort = cac().parse().options.port || 8888;
 
 async function get(ctx: Context) {
   ctx.body = `<!DOCTYPE html>

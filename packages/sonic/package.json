@@ -4,6 +4,7 @@
     "description": "Sonic search service",
     "main": "service.js",
     "typings": "service.d.ts",
+    "preferUnplugged": true,
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "SEE LICENSE IN LICENSE",

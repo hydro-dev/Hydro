@@ -46,7 +46,7 @@ class MessageModel {
         const result = await coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
-            { returnOriginal: false },
+            { returnDocument: 'after' },
         );
         return result.value;
     }

@@ -80,7 +80,7 @@ class DomainModel {
 
     static async edit(domainId: string, $set: Partial<DomainDoc>) {
         await bus.serial('domain/before-update', domainId, $set);
-        const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnOriginal: false });
+        const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnDocument: 'after' });
         await bus.serial('domain/update', domainId, $set, result.value);
         return result.value;
     }
@@ -92,7 +92,7 @@ class DomainModel {
             // FIXME
             // @ts-expect-error
             { $inc: { [field]: n } },
-            { returnOriginal: false },
+            { returnDocument: 'after' },
         );
         return res.value[field];
     }
@@ -113,7 +113,7 @@ class DomainModel {
     @ArgMethod
     static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
         if (!(uid instanceof Array)) {
-            const res = await collUser.findOneAndUpdate({ domainId, uid }, { $set: { role } }, { upsert: true, returnOriginal: false });
+            const res = await collUser.findOneAndUpdate({ domainId, uid }, { $set: { role } }, { upsert: true, returnDocument: 'after' });
             const udoc = await UserModel.getById(domainId, uid);
             deleteUserCache(udoc);
             return res;

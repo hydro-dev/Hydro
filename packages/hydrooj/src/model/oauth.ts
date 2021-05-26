@@ -19,7 +19,7 @@ class OauthModel {
         const res = await coll.findOneAndUpdate(
             { _id },
             { $set: { value } },
-            { upsert: true, returnOriginal: false },
+            { upsert: true, returnDocument: 'after' },
         );
         return res.value.uid;
     }

@@ -2,8 +2,8 @@
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
 import path from 'path';
-import { argv } from 'yargs';
-import { ObjectID } from 'bson';
+import cac from 'cac';
+import { ObjectID } from 'mongodb';
 import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { Logger } from 'hydrooj/dist/logger';
@@ -217,7 +217,7 @@ async function postInit() {
                     });
                 } else {
                     logger.error(e);
-                    this.next({ message: { message: e.message, params: e.params, ...argv.debug ? { stack: e.stack } : {} } });
+                    this.next({ message: { message: e.message, params: e.params, ...process.env.DEV ? { stack: e.stack } : {} } });
                     this.end({
                         status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });

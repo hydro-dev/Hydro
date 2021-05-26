@@ -14,6 +14,12 @@ dist/
 globalConfig.json
 *.out
 .clinic/
+.yarn/cache
+.yarn/build-state.yml
+.yarn/unplugged
+.yarn/sdks
+.yarn/install-state.gz
+.pnp.*
 
 # Config Files
 /config.yaml
@@ -30,6 +36,7 @@ packages/**/*.js
 !/install/jssh.d.ts
 ## ui-default
 !packages/ui-default/**/*.js
+!packages/geoip/download.js
 !examples/**
 packages/ui-default/public
 packages/ui-default/misc/.iconfont

@@ -5,10 +5,11 @@
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "SEE LICENSE IN LICENSE",
+    "preferUnplugged": true,
     "dependencies": {
-        "ws": "^7.4.5"
+        "ws": "^7.4.6"
     },
     "devDependencies": {
-        "@types/ws": "^7.4.2"
+        "@types/ws": "^7.4.4"
     }
 }

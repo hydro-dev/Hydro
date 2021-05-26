@@ -100,7 +100,7 @@ export async function set<K extends keyof DocType>(
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         update,
-        { returnOriginal: false, upsert: true },
+        { returnDocument: 'after', upsert: true },
     );
     return res.value;
 }
@@ -141,7 +141,7 @@ export async function inc<K extends keyof DocType>(
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $inc: { [key]: value } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -153,7 +153,7 @@ export async function incAndSet<K extends keyof DocType>(
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $inc: { [key]: value }, $set: args },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -183,7 +183,7 @@ export async function push(
     const doc = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $push: { [key]: v } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return [doc.value, _id];
 }
@@ -195,7 +195,7 @@ export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $pull: { [setKey]: { $in: contents } } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -208,7 +208,7 @@ export async function deleteSub<T extends keyof DocType, K extends ArrayKeys<Doc
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $pull: { [key]: { _id: { $in: subId } } } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -244,7 +244,7 @@ export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
             [key]: { $elemMatch: { _id: subId } },
         },
         { $set },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -256,7 +256,7 @@ export async function addToSet<T extends keyof DocType, K extends ArrayKeys<DocT
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $addToSet: { [setKey]: content } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     return res.value;
 }
@@ -285,7 +285,7 @@ export async function setStatus<K extends keyof DocStatusType>(
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $set: args },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -308,7 +308,7 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $set: { [key]: value, ...args } },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -322,7 +322,7 @@ export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $set: args },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -336,7 +336,7 @@ export async function cappedIncStatus<T extends keyof DocStatusType>(
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [key]: { $not } },
         { $inc: { [key]: value } },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -348,7 +348,7 @@ export async function incStatus<T extends keyof DocStatusType>(
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $inc: { [key]: value } },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -360,13 +360,13 @@ export async function revPushStatus<T extends keyof DocStatusType>(
     let res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [`${key}.${id}`]: value[id] },
         { $set: { [`${key}.$`]: value }, $inc: { rev: 1 } },
-        { returnOriginal: false },
+        { returnDocument: 'after' },
     );
     if (!res.value) {
         res = await collStatus.findOneAndUpdate(
             { domainId, docType, docId, uid },
             { $push: { [key]: value }, $inc: { rev: 1 } },
-            { upsert: true, returnOriginal: false },
+            { upsert: true, returnDocument: 'after' },
         );
     }
     return res.value;
@@ -378,7 +378,7 @@ export async function revInitStatus<T extends keyof DocStatusType>(
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $inc: { rev: 1 } },
-        { upsert: true, returnOriginal: false },
+        { upsert: true, returnDocument: 'after' },
     );
     return res.value;
 }
@@ -389,7 +389,7 @@ export async function revSetStatus<T extends keyof DocStatusType>(
 ): Promise<any> {
     const filter = { domainId, docType, docId, uid, rev };
     const update = { $set: args, $inc: { rev: 1 } };
-    const res = await collStatus.findOneAndUpdate(filter, update, { returnOriginal: false });
+    const res = await collStatus.findOneAndUpdate(filter, update, { returnDocument: 'after' });
     return res.value;
 }
 

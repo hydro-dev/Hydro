@@ -132,7 +132,7 @@ class RecordModel {
             const res = await RecordModel.coll.findOneAndUpdate(
                 { _id, domainId },
                 $update,
-                { returnOriginal: false },
+                { returnDocument: 'after' },
             );
             return res.value;
         }

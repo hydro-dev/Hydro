@@ -1,6 +1,5 @@
 import Queue from 'p-queue';
 import fs from 'fs-extra';
-import { argv } from 'yargs';
 import * as STATUS from '../status';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
@@ -123,7 +122,7 @@ export const judge = async (ctx) => {
     }
     await Promise.all(tasks);
     ctx.stat.done = new Date();
-    if (argv.debug) ctx.next({ message: JSON.stringify(ctx.stat) });
+    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     console.log({
         status: ctx.total_status,
         score: ctx.total_score,

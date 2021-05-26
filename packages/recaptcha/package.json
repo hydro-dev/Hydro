@@ -6,6 +6,7 @@
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined",
     "license": "SEE LICENSE IN LICENSE",
+    "preferUnplugged": true,
     "dependencies": {
         "superagent": "^6.1.0"
     }

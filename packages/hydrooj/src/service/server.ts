@@ -15,7 +15,7 @@ import Router from 'koa-router';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
-import { argv } from 'yargs';
+import cac from 'cac';
 import { createHash } from 'crypto';
 import type { SetOption } from 'cookies';
 import * as bus from './bus';
@@ -38,6 +38,7 @@ import token from '../model/token';
 import * as opcount from '../model/opcount';
 import { PERM, PRIV } from '../model/builtin';
 
+const argv = cac().parse();
 const logger = new Logger('server');
 export const app = new Koa();
 export const server = http.createServer(app.callback());
@@ -248,8 +249,8 @@ export async function prepare() {
         rewrite: (p) => p.replace('/fs', ''),
     }));
     app.use(Compress());
-    if (argv.public) {
-        app.use(cache(argv.public, {
+    if (argv.options.public) {
+        app.use(cache(argv.options.public, {
             maxAge: 0,
         }));
     } else {
@@ -257,7 +258,7 @@ export async function prepare() {
             maxAge: 30 * 24 * 60 * 60,
         }));
     }
-    if (argv.debug) {
+    if (process.env.DEV) {
         app.use(async (ctx: Context, next: Function) => {
             const startTime = new Date().getTime();
             await next();
@@ -482,7 +483,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (!argv.benchmark) await this.limitRate('global', 10, 88);
+        if (!argv.options.benchmark) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
@@ -844,8 +845,8 @@ export function start() {
     if (started) return;
     const port = system.get('server.port');
     app.use(router.routes()).use(router.allowedMethods());
-    server.listen(argv.port || port);
-    logger.success('Server listening at: %d', argv.port || port);
+    server.listen(argv.options.port || port);
+    logger.success('Server listening at: %d', argv.options.port || port);
     started = true;
 }
 

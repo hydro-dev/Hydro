@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 import cluster from 'cluster';
-import { argv } from 'yargs';
 import * as bus from './service/bus';
-
-const disabledTerminal = argv.legacy || argv._.length || process.env.NODE_ENV === 'test';
 
 export namespace Progress {
     export class Progress {
@@ -40,7 +37,6 @@ async function terminate() {
 }
 process.on('SIGINT', terminate);
 if (cluster.isMaster) {
-    if (!disabledTerminal) console.log('Not running in a terminal environment. Interactive mode disabled.');
     bus.on('message/log', (message) => {
         process.stdout.write(`${message}\n`);
     });

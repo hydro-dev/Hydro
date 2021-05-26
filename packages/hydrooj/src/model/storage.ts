@@ -35,7 +35,7 @@ export class StorageModel {
     }
 
     static async get(path: string, savePath?: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnOriginal: false });
+        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnDocument: 'after' });
         if (value) return await storage.get(value._id, savePath);
         return await storage.get(path, savePath);
     }
@@ -61,7 +61,7 @@ export class StorageModel {
     }
 
     static async getMeta(path: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnOriginal: false });
+        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnDocument: 'after' });
         if (!value) return null;
         return {
             ...value.meta,
