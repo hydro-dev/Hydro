@@ -126,9 +126,11 @@ class UserRegisterWithCodeHandler extends Handler {
         if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
+        const [id, domain] = tdoc.mail.split('@');
+        if (domain === 'qq.com' && !Number.isNaN(+id)) await user.setById(uid, { avatar: `qq:${id}` });
         this.session.uid = uid;
         this.session.scpoe = PERM.PERM_ALL.toString();
-        this.response.redirect = this.url('homepage');
+        this.response.redirect = this.url('home_settings', { category: 'preference' });
     }
 }
 
