@@ -94,7 +94,8 @@ const page = new NamedPage('home_preference', async () => {
       .hide()
       .after($el);
 
-    $('#codelang-main-select').on('change', function () {
+    function onChangeMain() {
+      console.log(this.value, window.LANGS);
       const options = {};
       for (const key in window.LANGS) {
         if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
@@ -107,7 +108,8 @@ const page = new NamedPage('home_preference', async () => {
         $('#codelang-sub-container').hide();
         $('[name="codeLang"]').val(this.value);
       }
-    });
+    }
+    $('#codelang-main-select').on('change', onChangeMain);
     $('#codelang-sub-select').on('change', function () {
       $('[name="codeLang"]').val(this.value);
     });
@@ -118,9 +120,10 @@ const page = new NamedPage('home_preference', async () => {
     setOptions($('#codelang-main-select'), main);
     const current = $('[name="codeLang"]').val();
     if (current.includes('.')) {
-      const [m, s] = current.split('.');
+      const [m] = current.split('.');
       $('#codelang-main-select').val(m);
-      $('#codelang-sub-select').val(s).show();
+      onChangeMain.call({ value: $('#codelang-main-select').val() });
+      $('#codelang-sub-select').val(current);
     } else $('#codelang-main-select').val(current);
 
     if (success) {
