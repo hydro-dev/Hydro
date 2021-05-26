@@ -1,7 +1,7 @@
 // Modified from jquery-pjax to support multiple fragments and jQuery 3.0
 // https://github.com/defunkt/jquery-pjax/blob/master/jquery.pjax.js
 
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid';
 import Notification from 'vj/components/notification';
 import NProgress from 'vj/components/nprogress';
 import request from './request';
@@ -56,7 +56,7 @@ pjax.request = async (opt) => {
   if (!currentState) {
     // create initial state
     currentState = {
-      id: uuid(),
+      id: nanoid(),
       options: {
         url: window.location.href,
       },
@@ -81,7 +81,7 @@ pjax.request = async (opt) => {
     const data = await request.ajax(params);
     const meta = extractMetaData(options, data);
     currentState = {
-      id: uuid(),
+      id: nanoid(),
       options: opt,
     };
     if (options.push) {
