@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
 import path from 'path';
-import cac from 'cac';
 import { ObjectID } from 'mongodb';
 import fs from 'fs-extra';
 import { noop } from 'lodash';

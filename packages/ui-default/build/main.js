@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import cac from 'cac';
+import fs from 'fs-extra';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
@@ -73,6 +74,10 @@ async function main() {
   process.chdir(root());
   await runGulp();
   await runWebpack(argv.options);
+  if (argv.options.production) {
+    fs.removeSync('public/vditor/dist/js/mathjax');
+    fs.removeSync('public/vditor/dist/js/abcjs');
+  }
   process.chdir(dir);
 }
 

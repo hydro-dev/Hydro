@@ -44,7 +44,6 @@ const configFlat = {
 };
 
 const packages = fs.readdirSync(path.resolve(process.cwd(), 'packages'));
-console.log(packages);
 for (const package of packages) {
     if (package === 'ui-default') continue;
     const basedir = path.resolve(process.cwd(), 'packages', package);
