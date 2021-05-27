@@ -19,9 +19,8 @@ bus.on('problem/del', async (domainId, docId) => {
     await sonic.flusho('problem', `${domainId}@content`, docId.toString());
 });
 
-global.Hydro.lib.problemSearch = async (domainId: string, query: string) => {
-    const c = system.get('pagination.problem');
-    const docIds = await sonic.query('problem', `${domainId}@title`, query, { limit: c });
-    if (c - docIds.length > 0) docIds.push(...await sonic.query('problem', `${domainId}@content`, query, { limit: c - docIds.length }));
+global.Hydro.lib.problemSearch = async (domainId: string, query: string, limit = system.get('pagination.problem')) => {
+    const docIds = await sonic.query('problem', `${domainId}@title`, query, { limit });
+    if (limit - docIds.length > 0) docIds.push(...await sonic.query('problem', `${domainId}@content`, query, { limit: limit - docIds.length }));
     return docIds.map(Number);
 };
