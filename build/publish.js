@@ -54,7 +54,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
     if (Object.keys(bumpMap).length) {
         for (const name in bumpMap) {
             console.log(`publishing ${name}@${bumpMap[name]} ...`);
-            await spawnAsync(`yarn publish ${name} --new-version ${bumpMap[name]}${tag === 'dev' ? '-dev' : ''} --access public --tag ${tag}`);
+            await spawnAsync(`yarn npm publish ${name} --new-version ${bumpMap[name]}${tag === 'dev' ? '-dev' : ''} --access public --tag ${tag}`);
         }
     }
     console.log('Release created successfully.');
