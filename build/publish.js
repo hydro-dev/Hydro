@@ -8,6 +8,7 @@ const { gt } = require('semver');
 const latest = require('latest-version');
 const path = require('path');
 const ora = require('ora');
+const { writeFileSync } = require('fs');
 const { getWorkspaces, spawnAsync } = require('./utils');
 
 const {
@@ -55,8 +56,13 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
     if (Object.keys(bumpMap).length) {
         for (const name in bumpMap) {
             console.log(`publishing ${name}@${bumpMap[name]} ...`);
+            if (tag === 'dev') {
+                const pkg = require(`${name}/package.json`);
+                pkg.version += '-dev';
+                writeFileSync(path.resolve(`${name}/package.json`), JSON.stringify(pkg));
+            }
             await spawnAsync(
-                `yarn npm publish --new-version ${bumpMap[name]}${tag === 'dev' ? '-dev' : ''} --access public --tag ${tag}`,
+                `yarn npm publish --access public --tag ${tag}`,
                 path.resolve(name),
             );
         }
