@@ -57,7 +57,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
             console.log(`publishing ${name}@${bumpMap[name]} ...`);
             await spawnAsync(
                 `yarn npm publish --new-version ${bumpMap[name]}${tag === 'dev' ? '-dev' : ''} --access public --tag ${tag}`,
-                path.resolve(`packages/${name}`),
+                path.resolve(name),
             );
         }
     }
