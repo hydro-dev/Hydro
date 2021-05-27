@@ -104,7 +104,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   const extender = new ProblemPageExtender();
 
   async function handleClickDownloadProblem() {
-    await downloadProblemSet([UiContext.problemNumId]);
+    await downloadProblemSet([UiContext.problemNumId], UiContext.pdoc.title);
   }
 
   async function scratchpadFadeIn() {

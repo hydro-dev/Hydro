@@ -5,6 +5,7 @@ import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import Notification from 'vj/components/notification';
+import { pick } from 'lodash';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -62,11 +63,25 @@ export default async function download(name, targets) {
   window.removeEventListener('beforeunload', onBeforeUnload);
 }
 
-export async function downloadProblemSet(pids) {
+export async function downloadProblemSet(pids, name = 'Export') {
+  Notification.info('Downloading...');
   const targets = [];
   for (const pid of pids) {
     const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
-    targets.push({ filename: `${pid}/problem.yaml`, content: dump(pdoc) });
+    targets.push({
+      filename: `${pid}/problem.yaml`,
+      content: dump({
+        content: pdoc.content,
+        owner: pdoc.owner,
+        title: pdoc.title,
+        tag: pdoc.tag,
+        nSubmit: pdoc.nSubmit,
+        nAccept: pdoc.nAccept,
+        data: pdoc.data.map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
+        additional_file: pdoc.additional_file.map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
+        difficulty: pdoc.difficulty,
+      }),
+    });
     let { links } = await request.post(
       `/d/${UiContext.domainId}/p/${pid}/files`,
       { operation: 'get_links', files: pdoc.data.map((i) => i.name), type: 'testdata' }
@@ -81,5 +96,5 @@ export async function downloadProblemSet(pids) {
       targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
     }
   }
-  await download('Export.zip', targets);
+  await download(`${name}.zip`, targets);
 }

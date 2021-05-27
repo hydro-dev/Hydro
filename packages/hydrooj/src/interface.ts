@@ -142,7 +142,7 @@ export interface SubtaskConfig {
     cases?: TestCaseConfig[],
 }
 
-export interface ProblemConfig {
+export interface ProblemConfigFile {
     type?: ProblemType;
     score?: number;
     time?: string;
@@ -157,6 +157,16 @@ export interface ProblemConfig {
     cases?: TestCaseConfig[];
     subtasks?: SubtaskConfig[];
     langs?: string[];
+}
+
+export interface ProblemConfig {
+    count: number;
+    memoryMax: number;
+    memoryMin: number;
+    timeMax: number;
+    timeMin: number;
+    langs?: string[];
+    type: string;
 }
 
 export interface PlainContentNode {

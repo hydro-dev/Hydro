@@ -10,7 +10,7 @@ import { ProblemAdd } from 'hydrooj/dist/lib/ui';
 import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { buildContent } from 'hydrooj/dist/lib/content';
-import type { ContentNode, ProblemConfig } from 'hydrooj';
+import type { ContentNode, ProblemConfigFile } from 'hydrooj';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
@@ -78,7 +78,7 @@ class ImportQduojHandler extends Handler {
                 const n = await problem.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
                 const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'), this.user._id, pdoc.tags);
-                const config: ProblemConfig = {
+                const config: ProblemConfigFile = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,
                     subtasks: [],

@@ -8,7 +8,7 @@ import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
-import { RecordDoc, ContestInfo, ProblemConfig } from '../interface';
+import { RecordDoc, ContestInfo, ProblemConfigFile } from '../interface';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
@@ -51,7 +51,7 @@ class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfig = {}) {
+    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}) {
         const rdoc = await RecordModel.get(domainId, rid);
         let data = [];
         if (rdoc.pid) {

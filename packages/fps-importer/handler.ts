@@ -11,7 +11,7 @@ import solution from 'hydrooj/dist/model/solution';
 import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { FileTooLargeError, ValidationError } from 'hydrooj/dist/error';
-import type { ProblemConfig } from 'hydrooj';
+import type { ProblemConfigFile } from 'hydrooj';
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -29,7 +29,7 @@ class FpsProblemImportHandler extends Handler {
                     : [],
                 hint: p.hint,
             }, 'html', this.translate.bind(this));
-            const config: ProblemConfig = {
+            const config: ProblemConfigFile = {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
