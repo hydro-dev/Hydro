@@ -6,7 +6,7 @@ const spawn = require('cross-spawn');
 const cwd = process.cwd();
 
 function getWorkspaces() {
-    return globby(require('../package').workspaces, {
+    return globby(require('../package.json').workspaces, {
         cwd,
         deep: 0,
         onlyDirectories: true,
@@ -26,9 +26,11 @@ function spawnSync(command, silent) {
     }
 }
 
-function spawnAsync(command) {
+function spawnAsync(command, path) {
     const args = command.split(/\s+/);
-    const child = spawn(args[0], args.slice(1), { stdio: 'inherit' });
+    const options = { stdio: 'inherit' };
+    if (path) options.cwd = path;
+    const child = spawn(args[0], args.slice(1), options);
     return new Promise((resolve, reject) => {
         child.on('close', resolve);
         child.on('error', reject);

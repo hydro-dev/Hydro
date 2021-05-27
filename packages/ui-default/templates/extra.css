@@ -6,7 +6,7 @@
 
 @media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx), only screen and (min-resolution: 144dpi) {
     /* {% if nav_logo_dark_2x %} */
-    .nav__logo, .header--mobile__domain.is--system {
+    .nav__logo, .header--mobile__domain {
         background-image: url({{nav_logo_dark_2x}}) !important
     }
     /* {% endif %} */
