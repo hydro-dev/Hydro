@@ -7,7 +7,6 @@ import {
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
-import { parseConfig } from '../lib/testdataConfig';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as system from '../model/system';
@@ -270,11 +269,6 @@ class ContestProblemHandler extends Handler {
             attended: this.attended,
             page_name: 'contest_detail_problem',
         };
-        try {
-            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
-        } catch (e) {
-            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
-        }
     }
 
     // eslint-disable-next-line

@@ -2,7 +2,7 @@ import React from 'react';
 import { sortBy } from 'lodash';
 import request from 'vj/utils/request';
 
-export default class MessagePadContainer extends React.PureComponent {
+export default class SubjectiveContainer extends React.PureComponent {
   constructor(args) {
     super(args);
     this.state = {};

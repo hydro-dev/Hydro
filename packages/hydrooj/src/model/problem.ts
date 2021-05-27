@@ -12,6 +12,7 @@ import {
 } from '../typeutils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import * as bus from '../service/bus';
+import { parseConfig } from '../lib/testdataConfig';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
@@ -79,9 +80,16 @@ export class ProblemModel {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
         }
-        return typeof pid === 'number'
+        const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
             : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
+        if (!res) return null;
+        try {
+            res.config = await parseConfig(res.config);
+        } catch (e) {
+            res.config = `Cannot parse: ${e.message}`;
+        }
+        return res;
     }
 
     static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
@@ -173,12 +181,12 @@ export class ProblemModel {
         await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }
 
-    static async random(domainId: string, query: FilterQuery<ProblemDoc>): Promise<string | null> {
+    static async random(domainId: string, query: FilterQuery<ProblemDoc>): Promise<string | number | null> {
         const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
         const pcount = await cursor.count();
         if (pcount) {
             const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
-            return pdoc[0].pid;
+            return pdoc[0].pid || pdoc[0].docId;
         } return null;
     }
 
@@ -194,6 +202,12 @@ export class ProblemModel {
         const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
             .project(buildProjection(projection)).toArray();
         for (const pdoc of pdocs) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                pdoc.config = await parseConfig(pdoc.config);
+            } catch (e) {
+                pdoc.config = `Cannot parse: ${e.message}`;
+            }
             r[pdoc.docId] = pdoc;
             l[pdoc.pid] = pdoc;
         }

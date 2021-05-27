@@ -9,21 +9,23 @@ interface ParseResult {
     timeMax: number;
     timeMin: number;
     langs?: string[];
+    type: string;
 }
 
 export async function parseConfig(config: string | ProblemConfig = {}) {
+    let cfg: ProblemConfig = {};
+    if (typeof config === 'string') {
+        // TODO should validate here?
+        cfg = await readYamlCases(load(config) as Record<string, any>);
+    } else if (typeof config === 'object') cfg = await readYamlCases(config);
     const result: ParseResult = {
         count: 0,
         memoryMin: Number.MAX_SAFE_INTEGER,
         memoryMax: 0,
         timeMin: Number.MAX_SAFE_INTEGER,
         timeMax: 0,
+        type: cfg.type || 'default',
     };
-    let cfg: ProblemConfig = {};
-    if (typeof config === 'string') {
-        // TODO should validate here?
-        cfg = await readYamlCases(load(config) as Record<string, any>);
-    } else if (typeof config === 'object') cfg = await readYamlCases(config);
     if (cfg.subtasks.length) {
         for (const subtask of cfg.subtasks) {
             result.memoryMax = Math.max(result.memoryMax, subtask.memory);

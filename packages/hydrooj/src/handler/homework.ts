@@ -24,7 +24,6 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
-import { parseConfig } from '../lib/testdataConfig';
 
 const validatePenaltyRules = (input: string) => {
     const s = yaml.load(input);
@@ -144,11 +143,6 @@ class HomeworkDetailProblemHandler extends Handler {
             udoc: this.udoc,
             attended: this.attended,
         };
-        try {
-            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
-        } catch (e) {
-            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
-        }
     }
 
     @param('tid', Types.ObjectID)

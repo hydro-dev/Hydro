@@ -13,7 +13,6 @@ import {
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import difficultyAlgorithm from '../lib/difficulty';
-import { parseConfig } from '../lib/testdataConfig';
 import * as system from '../model/system';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -203,12 +202,6 @@ export class ProblemDetailHandler extends ProblemHandler {
             ],
         };
         this.extraTitleContent = this.pdoc.title;
-        // Get time and memory limit
-        try {
-            this.response.body.pdoc.config = await parseConfig(this.pdoc.config);
-        } catch (e) {
-            this.response.body.pdoc.config = `Cannot parse: ${e.message}`;
-        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -597,11 +590,20 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        this.response.body = await problem.getPrefixList(domainId, prefix);
+        const pdocs = await problem.getPrefixList(domainId, prefix);
         if (!Number.isNaN(+prefix)) {
             const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
-            if (pdoc) this.response.body.unshift(pdoc);
+            if (pdoc) pdocs.unshift(pdoc);
         }
+        const search = global.Hydro.lib.problemSearch;
+        if (pdocs.length < 20) {
+            if (search) {
+                const result = await search(domainId, prefix, 20 - pdocs.length);
+                const docs = await problem.getMulti(domainId, { docId: { $in: result } }).toArray();
+                pdocs.push(...docs);
+            }
+        }
+        this.response.body = pdocs;
     }
 }
 

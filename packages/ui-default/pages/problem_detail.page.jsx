@@ -103,22 +103,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   let unmountReact = null;
   const extender = new ProblemPageExtender();
 
-  const copyProblemDialog = new ActionDialog({
-    $body: $('.dialog__body--send-to > div'),
-    onDispatch(action) {
-      const $target = copyProblemDialog.$dom.find('[name="target"]');
-      if (action === 'ok' && $target.val() === '') {
-        $target.focus();
-        return false;
-      }
-      return true;
-    },
-  });
-  copyProblemDialog.clear = function () {
-    this.$dom.find('[name="target"]').val('');
-    return this;
-  };
-
   async function handleClickDownloadProblem() {
     await downloadProblemSet([UiContext.problemNumId]);
   }
@@ -192,7 +176,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
 
   async function loadSubjective() {
     try {
-      const props = yaml.load(base64.decode(document.getElementsByClassName('section__body typo')[0].innerText));
+      if (UiContext.pdoc.config?.type !== 'subjective') return;
+      const props = yaml.load(document.getElementsByClassName('section__body typo')[0].innerText);
       if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
       const { default: Subjective } = await import('vj/components/subjective-question/index');

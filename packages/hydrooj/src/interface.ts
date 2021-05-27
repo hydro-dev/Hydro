@@ -207,7 +207,8 @@ declare module './model/problem' {
         /** @deprecated */
         category?: string[],
 
-        config: string,
+        /** string (errormsg) */
+        config: string | ProblemConfig,
     }
 }
 export type { ProblemDoc } from './model/problem';
