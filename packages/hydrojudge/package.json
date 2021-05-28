@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.7.1",
+    "version": "2.8.0",
     "main": "package.json",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -12,7 +12,7 @@
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
-        "mongodb": "^3.6.8",
+        "mongodb": "^3.6.9",
         "p-queue": "^6.6.2",
         "shell-quote": "^1.7.2",
         "ws": "^7.4.6"

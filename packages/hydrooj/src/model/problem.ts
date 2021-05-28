@@ -266,7 +266,6 @@ export class ProblemModel {
             const range = { $in: parsed[task].map((i) => i.pid) };
             const q: any = { $or: [{ docId: range }, { pid: range }] };
             if (!getHidden) q.hidden = false;
-            console.log(task, parsed[task]);
             tasks.push(document.getMulti(task, document.TYPE_PROBLEM, q).project(buildProjection(projection)).toArray());
         }
         const pdocs = flatten(await Promise.all(tasks));
