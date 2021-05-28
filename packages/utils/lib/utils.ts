@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
-import { Duplex, Readable } from 'stream';
+import { Duplex } from 'stream';
 import { ObjectID } from 'mongodb';
 import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';

@@ -1,9 +1,9 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { pick } from 'lodash';
 import {
     ContestNotFoundError, PermissionError, ProblemNotFoundError,
     RecordNotFoundError, UserNotFoundError,
 } from '../error';
+import { buildProjection } from '../utils';
 import { RecordDoc } from '../interface';
 import { PERM, STATUS, PRIV } from '../model/builtin';
 import * as system from '../model/system';
@@ -17,7 +17,6 @@ import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
 } from '../service/server';
-import { buildProjection } from '../utils';
 
 class RecordListHandler extends Handler {
     @param('page', Types.PositiveInt, true)
@@ -60,7 +59,7 @@ class RecordListHandler extends Handler {
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             canViewProblem
                 ? problem.getList(domainId, rdocs.map(
-                    (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`)
+                    (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
                 ), canViewProblemHidden, false)
                 : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
         ]);
