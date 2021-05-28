@@ -206,7 +206,7 @@ class UserDetailHandler extends Handler {
                 this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
             )
             : Object.fromEntries(rdocs.map(
-                (rdoc) => [rdoc.pid, problem.create(undefined, rdoc.pid.toString())],
+                (rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }],
             ));
         // Remove sensitive data
         if (!isSelfProfile && sdoc) {

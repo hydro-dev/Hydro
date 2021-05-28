@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
-import { Duplex } from 'stream';
+import { Duplex, Readable } from 'stream';
 import { ObjectID } from 'mongodb';
 import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';
@@ -192,11 +192,20 @@ export function isClass(obj: any, strict = false) {
     return false;
 }
 
-export function streamToBuffer(stream): Promise<Buffer> {
+export function streamToBuffer(stream: any, maxSize = 0): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const buffers = [];
+        let length = 0;
+        function onData(data) {
+            buffers.push(data);
+            length += data.length;
+            if (maxSize && length > maxSize) {
+                stream.removeListener('data', onData);
+                reject(new Error('buffer length exceeded'));
+            }
+        }
         stream.on('error', reject);
-        stream.on('data', (data) => buffers.push(data));
+        stream.on('data', onData);
         stream.on('end', () => resolve(Buffer.concat(buffers)));
     });
 }

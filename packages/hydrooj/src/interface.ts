@@ -256,27 +256,31 @@ export interface ContestInfo {
 }
 
 export interface RecordDoc {
-    _id: ObjectID,
-    domainId: string,
-    pid: number
-    uid: number,
-    lang: string,
-    code: string,
-    score: number,
-    memory: number,
-    time: number,
-    judgeTexts: string[],
-    compilerTexts: string[],
-    testCases: TestCase[],
-    rejudged: boolean,
-    judger: number,
-    judgeAt: Date,
-    status: number,
-    hidden: boolean,
-    progress?: number,
-    input?: string,
-    contest?: ContestInfo,
-    effective?: boolean,
+    _id: ObjectID;
+    domainId: string;
+    pdomain: string;
+    pid: number;
+    uid: number;
+    lang: string;
+    code: string;
+    score: number;
+    memory: number;
+    time: number;
+    judgeTexts: string[];
+    compilerTexts: string[];
+    testCases: TestCase[];
+    rejudged: boolean;
+    /** judge uid */
+    judger: number;
+    judgeAt: Date;
+    status: number;
+    progress?: number;
+    /** pretest/script */
+    hidden?: boolean;
+    /** pretest */
+    input?: string;
+    contest?: ContestInfo;
+    effective?: boolean;
 }
 
 export interface ScoreboardNode {
@@ -296,6 +300,9 @@ export interface TrainingNode {
     pids: number[],
 }
 
+export type ExternalProblemId = string; // ${string}:${number}
+export type ProblemId = ExternalProblemId | number;
+
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWORK'] | document['TYPE_TRAINING']> extends Document {
     docId: ObjectID,
     docType: docType & number,
@@ -305,7 +312,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWO
     title: string,
     content: string,
     rule: string,
-    pids: number[],
+    pids: ProblemId[],
     rated?: boolean,
 
     // For homework

@@ -23,16 +23,20 @@ const logger = new Logger('judge');
 async function _postJudge(rdoc: RecordDoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
+    const updated = await problem.updateStatus(rdoc.pdomain, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
         await contest.updateStatus(
             rdoc.domainId, rdoc.contest.tid, rdoc.uid,
             rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
         );
+        await contest.updateStatus(
+            rdoc.domainId, rdoc.contest.tid, rdoc.uid,
+            rdoc._id, `${rdoc.pdomain}:${rdoc.pid}`, accept, rdoc.score, rdoc.contest.type,
+        );
     } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
     const pdoc = (accept && updated)
-        ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
-        : await problem.get(rdoc.domainId, rdoc.pid);
+        ? await problem.inc(rdoc.pdomain, rdoc.pid, 'nAccept', 1)
+        : await problem.get(rdoc.pdomain, rdoc.pid);
     const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
     if (!updated) await record.updateMulti(rdoc.domainId, { uid: rdoc.uid, status: builtin.STATUS.STATUS_ACCEPTED }, { effective: false });
     await Promise.all([
@@ -45,8 +49,8 @@ async function _postJudge(rdoc: RecordDoc) {
 }
 
 export async function next(body: JudgeResultBody) {
-    if (body.rid) body.rid = new ObjectID(body.rid);
-    let rdoc = await record.get(body.domainId, body.rid);
+    body.rid = new ObjectID(body.rid);
+    let rdoc = await record.get(body.rid);
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     if (body.case) {
@@ -72,13 +76,13 @@ export async function next(body: JudgeResultBody) {
     if (body.time !== undefined) $set.time = body.time;
     if (body.memory !== undefined) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
-    rdoc = await record.update(body.domainId, body.rid, $set, $push);
+    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push);
     bus.boardcast('record/change', rdoc, $set, $push);
 }
 
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
-    let rdoc = await record.get(body.domainId, body.rid);
+    let rdoc = await record.get(body.rid);
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     const $unset: any = { progress: '' };
@@ -97,7 +101,7 @@ export async function end(body: JudgeResultBody) {
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
     await sleep(100); // Make sure that all 'next' event already triggered
-    rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
+    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
     await _postJudge(rdoc);
     bus.boardcast('record/change', rdoc); // trigger a full update
 }

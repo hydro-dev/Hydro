@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { pick } from 'lodash';
 import {
     ContestNotFoundError, PermissionError, ProblemNotFoundError,
     RecordNotFoundError, UserNotFoundError,
@@ -58,8 +59,10 @@ class RecordListHandler extends Handler {
         const [udict, pdict] = await Promise.all([
             user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
             canViewProblem
-                ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden, false)
-                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, problem.create(rdoc.pid, rdoc.pid.toString())])]),
+                ? problem.getList(domainId, rdocs.map(
+                    (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`)
+                ), canViewProblemHidden, false)
+                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
         ]);
         const path = [
             ['Hydro', 'homepage'],
@@ -100,16 +103,15 @@ class RecordDetailHandler extends Handler {
         }
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
-            problem.get(domainId, rdoc.pid),
+            problem.get(rdoc.pdomain, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
-        if (!(pdoc && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM))) {
-            pdoc = problem.create(pdoc?.docId || 0, pdoc?.pid || '*');
-        }
-        if (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc)) {
-            if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
-                pdoc = problem.create(pdoc.docId, pdoc.pid);
-            }
+        if (
+            !pdoc
+            || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
+            || (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))
+        ) {
+            pdoc = { ...problem.default, docId: pdoc?.docId || 0, pid: '*' };
         }
         this.response.body = {
             path: [
@@ -162,6 +164,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     dispose: bus.Disposable;
     tid: string;
     uid: number;
+    pdomain: string;
     pid: number;
     status: number;
     pretest: boolean;
@@ -174,14 +177,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     async prepare(domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string, status?: number, pretest = false) {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
-            if (contest.canShowRecord.call(this, tdoc)) this.tid = tid.toHexString();
-            else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-        }
-        if (tid) {
-            const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, tid);
-            if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            this.tid = tid.toHexString();
+            if (contest.canShowScoreboard.call(this, tdoc, true)) this.tid = tid.toHexString();
+            else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (uidOrName) {
             let udoc = await user.getById(domainId, +uidOrName);
@@ -193,9 +191,13 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             }
         }
         if (pid) {
-            const pdoc = await problem.get(domainId, pid);
-            if (pdoc) this.pid = pdoc.docId;
-            else throw new ProblemNotFoundError(domainId, pid);
+            const pdomain = pid.includes(':') ? pid.split(':')[0] : domainId;
+            const ppid = pid.includes(':') ? +pid.split(':')[1] : pid;
+            const pdoc = await problem.get(pdomain, ppid);
+            if (pdoc) {
+                this.pdomain = pdoc.domainId;
+                this.pid = pdoc.docId;
+            } else throw new ProblemNotFoundError(domainId, pid);
         }
         if (status) this.status = status;
         if (pretest) this.pretest = true;
@@ -219,7 +221,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (!this.pretest && rdoc.input) return;
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
-        if (this.pid && rdoc.pid !== this.pid) return;
+        if (this.pid && (rdoc.pid !== this.pid || rdoc.pdomain !== this.pdomain)) return;
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),

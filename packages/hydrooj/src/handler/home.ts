@@ -11,7 +11,7 @@ import {
     Route, Connection, Handler, ConnectionHandler, param, Types,
 } from '../service/server';
 import { md5 } from '../lib/crypto';
-import { isPassword, isEmail } from '../lib/validator';
+import { isPassword, isEmail, isDomainId } from '../lib/validator';
 import avatar from '../lib/avatar';
 import * as mail from '../lib/mail';
 import * as contest from '../model/contest';
@@ -321,7 +321,7 @@ class HomeDomainCreateHandler extends Handler {
         this.response.template = 'domain_create.html';
     }
 
-    @param('id', Types.Name)
+    @param('id', Types.Name, isDomainId)
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
     @param('avatar', Types.Content, true)

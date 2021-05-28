@@ -8,7 +8,7 @@ import {
     ContestNotAttendedError, ContestScoreboardHiddenError,
 } from '../error';
 import {
-    ContestRule, ContestRules, ProblemDict,
+    ProblemId, ContestRule, ContestRules, ProblemDict,
     ScoreboardNode, ScoreboardRow, Tdoc,
     Udict,
 } from '../interface';
@@ -178,14 +178,20 @@ const oi: ContestRule = {
         const psdict = {};
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
-            const psdocs = await problem.getMultiStatus(tdoc.domainId, {
-                $or: rankedTsdocs.map(([, i]) => ({
-                    uid: i.uid,
-                    docId: { $in: tdoc.pids },
-                })),
-            }).toArray();
-            for (const psdoc of psdocs) {
-                psdict[`${psdoc.uid}/${psdoc.docId}`] = psdoc;
+            const psdocs = await Promise.all(
+                tdoc.pids.map((pid) => {
+                    let pdomain = tdoc.domainId;
+                    if (typeof pid === 'string') {
+                        pdomain = pid.split(':')[0];
+                        pid = +pid.split(':')[1];
+                    }
+                    return problem.getMultiStatus(pdomain, { uid: { $in: uids } }).toArray();
+                }),
+            );
+            for (const tpsdoc of psdocs) {
+                for (const psdoc of tpsdoc) {
+                    psdict[`${psdoc.uid}/${psdoc.docId}`] = psdoc;
+                }
             }
         }
         const rows = [columns];
@@ -397,7 +403,7 @@ function _getStatusJournal(tsdoc) {
 
 export function add(
     domainId: string, title: string, content: string, owner: number,
-    rule: string, beginAt = new Date(), endAt = new Date(), pids = [],
+    rule: string, beginAt = new Date(), endAt = new Date(), pids: ProblemId[] = [],
     rated = false, data: Partial<Tdoc> = {}, type: Type = document.TYPE_CONTEST,
 ) {
     if (!this.RULES[rule]) throw new ValidationError('rule');
@@ -444,12 +450,12 @@ export async function get(domainId: string, tid: ObjectID, type: Type | -1 = doc
     return tdoc;
 }
 
-export async function getRelated(domainId: string, pid: number, type: Type = document.TYPE_CONTEST) {
+export async function getRelated(domainId: string, pid: ProblemId, type: Type = document.TYPE_CONTEST) {
     return await document.getMulti(domainId, type, { pids: pid }).toArray();
 }
 
 export async function updateStatus(
-    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
+    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
     accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     const tdoc = await get(domainId, tid, type);

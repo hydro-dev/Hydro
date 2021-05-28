@@ -1,10 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import { FilterQuery } from 'mongodb';
-import type { DomainDoc, Udoc, ProblemStatusDoc } from './interface';
+import type {
+    DomainDoc, Udoc, ProblemStatusDoc, RecordDoc,
+} from './interface';
 import domain from './model/domain';
 import * as document from './model/document';
 import user from './model/user';
 import problem, { Field, ProblemDoc } from './model/problem';
+import RecordModel from './model/record';
 
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().toArray();
@@ -55,4 +58,17 @@ export async function iterateAllProblem(
     await iterateAllDomain(async (d) => {
         await iterateAllProblemInDomain(d._id, fields, cb);
     });
+}
+
+export async function iterateAllRecord(
+    cb: (rdoc: RecordDoc, current: number, total: number) => any,
+) {
+    const total = await RecordModel.coll.count();
+    let i = 0;
+    const cursor = RecordModel.coll.find().sort('_id', 1);
+    while (await cursor.hasNext()) {
+        const rdoc = await cursor.next();
+        i++;
+        await cb(rdoc, i, total);
+    }
 }

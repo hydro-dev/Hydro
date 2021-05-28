@@ -8,7 +8,9 @@ import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
-import { RecordDoc, ContestInfo, ProblemConfigFile } from '../interface';
+import {
+    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId,
+} from '../interface';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
@@ -29,9 +31,13 @@ class RecordModel {
         return base - ((pending + 0.5) * (sum(timeRecent.map((i) => i.time || 0)) / 10000));
     }
 
-    static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null> {
+    static async get(_id: ObjectID): Promise<RecordDoc | null>
+    static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null>
+    static async get(arg0, arg1?) {
+        const _id = arg1 || arg0;
+        const domainId = arg1 ? arg0 : null;
         const res = await RecordModel.coll.findOne({ _id });
-        if (res && res.domainId === domainId) return res;
+        if (res.domainId === (domainId || res.domainId)) return res;
         return null;
     }
 
@@ -55,7 +61,7 @@ class RecordModel {
         const rdoc = await RecordModel.get(domainId, rid);
         let data = [];
         if (rdoc.pid) {
-            const pdoc = await problem.get(domainId, rdoc.pid);
+            const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
             data = pdoc.data;
         }
         delete rdoc._id;
@@ -71,15 +77,21 @@ class RecordModel {
     }
 
     static async add(
-        domainId: string, pid: number, uid: number,
+        domainId: string, pid: ExternalProblemId | number, uid: number,
         lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
     ) {
+        let pdomain = domainId;
+        if (typeof pid === 'string') {
+            pdomain = pid.split(':')[0];
+            pid = +pid.split(':')[1];
+        }
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
             _id: new ObjectID(),
             uid,
             code,
             lang,
+            pdomain,
             pid,
             domainId,
             score: 0,
@@ -189,16 +201,20 @@ class RecordModel {
     }
 
     @ArgMethod
-    static getUserInProblemMulti(
-        domainId: string, uid: number, pid: number,
-        getHidden: boolean = false,
-    ) {
-        if (!getHidden) {
+    static getUserInProblemMulti(domainId: string, uid: number, pid: ExternalProblemId | number, contestInfo?: ContestInfo) {
+        let pdomain = domainId;
+        if (typeof pid === 'string') {
+            pdomain = pid.split(':')[0];
+            pid = +pid.split(':')[1];
+        }
+        if (!contestInfo) {
             return RecordModel.coll.find({
-                domainId, uid, pid, hidden: false,
+                domainId, uid, pdomain, pid, contest: { $exists: false },
             });
         }
-        return RecordModel.coll.find({ domainId, uid, pid });
+        return RecordModel.coll.find({
+            domainId, uid, pdomain, pid, contest: contestInfo,
+        });
     }
 
     @ArgMethod
@@ -207,8 +223,12 @@ class RecordModel {
     }
 }
 
-bus.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
-bus.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
+// Mark problem as deleted
+bus.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ pdomain: domainId, pid: docId }, { $set: { pid: -1 } }));
+bus.on('domain/delete', (domainId) => Promise.all([
+    RecordModel.coll.deleteMany({ domainId }),
+    RecordModel.coll.updateMany({ pdomain: domainId }, { $set: { docId: -1 } }),
+]));
 
 export default RecordModel;
 global.Hydro.model.record = RecordModel;

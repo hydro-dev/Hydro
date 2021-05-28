@@ -393,6 +393,11 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _29_30() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
+        return true;
+    },
 ];
 
 export default scripts;

@@ -58,7 +58,7 @@ class JudgeTask {
         this.stat.handle = new Date();
         this.tag = this.request.tag;
         this.type = this.request.type;
-        this.domainId = this.request.domainId;
+        this.domainId = this.request.pdomain;
         this.pid = this.request.pid.toString();
         this.rid = this.request.rid;
         this.lang = this.request.lang;
@@ -120,7 +120,6 @@ class JudgeTask {
     next(data, id?: number) {
         log.debug('Next: %d %o', id, data);
         data.key = 'next';
-        data.domainId = this.request.domainId;
         data.rid = new ObjectID(this.rid);
         if (data.time_ms) data.time = data.time_ms;
         if (data.memory_kb) data.memory = data.memory_kb;
@@ -162,7 +161,6 @@ class JudgeTask {
         log.info('End: %o', data);
         data.key = 'end';
         data.rid = new ObjectID(this.request.rid);
-        data.domainId = this.request.domainId;
         data.time = data.time_ms ?? data.time;
         data.memory = data.memory_kb ?? data.memory;
         this.ws.send(JSON.stringify(data));

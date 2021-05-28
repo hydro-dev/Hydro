@@ -1,12 +1,17 @@
 import { ObjectID, FilterQuery } from 'mongodb';
-import { Dictionary, escapeRegExp, pick } from 'lodash';
+import {
+    Dictionary, escapeRegExp, flatten, groupBy, pick,
+} from 'lodash';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import type { Readable } from 'stream';
 import * as document from './document';
 import { STATUS } from './builtin';
+import domain from './domain';
 import storage from './storage';
 import { buildProjection } from '../utils';
-import type { ProblemStatusDoc, ProblemDict, Document } from '../interface';
+import type {
+    ProblemStatusDoc, ProblemDict, Document, ProblemId,
+} from '../interface';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
@@ -16,9 +21,6 @@ import { parseConfig } from '../lib/testdataConfig';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
-const fields: Field[] = [];
-export type Getter = (docId?: number, pid?: string) => Partial<ProblemDoc>;
-const getters: Getter[] = [];
 
 export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
@@ -32,18 +34,47 @@ export class ProblemModel {
         'content', 'html', 'data', 'config', 'additional_file',
     ];
 
-    static extend(getter: Getter) {
-        getters.push(getter);
-        fields.push(...Object.keys(getter(0, '0')) as any);
-    }
+    static default = {
+        _id: new ObjectID(),
+        domainId: 'system',
+        docType: document.TYPE_PROBLEM,
+        docId: 0,
+        pid: null,
+        owner: 1,
+        title: '*',
+        content: '',
+        html: false,
+        nSubmit: 0,
+        nAccept: 0,
+        tag: [],
+        data: [],
+        additional_file: [],
+        stats: {},
+        hidden: true,
+        config: '',
+        difficulty: 0,
+    };
 
-    static create(docId?: number, pid?: string) {
-        const result = {} as ProblemDoc;
-        for (const getter of getters) {
-            Object.assign(result, getter(docId, pid));
-        }
-        return result;
-    }
+    static deleted = {
+        _id: new ObjectID(),
+        domainId: 'system',
+        docType: document.TYPE_PROBLEM,
+        docId: -1,
+        pid: null,
+        owner: 1,
+        title: '*',
+        content: 'Deleted Problem',
+        html: false,
+        nSubmit: 0,
+        nAccept: 0,
+        tag: [],
+        data: [],
+        additional_file: [],
+        stats: {},
+        hidden: true,
+        config: '',
+        difficulty: 0,
+    };
 
     static async add(
         domainId: string, pid: string = null, title: string, content: string, owner: number,
@@ -79,6 +110,12 @@ export class ProblemModel {
     ): Promise<ProblemDoc> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
+        }
+        if (typeof pid === 'string') {
+            if (pid.includes(':')) {
+                domainId = pid.split(':')[0];
+                pid = +pid.split(':')[1];
+            }
         }
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
@@ -121,7 +158,12 @@ export class ProblemModel {
         return document.deleteSub(domainId, document.TYPE_PROBLEM, pid, key, values);
     }
 
-    static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
+    static inc(domainId: string, _id: ProblemId, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
+        if (typeof _id === 'string') {
+            if (!_id.includes(':')) throw new Error(`model.problem.inc: invalid _id <${_id}>`);
+            domainId = _id.split(':')[0];
+            _id = +_id.split(':')[1];
+        }
         return document.inc(domainId, document.TYPE_PROBLEM, _id, field as any, n);
     }
 
@@ -191,16 +233,43 @@ export class ProblemModel {
     }
 
     static async getList(
-        domainId: string, pids: Array<number | string>,
+        domainId: string, pids: ProblemId[],
         getHidden = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
     ): Promise<ProblemDict> {
-        pids = Array.from(new Set(pids)).map((i) => (+i ? +i : i));
+        const parsed = groupBy(
+            Array.from(new Set(pids)).map((i) => ({
+                domainId: (typeof i === 'string' && i.includes(':')) ? i.split(':')[0] : domainId,
+                pid: (typeof i === 'string' && i.includes(':')) ? +i.split(':')[1] : i,
+            })),
+            'domainId',
+        );
         const r = {};
         const l = {};
-        const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
-        if (!getHidden) q.hidden = false;
-        const pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
-            .project(buildProjection(projection)).toArray();
+        const ddocs = await Promise.all(Object.keys(parsed).map((i) => domain.get(i)));
+        const f = ddocs.filter((i) => !(
+            i.share === '*'
+            || (`,${i.share.replace(/，/g, ',').split(',').map((i) => i.trim()).join(',')},`).includes(`,${domainId},`)
+        ));
+        if (f.length) {
+            if (doThrow) throw new ProblemNotFoundError(f[0]._id, parsed[f[0]._id][0].pid);
+            else {
+                for (const sf of f) {
+                    for (const pinfo of parsed[sf._id]) {
+                        r[pinfo.pid] = { ...ProblemModel.default, domainId: sf._id, pid: pinfo.pid };
+                    }
+                    delete parsed[sf._id];
+                }
+            }
+        }
+        const tasks = [];
+        for (const task in parsed) {
+            const range = { $in: parsed[task].map((i) => i.pid) };
+            const q: any = { $or: [{ docId: range }, { pid: range }] };
+            if (!getHidden) q.hidden = false;
+            console.log(task, parsed[task]);
+            tasks.push(document.getMulti(task, document.TYPE_PROBLEM, q).project(buildProjection(projection)).toArray());
+        }
+        const pdocs = flatten(await Promise.all(tasks));
         for (const pdoc of pdocs) {
             try {
                 // eslint-disable-next-line no-await-in-loop
@@ -208,15 +277,20 @@ export class ProblemModel {
             } catch (e) {
                 pdoc.config = `Cannot parse: ${e.message}`;
             }
-            r[pdoc.docId] = pdoc;
-            l[pdoc.pid] = pdoc;
+            if (pdoc.domainId === domainId) {
+                r[pdoc.docId] = pdoc;
+                if (pdoc.pid) l[pdoc.pid] = pdoc;
+            } else {
+                r[`${pdoc.domainId}:${pdoc.docId}`] = pdoc;
+                if (pdoc.pid) l[`${pdoc.domainId}:${pdoc.pid}`] = pdoc;
+            }
         }
         // TODO enhance
         if (pdocs.length !== pids.length) {
             for (const pid of pids) {
                 if (!(r[pid] || l[pid])) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-                    else r[pid] = ProblemModel.create(undefined, pid.toString());
+                    else r[pid] = { ...ProblemModel.default, domainId, pid };
                 }
             }
         }
@@ -272,27 +346,6 @@ bus.on('problem/delTestdata', async (domainId, docId, names) => {
     if (!names.includes('config.yaml')) return;
     await ProblemModel.edit(domainId, docId, { config: '' });
 });
-
-ProblemModel.extend((docId, pid) => ({
-    _id: new ObjectID(),
-    domainId: 'system',
-    docType: document.TYPE_PROBLEM,
-    docId: docId || -1,
-    pid: pid || docId.toString(),
-    owner: 1,
-    title: '*',
-    content: '',
-    html: false,
-    nSubmit: 0,
-    nAccept: 0,
-    tag: [],
-    data: [],
-    additional_file: [],
-    stats: {},
-    hidden: true,
-    config: '',
-    difficulty: 0,
-}));
 
 global.Hydro.model.problem = ProblemModel;
 export default ProblemModel;

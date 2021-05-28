@@ -1,11 +1,14 @@
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
+import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError, BadRequestError,
 } from '../error';
-import { ProblemDoc, Tdoc, User } from '../interface';
+import {
+    ProblemId, ProblemDoc, Tdoc, User,
+} from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -22,23 +25,13 @@ import {
 import * as bus from '../service/bus';
 import storage from '../service/storage';
 
-class ContestListHandler extends Handler {
+export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
-        this.response.template = 'contest_main.html';
-        let tdocs;
-        let qs;
-        let tpcount;
-        if (!rule) {
-            tdocs = contest.getMulti(domainId).sort({ beginAt: -1 });
-            qs = '';
-        } else {
-            tdocs = contest.getMulti(domainId, { rule }).sort({ beginAt: -1 });
-            qs = `rule=${rule}`;
-        }
-        // eslint-disable-next-line prefer-const
-        [tdocs, tpcount] = await paginate(tdocs, page, system.get('pagination.contest'));
+        const cursor = contest.getMulti(domainId, rule ? { rule } : undefined).sort({ beginAt: -1 });
+        const qs = rule ? `rule=${rule}` : '';
+        const [tdocs, tpcount] = await paginate(cursor, page, system.get('pagination.contest'));
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc.docId);
         const tsdict = await contest.getListStatus(domainId, this.user._id, tids);
@@ -46,13 +39,14 @@ class ContestListHandler extends Handler {
             ['Hydro', 'homepage'],
             ['contest_main', null],
         ];
+        this.response.template = 'contest_main.html';
         this.response.body = {
             page, tpcount, qs, rule, tdocs, tsdict, path,
         };
     }
 }
 
-class ContestDetailHandler extends Handler {
+export class ContestDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -165,42 +159,49 @@ class ContestScoreboardDownloadHandler extends Handler {
     }
 }
 
-class ContestEditHandler extends Handler {
+export class ContestEditHandler extends Handler {
     tdoc: Tdoc;
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid: ObjectID) {
-        this.tdoc = await contest.get(domainId, tid);
-        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
-        else this.checkPerm(PERM.PERM_EDIT_CONTEST_SELF);
+        if (tid) {
+            this.tdoc = await contest.get(domainId, tid);
+            if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+            else this.checkPerm(PERM.PERM_EDIT_CONTEST_SELF);
+        }
     }
 
-    async get() {
+    @param('tid', Types.ObjectID, true)
+    async get(domainId: string, tid: ObjectID) {
         this.response.template = 'contest_edit.html';
         const rules = {};
-        for (const i in contest.RULES) {
-            rules[i] = contest.RULES[i].TEXT;
-        }
-        const duration = (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / 3600 / 1000;
+        for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
-            [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
-            ['contest_edit', null],
+            ...tid
+                ? [
+                    [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
+                    ['contest_edit', null],
+                ]
+                : [['contest_create', null]],
         ];
-        const dt = this.tdoc.beginAt;
+        let ts = new Date().getTime();
+        ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
+        const dt = this.tdoc?.beginAt || new Date(ts);
         this.response.body = {
             rules,
             tdoc: this.tdoc,
-            duration,
+            duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             path,
-            pids: this.tdoc.pids.join(','),
+            pids: tid ? this.tdoc.pids.join(',') : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
-            page_name: 'contest_edit',
+            page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
 
+    @param('tid', Types.ObjectID, true)
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('duration', Types.Float)
@@ -210,31 +211,36 @@ class ContestEditHandler extends Handler {
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     async post(
-        domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
+        domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+            if ((+i).toString() === i) return +i;
+            return i;
+        }).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        if (!beginAtMoment.isValid()) {
-            throw new ValidationError('beginAtDate', 'beginAtTime');
-        }
+        if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        await contest.edit(domainId, this.tdoc.docId, {
-            title, content, rule, beginAt, endAt, pids, rated,
-        });
-        if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
-            || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
-            await contest.recalcStatus(domainId, this.tdoc.docId);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
+        if (tid) {
+            await contest.edit(domainId, tid, {
+                title, content, rule, beginAt, endAt, pids, rated,
+            });
+            if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
+                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
+                await contest.recalcStatus(domainId, this.tdoc.docId);
+            }
+        } else {
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
         }
-        this.response.body = { tid: this.tdoc.docId };
-        this.response.redirect = this.url('contest_detail', { tid: this.tdoc.docId });
+        this.response.body = { tid };
+        this.response.redirect = this.url('contest_detail', { tid });
     }
 }
 
-class ContestProblemHandler extends Handler {
+export class ContestProblemHandler extends Handler {
     tdoc: Tdoc<30 | 60>;
     pdoc: ProblemDoc;
     tsdoc: any;
@@ -242,25 +248,22 @@ class ContestProblemHandler extends Handler {
     attended: boolean;
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
-    async _prepare(domainId: string, tid: ObjectID, pid: number) {
-        [this.tdoc, this.pdoc] = await Promise.all([
-            contest.get(domainId, tid),
+    @param('pid', Types.Name)
+    async _prepare(domainId: string, tid: ObjectID, pid: ProblemId) {
+        this.tdoc = await contest.get(domainId, tid);
+        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid);
+        [this.pdoc, this.tsdoc, this.udoc] = await Promise.all([
             problem.get(domainId, pid),
-        ]);
-        [this.tsdoc, this.udoc] = await Promise.all([
-            contest.getStatus(domainId, this.tdoc.docId, this.user._id),
+            contest.getStatus(domainId, tid, this.user._id),
             user.getById(domainId, this.tdoc.owner),
         ]);
+        if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
+        // @ts-ignore
+        if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
+        if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
+        if (!contest.isDone(this.tdoc) && !this.attended) throw new ContestNotAttendedError(tid);
         this.response.template = 'problem_detail.html';
-        if (!contest.isDone(this.tdoc)) {
-            if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
-            if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        }
-        if (!this.tdoc.pids.map((s) => s.toString()).includes(this.pdoc.docId.toString())) {
-            throw new ProblemNotFoundError(domainId, this.tdoc.docId);
-        }
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
@@ -271,18 +274,19 @@ class ContestProblemHandler extends Handler {
         };
     }
 
-    // eslint-disable-next-line
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.Name)
     async get(...args: any[]) {
         this.response.body.path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
-            [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
+            [this.tdoc.title, 'contest_detail', { tid: args[1] }, true],
             [this.pdoc.title, null, null, true],
         ];
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+            .replace(/\(file:\/\//g, `(./${args[2]}/file/`);
     }
 }
 
@@ -301,19 +305,19 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
     }
 }
 
-class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
+export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     async prepare() {
         if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
-    async get(domainId: string, tid: ObjectID, pid: number) {
+    @param('pid', Types.Name)
+    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
         this.response.body.rdocs = [];
         if (contest.canShowRecord.call(this, this.tdoc)) {
             this.response.body.rdocs = await record.getUserInProblemMulti(
                 domainId, this.user._id,
-                this.pdoc.docId, true,
+                pid, { type: document.TYPE_CONTEST, tid },
             ).sort({ _id: -1 }).limit(10).toArray();
         }
         this.response.body.path = [
@@ -330,20 +334,21 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('tid', Types.ObjectID)
     @param('lang', Types.Name)
     @param('code', Types.Content)
-    async post(domainId: string, tid: ObjectID, lang: string, code: string) {
+    @param('pid', Types.Name)
+    async post(domainId: string, tid: ObjectID, lang: string, code: string, pid: ProblemId) {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 10);
-        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, {
+        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, {
             type: document.TYPE_CONTEST,
             tid,
         });
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
-            problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
+            problem.inc(domainId, pid, 'nSubmit', 1),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-            contest.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
+            contest.updateStatus(domainId, tid, this.user._id, rid, pid),
         ]);
         bus.boardcast('record/change', rdoc);
         if (!contest.canShowRecord.call(this, this.tdoc)) {
@@ -356,7 +361,7 @@ class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     }
 }
 
-class ContestCodeHandler extends Handler {
+export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
@@ -381,58 +386,8 @@ class ContestCodeHandler extends Handler {
     }
 }
 
-class ContestCreateHandler extends Handler {
-    async get() {
-        this.response.template = 'contest_edit.html';
-        const rules = {};
-        for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
-        const now = new Date();
-        let ts = now.getTime();
-        ts = ts - (ts % (15 * 60 * 1000)) + 15 * 60 * 1000;
-        const dt = new Date(ts);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            ['contest_create', null],
-        ];
-        this.response.body = {
-            rules,
-            path,
-            page_name: 'contest_create',
-            date_text: dt.format('%Y-%m-%d'),
-            time_text: dt.format('%H:%M'),
-            pids: '1000, 1001',
-        };
-    }
-
-    @param('beginAtDate', Types.Date)
-    @param('beginAtTime', Types.Time)
-    @param('duration', Types.Float)
-    @param('title', Types.Title)
-    @param('content', Types.Content)
-    @param('rule', Types.Name)
-    @param('pids', Types.Content)
-    @param('rated', Types.Boolean)
-    async post(
-        domainId: string, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false,
-    ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
-        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
-        const endAt = beginAt.clone().add(duration, 'hours').toDate();
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
-        const tid = await contest.add(
-            domainId, title, content,
-            this.user._id, rule, beginAt.toDate(), endAt, pids, rated,
-        );
-        this.response.body = { tid };
-        this.response.redirect = this.url('contest_detail', { tid });
-    }
-}
-
 export async function apply() {
-    Route('contest_create', '/contest/create', ContestCreateHandler, PERM.PERM_CREATE_CONTEST);
+    Route('contest_create', '/contest/create', ContestEditHandler, PERM.PERM_CREATE_CONTEST);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);

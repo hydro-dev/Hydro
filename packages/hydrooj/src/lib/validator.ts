@@ -1,6 +1,8 @@
 import { ValidationError } from '../error';
 
 const RE_UID = /^-?\d+$/i;
+const RE_DOMAINID = /^[a-zA-Z][a-zA-Z0-9_]{3,31}$/i;
+const RE_EXTERNAL_PID = /^[a-zA-Z][a-zA-Z0-9_]{3,31}:\d+$/i;
 const RE_PID = /^[a-zA-Z]+[a-zA-Z0-9]*$/i;
 const RE_UNAME = /^.{3,254}$/i;
 const RE_ROLE = /^[_0-9A-Za-z]{1,256}$/i;
@@ -60,6 +62,10 @@ export function validate(scheme: any, arg: any) {
 
 export const isTitle = (s) => s && s.length < 64;
 export const checkTitle = (s) => { if (!(s && s.length < 64)) throw new ValidationError('title'); else return s; };
+export const isDomainId = (s) => RE_DOMAINID.test(s);
+export const checkDomainId = (s) => { if (!isDomainId(s)) throw new ValidationError('domainId'); else return s; };
+export const isExternalPid = (s) => RE_EXTERNAL_PID.test(s);
+export const checkExternalPid = (s) => { if (!isExternalPid(s)) throw new ValidationError('pid'); else return s; };
 export const isUid = (s) => RE_UID.test(s);
 export const checkUid = (s) => { if (!isUid(s)) throw new ValidationError('uid'); else return s; };
 export const isUname = (s) => RE_UNAME.test(s);
@@ -87,6 +93,10 @@ global.Hydro.lib.validator = {
     validate,
     isTitle,
     checkTitle,
+    isDomainId,
+    checkDomainId,
+    isExternalPid,
+    checkExternalPid,
     isUid,
     checkUid,
     isUname,

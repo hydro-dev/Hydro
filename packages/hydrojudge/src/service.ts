@@ -102,7 +102,6 @@ async function postInit() {
         that.nextWaiting = [];
         return (data, id = 0) => {
             logger.debug('Next: %d %o', id, data);
-            data.domainId = that.domainId;
             data.rid = new ObjectID(that.rid);
             if (data.time_ms) data.time = data.time_ms;
             if (data.memory_kb) data.memory = data.memory_kb;
@@ -139,11 +138,10 @@ async function postInit() {
         };
     }
 
-    function getEnd(domainId: string, rid: string) {
+    function getEnd(rid: string) {
         return (data) => {
             data.key = 'end';
             data.rid = new ObjectID(rid);
-            data.domainId = domainId;
             data.time = data.time_ms ?? data.time;
             data.memory = data.memory_kb ?? data.memory;
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
@@ -188,14 +186,14 @@ async function postInit() {
                 this.stat.handle = new Date();
                 this.pid = (this.request.pid || 'unknown').toString();
                 this.rid = this.request.rid.toString();
-                this.domainId = this.request.domainId;
+                this.domainId = this.request.pdomain;
                 this.lang = this.request.lang;
                 this.code = this.request.code;
                 this.data = this.request.data;
                 this.config = this.request.config;
                 this.input = this.request.input;
                 this.next = getNext(this);
-                this.end = getEnd(this.domainId, this.rid);
+                this.end = getEnd(this.rid);
                 this.tmpdir = path.resolve(getConfig('tmp_dir'), this.rid);
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);

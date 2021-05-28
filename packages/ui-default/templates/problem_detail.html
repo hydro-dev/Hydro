@@ -15,13 +15,13 @@
   {{ set(UiContext, 'postSubmitUrl', url('contest_detail_problem_submit' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem_submit', pid=pdoc.docId, tid=tdoc.docId)) }}
   {{ set(UiContext, 'getSubmissionsUrl', url('contest_detail_problem_submit' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem_submit', pid=pdoc.docId, tid=tdoc.docId)) }}
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}', query={tid:tdoc.docId})) }}
-  {{ set(UiContext, 'pretestConnUrl', "/record-conn?pretest=1&uid=" + handler.user._id + "&pid=" + pdoc.pid|default(pdoc.docId) + "&domainId=" + handler.domainId + "&tid=" + tdoc.docId) }}
+  {{ set(UiContext, 'pretestConnUrl', "/record-conn?pretest=1&uid=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.domainId + "&tid=" + tdoc.docId) }}
 {% else %}
   {{ set(UiContext, 'canViewRecord', true) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId)) }}
   {{ set(UiContext, 'getSubmissionsUrl', url('problem_submit', pid=pdoc.docId)) }}
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}')) }}
-  {{ set(UiContext, 'pretestConnUrl', "/record-conn?pretest=1&uid=" + handler.user._id + "&pid=" + pdoc.pid|default(pdoc.docId) + "&domainId=" + handler.domainId) }}
+  {{ set(UiContext, 'pretestConnUrl', "/record-conn?pretest=1&uid=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.domainId) }}
 {% endif %}
 </script>
 <div class="row">

@@ -2,13 +2,13 @@ import yaml from 'js-yaml';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
+import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
-    HomeworkNotAttendedError,
-    BadRequestError,
+    HomeworkNotAttendedError, BadRequestError,
 } from '../error';
 import {
-    PenaltyRules, Tdoc, ProblemDoc, User,
+    PenaltyRules, Tdoc, ProblemDoc, User, ProblemId,
 } from '../interface';
 import {
     Route, Handler, Types, param,
@@ -24,11 +24,9 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
+import { isExternalPid } from '../lib/validator';
 
-const validatePenaltyRules = (input: string) => {
-    const s = yaml.load(input);
-    return s;
-};
+const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
@@ -40,9 +38,7 @@ class HomeworkMainHandler extends Handler {
             if (contest.isExtended(tdoc) || contest.isDone(tdoc)) {
                 cal.endAt = tdoc.endAt;
                 cal.penaltySince = tdoc.penaltySince;
-            } else {
-                cal.endAt = tdoc.penaltySince;
-            }
+            } else cal.endAt = tdoc.penaltySince;
             calendar.push(cal);
         }
         const path = [
@@ -126,12 +122,14 @@ class HomeworkDetailProblemHandler extends Handler {
     attended: boolean;
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
-    async prepare(domainId: string, tid: ObjectID, pid: number) {
-        this.checkPerm(PERM.PERM_VIEW_PROBLEM);
+    @param('pid', Types.String, isExternalPid)
+    async _prepare(domainId: string, tid: ObjectID, pid: ProblemId) {
+        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
+        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
+        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         [this.tdoc, this.pdoc, this.tsdoc] = await Promise.all([
             contest.get(domainId, tid, document.TYPE_HOMEWORK),
-            problem.get(domainId, pid),
+            problem.get(pdomainId, ppid),
             contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
         ]);
         this.udoc = await user.getById(domainId, this.tdoc.owner);
@@ -146,13 +144,13 @@ class HomeworkDetailProblemHandler extends Handler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
-    async get(domainId: string, tid: ObjectID, pid: number) {
+    @param('pid', Types.Name)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
         if (!contest.isDone(this.tdoc)) {
             if (!this.attended) throw new HomeworkNotAttendedError(tid);
             if (contest.isNotStarted(this.tdoc)) throw new HomeworkNotLiveError(tid);
         }
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
         this.response.template = 'problem_detail.html';
         this.response.body.page_name = 'homework_detail_problem';
         this.response.body.path = [
@@ -166,13 +164,16 @@ class HomeworkDetailProblemHandler extends Handler {
 
 class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
-    async get(domainId: string, tid: ObjectID, pid: number) {
+    async prepare(domainId: string, tid: ObjectID) {
         if (!this.attended) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
+    }
+
+    @param('tid', Types.ObjectID)
+    @param('pid', Types.String, isExternalPid)
+    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
         this.response.body.rdocs = contest.canShowRecord.call(this, this.tdoc)
-            ? await record.getUserInProblemMulti(domainId, this.user._id, pid, true)
+            ? await record.getUserInProblemMulti(domainId, this.user._id, pid, { type: document.TYPE_HOMEWORK, tid })
                 .sort('_id', -1).limit(10).toArray()
             : [];
         this.response.body.path = [
@@ -186,24 +187,23 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.UnsignedInt)
+    @param('pid', Types.String, isExternalPid)
     @param('code', Types.Content)
     @param('lang', Types.Name)
-    async post(domainId: string, tid: ObjectID, pid: number, code: string, lang: string) {
+    async post(domainId: string, tid: ObjectID, pid: ProblemId, code: string, lang: string) {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 5);
-        if (!this.attended) throw new HomeworkNotAttendedError(tid);
-        if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid);
         const rid = await record.add(domainId, pid, this.user._id, lang, code, true, {
             type: document.TYPE_HOMEWORK,
             tid,
         });
+        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
+        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const [rdoc] = await Promise.all([
             record.get(domainId, rid),
-            problem.inc(domainId, pid, 'nSubmit', 1),
+            problem.inc(pdomainId, ppid, 'nSubmit', 1),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             contest.updateStatus(domainId, tid, this.user._id,
                 rid, pid, false, 0, document.TYPE_HOMEWORK),
@@ -216,77 +216,35 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     }
 }
 
-class HomeworkCreateHandler extends Handler {
-    async get() {
-        const beginAt = moment().add(1, 'day');
-        const penaltySince = beginAt.clone().add(7, 'days');
-        const path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            ['homework_create', null],
-        ];
-        this.response.template = 'homework_edit.html';
-        this.response.body = {
-            path,
-            dateBeginText: beginAt.tz(this.user.timeZone).format('YYYY-M-D'),
-            timeBeginText: '00:00',
-            datePenaltyText: penaltySince.tz(this.user.timeZone).format('YYYY-M-D'),
-            timePenaltyText: '23:59',
-            pids: '1000, 1001',
-            extensionDays: 1,
-            page_name: 'homework_create',
-        };
-    }
-
-    @param('beginAtDate', Types.Date)
-    @param('beginAtTime', Types.Time)
-    @param('penaltySinceDate', Types.Date)
-    @param('penaltySinceTime', Types.Time)
-    @param('extensionDays', Types.Float)
-    @param('penaltyRules', Types.Content, validatePenaltyRules, convertPenaltyRules)
-    @param('title', Types.Title)
-    @param('content', Types.Content)
-    @param('pids', Types.Content)
-    @param('rated', Types.Boolean)
-    async post(
-        domainId: string, beginAtDate: string, beginAtTime: string,
-        penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
-        penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
-    ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
-        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
-        const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
-        if (!penaltySince.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
-        const endAt = penaltySince.clone().add(extensionDays, 'days');
-        if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
-        if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
-        const tid = await contest.add(domainId, title, content, this.user._id,
-            'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-            { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
-        this.response.body = { tid };
-        this.response.redirect = this.url('homework_detail', { tid });
-    }
-}
-
 class HomeworkEditHandler extends Handler {
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     async get(domainId: string, tid: ObjectID) {
-        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        const tdoc = tid
+            ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
+            : null;
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
-        const extensionDays = Math.round(
-            (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / 36000 / 24,
-        ) / 100;
+        const extensionDays = tid
+            ? Math.round(
+                (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / (Time.day / 100),
+            ) / 100
+            : 1;
         const path = [
             ['Hydro', 'homepage'],
             ['homework_main', 'homework_main'],
-            [tdoc.title, 'homework_detail', { tid }, true],
-            ['homework_edit', null],
+            ...tid
+                ? [
+                    [tdoc.title, 'homework_detail', { tid }, true],
+                    ['homework_edit', null],
+                ]
+                : [['homework_create', null]],
         ];
-        const beginAt = moment(tdoc.beginAt).tz(this.user.timeZone);
-        const penaltySince = moment(tdoc.penaltySince).tz(this.user.timeZone);
+        const beginAt = tid
+            ? moment(tdoc.beginAt).tz(this.user.timeZone)
+            : moment().add(1, 'day').tz(this.user.timeZone).hour(0).minute(0).millisecond(0);
+        const penaltySince = tid
+            ? moment(tdoc.penaltySince).tz(this.user.timeZone)
+            : beginAt.clone().add(7, 'days').tz(this.user.timeZone).hour(23).minute(59).millisecond(0);
         this.response.template = 'homework_edit.html';
         this.response.body = {
             tdoc,
@@ -298,10 +256,11 @@ class HomeworkEditHandler extends Handler {
             penaltyRules: yaml.dump(tdoc.penaltyRules),
             pids: tdoc.pids.join(','),
             path,
+            page_name: tid ? 'homework_edit' : 'homework_create',
         };
     }
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('penaltySinceDate', Types.Date)
@@ -315,38 +274,37 @@ class HomeworkEditHandler extends Handler {
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
-        penaltyRules: string, title: string, content: string, _pids: string, rated = false,
+        penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+            if ((+i).toString() === i) return +i;
+            return i;
+        }).filter((i) => i);
         const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
-        let beginAt;
-        let penaltySince;
-        try {
-            beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        } catch (e) {
-            throw new ValidationError('beginAtDate', 'beginAtTime');
-        }
-        try {
-            penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
-        } catch (e) {
-            throw new ValidationError('endAtDate', 'endAtTime');
-        }
-        let endAt = penaltySince.clone().add(extensionDays, 'days');
+        const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
+        if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
+        const penaltySince = moment.tz(`${penaltySinceDate} ${penaltySinceTime}`, this.user.timeZone);
+        if (!penaltySince.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
+        const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
+        if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), true);
-        beginAt = beginAt.toDate();
-        endAt = endAt.toDate();
-        penaltySince = penaltySince.toDate();
-        await contest.edit(domainId, tid, {
-            title, content, beginAt, endAt, pids, penaltySince, penaltyRules, rated,
-        }, document.TYPE_HOMEWORK);
-        if (tdoc.beginAt !== beginAt
-            || tdoc.endAt !== endAt
-            || tdoc.penaltySince !== penaltySince
-            || tdoc.pids.sort().join(' ') !== pids.sort().join(' ')) {
-            await contest.recalcStatus(domainId, tdoc.docId, document.TYPE_HOMEWORK);
+        if (!tid) {
+            tid = await contest.add(domainId, title, content, this.user._id,
+                'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
+                { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
+        } else {
+            await contest.edit(domainId, tid, {
+                title, content, beginAt: beginAt.toDate(), endAt: endAt.toDate(), pids, penaltySince: penaltySince.toDate(), penaltyRules, rated,
+            }, document.TYPE_HOMEWORK);
+            if (tdoc.beginAt !== beginAt.toDate()
+                || tdoc.endAt !== endAt.toDate()
+                || tdoc.penaltySince !== penaltySince.toDate()
+                || tdoc.pids.sort().join(' ') !== pids.sort().join(' ')) {
+                await contest.recalcStatus(domainId, tdoc.docId, document.TYPE_HOMEWORK);
+            }
         }
         this.response.body = { tid };
         this.response.redirect = this.url('homework_detail', { tid });
@@ -405,9 +363,7 @@ class HomeworkCodeHandler extends Handler {
         }
         const zip = new AdmZip();
         const rdocs = await record.getMulti(domainId, {
-            _id: {
-                $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)),
-            },
+            _id: { $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)) },
         }).toArray();
         for (const rdoc of rdocs) {
             zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
@@ -418,7 +374,7 @@ class HomeworkCodeHandler extends Handler {
 
 export async function apply() {
     Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_create', '/homework/create', HomeworkCreateHandler, PERM.PERM_CREATE_HOMEWORK);
+    Route('homework_create', '/homework/create', HomeworkEditHandler, PERM.PERM_CREATE_HOMEWORK);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
     Route(

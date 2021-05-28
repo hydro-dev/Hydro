@@ -107,6 +107,7 @@ class StorageService {
             this.error = null;
         } catch (e) {
             logger.warn('Storage init fail. will retry later.');
+            if (process.env.DEV) logger.warn(e);
             this.error = e.toString();
             setTimeout(async () => {
                 await this.start();
