@@ -76,6 +76,10 @@ export class ContestDetailHandler extends Handler {
             ['contest_main', 'contest_main'],
             [tdoc.title, null, null, true],
         ];
+        for (const key in pdict) {
+            // @ts-ignore
+            if (pdict[key].domainId !== domainId) pdict[key].docId = `${pdict[key].domainId}:${pdict[key].docId}`;
+        }
         this.response.body = {
             path, tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
         };

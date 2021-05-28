@@ -11,7 +11,7 @@ import {
     PenaltyRules, Tdoc, ProblemDoc, User, ProblemId,
 } from '../interface';
 import {
-    Route, Handler, Types, param,
+    Route, Handler, Types, param, query,
 } from '../service/server';
 import * as bus from '../service/bus';
 import domain from '../model/domain';
@@ -22,6 +22,7 @@ import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import problem from '../model/problem';
 import record from '../model/record';
+import storage from '../model/storage';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
 import { isExternalPid } from '../lib/validator';
@@ -90,6 +91,10 @@ class HomeworkDetailHandler extends Handler {
             ['homework_main', 'homework_main'],
             [tdoc.title, null, null, true],
         ];
+        for (const key in pdict) {
+            // @ts-ignore
+            if (pdict[key].domainId !== domainId) pdict[key].docId = `${pdict[key].domainId}:${pdict[key].docId}`;
+        }
         this.response.template = 'homework_detail.html';
         this.response.body = {
             tdoc, tsdoc, attended, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount, path,
@@ -159,6 +164,26 @@ class HomeworkDetailProblemHandler extends Handler {
             [this.tdoc.title, 'homework_detail', { tid }, true],
             [this.pdoc.title, null, null, true],
         ];
+        // Navigate to current additional file download
+        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        this.response.body.pdoc.content = this.response.body.pdoc.content
+            .replace(/\(file:\/\//g, `(./${pid}/file/`);
+    }
+}
+
+export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHandler {
+    @query('type', Types.Range(['additional_file', 'testdata']), true)
+    @param('filename', Types.Name)
+    @param('noDisposition', Types.Boolean)
+    // @ts-ignore
+    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+        if (type === 'testdata' && !this.user.own(this.pdoc)) {
+            if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+        }
+        this.response.redirect = await storage.signDownloadLink(
+            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
+            noDisposition ? undefined : filename, false, 'user',
+        );
     }
 }
 
@@ -382,6 +407,10 @@ export async function apply() {
         HomeworkScoreboardDownloadHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
     );
     Route('homework_detail_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM.PERM_VIEW_HOMEWORK);
+    Route(
+        'homework_detail_problem_file_download', '/homework/:tid/p/:pid/file/:filename',
+        HomeworkProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM,
+    );
     Route('homework_detail_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('homework_code', '/homework/:tid/code', HomeworkCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
