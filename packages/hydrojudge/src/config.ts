@@ -4,11 +4,9 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import log from './log';
 
 const argv = cac().parse();
 let CONFIG_FILE = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
-let LANGS_FILE = path.resolve(os.homedir(), '.config', 'hydro', 'langs.yaml');
 
 let config = {
     cache_dir: path.resolve(os.homedir(), '.cache', 'hydro', 'judge'),
@@ -47,9 +45,6 @@ if (!global.Hydro) {
     if (process.env.CONFIG_FILE || argv.options.config) {
         CONFIG_FILE = path.resolve(process.env.CONFIG_FILE || argv.options.config);
     }
-    if (process.env.LANGS_FILE || argv.options.langs) {
-        LANGS_FILE = path.resolve(process.env.LANGS_FILE || argv.options.langs);
-    }
     if (process.env.TEMP_DIR || argv.options.tmp) {
         config.tmp_dir = path.resolve(process.env.TEMP_DIR || argv.options.tmp);
     }
@@ -61,11 +56,4 @@ if (!global.Hydro) {
     }
     const configFile = fs.readFileSync(CONFIG_FILE).toString();
     config = { ...config, ...yaml.load(configFile) as any };
-    if (fs.existsSync(LANGS_FILE)) config.langs = fs.readFileSync(LANGS_FILE).toString();
-    else {
-        log.error('Language file not found, using default.');
-        const file = path.join(path.dirname(require.resolve('@hydrooj/hydrojudge')), 'setting.yaml');
-        const content = yaml.load(fs.readFileSync(file).toString()) as any;
-        config.langs = content.langs.default;
-    }
 }
