@@ -372,6 +372,7 @@ class HomeMessagesHandler extends Handler {
     @param('uid', Types.Int)
     @param('content', Types.Content)
     async postSend(domainId: string, uid: number, content: string) {
+        this.checkPriv(PRIV.PRIV_SEND_MESSAGE);
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
         if (udoc.avatar) udoc.avatarUrl = avatar(udoc.avatar);

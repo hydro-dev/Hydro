@@ -24,7 +24,7 @@ import * as discussion from './model/discussion';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
-import { STATUS } from './model/builtin';
+import { PRIV, STATUS } from './model/builtin';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import { size } from './lib/misc';
@@ -396,6 +396,13 @@ const scripts: UpgradeScript[] = [
     async function _29_30() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
+        return true;
+    },
+    async function _30_31() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllUser(async (udoc) => {
+            await user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE);
+        });
         return true;
     },
 ];
