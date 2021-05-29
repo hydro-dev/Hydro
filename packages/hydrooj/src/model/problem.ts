@@ -247,7 +247,7 @@ export class ProblemModel {
         const l = {};
         const ddocs = await Promise.all(Object.keys(parsed).map((i) => domain.get(i)));
         const f = ddocs.filter((i) => !(
-            i._id === domainId
+            i?._id === domainId
             || i?.share === '*'
             || (`,${(i?.share || '').replace(/，/g, ',').split(',').map((q) => q.trim()).join(',')},`).includes(`,${domainId},`)
         ));

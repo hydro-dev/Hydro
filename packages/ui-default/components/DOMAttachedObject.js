@@ -111,15 +111,11 @@ export default class DOMAttachedObject {
   }
 
   constructor($dom, monitorDetach = false) {
-    if ($dom == null) {
-      return null;
-    }
+    if ($dom == null) return null;
     this.$dom = $dom;
     this.id = ++DOMAttachedObject.uniqueIdCounter;
     this.eventNS = `vj4obj_${this.id}`;
     this.detached = false;
-    if (monitorDetach) {
-      monitorResource(this);
-    }
+    if (monitorDetach) monitorResource(this);
   }
 }

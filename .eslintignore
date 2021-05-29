@@ -2,4 +2,3 @@ dist
 *.d.ts
 node_modules
 public
-packages/ui-default/
