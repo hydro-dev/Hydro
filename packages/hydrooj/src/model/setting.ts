@@ -125,7 +125,7 @@ AccountSetting(
     Setting('setting_info', 'avatar', '', 'text', 'Avatar',
         'Allow using gravatar:email qq:id github:name format.'),
     Setting('setting_info', 'qq', null, 'text', 'QQ'),
-    Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
+    Setting('setting_info', 'gender', builtin.USER_GENDER_DEFAULT, builtin.USER_GENDER_RANGE, 'Gender'),
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
     Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
