@@ -5,7 +5,7 @@ import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
-    HomeworkNotAttendedError, BadRequestError,
+    HomeworkNotAttendedError, BadRequestError, ContestNotFoundError,
 } from '../error';
 import {
     PenaltyRules, Tdoc, ProblemDoc, User,
@@ -250,7 +250,9 @@ class HomeworkEditHandler extends Handler {
         const tdoc = tid
             ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
             : null;
-        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        if (tid && !tdoc) throw new ContestNotFoundError(domainId, tid);
+        else if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
+        else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         const extensionDays = tid
             ? Math.round(
@@ -402,7 +404,7 @@ class HomeworkCodeHandler extends Handler {
 
 export async function apply() {
     Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_create', '/homework/create', HomeworkEditHandler, PERM.PERM_CREATE_HOMEWORK);
+    Route('homework_create', '/homework/create', HomeworkEditHandler);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
     Route(

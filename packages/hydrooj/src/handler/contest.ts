@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError, PermissionError, BadRequestError,
+    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
@@ -169,9 +169,10 @@ export class ContestEditHandler extends Handler {
     async prepare(domainId: string, tid: ObjectID) {
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
+            if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
             if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
             else this.checkPerm(PERM.PERM_EDIT_CONTEST_SELF);
-        }
+        } else this.checkPerm(PERM.PERM_CREATE_CONTEST);
     }
 
     @param('tid', Types.ObjectID, true)
@@ -394,7 +395,7 @@ export class ContestCodeHandler extends Handler {
 }
 
 export async function apply() {
-    Route('contest_create', '/contest/create', ContestEditHandler, PERM.PERM_CREATE_CONTEST);
+    Route('contest_create', '/contest/create', ContestEditHandler);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);
