@@ -8,7 +8,7 @@ import {
     HomeworkNotAttendedError, BadRequestError,
 } from '../error';
 import {
-    PenaltyRules, Tdoc, ProblemDoc, User, ProblemId,
+    PenaltyRules, Tdoc, ProblemDoc, User,
 } from '../interface';
 import {
     Route, Handler, Types, param, query,
@@ -25,7 +25,6 @@ import record from '../model/record';
 import storage from '../model/storage';
 import * as document from '../model/document';
 import paginate from '../lib/paginate';
-import { isExternalPid } from '../lib/validator';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
@@ -94,6 +93,7 @@ class HomeworkDetailHandler extends Handler {
         for (const key in pdict) {
             // @ts-ignore
             if (pdict[key].domainId !== domainId) pdict[key].docId = `${pdict[key].domainId}:${pdict[key].docId}`;
+            pdict[key].pid = (tdoc.pids.indexOf(pdict[key].docId) + 10).toString(36).toUpperCase();
         }
         this.response.template = 'homework_detail.html';
         this.response.body = {
@@ -127,17 +127,19 @@ class HomeworkDetailProblemHandler extends Handler {
     attended: boolean;
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.String, isExternalPid)
-    async _prepare(domainId: string, tid: ObjectID, pid: ProblemId) {
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid, tid);
+    @param('pid', Types.String)
+    async _prepare(domainId: string, tid: ObjectID, _pid: string) {
+        this.tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+        if (!pid) throw new ProblemNotFoundError(domainId, tid, _pid);
         const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
         const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
-        [this.tdoc, this.pdoc, this.tsdoc] = await Promise.all([
-            contest.get(domainId, tid, document.TYPE_HOMEWORK),
+        [this.udoc, this.pdoc, this.tsdoc] = await Promise.all([
+            user.getById(domainId, this.tdoc.owner),
             problem.get(pdomainId, ppid),
             contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
         ]);
-        this.udoc = await user.getById(domainId, this.tdoc.owner);
+        this.pdoc.pid = _pid;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
         this.response.body = {
             tdoc: this.tdoc,
@@ -150,8 +152,7 @@ class HomeworkDetailProblemHandler extends Handler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.Name)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
+    async get(domainId: string, tid: ObjectID, pid: string) {
         if (!contest.isDone(this.tdoc)) {
             if (!this.attended) throw new HomeworkNotAttendedError(tid);
             if (contest.isNotStarted(this.tdoc)) throw new HomeworkNotLiveError(tid);
@@ -195,8 +196,9 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.String, isExternalPid)
-    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
+    @param('pid', Types.String)
+    async get(domainId: string, tid: ObjectID, _pid: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         this.response.body.rdocs = contest.canShowRecord.call(this, this.tdoc)
             ? await record.getUserInProblemMulti(domainId, this.user._id, pid, { type: document.TYPE_HOMEWORK, tid })
                 .sort('_id', -1).limit(10).toArray()
@@ -212,10 +214,11 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.String, isExternalPid)
+    @param('pid', Types.String)
     @param('code', Types.Content)
     @param('lang', Types.Name)
-    async post(domainId: string, tid: ObjectID, pid: ProblemId, code: string, lang: string) {
+    async post(domainId: string, tid: ObjectID, _pid: string, code: string, lang: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }

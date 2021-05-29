@@ -120,6 +120,7 @@ async function reload(count = 1) {
 
 const shell = new Logger('shell');
 async function executeCommand(input: string) {
+    input = input.trim();
     // Clear the stack
     setImmediate(async () => {
         if (input === 'restart') return reload();
@@ -128,7 +129,7 @@ async function executeCommand(input: string) {
         }
         try {
             // eslint-disable-next-line no-eval
-            shell.info(await eval(input.trim()));
+            shell.info(await eval(input));
         } catch (e) {
             shell.warn(e);
         }

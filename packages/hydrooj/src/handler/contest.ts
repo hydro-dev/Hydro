@@ -6,9 +6,7 @@ import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError, BadRequestError,
 } from '../error';
-import {
-    ProblemId, ProblemDoc, Tdoc, User,
-} from '../interface';
+import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -79,6 +77,7 @@ export class ContestDetailHandler extends Handler {
         for (const key in pdict) {
             // @ts-ignore
             if (pdict[key].domainId !== domainId) pdict[key].docId = `${pdict[key].domainId}:${pdict[key].docId}`;
+            pdict[key].pid = (tdoc.pids.indexOf(pdict[key].docId) + 10).toString(36).toUpperCase();
         }
         this.response.body = {
             path, tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
@@ -102,7 +101,7 @@ export class ContestDetailHandler extends Handler {
     }
 }
 
-class ContestBoardcastHandler extends Handler {
+export class ContestBoardcastHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
@@ -131,7 +130,7 @@ class ContestBoardcastHandler extends Handler {
     }
 }
 
-class ContestScoreboardHandler extends Handler {
+export class ContestScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -149,7 +148,7 @@ class ContestScoreboardHandler extends Handler {
     }
 }
 
-class ContestScoreboardDownloadHandler extends Handler {
+export class ContestScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html']))
     async get(domainId: string, tid: ObjectID, ext: string) {
@@ -253,15 +252,17 @@ export class ContestProblemHandler extends Handler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.Name)
-    async _prepare(domainId: string, tid: ObjectID, pid: ProblemId) {
+    async _prepare(domainId: string, tid: ObjectID, _pid: string) {
         this.tdoc = await contest.get(domainId, tid);
-        if (!this.tdoc.pids.includes(pid)) throw new ProblemNotFoundError(domainId, pid);
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+        if (!pid) throw new ProblemNotFoundError(domainId, tid, _pid);
         [this.pdoc, this.tsdoc, this.udoc] = await Promise.all([
             problem.get(domainId, pid),
             contest.getStatus(domainId, tid, this.user._id),
             user.getById(domainId, this.tdoc.owner),
         ]);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
+        this.pdoc.pid = _pid;
         // @ts-ignore
         if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
@@ -316,7 +317,8 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.Name)
-    async get(domainId: string, tid: ObjectID, pid: ProblemId) {
+    async get(domainId: string, tid: ObjectID, _pid: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         this.response.body.rdocs = [];
         if (contest.canShowRecord.call(this, this.tdoc)) {
             this.response.body.rdocs = await record.getUserInProblemMulti(
@@ -339,7 +341,8 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     @param('pid', Types.Name)
-    async post(domainId: string, tid: ObjectID, lang: string, code: string, pid: ProblemId) {
+    async post(domainId: string, tid: ObjectID, lang: string, code: string, _pid: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
