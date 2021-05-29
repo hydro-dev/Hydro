@@ -283,8 +283,8 @@ class HomeworkEditHandler extends Handler {
             datePenaltyText: penaltySince.format('YYYY-M-D'),
             timePenaltyText: penaltySince.format('hh:mm'),
             extensionDays,
-            penaltyRules: yaml.dump(tdoc.penaltyRules),
-            pids: tdoc.pids.join(','),
+            penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
+            pids: tid ? tdoc.pids.join(',') : '',
             path,
             page_name: tid ? 'homework_edit' : 'homework_create',
         };
