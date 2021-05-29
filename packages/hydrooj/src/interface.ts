@@ -126,6 +126,7 @@ export enum ProblemType {
     Default = 'default',
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
+    Subjective = 'subjective',
 }
 
 export enum SubtaskType {

@@ -31,7 +31,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         } else throw new Error('Invalid user_extra_files config.');
     }
     if (cfg.outputs) {
-        config.type = 'submit_answer';
+        config.type = 'subjective';
     } else if (cfg.cases?.length) {
         config.subtasks = [{
             score: +cfg.score || Math.floor(100 / cfg.cases.length),
