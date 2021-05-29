@@ -53,7 +53,7 @@ monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
           score: { type: 'integer', maximum: 100, minimum: 1 },
         },
         properties: {
-          type: { enum: ['default', 'interactive', 'submit_answer'] },
+          type: { enum: ['default', 'interactive', 'submit_answer', 'subjective'] },
           checker_type: { enum: ['default', 'lemon', 'syzoj', 'testlib', 'strict', 'qduoj'] },
           checker: { type: 'string', pattern: '\\.' },
           interactor: { type: 'string', pattern: '\\.' },
