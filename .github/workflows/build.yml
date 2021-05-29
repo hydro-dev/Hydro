@@ -22,9 +22,12 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - name: Config
+    - name: Env
+      if: ${{ secrets.NPM_TOKEN }}
       run: |
         echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
+    - name: Config
+      run: |
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
     - name: Install
