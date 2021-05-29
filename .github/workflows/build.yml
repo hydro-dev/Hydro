@@ -24,7 +24,7 @@ jobs:
         node-version: 14.x
     - name: Config
       run: |
-        echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
+        [[ ! -z $(${{secrets.NPM_TOKEN}}) ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
     - name: Install
