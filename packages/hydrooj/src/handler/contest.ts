@@ -219,8 +219,9 @@ export class ContestEditHandler extends Handler {
         title: string, content: string, rule: string, _pids: string, rated = false,
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+            i = i.trim();
             if ((+i).toString() === i) return +i;
-            return i.trim();
+            return i;
         }).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');

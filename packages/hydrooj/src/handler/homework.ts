@@ -306,8 +306,9 @@ class HomeworkEditHandler extends Handler {
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
+            i = i.trim();
             if ((+i).toString() === i) return +i;
-            return i.trim();
+            return i;
         }).filter((i) => i);
         const tdoc = tid
             ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
