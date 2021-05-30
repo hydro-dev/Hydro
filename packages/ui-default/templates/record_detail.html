@@ -56,9 +56,9 @@
             </dd>
           {% endif %}
           {% if tdoc %}
-            <dt>{{ _('Contest') }}</dt>
+            <dt>{{ _('Contest') if tdoc.docType == model.document.TYPE_CONTEST else _('Homework') }}</dt>
             <dd>
-              <a href="{{ url('contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a>
+              <a href="{{ url('contest_detail', tid=tdoc.docId) if tdoc.docType == model.document.TYPE_CONTEST else url('homework_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a>
             </dd>
           {% endif %}
           <dt>{{ _('Language') }}</dt>
