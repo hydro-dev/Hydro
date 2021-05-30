@@ -16,11 +16,11 @@
         <span class="icon icon-enlarge"></span> {{ _('Quit Scratchpad') }} (Alt+Q)
       </a></li>
     {% else %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.docId) }}">
+      <li class="menu__item"><a class="menu__link" href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.pid) }}">
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="{{ url('homework_detail_problem_submit', tid=tdoc.docId, pid=pdoc.docId) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'homework_detail_problem_submit' %} active{% endif %}" href="{{ url('homework_detail_problem_submit', tid=tdoc.docId, pid=pdoc.pid) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif model.contest.isDone(tdoc) %}
