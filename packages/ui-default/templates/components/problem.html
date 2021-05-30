@@ -2,9 +2,9 @@
 {%- if not invalid %}
   <a
   {%- if tdoc and tdoc.docType == model.document.TYPE_CONTEST %}
-    href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=pdoc.pid) }}"
+    href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=pdoc.pid|default(pdoc.docId)) }}"
   {%- elif tdoc and tdoc.docType == model.document.TYPE_HOMEWORK %}
-    href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.pid) }}"
+    href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.pid|default(pdoc.docId)) }}"
   {%- else %}
     href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}"
   {%- endif %}

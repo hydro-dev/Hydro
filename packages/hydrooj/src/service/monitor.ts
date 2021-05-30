@@ -84,13 +84,12 @@ export async function updateJudge(args) {
 
 if (cluster.isMaster) {
     bus.on('app/started', async () => {
-        const info = await sysinfo.get();
-        await coll.updateOne(
+        sysinfo.get().then((info) => coll.updateOne(
             { mid: info.mid, type: 'server' },
             { $set: { ...info, updateAt: new Date(), type: 'server' } },
             { upsert: true },
-        );
-        await feedback();
+        ));
+        feedback();
         setInterval(update, 60 * 1000);
     });
 }

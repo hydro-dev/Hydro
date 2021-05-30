@@ -24,17 +24,17 @@
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif model.contest.isDone(tdoc) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ url('problem_detail', pid=pdoc.docId) }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
     {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.pid|default(pdoc.docId)) }}">
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_settings' %} active{% endif %}" href="{{ url('problem_settings', pid=pdoc.pid|default(pdoc.docId)) }}">
-        <span class="icon icon-wrench"></span> {{ _('Settings') }}
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_files' %} active{% endif %}" href="{{ url('problem_files', pid=pdoc.docId) }}">
+        <span class="icon icon-file"></span> {{ _('Files') }}
       </a></li>
     {% endif %}
     </ol>

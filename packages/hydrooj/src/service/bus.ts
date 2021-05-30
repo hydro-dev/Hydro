@@ -147,9 +147,9 @@ export function off<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
 
 export async function parallel<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
     const tasks: Promise<any>[] = [];
-    if (argv.options.showBus) logger.debug('parallel: %s %o', name, args);
+    if (argv.options.showBus && name !== 'message/log') logger.debug('parallel: %s %o', name, args);
     for (const callback of _hooks[name] || []) {
-        if (argv.options.busDetail) logger.debug(callback.toString());
+        if (argv.options.busDetail && name !== 'message/log') logger.debug(callback.toString());
         tasks.push(callback.apply(this, args));
     }
     await Promise.all(tasks);
@@ -160,7 +160,7 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
 }
 
 export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
-    if (argv.options.showBus) logger.debug('serial: %s %o', name, args);
+    if (argv.options.showBus && name !== 'message/log') logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         if (argv.options.busDetail) logger.debug(callback.toString());
@@ -169,7 +169,7 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
 }
 
 export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
-    if (argv.options.showBus) logger.debug('bail: %s %o', name, args);
+    if (argv.options.showBus && name !== 'message/log') logger.debug('bail: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         const result = callback.apply(this, args);

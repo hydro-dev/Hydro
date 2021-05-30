@@ -5,7 +5,7 @@ import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
-    HomeworkNotAttendedError, BadRequestError, ContestNotFoundError,
+    HomeworkNotAttendedError, BadRequestError,
 } from '../error';
 import {
     PenaltyRules, Tdoc, ProblemDoc, User,
@@ -250,8 +250,7 @@ class HomeworkEditHandler extends Handler {
         const tdoc = tid
             ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
             : null;
-        if (tid && !tdoc) throw new ContestNotFoundError(domainId, tid);
-        else if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
+        if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         const extensionDays = tid
@@ -308,10 +307,13 @@ class HomeworkEditHandler extends Handler {
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             if ((+i).toString() === i) return +i;
-            return i;
+            return i.trim();
         }).filter((i) => i);
-        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        const tdoc = tid
+            ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
+            : null;
+        if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
+        else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
         const beginAt = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
