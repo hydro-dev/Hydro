@@ -26,12 +26,9 @@ async function _postJudge(rdoc: RecordDoc) {
     const updated = await problem.updateStatus(rdoc.pdomain, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
         await contest.updateStatus(
-            rdoc.domainId, rdoc.contest.tid, rdoc.uid,
-            rdoc._id, rdoc.pid, accept, rdoc.score, rdoc.contest.type,
-        );
-        await contest.updateStatus(
-            rdoc.domainId, rdoc.contest.tid, rdoc.uid,
-            rdoc._id, `${rdoc.pdomain}:${rdoc.pid}`, accept, rdoc.score, rdoc.contest.type,
+            rdoc.domainId, rdoc.contest.tid, rdoc.uid, rdoc._id,
+            rdoc.domainId === rdoc.pdomain ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`,
+            accept, rdoc.score, rdoc.contest.type,
         );
     } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
     const pdoc = (accept && updated)

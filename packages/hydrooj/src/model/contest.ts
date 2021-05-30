@@ -88,7 +88,7 @@ const acm: ContestRule = {
                 columns.push({
                     type: 'problem_detail',
                     value: '#{0}'.format(i),
-                    raw: pid,
+                    raw: (i + 9).toString(36).toUpperCase(),
                 });
             }
         }
@@ -171,7 +171,7 @@ const oi: ContestRule = {
                 columns.push({
                     type: 'problem_detail',
                     value: '#{0}'.format(i),
-                    raw: tdoc.pids[i - 1],
+                    raw: (i + 9).toString(36).toUpperCase(),
                 });
             }
         }
@@ -336,7 +336,7 @@ const homework: ContestRule = {
                 columns.push({
                     type: 'problem_detail',
                     value: '#{0}'.format(i),
-                    raw: pid,
+                    raw: (i + 9).toString(36).toUpperCase(),
                 });
             }
         }
