@@ -267,18 +267,22 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
 
     @param('lang', Types.Name)
     @param('code', Types.Content)
-    async post(domainId: string, lang: string, code: string) {
+    @param('pretest', Types.Boolean)
+    @param('input', Types.String, true)
+    async post(domainId: string, lang: string, code: string, pretest = false, input = '') {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 5);
-        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true);
-        const [rdoc] = await Promise.all([
-            record.get(domainId, rid),
-            problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
-            problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
-            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-        ]);
+        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);
+        const rdoc = await record.get(domainId, rid);
+        if (!pretest) {
+            await Promise.all([
+                problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
+                problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
+                domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
+            ]);
+        }
         bus.boardcast('record/change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
@@ -613,7 +617,6 @@ export async function apply() {
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
-    Route('problem_pretest', '/p/:pid/pretest', ProblemPretestHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);

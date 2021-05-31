@@ -343,24 +343,26 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('lang', Types.Name)
     @param('code', Types.Content)
     @param('pid', Types.Name)
-    async post(domainId: string, tid: ObjectID, lang: string, code: string, _pid: string) {
+    @param('pretest', Types.Boolean)
+    @param('input', Types.String, true)
+    async post(domainId: string, tid: ObjectID, lang: string, code: string, _pid: string, pretest = false, input = '') {
         const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 10);
-        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, {
+        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
             type: document.TYPE_CONTEST,
             tid,
         });
-        const [rdoc] = await Promise.all([
-            record.get(domainId, rid),
+        const rdoc = await record.get(domainId, rid);
+        await Promise.all([
             problem.inc(domainId, pid, 'nSubmit', 1),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             contest.updateStatus(domainId, tid, this.user._id, rid, pid),
         ]);
         bus.boardcast('record/change', rdoc);
-        if (!contest.canShowRecord.call(this, this.tdoc)) {
+        if (!pretest && !contest.canShowRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });
         } else {

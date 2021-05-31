@@ -217,20 +217,22 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     @param('pid', Types.String)
     @param('code', Types.Content)
     @param('lang', Types.Name)
-    async post(domainId: string, tid: ObjectID, _pid: string, code: string, lang: string) {
+    @param('pretest', Types.Boolean)
+    @param('input', Types.String, true)
+    async post(domainId: string, tid: ObjectID, _pid: string, code: string, lang: string, pretest = false, input = '') {
         const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, 5);
-        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, {
+        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
             type: document.TYPE_HOMEWORK,
             tid,
         });
         const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
         const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
-        const [rdoc] = await Promise.all([
-            record.get(domainId, rid),
+        const rdoc = await record.get(domainId, rid);
+        await Promise.all([
             problem.inc(pdomainId, ppid, 'nSubmit', 1),
             domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             contest.updateStatus(domainId, tid, this.user._id,
@@ -239,7 +241,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         bus.boardcast('record/change', rdoc);
         this.response.body.tid = tid;
         this.response.body.rid = rid;
-        if (contest.canShowRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
+        if (pretest || contest.canShowRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
         else this.response.redirect = this.url('homework_detail', { tid });
     }
 }
