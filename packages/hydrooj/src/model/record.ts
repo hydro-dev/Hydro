@@ -38,6 +38,7 @@ class RecordModel {
         const _id = arg1 || arg0;
         const domainId = arg1 ? arg0 : null;
         const res = await RecordModel.coll.findOne({ _id });
+        if (!res) return null;
         if (res.domainId === (domainId || res.domainId)) return res;
         return null;
     }
