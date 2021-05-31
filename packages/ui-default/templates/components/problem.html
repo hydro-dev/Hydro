@@ -1,11 +1,12 @@
 {% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false) %}
 {%- if not invalid %}
   <a
-  {%- if tdoc and tdoc.docType == model.document.TYPE_CONTEST %}
-    href="{{ url('contest_detail_problem', tid=tdoc.docId, pid=pdoc.pid|default(pdoc.docId)) }}"
-  {%- elif tdoc and tdoc.docType == model.document.TYPE_HOMEWORK %}
-    href="{{ url('homework_detail_problem', tid=tdoc.docId, pid=pdoc.pid|default(pdoc.docId)) }}"
-  {%- else %}
+  {% if tdoc -%}
+    href="{{ url(
+      'contest_detail_problem' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem',
+      tid=tdoc.docId, pid=parseContestProblemId(pdoc, tdoc)
+    ) }}"
+  {%- else -%}
     href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}"
   {%- endif %}
   >

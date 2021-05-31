@@ -11,7 +11,7 @@ const markdown = require('./markdown');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
 
-let template = argv.options.template;
+let { template } = argv.options;
 if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
 else if (template) template = findFileSync(template);
 
@@ -138,6 +138,13 @@ env.addGlobal('set', (obj, key, val) => {
 });
 env.addGlobal('findSubModule', (prefix) => {
   filter(Object.keys(global.Hydro.ui.template), (n) => n.startsWith(prefix));
+});
+env.addGlobal('parseContestProblemId', (pdoc, tdoc) => {
+  if (tdoc.pids[parseInt(pdoc.pid, 36) - 10]) return pdoc.pid;
+  let cur = tdoc.pids.indexOf(pdoc.docId);
+  if (cur !== -1) return (cur + 10).toString(36).toUpperCase();
+  cur = tdoc.pids.indexOf(`${pdoc.domainId}:${pdoc.docId}`);
+  return (cur + 10).toString(36).toUpperCase();
 });
 
 async function render(name, state) {
