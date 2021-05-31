@@ -218,7 +218,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     async onRecordChange(rdoc: RecordDoc) {
         if (rdoc.domainId !== this.domainId) return;
         if (!this.pretest && rdoc.input) return;
-        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (!this.pretest && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
         if (this.pid && (rdoc.pid !== this.pid || rdoc.pdomain !== this.pdomain)) return;
         // eslint-disable-next-line prefer-const
@@ -242,7 +242,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
-        if (rdoc.contest) {
+        if (rdoc.contest && rdoc.input === undefined) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
             if (!contest.canShowRecord.call(this, tdoc)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
