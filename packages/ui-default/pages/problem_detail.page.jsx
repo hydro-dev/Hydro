@@ -177,7 +177,20 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   async function loadSubjective() {
     try {
       if (UiContext.pdoc.config?.type !== 'subjective') return;
-      const props = yaml.load(document.getElementsByClassName('section__body typo')[0].innerText);
+      let s = '';
+      try {
+        s = JSON.parse(UiContext.pdoc.content);
+      } catch {
+        s = UiContext.pdoc.content;
+      }
+      if (typeof s === 'object') {
+        const langs = Object.keys(s);
+        const f = langs.filter((i) => i.startsWith(UserContext.viewLang));
+        if (s[UserContext.viewLang]) s = s[UserContext.viewLang];
+        else if (f.length) s = s[f[0]];
+        else s = s[langs[0]];
+      }
+      const props = yaml.load(s);
       if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
       const { default: Subjective } = await import('vj/components/subjective-question/index');

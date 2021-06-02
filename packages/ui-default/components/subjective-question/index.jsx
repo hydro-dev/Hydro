@@ -36,7 +36,7 @@ export default class SubjectiveContainer extends React.PureComponent {
   Textbox(args, name) {
     return (
       <label htmlFor={`textbox${name}`}>
-        {args.desc}
+        {name}. {args.desc}
         <div name={`form_item_${name}`} className="textbox-container">
           <input type="text" name={name} id={`textbox${name}`} className="textbox" onChange={this.onChange}></input>
         </div>
@@ -47,7 +47,7 @@ export default class SubjectiveContainer extends React.PureComponent {
   Radio(args, name) {
     return (
       <>
-        {args.desc}
+        {name}. {args.desc}
         {args.choices.map((i) => (
           <label className="radiobox" htmlFor={`radio${name}${i}`} key={i}>
             <input type="radio" name={name} id={`radio${name}${i}`} value={i} onChange={this.onChange} /> {i} <br />
@@ -67,7 +67,9 @@ export default class SubjectiveContainer extends React.PureComponent {
             </div>
           </div>
         ))}
-        <input type="submit" className="button rounded primary" value="提交" />
+        {document.getElementsByClassName('nav__item--round').length
+          ? <input type="submit" disabled className="button rounded primary" value="登录后提交" />
+          : <input type="submit" className="button rounded primary" value="提交" />}
       </form>
     );
   }

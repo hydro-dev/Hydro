@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.11.8",
+  "version": "4.11.9",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -26,7 +26,7 @@
     "@blueprintjs/core": "^3.45.0",
     "@blueprintjs/icons": "^3.26.1",
     "@blueprintjs/select": "^3.16.4",
-    "@hydrooj/utils": "^1.0.15",
+    "@hydrooj/utils": "^1.0.20",
     "@undefined-moe/monaco-yaml": "^2.5.0",
     "ansi_up": "^5.0.1",
     "autoprefixer": "^9.8.6",

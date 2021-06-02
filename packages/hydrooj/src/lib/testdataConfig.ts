@@ -34,6 +34,7 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
         result.timeMax = result.timeMin = 1000;
     }
     if (cfg.langs) result.langs = cfg.langs;
+    console.log(result);
     return result;
 }
 
