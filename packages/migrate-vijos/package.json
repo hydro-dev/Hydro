@@ -7,7 +7,7 @@
     "preferUnplugged": true,
     "license": "SEE LICENSE IN LICENSE",
     "devDependencies": {
-        "@types/mongodb": "^3.6.16"
+        "@types/mongodb": "^3.6.17"
     },
     "dependencies": {
         "mongodb": "^3.6.9"
