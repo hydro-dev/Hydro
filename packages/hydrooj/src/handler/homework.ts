@@ -90,10 +90,10 @@ class HomeworkDetailHandler extends Handler {
             ['homework_main', 'homework_main'],
             [tdoc.title, null, null, true],
         ];
+        const index = tdoc.pids.map((i) => i.toString());
         for (const key in pdict) {
-            // @ts-ignore
-            if (pdict[key].domainId !== domainId) pdict[key].docId = `${pdict[key].domainId}:${pdict[key].docId}`;
-            pdict[key].pid = (tdoc.pids.indexOf(pdict[key].docId) + 10).toString(36).toUpperCase();
+            const i = (index.indexOf(key) + 10).toString(36).toUpperCase();
+            if (i !== '9') pdict[key].pid = i;
         }
         this.response.template = 'homework_detail.html';
         this.response.body = {

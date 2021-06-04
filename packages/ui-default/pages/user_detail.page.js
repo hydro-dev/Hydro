@@ -40,12 +40,10 @@ const page = new NamedPage('user_detail', async () => {
     toolbox: {
       right: 10,
       feature: {
-        dataZoom: { yAxisIndex: 'none' },
         restore: {},
         saveAsImage: {},
       },
     },
-    dataZoom: [{ type: 'inside' }],
     visualMap: {
       show: false,
       pieces: [{

@@ -17,7 +17,6 @@ import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import cac from 'cac';
 import { createHash } from 'crypto';
-import type { SetOption } from 'cookies';
 import * as bus from './bus';
 import { errorMessage } from '../utils';
 import { User, DomainDoc } from '../interface';
@@ -611,7 +610,7 @@ export class Handler extends HandlerCommon {
         } else {
             [, this.session] = await token.add(token.TYPE_SESSION, expireSeconds, { ...this.session, ...$update, ...$create });
         }
-        const cookie: SetOption = {
+        const cookie = {
             secure: !!system.get('session.secure'),
             httpOnly: false,
         };
