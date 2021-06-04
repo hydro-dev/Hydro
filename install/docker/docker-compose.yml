@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  oj-minio:
+    image: minio/minio
+    container_name: oj-minio
+    command: server /data
+    restart: always
+    volumes:
+      - ./data/minio:/data
+    environment:
+      - MINIO_ACCESS_KEY=CHANGE_THIS
+      - MINIO_SECRET_KEY=CHANGE_THIS
+    
+  oj-mongo:
+    image: mongo
+    container_name: oj-mongo
+    restart: always
+    volumes:
+      - ./data/mongo:/data/db
+
+  oj-backend:
+    build: ./backend
+    container_name: oj-backend
+    restart: always
+    depends_on:
+      - oj-minio
+      - oj-mongo
+    volumes:
+      - ./data/backend/config:/root/.hydro
+    environment:
+      - ACCESS_KEY=CHANGE_THIS
+      - SECRET_KEY=CHANGE_THIS
+    ports:
+      - "0.0.0.0:80:8888"
+
+  oj-judge:
+    build: ./judge
+    container_name: oj-judge
+    restart: always
+    privileged: true
+    depends_on:
+      - oj-backend
+    volumes:
+      - ./data/judge/config:/root/.config/hydro
