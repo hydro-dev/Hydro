@@ -130,7 +130,7 @@ env.addGlobal('avatarUrl', avatar);
 env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('model', global.Hydro.model);
 env.addGlobal('ui', global.Hydro.ui);
-env.addGlobal('isIE', (str) => str.includes('MSIE') || str.includes('rv:11.0'));
+env.addGlobal('isIE', (str) => (str ? (str.includes('MSIE') || str.includes('rv:11.0')) : false));
 env.addGlobal('set', (obj, key, val) => {
   if (val !== undefined) obj[key] = val;
   else Object.assign(obj, key);
