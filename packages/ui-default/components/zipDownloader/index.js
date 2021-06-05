@@ -71,6 +71,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
     targets.push({
       filename: `${pid}/problem.yaml`,
       content: dump({
+        pid: pdoc.pid,
         content: pdoc.content,
         owner: pdoc.owner,
         title: pdoc.title,
