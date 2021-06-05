@@ -5,7 +5,7 @@ import * as system from './system';
 import token from './token';
 import * as setting from './setting';
 import domain from './domain';
-import { BUILTIN_USERS, PERM, PRIV } from './builtin';
+import { PERM, PRIV } from './builtin';
 import { ArgMethod } from '../utils';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
 import { User as _User, Udoc, Udict } from '../interface';
@@ -142,9 +142,7 @@ class UserModel {
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
         if (cache.has(`${_id}/${domainId}`)) return cache.get(`${_id}/${domainId}`);
-        const udoc = _id === 0 || _id === 1
-            ? BUILTIN_USERS[_id]
-            : await coll.findOne({ _id });
+        const udoc = await coll.findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         if (typeof scope === 'string') scope = BigInt(scope);
@@ -167,11 +165,7 @@ class UserModel {
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
         if (cache.has(`${unameLower}/${domainId}`)) return cache.get(`${unameLower}/${domainId}`);
-        const udoc = (unameLower === 'guest')
-            ? BUILTIN_USERS[0]
-            : unameLower === 'hydro'
-                ? BUILTIN_USERS[1]
-                : await coll.findOne({ unameLower });
+        const udoc = await coll.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();
@@ -185,11 +179,7 @@ class UserModel {
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
         const mailLower = mail.trim().toLowerCase();
         if (cache.has(`${mailLower}/${domainId}`)) return cache.get(`${mailLower}/${domainId}`);
-        const udoc = (mailLower === 'guest@hydro.local')
-            ? BUILTIN_USERS[0]
-            : mailLower === 'hydro@hydro.local'
-                ? BUILTIN_USERS[1]
-                : await coll.findOne({ mailLower });
+        const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();

@@ -398,11 +398,16 @@ const scripts: UpgradeScript[] = [
         await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
         return true;
     },
+    // Add send_message priv to user
     async function _30_31() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllUser(async (udoc) => {
-            await user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE);
-        });
+        await iterateAllUser((udoc) => user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE));
+        return true;
+    },
+    // Write builtin users to database
+    async function _31_32() {
+        await user.create('Guest@hydro.local', 'Guest', String.random(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
+        await user.create('Hydro@hydro.local', 'Hydro', String.random(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
         return true;
     },
 ];

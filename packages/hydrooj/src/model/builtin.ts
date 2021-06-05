@@ -11,7 +11,6 @@ import {
     USER_GENDER_MALE, USER_GENDER_FEMALE, USER_GENDER_OTHER,
     USER_GENDER_ICONS, USER_GENDERS, USER_GENDER_RANGE,
 } from '@hydrooj/utils/lib/status';
-import type { Udoc } from '../interface';
 
 export * from '@hydrooj/utils/lib/status';
 
@@ -267,39 +266,6 @@ PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE
 
 // people whose rank is less than 1% will get Level 10
 export const LEVELS = [100, 90, 70, 55, 40, 30, 20, 10, 5, 2, 1];
-
-export const BUILTIN_USERS: Udoc[] = [
-    {
-        _id: 0,
-        mail: 'Guest@hydro.local',
-        mailLower: 'guest@hydro.local',
-        uname: 'Guest',
-        unameLower: 'guest',
-        salt: '',
-        hash: '',
-        hashType: 'hydro',
-        regat: new Date(0),
-        regip: '127.0.0.1',
-        loginat: new Date(0),
-        loginip: '127.0.0.1',
-        priv: PRIV.PRIV_REGISTER_USER,
-    },
-    {
-        _id: 1,
-        mail: 'Hydro@hydro.local',
-        mailLower: 'hydro@hydro.local',
-        uname: 'Hydro',
-        unameLower: 'hydro',
-        salt: '',
-        hash: '',
-        hashType: 'hydro',
-        regat: new Date(0),
-        regip: '127.0.0.1',
-        loginat: new Date(0),
-        loginip: '127.0.0.1',
-        priv: PRIV.PRIV_USER_PROFILE,
-    },
-];
 
 export const BUILTIN_ROLES = {
     guest: PERM.PERM_BASIC,
