@@ -496,7 +496,6 @@ global.Hydro.model.builtin = {
     PERMS_BY_FAMILY,
     PRIV,
     LEVELS,
-    BUILTIN_USERS,
     BUILTIN_ROLES,
     DEFAULT_NODES,
     CATEGORIES,
