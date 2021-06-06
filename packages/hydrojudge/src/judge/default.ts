@@ -37,7 +37,7 @@ function judgeCase(c, sid) {
         const { filename } = ctx.config;
         const copyIn = { ...ctx.execute.copyIn };
         if (filename) copyIn[`${filename}.in`] = c.input ? { src: c.input } : { content: '' };
-        const copyOut = filename ? [`${filename}.out`] : [];
+        const copyOut = filename ? [`${filename}.out?`] : [];
         const stdin = filename ? null : c.input;
         const stdout = path.resolve(ctx.tmpdir, `${c.id}.out`);
         const stderr = path.resolve(ctx.tmpdir, `${c.id}.err`);

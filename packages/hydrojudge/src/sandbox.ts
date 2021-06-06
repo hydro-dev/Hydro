@@ -10,6 +10,7 @@ import { Logger } from './log';
 const argv = cac().parse();
 const logger = new Logger('sandbox');
 let callId = 0;
+let supportOptional = false;
 
 const statusMap = {
     'Time Limit Exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
@@ -29,6 +30,9 @@ function proc({
     process_limit = 32,
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
+    if (!supportOptional) {
+        copyOut = (copyOut as string[]).map((i) => (i.endsWith('?') ? i.substr(0, i.length - 1) : i));
+    }
     const size = parseMemoryMB(getConfig('stdio_size'));
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
@@ -112,6 +116,11 @@ export async function run(execute, params?) {
     // eslint-disable-next-line no-return-await
     if (typeof execute === 'object') return await runMultiple(execute);
     try {
+        if (!supportOptional) {
+            const res = await Axios.create({ baseURL: getConfig('sandbox_host') }).get('/version');
+            supportOptional = res.data.copyOutOptional;
+            if (!supportOptional) logger.warn('Sandbox version tooooooo low! Please upgrade to at least 1.2.0');
+        }
         const body = { cmd: [proc({ execute, ...params })] };
         const id = callId++;
         if (argv.options['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(body));
