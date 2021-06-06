@@ -377,9 +377,9 @@ const homework: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        score: colScore || 0,
+                        score: tsddict[pid]?.penaltyScore || 0,
                         value: colScore === colOriginalScore
-                            ? '{0}\n{2}'.format(colScore, colTimeStr)
+                            ? '{0}\n{1}'.format(colScore, colTimeStr)
                             : '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
                         raw: rid,
                     });
