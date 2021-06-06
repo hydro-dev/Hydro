@@ -356,11 +356,13 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             tid,
         });
         const rdoc = await record.get(domainId, rid);
-        await Promise.all([
-            problem.inc(domainId, pid, 'nSubmit', 1),
-            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-            contest.updateStatus(domainId, tid, this.user._id, rid, pid),
-        ]);
+        if (!pretest) {
+            await Promise.all([
+                problem.inc(domainId, pid, 'nSubmit', 1),
+                domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
+                contest.updateStatus(domainId, tid, this.user._id, rid, pid),
+            ]);
+        }
         bus.boardcast('record/change', rdoc);
         if (!pretest && !contest.canShowRecord.call(this, this.tdoc)) {
             this.response.body = { tid };

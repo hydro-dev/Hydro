@@ -232,12 +232,14 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
         const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const rdoc = await record.get(domainId, rid);
-        await Promise.all([
-            problem.inc(pdomainId, ppid, 'nSubmit', 1),
-            domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-            contest.updateStatus(domainId, tid, this.user._id,
-                rid, pid, false, 0, document.TYPE_HOMEWORK),
-        ]);
+        if (pretest) {
+            await Promise.all([
+                problem.inc(pdomainId, ppid, 'nSubmit', 1),
+                domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
+                contest.updateStatus(domainId, tid, this.user._id,
+                    rid, pid, false, 0, document.TYPE_HOMEWORK),
+            ]);
+        }
         bus.boardcast('record/change', rdoc);
         this.response.body.tid = tid;
         this.response.body.rid = rid;

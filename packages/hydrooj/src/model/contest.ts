@@ -264,19 +264,17 @@ const homework: ContestRule = {
         }
 
         function penaltyScore(jdoc) {
-            const { score } = jdoc;
             const exceedSeconds = Math.floor(
                 jdoc.rid.generationTime - tdoc.penaltySince.getTime() / 1000,
             );
-            if (exceedSeconds < 0) return score;
+            if (exceedSeconds < 0) return jdoc.score;
             let coefficient = 1;
-            const keys = Object.keys(tdoc.penaltyRules)
-                .map(parseFloat).sort((a, b) => a - b);
+            const keys = Object.keys(tdoc.penaltyRules).map(parseFloat).sort((a, b) => a - b);
             for (const i of keys) {
                 if (i * 3600 <= exceedSeconds) coefficient = tdoc.penaltyRules[i];
                 else break;
             }
-            return score * coefficient;
+            return jdoc.score * coefficient;
         }
         const detail = [];
         for (const j in effective) {
@@ -379,7 +377,10 @@ const homework: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        value: '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
+                        score: colScore || 0,
+                        value: colScore === colOriginalScore
+                            ? '{0}\n{2}'.format(colScore, colTimeStr)
+                            : '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
                         raw: rid,
                     });
                 }
@@ -454,25 +455,28 @@ export async function getRelated(domainId: string, pid: ProblemId, type: Type = 
     return await document.getMulti(domainId, type, { pids: pid }).toArray();
 }
 
-export async function updateStatus(
-    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
-    accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
-) {
-    const tdoc = await get(domainId, tid, type);
-    const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
-        rid, pid, accept, score,
-    }, 'rid');
-    if (!tsdoc.attend) throw new ContestNotAttendedError(tid, uid);
-    const journal = _getStatusJournal(tsdoc);
-    const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    return await document.revSetStatus(domainId, type, tid, uid, tsdoc.rev, { journal, ...stats });
-}
-
 export function getStatus(
     domainId: string, tid: ObjectID, uid: number,
     type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     return document.getStatus(domainId, type, tid, uid);
+}
+
+export async function updateStatus(
+    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
+    accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
+) {
+    const [tdoc, otsdoc] = await Promise.all([
+        get(domainId, tid, type),
+        getStatus(domainId, tid, uid, type),
+    ]);
+    if (!otsdoc.attend) throw new ContestNotAttendedError(tid, uid);
+    const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
+        rid, pid, accept, score,
+    }, 'rid');
+    const journal = _getStatusJournal(tsdoc);
+    const stats = RULES[tdoc.rule].stat(tdoc, journal);
+    return await document.revSetStatus(domainId, type, tid, uid, tsdoc.rev, { journal, ...stats });
 }
 
 export async function getListStatus(
