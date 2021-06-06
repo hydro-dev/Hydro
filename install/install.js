@@ -33,7 +33,7 @@ const _MINIO_ = [
 ];
 const _SANDBOX_ = [
     'https://s3.undefined.moe/file/executor-amd64',
-    'https://github.com/criyle/go-judge/releases/download/v1.1.9/executorserver-amd64',
+    'https://github.com/criyle/go-judge/releases/download/v1.2.0/executorserver-amd64',
 ];
 if (!fs.exist('/etc/os-release')) log.fatal('/etc/os-release 文件未找到');
 const osinfoFile = fs.readfile('/etc/os-release');
