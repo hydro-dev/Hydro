@@ -229,7 +229,7 @@ class UserModel {
     @ArgMethod
     static async create(
         mail: string, uname: string, password: string,
-        uid: number = 0, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
+        uid?: number, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
     ) {
         const salt = String.random();
         if (typeof uid !== 'number') {
