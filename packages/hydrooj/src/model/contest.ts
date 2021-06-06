@@ -208,7 +208,7 @@ const oi: ContestRule = {
             );
             for (const pid of tdoc.pids) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                if (isDone(tdoc)) {
+                if (isDone(tdoc) && tsddict[pid]?.rid !== psdict[`${tsdoc.uid}/${pid}`]?.rid) {
                     row.push({
                         type: 'records',
                         value: '',
