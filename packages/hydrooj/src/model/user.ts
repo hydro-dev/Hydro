@@ -232,7 +232,7 @@ class UserModel {
         uid: number = 0, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
     ) {
         const salt = String.random();
-        if (!uid) {
+        if (typeof uid !== 'number') {
             const [udoc] = await coll.find({}).sort({ _id: -1 }).limit(1).toArray();
             uid = Math.max((udoc?._id || 0) + 1, 2);
         }
