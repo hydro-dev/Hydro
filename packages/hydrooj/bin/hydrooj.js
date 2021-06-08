@@ -48,7 +48,14 @@ if (!cluster.isMaster) {
         const arg1 = argv.args[1];
         const arg2 = argv.args[2];
         if (operation === 'addon') {
-            if (arg1 === 'add') addons.push(arg2);
+            if (arg1 === 'create') {
+                fs.mkdirSync('/root/addon');
+                child.execSync('yarn init -y', { cwd: '/root/addon' });
+                fs.mkdirSync('/root/addon/templates');
+                fs.mkdirSync('/root/addon/locales');
+                fs.mkdirSync('/root/addon/public');
+                addons.push('/root/addon');
+            } else if (arg1 === 'add') addons.push(arg2);
             else if (arg1 === 'remove') {
                 for (let i = 0; i < addons.length; i++) {
                     if (addons[i] === arg2) {

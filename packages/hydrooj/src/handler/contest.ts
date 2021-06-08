@@ -76,6 +76,7 @@ export class ContestDetailHandler extends Handler {
         ];
         const index = tdoc.pids.map((i) => i.toString());
         for (const key in pdict) {
+            pdict[key].tag.length = 0;
             const i = (index.indexOf(key) + 10).toString(36).toUpperCase();
             if (i !== '9') pdict[key].pid = i;
         }
@@ -265,6 +266,7 @@ export class ContestProblemHandler extends Handler {
         ]);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         this.pdoc.pid = _pid;
+        this.pdoc.tag.length = 0;
         // @ts-ignore
         if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
