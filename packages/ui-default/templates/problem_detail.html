@@ -49,6 +49,12 @@
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Accepted Ratio') }}: {% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</span>
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</span>
           <span class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
+          {% if pdoc.tag.length %}
+            <span name="show_tags" class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item nojs--hide">{{ _('Show Tags') }}</span>
+            {%- for tag in pdoc.tag -%}
+              <span class="bp3-tag bp3-large bp3-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
+            {%- endfor -%}
+          {% endif %}
         </ul>
       </div>
     </div>

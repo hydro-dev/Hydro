@@ -176,7 +176,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
 
   async function loadSubjective() {
     try {
-      if (UiContext.pdoc.config?.type !== 'subjective') return;
       let s = '';
       try {
         s = JSON.parse(UiContext.pdoc.content);
@@ -193,9 +192,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       const props = yaml.load(s);
       if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
-      const { default: Subjective } = await import('vj/components/subjective-question/index');
-      const React = await import('react');
-      const ReactDOM = await import('react-dom');
+      const [{ default: Subjective }, React, ReactDOM] = await Promise.all([
+        import('vj/components/subjective-question/index'),
+        import('react'),
+        import('react-dom'),
+      ]);
 
       ReactDOM.render(
         <div className="section__body typo">
@@ -215,12 +216,12 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     leaveScratchpadMode();
     ev.preventDefault();
   });
-  $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
+  $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();
-    $('[name="problem-sidebar__categories"]').show();
+    $('span.tags').show();
   });
   $('[name="problem-sidebar__download').on('click', handleClickDownloadProblem);
-  loadSubjective();
+  if (UiContext.pdoc.config?.type === 'subjective') loadSubjective();
 
   if (pagename === 'contest_detail_problem') return;
   if (!Object.keys(UiContext.pdoc.stats || {}).length) {
