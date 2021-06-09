@@ -25,7 +25,9 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            const exec = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            exec.copyIn = { ...copyIn, ...exec.copyIn };
+            return exec;
         })(),
         // Validator
         (async () => {
@@ -43,7 +45,9 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             const file = await fs.readFile(ctx.config.std);
-            return await compile(ctx.getLang(parseFilename(ctx.config.std).split('.')[1]), file.toString(), 'std', copyIn);
+            const exec = await compile(ctx.getLang(parseFilename(ctx.config.std).split('.')[1]), file.toString(), 'std', copyIn);
+            exec.copyIn = { ...copyIn, ...exec.copyIn };
+            return exec;
         })(),
         // Checker
         (async () => {

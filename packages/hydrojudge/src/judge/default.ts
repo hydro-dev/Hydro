@@ -135,7 +135,9 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            const execute = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            execute.copyIn = { ...copyIn, ...execute.copyIn };
+            return execute;
         })(),
         (async () => {
             if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
