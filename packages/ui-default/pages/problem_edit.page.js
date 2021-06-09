@@ -6,6 +6,7 @@ import i18n from 'vj/utils/i18n';
 import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
+import Notification from 'vj/components/notification';
 
 const categories = {};
 const dirtyCategories = [];
@@ -153,6 +154,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (confirmed) {
       return request.post('.', { operation: 'delete' }).then((res) => {
         window.location.href = res.url;
+      }).catch((e) => {
+        Notification.error(e.message);
       });
     }
     const message = 'Confirm deleting this problem? Its files, submissions, discussions and solutions will be deleted as well.';
