@@ -20,7 +20,7 @@ import { updateJudge } from '../service/monitor';
 
 const logger = new Logger('judge');
 
-async function _postJudge(rdoc: RecordDoc) {
+export async function postJudge(rdoc: RecordDoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.pdomain, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
@@ -99,7 +99,7 @@ export async function end(body: JudgeResultBody) {
     $set.judger = body.judger ?? 1;
     await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
-    await _postJudge(rdoc);
+    await postJudge(rdoc);
     bus.boardcast('record/change', rdoc); // trigger a full update
 }
 

@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { postJudge } from './judge';
 import {
     ContestNotFoundError, PermissionError, ProblemNotFoundError,
     RecordNotFoundError, UserNotFoundError,
@@ -150,10 +151,11 @@ class RecordDetailHandler extends Handler {
                     status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
                 }],
             };
-            await Promise.all([
+            const [latest] = await Promise.all([
                 record.update(domainId, rid, $set),
                 bus.emit('record/change', rdoc, $set),
             ]);
+            await postJudge(latest);
         }
         this.back();
     }
