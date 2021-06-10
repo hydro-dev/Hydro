@@ -368,33 +368,35 @@ export interface HistoryDoc {
 export type { DiscussionDoc } from './model/discussion';
 declare module './model/discussion' {
     interface DiscussionDoc {
-        docType: document['TYPE_DISCUSSION'],
-        docId: ObjectID,
-        parentType: number,
-        parentId: ObjectID | number | string,
-        title: string,
-        content: string,
-        ip: string,
-        pin: boolean,
-        highlight: boolean,
-        updateAt: Date,
-        nReply: number,
-        views: number,
-        history: HistoryDoc[],
-        sort: number,
-        lastRCount: number,
+        docType: document['TYPE_DISCUSSION'];
+        docId: ObjectID;
+        parentType: number;
+        parentId: ObjectID | number | string;
+        title: string;
+        content: string;
+        ip: string;
+        pin: boolean;
+        highlight: boolean;
+        updateAt: Date;
+        nReply: number;
+        views: number;
+        history: HistoryDoc[];
+        react: Record<string, number>;
+        sort: number;
+        lastRCount: number;
     }
 }
 
 export interface DiscussionReplyDoc extends Document {
-    docType: document['TYPE_DISCUSSION_REPLY'],
-    docId: ObjectID,
-    parentType: document['TYPE_DISCUSSION'],
-    parentId: ObjectID,
-    ip: string,
-    content: string,
-    reply: DiscussionTailReplyDoc[],
-    history: HistoryDoc[],
+    docType: document['TYPE_DISCUSSION_REPLY'];
+    docId: ObjectID;
+    parentType: document['TYPE_DISCUSSION'];
+    parentId: ObjectID;
+    ip: string;
+    content: string;
+    reply: DiscussionTailReplyDoc[];
+    history: HistoryDoc[];
+    react: Record<string, number>;
 }
 
 export interface DiscussionTailReplyDoc {

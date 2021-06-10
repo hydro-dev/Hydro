@@ -176,6 +176,11 @@ export function getListReply(domainId: string, did: ObjectID): Promise<Discussio
     return getMultiReply(domainId, did).toArray();
 }
 
+export async function react(domainId: string, docType: keyof document.DocType, did: ObjectID, id: string, uid: number, reverse = false) {
+    const updated = await document.setIfNotStatus(domainId, docType, did, uid, `react.${id}`, reverse ? 0 : 1, reverse ? 0 : 1, {});
+    if (updated) await document.inc(domainId, docType, did, `react.${id}`, reverse ? -1 : 1);
+}
+
 export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
@@ -330,6 +335,7 @@ global.Hydro.model.discussion = {
     getTailReply,
     editTailReply,
     delTailReply,
+    react,
     setStar,
     getStatus,
     addNode,

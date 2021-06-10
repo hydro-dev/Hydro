@@ -304,7 +304,16 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
 ): Promise<DocStatusType[T]> {
     const current = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
-    if (current[key] === ifNot) return null;
+    if (typeof key === 'string' && key.includes('.')) {
+        const acc = key.split('.');
+        let c = current;
+        for (const i of acc) {
+            if (!(i in c)) break;
+            c = c[i];
+            if (c === null || c === undefined) break;
+        }
+        if (c === ifNot) return null;
+    } else if (current[key] === ifNot) return null;
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $set: { [key]: value, ...args } },

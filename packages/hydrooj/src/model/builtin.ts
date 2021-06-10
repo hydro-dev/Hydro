@@ -57,6 +57,7 @@ export const PERM = {
     PERM_DELETE_DISCUSSION: 1n << 32n,
     PERM_DELETE_DISCUSSION_SELF: 1n << 33n,
     PERM_REPLY_DISCUSSION: 1n << 34n,
+    PERM_ADD_REACTION: 1 << 62n,
     PERM_EDIT_DISCUSSION_REPLY_SELF: 1n << 36n,
     PERM_DELETE_DISCUSSION_REPLY: 1n << 38n,
     PERM_DELETE_DISCUSSION_REPLY_SELF: 1n << 39n,
@@ -134,6 +135,7 @@ export const PERMS = [
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION, 'Delete discussions'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION_SELF, 'Delete own discussions'),
     Permission('perm_discussion', PERM.PERM_REPLY_DISCUSSION, 'Reply discussions'),
+    Permission('perm_discussion', PERM.PERM_ADD_REACTION, 'React to discussion'),
     Permission('perm_discussion', PERM.PERM_EDIT_DISCUSSION_REPLY_SELF, 'Edit own discussion replies'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION_REPLY, 'Delete discussion replies'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION_REPLY_SELF, 'Delete own discussion replies'),
@@ -192,6 +194,7 @@ PERM.PERM_DEFAULT = PERM.PERM_VIEW
     | PERM.PERM_CREATE_DISCUSSION
     | PERM.PERM_EDIT_DISCUSSION_SELF
     | PERM.PERM_REPLY_DISCUSSION
+    | PERM.PERM_ADD_REACTION
     | PERM.PERM_EDIT_DISCUSSION_REPLY_SELF
     | PERM.PERM_DELETE_DISCUSSION_REPLY_SELF
     | PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION

@@ -206,6 +206,16 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
     }
 
+    @param('type', Types.Range(['did', 'drid']))
+    @param('did', Types.ObjectID)
+    @param('id', Types.Name)
+    @param('reverse', Types.Boolean)
+    async postReaction(domainId: string, type: string, did: ObjectID, id: string, reverse = false) {
+        this.checkPerm(PERM.PERM_ADD_REACTION);
+        await discussion.react(domainId, type === 'did' ? document.TYPE_DISCUSSION : document.TYPE_DISCUSSION_REPLY, did, id, this.user._id, reverse);
+        this.back();
+    }
+
     @param('did', Types.ObjectID)
     @param('content', Types.Content)
     async postReply(domainId: string, did: ObjectID, content: string) {

@@ -124,8 +124,13 @@ export default function (env = {}) {
     },
     optimization: {
       splitChunks: {
-        minChunks: 2,
+        minSize: 80000,
+        maxAsyncRequests: 15,
+        maxInitialRequests: 10,
+        chunks: 'all',
       },
+      moduleIds: env.production ? 'size' : 'named',
+      chunkIds: env.production ? 'size' : 'named',
     },
     plugins: [
       new WebpackBar(),
