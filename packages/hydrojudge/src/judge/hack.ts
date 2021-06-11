@@ -25,7 +25,7 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         // Validator
         (async () => {
