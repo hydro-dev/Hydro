@@ -71,7 +71,7 @@ export default function (env = {}) {
 
   const config = {
     bail: true,
-    mode: env.production ? 'production' : 'development',
+    mode: (env.production || env.measure) ? 'production' : 'development',
     profile: true,
     context: root(),
     entry: {
@@ -127,7 +127,6 @@ export default function (env = {}) {
         minSize: 80000,
         maxAsyncRequests: 15,
         maxInitialRequests: 10,
-        chunks: 'all',
       },
       moduleIds: env.production ? 'size' : 'named',
       chunkIds: env.production ? 'size' : 'named',
@@ -169,12 +168,10 @@ export default function (env = {}) {
           NODE_ENV: env.production ? '"production"' : '"debug"',
         },
       }),
-      ...env.production
+      ...(env.production || env.measure)
         ? [
           new OptimizeCssAssetsPlugin(),
-          new webpack.optimize.ModuleConcatenationPlugin(),
           new webpack.LoaderOptionsPlugin({ minimize: true }),
-          new webpack.HashedModuleIdsPlugin(),
         ]
         : [],
       new webpack.LoaderOptionsPlugin({

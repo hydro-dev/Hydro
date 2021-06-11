@@ -1,5 +1,4 @@
 import { AutoloadPage } from 'vj/misc/Page';
-
 import tpl from 'vj/utils/tpl';
 
 const menuHeadingPage = new AutoloadPage('menuHeadingPage', null, () => {

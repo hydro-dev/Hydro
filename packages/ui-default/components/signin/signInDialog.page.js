@@ -12,13 +12,9 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   // don't show quick login dialog if in mobile
   if ($('[name="nav_login"]').length > 0) {
     // nav
-    $('[name="nav_login"]').click((ev) => {
-      if (isBelow(responsiveCutoff.mobile)) {
-        return;
-      }
-      if (ev.shiftKey || ev.metaKey || ev.ctrlKey) {
-        return;
-      }
+    $('[name="nav_login"]').on('click', (ev) => {
+      if (isBelow(responsiveCutoff.mobile)) return;
+      if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
       signInDialog.show();
       ev.preventDefault();
     });

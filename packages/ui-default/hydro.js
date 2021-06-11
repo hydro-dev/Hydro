@@ -1,6 +1,7 @@
 import './modules';
 import 'jquery.transit';
 import _ from 'lodash';
+import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
 import base64 from 'vj/utils/base64';
@@ -54,18 +55,13 @@ async function load() {
   ];
   // eslint-disable-next-line no-restricted-syntax
   for (const { page, func, type } of loadSequence) {
-    if (typeof func !== 'function') {
-      if (process.env.NODE_ENV !== 'production') {
-        throw new Error(`The '${type}Loading' function of '${page.name}' is not callable`);
-      }
-      continue;
-    }
     if (process.env.NODE_ENV !== 'production') {
       console.time(`${page.name}: ${type}Loading`);
     }
     try {
       await func(currentPageName);
     } catch (e) {
+      Notification.warn(`Failed to call '${type}Loading' of ${page.name}`);
       console.error(`Failed to call '${type}Loading' of ${page.name}\n${e.stack}`);
     }
     if (process.env.NODE_ENV !== 'production') {
@@ -83,9 +79,7 @@ async function load() {
   }
   await delay(500);
   // eslint-disable-next-line no-restricted-syntax
-  for (const { $element } of sections) {
-    $element.trigger('vjLayout');
-  }
+  for (const { $element } of sections) $element.trigger('vjLayout');
   $(document).trigger('vjPageFullyInitialized');
 }
 

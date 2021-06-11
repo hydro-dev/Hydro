@@ -12,9 +12,7 @@ function handleNavLogoutClick(ev) {
 }
 
 const navigationPage = new AutoloadPage('navigationPage', () => {
-  if (!document.getElementById('panel') || !document.getElementById('menu')) {
-    return;
-  }
+  if (!document.getElementById('panel') || !document.getElementById('menu')) return;
 
   $(document).on('click', '[name="nav_logout"]', handleNavLogoutClick);
 

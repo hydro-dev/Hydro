@@ -14,9 +14,7 @@ function getClosestTooltipElement(element) {
 const tooltipPage = new AutoloadPage('tooltipPage', () => {
   $(document).on('mouseover', (e) => {
     const element = getClosestTooltipElement(e.target);
-    if (!element) {
-      return;
-    }
+    if (!element) return;
     const $element = $(element);
     const options = {};
     if ($element.attr('data-tooltip-pos')) {

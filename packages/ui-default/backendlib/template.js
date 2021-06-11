@@ -112,7 +112,7 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
 };
 const env = new Nunjucks();
 env.addGlobal('static_url', (assetName) => {
-  const cdnPrefix = global.Hydro.model.system.get('server.cdn');
+  const cdnPrefix = process.env.DEV ? '/' : global.Hydro.model.system.get('server.cdn');
   if (global.Hydro.ui.manifest[assetName]) {
     return `${cdnPrefix}${global.Hydro.ui.manifest[assetName]}`;
   }

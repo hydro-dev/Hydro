@@ -16,11 +16,8 @@ const dirtyCategories = [];
 const selections = [];
 
 function setDomSelected($dom, selected) {
-  if (selected) {
-    $dom.addClass('selected');
-  } else {
-    $dom.removeClass('selected');
-  }
+  if (selected) $dom.addClass('selected');
+  else $dom.removeClass('selected');
 }
 
 async function updateSelection(sendRequest = true) {
@@ -113,9 +110,7 @@ function buildCategoryFilter() {
     }
   });
   $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) {
-      return;
-    }
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const category = $(ev.currentTarget).text();
     const treeItem = categories[category];
     // the effect should be cancelSelect if it is shown as selected when clicking
@@ -135,9 +130,7 @@ function buildCategoryFilter() {
     ev.preventDefault();
   });
   $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) {
-      return;
-    }
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const subcategory = $(ev.currentTarget).text();
     const category = $(ev.currentTarget).attr('data-category');
     const treeItem = categories[category].children[subcategory];
@@ -151,12 +144,8 @@ function buildCategoryFilter() {
 function parseCategorySelection() {
   UiContext.currentCategory.split(' ').forEach((cline) => {
     const [category, subcategory] = cline.split(',');
-    if (!categories[category]) {
-      return;
-    }
-    if (subcategory && !categories[category].children[subcategory]) {
-      return;
-    }
+    if (!categories[category]) return;
+    if (subcategory && !categories[category].children[subcategory]) return;
     if (!subcategory) {
       categories[category].select = true;
       dirtyCategories.push({ type: 'category', category });

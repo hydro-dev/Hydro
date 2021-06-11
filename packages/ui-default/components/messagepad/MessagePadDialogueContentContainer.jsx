@@ -2,7 +2,7 @@ import React from 'react';
 import _ from 'lodash';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
-import moment from 'moment';
+import moment from 'dayjs';
 import 'jquery-scroll-lock';
 import 'jquery.easing';
 import i18n from 'vj/utils/i18n';

@@ -1,7 +1,7 @@
 import { AutoloadPage } from 'vj/misc/Page';
 
 const katexPage = new AutoloadPage('katexPage', () => {
-  import('katex/dist/contrib/auto-render.min.js').then(({ default: katex }) => {
+  import('katex/contrib/auto-render/auto-render').then(({ default: katex }) => {
     function runKatex($containers) {
       $containers.get().forEach((container) => katex(container));
     }

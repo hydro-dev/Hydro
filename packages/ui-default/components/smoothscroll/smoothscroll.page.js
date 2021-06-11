@@ -1,5 +1,4 @@
 import 'jquery.easing';
-
 import { AutoloadPage } from 'vj/misc/Page';
 
 const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {
@@ -8,13 +7,9 @@ const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {
   const OFFSET_HEIGHT = 10 + ($('.nav').height() || 0);
 
   function scrollIfAnchor(href, pushToHistory) {
-    if (!ANCHOR_REGEX.test(href)) {
-      return false;
-    }
+    if (!ANCHOR_REGEX.test(href)) return false;
     const match = document.getElementById(href.slice(1));
-    if (!match) {
-      return false;
-    }
+    if (!match) return false;
     const rect = match.getBoundingClientRect();
     const anchorOffset = window.pageYOffset + rect.top - OFFSET_HEIGHT;
     $('html,body').animate({ scrollTop: anchorOffset }, 200, 'easeOutCubic');
@@ -29,16 +24,12 @@ const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {
   }
 
   function delegateAnchors(e) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey) {
-      return;
-    }
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
     const elem = e.target;
     if (
       elem.nodeName === 'A'
       && scrollIfAnchor(elem.getAttribute('href'), true)
-    ) {
-      e.preventDefault();
-    }
+    ) e.preventDefault();
   }
 
   $(document).on('vjPageFullyInitialized', () => {

@@ -2,7 +2,6 @@
 /* eslint-disable guard-for-in */
 /* eslint-disable import/no-extraneous-dependencies */
 import _ from 'lodash';
-import moment from 'moment';
 import gulp from 'gulp';
 import log from 'fancy-log';
 import chalk from 'chalk';
@@ -16,7 +15,7 @@ import vjTouch from '../plugins/gulpTouch';
 
 let isInWatchMode = false;
 export const tasks = {};
-const iconTimestamp = moment.utc([2020, 0, 1, 0, 0, 0, 0]).unix();
+const iconTimestamp = 1577836800; // 2020-1-1
 
 function handleWatchChange(name, r = 300) {
   return _.debounce((ev) => {

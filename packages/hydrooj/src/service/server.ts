@@ -445,7 +445,7 @@ export class Handler extends HandlerCommon {
             disposition: null,
         };
         this.UiContext = cloneDeep(UiContextBase);
-        this.UiContext.cdn_prefix = system.get('server.cdn');
+        if (!process.env.DEV) this.UiContext.cdn_prefix = system.get('server.cdn');
         this.session = {};
         const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;

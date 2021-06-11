@@ -1,12 +1,9 @@
 import yaml from 'js-yaml';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
-import * as echarts from 'echarts';
 import { NamedPage } from 'vj/misc/Page';
-import { ActionDialog } from 'vj/components/dialog';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
-import base64 from 'vj/utils/base64';
 
 class ProblemPageExtender {
   constructor() {
@@ -208,6 +205,53 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     } catch (e) { }
   }
 
+  async function initChart() {
+    if (!Object.keys(UiContext.pdoc.stats || {}).length) {
+      $('#submission-status-placeholder').parent().hide();
+      return;
+    }
+    const echarts = await import('echarts');
+    const $status = document.getElementById('submission-status-placeholder');
+    const statusChart = echarts.init($status);
+    statusChart.setOption({
+      tooltip: { trigger: 'item' },
+      series: [
+        {
+          name: 'Submissions',
+          type: 'pie',
+          radius: '70%',
+          label: { show: false },
+          labelLine: { show: false },
+          data: [
+            { value: UiContext.pdoc.stats.TLE, name: 'TLE' },
+            { value: UiContext.pdoc.stats.AC, name: 'AC' },
+            { value: UiContext.pdoc.stats.MLE, name: 'MLE' },
+            { value: UiContext.pdoc.stats.WA, name: 'WA' },
+            { value: UiContext.pdoc.stats.RE, name: 'RE' },
+            { value: UiContext.pdoc.stats.CE, name: 'CE' },
+            { value: UiContext.pdoc.stats.SE, name: 'SE' },
+            { value: UiContext.pdoc.stats.IGN, name: 'IGN' },
+          ],
+        },
+      ],
+    });
+    const $score = document.getElementById('submission-score-placeholder');
+    const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => UiContext.pdoc.stats[`s${i}`]);
+    const scoreChart = echarts.init($score);
+    scoreChart.setOption({
+      tooltip: { trigger: 'item' },
+      xAxis: { data: x },
+      yAxis: {},
+      series: [{
+        data: x.map((i) => ({
+          value: UiContext.pdoc.stats[`s${i}`],
+          itemStyle: { color: getScoreColor(i) },
+        })),
+        type: 'bar',
+      }],
+    });
+  }
+
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
     enterScratchpadMode();
     ev.preventDefault();
@@ -222,50 +266,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   });
   $('[name="problem-sidebar__download').on('click', handleClickDownloadProblem);
   if (UiContext.pdoc.config?.type === 'subjective') loadSubjective();
-
-  if (pagename === 'contest_detail_problem') return;
-  if (!Object.keys(UiContext.pdoc.stats || {}).length) {
-    $('#submission-status-placeholder').parent().hide();
-    return;
-  }
-  const $status = document.getElementById('submission-status-placeholder');
-  const statusChart = echarts.init($status);
-  statusChart.setOption({
-    tooltip: { trigger: 'item' },
-    series: [
-      {
-        name: 'Submissions',
-        type: 'pie',
-        radius: [10, 70],
-        roseType: 'radius',
-        data: [
-          { value: UiContext.pdoc.stats.TLE, name: 'TLE' },
-          { value: UiContext.pdoc.stats.AC, name: 'AC' },
-          { value: UiContext.pdoc.stats.MLE, name: 'MLE' },
-          { value: UiContext.pdoc.stats.WA, name: 'WA' },
-          { value: UiContext.pdoc.stats.RE, name: 'RE' },
-          { value: UiContext.pdoc.stats.CE, name: 'CE' },
-          { value: UiContext.pdoc.stats.SE, name: 'SE' },
-          { value: UiContext.pdoc.stats.IGN, name: 'IGN' },
-        ],
-      },
-    ],
-  });
-  const $score = document.getElementById('submission-score-placeholder');
-  const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => UiContext.pdoc.stats[`s${i}`]);
-  const scoreChart = echarts.init($score);
-  scoreChart.setOption({
-    tooltip: { trigger: 'item' },
-    xAxis: { data: x },
-    yAxis: {},
-    series: [{
-      data: x.map((i) => ({
-        value: UiContext.pdoc.stats[`s${i}`],
-        itemStyle: { color: getScoreColor(i) },
-      })),
-      type: 'bar',
-    }],
-  });
+  if (pagename !== 'contest_detail_problem') initChart();
 });
 
 export default page;
