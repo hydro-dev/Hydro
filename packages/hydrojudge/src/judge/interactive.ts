@@ -92,21 +92,19 @@ export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
     ctx.time_limit_rate = ctx.getLang(ctx.lang).time_limit_rate;
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
-        (async () => {
+        (() => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            const execute = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
-            execute.copyIn = { ...copyIn, ...execute.copyIn };
-            return execute;
+            return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
-        (async () => {
+        (() => {
             const copyIn = { 'testlib.h': { src: testlibSrc } };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compile(
+            return compile(
                 ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1]),
                 fs.readFileSync(ctx.config.interactor).toString(),
                 'interactor',

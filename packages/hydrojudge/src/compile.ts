@@ -6,7 +6,7 @@ import { compilerText } from './utils';
 import { Execute } from './interface';
 
 export = async function compile(
-    lang: LangConfig, code: string, target: string, copyIn: any, next?: Function,
+    lang: LangConfig, code: string, target: string, copyIn: any = {}, next?: Function,
 ): Promise<Execute> {
     target = lang.target || target;
     const f = {};
@@ -23,11 +23,11 @@ export = async function compile(
         if (next) next({ compiler_text: compilerText(stdout, stderr) });
         f[target] = { fileId: fileIds[target] };
         return {
-            execute: lang.execute, copyIn: f, clean: () => del(fileIds[target]), time: lang.time_limit_rate || 1,
+            execute: lang.execute, copyIn: { ...copyIn, ...f }, clean: () => del(fileIds[target]), time: lang.time_limit_rate || 1,
         };
     }
     f[target] = { content: code };
     return {
-        execute: lang.execute, copyIn: f, clean: () => Promise.resolve(null), time: lang.time_limit_rate || 1,
+        execute: lang.execute, copyIn: { ...copyIn, ...f }, clean: () => Promise.resolve(null), time: lang.time_limit_rate || 1,
     };
 };

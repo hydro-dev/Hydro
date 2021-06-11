@@ -20,14 +20,12 @@ export const judge = async (ctx) => {
     if (!ctx.config.validator || !ctx.config.std) throw new CompileError('config.validator or config.std is missing.');
     const [execute, executeValidator, executeStd, executeChecker] = await Promise.all([
         // UserProgram
-        (async () => {
+        (() => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            const exec = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
-            exec.copyIn = { ...copyIn, ...exec.copyIn };
-            return exec;
+            return await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         // Validator
         (async () => {
@@ -45,18 +43,16 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             const file = await fs.readFile(ctx.config.std);
-            const exec = await compile(ctx.getLang(parseFilename(ctx.config.std).split('.')[1]), file.toString(), 'std', copyIn);
-            exec.copyIn = { ...copyIn, ...exec.copyIn };
-            return exec;
+            return await compile(ctx.getLang(parseFilename(ctx.config.std).split('.')[1]), file.toString(), 'std', copyIn);
         })(),
         // Checker
-        (async () => {
+        (() => {
             if (!ctx.config.checker_type || ctx.config.checker_type === 'default') return null;
             const copyIn = {};
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compileChecker(
+            return compileChecker(
                 ctx.getLang,
                 ctx.config.checker_type,
                 ctx.config.checker,

@@ -130,16 +130,14 @@ export const judge = async (ctx) => {
     ctx.time_limit_rate = info.time_limit_rate || 1;
     ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.execute, ctx.checker] = await Promise.all([
-        (async () => {
+        (() => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            const execute = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
-            execute.copyIn = { ...copyIn, ...execute.copyIn };
-            return execute;
+            return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
-        (async () => {
+        (() => {
             if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
                 return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
@@ -147,7 +145,7 @@ export const judge = async (ctx) => {
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return await compileChecker(
+            return compileChecker(
                 ctx.getLang,
                 ctx.config.checker_type,
                 ctx.config.checker,
