@@ -211,7 +211,7 @@ class RecordModel {
         }
         if (!contestInfo) {
             return RecordModel.coll.find({
-                domainId, uid, pdomain, pid, contest: { $exists: false },
+                domainId, uid, pdomain, pid, contest: null,
             });
         }
         return RecordModel.coll.find({

@@ -29,7 +29,7 @@ import {
 } from '../service/server';
 
 export const parseCategory = (value: string) => flatten(value.split('+').map((e) => e.split(','))).map((e) => e.trim());
-export const parsePid = (value: string) => (isSafeInteger(value) ? parseInt(value, 10) : value);
+export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
 
 export class ProblemHandler extends Handler {
     async cleanup() {
