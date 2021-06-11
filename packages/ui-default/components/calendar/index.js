@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import moment from 'dayjs';
+import moment from 'moment';
 import tpl from 'vj/utils/tpl';
 
 export default class Calendar {
@@ -165,7 +165,6 @@ export default class Calendar {
   }
 
   buildBodyData() {
-    const now = moment();
     const days = [];
     {
       // back fill
@@ -206,6 +205,7 @@ export default class Calendar {
       }
     }
 
+    const now = moment();
     days.forEach((day) => {
       day.current = day.date.isSame(now, 'day'); // eslint-disable-line no-param-reassign
     });
