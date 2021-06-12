@@ -95,9 +95,9 @@ export async function runMultiple(execute) {
         body.cmd[1].files[0] = null;
         body.cmd[1].files[1] = null;
         const id = callId++;
-        if (argv.options['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(body));
+        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
         res = await Axios.create({ baseURL: getConfig('sandbox_host') }).post('/run', body);
-        if (argv.options['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
+        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res.data));
     } catch (e) {
         if (e instanceof FormatError) throw e;
         throw new SystemError('Sandbox Error');
@@ -123,9 +123,9 @@ export async function run(execute, params?) {
         }
         const body = { cmd: [proc({ execute, ...params })] };
         const id = callId++;
-        if (argv.options['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(body));
+        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
         const res = await Axios.create({ baseURL: getConfig('sandbox_host') }).post('/run', body);
-        if (argv.options['show-sandbox-call']) logger.debug('%d %s', id, JSON.stringify(res.data));
+        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res.data));
         [result] = res.data;
     } catch (e) {
         if (e instanceof FormatError) throw e;
