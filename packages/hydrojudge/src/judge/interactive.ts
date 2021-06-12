@@ -26,12 +26,14 @@ function judgeCase(c) {
                 time: ctxSubtask.subtask.time,
                 memory: ctxSubtask.subtask.memory,
             }, {
-                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout`,
+                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/tout`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time: ctxSubtask.subtask.time * 2,
                 memory: ctxSubtask.subtask.memory * 2,
+                copyOut: ['/w/tout?'],
             },
         ]);
+        // TODO handle tout (maybe pass to checker?)
         let status;
         let score = 0;
         let message: any = '';
