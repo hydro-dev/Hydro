@@ -4,7 +4,7 @@ const { join } = require('path');
 const crypto = require('crypto');
 const { tmpdir } = require('os');
 const bus = require('hydrooj/dist/service/bus');
-const markdown = require('./backendlib/markdown.js');
+const markdown = require('./backendlib/markdown');
 
 const {
   system, domain, user, setting,
@@ -18,7 +18,7 @@ class WikiHelpHandler extends Handler {
   }
 
   async get() {
-    const LANGS = system.get('hydrooj.langs');
+    const LANGS = setting.langs;
     const languages = {};
     // eslint-disable-next-line guard-for-in
     for (const key in LANGS) {

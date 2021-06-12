@@ -78,20 +78,20 @@ export async function downloadProblemSet(pids, name = 'Export') {
         tag: pdoc.tag,
         nSubmit: pdoc.nSubmit,
         nAccept: pdoc.nAccept,
-        data: pdoc.data.map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
-        additional_file: pdoc.additional_file.map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
+        data: (pdoc.data || []).map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
+        additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
         difficulty: pdoc.difficulty,
       }),
     });
     let { links } = await request.post(
       `/d/${UiContext.domainId}/p/${pid}/files`,
-      { operation: 'get_links', files: pdoc.data.map((i) => i.name), type: 'testdata' }
+      { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' }
     );
     for (const filename of Object.keys(links)) {
       targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
     }
     ({ links } = await request.post(`/d/${UiContext.domainId}/p/${pid}/files`, {
-      operation: 'get_links', files: pdoc.additional_file.map((i) => i.name), type: 'additional_file',
+      operation: 'get_links', files: (pdoc.additional_file || []).map((i) => i.name), type: 'additional_file',
     }));
     for (const filename of Object.keys(links)) {
       targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
