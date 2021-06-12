@@ -189,7 +189,7 @@ const checkers: Record<string, Checker> = {
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
-                message: '',
+                message: stderr,
             };
         }
         return parse(stderr, config.score);

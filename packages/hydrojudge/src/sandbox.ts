@@ -68,8 +68,8 @@ async function adaptResult(result, params) {
     ret.fileIds = result.fileIds || {};
     if (params.stdout) await fs.writeFile(params.stdout, ret.files.stdout || '');
     else ret.stdout = ret.files.stdout || '';
-    if (params.stderr) await fs.writeFile(params.stderr, ret.files.stderr || '');
-    else ret.stderr = ret.files.stderr || '';
+    if (params.stderr) await fs.writeFile(params.stderr, ret.files.stderr || result.error || '');
+    else ret.stderr = ret.files.stderr || result.error || '';
     if (result.error) ret.error = result.error;
     return ret;
 }
