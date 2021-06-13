@@ -111,16 +111,18 @@ export async function pdoc(report) {
         const $set = {
             nSubmit: adoc.nSubmit,
             nAccept: adoc.nAccept,
-            'stats.AC': adoc.AC,
-            'stats.WA': adoc.WA,
-            'stats.TLE': adoc.TLE,
-            'stats.MLE': adoc.MLE,
-            'stats.RE': adoc.RE,
-            'stats.SE': adoc.SE,
-            'stats.IGN': adoc.IGN,
-            'stats.CE': adoc.CE,
+            stats: {
+                AC: adoc.AC,
+                WA: adoc.WA,
+                TLE: adoc.TLE,
+                MLE: adoc.MLE,
+                RE: adoc.RE,
+                SE: adoc.SE,
+                IGN: adoc.IGN,
+                CE: adoc.CE,
+            },
         };
-        for (let i = 0; i <= 100; i++) if (adoc[`s${i}`]) $set[`stats.s${i}`] = adoc[`s${i}`];
+        for (let i = 0; i <= 100; i++) if (adoc[`s${i}`]) $set.stats[`s${i}`] = adoc[`s${i}`];
         bulk.find({
             domainId: adoc._id.domainId,
             docType: document.TYPE_PROBLEM,
