@@ -32,9 +32,10 @@ const messagePage = new AutoloadPage('messagePage', () => {
       if (msg.mdoc.flag & FLAG_ALERT) {
         // Is alert
         new InfoDialog({
+          cancelByClickingBack: false,
           $body: tpl`
             <div class="typo">
-              <p>${i18n('Message from {0}:', msg.mdoc.from)}</p>
+              ${{ templateRaw: true, html: i18n('Message from {0}:', `<div data-user>${msg.mdoc.from}</div>`) }}
               <p>${i18n(msg.mdoc.content)}</p>
             </div>`,
         }).open();

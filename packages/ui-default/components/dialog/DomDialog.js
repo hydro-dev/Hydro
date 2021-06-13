@@ -13,7 +13,7 @@ export default class DomDialog extends DOMAttachedObject {
     this.options = {
       cancelByClickingBack: false,
       cancelByEsc: false,
-      onDispatch: () => {},
+      onDispatch: () => { },
       ...options,
     };
     this._defer = null;
@@ -37,17 +37,17 @@ export default class DomDialog extends DOMAttachedObject {
       opacity: 0,
     });
     $wrap.width();
-    $wrap.transition({
-      opacity: 1,
-    }, {
-      duration: 100,
-      easing: 'easeOutCubic',
-    });
+    $wrap.transition(
+      { opacity: 1 },
+      {
+        duration: 100,
+        easing: 'easeOutCubic',
+      }
+    );
 
     const $dgContent = this.$dom.find('.dialog__content');
-    $dgContent.css({
-      scale: 0.8,
-    });
+    $dgContent.css({ scale: 0.8 });
+    $dgContent.trigger('vjContentNew');
     await $dgContent
       .transition({
         scale: 1,

@@ -87,7 +87,9 @@ export class ProblemMainHandler extends ProblemHandler {
                 sort = result;
             } else query.$text = { $search: q };
         }
-        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) query.hidden = false;
+        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
+            query.$or = [{ hidden: false }, { owner: this.user._id }, { maintainer: this.user._id }];
+        }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = await paginate(
