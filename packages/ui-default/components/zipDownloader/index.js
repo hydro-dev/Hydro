@@ -78,8 +78,8 @@ export async function downloadProblemSet(pids, name = 'Export') {
         tag: pdoc.tag,
         nSubmit: pdoc.nSubmit,
         nAccept: pdoc.nAccept,
-        data: (pdoc.data || []).map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
-        additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name', 'lastModified', 'etag', 'size', '_id'])),
+        data: (pdoc.data || []).map((i) => pick(i, ['name'])),
+        additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name'])),
         difficulty: pdoc.difficulty,
       }),
     });
