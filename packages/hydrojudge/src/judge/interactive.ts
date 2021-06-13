@@ -26,7 +26,7 @@ function judgeCase(c) {
                 time: ctxSubtask.subtask.time,
                 memory: ctxSubtask.subtask.memory,
             }, {
-                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/tout`,
+                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time: ctxSubtask.subtask.time * 2,
                 memory: ctxSubtask.subtask.memory * 2,

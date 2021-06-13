@@ -76,6 +76,7 @@ async function adaptResult(result, params) {
 
 export async function runMultiple(execute) {
     let res;
+    const size = parseMemoryMB(getConfig('stdio_size'));
     try {
         const body = {
             cmd: [
@@ -85,9 +86,15 @@ export async function runMultiple(execute) {
             pipeMapping: [{
                 in: { index: 0, fd: 1 },
                 out: { index: 1, fd: 0 },
+                proxy: true,
+                name: 'stdout',
+                max: 1024 * 1024 * size,
             }, {
                 in: { index: 1, fd: 1 },
                 out: { index: 0, fd: 0 },
+                proxy: true,
+                name: 'stdout',
+                max: 1024 * 1024 * size,
             }],
         };
         body.cmd[0].files[0] = null;
@@ -105,7 +112,7 @@ export async function runMultiple(execute) {
     return await Promise.all(res.data.map((i) => adaptResult(i, {})));
 }
 
-export async function del(fileId) {
+export async function del(fileId: string) {
     const res = await Axios.create({ baseURL: getConfig('sandbox_host') }).delete(`/file/${fileId}`);
     return res.data;
 }
