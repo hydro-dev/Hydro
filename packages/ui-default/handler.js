@@ -22,7 +22,7 @@ class WikiHelpHandler extends Handler {
     const languages = {};
     // eslint-disable-next-line guard-for-in
     for (const key in LANGS) {
-      languages[LANGS[key].display] = LANGS[key].compile || LANGS[key].execute;
+      languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;
     }
     this.response.body = { languages };
     this.response.template = 'wiki_help.html';

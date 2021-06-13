@@ -41,6 +41,7 @@ monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
             description: 'Subtask Info',
             type: 'object',
             properties: {
+              type: { enum: ['min', 'max', 'sum'] },
               time: { $ref: '#/def/time' },
               memory: { $ref: '#/def/memory' },
               score: { $ref: '#/def/score', description: 'score' },
