@@ -30,7 +30,7 @@ function mfrParser(url) {
   const match = url.match(mfrRegex);
   return match ? match[1] : url;
 }
-const EMBED_REGEX = /@\[([a-zA-Z].+)]\((.*?)[)]/im;
+const EMBED_REGEX = /@\[([a-zA-Z].+?)]\((.*?)[)]/im;
 function extractVideoParameters(url) {
   const parameterMap = new Map();
   const params = url.replace(/&amp;/gi, '&').split(/[#?&]/);
