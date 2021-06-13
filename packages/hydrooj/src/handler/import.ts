@@ -13,7 +13,7 @@ import { Logger } from '../logger';
 import type { ContentNode } from '../interface';
 import problem, { ProblemDoc } from '../model/problem';
 import TaskModel from '../model/task';
-import { PERM } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import {
     Route, Handler, Types, post,
 } from '../service/server';
@@ -279,7 +279,8 @@ class ProblemImportHydroHandler extends Handler {
         this.response.template = 'problem_import.html';
     }
 
-    async post({ domainId }) {
+    async post({ domainId, keepUser }) {
+        if (keepUser) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         if (!this.request.files.file) throw new ValidationError('file');
         const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
         const zip = new AdmZip(this.request.files.file.path);
@@ -298,7 +299,10 @@ class ProblemImportHydroHandler extends Handler {
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 const current = await problem.get(domainId, pdoc.pid);
                 const pid = current ? undefined : pdoc.pid;
-                const docId = await problem.add(domainId, pid, pdoc.title, pdoc.content, pdoc.owner, pdoc.tag, pdoc.hidden);
+                const docId = await problem.add(
+                    domainId, pid, pdoc.title, pdoc.content,
+                    keepUser ? pdoc.owner : this.user._id, pdoc.tag, pdoc.hidden,
+                );
                 if (files.includes('testdata')) {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
                     for (const f of datas) {

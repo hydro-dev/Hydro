@@ -6,8 +6,9 @@
       <div class="section__body">
         <form method="post" enctype="multipart/form-data">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-          <p>{{ _('Upload zipfile') }} ({{ _('Type') }}: {{type}}):
+          <p>{{ _('Upload zipfile') }} {% if type %}({{ _('Type') }}: {{type}}){% endif %}:
             <input type="file" name="file">
+            {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) not type %}<input type="checkbox" name="keepUser">{% endif %}
             <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
           </p>
         </form>
