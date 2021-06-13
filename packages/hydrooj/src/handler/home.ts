@@ -87,7 +87,7 @@ class HomeHandler extends Handler {
 
     async getRanking(domainId: string, limit: number = 50) {
         if (this.user.hasPerm(PERM.PERM_VIEW_RANKING)) {
-            const dudocs = await domain.getMultiUserInDomain(domainId)
+            const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $nin: [0, 1] } })
                 .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
             const uids = dudocs.map((dudoc) => dudoc.uid);
             this.collectUser(uids);

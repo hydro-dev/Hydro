@@ -95,6 +95,7 @@ export async function calcLevel(domainId: string, report: Function) {
     let bulk = coll.initializeUnorderedBulkOp();
     while (await ducur.hasNext()) {
         const dudoc = await ducur.next();
+        if ([0, 1].includes(dudoc.uid)) continue;
         count++;
         if (!dudoc.rp) dudoc.rp = null;
         if (dudoc.rp !== last.rp) rank = count;

@@ -24,7 +24,7 @@ class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
-            domain.getMultiUserInDomain(domainId).sort({ rp: -1 }),
+            domain.getMultiUserInDomain(domainId, { uid: { $nin: [0, 1] } }).sort({ rp: -1 }),
             page,
             100,
         );
