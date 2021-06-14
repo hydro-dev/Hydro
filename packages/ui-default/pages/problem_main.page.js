@@ -196,7 +196,7 @@ async function handleDownload(ev) {
   // eslint-disable-next-line no-alert
   if (ev.shiftKey) name = prompt('Filename:', name);
   const pids = ensureAndGetSelectedPids();
-  await downloadProblemSet(pids, name);
+  if (pids) await downloadProblemSet(pids, name);
 }
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {

@@ -66,40 +66,42 @@ export default async function download(name, targets) {
 export async function downloadProblemSet(pids, name = 'Export') {
   Notification.info('Downloading...');
   const targets = [];
-  for (const pid of pids) {
-    const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
-    targets.push({
-      filename: `${pid}/problem.yaml`,
-      content: dump({
-        pid: pdoc.pid,
-        content: pdoc.content,
-        owner: pdoc.owner,
-        title: pdoc.title,
-        tag: pdoc.tag,
-        nSubmit: pdoc.nSubmit,
-        nAccept: pdoc.nAccept,
-        data: (pdoc.data || []).map((i) => pick(i, ['name'])),
-        additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name'])),
-        difficulty: pdoc.difficulty,
-      }),
-    });
-    let { links } = await request.post(
-      `/d/${UiContext.domainId}/p/${pid}/files`,
-      { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' }
-    ).catch((e) => {
-      Notification.warn(`${e.error.message} ${e.error.params[0]}`);
-    });
-    for (const filename of Object.keys(links)) {
-      targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
+  try {
+    for (const pid of pids) {
+      const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
+      targets.push({
+        filename: `${pid}/problem.yaml`,
+        content: dump({
+          pid: pdoc.pid,
+          content: pdoc.content,
+          owner: pdoc.owner,
+          title: pdoc.title,
+          tag: pdoc.tag,
+          nSubmit: pdoc.nSubmit,
+          nAccept: pdoc.nAccept,
+          data: (pdoc.data || []).map((i) => pick(i, ['name'])),
+          additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name'])),
+          difficulty: pdoc.difficulty,
+        }),
+      });
+      let { links } = await request.post(
+        `/d/${UiContext.domainId}/p/${pid}/files`,
+        { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' }
+      );
+      for (const filename of Object.keys(links)) {
+        targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
+      }
+      ({ links } = await request.post(`/d/${UiContext.domainId}/p/${pid}/files`, {
+        operation: 'get_links', files: (pdoc.additional_file || []).map((i) => i.name), type: 'additional_file',
+      }));
+      for (const filename of Object.keys(links)) {
+        targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
+      }
     }
-    ({ links } = await request.post(`/d/${UiContext.domainId}/p/${pid}/files`, {
-      operation: 'get_links', files: (pdoc.additional_file || []).map((i) => i.name), type: 'additional_file',
-    }));
-    for (const filename of Object.keys(links)) {
-      targets.push({ filename: `${pid}/additional_file/${filename}`, url: links[filename] });
-    }
+    await download(`${name}.zip`, targets);
+  } catch (e) {
+    Notification.warn(`${e.error.message} ${e.error.params[0]}`);
   }
-  await download(`${name}.zip`, targets);
 }
 
 window.Hydro.components.downloadProblemSet = downloadProblemSet;
