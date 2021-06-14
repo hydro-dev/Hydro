@@ -17,7 +17,8 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
             ? source.map((node) => [
                 node.type !== 'Plain' ? `<h2>${node.sectionTitle}</h2>` : '',
                 node.type === 'Sample'
-                    ? `<h2>${_('Sample Input')}<h2><pre>${node.payload[0]}</pre><h2>${_('Sample Output')}</h2><pre>${node.payload[1]}</pre>`
+                    ? `<pre><code class="language-input${++cnt}">${node.payload[0]}</code></pre>`
+                    + `<pre><code class="language-output${cnt}">${node.payload[1]}</code></pre>`
                     : '',
                 node.text,
             ].join('\n')).join('\n')

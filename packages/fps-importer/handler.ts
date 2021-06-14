@@ -11,7 +11,7 @@ import solution from 'hydrooj/dist/model/solution';
 import problem from 'hydrooj/dist/model/problem';
 import { PERM } from 'hydrooj/dist/model/builtin';
 import { FileTooLargeError, ValidationError } from 'hydrooj/dist/error';
-import type { ProblemConfigFile } from 'hydrooj';
+import type { ContentNode, ProblemConfigFile } from 'hydrooj';
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -20,22 +20,53 @@ class FpsProblemImportHandler extends Handler {
 
     async run(domainId: string, result: any) {
         for (const p of result.fps.item) {
-            const content = buildContent({
-                description: p.description,
-                input: p.input,
-                output: p.output,
-                samples: p.sample_input
-                    ? p.sample_input.map((si: string, i: number) => [si, p.sample_output[i]])
-                    : [],
-                hint: p.hint,
-            }, 'html', this.translate.bind(this));
+            const content: ContentNode[] = [];
+            if (p.description?.[0]) {
+                content.push({
+                    type: 'Text',
+                    subType: 'html',
+                    sectionTitle: this.translate('Description'),
+                    text: p.description[0],
+                });
+            }
+            if (p.input?.[0]) {
+                content.push({
+                    type: 'Text',
+                    subType: 'html',
+                    sectionTitle: this.translate('Input Format'),
+                    text: p.input[0],
+                });
+            }
+            if (p.output?.[0]) {
+                content.push({
+                    type: 'Text',
+                    subType: 'html',
+                    sectionTitle: this.translate('Output Format'),
+                    text: p.output[0],
+                });
+            }
+            if (p.sample_input?.length) {
+                content.push(...p.sample_input.map((input, i) => ({
+                    type: 'Sample',
+                    sectionTitle: this.translate('Sample'),
+                    payload: [input, p.sample_output[i]],
+                })));
+            }
+            if (p.hint?.[0]) {
+                content.push({
+                    type: 'Text',
+                    subType: 'html',
+                    sectionTitle: this.translate('Hint'),
+                    text: p.hint[0],
+                });
+            }
             const config: ProblemConfigFile = {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
             const title = decodeHTML(p.title.join(' '));
             const tags = filter(p.source, (i: string) => i.trim());
-            const pid = await problem.add(domainId, null, title, content, this.user._id, tags);
+            const pid = await problem.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
             await problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
@@ -75,6 +106,7 @@ class FpsProblemImportHandler extends Handler {
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {
+            console.log(e);
             const zip = new AdmZip(this.request.files.file.path);
             for (const entry of zip.getEntries()) {
                 try {
