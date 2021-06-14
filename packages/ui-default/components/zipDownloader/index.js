@@ -86,7 +86,9 @@ export async function downloadProblemSet(pids, name = 'Export') {
     let { links } = await request.post(
       `/d/${UiContext.domainId}/p/${pid}/files`,
       { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' }
-    );
+    ).catch((e) => {
+      Notification.warn(`${e.error.message} ${e.error.params[0]}`);
+    });
     for (const filename of Object.keys(links)) {
       targets.push({ filename: `${pid}/testdata/${filename}`, url: links[filename] });
     }
