@@ -7,7 +7,7 @@
     "preferUnplugged": true,
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "SEE LICENSE IN LICENSE",
+    "license": "AGPL-3.0-or-later",
     "dependencies": {
         "sonic-channel": "^1.2.6"
     }

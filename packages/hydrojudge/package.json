@@ -18,7 +18,7 @@
         "ws": "^7.4.6"
     },
     "preferUnplugged": true,
-    "license": "SEE LICENSE IN LICENSE",
+    "license": "AGPL-3.0-or-later",
     "devDependencies": {
         "@types/fs-extra": "^9.0.11",
         "@types/js-yaml": "^4.0.1",

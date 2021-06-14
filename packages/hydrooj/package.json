@@ -6,7 +6,7 @@
     "typings": "dist/loader.d.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "SEE LICENSE IN LICENSE",
+    "license": "AGPL-3.0-or-later",
     "engines": {
         "node": ">=14"
     },

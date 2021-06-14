@@ -5,7 +5,7 @@
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "license": "AGPL-3.0-only",
+    "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "dependencies": {
         "fs-extra": "^10.0.0",

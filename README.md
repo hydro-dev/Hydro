@@ -29,13 +29,9 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 ## 开源许可
 
-本项目基于 Hydro Public License 开源。（基于 LGPL v3 扩展，增加商用限制）  
-允许非营利性组织不受限制直接使用 Hydro。  
-营利性组织（培训机构等）需要购买商业许可（这不会十分昂贵，请您不要绕开本限制）。  
-详细信息请通过上方方式与开发者联系。  
+本项目基于 AGPL-3.0-or-later 开源。  
 在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
-若您对源码做出修改/扩展，同样需要以 Hydro Public License 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
-若您需要进行闭源处理，请考虑联系我们以购买商业许可。  
+若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
 鉴于 Mirai 处的 [不和谐事件](https://github.com/mamoe/mirai/issues/850) 对此项目做如下声明：
 
 - 项目开源不代表开发者有义务为您提供服务。  

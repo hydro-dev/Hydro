@@ -5,5 +5,5 @@
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "preferUnplugged": true,
-    "license": "SEE LICENSE IN LICENSE"
+    "license": "AGPL-3.0-or-later"
 }
