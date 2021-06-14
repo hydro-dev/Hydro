@@ -99,3 +99,6 @@ export async function downloadProblemSet(pids, name = 'Export') {
   }
   await download(`${name}.zip`, targets);
 }
+
+window.Hydro.components.downloadProblemSet = downloadProblemSet;
+window.Hydro.components.download = download;
