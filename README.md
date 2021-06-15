@@ -35,6 +35,7 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 鉴于 Mirai 处的 [不和谐事件](https://github.com/mamoe/mirai/issues/850) 对此项目做如下声明：
 
 - 项目开源不代表开发者有义务为您提供服务。  
+- 您的发言不应该具有攻击性或是不友善倾向。  
 - 在提问前请先阅读《提问的智慧》。  
 - 若有必要，开发者有权对您停止任何技术支持。  
 - 开发组会 **尽可能** 保证用户可以进行平滑升级，但无法保证不在新版本引入影响使用的漏洞，且内部实现可能会在不发布任何通知的情况下进行重命名/修改/删除。  
