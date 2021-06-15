@@ -3,8 +3,8 @@
 /// <reference types="./jssh" />
 
 log.info('开始运行 HydroOJ 安装工具 / Starting HydroOJ installation tool');
-let MINIO_ACCESS_KEY = randomstring(32);
-let MINIO_SECRET_KEY = randomstring(32);
+const MINIO_ACCESS_KEY = randomstring(32);
+const MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 
 let retry = 0;
@@ -154,7 +154,6 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         operations: [
             [`curl -fSL ${_MINIO_[retry % _MINIO_.length]} -o /usr/bin/minio`, { retry: true }],
             'chmod +x /usr/bin/minio',
-            `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
         ],
     },
     {
@@ -188,10 +187,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     {
         init: '正在启动 / Starting',
         operations: [
-            () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env')
-                    .split('\n').filter((i) => i.trim()).map((i) => i.split('=')[1].trim());
-            },
+            `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
             'pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb',
             () => sleep(1000),
@@ -205,8 +201,6 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         init: '安装完成 / Install done',
         operations: [
             () => {
-                [MINIO_ACCESS_KEY, MINIO_SECRET_KEY] = fs.readfile('/root/.hydro/env')
-                    .split('\n').filter((i) => i.trim()).map((i) => i.split('=')[1].trim());
                 DATABASE_PASSWORD = loadconfig('/root/.hydro/config.json').password;
             },
             () => log.info('请重启终端并切换到 root 用户执行其他操作'),
