@@ -70,14 +70,18 @@ class FpsProblemImportHandler extends Handler {
             await problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
-                    await problem.addTestdata(
-                        domainId, pid, `${i + 1}.in`,
-                        Buffer.from(p.test_input[i]._ || p.test_input[i]),
-                    );
-                    await problem.addTestdata(
-                        domainId, pid, `${i + 1}.out`,
-                        Buffer.from(p.test_output[i]._ || p.test_output[i]),
-                    );
+                    const input = typeof p.test_input[i]?._ === 'string'
+                        ? p.test_input[i]?._
+                        : typeof p.test_input[i] === 'string'
+                            ? p.test_input[i]
+                            : '';
+                    const output = typeof p.test_output[i]?._ === 'string'
+                        ? p.test_output[i]?._
+                        : typeof p.test_output[i] === 'string'
+                            ? p.test_output[i]
+                            : '';
+                    await problem.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(input));
+                    await problem.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(output));
                 }
             } else if (p.test_input) {
                 for (let i = 0; i < p.test_input.length / 2; i++) {
