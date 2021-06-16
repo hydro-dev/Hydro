@@ -44,6 +44,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     $('#codelang-main-select').val(m);
     onChangeMain.call({ value: $('#codelang-main-select').val() });
     $('#codelang-sub-select').val(current);
+    $('[name="lang"]').val(current);
   } else $('#codelang-main-select').val(current);
 });
 

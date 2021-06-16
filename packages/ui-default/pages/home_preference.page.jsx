@@ -124,6 +124,7 @@ const page = new NamedPage('home_preference', async () => {
       $('#codelang-main-select').val(m);
       onChangeMain.call({ value: $('#codelang-main-select').val() });
       $('#codelang-sub-select').val(current);
+      $('[name="codeLang"]').val(current);
     } else $('#codelang-main-select').val(current);
 
     if (success) {
