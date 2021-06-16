@@ -619,10 +619,10 @@ export class Handler extends HandlerCommon {
 
     async onerror(error: HydroError) {
         if (!error.msg) error.msg = () => error.message;
-        if (error instanceof UserFacingError) error.stack = '';
+        if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
         if (!(error instanceof NotFoundError)) {
-            logger.error(this.request.path, error.msg(), error.params);
-            logger.error(error.stack);
+            logger.error(`User: ${this.user._id}(${this.user.uname}) Path: ${this.request.path}`, error.msg(), error.params);
+            if (error.stack) logger.error(error.stack);
         }
         this.response.status = error instanceof UserFacingError ? error.code : 500;
         this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
@@ -757,7 +757,10 @@ export class ConnectionHandler extends HandlerCommon {
 
     onerror(err: HydroError) {
         if (err instanceof UserFacingError) err.stack = this.conn.pathname;
-        if (!(err instanceof NotFoundError)) logger.error(err);
+        if (!(err instanceof NotFoundError)) {
+            logger.error(`Path:${this.conn.pathname}, User:${this.user._id}(${this.user.uname})`);
+            logger.error(err);
+        }
         this.send({
             error: {
                 name: err.name,
