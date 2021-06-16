@@ -34,6 +34,7 @@ function proc({
         copyOut = (copyOut as string[]).map((i) => (i.endsWith('?') ? i.substr(0, i.length - 1) : i));
     }
     const size = parseMemoryMB(getConfig('stdio_size'));
+    const rate = getConfig('rate');
     return {
         args: cmd(execute.replace(/\$\{dir\}/g, '/w')),
         env: getConfig('env').split('\n'),
@@ -42,8 +43,8 @@ function proc({
             { name: 'stdout', max: 1024 * 1024 * size },
             { name: 'stderr', max: 1024 * 1024 * size },
         ],
-        cpuLimit: time * 1000 * 1000,
-        realCpuLimit: time * 3000 * 1000,
+        cpuLimit: time * 1000 * 1000 * rate,
+        realCpuLimit: time * 3000 * 1000 * rate,
         memoryLimit: memory * 1024 * 1024,
         procLimit: process_limit,
         copyIn,
@@ -53,10 +54,11 @@ function proc({
 }
 
 async function adaptResult(result, params) {
+    const rate = getConfig('rate');
     // FIXME: Signalled?
     const ret: any = {
         status: statusMap[result.status] || STATUS.STATUS_ACCEPTED,
-        time_usage_ms: result.time / 1000000,
+        time_usage_ms: result.time / 1000000 / rate,
         memory_usage_kb: result.memory / 1024,
         files: result.files,
         code: result.exitStatus,

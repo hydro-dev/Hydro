@@ -56,7 +56,6 @@ export async function load(call: Entry) {
     if (process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY) {
         await modelSystem.set('file.accessKey', process.env.MINIO_ACCESS_KEY);
         await modelSystem.set('file.secretKey', process.env.MINIO_SECRET_KEY);
-        await modelSystem.set('file.endPoint', 'http://localhost:9000/');
     }
     const storage = require('../service/storage');
     await storage.start();

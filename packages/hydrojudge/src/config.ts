@@ -19,6 +19,7 @@ let config = {
     testcases_max: 100,
     total_time_limit: 60,
     parallelism: 2,
+    rate: 1,
     config: null,
     langs: null,
     env: `\
