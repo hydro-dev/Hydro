@@ -35,12 +35,14 @@ if (!cluster.isMaster) {
         return child.spawn('mongo', [url], { stdio: 'inherit' });
     }
 
-    try {
-        const ui = argv.options.ui || '@hydrooj/ui-default';
-        require.resolve(ui);
-        addons.push(ui);
-    } catch (e) {
-        console.error('Please also install @hydrooj/ui-default');
+    if (!addons.includes('@hydrooj/ui-default')) {
+        try {
+            const ui = argv.options.ui || '@hydrooj/ui-default';
+            require.resolve(ui);
+            addons.push(ui);
+        } catch (e) {
+            console.error('Please also install @hydrooj/ui-default');
+        }
     }
 
     if (argv.args[0] && argv.args[0] !== 'cli') {
@@ -55,8 +57,15 @@ if (!cluster.isMaster) {
                 fs.mkdirSync('/root/addon/locales');
                 fs.mkdirSync('/root/addon/public');
                 addons.push('/root/addon');
-            } else if (arg1 === 'add') addons.push(arg2);
-            else if (arg1 === 'remove') {
+            } else if (arg1 === 'add') {
+                for (let i = 0; i < addons.length; i++) {
+                    if (addons[i] === arg2) {
+                        addons.splice(i, 1);
+                        break;
+                    }
+                }
+                addons.push(arg2);
+            } else if (arg1 === 'remove') {
                 for (let i = 0; i < addons.length; i++) {
                     if (addons[i] === arg2) {
                         addons.splice(i, 1);

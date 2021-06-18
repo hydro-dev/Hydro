@@ -85,6 +85,7 @@ export const PERM = {
     PERM_VIEW_TRAINING: 1n << 46n,
     PERM_CREATE_TRAINING: 1n << 47n,
     PERM_EDIT_TRAINING: 1n << 48n,
+    PERM_PIN_TRAINING: 1n << 63n,
     PERM_EDIT_TRAINING_SELF: 1n << 49n,
 
     // Ranking

@@ -12,6 +12,14 @@
                 <input name="title" placeholder="{{ _('title') }}" value="{{ tdoc.title|default('') }}" class="textbox" autofocus>
               </label>
             </div>
+            <div class="medium-2 columns">
+              <label>
+                <br>
+                <label class="checkbox">
+                  <input type="checkbox" name="pin" value="on"{% if tdoc['hidden'] %} checked{% endif %}>{{ _('Pin') }}
+                </label>
+              </label>
+            </div>
           </div>
           <div class="row"><div class="columns">
             <label>

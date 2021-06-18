@@ -326,8 +326,9 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWO
 }
 
 export interface TrainingDoc extends Tdoc {
-    description: string,
-    dag: TrainingNode[],
+    description: string;
+    pin?: boolean;
+    dag: TrainingNode[];
 }
 
 export interface DomainDoc extends Record<string, any> {

@@ -84,13 +84,15 @@ export async function updateJudge(args) {
 
 if (cluster.isMaster) {
     bus.on('app/started', async () => {
-        sysinfo.get().then((info) => coll.updateOne(
-            { mid: info.mid, type: 'server' },
-            { $set: { ...info, updateAt: new Date(), type: 'server' } },
-            { upsert: true },
-        ));
-        feedback();
-        setInterval(update, 60 * 1000);
+        sysinfo.get().then((info) => {
+            coll.updateOne(
+                { mid: info.mid, type: 'server' },
+                { $set: { ...info, updateAt: new Date(), type: 'server' } },
+                { upsert: true },
+            );
+            feedback();
+            setInterval(update, 60 * 1000);
+        });
     });
 }
 

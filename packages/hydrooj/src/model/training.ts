@@ -114,7 +114,7 @@ export async function getList(domainId: string, tids: ObjectID[]) {
 }
 
 export const getMulti = (domainId: string, query: FilterQuery<TrainingDoc> = {}) =>
-    document.getMulti(domainId, document.TYPE_TRAINING, query).sort('_id', 1);
+    document.getMulti(domainId, document.TYPE_TRAINING, query).sort({ pin: -1, _id: -1 });
 
 global.Hydro.model.training = {
     getPids,

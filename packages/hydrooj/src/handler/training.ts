@@ -181,11 +181,13 @@ class TrainingCreateHandler extends Handler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.String, isContent)
+    @param('pin', Types.Boolean)
     @param('description', Types.String, isDescription)
     async post(
         domainId: string, title: string, content: string,
-        _dag: string, description: string,
+        _dag: string, pin = false, description: string,
     ) {
+        if (pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
@@ -194,13 +196,14 @@ class TrainingCreateHandler extends Handler {
             if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         const tid = await training.add(domainId, title, content, this.user._id, dag, description);
+        if (pin) await training.edit(domainId, tid, { pin });
         this.response.body = { tid };
         this.response.redirect = this.url('training_detail', { tid });
     }
 }
 
 class TrainingEditHandler extends Handler {
-    tdoc: Tdoc;
+    tdoc: TrainingDoc;
 
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
@@ -227,12 +230,14 @@ class TrainingEditHandler extends Handler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.Content)
+    @param('pin', Types.Boolean)
     @param('description', Types.String, isDescription)
     async post(
         domainId: string, tid: ObjectID,
         title: string, content: string,
-        _dag: string, description: string,
+        _dag: string, pin = false, description: string,
     ) {
+        if (this.tdoc.pin !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
@@ -257,7 +262,7 @@ class TrainingEditHandler extends Handler {
             if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         await training.edit(domainId, tid, {
-            title, content, dag, description,
+            title, content, dag, description, pin,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('training_detail', { tid });
