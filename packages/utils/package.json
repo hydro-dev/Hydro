@@ -12,11 +12,11 @@
         "js-yaml": "^4.1.0",
         "moment": "^2.29.1",
         "mongodb": "^3.6.9",
-        "systeminformation": "^5.7.6"
+        "systeminformation": "^5.7.7"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.11",
-        "@types/node": "^15.12.2",
+        "@types/node": "^15.12.4",
         "moment-timezone": "^0.5.33"
     }
 }
