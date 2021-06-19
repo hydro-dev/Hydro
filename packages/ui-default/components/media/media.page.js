@@ -13,6 +13,7 @@ export default new AutoloadPage('media', async () => {
         users.get().forEach((ele) => resolve(ele, { type: 'user', id: +$(ele).text() }));
         $dom.find('.typo').get().forEach((el) => {
             $(el).find('a[href]').get().forEach((ele) => {
+                if ($(ele).parent().hasClass('user-profile-link')) return;
                 let target = $(ele).attr('href');
                 let { domainId } = UiContext;
                 if (target.startsWith(UiContext.url_prefix)) {
