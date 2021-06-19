@@ -12,7 +12,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     $(ev.currentTarget).hide();
     $('[name="problem-sidebar__categories"]').show();
   });
-  function onChangeMain() {
+  function onChangeMain(update = true) {
     const options = {};
     for (const key in window.LANGS) {
       if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.includes(key)) continue;
@@ -21,16 +21,12 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     if (Object.keys(options).length > 1) {
       setOptions($('#codelang-sub-select'), options);
       $('#codelang-sub-container').show();
-      $('[name="lang"]').val($('#codelang-sub-select').val());
+      if (update) $('[name="lang"]').val($('#codelang-sub-select').val());
     } else {
       $('#codelang-sub-container').hide();
-      $('[name="lang"]').val(this.value);
+      if (update) $('[name="lang"]').val(this.value);
     }
   }
-  $('#codelang-main-select').on('change', onChangeMain);
-  $('#codelang-sub-select').on('change', function () {
-    $('[name="lang"]').val(this.value);
-  });
   const main = {};
   const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
   for (const key in window.LANGS) {
@@ -38,14 +34,19 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
   }
   setOptions($('#codelang-main-select'), main);
+
   const current = $('[name="lang"]').val();
   if (current.includes('.')) {
     const [m] = current.split('.');
     $('#codelang-main-select').val(m);
-    onChangeMain.call({ value: $('#codelang-main-select').val() });
+    onChangeMain.call({ value: m }, false);
     $('#codelang-sub-select').val(current);
-    $('[name="lang"]').val(current);
   } else $('#codelang-main-select').val(current);
+
+  $('#codelang-main-select').on('change', onChangeMain);
+  $('#codelang-sub-select').on('change', function () {
+    $('[name="lang"]').val(this.value);
+  });
 });
 
 export default page;
