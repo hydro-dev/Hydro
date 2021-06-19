@@ -341,6 +341,11 @@ export interface DomainDoc extends Record<string, any> {
     host?: string[],
 }
 
+export interface DomainUnion {
+    _id: string;
+    union: string[];
+}
+
 // Message
 export interface MessageDoc {
     _id: ObjectID,
@@ -481,7 +486,7 @@ export interface Task {
 }
 
 export interface UploadStream extends Writable {
-    id: ObjectID
+    id: ObjectID;
 }
 
 export interface HydroFileSystem {
@@ -516,27 +521,28 @@ export interface FileNode {
 }
 
 export interface Collections {
-    'blacklist': BlacklistDoc,
-    'contest': Tdoc,
-    'domain': DomainDoc,
-    'domain.user': any,
-    'record': RecordDoc,
-    'document': any,
-    'problem': ProblemDoc,
-    'user': Udoc,
-    'check': any,
-    'message': MessageDoc,
-    'token': TokenDoc,
-    'status': any,
-    'oauth': any,
-    'system': System,
-    'task': Task,
-    'storage': FileNode,
-    'oplog': OplogDoc,
-    'opcount': any,
-    'fs.chunks': any,
-    'fs.files': any,
-    'document.status': any,
+    'blacklist': BlacklistDoc;
+    'contest': Tdoc;
+    'domain': DomainDoc;
+    'domain.user': any;
+    'domain.union': DomainUnion;
+    'record': RecordDoc;
+    'document': any;
+    'problem': ProblemDoc;
+    'user': Udoc;
+    'check': any;
+    'message': MessageDoc;
+    'token': TokenDoc;
+    'status': any;
+    'oauth': any;
+    'system': System;
+    'task': Task;
+    'storage': FileNode;
+    'oplog': OplogDoc;
+    'opcount': any;
+    'fs.chunks': any;
+    'fs.files': any;
+    'document.status': any;
 }
 
 export interface Model {

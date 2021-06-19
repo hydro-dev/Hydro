@@ -33,6 +33,7 @@ async function cli() {
     const [, modelName, func, ...args] = argv.args as [string, string, string, ...any[]];
     if (modelName === 'script') {
         let arg: any;
+        console.log(args.join(' '));
         try {
             arg = JSON.parse(args.join(' '));
         } catch (e) {
