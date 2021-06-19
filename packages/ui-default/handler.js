@@ -1,13 +1,15 @@
+/* eslint-disable no-return-await */
 /* eslint-disable camelcase */
 const { readdirSync, readFileSync } = require('fs');
 const { join } = require('path');
 const crypto = require('crypto');
 const { tmpdir } = require('os');
 const bus = require('hydrooj/dist/service/bus');
+const { PERM } = require('hydrooj/dist/model/builtin');
 const markdown = require('./backendlib/markdown');
 
 const {
-  system, domain, user, setting,
+  system, domain, user, setting, problem,
 } = global.Hydro.model;
 const { Route, Handler, UiContextBase } = global.Hydro.service.server;
 
@@ -119,18 +121,30 @@ class MarkdownHandler extends Handler {
 }
 
 class RichMediaHandler extends Handler {
-  constructor(args) {
-    super(args);
-    this.noCheckPermView = true;
+  async renderUser(domainId, payload) {
+    let d = payload.domainId || domainId;
+    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    if (!cur.hasPerm(PERM.PERM_VIEW)) d = domainId;
+    const udoc = Number.isNaN(+payload.id) ? await user.getByUname(d, payload.id) : await user.getById(d, +payload.id);
+    return await this.renderHTML('partials/user.html', { udoc });
+  }
+
+  async renderProblem(domainId, payload) {
+    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    let pdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_PROBLEM)
+      ? await problem.get(domainId, payload.data) || problem.default
+      : problem.default;
+    if (pdoc.hidden && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = problem.default;
+    return await this.renderHTML('partials/problem.html', { pdoc });
   }
 
   async post({ domainId, items }) {
     const res = [];
     for (const item of items) {
-      if (item.type === 'user') {
-        const udoc = Number.isNaN(+item.id) ? await user.getByUname(domainId, item.id) : await user.getById(domainId, +item.id);
-        res.push(this.renderHTML('partials/user.html', { udoc }));
-      } else res.push('');
+      if (item.domainId && item.domainId === domainId) delete item.domainId;
+      if (item.type === 'user') res.push(this.renderUser(domainId, item));
+      else if (item.type === 'problem') res.push(this.renderProblem(domainId, item));
+      else res.push('');
     }
     this.response.body = await Promise.all(res);
   }

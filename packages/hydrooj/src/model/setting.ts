@@ -156,7 +156,7 @@ DomainUserSetting(
 );
 
 SystemSetting(
-    Setting('setting_file', 'file.endPoint', null, 'text', 'file.endPoint', 'Storage engine endPoint'),
+    Setting('setting_file', 'file.endPoint', 'http://127.0.0.1:9000', 'text', 'file.endPoint', 'Storage engine endPoint'),
     Setting('setting_file', 'file.accessKey', null, 'text', 'file.accessKey', 'Storage engine accessKey'),
     Setting('setting_file', 'file.secretKey', null, 'password', 'file.secretKey', 'Storage engine secret', FLAG_SECRET),
     Setting('setting_file', 'file.bucket', 'hydro', 'text', 'file.bucket', 'Storage engine bucket'),
