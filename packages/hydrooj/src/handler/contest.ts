@@ -321,15 +321,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.Name)
-    async get(domainId: string, tid: ObjectID, _pid: string) {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        this.response.body.rdocs = [];
-        if (contest.canShowRecord.call(this, this.tdoc)) {
-            this.response.body.rdocs = await record.getUserInProblemMulti(
-                domainId, this.user._id,
-                pid, { type: document.TYPE_CONTEST, tid },
-            ).sort({ _id: -1 }).limit(10).toArray();
-        }
+    async get(domainId: string, tid: ObjectID, pid: string) {
         this.response.body.path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],

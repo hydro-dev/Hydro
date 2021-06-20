@@ -248,11 +248,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('pid', Types.Name, null, parsePid)
     async get(domainId: string, pid: string | number) {
         this.response.template = 'problem_submit.html';
-        const rdocs = await record
-            .getUserInProblemMulti(domainId, this.user._id, pid)
-            .sort({ _id: -1 })
-            .limit(10)
-            .toArray();
         this.response.body = {
             path: [
                 ['Hydro', 'homepage'],
@@ -262,7 +257,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             ],
             pdoc: this.pdoc,
             udoc: this.udoc,
-            rdocs,
             title: this.pdoc.title,
         };
     }

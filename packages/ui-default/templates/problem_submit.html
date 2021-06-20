@@ -3,40 +3,6 @@
 {{ set(UiContext, 'pdocConfig', pdoc.config) }}
 <div class="row">
   <div class="medium-9 columns">
-  {% if not tdoc or rdocs.length %}
-    <div class="section">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Recent 10 Records') }}</h1>
-      </div>
-      <div class="section__body no-padding">
-      {% if not rdocs.length %}
-        {{ nothing.render('You have not submitted any solutions for this problem') }}
-      {% else %}
-        <table class="data-table">
-          <colgroup>
-            <col class="col--status">
-            <col class="col--memory">
-            <col class="col--time">
-            <col class="col--submit-at">
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="col--status record-status--border">{{ _('Status') }}</th>
-              <th class="col--memory">{{ _('Peak Memory') }}</th>
-              <th class="col--time">{{ _('Total Time') }}</th>
-              <th class="col--submit-at">{{ _('Submit At') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-          {%- for rdoc in rdocs -%}
-            {% include 'problem_submit_tr.html' %}
-          {%- endfor -%}
-          </tbody>
-        </table>
-      {% endif %}
-      </div>
-    </div>
-  {% endif %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Submit to Judge') }}</h1>

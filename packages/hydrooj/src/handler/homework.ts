@@ -197,12 +197,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 
     @param('tid', Types.ObjectID)
     @param('pid', Types.String)
-    async get(domainId: string, tid: ObjectID, _pid: string) {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        this.response.body.rdocs = contest.canShowRecord.call(this, this.tdoc)
-            ? await record.getUserInProblemMulti(domainId, this.user._id, pid, { type: document.TYPE_HOMEWORK, tid })
-                .sort('_id', -1).limit(10).toArray()
-            : [];
+    async get(domainId: string, tid: ObjectID, pid: string) {
         this.response.body.path = [
             ['Hydro', 'homepage'],
             ['homework_main', 'homework_main'],
