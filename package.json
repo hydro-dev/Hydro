@@ -31,7 +31,7 @@
         "@shelf/jest-mongodb": "^1.2.5",
         "@types/cross-spawn": "^6.0.2",
         "@types/jest": "^26.0.23",
-        "@types/node": "^15.12.2",
+        "@types/node": "^15.12.4",
         "@types/semver": "^7.3.6",
         "@typescript-eslint/eslint-plugin": "^4.26.1",
         "@typescript-eslint/parser": "^4.26.1",
@@ -43,7 +43,7 @@
         "eslint-import-resolver-typescript": "^2.4.0",
         "eslint-plugin-import": "^2.23.4",
         "fs-extra": "^10.0.0",
-        "globby": "^11.0.3",
+        "globby": "^11.0.4",
         "jest": "^27.0.4",
         "latest-version": "^5.1.0",
         "mongodb": "^3.6.9",
@@ -51,7 +51,7 @@
         "ora": "^5.4.1",
         "semver": "^7.3.5",
         "ts-jest": "^27.0.3",
-        "typedoc": "^0.20.36",
+        "typedoc": "^0.20.37",
         "typescript": "4.2.4"
     }
 }
