@@ -2,7 +2,7 @@ import Queue from 'p-queue';
 import path from 'path';
 import fs from 'fs-extra';
 import * as STATUS from '../status';
-import { SystemError } from '../error';
+import { CompileError, SystemError } from '../error';
 import { parseFilename } from '../utils';
 import { run } from '../sandbox';
 import compile from '../compile';
@@ -18,6 +18,12 @@ const Score = {
 
 function judgeCase(c, sid) {
     return async (ctx, ctxSubtask) => {
+        if (ctx.config.template) {
+            if (ctx.config.template[ctx.lang]) {
+                const tpl = ctx.config.template[ctx.lang];
+                ctx.code = tpl[0] + ctx.code + tpl[1];
+            } else throw new CompileError('Language not supported by provided templates');
+        }
         if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || (ctxSubtask.subtask.if && ctx.failed[sid])

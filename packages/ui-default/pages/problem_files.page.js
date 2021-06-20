@@ -178,6 +178,7 @@ const page = new NamedPage('problem_files', () => {
         </div>`,
       width: `${window.innerWidth - 200}px`,
       height: `${window.innerHeight - 100}px`,
+      cancelByEsc: false,
     }).open();
     const language = {
       yaml: 'yaml',

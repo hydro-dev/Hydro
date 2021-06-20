@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.11.31",
+  "version": "4.11.32",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -27,6 +27,7 @@
     "@blueprintjs/icons": "^3.26.1",
     "@blueprintjs/select": "^3.16.4",
     "@hydrooj/utils": "^1.0.20",
+    "@types/json-schema": "^7.0.7",
     "@types/katex": "^0.11.0",
     "@undefined-moe/monaco-yaml": "^2.5.0",
     "ansi_up": "^5.0.1",

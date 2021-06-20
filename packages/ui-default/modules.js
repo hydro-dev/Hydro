@@ -23,3 +23,5 @@ import './components/notification';
 import './components/nprogress';
 
 window.node_modules = { _, $ };
+window.$ = $;
+window.jQuery = $;
