@@ -203,23 +203,6 @@ class RecordModel {
     }
 
     @ArgMethod
-    static getUserInProblemMulti(domainId: string, uid: number, pid: ExternalProblemId | number, contestInfo?: ContestInfo) {
-        let pdomain = domainId;
-        if (typeof pid === 'string') {
-            pdomain = pid.split(':')[0];
-            pid = +pid.split(':')[1];
-        }
-        if (!contestInfo) {
-            return RecordModel.coll.find({
-                domainId, uid, pdomain, pid, contest: null,
-            });
-        }
-        return RecordModel.coll.find({
-            domainId, uid, pdomain, pid, contest: contestInfo,
-        });
-    }
-
-    @ArgMethod
     static getByUid(domainId: string, uid: number, limit: number): Promise<RecordDoc[]> {
         return RecordModel.coll.find({ domainId, uid, hidden: false }).sort({ _id: -1 }).limit(limit).toArray();
     }

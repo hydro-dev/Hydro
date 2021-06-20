@@ -25,10 +25,15 @@ class RecordListHandler extends Handler {
     @param('tid', Types.ObjectID, true)
     @param('uidOrName', Types.Name, true)
     @param('status', Types.Int, true)
+    @param('fullStatus', Types.Boolean)
     @param('allDomain', Types.Boolean, true)
-    async get(domainId: string, page = 1, pid?: string, tid?: ObjectID, uidOrName?: string, status?: number, all = false) {
+    async get(
+        domainId: string, page = 1, pid?: string, tid?: ObjectID,
+        uidOrName?: string, status?: number, full = false, all = false,
+    ) {
         this.response.template = 'record_main.html';
         const q: FilterQuery<RecordDoc> = { 'contest.tid': tid, hidden: false };
+        if (full) uidOrName = this.user._id.toString();
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
@@ -49,27 +54,21 @@ class RecordListHandler extends Handler {
             else q.pid = null;
         }
         if (status) q.status = status;
-        const [rdocs] = await paginate(
-            record.getMulti(domainId, q).sort('_id', -1).project(buildProjection(record.PROJECTION_LIST)),
-            page,
-            system.get('pagination.record'),
-        );
+        let cursor = record.getMulti(domainId, q).sort('_id', -1);
+        if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
+        const [rdocs] = await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        const [udict, pdict] = await Promise.all([
-            user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
-            canViewProblem
-                ? problem.getList(domainId, rdocs.map(
-                    (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
-                ), canViewProblemHidden, false)
-                : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
-        ]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['record_main', null],
-        ];
+        const [udict, pdict] = full ? [{}, {}]
+            : await Promise.all([
+                user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
+                canViewProblem
+                    ? problem.getList(domainId, rdocs.map(
+                        (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
+                    ), canViewProblemHidden, false)
+                    : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
+            ]);
         this.response.body = {
-            path,
             page,
             rdocs,
             pdict,
@@ -79,7 +78,7 @@ class RecordListHandler extends Handler {
             filterUidOrName: uidOrName,
             filterStatus: status,
         };
-        if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS)) {
+        if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && !full) {
             this.response.body.statistics = {
                 ...await record.stat(all ? undefined : domainId),
                 delay: await TaskModel.getDelay({ type: 'judge' }),
