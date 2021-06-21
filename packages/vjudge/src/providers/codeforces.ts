@@ -16,11 +16,13 @@ const VERDICT = {
     OK: STATUS.STATUS_ACCEPTED,
     TIME_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
     MEMORY_LIMIT_EXCEEDED: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    IDLENESS_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
     Accepted: STATUS.STATUS_ACCEPTED,
     'Wrong answer': STATUS.STATUS_WRONG_ANSWER,
     'Runtime error': STATUS.STATUS_RUNTIME_ERROR,
     'Time limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
     'Memory limit exceeded': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    'Idleness limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
 };
 
 export default class CodeforcesProvider implements IBasicProvider {
@@ -219,7 +221,7 @@ export default class CodeforcesProvider implements IBasicProvider {
                         status,
                         time: +body[`timeConsumed#${i}`],
                         memory: +body[`memoryConsumed#${i}`] / 1024,
-                        message: body[`checkerStdoutAndStderr#${i}`],
+                        message: body[`checkerStdoutAndStderr#${i}`] || body[`verdict#${i}`],
                     },
                 });
             }
