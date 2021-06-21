@@ -415,6 +415,14 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _33_34() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['content'], async (pdoc) => {
+            if (typeof pdoc.content !== 'string') return;
+            await problem.edit(pdoc.domainId, pdoc.docId, { content: pdoc.content.replace(/%file%:\/\//g, 'file://') });
+        });
+        return true;
+    },
 ];
 
 export default scripts;

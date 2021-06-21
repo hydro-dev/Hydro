@@ -112,7 +112,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             superagent.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
-            ele.setAttribute('src', `%file%://${fid}.png`);
+            ele.setAttribute('src', `file://${fid}.png`);
         });
         const title = document.querySelector('.title').innerHTML.trim().split('. ')[1];
         const time = parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
