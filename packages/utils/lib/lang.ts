@@ -7,6 +7,7 @@ export interface LangConfig {
     highlight: string;
     monaco: string;
     time_limit_rate: number;
+    domain: string[];
     display: string;
     target?: string;
     sub?: LangConfig[];

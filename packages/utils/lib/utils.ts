@@ -31,11 +31,11 @@ declare global {
     }
 }
 
-const dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
-String.random = function random(digit = 32) {
+String.random = function random(digit = 32, dict = defaultDict) {
     let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * 62)];
+    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
     return str;
 };
 
