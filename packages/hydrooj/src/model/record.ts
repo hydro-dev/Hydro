@@ -9,7 +9,7 @@ import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
 import {
-    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId, ProblemConfig,
+    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId,
 } from '../interface';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
@@ -81,7 +81,7 @@ class RecordModel {
                 });
             }
         }
-        await task.add({
+        return await task.add({
             ...rdoc,
             priority,
             type: 'judge',
