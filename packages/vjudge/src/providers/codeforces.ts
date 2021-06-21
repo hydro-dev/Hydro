@@ -113,7 +113,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `%file%://${fid}.png`);
         });
-        const title = document.querySelector('.title').innerHTML;
+        const title = document.querySelector('.title').innerHTML.trim().substr(3, 100);
         const time = parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
         const memory = parseInt(document.querySelector('.memory-limit').innerHTML.substr(55, 4), 10);
         document.body.firstChild.remove();
