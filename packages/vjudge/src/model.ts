@@ -13,6 +13,7 @@ import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 const coll = db.collection('vjudge');
 const Pool = {};
 const logger = new Logger('vjudge');
+const syncing = {};
 
 class Service {
     api: IBasicProvider;
@@ -37,17 +38,22 @@ class Service {
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);
             for (const pid of pids) {
-                if (await ProblemModel.get(domainId, pid)) continue;
-                const res = await this.api.getProblem(pid);
-                if (!res) continue;
-                const id = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
-                for (const key in res.files) {
-                    await ProblemModel.addAdditionalFile(domainId, id, key, res.files[key]);
+                if (syncing[`${domainId}/${pid}`] || await ProblemModel.get(domainId, pid)) continue;
+                syncing[`${domainId}/${pid}`] = true;
+                try {
+                    const res = await this.api.getProblem(pid);
+                    if (!res) continue;
+                    const id = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
+                    for (const key in res.files) {
+                        await ProblemModel.addAdditionalFile(domainId, id, key, res.files[key]);
+                    }
+                    for (const key in res.data) {
+                        await ProblemModel.addTestdata(domainId, id, key, res.data[key]);
+                    }
+                    logger.info(`${domainId}: problem ${id} sync done`);
+                } finally {
+                    delete syncing[`${domainId}/${pid}`];
                 }
-                for (const key in res.data) {
-                    await ProblemModel.addTestdata(domainId, id, key, res.data[key]);
-                }
-                logger.info(`${domainId}: problem ${id} sync done`);
                 await sleep(5000);
             }
             page++;
