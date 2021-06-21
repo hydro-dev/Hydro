@@ -97,13 +97,29 @@ export default class CodeforcesProvider implements IBasicProvider {
         return false;
     }
 
+    async getPdfProblem(id: string) {
+        const [, contestId, problemId] = id.startsWith('P921')
+            ? ['', '921', '01']
+            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+        const file = new PassThrough();
+        this.get(`/problemset/problem/${contestId}/${problemId}`).pipe(file);
+        return {
+            title: '__NO_TITLE__',
+            data: { 'config.yaml': Buffer.from(`type: remote_judge\nsubType: codeforces\ntarget: ${id}`) },
+            files: { 'problem.pdf': file },
+            tag: [],
+            content: '@[pdf](file://problem.pdf)',
+        };
+    }
+
     async getProblem(id: string) {
         logger.info(id);
+        if (id === 'P936E') return null; // Problem Missing
         const [, contestId, problemId] = id.startsWith('P921')
             ? ['', '921', '01']
             : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
         const res = await this.get(`/problemset/problem/${contestId}/${problemId}`);
-        if (!res.text) return null;
+        if (!res.text) return await this.getPdfProblem(id);
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
         const tag = Array.from($dom.window.document.querySelectorAll('.tag-box')).map((i) => i.textContent.trim());
         const text = $dom.window.document.querySelector('.problem-statement').innerHTML;
