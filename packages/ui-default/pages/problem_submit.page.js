@@ -7,7 +7,7 @@ function setOptions($el, options) {
   });
 }
 
-const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
+const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async (name) => {
   $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
     $(ev.currentTarget).hide();
     $('[name="problem-sidebar__categories"]').show();
@@ -16,6 +16,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     const options = {};
     for (const key in window.LANGS) {
       if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.includes(key)) continue;
+      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
+      if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     if (Object.keys(options).length > 1) {
@@ -31,6 +33,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
   for (const key in window.LANGS) {
     if (UiContext.pdocConfig.langs && !prefix.has(key) && !UiContext.pdocConfig.langs.includes(key)) continue;
+    if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
+    if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
   }
   setOptions($('#codelang-main-select'), main);

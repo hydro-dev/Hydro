@@ -21,12 +21,8 @@ export class Page {
   }
 
   isNameMatch(name) {
-    if (typeof this.name === 'string') {
-      return this.name === name;
-    }
-    if (this.name instanceof Array) {
-      return this.name.indexOf(name) !== -1;
-    }
+    if (typeof this.name === 'string') return this.name === name;
+    if (this.name instanceof Array) return this.name.includes(name);
     return false;
   }
 }

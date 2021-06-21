@@ -84,6 +84,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     for (const key in window.LANGS) {
       if (prefix.has(key)) continue;
       if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
+      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
+      if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
       LANGS[key] = window.LANGS[key];
     }
     return (
