@@ -16,6 +16,8 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
         timeMax: 0,
         type: cfg.type || 'default',
     };
+    if (cfg.subType) result.subType = cfg.subType;
+    if (cfg.target) result.target = cfg.target;
     if (cfg.subtasks.length) {
         for (const subtask of cfg.subtasks) {
             result.memoryMax = Math.max(result.memoryMax, subtask.memory);

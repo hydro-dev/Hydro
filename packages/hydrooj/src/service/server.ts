@@ -503,6 +503,7 @@ export class Handler extends HandlerCommon {
             throw new NotFoundError(domainId);
         }
         this.UiContext.domainId = this.domainId;
+        this.UiContext.domain = this.domain;
         this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         if (!this.user) {
             this.session.uid = 0;

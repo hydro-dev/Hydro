@@ -9,7 +9,7 @@ import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
 import {
-    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId,
+    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId, ProblemConfig,
 } from '../interface';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
@@ -62,11 +62,25 @@ class RecordModel {
     static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}) {
         const rdoc = await RecordModel.get(domainId, rid);
         let data = [];
+        delete rdoc._id;
         if (rdoc.pid) {
             const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
             data = pdoc.data;
+            if (typeof pdoc.config === 'string') throw new Error(); // Just for typings. This won't happen.
+            if (pdoc.config.type === 'remote_judge') {
+                return await task.add({
+                    ...rdoc,
+                    priority,
+                    type: 'remotejudge',
+                    subType: pdoc.config.subType,
+                    target: pdoc.config.target,
+                    rid,
+                    domainId,
+                    config,
+                    data,
+                });
+            }
         }
-        delete rdoc._id;
         await task.add({
             ...rdoc,
             priority,

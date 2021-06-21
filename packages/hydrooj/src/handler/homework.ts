@@ -168,7 +168,8 @@ class HomeworkDetailProblemHandler extends Handler {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${pid}/file/`);
+            .replace(/\(file:\/\//g, `(./${pid}/file/`)
+            .reaplce(/="file:\/\//g, `="./${pid}/file/`);
     }
 }
 
@@ -218,6 +219,9 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
+        }
+        if (this.domain.langs && !this.domain.langs.includes(lang)) {
+            throw new BadRequestError('Language not allowed');
         }
         await this.limitRate('add_record', 60, 5);
         const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {

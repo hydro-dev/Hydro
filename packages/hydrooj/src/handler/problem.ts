@@ -212,7 +212,8 @@ export class ProblemDetailHandler extends ProblemHandler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json) {
             this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`);
+                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
+                .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
         }
         if (this.psdoc) {
             this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
@@ -268,6 +269,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     async post(domainId: string, lang: string, code: string, pretest = false, input = '') {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
+        }
+        if (this.domain.langs && !this.domain.langs.includes(lang)) {
+            throw new BadRequestError('Language not allowed');
         }
         await this.limitRate('add_record', 60, 5);
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);

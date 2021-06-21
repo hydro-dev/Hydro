@@ -39,7 +39,7 @@ export class ProblemModel {
         domainId: 'system',
         docType: document.TYPE_PROBLEM,
         docId: 0,
-        pid: null,
+        pid: '',
         owner: 1,
         title: '*',
         content: '',

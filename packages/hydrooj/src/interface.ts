@@ -136,15 +136,19 @@ export enum SubtaskType {
 }
 
 export interface SubtaskConfig {
-    time?: number,
-    memory?: number,
-    score?: number,
-    type?: SubtaskType,
-    cases?: TestCaseConfig[],
+    time?: number;
+    memory?: number;
+    score?: number;
+    if?: number[];
+    id?: number;
+    type?: SubtaskType;
+    cases?: TestCaseConfig[];
 }
 
 export interface ProblemConfigFile {
     type?: ProblemType;
+    subType?: string;
+    target?: string;
     score?: number;
     time?: string;
     memory?: string;
@@ -168,6 +172,8 @@ export interface ProblemConfig {
     timeMin: number;
     langs?: string[];
     type: string;
+    subType?: string;
+    target?: string;
 }
 
 export interface PlainContentNode {

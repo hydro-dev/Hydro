@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.28.44",
+    "version": "2.28.45",
     "bin": "bin/hydrooj.js",
     "main": "dist/loader.js",
     "typings": "dist/loader.d.ts",
@@ -12,7 +12,7 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@hydrooj/utils": "workspace:*",
+        "@hydrooj/utils": "workspace:packages/utils",
         "adm-zip": "^0.5.5",
         "ansi_up": "^5.0.1",
         "cac": "^6.7.3",

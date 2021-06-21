@@ -26,15 +26,20 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 node.type !== 'Plain' ? `## ${node.sectionTitle}` : '',
                 ...node.type === 'Sample'
                     ? [
+                        '',
                         `\`\`\`input${++cnt}`,
                         node.payload[0],
                         '```',
+                        '',
                         `\`\`\`output${cnt}`,
                         node.payload[1],
                         '```',
+                        '',
                     ]
                     : [],
+                '',
                 node.text,
+                '',
             ].join('\n')).join('\n');
     }
     return type === 'html'
