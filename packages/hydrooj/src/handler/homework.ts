@@ -169,7 +169,7 @@ class HomeworkDetailProblemHandler extends Handler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         this.response.body.pdoc.content = this.response.body.pdoc.content
             .replace(/\(file:\/\//g, `(./${pid}/file/`)
-            .reaplce(/="file:\/\//g, `="./${pid}/file/`);
+            .replace(/="file:\/\//g, `="./${pid}/file/`);
     }
 }
 
