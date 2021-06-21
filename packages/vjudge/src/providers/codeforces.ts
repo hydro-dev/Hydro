@@ -56,7 +56,11 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async getCsrfToken(url: string) {
-        const { text: html } = await this.get(url);
+        const { text: html, header } = await this.get(url);
+        if (header['set-cookie']) {
+            await this.save({ cookie: header['set-cookie'] });
+            this.cookie = header['set-cookie'];
+        }
         const $dom = new JSDOM(html);
         return $dom.window.document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
     }
