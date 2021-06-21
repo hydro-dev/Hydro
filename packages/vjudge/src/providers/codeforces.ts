@@ -100,7 +100,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     async getProblem(id: string) {
         logger.info(id);
         const [, contestId, problemId] = id.startsWith('P921')
-            ? ['', '921', id.split('P921')[1]]
+            ? ['', '921', '01']
             : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
         const res = await this.get(`/problemset/problem/${contestId}/${problemId}`);
         if (!res.text) return null;
@@ -139,7 +139,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         });
         const description = document.body.innerHTML.trim();
         return {
-            title,
+            title: id.startsWith('P921') ? title.replace('1', id.split('P921')[1]) : title,
             data: {
                 'config.yaml': Buffer.from(`time: ${time}s\nmemory: ${memory}m\ntype: remote_judge\nsubType: codeforces\ntarget: ${id}`),
             },
