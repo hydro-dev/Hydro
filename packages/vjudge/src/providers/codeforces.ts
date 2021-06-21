@@ -99,7 +99,9 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     async getProblem(id: string) {
         logger.info(id);
-        const [, contestId, problemId] = /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+        const [, contestId, problemId] = id.startsWith('P921')
+            ? ['', '921', id.split('P921')[1]]
+            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
         const res = await this.get(`/problemset/problem/${contestId}/${problemId}`);
         if (!res.text) return null;
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
@@ -125,8 +127,8 @@ export default class CodeforcesProvider implements IBasicProvider {
         document.querySelector('.note')?.firstChild.remove();
         const input = document.querySelector('.input-specification')?.innerHTML.trim();
         const output = document.querySelector('.output-specification')?.innerHTML.trim();
-        const inputs = Array.from(document.querySelectorAll('.input>pre')).map((i) => i.innerHTML.trim());
-        const outputs = Array.from(document.querySelectorAll('.output>pre')).map((i) => i.innerHTML.trim());
+        const inputs = Array.from(document.querySelectorAll('.input>pre')).map((i) => i.innerHTML.trim().replace(/<br>/g, '\n'));
+        const outputs = Array.from(document.querySelectorAll('.output>pre')).map((i) => i.innerHTML.trim().replace(/<br>/g, '\n'));
         const note = document.querySelector('.note')?.innerHTML.trim();
         document.querySelector('.note')?.remove();
         document.querySelector('.sample-tests')?.remove();
@@ -173,7 +175,9 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     async submitProblem(id: string, lang: string, code: string) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '42';
-        const [, contestId, submittedProblemIndex] = /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+        const [, contestId, submittedProblemIndex] = id.startsWith('P921')
+            ? ['', '921', id.split('P921')[1]]
+            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
         const csrf_token = await this.getCsrfToken('/problemset/submit');
         // TODO check submit time to ensure submission
         await this.post(`/problemset/submit?csrf_token=${csrf_token}`).send({
