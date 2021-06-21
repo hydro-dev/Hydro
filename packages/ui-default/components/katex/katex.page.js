@@ -14,7 +14,6 @@ const katexPage = new AutoloadPage('katexPage', () => {
           { left: '\\begin{alignat}', right: '\\end{alignat}', display: true },
           { left: '\\begin{gather}', right: '\\end{gather}', display: true },
           { left: '\\begin{CD}', right: '\\end{CD}', display: true },
-
         ],
       }));
     }
