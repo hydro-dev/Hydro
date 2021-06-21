@@ -23,7 +23,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 node.text,
             ].join('\n')).join('\n')
             : source.map((node) => [
-                node.type !== 'Plain' ? `## ${node.sectionTitle}` : '',
+                node.type !== 'Plain' && (node.type !== 'Sample' || !cnt) ? `## ${node.sectionTitle}` : '',
                 ...node.type === 'Sample'
                     ? [
                         '',
