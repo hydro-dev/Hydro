@@ -39,6 +39,7 @@ class Service {
             for (const pid of pids) {
                 if (await ProblemModel.get(domainId, pid)) continue;
                 const res = await this.api.getProblem(pid);
+                if (!res) continue;
                 const id = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
                 for (const key in res.files) {
                     await ProblemModel.addAdditionalFile(domainId, id, key, res.files[key]);
