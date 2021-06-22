@@ -123,7 +123,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     if (info) info.union.push(id);
     const udict: ND = {};
     const deltaudict: ND = {};
-    const domainId = info ? { $in: info.union } : { $exists: false };
+    const domainId = info ? { $in: info.union } : id;
     const dudocs = unionWith([
         ...await domain.getMultiUserInDomain(id).toArray(),
         ...await domain.getMultiUserInDomain('', { domainId }).toArray(),
