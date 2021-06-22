@@ -100,7 +100,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     async getPdfProblem(id: string) {
         const [, contestId, problemId] = id.startsWith('P921')
             ? ['', '921', '01']
-            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
         const file = new PassThrough();
         this.get(`/problemset/problem/${contestId}/${problemId}`).pipe(file);
         return {
@@ -117,7 +117,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         if (id === 'P936E') return null; // Problem Missing
         const [, contestId, problemId] = id.startsWith('P921')
             ? ['', '921', '01']
-            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
         const res = await this.get(`/problemset/problem/${contestId}/${problemId}`);
         if (!res.text) return await this.getPdfProblem(id);
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
@@ -193,7 +193,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '42';
         const [, contestId, submittedProblemIndex] = id.startsWith('P921')
             ? ['', '921', id.split('P921')[1]]
-            : /^P(\d+)([A-Z][0-9]?)$/.exec(id);
+            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
         const csrf_token = await this.getCsrfToken('/problemset/submit');
         // TODO check submit time to ensure submission
         await this.post(`/problemset/submit?csrf_token=${csrf_token}`).send({
