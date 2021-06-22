@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { buildContent } from 'hydrooj/dist/lib/content';
+import * as setting from 'hydrooj/dist/model/setting';
 import { Logger } from 'hydrooj/dist/logger';
 import { PassThrough } from 'stream';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -189,8 +190,14 @@ export default class CodeforcesProvider implements IBasicProvider {
         return Array.from($dom.window.document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
     }
 
-    async submitProblem(id: string, lang: string, code: string) {
+    async submitProblem(id: string, lang: string, code: string, info) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '42';
+        const comment = setting.langs[lang].comment;
+        if (comment) {
+            const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
+            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
+            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
+        }
         const [, contestId, submittedProblemIndex] = id.startsWith('P921')
             ? ['', '921', id.split('P921')[1]]
             : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
@@ -210,8 +217,8 @@ export default class CodeforcesProvider implements IBasicProvider {
             _tta: 594,
             sourceCodeConfirmed: true,
         });
-        const { text: info } = await this.get('/problemset/status?my=on');
-        const $dom = new JSDOM(info);
+        const { text: status } = await this.get('/problemset/status?my=on');
+        const $dom = new JSDOM(status);
         this.csrf = $dom.window.document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
         return $dom.window.document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
     }

@@ -25,7 +25,7 @@ export interface IBasicProvider {
         content: string;
     }>;
     listProblem(page: number): Promise<string[]>;
-    submitProblem(id: string, lang: string, code: string): Promise<string>;
+    submitProblem(id: string, lang: string, code: string, info): Promise<string>;
     waitForSubmission(id: string, next: any, end: any): Promise<void>;
 }
 

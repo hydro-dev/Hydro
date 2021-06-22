@@ -26,7 +26,7 @@ class Service {
     }
 
     async judge(task) {
-        const rid = await this.api.submitProblem(task.target, task.lang, task.code);
+        const rid = await this.api.submitProblem(task.target, task.lang, task.code, task);
         const next = (payload) => Judge.next({ ...payload, rid: task.rid });
         const end = (payload) => Judge.end({ ...payload, rid: task.rid });
         await this.api.waitForSubmission(rid, next, end);
