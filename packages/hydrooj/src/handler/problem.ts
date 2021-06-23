@@ -98,8 +98,8 @@ export class ProblemMainHandler extends ProblemHandler {
             system.get('pagination.problem'),
         );
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(a.docId) - sort.indexOf(b.docId));
-        if (q && +q) {
-            const pdoc = await problem.get(domainId, +q, problem.PROJECTION_LIST);
+        if (q) {
+            const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
             if (pdoc) pdocs.filter((doc) => doc.docId !== pdoc.docId).unshift(pdoc);
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
