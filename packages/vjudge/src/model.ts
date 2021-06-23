@@ -67,7 +67,10 @@ class Service {
         else return;
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this));
         const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
-        for (const ddoc of ddocs) await this.sync(ddoc._id);
+        for (const ddoc of ddocs) {
+            if (!ddoc.syncDone) await this.sync(ddoc._id);
+            await DomainModel.edit(ddoc._id, { syncDone: true });
+        }
     }
 }
 
