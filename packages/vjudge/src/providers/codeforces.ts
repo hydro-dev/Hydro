@@ -38,12 +38,12 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     get(url: string) {
         logger.debug('get', url);
-        return superagent.get(`https://codeforces.com${url}`).set('Cookie', this.cookie);
+        return superagent.get(`${this.account.endpoint || 'https://codeforces.com'}${url}`).set('Cookie', this.cookie);
     }
 
     post(url: string) {
         logger.debug('post', url, this.cookie);
-        return superagent.post(`https://codeforces.com${url}`).type('form').set('Cookie', this.cookie);
+        return superagent.post(`${this.account.endpoint || 'https://codeforces.com'}${url}`).type('form').set('Cookie', this.cookie);
     }
 
     tta(_39ce7: string) {

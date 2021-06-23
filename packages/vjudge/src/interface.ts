@@ -4,6 +4,7 @@ export interface RemoteAccount {
     cookie?: string[];
     handle: string;
     password: string;
+    endpoint?: string;
 }
 declare module 'hydrooj/dist/interface' {
     interface Collections {
