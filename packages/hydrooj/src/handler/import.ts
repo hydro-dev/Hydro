@@ -10,7 +10,7 @@ import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
-import type { ContentNode } from '../interface';
+import type { ContentNode, ProblemConfigFile, SubtaskConfig } from '../interface';
 import problem, { ProblemDoc } from '../model/problem';
 import TaskModel from '../model/task';
 import { PERM, PRIV } from '../model/builtin';
@@ -25,10 +25,20 @@ import { ProblemAdd } from '../lib/ui';
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');
 
+const ScoreTypeMap = {
+    GroupMin: 'min',
+    Sum: 'sum',
+    GroupMul: 'max',
+};
+const LanguageMap = {
+    cpp: 'cc',
+};
+
 async function syzojSync(info) {
     const {
-        protocol, host, body, pid, domainId, docId,
+        protocol, host, pid, domainId, docId,
     } = info;
+    const body = JSON.parse(info.body);
     const judge = body.judgeInfo;
     const r = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
         .send({
@@ -36,22 +46,51 @@ async function syzojSync(info) {
             type: 'TestData',
             filenameList: body.testData.map((node) => node.filename),
         });
-    const urls = {};
     if (r.body.error) return;
+    const urls = {};
+    const rename = {};
+    if (judge) {
+        const config: ProblemConfigFile = {
+            time: `${judge.timeLimit}ms`,
+            memory: `${judge.memoryLimit}m`,
+            // TODO other config
+        };
+        if (judge.extraSourceFiles) {
+            const user_extra_files = [];
+            for (const key in judge.extraSourceFiles) {
+                for (const file in judge.extraSourceFiles[key]) {
+                    user_extra_files.push(file);
+                }
+            }
+            config.user_extra_files = user_extra_files;
+        }
+        if (judge.checker?.type === 'custom') {
+            config.checker_type = judge.checker.interface;
+            if (LanguageMap[judge.checker.language]) {
+                rename[judge.checker.filename] = `chk.${LanguageMap[judge.checker.language]}`;
+                config.checker = `chk.${LanguageMap[judge.checker.language]}`;
+            } else config.checker = judge.checker.filename;
+        }
+        if (judge.subtasks?.length) {
+            config.subtasks = [];
+            for (const subtask of judge.subtasks) {
+                const current: SubtaskConfig = {
+                    score: subtask.points,
+                    type: ScoreTypeMap[subtask.scoringType],
+                    cases: subtask.testcases.map((i) => ({ input: i.inputFile, output: i.outputFile })),
+                };
+                if (subtask.dependencies) current.if = subtask.dependencies;
+                config.subtasks.push(current);
+            }
+        }
+        await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+    }
     for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
     for (const f of body.testData) {
         const p = new PassThrough();
         superagent.get(urls[f.filename]).pipe(p);
         // eslint-disable-next-line no-await-in-loop
-        await problem.addTestdata(domainId, docId, f.filename, p);
-    }
-    if (judge) {
-        const config = {
-            time: `${judge.timeLimit}ms`,
-            memory: `${judge.memoryLimit}m`,
-            // TODO other config
-        };
-        await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+        await problem.addTestdata(domainId, docId, rename[f.filename] || f.filename, p);
     }
     const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
         .send({
@@ -226,7 +265,7 @@ class ProblemImportSYZOJHandler extends Handler {
             domainId, target, title, JSON.stringify(content), this.user._id, tags || [], hidden,
         );
         const payload = {
-            protocol, host, pid, domainId, docId, body: result.body,
+            protocol, host, pid, domainId, docId, body: JSON.stringify(result.body),
         };
         if (wait) await syzojSync(payload);
         else await TaskModel.add({ ...payload, type: 'schedule', subType: 'import.syzoj' });
