@@ -229,6 +229,6 @@ export default async function readCases(folder: string, cfg: Record<string, any>
         result.subtasks = c.subtasks;
         result.count = c.count;
     }
-    isValidConfig(result);
+    if ((!args.key) || args.key !== result.key) isValidConfig(result);
     return result;
 }

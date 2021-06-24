@@ -36,7 +36,10 @@ export default class SubjectiveContainer extends React.PureComponent {
   Textbox(args, name) {
     return (
       <label htmlFor={`textbox${name}`}>
-        {name}. {args.desc}
+        {name}. {args.desc.split('\n').map((i, index) => {
+          if (index) return <><br />{i}</>;
+          return i;
+        })}
         <div name={`form_item_${name}`} className="textbox-container">
           <input type="text" name={name} id={`textbox${name}`} className="textbox" onChange={this.onChange}></input>
         </div>
@@ -47,7 +50,10 @@ export default class SubjectiveContainer extends React.PureComponent {
   Radio(args, name) {
     return (
       <>
-        {name}. {args.desc}
+        {name}. {args.desc.split('\n').map((i, index) => {
+          if (index) return <><br />{i}</>;
+          return i;
+        })}
         {args.choices.map((i) => (
           <label className="radiobox" htmlFor={`radio${name}${i}`} key={i}>
             <input type="radio" name={name} id={`radio${name}${i}`} value={i} onChange={this.onChange} /> {i} <br />

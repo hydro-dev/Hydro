@@ -53,6 +53,7 @@ const problemConfigSchema = {
   type: 'object',
   def: problemConfigSchemaDef,
   properties: {
+    key: { type: 'string', pattern: '[0-9a-f]{32}' },
     type: { enum: ['default', 'interactive', 'submit_answer', 'subjective'] },
     checker_type: { enum: ['default', 'lemon', 'syzoj', 'testlib', 'strict', 'qduoj'] },
     checker: { type: 'string', pattern: '\\.' },

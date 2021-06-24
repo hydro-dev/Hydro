@@ -11,7 +11,7 @@ import * as sysinfo from './sysinfo';
 import * as tmpfs from './tmpfs';
 import { FormatError, CompileError, SystemError } from './error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
-import { compilerText } from './utils';
+import { compilerText, md5 } from './utils';
 import readCases from './cases';
 import { getConfig } from './config';
 
@@ -233,7 +233,7 @@ async function postInit() {
             this.config = await readCases(
                 this.folder,
                 this.config,
-                { next: this.next },
+                { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();
             await judge[this.config.type || 'default'].judge(this);

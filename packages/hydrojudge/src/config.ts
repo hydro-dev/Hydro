@@ -25,6 +25,7 @@ let config = {
     env: `\
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 HOME=/w`,
+    secret: String.random(32),
 };
 
 export function getConfig(key: string) {

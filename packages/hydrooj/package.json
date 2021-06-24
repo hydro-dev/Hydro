@@ -12,7 +12,7 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@hydrooj/utils": "workspace:packages/utils",
+        "@hydrooj/utils": "workspace:*",
         "adm-zip": "^0.5.5",
         "ansi_up": "^5.0.1",
         "cac": "^6.7.3",

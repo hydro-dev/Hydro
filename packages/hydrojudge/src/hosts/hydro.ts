@@ -9,7 +9,7 @@ import { ObjectID } from 'mongodb';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
-import { compilerText, Queue } from '../utils';
+import { compilerText, md5, Queue } from '../utils';
 import { getConfig } from '../config';
 import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
@@ -111,7 +111,7 @@ class JudgeTask {
         this.config = await readCases(
             this.folder,
             { ...this.config, detail: this.session.config.detail },
-            { next: this.next },
+            { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
         await judge[this.config.type || 'default'].judge(this);

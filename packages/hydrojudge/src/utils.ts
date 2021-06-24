@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import crypto from 'crypto';
 import path from 'path';
 import { parse } from 'shell-quote';
 import _ from 'lodash';
@@ -13,6 +14,15 @@ export function parseFilename(filePath: string) {
     const t = filePath.split('/');
     return t[t.length - 1];
 }
+
+const encrypt = (algorithm, content) => {
+    const hash = crypto.createHash(algorithm);
+    hash.update(content);
+    return hash.digest('hex');
+};
+
+export const sha1 = (content: string) => encrypt('sha1', content);
+export const md5 = (content: string) => encrypt('md5', content);
 
 export class Queue<T> extends EventEmitter {
     queue: T[] = [];

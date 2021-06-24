@@ -64,3 +64,8 @@ env:
   default: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
+secret:
+  type: text
+  name: secret
+  desc: Judge Token Secret
+  default: Hydro-Judge-Secret
