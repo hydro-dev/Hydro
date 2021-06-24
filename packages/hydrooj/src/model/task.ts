@@ -66,9 +66,14 @@ class WorkerService implements BaseService {
     public start() {
         this.consumer = new Consumer(
             { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
-            (doc) => {
-                logger.debug('Worker task: %o', doc);
-                return this.handlers[doc.subType](doc);
+            async (doc) => {
+                try {
+                    logger.debug('Worker task: %o', doc);
+                    await this.handlers[doc.subType](doc);
+                } catch (e) {
+                    logger.error('Worker task fail: ', e);
+                    logger.error('%o', doc);
+                }
             },
             false,
         );

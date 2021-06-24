@@ -36,24 +36,16 @@ const LanguageMap = {
 
 async function syzojSync(info) {
     const {
-        protocol, host, pid, domainId, docId,
+        protocol, host, domainId, docId,
     } = info;
     const body = JSON.parse(info.body);
+    const pid = body.meta.id;
     const judge = body.judgeInfo;
-    const r = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
-        .send({
-            problemId: +pid,
-            type: 'TestData',
-            filenameList: body.testData.map((node) => node.filename),
-        });
-    if (r.body.error) return;
-    const urls = {};
     const rename = {};
     if (judge) {
         const config: ProblemConfigFile = {
             time: `${judge.timeLimit}ms`,
             memory: `${judge.memoryLimit}m`,
-            // TODO other config
         };
         if (judge.extraSourceFiles) {
             const user_extra_files = [];
@@ -85,6 +77,14 @@ async function syzojSync(info) {
         }
         await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
     }
+    const r = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
+        .send({
+            problemId: pid,
+            type: 'TestData',
+            filenameList: body.testData.map((node) => node.filename),
+        });
+    if (r.body.error) throw new Error(r.body.error.message || r.body.error);
+    const urls = {};
     for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
     for (const f of body.testData) {
         const p = new PassThrough();
@@ -94,12 +94,12 @@ async function syzojSync(info) {
     }
     const a = await superagent.post(`${protocol}://${host === 'loj.ac' ? 'api.loj.ac.cn' : host}/api/problem/downloadProblemFiles`)
         .send({
-            problemId: +pid,
+            problemId: pid,
             type: 'AdditionalFile',
             filenameList: body.additionalFiles.map((node) => node.filename),
         });
     const aurls = {};
-    if (a.body.error) return;
+    if (a.body.error) throw new Error(a.body.error.message || a.body.error);
     for (const t of a.body.downloadInfo) aurls[t.filename] = t.downloadUrl;
     for (const f of body.additionalFiles) {
         const p = new PassThrough();
