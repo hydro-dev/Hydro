@@ -8,7 +8,7 @@ import {
     ForbiddenError,
 } from '../error';
 import {
-    ProblemDoc, User, PathComponent, ProblemStatusDoc,
+    ProblemDoc, User, ProblemStatusDoc,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -35,7 +35,7 @@ export class ProblemHandler extends Handler {
     async cleanup() {
         if (this.response.template === 'problem_main.html' && this.request.json) {
             const {
-                path, page, pcount, ppcount, pdocs, psdict, category,
+                page, pcount, ppcount, pdocs, psdict, category,
             } = this.response.body;
             this.response.body = {
                 title: this.renderTitle(category),
@@ -45,10 +45,9 @@ export class ProblemHandler extends Handler {
                     }),
                     this.renderHTML('partials/problem_stat.html', { pcount }),
                     this.renderHTML('partials/problem_lucky.html', { category }),
-                    this.renderHTML('partials/path.html', { path }),
                 ])).map((i) => ({ html: i })),
                 raw: {
-                    path, page, pcount, ppcount, pdocs, psdict, category,
+                    page, pcount, ppcount, pdocs, psdict, category,
                 },
             };
         }
@@ -64,10 +63,6 @@ export class ProblemMainHandler extends ProblemHandler {
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: FilterQuery<ProblemDoc> = {};
         let psdict = {};
-        const path: PathComponent[] = [
-            ['Hydro', 'homepage'],
-            ['problem_main', null],
-        ];
         const search = global.Hydro.lib.problemSearch;
         let sort: number[];
         if (category.length) {
@@ -75,11 +70,7 @@ export class ProblemMainHandler extends ProblemHandler {
             for (const tag of category) query.$and.push({ tag });
         }
         if (q) category.push(q);
-        if (category.length) {
-            this.extraTitleContent = category.join('+');
-            path[1][1] = 'problem_main';
-            path.push([category.join('+'), null, null, true]);
-        }
+        if (category.length) this.extraTitleContent = category.join('+');
         if (q) {
             if (search) {
                 const result = await search(domainId, q);
@@ -108,7 +99,7 @@ export class ProblemMainHandler extends ProblemHandler {
             );
         }
         this.response.body = {
-            path, page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
+            page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
         };
     }
 
@@ -197,11 +188,6 @@ export class ProblemDetailHandler extends ProblemHandler {
             pdoc: this.pdoc,
             udoc: this.udoc,
             title: this.pdoc.title,
-            path: [
-                ['Hydro', 'homepage'],
-                ['problem_main', 'problem_main'],
-                [this.pdoc.title, null, null, true],
-            ],
         };
         this.extraTitleContent = this.pdoc.title;
     }
@@ -246,16 +232,9 @@ export class ProblemDetailHandler extends ProblemHandler {
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
-    @param('pid', Types.Name, null, parsePid)
-    async get(domainId: string, pid: string | number) {
+    async get() {
         this.response.template = 'problem_submit.html';
         this.response.body = {
-            path: [
-                ['Hydro', 'homepage'],
-                ['problem_main', 'problem_main'],
-                [this.pdoc.title, 'problem_detail', { pid }, true],
-                ['problem_submit', null],
-            ],
             pdoc: this.pdoc,
             udoc: this.udoc,
             title: this.pdoc.title,
@@ -312,14 +291,8 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 }
 
 export class ProblemEditHandler extends ProblemManageHandler {
-    async get({ pid }) {
+    async get() {
         this.response.template = 'problem_edit.html';
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid }, true],
-            ['problem_edit', null],
-        ];
     }
 
     @route('pid', Types.Name, null, parsePid)
@@ -462,13 +435,8 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         }
         const udict = await user.getList(domainId, uids);
         const pssdict = await solution.getListStatus(domainId, docids, this.user._id);
-        const path = [
-            ['problem_main', 'problem_main'],
-            [this.pdoc.title, 'problem_detail', { pid: this.pdoc.pid || this.pdoc.docId }, true],
-            ['problem_solution', null],
-        ];
         this.response.body = {
-            path, psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
+            psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
         };
         await bus.serial('handler/solution/get', this);
     }
@@ -569,11 +537,6 @@ export class ProblemCreateHandler extends Handler {
     async get() {
         this.response.template = 'problem_edit.html';
         this.response.body = {
-            path: [
-                ['Hydro', 'homepage'],
-                ['problem_main', 'problem_main'],
-                ['problem_create', null],
-            ],
             page_name: 'problem_create',
         };
     }
