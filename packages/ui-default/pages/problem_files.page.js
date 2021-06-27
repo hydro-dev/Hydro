@@ -194,7 +194,7 @@ const page = new NamedPage('problem_files', () => {
       model: `hydro://problem/file/${filename}`,
     });
     const action = await promise;
-    value = editor.value();
+    value = editor.value().replace(/\r\n/g, '\n');
     editor.destory();
     if (action !== 'ok') return null;
     return value;
