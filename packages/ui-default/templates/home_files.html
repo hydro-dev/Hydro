@@ -1,0 +1,16 @@
+{% extends "layout/home_base.html" %}
+{% block home_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Files') }}</h1>
+    <div class="section__tools">
+      <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+    </div>
+  </div>
+  {{ noscript_note.render() }}
+  {% include "partials/home_files.html" %}
+  <div class="section__body">
+    <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+  </div>
+</div>
+{% endblock %}

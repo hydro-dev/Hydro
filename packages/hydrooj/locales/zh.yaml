@@ -269,6 +269,7 @@ Domain: 域
 Don't have an account?: 还没有账户？
 Done: 已结束
 Download Dataset: 下载数据集
+Download link copied to clipboard!: 下载链接已复制到剪贴板。
 Download: 下载
 Downvote: 差评
 Duration (hours): 持续时间 (小时)
@@ -350,6 +351,7 @@ home_account: 账户设置
 home_domain_account: 当前域的设置
 home_domain_create: 创建域
 home_domain: 我的域
+home_files: 我的文件
 home_messages: 站内消息
 home_preference: 偏好设置
 home_security: 安全设置

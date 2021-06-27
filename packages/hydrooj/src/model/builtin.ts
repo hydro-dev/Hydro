@@ -242,6 +242,9 @@ export const PRIV = {
     PRIV_UNLIMITED_ACCESS: 1 << 22,
     PRIV_VIEW_SYSTEM_NOTIFICATION: 1 << 23,
     PRIV_SEND_MESSAGE: 1 << 24,
+    PRIV_CREATE_FILE: 1 << 16,
+    PRIV_UNLIMITED_QUOTA: 1 << 17,
+    PRIV_DELETE_FILE: 1 << 18,
 
     PRIV_ALL: -1,
     PRIV_DEFAULT: 0,
@@ -251,12 +254,6 @@ export const PRIV = {
     PRIV_READ_PRETEST_DATA: 1 << 5,
     /** @deprecated */
     PRIV_READ_PRETEST_DATA_SELF: 1 << 6,
-    /** @deprecated */
-    PRIV_CREATE_FILE: 1 << 16,
-    /** @deprecated */
-    PRIV_UNLIMITED_QUOTA: 1 << 17,
-    /** @deprecated */
-    PRIV_DELETE_FILE: 1 << 18,
     /** @deprecated */
     PRIV_DELETE_FILE_SELF: 1 << 19,
 };

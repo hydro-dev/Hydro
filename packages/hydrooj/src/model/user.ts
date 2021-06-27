@@ -8,7 +8,9 @@ import domain from './domain';
 import { PERM, PRIV } from './builtin';
 import { ArgMethod } from '../utils';
 import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
-import { User as _User, Udoc, Udict } from '../interface';
+import {
+    User as _User, Udoc, Udict, FileInfo,
+} from '../interface';
 import { Value } from '../typeutils';
 import { Logger } from '../logger';
 import pwhash from '../lib/hash.hydro';
@@ -51,6 +53,7 @@ class User implements _User {
     perm: bigint;
     role: string;
     scope: bigint;
+    _files: FileInfo[];
     [key: string]: any;
 
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
@@ -62,6 +65,7 @@ class User implements _User {
         this._hash = udoc.hash;
         this._regip = udoc.regip;
         this._loginip = udoc.loginip;
+        this._files = udoc._files || [];
 
         this.mail = udoc.mail;
         this.uname = udoc.uname;

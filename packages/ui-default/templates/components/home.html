@@ -6,6 +6,11 @@
     {{ sidemenu.render_item('comment--multiple', 'home_messages') }}
     <li class="menu__seperator"></li>
     {{ sidemenu.render_item('web', 'home_settings', {category:'domain'}, label='Domain Settings') }}
+    {{ sidemenu.render_item('web', 'home_domain', label='My Domains') }}
+    {% if handler.user.hasPriv(PRIV.PRIV_CREATE_FILE) %}
+      <li class="menu__seperator"></li>
+      {{ sidemenu.render_item('file', 'home_file', label='My Files') }}
+    {% endif %}
     <li class="menu__seperator"></li>
     {{ sidemenu.render_item('wrench', 'home_settings', {category:'account'}, label='Account Settings') }}
     {{ sidemenu.render_item('sliders', 'home_settings', {category:'preference'}, label='Preference Settings')}}
