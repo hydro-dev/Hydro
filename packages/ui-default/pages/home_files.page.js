@@ -119,19 +119,17 @@ const page = new NamedPage('home_files', () => {
     }
 
     /**
-     * @param {string} type
      * @param {JQuery.DragOverEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
      */
-    function handleDragOver(type, ev) {
+    function handleDragOver(ev) {
         ev.preventDefault();
         // TODO display a drag-drop allowed hint
     }
 
     /**
-     * @param {string} type
      * @param {JQuery.DropEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
      */
-    function handleDrop(type, ev) {
+    function handleDrop(ev) {
         ev.preventDefault();
         if (!$('[name="upload_testdata"]').length) {
             Notification.error(i18n("You don't have permission to upload file."));
@@ -151,7 +149,7 @@ const page = new NamedPage('home_files', () => {
                 files.push(ev.dataTransfer.files[i]);
             }
         }
-        handleClickUpload(type, files);
+        handleClickUpload(files);
     }
 
     const clip = new Clipboard('.home-files .col--name', {
