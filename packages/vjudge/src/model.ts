@@ -32,9 +32,9 @@ class Service {
         await this.api.waitForSubmission(rid, next, end);
     }
 
-    async sync(domainId: string) {
+    async sync(domainId: string, resync = false) {
         let page = 1;
-        let pids = await this.api.listProblem(page);
+        let pids = await this.api.listProblem(page, resync);
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);
             for (const pid of pids) {
@@ -68,7 +68,8 @@ class Service {
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this));
         const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
         for (const ddoc of ddocs) {
-            if (!ddoc.syncDone) await this.sync(ddoc._id);
+            if (!ddoc.syncDone) await this.sync(ddoc._id, false);
+            else await this.sync(ddoc._id, true);
             await DomainModel.edit(ddoc._id, { syncDone: true });
         }
     }

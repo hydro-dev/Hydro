@@ -182,7 +182,8 @@ export default class CodeforcesProvider implements IBasicProvider {
         };
     }
 
-    async listProblem(page: number) {
+    async listProblem(page: number, resync = false) {
+        if (resync && page > 1) return [];
         const res = await this.get(`/problemset/page/${page}`);
         const $dom = new JSDOM(res.text);
         const index = $dom.window.document.querySelector('.page-index.active').getAttribute('pageindex');

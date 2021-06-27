@@ -25,7 +25,7 @@ export interface IBasicProvider {
         tag: string[];
         content: string;
     }>;
-    listProblem(page: number): Promise<string[]>;
+    listProblem(page: number, resync: boolean): Promise<string[]>;
     submitProblem(id: string, lang: string, code: string, info): Promise<string>;
     waitForSubmission(id: string, next: any, end: any): Promise<void>;
 }
