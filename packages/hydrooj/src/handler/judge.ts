@@ -162,7 +162,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (msg.key !== 'ping') logger.info('%o', msg);
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
-            await end({ judger: this.user._id, ...msg });
+            await end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e));
             this.processing = null;
             await this.newTask();
         } else if (msg.key === 'status') {
