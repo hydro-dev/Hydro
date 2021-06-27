@@ -57,7 +57,7 @@ class Service {
                 await sleep(5000);
             }
             page++;
-            pids = await this.api.listProblem(page);
+            pids = await this.api.listProblem(page, resync);
         }
     }
 
