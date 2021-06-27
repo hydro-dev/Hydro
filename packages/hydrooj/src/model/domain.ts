@@ -45,6 +45,7 @@ class DomainModel {
     static async add(domainId: string, owner: number, name: string, bulletin: string) {
         const ddoc: DomainDoc = {
             _id: domainId,
+            lower: domainId.toLowerCase(),
             owner,
             name,
             bulletin,
@@ -59,7 +60,7 @@ class DomainModel {
 
     @ArgMethod
     static async get(domainId: string): Promise<DomainDoc | null> {
-        const query: FilterQuery<DomainDoc> = { _id: domainId };
+        const query: FilterQuery<DomainDoc> = { lower: domainId.toLowerCase() };
         await bus.serial('domain/before-get', query);
         const result = await coll.findOne(query);
         await bus.serial('domain/get', result);
@@ -274,5 +275,6 @@ class DomainModel {
     }
 }
 
+bus.on('app/started', () => coll.createIndex({ lower: 1 }, { unique: true }));
 export default DomainModel;
 global.Hydro.model.domain = DomainModel;

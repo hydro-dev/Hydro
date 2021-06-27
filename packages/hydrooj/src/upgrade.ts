@@ -423,6 +423,11 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _34_35() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain((ddoc) => domain.edit(ddoc._id, { lower: ddoc._id.toLowerCase() }));
+        return true;
+    },
 ];
 
 export default scripts;
