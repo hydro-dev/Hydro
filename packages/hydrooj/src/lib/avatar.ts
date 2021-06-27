@@ -6,6 +6,7 @@ export const providers: Record<string, AvatarProvider> = {
     gravatar: (email, size) => `//gravatar.loli.net/avatar/${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size || 32}`,
     qq: (id) => `//q1.qlogo.cn/g?b=qq&nk=${(/(\d+)/g.exec(id) || ['', ''])[1]}&s=640`,
     github: (id, size) => `//github.com/${id}.png?size=${Math.min(size, 460)}`,
+    url: (url) => url,
 };
 
 function avatar(src: string, size = 64) {
