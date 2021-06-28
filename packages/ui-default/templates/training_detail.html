@@ -83,8 +83,8 @@
                     <col class="col--status">
                   {% endif %}
                   <col class="col--name">
-                  <col class="col--submit_n">
-                  <col class="col--ac_rate">
+                  <col class="col--tried">
+                  <col class="col--ac">
                   <col class="col--difficulty">
                 </colgroup>
                 <thead>
@@ -93,8 +93,8 @@
                       <th class="col--status record-status--border">{{ _('Status') }}</th>
                     {% endif %}
                     <th class="col--name">{{ _('Problem') }}</th>
-                    <th class="col--submit_n">{{ _('Tried') }}</th>
-                    <th class="col--ac_rate">% {{ _('AC') }}</th>
+                    <th class="col--tried">{{ _('Tried') }}</th>
+                    <th class="col--ac">{{ _('AC') }}</th>
                     <th class="col--difficulty">{{ _('Difficulty') }}</th>
                   </tr>
                 </thead>
@@ -141,8 +141,8 @@
                         <td class="col--name col--problem-name">
                           {{ problem.render_problem_title(pdoc, invalid=true) }}
                         </td>
-                        <td class="col--submit_n">*</td>
-                        <td class="col--ac_rate">*</td>
+                        <td class="col--tried">*</td>
+                        <td class="col--ac">*</td>
                         <td class="col--difficulty">*</td>
                       </tr>
                     {% endif %}
