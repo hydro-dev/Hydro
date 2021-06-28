@@ -61,10 +61,20 @@ class Service {
         }
     }
 
-    async main() {
+    async login() {
         const login = await this.api.ensureLogin();
-        if (login) logger.info(`${this.account.type}/${this.account.handle}: logged in`);
-        else return;
+        if (login) {
+            logger.info(`${this.account.type}/${this.account.handle}: logged in`);
+            return true;
+        }
+        logger.warn(`${this.account.type}/${this.account.handle}: login fail`);
+        return false;
+    }
+
+    async main() {
+        const res = await this.login();
+        if (!res) return;
+        setInterval(() => this.login(), 1 * 3600 * 1000);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this));
         const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
         for (const ddoc of ddocs) {

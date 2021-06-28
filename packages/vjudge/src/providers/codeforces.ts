@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
-import superagent from 'superagent';
+import * as superagent from 'superagent';
+import proxy from 'superagent-proxy';
 import { JSDOM } from 'jsdom';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { sleep } from '@hydrooj/utils/lib/utils';
@@ -9,6 +10,7 @@ import { Logger } from 'hydrooj/dist/logger';
 import { PassThrough } from 'stream';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
+proxy(superagent);
 const logger = new Logger('codeforces');
 
 const VERDICT = {
@@ -38,12 +40,18 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     get(url: string) {
         logger.debug('get', url);
-        return superagent.get(`${this.account.endpoint || 'https://codeforces.com'}${url}`).set('Cookie', this.cookie);
+        if (!url.includes('//')) url = `${this.account.endpoint || 'https://codeforces.com'}${url}`;
+        const req = superagent.get(url).set('Cookie', this.cookie);
+        if (this.account.proxy) return req.proxy(this.account.proxy);
+        return req;
     }
 
     post(url: string) {
         logger.debug('post', url, this.cookie);
-        return superagent.post(`${this.account.endpoint || 'https://codeforces.com'}${url}`).type('form').set('Cookie', this.cookie);
+        if (!url.includes('//')) url = `${this.account.endpoint || 'https://codeforces.com'}${url}`;
+        const req = superagent.post(url).type('form').set('Cookie', this.cookie);
+        if (this.account.proxy) return req.proxy(this.account.proxy);
+        return req;
     }
 
     tta(_39ce7: string) {
@@ -89,6 +97,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             password: this.account.password,
             remember: 'on',
         });
+        console.log(res.header);
         const cookie = res.header['set-cookie'];
         if (cookie) {
             await this.save({ cookie });
@@ -130,7 +139,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             const src = ele.getAttribute('src');
             if (!src.startsWith('http')) return;
             const file = new PassThrough();
-            superagent.get(src).pipe(file);
+            this.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
