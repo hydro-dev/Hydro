@@ -233,7 +233,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         const rdoc = await record.get(domainId, rid);
         if (pretest) {
             await Promise.all([
-                problem.inc(pdomainId, ppid, 'nSubmit', 1),
+                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length ? Promise.resolve() : problem.inc(pdomainId, ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id,
                     rid, pid, false, 0, document.TYPE_HOMEWORK),

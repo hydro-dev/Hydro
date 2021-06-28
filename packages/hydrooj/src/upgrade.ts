@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-import { FilterQuery, ObjectID } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
@@ -8,7 +8,6 @@ import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { BucketItem } from 'minio';
 import { Progress } from './ui';
-import { RecordDoc } from './interface';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
 import {
@@ -24,7 +23,7 @@ import * as discussion from './model/discussion';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
-import { PRIV, STATUS } from './model/builtin';
+import { PRIV } from './model/builtin';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import { size } from './lib/misc';
@@ -242,37 +241,7 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
-    async function _19_20() {
-        const _FRESH_INSTALL_IGNORE = 1;
-        const data = db.collection('record').aggregate([
-            { $match: { hidden: false, type: { $ne: 'run' } } },
-            {
-                $group: {
-                    _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
-                    nAccept: {
-                        $sum: {
-                            $cond: [{ $eq: ['$status', STATUS.STATUS_ACCEPTED] }, 1, 0],
-                        },
-                    },
-                },
-            },
-        ]);
-        while (await data.hasNext()) {
-            const d: any = await data.next();
-            logger.info('%o', d);
-            const filter: FilterQuery<RecordDoc> = { domainId: d._id.domainId, pid: d._id.pid, uid: d._id.uid };
-            if (d.nAccept) {
-                const [first] = await db.collection('record')
-                    .find({ ...filter, status: STATUS.STATUS_ACCEPTED })
-                    .sort({ _id: 1 }).limit(1)
-                    .project({ _id: 1 })
-                    .toArray();
-                filter._id = { $lte: first._id };
-            }
-            await db.collection('record').updateMany(filter, { $set: { effective: true } });
-        }
-        return true;
-    },
+    null,
     async function _20_21() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllProblem([], async (pdoc) => {
@@ -426,6 +395,11 @@ const scripts: UpgradeScript[] = [
     async function _34_35() {
         const _FRESH_INSTALL_IGNORE = 1;
         await iterateAllDomain((ddoc) => domain.edit(ddoc._id, { lower: ddoc._id.toLowerCase() }));
+        return true;
+    },
+    async function _35_36() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await RecordModel.coll.updateMany({}, { $unset: { effective: '' } });
         return true;
     },
 ];

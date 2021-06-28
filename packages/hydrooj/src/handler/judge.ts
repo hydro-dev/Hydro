@@ -35,9 +35,7 @@ export async function postJudge(rdoc: RecordDoc) {
         ? await problem.inc(rdoc.pdomain, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.pdomain, rdoc.pid);
     const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-    if (!updated) await record.updateMulti(rdoc.domainId, { uid: rdoc.uid, status: builtin.STATUS.STATUS_ACCEPTED }, { effective: false });
     await Promise.all([
-        record.update(rdoc.domainId, rdoc._id, { effective: true }),
         problem.edit(pdoc.domainId, pdoc.docId, { difficulty }),
         problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
         problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),

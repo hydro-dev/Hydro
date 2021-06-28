@@ -61,8 +61,8 @@
         <td class="col--name col--problem-name">
           {{ problem.render_problem_title(pdoc) }}
         </td>
-        <td class="col--submit_n">{{ pdoc['nSubmit'] }}</td>
-        <td class="col--ac_rate">{{ (100 * pdoc['nAccept'] / pdoc['nSubmit'])|round|int if pdoc['nSubmit'] > 0 else _('?') }}</td>
+        <td class="col--tried">{{ pdoc.nSubmit }}</td>
+        <td class="col--ac">{{ pdoc.nAccept }}</td>
         <td class="col--difficulty">{{ pdoc['difficulty'] or _('(None)') }}</td>
       </tr>
     {%- endfor -%}

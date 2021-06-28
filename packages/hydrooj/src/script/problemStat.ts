@@ -21,7 +21,7 @@ export async function udoc(report) {
         {
             $group: {
                 _id: { domainId: '$_id.domainId', uid: '$_id.uid' },
-                nSubmit: { $sum: '$nSubmit' },
+                nSubmit: { $sum: { $min: ['$nSubmit', 1] } },
                 nAccept: { $sum: { $min: ['$nAccept', 1] } },
             },
         },
@@ -68,7 +68,7 @@ export async function psdoc(report) {
 export async function pdoc(report) {
     report({ message: 'Pdoc' });
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' }, effective: true } },
+        { $match: { hidden: false, type: { $ne: 'run' } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },

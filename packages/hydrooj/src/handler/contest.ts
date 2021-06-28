@@ -353,10 +353,12 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             type: document.TYPE_CONTEST,
             tid,
         });
+        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
+        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                problem.inc(domainId, pid, 'nSubmit', 1),
+                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length ? Promise.resolve() : problem.inc(pdomainId, ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id, rid, pid),
             ]);

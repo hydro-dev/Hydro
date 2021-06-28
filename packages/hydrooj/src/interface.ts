@@ -287,7 +287,6 @@ export interface RecordDoc {
     /** pretest */
     input?: string;
     contest?: ContestInfo;
-    effective?: boolean;
 }
 
 export interface ScoreboardNode {

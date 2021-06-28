@@ -35,16 +35,8 @@
     </dd>
     <dt>{{ _('# Submissions') }}</dt>
     <dd><a href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ pdoc.nSubmit }}</a></dd>
-    {% if page_name != 'discussion_node' and page_name != 'discussion_detail' %}
-    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-    <dt>{{ _('# My Submissions') }}</dt>
-    <dd><a href="{{ url('record_main', query={pid:pdoc.docId, uidOrName:handler.user._id}) }}">{{ pdoc['psdoc'].nSubmit|default(0) }}</a></dd>
-    {% endif %}
-    {% endif %}
     <dt>{{ _('Accepted') }}</dt>
     <dd>{{ pdoc.nAccept }}</dd>
-    <dt>{{ _('Accepted Ratio') }}</dt>
-    <dd>{% if pdoc.nSubmit > 0 %}{{ (100 * pdoc.nAccept / pdoc.nSubmit)|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
     <dt>{{ _('Uploaded By') }}</dt>
     <dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
   </dl>
