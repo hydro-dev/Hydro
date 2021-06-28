@@ -3,19 +3,15 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
 {% block content %}
-{% if domain['bulletin'] %}
-<div class="row">
-  <div class="large-12 columns">
-    <div class="section">
-      <div class="section__body typo">
-        {{ domain['bulletin']|markdown|safe }}
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 <div class="row">
   <div class="large-9 columns">
+    {% if domain['bulletin'] %}
+      <div class="section">
+        <div class="section__body typo">
+          {{ domain['bulletin']|markdown|safe }}
+        </div>
+      </div>
+    {% endif %}
     {% for node in contents %}
       {% if node[0] == 'contest' %}
         {% set tdocs = node[1] %}
