@@ -15,7 +15,7 @@
         "mongodb": "^3.6.9",
         "p-queue": "^6.6.2",
         "shell-quote": "^1.7.2",
-        "ws": "^7.4.6"
+        "ws": "^7.5.0"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",

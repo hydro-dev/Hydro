@@ -7,7 +7,7 @@
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "dependencies": {
-        "ws": "^7.4.6"
+        "ws": "^7.5.0"
     },
     "devDependencies": {
         "@types/ws": "^7.4.5"

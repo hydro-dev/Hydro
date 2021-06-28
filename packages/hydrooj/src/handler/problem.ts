@@ -28,7 +28,7 @@ import {
     Route, Handler, Types, param, post, route, query,
 } from '../service/server';
 
-export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split('+').map((e) => e.split(','))).map((e) => e.trim());
+export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split(',')).map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
 
 export class ProblemHandler extends Handler {
@@ -70,7 +70,7 @@ export class ProblemMainHandler extends ProblemHandler {
             for (const tag of category) query.$and.push({ tag });
         }
         if (q) category.push(q);
-        if (category.length) this.extraTitleContent = category.join('+');
+        if (category.length) this.extraTitleContent = category.join(',');
         if (q) {
             if (search) {
                 const result = await search(domainId, q);
@@ -99,7 +99,7 @@ export class ProblemMainHandler extends ProblemHandler {
             );
         }
         this.response.body = {
-            page, pcount, ppcount, pdocs, psdict, category: category.join('+'),
+            page, pcount, ppcount, pdocs, psdict, category: category.join(','),
         };
     }
 
