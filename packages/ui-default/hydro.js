@@ -6,6 +6,7 @@ import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
 import base64 from 'vj/utils/base64';
 
+const start = new Date();
 window.UiContext = JSON.parse(base64.decode(window.UiContext));
 window.UserContext = JSON.parse(base64.decode(window.UserContext));
 
@@ -72,6 +73,7 @@ async function load() {
     shouldDelay: idx < 5, // only animate first 5 sections
     $element: $(section),
   }));
+  console.log('done! %d ms', new Date().getTime() - start.getTime());
   // eslint-disable-next-line no-restricted-syntax
   for (const { $element, shouldDelay } of sections) {
     $element.addClass('visible');
