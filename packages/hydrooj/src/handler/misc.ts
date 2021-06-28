@@ -113,7 +113,7 @@ export class FSDownloadHandler extends Handler {
 export async function apply() {
     Route('check_in', '/checkin', CheckInHandler, PRIV.PRIV_USER_PROFILE);
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('home_file', '/file', FilesHandler, PRIV.PRIV_CREATE_FILE);
+    Route('home_files', '/file', FilesHandler, PRIV.PRIV_CREATE_FILE);
     Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
 }
 
