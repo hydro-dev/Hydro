@@ -109,7 +109,7 @@
       </div>
       <div class="section__body">
         <dl class="large horizontal">
-          <dt>{{ _('Delay')}}</dt><dd>{{ formatSeconds(statistics.delay[0] / 1000) }}</dd>
+          <dt>{{ _('Delay')}}</dt><dd>{{ statistics.delay[0]|int }}</dd>
           <dt>{{ _('5 Min')}}</dt><dd>{{ statistics['d5min'] }}</dd>
           <dt>{{ _('1 Hour')}}</dt><dd>{{ statistics['d1h'] }}</dd>
           <dt>{{ _('Day') }}</dt><dd>{{ statistics['day'] }}</dd>
