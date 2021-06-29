@@ -558,6 +558,10 @@ export class Handler extends HandlerCommon {
             this.request.json || this.response.redirect
             || this.request.query.noTemplate || !this.response.template) {
             try {
+                if (typeof this.response.body === 'object') {
+                    this.response.body.UiContext = this.UiContext;
+                    this.response.body.UserContext = this.user;
+                }
                 this.response.body = JSON.stringify(this.response.body, serializer);
             } catch (e) {
                 this.response.body = new SystemError('Serialize failure', e.message);
