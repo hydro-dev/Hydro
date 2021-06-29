@@ -5,6 +5,10 @@ echo "CENTOS IS NOT RECOMMENDED TO USE."
 echo "PLEASE USE UBUNTU INSTEAD."
 echo "THIS SCRIPT MAY NOT WORK PROPERLY."
 echo "Will continue installation in 10 secs, press Ctrl-C to exit"
+echo "非常不推荐使用CentOS！"
+echo "请切换到 ubuntu 操作系统！"
+echo "此脚本可能无法正常工作"
+echo "使用 Ctrl-C 退出该脚本。"
 sleep 10
 db_password=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)

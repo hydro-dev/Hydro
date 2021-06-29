@@ -1,6 +1,12 @@
 #!/bin/bash
 name=xenial
 echo "Running Hydro Installer for ubuntu 16.04"
+echo "此脚本已不再维护，推荐使用新版安装工具："
+echo "wget https://s3.undefined.moe/public/install -O install && chmod +x install && ./install"
+echo "详情请参阅文档 -> https://hydro.js.org"
+echo "使用 Ctrl-C 退出该脚本，或是等待十秒后继续。"
+echo "Will continue installation in 10 secs, press Ctrl-C to exit"
+sleep 10
 MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 MINIO_SECRET_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 
