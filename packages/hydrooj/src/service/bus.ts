@@ -2,13 +2,15 @@
 import cluster from 'cluster';
 import serialize from 'serialize-javascript';
 import cac from 'cac';
-import type { Db, FilterQuery, OnlyFieldsOfType } from 'mongodb';
+import type {
+    Db, FilterQuery, ObjectID, OnlyFieldsOfType,
+} from 'mongodb';
 import type { Handler } from './server';
 import { Logger } from '../logger';
 import type {
     MessageDoc, ProblemDoc, RecordDoc,
     TrainingDoc, User, DiscussionDoc,
-    DomainDoc, FileInfo,
+    DomainDoc, FileInfo, Tdoc,
 } from '../interface';
 import type { DocType } from '../model/document';
 import type { ProblemSolutionHandler } from '../handler/problem';
@@ -88,6 +90,9 @@ export interface EventMap extends Record<string, any> {
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
     'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
+
+    'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc>, id: ObjectID) => VoidReturn
 
     'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn

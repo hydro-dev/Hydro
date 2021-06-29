@@ -12,6 +12,7 @@ import {
     ScoreboardNode, ScoreboardRow, Tdoc,
     Udict,
 } from '../interface';
+import * as bus from '../service/bus';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
 
@@ -402,7 +403,7 @@ function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }
 
-export function add(
+export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: ProblemId[] = [],
     rated = false, data: Partial<Tdoc> = {}, type: Type = document.TYPE_CONTEST,
@@ -413,9 +414,12 @@ export function add(
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     this.RULES[rule].check(data);
-    return document.add(domainId, content, owner, type, null, null, null, {
+    await bus.serial('contest/before-add', data);
+    const res = await document.add(domainId, content, owner, type, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
+    await bus.serial('contest/add', data, res);
+    return res;
 }
 
 export async function edit(
