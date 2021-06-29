@@ -80,7 +80,7 @@ export class UserRegisterHandler extends Handler {
                 system.get('session.unsaved_expire_seconds'),
                 { mail },
             );
-            if (system.get('smtp.verify')) {
+            if (system.get('smtp.verify') && system.get('smtp.user')) {
                 const m = await this.renderHTML('user_register_mail.html', {
                     path: `register/${t[0]}`,
                     url_prefix: (this.domain.host || [])[0] || system.get('server.url'),

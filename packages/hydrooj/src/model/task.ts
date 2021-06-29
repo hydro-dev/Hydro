@@ -116,7 +116,7 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static async getDelay(query?: FilterQuery<Task>) {
+    static async getDelay(query?: FilterQuery<Task>): Promise<[number, Date]> {
         const now = new Date();
         const res = await coll.findOne(query, { sort: { executeAfter: 1 } });
         if (res) return [Math.max(0, now.getTime() - res.executeAfter.getTime()), res.executeAfter];
