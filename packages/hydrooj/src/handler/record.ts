@@ -65,7 +65,7 @@ class RecordListHandler extends Handler {
                 canViewProblem
                     ? problem.getList(domainId, rdocs.map(
                         (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
-                    ), canViewProblemHidden, false)
+                    ), canViewProblemHidden || this.user._id, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {

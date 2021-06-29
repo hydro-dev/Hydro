@@ -203,7 +203,7 @@ class UserDetailHandler extends Handler {
         const pdict = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
             ? await problem.getList(
                 domainId, rdocs.map((rdoc) => rdoc.pid),
-                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), false,
+                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
             )
             : Object.fromEntries(rdocs.map(
                 (rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }],

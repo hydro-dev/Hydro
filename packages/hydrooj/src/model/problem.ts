@@ -234,7 +234,7 @@ export class ProblemModel {
 
     static async getList(
         domainId: string, pids: ProblemId[],
-        getHidden = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
+        getHidden: number | boolean = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
     ): Promise<ProblemDict> {
         const parsed = groupBy(
             Array.from(new Set(pids)).map((i) => ({
@@ -266,10 +266,10 @@ export class ProblemModel {
         for (const task in parsed) {
             const range = { $in: parsed[task].map((i) => i.pid) };
             const q: any = { $or: [{ docId: range }, { pid: range }] };
-            if (!getHidden) q.hidden = false;
             tasks.push(document.getMulti(task, document.TYPE_PROBLEM, q).project(buildProjection(projection)).toArray());
         }
-        const pdocs = flatten(await Promise.all(tasks));
+        let pdocs = flatten(await Promise.all(tasks));
+        if (getHidden !== true) pdocs = pdocs.filter((i) => !i.hidden || i.owner === getHidden);
         for (const pdoc of pdocs) {
             try {
                 // eslint-disable-next-line no-await-in-loop
