@@ -228,7 +228,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             problem.get(this.domainId, rdoc.pid, null),
         ]);
         if (pdoc) {
-            if (pdoc.hidden && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+            if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.pretest) this.send({ rdoc });

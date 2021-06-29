@@ -134,7 +134,7 @@ class RichMediaHandler extends Handler {
     let pdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_PROBLEM)
       ? await problem.get(domainId, payload.id) || problem.default
       : problem.default;
-    if (pdoc.hidden && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = problem.default;
+    if (pdoc.hidden && !cur.own(pdoc) && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = problem.default;
     return await this.renderHTML('partials/problem.html', { pdoc });
   }
 
