@@ -225,7 +225,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.get(this.domainId, rdoc.pid, null),
+            problem.get(this.domainId, rdoc.pid),
         ]);
         if (pdoc) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;

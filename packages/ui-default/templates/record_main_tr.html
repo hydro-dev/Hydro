@@ -13,7 +13,7 @@
       </button> |
     </form>
   {% endif %}
-  {% if pdoc and (not pdoc.hidden or handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_HIDDEN)) %}
+  {% if pdoc and (not pdoc.hidden or handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_HIDDEN) or handler.user.own(pdoc)) %}
     {{ problem.render_problem_title(pdoc, show_tags=false) }}
   {% else %}
     *
