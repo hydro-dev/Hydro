@@ -62,6 +62,7 @@ const xss = new Xss.FilterXSS({
         tt: [],
         u: [],
         ul: [],
+        var: [],
         video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
     },
 });
