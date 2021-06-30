@@ -607,7 +607,6 @@ export async function getScoreboard(
 ): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict, number]> {
     const tdoc = await get(domainId, tid, docType);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
-    if (!canShowRecord.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
     const [rows, udict, nPages] = await RULES[tdoc.rule].scoreboard(
