@@ -161,7 +161,7 @@ langs: ${JSON.stringify(langs)}`),
             const timestr = document.querySelector(`#statustime_${id}`).children[0].innerHTML.trim();
             const time = timestr === '-' ? 0 : (+timestr) * 1000;
             const memorystr = document.querySelector(`#statusmem_${id}`).innerHTML.trim().toLowerCase();
-            const memory = memorystr === '-' ? 0 : parseMemoryMB(memorystr) / 1024;
+            const memory = memorystr === '-' ? 0 : parseMemoryMB(memorystr) * 1024;
             await next({
                 message: document.querySelector(`#statusres_${id}`).childNodes[0].nodeValue.trim(),
             });
