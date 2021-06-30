@@ -382,6 +382,9 @@ export class ContestCodeHandler extends Handler {
         }
         await this.limitRate('homework_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
+        if (!contest.canShowRecord.call(this, tdoc as any, true)) {
+            throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
         const rnames = {};
         for (const tsdoc of tsdocs) {
             for (const pid in tsdoc.detail || {}) {

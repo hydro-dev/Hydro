@@ -58,9 +58,11 @@
       </a></li>
     {% endif %}
     {% if handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('contest_code', tid=tdoc.docId) }}">
-        <span class="icon icon-download"></span> {{ _('Export All Code') }}
-      </a></li>
+      {% if model.contest.canShowRecord.call(handler, tdoc, true) %}
+        <li class="menu__item"><a class="menu__link" href="{{ url('contest_code', tid=tdoc.docId) }}">
+          <span class="icon icon-download"></span> {{ _('Export All Code') }}
+        </a></li>
+      {% endif %}
     {% endif %}
       <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
         <span class="icon icon-flag"></span> {{ _('All Submissions') }}
