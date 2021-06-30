@@ -441,6 +441,7 @@ export interface ContestRule {
     check: (args: any) => any;
     statusSort: any;
     showScoreboard: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
+    showSelfRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
     showRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
     stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat;
     scoreboard: (

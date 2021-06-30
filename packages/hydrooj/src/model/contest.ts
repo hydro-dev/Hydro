@@ -23,6 +23,7 @@ const acm: ContestRule = {
     check: () => { },
     statusSort: { accept: -1, time: 1 },
     showScoreboard: () => true,
+    showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat: (tdoc, journal) => {
         const naccept = {};
@@ -152,6 +153,7 @@ const oi: ContestRule = {
         return { score, detail };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
+    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
         const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
@@ -244,7 +246,8 @@ const oi: ContestRule = {
 const ioi: ContestRule = {
     ...oi,
     TEXT: 'IOI',
-    showRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    showSelfRecord: () => true,
     showScoreboard: () => true,
 };
 
@@ -293,6 +296,7 @@ const homework: ContestRule = {
         };
     },
     showScoreboard: () => true,
+    showSelfRecord: () => true,
     showRecord: () => true,
     async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
         const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
@@ -595,6 +599,12 @@ export function canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
     return false;
 }
 
+export function canShowSelfRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+    if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    return false;
+}
+
 export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
@@ -650,6 +660,7 @@ global.Hydro.model.contest = {
     getAndListStatus,
     recalcStatus,
     canShowRecord,
+    canShowSelfRecord,
     canShowScoreboard,
     canViewHiddenScoreboard,
     getScoreboard,

@@ -95,7 +95,12 @@ class RecordDetailHandler extends Handler {
         if (!rdoc) throw new RecordNotFoundError(rid);
         if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
-            if (!contest.canShowRecord.call(this, tdoc, true)) throw new PermissionError(rid);
+            if (
+                (rdoc.uid !== this.user._id && !contest.canShowRecord.call(this, tdoc, true))
+                || (rdoc.uid === this.user._id && !contest.canShowSelfRecord.call(this, tdoc, true))
+            ) {
+                throw new PermissionError(rid);
+            }
         }
         if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
