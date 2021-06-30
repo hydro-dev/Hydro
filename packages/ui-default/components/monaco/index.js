@@ -54,7 +54,10 @@ const problemConfigSchema = {
   def: problemConfigSchemaDef,
   properties: {
     key: { type: 'string', pattern: '[0-9a-f]{32}' },
-    type: { enum: ['default', 'interactive', 'submit_answer', 'subjective'] },
+    type: { enum: ['default', 'interactive', 'submit_answer', 'subjective', 'remote_judge'] },
+    subType: { type: 'string' },
+    langs: { type: 'array', items: { type: 'string' } },
+    target: { type: 'string' },
     checker_type: { enum: ['default', 'lemon', 'syzoj', 'testlib', 'strict', 'qduoj'] },
     checker: { type: 'string', pattern: '\\.' },
     interactor: { type: 'string', pattern: '\\.' },

@@ -6,6 +6,7 @@ import * as Judge from 'hydrooj/dist/handler/judge';
 import TaskModel from 'hydrooj/dist/model/task';
 import DomainModel from 'hydrooj/dist/model/domain';
 import ProblemModel from 'hydrooj/dist/model/problem';
+import { STATUS } from 'hydrooj/dist/model/builtin';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import providers from './providers/index';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
@@ -26,9 +27,12 @@ class Service {
     }
 
     async judge(task) {
-        const rid = await this.api.submitProblem(task.target, task.lang, task.code, task);
         const next = (payload) => Judge.next({ ...payload, rid: task.rid });
         const end = (payload) => Judge.end({ ...payload, rid: task.rid });
+        await next({ status: STATUS.STATUS_FETCHED });
+        const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
+        if (!rid) return;
+        await next({ status: STATUS.STATUS_JUDGING });
         await this.api.waitForSubmission(rid, next, end);
     }
 

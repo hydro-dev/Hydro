@@ -30,9 +30,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     }
   }
   const main = {};
-  const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
   for (const key in window.LANGS) {
-    if (UiContext.pdocConfig.langs && !prefix.has(key) && !UiContext.pdocConfig.langs.includes(key)) continue;
+    if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
     if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
     if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
