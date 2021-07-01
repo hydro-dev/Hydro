@@ -187,7 +187,7 @@ SystemSetting(
     Setting('setting_limits', 'limit.problem_files_size_max', 128 * 1024 * 1024, 'number', 'limit.problem_files_size_max', 'Max files size per problem'),
     Setting('setting_limits', 'limit.user_files', 100, 'number', 'limit.user_files', 'Max files for user'),
     Setting('setting_limits', 'limit.user_files_size', 128 * 1024 * 1024, 'number', 'limit.user_files_size', 'Max total file size for user'),
-    Setting('setting_limits', 'limit.submisson', 30, 'number', 'limit.submission', 'Max submission count per minute'),
+    Setting('setting_limits', 'limit.submission', 30, 'number', 'limit.submission', 'Max submission count per minute'),
     Setting('setting_limits', 'limit.pretest', 60, 'number', 'limit.pretest', 'Max pretest count per minute'),
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege', FLAG_PRO),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
