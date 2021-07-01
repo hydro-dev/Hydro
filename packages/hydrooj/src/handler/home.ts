@@ -26,6 +26,7 @@ import token from '../model/token';
 import * as training from '../model/training';
 import { PERM, PRIV } from '../model/builtin';
 import BlackListModel from '../model/blacklist';
+import ProblemModel from '../model/problem';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -293,8 +294,15 @@ class HomeDomainHandler extends Handler {
             const dids = Object.keys(dudict);
             ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
         } else {
-            ddocs = await domain.getMulti().toArray();
-            for (const ddoc of ddocs) dudict[ddoc._id] = ddoc;
+            const _ddocs = await domain.getMulti().toArray();
+            for (const ddoc of _ddocs) {
+                // eslint-disable-next-line no-await-in-loop
+                const pcount = await ProblemModel.count(ddoc._id, {});
+                if (pcount >= 3) {
+                    dudict[ddoc._id] = ddoc;
+                    ddocs.push(ddoc);
+                }
+            }
         }
         const canManage = {};
         for (const ddoc of ddocs) {
