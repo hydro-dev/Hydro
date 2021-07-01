@@ -252,7 +252,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (this.domain.langs && !this.domain.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed');
         }
-        await this.limitRate('add_record', 60, 5);
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
@@ -273,7 +273,7 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
     @param('code', Types.Content)
     @param('input', Types.Content, true)
     async post(domainId: string, lang: string, code: string, input = '') {
-        await this.limitRate('add_record', 60, 5);
+        await this.limitRate('do_pretest', 60, system.get('limit.pretest'));
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
             lang, code, true, input,

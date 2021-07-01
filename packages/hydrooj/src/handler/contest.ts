@@ -348,7 +348,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
         if (this.domain.langs && !this.domain.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed');
         }
-        await this.limitRate('add_record', 60, 10);
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
             type: document.TYPE_CONTEST,
             tid,
