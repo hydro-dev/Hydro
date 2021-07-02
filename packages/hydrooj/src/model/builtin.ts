@@ -158,6 +158,7 @@ export const PERMS = [
     Permission('perm_training', PERM.PERM_VIEW_TRAINING, 'View training plans'),
     Permission('perm_training', PERM.PERM_CREATE_TRAINING, 'Create training plans'),
     Permission('perm_training', PERM.PERM_EDIT_TRAINING, 'Edit training plans'),
+    Permission('perm_training', PERM.PERM_PIN_TRAINING, 'Pin training plans'),
     Permission('perm_training', PERM.PERM_EDIT_TRAINING_SELF, 'Edit own training plans'),
     Permission('perm_ranking', PERM.PERM_VIEW_RANKING, 'View ranking'),
 ];

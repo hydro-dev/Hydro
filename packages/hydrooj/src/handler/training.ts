@@ -237,7 +237,7 @@ class TrainingEditHandler extends Handler {
         title: string, content: string,
         _dag: string, pin = false, description: string,
     ) {
-        if (this.tdoc.pin !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
+        if ((!!this.tdoc.pin) !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag'));
