@@ -132,13 +132,14 @@ class HomeworkDetailProblemHandler extends Handler {
         this.tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
         const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (!pid) throw new ProblemNotFoundError(domainId, tid, _pid);
-        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
-        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         [this.udoc, this.pdoc, this.tsdoc] = await Promise.all([
             user.getById(domainId, this.tdoc.owner),
-            problem.get(pdomainId, ppid),
+            problem.get(domainId, pid),
             contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
         ]);
+        if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
+        // @ts-ignore
+        if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.pdoc.pid = _pid;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
         this.response.body = {

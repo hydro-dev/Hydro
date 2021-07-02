@@ -287,7 +287,7 @@ class HomeDomainHandler extends Handler {
             ['Hydro', 'homepage'],
             ['home_domain', null],
         ];
-        let ddocs: DomainDoc[];
+        let ddocs: DomainDoc[] = [];
         let dudict: Record<string, DomainDoc> = {};
         if (!this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) {
             dudict = await domain.getDictUserByDomainId(this.user._id);
