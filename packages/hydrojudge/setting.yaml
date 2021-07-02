@@ -58,7 +58,7 @@ disable:
   desc: Disable builtin judge
   default: false
 env:
-  type: text
+  type: textarea
   name: env
   desc: Sandbox Env
   default: |
