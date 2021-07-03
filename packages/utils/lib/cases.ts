@@ -63,6 +63,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                 score: parseInt(subtask.score, 10),
                 if: subtask.if || [],
                 cases,
+                type: subtask.type || 'min',
                 time: parseTimeMS(subtask.time || cfg.time || '1s'),
                 memory: parseMemoryMB(subtask.memory || cfg.memory || '256m'),
             });
