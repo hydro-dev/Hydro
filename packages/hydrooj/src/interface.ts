@@ -294,6 +294,7 @@ export interface ScoreboardNode {
     value: string;
     raw?: any;
     score?: number;
+    style?: string;
 }
 export type ScoreboardRow = ScoreboardNode[] & { raw?: any };
 

@@ -179,6 +179,17 @@ const oi: ContestRule = {
             }
         }
         const psdict = {};
+        const first = {};
+        for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
+        for (const [, tsdoc] of rankedTsdocs) {
+            const tsddict = {};
+            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
+            for (const pid of tdoc.pids) {
+                if (tsddict[pid]?.accept && tsddict[pid].rid.generationTime < first[pid]) {
+                    first[pid] = tsddict[pid].rid.generationTime;
+                }
+            }
+        }
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
             const psdocs = await Promise.all(
@@ -227,11 +238,15 @@ const oi: ContestRule = {
                         ],
                     });
                 } else {
-                    row.push({
+                    const node: ScoreboardNode = {
                         type: 'record',
                         value: tsddict[pid]?.score ?? '-',
                         raw: tsddict[pid]?.rid || null,
-                    });
+                    };
+                    if (tsddict[pid]?.accept && tsddict[pid]?.rid.generationTime === first[pid]) {
+                        node.style = 'background-color: rgb(217, 240, 199);';
+                    }
+                    row.push(node);
                 }
             }
             rows.push(row);

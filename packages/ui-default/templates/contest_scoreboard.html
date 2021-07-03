@@ -36,7 +36,7 @@
         {%- for row in rows -%}{% if loop.index0 > 0 %}
           <tr>
             {%- for column in row -%}
-              <td class="col--{{ rows[0][loop.index0]['type'] }}">
+              <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
               {% if column.type == 'user' %}
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
