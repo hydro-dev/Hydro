@@ -31,11 +31,12 @@ class RecordListHandler extends Handler {
         domainId: string, page = 1, pid?: string, tid?: ObjectID,
         uidOrName?: string, status?: number, full = false, all = false,
     ) {
+        let tdoc = null;
         this.response.template = 'record_main.html';
         const q: FilterQuery<RecordDoc> = { 'contest.tid': tid, hidden: false };
         if (full) uidOrName = this.user._id.toString();
         if (tid) {
-            const tdoc = await contest.get(domainId, tid, -1);
+            tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
@@ -65,12 +66,13 @@ class RecordListHandler extends Handler {
                 canViewProblem
                     ? problem.getList(domainId, rdocs.map(
                         (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
-                    ), canViewProblemHidden || this.user._id, false)
+                    ), (!!tid) || canViewProblemHidden || this.user._id, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {
             page,
             rdocs,
+            tdoc,
             pdict,
             udict,
             filterPid: pid,
@@ -232,12 +234,19 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.domainId, rdoc.uid),
             problem.get(this.domainId, rdoc.pid),
         ]);
-        if (pdoc) {
+        const tdoc = this.tid ? contest.get(this.domainId, new ObjectID(this.tid)) : null;
+        if (pdoc && !rdoc.contest) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.pretest) this.send({ rdoc });
-        else this.send({ html: await this.renderHTML('record_main_tr.html', { rdoc, udoc, pdoc }) });
+        else {
+            this.send({
+                html: await this.renderHTML('record_main_tr.html', {
+                    rdoc, udoc, pdoc, tdoc,
+                }),
+            });
+        }
     }
 }
 

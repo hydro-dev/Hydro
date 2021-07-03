@@ -21,7 +21,8 @@ class RecordModel {
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'hidden', 'progress',
-        'contest', 'judger', 'judgeAt', 'status', 'pdomain',
+        'contest', 'judger', 'judgeAt', 'status', 'domainId',
+        'pdomain',
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {

@@ -86,7 +86,7 @@
           <tbody>
           {%- for rdoc in rdocs -%}
             {% set udoc = udict[rdoc['uid']] %}
-            {% set pdoc = pdict[rdoc['pid']] %}
+            {% set pdoc = pdict[rdoc['pid']] or pdict[rdoc.pdomain + ':' + rdoc.pid] %}
             {% include 'record_main_tr.html' %}
           {%- endfor -%}
           </tbody>
