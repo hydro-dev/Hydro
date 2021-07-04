@@ -6,7 +6,7 @@
     <div class="section__body">
       <h1>{{ tdoc.title }}</h1>
       <div class="contest-sidebar__status">
-      {% if attended %}
+      {% if attended or tdoc.attend %}
         <span class="icon icon-check"></span> {{ _('Attended') }}
       {% else %}
         <span class="icon icon-schedule"></span> {{ _('Not Attended') }}

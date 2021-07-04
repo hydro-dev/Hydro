@@ -56,7 +56,7 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
-        this.vnode = await discussion.getVnode(domainId, typeMapper[type], name);
+        this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this.user._id);
         if (this.vnode.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (this.ddoc) {
             this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
@@ -68,8 +68,10 @@ class DiscussionHandler extends Handler {
 class DiscussionMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
+        // Limit to known types
+        const parentType = { $in: Object.keys(typeMapper).map((i) => typeMapper[i]) };
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti(domainId),
+            discussion.getMulti(domainId, { parentType }),
             page,
             system.get('pagination.discussion'),
         );
@@ -300,24 +302,12 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 }
 
-class DiscussionDetailRawHandler extends DiscussionHandler {
-    async get() {
+class DiscussionRawHandler extends DiscussionHandler {
+    @param('drid', Types.ObjectID, true)
+    @param('drrid', Types.ObjectID, true)
+    async get(domainId: string, drid: ObjectID, drrid: ObjectID) {
         this.response.type = 'text/markdown';
-        this.response.body = this.ddoc.content;
-    }
-}
-
-class DiscussionReplyRawHandler extends DiscussionHandler {
-    async get() {
-        this.response.type = 'text/markdown';
-        this.response.body = this.drdoc.content;
-    }
-}
-
-class DiscussionTailReplyRawHandler extends DiscussionHandler {
-    async get() {
-        this.response.type = 'text/markdown';
-        this.response.body = this.drrdoc.content;
+        this.response.body = drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
     }
 }
 
@@ -375,9 +365,9 @@ export async function apply() {
     Route('discussion_main', '/discuss', DiscussionMainHandler);
     Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
     Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
-    Route('discussion_detail', '/discuss/:did/raw', DiscussionDetailRawHandler);
-    Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionReplyRawHandler);
-    Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionTailReplyRawHandler);
+    Route('discussion_detail', '/discuss/:did/raw', DiscussionRawHandler);
+    Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionRawHandler);
+    Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionRawHandler);
     Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
     Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler, PRIV.PRIV_USER_PROFILE, PERM.PERM_CREATE_DISCUSSION);
 }

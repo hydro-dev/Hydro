@@ -232,15 +232,21 @@ export function getNode(domainId: string, _id: string) {
     return document.get(domainId, document.TYPE_DISCUSSION_NODE, _id);
 }
 
-export async function getVnode(domainId: string, type: number, id: string) {
+export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
         const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
         return { ...pdoc, type, id };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
-        const tdoc = await (type === document.TYPE_TRAINING ? training : contest).get(domainId, new ObjectID(id), type as any);
+        const model = type === document.TYPE_TRAINING ? training : contest;
+        const _id = new ObjectID(id);
+        const tdoc = await model.get(domainId, _id, type as any);
         if (!tdoc) throw new DiscussionNodeNotFoundError(id);
+        if (uid) {
+            const tsdoc = await model.getStatus(domainId, _id, uid);
+            tdoc.attend = tsdoc.attend || tsdoc.enroll;
+        }
         return { ...tdoc, type, id };
     }
     return {
