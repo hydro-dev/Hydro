@@ -8,7 +8,7 @@ export default new AutoloadPage('media', async () => {
         const users = $dom.find('div[data-user]');
         const resolve = (ele, item) => {
             items.push(item);
-            resolvers.push((html) => $(ele).replaceWith($(html)));
+            resolvers.push((html) => html && $(ele).replaceWith($(html)));
         };
         users.get().forEach((ele) => resolve(ele, { type: 'user', id: +$(ele).text() }));
         $dom.find('.typo').get().forEach((el) => {
@@ -30,6 +30,7 @@ export default new AutoloadPage('media', async () => {
                 if (!data) return;
                 if (category === 'user' && Number.isInteger(+data) && !extra) resolve(ele, { type: 'user', id: +data });
                 if (category === 'p' && !extra) resolve(ele, { type: 'problem', id: data, domainId });
+                if (category === 'contest' && !extra) resolve(ele, { type: 'contest', id: data, domainId });
             });
         });
         if (!items.length) return;

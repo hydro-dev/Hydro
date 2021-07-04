@@ -4,12 +4,13 @@ const { readdirSync, readFileSync } = require('fs');
 const { join } = require('path');
 const crypto = require('crypto');
 const { tmpdir } = require('os');
+const { ObjectID } = require('mongodb');
 const bus = require('hydrooj/dist/service/bus');
 const { PERM } = require('hydrooj/dist/model/builtin');
 const markdown = require('./backendlib/markdown');
 
 const {
-  system, domain, user, setting, problem,
+  system, domain, user, setting, problem, contest,
 } = global.Hydro.model;
 const { Route, Handler, UiContextBase } = global.Hydro.service.server;
 
@@ -132,18 +133,28 @@ class RichMediaHandler extends Handler {
   async renderProblem(domainId, payload) {
     const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
     let pdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_PROBLEM)
-      ? await problem.get(domainId, payload.id) || problem.default
+      ? await problem.get(payload.domainId || domainId, payload.id) || problem.default
       : problem.default;
     if (pdoc.hidden && !cur.own(pdoc) && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = problem.default;
     return await this.renderHTML('partials/problem.html', { pdoc });
+  }
+
+  async renderContest(domainId, payload) {
+    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_CONTEST)
+      ? await contest.get(payload.domainId || domainId, new ObjectID(payload.id))
+      : null;
+    if (tdoc) return await this.renderHTML('partials/contest.html', { tdoc });
+    return '';
   }
 
   async post({ domainId, items }) {
     const res = [];
     for (const item of items) {
       if (item.domainId && item.domainId === domainId) delete item.domainId;
-      if (item.type === 'user') res.push(this.renderUser(domainId, item));
-      else if (item.type === 'problem') res.push(this.renderProblem(domainId, item));
+      if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));
+      else if (item.type === 'problem') res.push(this.renderProblem(domainId, item).catch(() => ''));
+      else if (item.type === 'contest') res.push(this.renderContest(domainId, item).catch(() => ''));
       else res.push('');
     }
     this.response.body = await Promise.all(res);

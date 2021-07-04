@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.12.11",
+  "version": "4.12.12",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -121,6 +121,7 @@
     "markdown-it-mark": "^3.0.1",
     "markdown-it-merge-cells": "^1.0.1",
     "markdown-it-table-of-contents": "^0.5.2",
+    "mongodb": "^3.6.9",
     "nunjucks": "^3.2.3",
     "streamsaver": "^2.0.5",
     "xss": "^1.0.9"
