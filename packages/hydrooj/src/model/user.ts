@@ -264,6 +264,19 @@ class UserModel {
         return uid;
     }
 
+    @ArgMethod
+    static async changeUsername(uid: number, uname: string) {
+        const udoc = await coll.findOne({ _id: uid });
+        deleteUserCache(udoc);
+        const res = await coll.findOneAndUpdate(
+            { _id: uid },
+            { $set: { uname, unameLower: uname.trim().toLowerCase() } },
+            { returnDocument: 'after' },
+        );
+        deleteUserCache(res.value);
+        return res.value;
+    }
+
     static getMulti(params: any = {}) {
         return coll.find(params);
     }
