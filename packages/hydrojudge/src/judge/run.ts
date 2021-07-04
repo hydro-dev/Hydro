@@ -68,7 +68,7 @@ export const judge = async (ctx) => {
             stderr,
             copyIn,
             copyOut,
-            time: parseTimeMS(ctx.config.time || '1s'),
+            time: parseTimeMS(ctx.config.time || '1s') * ctx.execute.time,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
         },
     );
@@ -77,9 +77,9 @@ export const judge = async (ctx) => {
     if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
     const message: string[] = [];
     if (status === STATUS.STATUS_ACCEPTED) {
-        if (time_usage_ms > ctx.config.time) {
+        if (time_usage_ms > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > ctx.config.memory * 1024) {
+        } else if (memory_usage_kb > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         }
     } else if (code) {

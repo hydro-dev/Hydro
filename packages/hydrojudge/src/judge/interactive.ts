@@ -23,12 +23,12 @@ function judgeCase(c) {
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
                 copyIn: ctx.executeUser.copyIn,
-                time: ctxSubtask.subtask.time,
+                time: ctxSubtask.subtask.time * ctx.executeUser.time,
                 memory: ctxSubtask.subtask.memory,
             }, {
                 execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
-                time: ctxSubtask.subtask.time * 2,
+                time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
                 memory: ctxSubtask.subtask.memory * 2,
                 copyOut: ['/w/tout?'],
             },
@@ -37,7 +37,7 @@ function judgeCase(c) {
         let status;
         let score = 0;
         let message: any = '';
-        if (time_usage_ms > ctxSubtask.subtask.time) {
+        if (time_usage_ms > ctxSubtask.subtask.time * ctx.executeUser.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory_usage_kb > ctxSubtask.subtask.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
@@ -72,7 +72,6 @@ function judgeCase(c) {
 
 function judgeSubtask(subtask) {
     return async (ctx) => {
-        subtask.time *= ctx.time_limit_rate;
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -93,7 +92,6 @@ function judgeSubtask(subtask) {
 
 export const judge = async (ctx) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    ctx.time_limit_rate = ctx.getLang(ctx.lang).time_limit_rate;
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (() => {
             const copyIn = {};

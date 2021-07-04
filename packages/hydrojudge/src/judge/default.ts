@@ -107,7 +107,6 @@ function judgeCase(c, sid) {
 
 function judgeSubtask(subtask, sid) {
     return async (ctx) => {
-        subtask.time *= ctx.time_limit_rate;
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -132,8 +131,6 @@ function judgeSubtask(subtask, sid) {
 
 export const judge = async (ctx) => {
     if (!ctx.config.subtasks.length) throw new SystemError('Problem data not found.');
-    const info = ctx.getLang(ctx.lang);
-    ctx.time_limit_rate = info.time_limit_rate || 1;
     ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.execute, ctx.checker] = await Promise.all([
         (() => {
