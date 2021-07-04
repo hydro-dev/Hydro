@@ -199,7 +199,7 @@ const oi: ContestRule = {
                         pdomain = pid.split(':')[0];
                         pid = +pid.split(':')[1];
                     }
-                    return problem.getMultiStatus(pdomain, { uid: { $in: uids } }).toArray();
+                    return problem.getMultiStatus(pdomain, { docId: pid, uid: { $in: uids } }).toArray();
                 }),
             );
             for (const tpsdoc of psdocs) {
@@ -222,7 +222,7 @@ const oi: ContestRule = {
             );
             for (const pid of tdoc.pids) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                if (isDone(tdoc) && tsddict[pid]?.rid !== psdict[`${tsdoc.uid}/${pid}`]?.rid) {
+                if (isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[`${tsdoc.uid}/${pid}`]?.rid?.toHexString()) {
                     row.push({
                         type: 'records',
                         value: '',
