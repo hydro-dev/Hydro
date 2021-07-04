@@ -17,6 +17,22 @@
 {% endif %}
   <div>
     <ol class="menu">
+    {% if page_name == 'discussion_node' or page_name == 'discussion_detail' %}
+    {% if handler.user.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
+      <li class="menu__item"><a class="menu__link highlight" href="{{ url('discussion_create', type='contest', name=tdoc.docId) }}">
+        <span class="icon icon-add"></span> {{ _('Create a Discussion') }}
+      </a></li>
+    {% else %}
+      {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
+        <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
+      {% else %}
+        <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
+        <span class="icon icon-add"></span> {{ _('No Permission to Create a Discussion') }}</a></li>
+      {% endif %}
+    {% endif %}
+      <li class="menu__seperator"></li>
+    {% endif %}
     {% if page_name != 'contest_detail' %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_detail', tid=tdoc.docId) }}">
         <span class="icon icon-award"></span> {{ _('View Contest') }}
@@ -63,6 +79,11 @@
           <span class="icon icon-download"></span> {{ _('Export All Code') }}
         </a></li>
       {% endif %}
+    {% endif %}
+    {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('discussion_node', type='contest', name=tdoc.docId) }}">
+        <span class="icon icon-comment--text"></span> {{ _('Discussion') }}
+      </a></li>
     {% endif %}
       <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
         <span class="icon icon-flag"></span> {{ _('All Submissions') }}
