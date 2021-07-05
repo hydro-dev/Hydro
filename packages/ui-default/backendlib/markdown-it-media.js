@@ -86,13 +86,14 @@ function videoUrl(service, videoID, url, options) {
     case 'osf':
       return `https://mfr.osf.io/render?url=https://osf.io/${videoID}/?action=download`;
     default:
-      return service;
+      return videoID;
   }
 }
 
 module.exports = function videoPlugin(md) {
   const options = {
     url: videoUrl,
+    video: videoUrl,
     youtube: { width: 640, height: 390, nocookie: false },
     vimeo: { width: 500, height: 281 },
     vine: { width: 600, height: 600, embed: 'simple' },
@@ -118,9 +119,9 @@ module.exports = function videoPlugin(md) {
         + '    }); </script>';
     }
     if (service === 'pdf') return `<iframe src="${videoID}?noDisposition=on#view=fit" width="100%" style="min-height: 100vh;border: none;"></iframe>`;
-    if (service === 'video') {
-      return `<div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width
-        }" height="${options[service].height
+    if (options[service]) {
+      return `<div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width || 640
+        }" height="${options[service].height || 390
         }" src="${options.url(service, videoID, tokens[idx].url, options)
         }" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>`;
     }
