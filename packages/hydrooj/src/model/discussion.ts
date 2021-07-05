@@ -245,7 +245,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
         if (!tdoc) throw new DiscussionNodeNotFoundError(id);
         if (uid) {
             const tsdoc = await model.getStatus(domainId, _id, uid);
-            tdoc.attend = tsdoc.attend || tsdoc.enroll;
+            tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
         return { ...tdoc, type, id };
     }

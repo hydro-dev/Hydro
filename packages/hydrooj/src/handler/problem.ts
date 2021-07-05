@@ -91,7 +91,10 @@ export class ProblemMainHandler extends ProblemHandler {
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(a.docId) - sort.indexOf(b.docId));
         if (q) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
-            if (pdoc) pdocs.filter((doc) => doc.docId !== pdoc.docId).unshift(pdoc);
+            if (pdoc) {
+                pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
+                pdocs.unshift(pdoc);
+            }
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
