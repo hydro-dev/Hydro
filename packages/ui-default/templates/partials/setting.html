@@ -1,5 +1,5 @@
 <form method="post">
-{%- for family, family_settings in settings|groupby('family') -%}
+{%- for family, family_settings in settings|groupby('family') -%}{%- if family != 'setting_storage' %}
   <div class="section__header">
     <h1 class="section__title" id="{{ family }}" data-heading>{{ _(family) }}</h1>
   </div>
@@ -83,7 +83,7 @@
   {% endif %}
   {%- endfor -%}
   </div>
-{%- endfor -%}
+{%- endif -%}{%- endfor -%}
   <div class="section__body">
     <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
     <input type="submit" class="rounded primary button" value="{{ _('Save All Changes') }}">

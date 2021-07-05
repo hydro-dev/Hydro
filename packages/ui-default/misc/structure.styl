@@ -16,6 +16,22 @@
 .mode--scratchpad .scratchpad--hide
   display: none
 
+::-webkit-scrollbar
+  width: 8px;
+  height: 8px;
+
+::-webkit-scrollbar-track
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+  border-radius: 8px;
+
+::-webkit-scrollbar-thumb
+  border-radius: 8px;
+  background: #bbb;
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.25);
+
+::-webkit-scrollbar-thumb:window-inactive
+  background: rgba(0,255,0,0.4);
+
 .main
   padding: rem(20px 0)
   flex: 1
