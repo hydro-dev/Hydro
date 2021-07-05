@@ -1,10 +1,10 @@
 export default function reducer(state = {
   lang: UiContext.codeLang,
-  code: localStorage.getItem(`${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`) || UiContext.codeTemplate,
+  code: localStorage.getItem(`${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`) || UiContext.codeTemplate,
 }, action) {
   switch (action.type) {
     case 'SCRATCHPAD_EDITOR_UPDATE_CODE': {
-      localStorage.setItem(`${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`, action.payload);
+      localStorage.setItem(`${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`, action.payload);
       return {
         ...state,
         code: action.payload,
