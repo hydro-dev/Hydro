@@ -10,6 +10,7 @@ export async function judge({
     let totalStatus = 0;
     for (const i in config.outputs) {
         const c = config.outputs[i];
+        outputs[i] = outputs[i] || '';
         let status = STATUS.STATUS_WRONG_ANSWER;
         let score = 0;
         if (outputs[i].trim() === (c.output || c[0]).trim()) {
