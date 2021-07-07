@@ -106,7 +106,7 @@ export const judge = async (ctx) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return compile(
-                ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1]),
+                ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
                 fs.readFileSync(ctx.config.interactor).toString(),
                 'interactor',
                 copyIn,

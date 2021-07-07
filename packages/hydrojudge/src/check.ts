@@ -29,5 +29,5 @@ export async function compileChecker(getLang: Function, checkerType: string, che
     if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
     const file = await fs.readFile(checker);
     // TODO cache compiled checker
-    return await compile(getLang(parseFilename(checker).split('.')[1]), file.toString(), 'checker', copyIn);
+    return await compile(getLang(parseFilename(checker).split('.')[1].replace('@', '.'), file.toString(), 'checker', copyIn);
 }
