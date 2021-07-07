@@ -50,7 +50,7 @@ function judgeCase(c) {
             status = result.status;
             score = result.score;
             message = result.message;
-            if (resInteractor.code && resInteractor.code !== 1) message += ` (Interactor exited with code ${resInteractor.code})`;
+            if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
         }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
