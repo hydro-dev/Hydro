@@ -173,11 +173,12 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
     }
 }
 
-export function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
+export async function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): ReturnType<EventMap[K]> {
     if (argv.options.showBus && name !== 'message/log') logger.debug('bail: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
-        const result = callback.apply(this, args);
+        let result = callback.apply(this, args);
+        if (result instanceof Promise) result = await result;
         if (isBailed(result)) return result;
     }
     return null;
