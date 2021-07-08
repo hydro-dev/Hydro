@@ -638,6 +638,11 @@ export class Handler extends HandlerCommon {
     }
 }
 
+async function bail(name: string, ...args: any[]) {
+    const r = await bus.bail(name, ...args);
+    if (r instanceof Error) throw r;
+}
+
 async function handle(ctx, HandlerClass, checker) {
     global.Hydro.stat.reqCount++;
     const args = {
@@ -670,21 +675,21 @@ async function handle(ctx, HandlerClass, checker) {
             throw new MethodNotAllowedError(method);
         }
 
-        await bus.bail('handler/init', h);
-        await bus.bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bus.bail('handler/before-prepare', h);
+        await bail('handler/init', h);
+        await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bail('handler/before-prepare', h);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
-        await bus.bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bus.bail('handler/before', h);
+        await bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bail('handler/before', h);
         if (h[method]) await h[method](args);
         if (operation) await h[`post${operation}`](args);
-        await bus.bail(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bus.bail('handler/after', h);
+        await bail(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bail('handler/after', h);
         if (h.cleanup) await h.cleanup(args);
         if (h.finish) await h.finish(args);
-        await bus.bail(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bus.bail('handler/finish', h);
+        await bail(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bail('handler/finish', h);
     } catch (e) {
         try {
             await h.onerror(e);
