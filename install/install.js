@@ -229,7 +229,17 @@ for (let i = 0; i < steps.length; i++) {
                         retry++;
                     } else log.fatal('Error when running %s', op[0]);
                 }
-            } else op[0](op[1]);
+            } else {
+                let res = 'retry';
+                retry = 0;
+                while (res === 'retry') {
+                    if (retry < 30) {
+                        log.warn('Retry...');
+                        res = op[0](op[1]);
+                        retry++;
+                    } else log.fatal('Error installing');
+                }
+            }
         }
     } else log.info('已跳过该步骤 / Step skipped');
 }

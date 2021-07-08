@@ -1,12 +1,5 @@
 FROM node:14
 
-ADD ./entrypoint.sh /root/entrypoint.sh
-ADD ./judge.yaml /root/judge.yaml
-
-RUN yarn global add pm2 @hydrooj/hydrojudge && \
-    wget https://s3.undefined.moe/file/executor-amd64 -O /usr/bin/sandbox && \
-    chmod +x /usr/bin/sandbox
-
 RUN apt-get -qq update && \
     apt-get install -y \
     gcc \
@@ -24,6 +17,12 @@ RUN apt-get -qq update && \
     mono-runtime \
     mono-mcs
 
+ADD ./entrypoint.sh /root/entrypoint.sh
+ADD ./judge.yaml /root/judge.yaml
 RUN chmod +x /root/entrypoint.sh
+
+RUN yarn global add pm2 @hydrooj/hydrojudge && \
+    wget https://s3.undefined.moe/file/executor-amd64 -O /usr/bin/sandbox && \
+    chmod +x /usr/bin/sandbox
 
 ENTRYPOINT /root/entrypoint.sh

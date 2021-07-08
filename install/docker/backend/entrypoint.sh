@@ -1,7 +1,6 @@
 #!/bin/sh
 
 ROOT=/root/.hydro
-
 mkdir -p $ROOT
 
 if [ ! -f "$ROOT/addon.json" ]; then
