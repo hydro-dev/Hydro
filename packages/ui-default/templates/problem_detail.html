@@ -40,17 +40,17 @@
       <div class="section__body">
         <ul class="problem__tags">
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
-          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Type') }}: {{ pdoc.config.type }}</span>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-book">{{ _('problem_type.' + pdoc.config.type) }}</span>
           {% if pdoc.config.type != 'subjective' and pdoc.config.type != 'submit_answer' %}
-            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Time') }}: {{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
-            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Memory') }}: {{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
           <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
           <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</span>
           <span class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% if pdoc.tag.length %}
-            <span name="show_tags" class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item nojs--hide">{{ _('Show Tags') }}</span>
+            <span name="show_tags" class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
             {%- for tag in pdoc.tag -%}
               <span class="bp3-tag bp3-large bp3-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
             {%- endfor -%}

@@ -24,6 +24,11 @@ problem_main: Problem Set
 problem_solution: Problem Solution
 problem_statistics: Problem Statistics
 problem_submit: Problem Submit
+problem_type.default: 'Type: Default'
+problem_type.interactive: 'Type: Interactive'
+problem_type.remote_judge: 'Type: RemoteJudge'
+problem_type.subjective: 'Type: Subjective'
+problem_type.submit_answer: 'Type: SubmitAnswer'
 problem-category-delim: '|'
 problem-subcategory-delim: ', '
 problem.import.additional_file: '## Additional Files'
