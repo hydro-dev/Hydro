@@ -37,8 +37,9 @@ async function postInit() {
     if (!global.Hydro.isFirstWorker) return;
     const judge = require('./judge');
 
-    const { task, system, setting } = global.Hydro.model;
-    const { storage } = global.Hydro.service;
+    const {
+        task, system, setting, storage,
+    } = global.Hydro.model;
     const _judge = global.Hydro.handler.judge as any;
 
     if (system.get('hydrojudge.disable')) return;

@@ -270,10 +270,13 @@ export class ContestProblemHandler extends Handler {
         // @ts-ignore
         if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
+        const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
+        if (!showAccept) this.pdoc.nAccept = 0;
         if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
         if (!contest.isDone(this.tdoc) && !this.attended) throw new ContestNotAttendedError(tid);
         this.response.template = 'problem_detail.html';
         this.response.body = {
+            showAccept,
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             pdoc: this.pdoc,
