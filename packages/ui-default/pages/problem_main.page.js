@@ -218,6 +218,15 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
     ev.preventDefault();
     updateSelection();
   });
+  $('#searchForm').on('submit', () => {
+    updateSelection();
+    return false;
+  });
+  let update;
+  $('#searchForm').find('input').on('input', () => {
+    if (update) clearTimeout(update);
+    update = setTimeout(updateSelection, 500);
+  });
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request({ url: $(ev.currentTarget).attr('href') }).then(() => {

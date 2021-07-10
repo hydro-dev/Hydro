@@ -11,6 +11,15 @@
     <div class="medium-9 columns">
       <div class="section">
         <div class="section__body no-padding">
+          <form method="get" id="searchForm" action="{{ url('problem_main') }}">
+            <div class="search">
+              <input name="q" type="text" value="{{ category }}" placeholder="1001">
+              {% include "partials/problem_stat.html" %}
+              <button type="submit">
+                <span class="icon icon-search"></span>
+              </button>
+            </div>
+          </form>
           {% include "partials/problem_list.html" %}
         </div>
       </div>
@@ -48,30 +57,6 @@
           </ol>
         </div>
       {% endif %}
-      <div class="section side">
-        <div class="section__header edit-mode-hide">
-          <h1 class="section__title">{{ _('Categories') }}</h1>
-        </div>
-        <div class="section__body">
-          {% include "partials/category.html" %}
-        </div>
-        <div class="section__body edit-mode-hide">
-          {% include "partials/problem_lucky.html" %}
-        </div>
-      </div>
-      <div class="section side">
-        <div class="section__header">
-          <h1 class="section__title">{{ _('Search') }}</h1>
-        </div>
-        <form method="get" action="{{ url('problem_main') }}">
-          <div class="section__body">
-            <label>
-              <input name="q" type="text" class="textbox" value="{{ category }}" placeholder="1001">
-            </label>
-            <button type="submit" id="search" class="primary button">{{ _('Search') }}</button>
-          </div>
-        </form>
-      </div>
       {% if handler.user.hasPerm(perm.PERM_CREATE_PROBLEM) %}
         <div class="section side">
           <div class="section__header">
@@ -93,10 +78,15 @@
         </div>
       {% endif %}
       <div class="section side">
-        <div class="section__header">
-          <h1 class="section__title">{{ _('Statistics') }}</h1>
+        <div class="section__header edit-mode-hide">
+          <h1 class="section__title">{{ _('Categories') }}</h1>
         </div>
-        {% include "partials/problem_stat.html" %}
+        <div class="section__body">
+          {% include "partials/category.html" %}
+        </div>
+        <div class="section__body edit-mode-hide">
+          {% include "partials/problem_lucky.html" %}
+        </div>
       </div>
     </div>
   </div>

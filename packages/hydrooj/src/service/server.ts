@@ -683,6 +683,8 @@ async function handle(ctx, HandlerClass, checker) {
         await bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before', h);
         if (h[method]) await h[method](args);
+        await bail(`handler/before-operation/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+        await bail('handler/before-operation', h);
         if (operation) await h[`post${operation}`](args);
         await bail(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/after', h);

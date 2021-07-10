@@ -38,7 +38,7 @@ export class ProblemHandler extends Handler {
                 page, pcount, ppcount, pdocs, psdict, category,
             } = this.response.body;
             this.response.body = {
-                title: this.renderTitle(category),
+                title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
                     this.renderHTML('partials/problem_list.html', {
                         page, ppcount, pcount, pdocs, psdict,
@@ -92,8 +92,10 @@ export class ProblemMainHandler extends ProblemHandler {
         if (q) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
             if (pdoc) {
+                const count = pdocs.length;
                 pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
                 pdocs.unshift(pdoc);
+                pcount = pcount - count + pdocs.length;
             }
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
