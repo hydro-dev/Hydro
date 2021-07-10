@@ -70,8 +70,8 @@ jobs:
         push: true
         context: ./install/docker/backend
         tags: |
-          docker.pkg.github.com/hydro-dev/hydro/web:${{ github.sha }}
-          docker.pkg.github.com/hydro-dev/hydro/web:${{ github.ref }}
+          docker.pkg.github.com/hydro-dev/web:${{ github.sha }}
+          docker.pkg.github.com/hydro-dev/web:${{ github.ref }}
   judge:
     needs: build
     if: ${{ github.event_name == 'push' }}
@@ -96,5 +96,5 @@ jobs:
         push: true  
         context: ./install/docker/judge
         tags: |
-          docker.pkg.github.com/hydro-dev/hydro/judge:${{ github.sha }}
-          docker.pkg.github.com/hydro-dev/hydro/judge:${{ github.ref }}
+          docker.pkg.github.com/hydro-dev/judge:${{ github.sha }}
+          docker.pkg.github.com/hydro-dev/judge:${{ github.ref }}
