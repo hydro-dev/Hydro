@@ -321,6 +321,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWO
     rule: string,
     pids: ProblemId[],
     rated?: boolean,
+    _code?: string,
 
     // For homework
     penaltySince?: Date,

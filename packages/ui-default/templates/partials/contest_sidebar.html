@@ -41,13 +41,13 @@
     {% if not attended and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-        <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
-          <input type="hidden" name="operation" value="attend">
-          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-          <button class="menu__link" type="submit">
-            <span class="icon icon-add"></span> {{ _('Attend Contest') }}
-          </button>
-        </form>
+      <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
+        <input type="hidden" name="operation" value="attend">
+        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+        <button class="menu__link" {% if tdoc._code %}data-contest-code{% endif %} type="submit">
+          <span class="icon icon-add"></span> {{ _('Attend Contest') }}
+        </button>
+      </form>
     {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}

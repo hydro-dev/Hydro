@@ -7,7 +7,7 @@
         <form method="post">
           <div class="row">
             {{ form.form_select({
-                 columns:4,
+                 columns:3,
                  label:'Rule',
                  name:'rule',
                  options:rules,
@@ -23,8 +23,16 @@
                  autofocus:true,
                  row:false
                }) }}
+            {{ form.form_text({
+                 columns:3,
+                 label:'Invitation code',
+                 name:'code',
+                 placeholder:_('(leave blank if none)'),
+                 value:tdoc.code|default(''),
+                 row:false
+               }) }}
             {{ form.form_checkbox({
-                columns:4,
+                columns:2,
                 label:'Rated',
                 name:'rated',
                 placeholder:_('Is rated'),

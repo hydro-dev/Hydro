@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError,
+    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError, InvalidTokenError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
@@ -86,9 +86,11 @@ export class ContestDetailHandler extends Handler {
     }
 
     @param('tid', Types.ObjectID)
-    async postAttend(domainId: string, tid: ObjectID) {
+    @param('code', Types.String, true)
+    async postAttend(domainId: string, tid: ObjectID, code = '') {
         const tdoc = await contest.get(domainId, tid);
         if (contest.isDone(tdoc)) throw new ContestNotLiveError(tid);
+        if (tdoc._code && code !== tdoc._code) throw new InvalidTokenError(code);
         await contest.attend(domainId, tid, this.user._id);
         this.back();
     }
@@ -215,9 +217,10 @@ export class ContestEditHandler extends Handler {
     @param('rule', Types.Range(contest.RULES))
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
+    @param('code', Types.String, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false,
+        title: string, content: string, rule: string, _pids: string, rated = false, _code = '',
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             i = i.trim();
@@ -241,6 +244,7 @@ export class ContestEditHandler extends Handler {
         } else {
             tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
         }
+        await contest.edit(domainId, tid, { _code });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
     }
