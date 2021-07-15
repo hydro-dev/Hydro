@@ -298,7 +298,7 @@ class HomeDomainHandler extends Handler {
             for (const ddoc of _ddocs) {
                 // eslint-disable-next-line no-await-in-loop
                 const pcount = await ProblemModel.count(ddoc._id, {});
-                if (pcount >= 3) {
+                if (pcount >= 3 || ddoc.owner === this.user._id) {
                     dudict[ddoc._id] = ddoc;
                     ddocs.push(ddoc);
                 }
