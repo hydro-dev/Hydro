@@ -88,6 +88,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
       if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
       LANGS[key] = window.LANGS[key];
     }
+    const keys = Object.keys(LANGS);
+    if (!keys.includes(this.props.editorLang)) this.props.setEditorLanguage(keys[0]);
     return (
       <Toolbar>
         <ToolbarButton
