@@ -11,7 +11,7 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/superagent": "^4.1.11"
+        "@types/superagent": "^4.1.12"
     },
     "peerDependencies": {
         "hydrooj": "^2.15.0"

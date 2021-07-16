@@ -11,11 +11,11 @@
         "adm-zip": "^0.5.5",
         "decode-html": "^2.0.0",
         "fs-extra": "^10.0.0",
-        "mongodb": "^3.6.9",
+        "mongodb": "^3.6.10",
         "xml2js": "^0.4.23"
     },
     "devDependencies": {
-        "@types/xml2js": "^0.4.8"
+        "@types/xml2js": "^0.4.9"
     },
     "peerDependencies": {
         "hydrooj": "*"

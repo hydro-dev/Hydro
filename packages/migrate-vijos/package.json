@@ -7,9 +7,9 @@
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
-        "@types/mongodb": "^3.6.18"
+        "@types/mongodb": "^3.6.20"
     },
     "dependencies": {
-        "mongodb": "^3.6.9"
+        "mongodb": "^3.6.10"
     }
 }
