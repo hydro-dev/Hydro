@@ -185,7 +185,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, tid);
-            if (contest.canShowScoreboard.call(this, tdoc, true)) this.tid = tid.toHexString();
+            if (pretest || contest.canShowScoreboard.call(this, tdoc, true)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (uidOrName) {
