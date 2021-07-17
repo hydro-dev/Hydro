@@ -65,7 +65,7 @@ const mapDispatchToProps = (dispatch) => ({
     });
   },
   handleClickRefresh() {
-    this.loadSubmissions();
+    if (this.props.recordsVisible) this.loadSubmissions();
   },
 });
 
@@ -75,7 +75,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   };
 
   componentDidMount() {
-    this.props.loadSubmissions();
+    if (this.props.recordsVisible) this.props.loadSubmissions();
   }
 
   render() {

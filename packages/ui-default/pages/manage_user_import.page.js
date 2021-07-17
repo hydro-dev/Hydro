@@ -23,8 +23,8 @@ const page = new NamedPage('manage_user_import', () => {
     }
   }
 
-  $('[name="preview"]').click(() => post(true));
-  $('[name="submit"]').click(() => post(false));
+  $('[name="preview"]').on('click', () => post(true));
+  $('[name="submit"]').on('click', () => post(false));
 });
 
 export default page;
