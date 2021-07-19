@@ -239,7 +239,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
-        if (rdoc.input) this.send({ rdoc });
+        if (this.pretest) this.send({ rdoc });
         else {
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
