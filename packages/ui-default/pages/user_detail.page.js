@@ -81,6 +81,7 @@ const page = new NamedPage('user_detail', () => {
     });
   });
   initChart();
+  window.onresize = initChart;
 });
 
 export default page;
