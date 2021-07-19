@@ -226,7 +226,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     async onRecordChange(rdoc: RecordDoc) {
         if (rdoc.domainId !== this.domainId) return;
         if (!this.pretest && rdoc.input) return;
-        if (!this.pretest && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (!rdoc.input && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
         if (this.pid && (rdoc.pid !== this.pid || rdoc.pdomain !== this.pdomain)) return;
         // eslint-disable-next-line prefer-const
@@ -239,7 +239,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
-        if (this.pretest) this.send({ rdoc });
+        if (rdoc.input) this.send({ rdoc });
         else {
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
