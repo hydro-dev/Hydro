@@ -11,8 +11,7 @@
         "@hydrooj/utils": "workspace:*",
         "jsdom": "^16.6.0",
         "superagent": "^6.1.0",
-        "superagent-proxy": "^2.1.0",
-        "turndown": "^7.1.1"
+        "superagent-proxy": "^2.1.0"
     },
     "devDependencies": {
         "@types/jsdom": "^16.2.13",

@@ -22,9 +22,22 @@ const mapDispatchToProps = (dispatch) => ({
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
   disposable = [];
 
+  blockly = false;
+
   componentDidMount() {
     const value = this.props.value || '';
     const { language, theme } = this.props;
+    if (this.props.language === 'blockly') {
+      if (!this.blockly) {
+        import('./blockly.jsx').then(({ default: Blockly }) => {
+          if (!this.blockly) return;
+          Blockly.inject(this.containerElement, {
+          });
+        });
+      }
+      this.blockly = true;
+      return;
+    }
     this.model = monaco.editor.createModel(value, language, monaco.Uri.parse('file://model'));
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
@@ -49,11 +62,23 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           localStorage.setItem('scratchpad.editor.fontSize', current);
         })
       );
-      window.editor = this.editor;
     }
   }
 
   componentDidUpdate(prevProps) {
+    if (this.props.language === 'blockly') {
+      if (!this.blockly) {
+        this.editor.dispose();
+        import('./blockly.jsx').then(({ default: Blockly, toolbox }) => {
+          if (!this.blockly) return;
+          Blockly.inject(this.containerElement, {
+            toolbox,
+          });
+        });
+      }
+      this.blockly = true;
+      return;
+    }
     const {
       value, language, theme, mainSize, recordSize, pretestSize,
     } = this.props;
