@@ -50,6 +50,8 @@ class UserLoginHandler extends Handler {
 }
 
 class UserLogoutHandler extends Handler {
+    noCheckPermView = true;
+
     async get() {
         this.response.template = 'user_logout.html';
     }
