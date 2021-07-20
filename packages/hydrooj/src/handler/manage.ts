@@ -203,7 +203,13 @@ class SystemUserImportHandler extends SystemHandler {
                 if (!isEmail(email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!isUname(username)) messages.push(`Line ${+i + 1}: Invalid username`);
                 else if (!isPassword(password)) messages.push(`Line ${+i + 1}: Invalid password`);
-                else {
+                // eslint-disable-next-line no-await-in-loop
+                else if (await user.getByEmail('system', email)) {
+                    messages.push(`Line ${+i + 1}: Email ${email} already exists.`);
+                    // eslint-disable-next-line no-await-in-loop
+                } else if (await user.getByUname('system', username)) {
+                    messages.push(`Line ${+i + 1}: Username ${username} already exists.`);
+                } else {
                     udocs.push({
                         email, username, password, displayName,
                     });
@@ -215,10 +221,14 @@ class SystemUserImportHandler extends SystemHandler {
             for (const {
                 email, username, password, displayName,
             } of udocs) {
-                // eslint-disable-next-line no-await-in-loop
-                const uid = await user.create(email, username, password);
-                // eslint-disable-next-line no-await-in-loop
-                if (displayName) await domain.setUserInDomain(domainId, uid, { displayName });
+                try {
+                    // eslint-disable-next-line no-await-in-loop
+                    const uid = await user.create(email, username, password);
+                    // eslint-disable-next-line no-await-in-loop
+                    if (displayName) await domain.setUserInDomain(domainId, uid, { displayName });
+                } catch (e) {
+                    messages.push(e.message);
+                }
             }
         }
         this.response.body.path.push(['manage_user_import']);

@@ -24,7 +24,7 @@
         "@types/js-yaml": "^4.0.2",
         "@types/lodash": "^4.14.171",
         "@types/shell-quote": "^1.7.1",
-        "@types/ws": "^7.4.6"
+        "@types/ws": "^7.4.7"
     },
     "peerDependencies": {
         "hydrooj": "*"
