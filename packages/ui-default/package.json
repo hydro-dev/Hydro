@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.12.28",
+  "version": "4.13.0",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -114,6 +114,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
+    "jsesc": "^3.0.2",
     "katex": "^0.13.11",
     "lodash": "^4.17.21",
     "markdown-it": "^12.1.0",

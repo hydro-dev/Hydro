@@ -4,11 +4,10 @@ import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
-import base64 from 'vj/utils/base64';
 
 const start = new Date();
-window.UiContext = JSON.parse(base64.decode(window.UiContext));
-window.UserContext = JSON.parse(base64.decode(window.UserContext));
+window.UiContext = JSON.parse(window.UiContext);
+window.UserContext = JSON.parse(window.UserContext);
 
 // eslint-disable-next-line
 try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }
@@ -16,7 +15,7 @@ try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }
 function buildSequence(pages, type) {
   if (process.env.NODE_ENV !== 'production') {
     if (['before', 'after'].indexOf(type) === -1) {
-      throw new Error(`'type' should be one of 'before' or 'after'`); // eslint-disable-line quotes
+      throw new Error("'type' should be one of 'before' or 'after'");
     }
   }
   return pages

@@ -41,8 +41,8 @@
   {% block body %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
-    var UiContext = "{{ UiContext|json|base64_encode }}";
-    var UserContext = "{{ UserContext|json|base64_encode }}";
+    var UiContext = '{{ UiContext|json|jsesc|safe }}';
+    var UserContext = '{{ UserContext|json|jsesc|safe }}';
   </script>
   <script type="text/javascript" src="{{ ('/locale/{0}.js'.format(handler.translate('__id'))) }}"></script>
   <script type="text/javascript" src="/ui-constants.js"></script>
