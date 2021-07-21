@@ -191,7 +191,7 @@ class SystemUserImportHandler extends SystemHandler {
 
     @param('users', Types.Content)
     @param('draft', Types.Boolean)
-    async post(domainId: string, _users: string, draft = true) {
+    async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
         const udocs = [];
         const messages = [];
