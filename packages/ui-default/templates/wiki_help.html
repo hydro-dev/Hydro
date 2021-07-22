@@ -1,5 +1,6 @@
 {% extends "layout/wiki_base.html" %}
 {% block wiki_content %}
+{% set name = model.system.get('server.name') %}
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
   <div class="section__header">
     <h1 class="section__title" id="domain" data-heading>{{ _('Domain') }}</h1>
@@ -7,7 +8,7 @@
   <div class="section__body typo">
     <p>每个用户可以创建自己的域。比如，老师可以为课程创建一个域，然后把题目和学生加入到此域中。再如，可以把域作为团队功能。</p>
     <p>通过合理的设置角色及其权限，可以把域设为公开或私有。</p>
-    <p>默认域为 system，用户直接访问 Hydro 域名就会访问此域，点击 Hydro Logo 会从任意域跳转回 system 域。</p>
+    <p>默认域为 system，用户直接访问 {{ name }} 域名就会访问此域，点击 Hydro Logo 会从任意域跳转回 system 域。</p>
     <p>每个域的题库、讨论、训练以及比赛是独立且自治的。</p>
   </div>
 </div>
@@ -16,7 +17,7 @@
     <h1 class="section__title" id="compiler" data-heading>{{ _("Compilers' Version and Parameters") }}</h1>
   </div>
   <div class="section__body typo">
-    <p>Hydro 使用<a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a>进行评测，以docker镜像的形式安装至评测机。所使用的编译器均为创建镜像时<a href="https://wiki.debian.org/DebianTesting">debian testing</a>分支的最新版。编译参数如下：</p>
+    <p>{{ name }} 使用<a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a>进行评测，以docker镜像的形式安装至评测机。所使用的编译器均为创建镜像时<a href="https://wiki.debian.org/DebianTesting">debian testing</a>分支的最新版。编译参数如下：</p>
     {% if languages %}
       <blockquote><ul>
         {%- for k, v in languages -%}
@@ -31,8 +32,8 @@
     <h1 class="section__title" id="limits" data-heading>{{ _('Limitations') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>Hydro 评测机使用进程的CPU时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p>
-    <p>Hydro 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。内存空间默认限定为256MiB，题目中特别指明的，限定为题目中评测点所指定的内存空间。</p>
+    <p>{{ name }} 评测机使用进程的CPU时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p>
+    <p>{{ name }} 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。内存空间默认限定为256MiB，题目中特别指明的，限定为题目中评测点所指定的内存空间。</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -40,7 +41,7 @@
     <h1 class="section__title" id="io" data-heading>{{ _('IO') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>若无特殊说明，Hydro 使用标准输入输出（控制台输入输出，屏幕输入输出，STD I/O）。  </p>
+    <p>若无特殊说明，{{ name }} 使用标准输入输出（控制台输入输出，屏幕输入输出，STD I/O）。  </p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -118,7 +119,7 @@
     <h1 class="section__title" id="acratio" data-heading>{{ _('Accepted Ratio') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>通过率的影响极其恶劣，Hydro 不提供也不承认通过率。</p>
+    <p>通过率的影响极其恶劣，{{ name }} 不提供也不承认通过率。</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -134,7 +135,7 @@
     <h1 class="section__title" id="pbmdiff" data-heading>{{ _('Difficulty Algorithm') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>Hydro 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，通过算法计算得出。</p>
+    <p>{{ name }} 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，通过算法计算得出。</p>
     <p>因此，请注意以下几点：</p>
     <ul>
     <li>0. 一般地，难度的数值越大，该题目越难。</li>

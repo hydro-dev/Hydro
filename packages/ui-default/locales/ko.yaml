@@ -26,6 +26,9 @@ __langname: 한국어
 'Current dataset: {0}': '현재 데이터셋: {0}'
 'Discussion: Terms Of Service': 토론 약관
 'Format: category 1, category 2, ..., category n': 형식：분류1, 분류2, ..., 분류n
+'Hello, {0}! You can click following link to active your new email of your {1} account:': 안녕하세요!，{0}！다음 링크를 눌러 이메일을 인증하세요：
+'Hello, {0}! You can click following link to reset the password of your {1} account:': 안녕하세요，{0}！다음 링크를 눌러 비밀번호를 초기화하세요.：
+'Hello! You can click following link to sign up your {0} account:': 다음 링크를 눌러 로그인하십시오. ：
 'Join {0}': '참여 {0}'
 'No': 아니오
 'Note: Problem title may not be hidden.': '주의: 문제 제목은 숨길 수 없습니다.'
@@ -90,6 +93,7 @@ Bulletin: 게시판
 By clicking the button, you will become a member of the domain {0}.: 이 버튼을 클릭하면 귀하는 {0} 의 멤버가 됩니다.
 By Contest: 대회
 By Problem: 문제
+By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.: '{0} 계정으로 가입하면 {0}로 제공되는 모든 OJ를 이용하고 참여하실 수 있습니다.'
 By Username / UID: 아이디
 Calendar View: 달력 보기
 Calendar: 달력
@@ -757,6 +761,7 @@ Username / UID: 아이디
 Username: 아이디
 Users with those roles will be removed from the domain.: 이 역할을 가진 사용자들이 그룹에서 제거될 것입니다.
 Users: 사용자
+Using your {0} universal account: '{0} 공용 계정을 사용'
 Valid for registered users who are not members of the domain: 그룹원이 아닌 사람들에게 유효
 Valid for visitors: 방문자에게 유효
 Version: Version

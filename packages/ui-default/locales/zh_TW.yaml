@@ -17,9 +17,9 @@ __langname: 正體中文
 '↓ Update Time': '↓ 更新時間'
 'A domain ID cannot be changed after creation. It is supposed to be:': '創建後將無法更改 ID。ID 必須滿足以下條件：'
 'Current dataset: {0}': '當前測試資料: {0}'
-'Hello, {0}! You can click following link to active your new email of your Hydro account:': 您好，{0}！您可以點選以下連結來啟用您 Hydro 賬戶的新電子郵件地址：
-'Hello, {0}! You can click following link to reset the password of your Hydro account:': 您好，{0}！您可以點選以下連結來重置您 Hydro 賬戶的密碼：
-'Hello! You can click following link to sign up your Hydro account:': 您好！您可以點選以下連結來註冊您的 Hydro 賬戶：
+'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以點選以下連結來啟用您 {1} 賬戶的新電子郵件地址：
+'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以點選以下連結來重置您 {1} 賬戶的密碼：
+'Hello! You can click following link to sign up your {0} account:': 您好！您可以點選以下連結來註冊您的 {0} 賬戶：
 'No': 否
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
 'Yes': 是
@@ -56,7 +56,7 @@ Blog: 部落格
 Boom!: 炸了！
 Browser: 瀏覽器
 Built-in: 內建
-By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.: 註冊一個 Hydro 通用賬戶，您就可以在我們提供的所有線上評測服務上提交程式碼、參與討論。
+By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.: 註冊一個 {0} 通用賬戶，您就可以在我們提供的所有線上評測服務上提交程式碼、參與討論。
 Calendar View: 日曆視圖
 Can be Extended For: 可延期
 Cancel Score: 取消成績
@@ -510,7 +510,7 @@ Username / UID: 使用者名或 UID
 Username: 使用者名
 Users with those roles will be removed from the domain.: 擁有這些角色的使用者將從此域中移除。
 Users: 使用者
-Using your Hydro universal account: 使用您的 Hydro 通用賬戶
+Using your {0} universal account: 使用您的 {0} 通用賬戶
 Valid for registered users who are not members of the domain: 對域外註冊使用者有效
 Valid for visitors: 對未登入的遊客有效
 View contest scoreboard: 檢視比賽成績表
