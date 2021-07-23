@@ -361,7 +361,7 @@ export class HandlerCommon {
                 !this.request.host
                 || (this.domain?.host instanceof Array
                     ? (!this.domain.host.includes(this.request.host))
-                    : this.domain.host !== this.domain?.host)
+                    : this.request.host !== this.domain?.host)
             )) {
                 name += '_with_domainId';
                 args.domainId = this.domainId;
