@@ -85,7 +85,7 @@ export class UserRegisterHandler extends Handler {
             if (system.get('smtp.verify') && system.get('smtp.user')) {
                 const m = await this.renderHTML('user_register_mail.html', {
                     path: `register/${t[0]}`,
-                    url_prefix: (this.domain.host || [])[0] || system.get('server.url'),
+                    url_prefix: (this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host) || system.get('server.url'),
                 });
                 await sendMail(mail, 'Sign Up', 'user_register_mail', m);
                 this.response.template = 'user_register_mail_sent.html';
@@ -154,7 +154,7 @@ class UserLostPassHandler extends Handler {
         );
         const m = await this.renderHTML('user_lostpass_mail.html', {
             url: `lostpass/${tid}`,
-            url_prefix: this.domain.host || system.get('server.url'),
+            url_prefix: (this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host) || system.get('server.url'),
             uname: udoc.uname,
         });
         await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);

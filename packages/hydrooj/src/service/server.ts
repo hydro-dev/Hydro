@@ -357,7 +357,12 @@ export class HandlerCommon {
         try {
             const { anchor } = args;
             if (args.domainId) name += '_with_domainId';
-            else if ((!this.request.host || this.domain?.host !== this.request.host) && this.domainId !== 'system') {
+            else if (this.domainId !== 'system' && (
+                !this.request.host
+                || (this.domain?.host instanceof Array
+                    ? (!this.domain.host.includes(this.request.host))
+                    : this.domain.host !== this.domain?.host)
+            )) {
                 name += '_with_domainId';
                 args.domainId = this.domainId;
             }
