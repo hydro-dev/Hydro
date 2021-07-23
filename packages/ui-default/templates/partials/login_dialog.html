@@ -3,7 +3,7 @@
     <div class="dialog--signin__bg">
       <div class="dialog--signin__side">
         <h1>{{ _("Don't have an account?") }}</h1>
-        <p>{{ _('By signing up a Hydro universal account, you can submit code and join discussions in all online judging services provided by us.') }}</p>
+        <p>{{ _('By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.').format(model.system.get('server.name')) }}</p>
         <div><a href="{{ url('user_register') }}" class="inverse rounded button">{{ _('Sign Up Now') }}</a></div>
       </div>
     </div>
@@ -13,7 +13,7 @@
           <a name="dialog--signin__close" href="javascript:;">{{ _('CLOSE') }}</a>
         </div>
         <h1 class="dialog--signin__title">{{ _('SIGN IN') }}</h1>
-        <p class="dialog--signin__note">{{ _('Using your Hydro universal account') }}</p>
+        <p class="dialog--signin__note">{{ _('Using your {0} universal account').format(model.system.get('server.name')) }}</p>
         {% if model.system.get('server.login') %}
         <div class="row"><div class="columns">
           <label class="material textbox">

@@ -18,12 +18,12 @@ body, .hydro { margin:0;color:#333;font-size:14px;font-family:"Tahoma","Segoe UI
 </style>
 <div class="hydro">
 <div class="hydro-box">
-<div class="hydro-header">{% block title %}{% endblock %} - Hydro</div>
+<div class="hydro-header">{% block title %}{% endblock %} - {{ model.system.get('server.name') }}</div>
 <div class="hydro-content">
 {% block content %}{% endblock %}
 </div>
 <div class="hydro-footer">
-<p>{{ _('This email was sent by {0} automatically, and please do not reply directly.').format('<a href="' + url_prefix + '/" target="_blank">Hydro</a>')|safe }}</p>
+<p>{{ _('This email was sent by {0} automatically, and please do not reply directly.').format('<a href="' + url_prefix + '/" target="_blank">' + model.system.get('server.name') + '</a>')|safe }}</p>
 </div>
 </div>
 </div>

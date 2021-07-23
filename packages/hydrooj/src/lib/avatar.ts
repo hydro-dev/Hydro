@@ -9,8 +9,11 @@ export const providers: Record<string, AvatarProvider> = {
     url: (url) => url,
 };
 
-function avatar(src: string, size = 64) {
-    const index = (src || '').indexOf(':');
+function avatar(src: string, size = 64, fallback = '') {
+    src = src || fallback;
+    let index = src.indexOf(':');
+    if (index === -1) src = fallback;
+    index = src.indexOf(':');
     if (index === -1) return providers.gravatar('', size);
     const [provider, str] = [src.substr(0, index), src.substr(index + 1, src.length)];
     if (!providers[provider] || !str) return providers.gravatar('', size);

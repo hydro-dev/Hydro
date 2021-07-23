@@ -15,6 +15,7 @@
     },
     "devDependencies": {
         "@types/jsdom": "^16.2.13",
+        "@types/superagent": "^4.1.12",
         "@types/superagent-proxy": "^2.0.0"
     }
 }

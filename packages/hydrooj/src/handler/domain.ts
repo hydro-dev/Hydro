@@ -288,7 +288,7 @@ class DomainJoinHandler extends Handler {
             }
         }
         await domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role);
-        this.response.redirect = this.url('domain_main', { query: { notification: 'Successfully joined domain.' } });
+        this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
     }
 }
 

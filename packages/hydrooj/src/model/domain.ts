@@ -186,8 +186,8 @@ class DomainModel {
         if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
         dudoc.role = dudoc.role || 'default';
         const ddoc = await DomainModel.get(domainId);
-        dudoc.perm = ddoc.roles[dudoc.role]
-            ? BigInt(ddoc.roles[dudoc.role])
+        dudoc.perm = ddoc?.roles[dudoc.role]
+            ? BigInt(ddoc?.roles[dudoc.role])
             : BUILTIN_ROLES[dudoc.role];
         return dudoc;
     }

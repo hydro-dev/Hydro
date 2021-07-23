@@ -16,7 +16,7 @@ const Score = {
     min: Math.min,
 };
 
-function judgeCase(c, sid) {
+function judgeCase(c, sid: string) {
     return async (ctx, ctxSubtask) => {
         if (ctx.config.template) {
             if (ctx.config.template[ctx.lang]) {
@@ -105,7 +105,7 @@ function judgeCase(c, sid) {
     };
 }
 
-function judgeSubtask(subtask, sid) {
+function judgeSubtask(subtask, sid: string) {
     return async (ctx) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
@@ -173,6 +173,7 @@ export const judge = async (ctx) => {
             if (ctx.failed[required.toString()]) effective = false;
         }
         if (effective) ctx.total_score += scores[sid];
+        console.log(effective, ctx.total_score, scores[sid], sid);
     }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });

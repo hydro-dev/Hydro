@@ -312,6 +312,7 @@ class HomeworkEditHandler extends Handler {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
             i = i.trim();
             if ((+i).toString() === i) return +i;
+            if (i.split(':')[0] === domainId) return +i.split(':')[1];
             return i;
         }).filter((i) => i);
         const tdoc = tid
