@@ -6,8 +6,9 @@ import db from '../service/db';
 import domain from '../model/domain';
 import * as contest from '../model/contest';
 import problem from '../model/problem';
+import UserModel from '../model/user';
 import record from '../model/record';
-import { STATUS } from '../model/builtin';
+import { PRIV, STATUS } from '../model/builtin';
 import rating from '../lib/rating';
 import paginate from '../lib/paginate';
 
@@ -155,12 +156,13 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     }
     await domain.setMultiUserInDomain(id, {}, { rp: 1500 });
     const tasks = [];
-    for (const uid in udict) {
-        const rp = udict[uid] + (deltaudict[uid] || 0);
-        const update: any = { $set: { rp } };
-        if (isSub) update.$push = { ratingHistory: rp };
-        tasks.push(domain.updateUserInDomain(id, +uid, update));
+    async function update(uid: number, rp: number) {
+        const udoc = await UserModel.getById(id, +uid);
+        const $upd: any = { $set: { rp } };
+        if (isSub) $upd.$push = { ratingHistory: rp };
+        if (udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
     }
+    for (const uid in udict) tasks.push(update(+uid, udict[uid] + (deltaudict[uid] || 0)));
     await Promise.all(tasks);
     await calcLevel(id, report);
 }
