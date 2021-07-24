@@ -214,6 +214,7 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
   $('[name="hide_selected_problems"]').on('click', () => handleOperation('hide'));
   $('[name="unhide_selected_problems"]').on('click', () => handleOperation('unhide'));
   $('[name="download_selected_problems"]').on('click', handleDownload);
+  $('#hideTags').on('click', () => $('.problem__tags').hide());
   $('#search').on('click', (ev) => {
     ev.preventDefault();
     updateSelection();

@@ -83,10 +83,7 @@ export const Types: Types = {
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
     UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
     PositiveInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
-    Float: [(v) => parseFloat(v), (v) => {
-        const t = parseFloat(v);
-        return t && !Number.isNaN(t) && Number.isFinite(t);
-    }],
+    Float: [(v) => +v, (v) => Number.isFinite(+v)],
     // eslint-disable-next-line no-shadow
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
     Boolean: [(v) => !!v, null, true],
@@ -357,7 +354,12 @@ export class HandlerCommon {
         try {
             const { anchor } = args;
             if (args.domainId) name += '_with_domainId';
-            else if ((!this.request.host || this.domain?.host !== this.request.host) && this.domainId !== 'system') {
+            else if (this.domainId !== 'system' && (
+                !this.request.host
+                || (this.domain?.host instanceof Array
+                    ? (!this.domain.host.includes(this.request.host))
+                    : this.request.host !== this.domain?.host)
+            )) {
                 name += '_with_domainId';
                 args.domainId = this.domainId;
             }
@@ -406,6 +408,7 @@ export class Handler extends HandlerCommon {
     csrfToken: string;
     loginMethods: any;
     noCheckPermView: boolean;
+    notUsage: boolean;
     __param: Record<string, ParamOption[]>;
 
     constructor(ctx: Koa.Context) {
@@ -482,7 +485,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (!argv.options.benchmark) await this.limitRate('global', 10, 88);
+        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
