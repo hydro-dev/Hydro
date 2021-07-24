@@ -408,6 +408,7 @@ export class Handler extends HandlerCommon {
     csrfToken: string;
     loginMethods: any;
     noCheckPermView: boolean;
+    notUsage: boolean;
     __param: Record<string, ParamOption[]>;
 
     constructor(ctx: Koa.Context) {
@@ -484,7 +485,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
-        if (!argv.options.benchmark) await this.limitRate('global', 10, 88);
+        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),

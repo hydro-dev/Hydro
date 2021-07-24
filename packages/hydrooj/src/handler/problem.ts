@@ -322,6 +322,8 @@ export class ProblemEditHandler extends ProblemManageHandler {
 }
 
 export class ProblemFilesHandler extends ProblemDetailHandler {
+    notUsage = true;
+
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     @param('pjax', Types.Boolean)
