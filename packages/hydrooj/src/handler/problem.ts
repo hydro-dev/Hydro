@@ -562,6 +562,18 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
+        let cors = false;
+        if (prefix.includes(':')) {
+            const [pdomain, s] = prefix.split(':');
+            const ddoc = await domain.get(pdomain);
+            this.response.body = [];
+            if (!ddoc || ddoc._id === domainId || !ddoc.share || !s.trim()) return;
+            ddoc.share = ddoc.share.replace(/，/g, ',').split(',').map((q) => q.trim()).join(',');
+            if (ddoc.share !== '*' && !`,${ddoc.share},`.includes(`,${domainId},`)) return;
+            domainId = pdomain;
+            prefix = s;
+            cors = true;
+        }
         const pdocs = await problem.getPrefixList(domainId, prefix);
         if (!Number.isNaN(+prefix)) {
             const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
@@ -576,6 +588,7 @@ export class ProblemPrefixListHandler extends Handler {
             }
         }
         this.response.body = pdocs;
+        if (cors) this.response.body.forEach((v) => { v.docId = `${domainId}:${v.docId}`; });
     }
 }
 
