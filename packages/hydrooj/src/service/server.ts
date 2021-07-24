@@ -83,10 +83,7 @@ export const Types: Types = {
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
     UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
     PositiveInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
-    Float: [(v) => parseFloat(v), (v) => {
-        const t = parseFloat(v);
-        return t && !Number.isNaN(t) && Number.isFinite(t);
-    }],
+    Float: [(v) => +v, (v) => Number.isFinite(+v)],
     // eslint-disable-next-line no-shadow
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
     Boolean: [(v) => !!v, null, true],
