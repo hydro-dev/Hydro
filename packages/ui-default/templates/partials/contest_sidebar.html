@@ -38,7 +38,7 @@
         <span class="icon icon-award"></span> {{ _('View Contest') }}
       </a></li>
     {% endif %}
-    {% if not attended and not model.contest.isDone(tdoc) %}
+    {% if not (attended or tdoc.attended) and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">

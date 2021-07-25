@@ -402,6 +402,18 @@ const scripts: UpgradeScript[] = [
         await RecordModel.coll.updateMany({}, { $unset: { effective: '' } });
         return true;
     },
+    async function _36_37() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const cur = document.collStatus.find();
+        while (await cur.hasNext()) {
+            const doc = await cur.next();
+            await document.collStatus.deleteMany({
+                ...pick(doc, ['docId', 'domainId', 'uid', 'docType']),
+                _id: { $gt: doc._id },
+            });
+        }
+        return true;
+    },
 ];
 
 export default scripts;

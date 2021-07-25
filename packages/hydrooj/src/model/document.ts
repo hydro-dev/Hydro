@@ -404,7 +404,7 @@ export async function revSetStatus<T extends keyof DocStatusType>(
 
 async function ensureIndexes() {
     const ic = coll.createIndex.bind(coll);
-    const is = collStatus.createIndex.bind(coll);
+    const is = collStatus.createIndex.bind(collStatus);
     const u = { unique: true };
     const s = { sparse: true };
     await ic({ domainId: 1, docType: 1, docId: 1 }, u);
