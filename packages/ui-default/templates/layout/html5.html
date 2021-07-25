@@ -34,16 +34,14 @@
   <script>
     var _htmlNode = document.documentElement;
     _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
+    var UiContext = '{{ UiContext|json|jsesc|safe }}';
+    var UserContext = '{{ UserContext|json|jsesc|safe }}';
   </script>
   {% endif %}
 </head>
 <body>
   {% block body %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
-  <script>
-    var UiContext = '{{ UiContext|json|jsesc|safe }}';
-    var UserContext = '{{ UserContext|json|jsesc|safe }}';
-  </script>
   <script type="text/javascript" src="{{ ('/locale/{0}.js'.format(handler.translate('__id'))) }}"></script>
   <script type="text/javascript" src="/ui-constants.js"></script>
   <script type="text/javascript" src="{{ static_url('hydro.js') }}"></script>
