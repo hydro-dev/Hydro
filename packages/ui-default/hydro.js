@@ -33,6 +33,7 @@ async function load() {
     for (const page of UiContext.extraPages) {
       const head = document.getElementsByTagName('head')[0];
       const script = document.createElement('script');
+      if (page.includes('.module.')) script.type = 'module';
       script.src = page;
       head.appendChild(script);
       tasks.push(new Promise((resolve) => {
