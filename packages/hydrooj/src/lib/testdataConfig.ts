@@ -36,6 +36,10 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
         result.timeMax = result.timeMin = 1000;
     }
     if (cfg.langs) result.langs = cfg.langs;
+    if (cfg.filename && result.type === 'default') {
+        result.type = 'fileio';
+        result.subType = cfg.filename;
+    }
     return result;
 }
 
