@@ -30,6 +30,7 @@ function buildSequence(pages, type) {
 async function load() {
   if (UiContext.extraPages) {
     const tasks = [];
+    const ts = new Date().getTime();
     for (const page of UiContext.extraPages) {
       const head = document.getElementsByTagName('head')[0];
       const script = document.createElement('script');
@@ -41,6 +42,10 @@ async function load() {
       }));
     }
     await Promise.all(tasks);
+    const time = new Date().getTime() - ts;
+    if ((process.env.NODE_ENV !== 'production' && time > 16) || time > 256) {
+      console.warn(`Extra pages loading took ${time}ms`);
+    }
   }
 
   const pageLoader = new PageLoader();
@@ -56,9 +61,7 @@ async function load() {
   ];
   // eslint-disable-next-line no-restricted-syntax
   for (const { page, func, type } of loadSequence) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.time(`${page.name}: ${type}Loading`);
-    }
+    const ts = new Date().getTime();
     try {
       await func(currentPageName);
     } catch (e) {
@@ -66,7 +69,11 @@ async function load() {
       console.error(`Failed to call '${type}Loading' of ${page.name}\n${e.stack}`);
     }
     if (process.env.NODE_ENV !== 'production') {
-      console.timeEnd(`${page.name}: ${type}Loading`);
+      console.time(`${page.name}: ${type}Loading`);
+    }
+    const time = new Date().getTime() - ts;
+    if ((process.env.NODE_ENV !== 'production' && time > 16) || time > 256) {
+      console.log(`${page.name}: ${type}Loading took ${time}ms`);
     }
   }
   const sections = _.map($('.section').get(), (section, idx) => ({

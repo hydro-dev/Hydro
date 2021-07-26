@@ -226,6 +226,7 @@ export class ContestEditHandler extends Handler {
             i = i.trim();
             if ((+i).toString() === i) return +i;
             if (i.split(':')[0] === domainId) return +i.split(':')[1];
+            if (!i.includes(':')) throw new ValidationError('pids');
             return i;
         }).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
