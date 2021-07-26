@@ -1,7 +1,10 @@
 import { AutoloadPage } from 'vj/misc/Page';
 import DomDialog from 'vj/components/dialog/DomDialog';
+import { InfoDialog } from 'vj/components/dialog/index';
 import responsiveCutoff from 'vj/breakpoints.json';
 import { isBelow } from 'vj/utils/mediaQuery';
+import i18n from 'vj/utils/i18n';
+import tpl from 'vj/utils/tpl';
 
 const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   const signInDialog = DomDialog.getOrConstruct($('.dialog--signin'), {
@@ -36,6 +39,13 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
     }
     signInDialog.show();
   };
+
+  $('[data-lostpass]').on('click', (e) => {
+    e.preventDefault();
+    new InfoDialog({
+      body: tpl`<p>${i18n('Relax and try to remember your password.')}</p>`,
+    }).open();
+  });
 });
 
 export default signinDialogPage;

@@ -44,7 +44,7 @@
         {%- endfor -%}
         <div class="row"><div class="columns">
           <div class="supplementary text-center">
-            <a href="{{ url('user_lostpass') }}">{{ _('Forgot password or username?') }}</a>
+            <a {% if not model.system.get('smtp.user') %}data-lostpass href="#"{% else %}href="{{ url('user_lostpass') }}"{% endif %}>{{ _('Forgot password or username?') }}</a>
           </div>
         </div></div>
       </form>

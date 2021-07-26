@@ -140,7 +140,6 @@ class UserRegisterWithCodeHandler extends Handler {
 
 class UserLostPassHandler extends Handler {
     async get() {
-        if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         this.response.template = 'user_lostpass.html';
     }
 
