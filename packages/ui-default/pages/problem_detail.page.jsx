@@ -171,7 +171,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     unmountReact();
   }
 
-  async function loadSubjective() {
+  async function loadObjective() {
     try {
       let s = '';
       try {
@@ -189,15 +189,15 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       const props = yaml.load(s);
       if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
-      const [{ default: Subjective }, React, ReactDOM] = await Promise.all([
-        import('vj/components/subjective-question/index'),
+      const [{ default: Objective }, React, ReactDOM] = await Promise.all([
+        import('vj/components/objective-question/index'),
         import('react'),
         import('react-dom'),
       ]);
 
       ReactDOM.render(
         <div className="section__body typo">
-          <Subjective panel={props} target={UiContext.postSubmitUrl}></Subjective>
+          <Objective panel={props} target={UiContext.postSubmitUrl}></Objective>
         </div>,
         $('.problem-content').get(0),
       );
@@ -265,7 +265,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').show();
   });
   $('[name="problem-sidebar__download').on('click', handleClickDownloadProblem);
-  if (UiContext.pdoc.config?.type === 'subjective') loadSubjective();
+  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
   if (pagename !== 'contest_detail_problem') initChart();
 });
 

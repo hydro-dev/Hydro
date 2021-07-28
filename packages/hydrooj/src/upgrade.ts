@@ -414,6 +414,19 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _37_38() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
+            logger.info('%s/%s', pdoc.domainId, pdoc.docId);
+            if (typeof pdoc.config !== 'string') return;
+            if (!pdoc.config?.includes('type: subjective')) return;
+            await problem.addTestdata(
+                pdoc.domainId, pdoc.docId, 'config.yaml',
+                Buffer.from(pdoc.config.replace('type: subjective', 'type: objective')),
+            );
+        });
+        return true;
+    },
 ];
 
 export default scripts;

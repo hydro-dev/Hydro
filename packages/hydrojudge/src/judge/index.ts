@@ -5,5 +5,5 @@ import * as submit_answer from './submit_answer';
 import * as hack from './hack';
 
 export = {
-    default: def, interactive, run, submit_answer, hack, subjective: submit_answer,
+    default: def, interactive, run, submit_answer, hack, objective: submit_answer,
 };

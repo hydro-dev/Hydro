@@ -54,7 +54,7 @@ const problemConfigSchema = {
   def: problemConfigSchemaDef,
   properties: {
     key: { type: 'string', pattern: '[0-9a-f]{32}' },
-    type: { enum: ['default', 'interactive', 'submit_answer', 'subjective', 'remote_judge'] },
+    type: { enum: ['default', 'interactive', 'submit_answer', 'objective', 'remote_judge'] },
     subType: { type: 'string' },
     langs: { type: 'array', items: { type: 'string' } },
     target: { type: 'string' },
