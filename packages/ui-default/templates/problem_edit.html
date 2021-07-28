@@ -43,11 +43,11 @@
               <li class="section__tab-header-item" data-lang="{{ _('__id') }}">{{ _('__langname') }}</li>
               {% for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range %}
                 {% if k != handler.user.viewLang %}
-              <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
-              {% endif %}
-            {% endfor %}
+                  <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
+                {% endif %}
+              {% endfor %}
             </ul>
-            </div>
+          </div>
           </div>
           <div><textarea data-editor{% if page_name == 'problem_edit' %} autofocus{% endif %} class="textbox auto-resize nojs--hide"></textarea></div>
           <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>

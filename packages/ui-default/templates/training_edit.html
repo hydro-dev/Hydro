@@ -37,7 +37,7 @@
           <div class="row"><div class="columns">
             <label>
               {{ _('Plan') }}
-              <textarea name="dag" class="textbox" style="height: 500px">{% if tdoc %}{{ dag }}{% else %}{% include 'partials/training_default.json' %}{% endif %}</textarea>
+              <textarea data-json name="dag" class="textbox" style="height: 500px">{% if tdoc %}{{ dag }}{% else %}{% include 'partials/training_default.json' %}{% endif %}</textarea>
             </label>
           </div></div>
           <div class="row"><div class="columns">
