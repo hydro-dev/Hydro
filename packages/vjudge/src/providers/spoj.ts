@@ -5,8 +5,8 @@ import { JSDOM } from 'jsdom';
 import { PassThrough } from 'stream';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { parseMemoryMB, sleep } from '@hydrooj/utils/lib/utils';
-import * as setting from 'hydrooj/dist/model/setting';
-import { Logger } from 'hydrooj/dist/logger';
+import * as setting from 'hydrooj/src/model/setting';
+import { Logger } from 'hydrooj/src/logger';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
 proxy(superagent);

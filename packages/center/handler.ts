@@ -1,7 +1,7 @@
-import db from 'hydrooj/dist/service/db';
+import db from 'hydrooj/src/service/db';
 import {
     Handler, post, Route, Types,
-} from 'hydrooj/dist/service/server';
+} from 'hydrooj/src/service/server';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
 
@@ -13,7 +13,7 @@ function decrypt(encrypted: string) {
     return decrypted;
 }
 
-declare module 'hydrooj/dist/interface' {
+declare module 'hydrooj/src/interface' {
     interface Collections {
         dataReport: any;
     }

@@ -30,7 +30,7 @@ module.exports = {
       webpack: {
         config: {
           resolve: {
-            extensions: ['.js', '.jsx'],
+            extensions: ['.js', '.jsx', '.ts', '.tsx'],
             alias: {
               vj: path.resolve(__dirname),
             },

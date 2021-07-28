@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import mysql from 'mysql';
 import 'hydrooj';
-import { buildContent } from 'hydrooj/dist/lib/content';
+import { buildContent } from 'hydrooj/src/lib/content';
 
 const { user, problem, system } = global.Hydro.model;
 

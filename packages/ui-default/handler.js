@@ -5,8 +5,8 @@ const { join } = require('path');
 const crypto = require('crypto');
 const { tmpdir } = require('os');
 const { ObjectID } = require('mongodb');
-const bus = require('hydrooj/dist/service/bus');
-const { PERM } = require('hydrooj/dist/model/builtin');
+const bus = require('hydrooj/src/service/bus');
+const { PERM } = require('hydrooj/src/model/builtin');
 const markdown = require('./backendlib/markdown');
 
 const {

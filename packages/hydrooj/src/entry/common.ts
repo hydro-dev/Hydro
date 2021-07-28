@@ -46,7 +46,8 @@ function getFiles(folder: string, base = ''): string[] {
 
 export async function handler(pending: string[], fail: string[]) {
     for (const i of pending) {
-        const p = path.resolve(i, 'handler.js');
+        let p = path.resolve(i, 'handler.ts');
+        if (!fs.existsSync(p)) p = path.resolve(i, 'handler.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Handler init: %s', i);
@@ -161,7 +162,8 @@ export async function uistatic(pending: string[], fail: string[]) {
 
 export async function model(pending: string[], fail: string[]) {
     for (const i of pending) {
-        const p = path.resolve(i, 'model.js');
+        let p = path.resolve(i, 'model.ts');
+        if (!fs.existsSync(p)) p = path.resolve(i, 'model.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Model init: %s', i);
@@ -178,7 +180,8 @@ export async function model(pending: string[], fail: string[]) {
 
 export async function lib(pending: string[], fail: string[]) {
     for (const i of pending) {
-        const p = path.resolve(i, 'lib.js');
+        let p = path.resolve(i, 'lib.ts');
+        if (!fs.existsSync(p)) p = path.resolve(i, 'lib.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Lib init: %s', i);
@@ -195,7 +198,8 @@ export async function lib(pending: string[], fail: string[]) {
 
 export async function service(pending: string[], fail: string[]) {
     for (const i of pending) {
-        const p = path.resolve(i, 'service.js');
+        let p = path.resolve(i, 'service.ts');
+        if (!fs.existsSync(p)) p = path.resolve(i, 'service.js');
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Service init: %s', i);
@@ -216,7 +220,8 @@ export async function service(pending: string[], fail: string[]) {
 
 export async function script(pending: string[], fail: string[], active: string[]) {
     for (const i of pending) {
-        const p = path.resolve(i, 'script.js');
+        let p = path.resolve(i, 'script.ts');
+        if (!fs.existsSync(p)) p = path.resolve(i, 'script.js');
         if (await fs.pathExists(p) && !fail.includes(i)) {
             try {
                 logger.info('Script init: %s', i);

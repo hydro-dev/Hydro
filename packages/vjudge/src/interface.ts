@@ -7,7 +7,7 @@ export interface RemoteAccount {
     endpoint?: string;
     proxy?: string;
 }
-declare module 'hydrooj/dist/interface' {
+declare module 'hydrooj/src/interface' {
     interface Collections {
         vjudge: RemoteAccount;
     }

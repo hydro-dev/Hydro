@@ -1,4 +1,4 @@
-import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/dist/pipelineUtils';
+import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
 import sonic from './service';
 
 export const description = 'Sonic problem search re-index';

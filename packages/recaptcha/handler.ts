@@ -1,8 +1,8 @@
 import superagent from 'superagent';
-import { ValidationError, ForbiddenError } from 'hydrooj/dist/error';
-import { PRIV } from 'hydrooj/dist/model/builtin';
-import * as system from 'hydrooj/dist/model/system';
-import * as bus from 'hydrooj/dist/service/bus';
+import { ValidationError, ForbiddenError } from 'hydrooj/src/error';
+import { PRIV } from 'hydrooj/src/model/builtin';
+import * as system from 'hydrooj/src/model/system';
+import * as bus from 'hydrooj/src/service/bus';
 
 bus.on('handler/before/UserRegister', async (thisArg) => {
     if (!system.get('recaptcha.key')) return;

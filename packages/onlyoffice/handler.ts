@@ -1,7 +1,7 @@
-import { UiContextBase } from 'hydrooj/dist/service/server';
-import * as system from 'hydrooj/dist/model/system';
+import { UiContextBase } from 'hydrooj/src/service/server';
+import * as system from 'hydrooj/src/model/system';
 
-declare module 'hydrooj/dist/service/server' {
+declare module 'hydrooj/src/service/server' {
     interface UiContextBase {
         onlyofficeApi: string;
     }

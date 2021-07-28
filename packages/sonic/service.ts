@@ -1,13 +1,13 @@
 import { BaseService } from 'hydrooj';
-import * as system from 'hydrooj/dist/model/system';
-import { Logger } from 'hydrooj/dist/logger';
+import * as system from 'hydrooj/src/model/system';
+import { Logger } from 'hydrooj/src/logger';
 import {
     Search, Ingest, QueryOptions, SuggestOptions, PushOptions,
 } from 'sonic-channel';
 
 const logger = new Logger('sonic');
 
-declare module 'hydrooj/dist/interface' {
+declare module 'hydrooj/src/interface' {
     interface SystemKeys {
         'sonic.host': string;
         'sonic.port': number;
@@ -110,7 +110,7 @@ class SonicService implements BaseService {
 const service = new SonicService();
 global.Hydro.service.sonic = service;
 export = service;
-declare module 'hydrooj/dist/interface' {
+declare module 'hydrooj/src/interface' {
     interface Service {
         sonic: typeof service
     }

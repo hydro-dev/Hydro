@@ -1,64 +1,25 @@
-import 'reflect-metadata';
-/* eslint-disable import/first */
-/* eslint-disable no-continue */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-
-const versionNum = +process.version.replace(/v/gim, '').split('.')[0];
-if (versionNum < 14) throw new Error('NodeJS >=v14 required');
-
-import cac from 'cac';
-
-const argv = cac().parse();
-
-if (argv.options.debug) {
-    process.env.NODE_ENV = 'development';
-    process.env.DEV = 'on';
-} else process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-
-if (!global.Hydro) {
-    global.Hydro = {
-        version: {
-            node: process.version,
-            hydrooj: require('hydrooj/package.json').version,
-        },
-        stat: { reqCount: 0 },
-        handler: {},
-        // @ts-ignore
-        service: {},
-        // @ts-ignore
-        model: {},
-        script: {},
-        // @ts-ignore
-        lib: {},
-        // @ts-ignore
-        ui: {
-            manifest: {},
-            nodes: {
-                nav: [],
-                problem_add: [],
-                user_dropdown: [],
-            },
-            template: {},
-        },
-        // @ts-ignore
-        error: {},
-        locales: {},
-    };
-    global.addons = [];
-}
+import 'reflect-metadata';
+import './init';
 import './interface';
 import os from 'os';
 import path from 'path';
 import cluster from 'cluster';
 import fs from 'fs-extra';
 import './utils';
+import cac from 'cac';
 import { Logger } from './logger';
 import './ui';
 import * as bus from './service/bus';
 
 export * from './interface';
+const argv = cac().parse();
+if (argv.options.debug) {
+    process.env.NODE_ENV = 'development';
+    process.env.DEV = 'on';
+} else process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 const logger = new Logger('loader');
 logger.debug('%o', argv);
 

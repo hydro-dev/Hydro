@@ -1,7 +1,7 @@
 import 'hydrooj';
-import 'hydrooj/dist/utils';
+import 'hydrooj/src/utils';
 
-declare module 'hydrooj' {
+declare module 'hydrooj/src/interface' {
     interface Lib {
         oauth_qq: typeof import('./lib'),
     }

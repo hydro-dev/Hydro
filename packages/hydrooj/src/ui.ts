@@ -42,6 +42,7 @@ if (cluster.isMaster) {
     });
     if (process.env.NODE_ENV !== 'test') {
         process.stdin.setEncoding('utf-8');
+        process.stdin.setRawMode(false);
         process.stdin.on('data', (buf) => {
             const input = buf.toString();
             if (input[0] === '@') {

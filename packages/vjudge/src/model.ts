@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
-import { Logger } from 'hydrooj/dist/logger';
-import db from 'hydrooj/dist/service/db';
-import * as bus from 'hydrooj/dist/service/bus';
-import * as Judge from 'hydrooj/dist/handler/judge';
-import TaskModel from 'hydrooj/dist/model/task';
-import DomainModel from 'hydrooj/dist/model/domain';
-import ProblemModel from 'hydrooj/dist/model/problem';
-import { STATUS } from 'hydrooj/dist/model/builtin';
+import { Logger } from 'hydrooj/src/logger';
+import db from 'hydrooj/src/service/db';
+import * as bus from 'hydrooj/src/service/bus';
+import * as Judge from 'hydrooj/src/handler/judge';
+import TaskModel from 'hydrooj/src/model/task';
+import DomainModel from 'hydrooj/src/model/domain';
+import ProblemModel from 'hydrooj/src/model/problem';
+import { STATUS } from 'hydrooj/src/model/builtin';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import providers from './providers/index';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';

@@ -4,9 +4,9 @@ import proxy from 'superagent-proxy';
 import { JSDOM } from 'jsdom';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { sleep } from '@hydrooj/utils/lib/utils';
-import { buildContent } from 'hydrooj/dist/lib/content';
-import * as setting from 'hydrooj/dist/model/setting';
-import { Logger } from 'hydrooj/dist/logger';
+import { buildContent } from 'hydrooj/src/lib/content';
+import * as setting from 'hydrooj/src/model/setting';
+import { Logger } from 'hydrooj/src/logger';
 import { PassThrough } from 'stream';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
