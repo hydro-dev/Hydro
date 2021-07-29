@@ -13,8 +13,8 @@ declare module 'hydrooj/src/interface' {
     }
 
     interface DomainDoc {
-        mount: string;
-        mountInfo: any;
+        mount?: string;
+        mountInfo?: any;
     }
 }
 export interface IBasicProvider {

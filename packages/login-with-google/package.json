@@ -10,7 +10,7 @@
         "@types/superagent": "^4.1.12"
     },
     "peerDependencies": {
-        "hydrooj": "workspace:*"
+        "hydrooj": "*"
     },
     "dependencies": {
         "superagent": "^6.1.0"

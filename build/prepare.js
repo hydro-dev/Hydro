@@ -7,11 +7,12 @@ const compilerOptionsBase = {
     esModuleInterop: true,
     moduleResolution: 'node',
     declaration: true,
-    sourceMap: true,
+    sourceMap: false,
     composite: true,
     strictBindCallApply: true,
     experimentalDecorators: true,
     emitDecoratorMetadata: true,
+    noEmit: true,
 };
 const config = {
     compilerOptions: compilerOptionsBase,
@@ -23,7 +24,7 @@ const config = {
 const configSrc = {
     compilerOptions: {
         ...compilerOptionsBase,
-        outDir: 'dist',
+        outDir: 'src',
         rootDir: 'src',
     },
     include: ['src'],
@@ -60,7 +61,7 @@ for (const package of packages) {
             if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
             const name = file.split('.')[0];
             if (['handler', 'service', 'lib', 'model', 'script'].includes(name)) {
-                fs.writeFileSync(path.resolve(basedir, `${name}.js`), `module.exports = require('./dist/${name}');\n`);
+                fs.writeFileSync(path.resolve(basedir, `${name}.js`), `module.exports = require('./src/${name}');\n`);
             }
         }
     }
