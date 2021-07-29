@@ -30,7 +30,7 @@ export class HydroError extends Error {
 
     constructor(...params: any[]) {
         super();
-        this.params = params || [];
+        this.params = params;
     }
 
     // eslint-disable-next-line class-methods-use-this
