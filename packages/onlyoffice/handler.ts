@@ -3,7 +3,7 @@ import * as system from 'hydrooj/src/model/system';
 
 declare module 'hydrooj/src/service/server' {
     interface UiContextBase {
-        onlyofficeApi: string;
+        onlyofficeApi?: string;
     }
 }
 UiContextBase.onlyofficeApi = system.get('onlyoffice.api');
