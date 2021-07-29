@@ -1,18 +1,11 @@
 /* eslint-disable max-len */
 /* eslint-disable func-names */
-import { isClass } from './utils';
 
 interface IHydroError {
     new(...args: any[]): HydroError
 }
 
-function isHydroError(item: any): item is IHydroError {
-    return isClass(item);
-}
-
-const Err = (name: string, ...info: Array<IHydroError | (() => string) | ((_super: Function, ...args: any) => HydroError) | string | number>) => {
-    let Class: IHydroError;
-    let constr: (_super: Function, ...args: any[]) => HydroError;
+const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
     let msg: () => string;
     let code: number;
     for (const item of info) {
@@ -20,26 +13,14 @@ const Err = (name: string, ...info: Array<IHydroError | (() => string) | ((_supe
             code = item;
         } else if (typeof item === 'string') {
             msg = function () { return item; };
-        } else if (isHydroError(item)) {
-            Class = item;
-        } else if (typeof item === 'function' && item.length === 0) {
-            // @ts-ignore
-            msg = item;
         } else if (typeof item === 'function') {
-            // @ts-ignore
-            constr = item;
+            msg = item;
         }
     }
     const HydroError = class extends Class { };
     HydroError.prototype.name = name;
     if (msg) HydroError.prototype.msg = msg;
     if (code) HydroError.prototype.code = code;
-    if (constr) {
-        const original = HydroError.prototype.constructor;
-        HydroError.prototype.constructor = function (...args: any[]) {
-            constr.call(this, original.bind(this, ...args));
-        };
-    }
     return HydroError;
 };
 
@@ -49,7 +30,7 @@ export class HydroError extends Error {
 
     constructor(...params: any[]) {
         super();
-        this.params = params;
+        this.params = params || [];
     }
 
     // eslint-disable-next-line class-methods-use-this

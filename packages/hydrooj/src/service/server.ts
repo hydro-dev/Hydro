@@ -311,12 +311,13 @@ export class HandlerCommon {
     }
 
     checkPerm(...args: bigint[]) {
-        // @ts-ignore
-        if (!this.user.hasPerm(...args)) throw new PermissionError(...args);
+        if (!this.user.hasPerm(...args)) {
+            if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new PermissionError(...args);
+            throw new PrivilegeError(PRIV.PRIV_USER_PROFILE);
+        }
     }
 
     checkPriv(...args: number[]) {
-        // @ts-ignore
         if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
     }
 
