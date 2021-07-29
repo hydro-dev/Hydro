@@ -1,8 +1,5 @@
-
-
 const versionNum = +process.version.replace(/v/gim, '').split('.')[0];
 if (versionNum < 14) throw new Error('NodeJS >=v14 required');
-
 
 if (!global.Hydro) {
     global.Hydro = {

@@ -56,7 +56,7 @@ export class StorageModel {
             ? await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') } }).toArray()
             : await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) } }).toArray();
         return results.map((i) => ({
-            ...i, name: i.path, prefix: i.path.split(target)[1],
+            ...i, name: i.path.split(target)[1], prefix: target,
         }));
     }
 
