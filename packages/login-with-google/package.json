@@ -1,20 +1,16 @@
 {
     "name": "@hydrooj/login-with-google",
-    "version": "0.0.10",
+    "version": "0.1.0",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
-    "scripts": {
-        "lint": "eslint lib.ts --fix",
-        "build": "tsc"
-    },
     "devDependencies": {
         "@types/superagent": "^4.1.12"
     },
     "peerDependencies": {
-        "hydrooj": "^2.15.0"
+        "hydrooj": "workspace:*"
     },
     "dependencies": {
         "superagent": "^6.1.0"

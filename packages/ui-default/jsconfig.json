@@ -3,6 +3,7 @@
     "./public",
   ],
   "compilerOptions": {
+    "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "target": "ES6",
     "baseUrl": ".",
