@@ -30,6 +30,16 @@ export default function (env = {}) {
     };
   }
 
+  function esbuildLoader() {
+    return {
+      loader: 'esbuild-loader',
+      options: {
+        loader: 'tsx',
+        target: 'es2015',
+      },
+    };
+  }
+
   function cssLoader() {
     return {
       loader: 'css-loader',
@@ -89,7 +99,7 @@ export default function (env = {}) {
     },
     resolve: {
       modules: [root('node_modules'), root('../../node_modules')],
-      extensions: ['.js', '.jsx'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
       alias: {
         vj: root(),
         'js-yaml': root('utils/yamlCompact'),
@@ -106,6 +116,11 @@ export default function (env = {}) {
           test: /\.jsx?$/,
           exclude: /node_modules[/\\]/,
           use: [babelLoader()],
+        },
+        {
+          test: /\.tsx?$/,
+          exclude: /node_modules[/\\]/,
+          use: [esbuildLoader()],
         },
         {
           test: /\.styl$/,

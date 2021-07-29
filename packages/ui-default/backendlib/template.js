@@ -1,6 +1,4 @@
 const fs = require('fs');
-const esbuild = require('esbuild');
-const { renderToString } = require('react-dom/server');
 const path = require('path');
 const yaml = require('js-yaml');
 const serialize = require('serialize-javascript');
