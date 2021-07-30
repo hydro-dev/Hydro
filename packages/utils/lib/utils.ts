@@ -311,9 +311,10 @@ export function formatSeconds(_seconds = '0') {
     );
 }
 
-export function changeErrorType(err: Error, Err: any) {
+export function changeErrorType(err: any, Err: any) {
     const e = new Err(err.message);
     e.stack = err.stack;
+    if (err.params) e.params = err.params;
     return e;
 }
 
