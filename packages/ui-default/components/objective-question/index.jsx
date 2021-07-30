@@ -36,7 +36,7 @@ export default class ObjectiveContainer extends React.PureComponent {
   Textbox(args, name) {
     return (
       <label htmlFor={`textbox${name}`}>
-        {name}. {args.desc.split('\n').map((i, index) => {
+        {name + 1}. {args.desc.split('\n').map((i, index) => {
           if (index) return <><br />{i}</>;
           return i;
         })}
@@ -50,7 +50,7 @@ export default class ObjectiveContainer extends React.PureComponent {
   Radio(args, name) {
     return (
       <>
-        {name}. {args.desc.split('\n').map((i, index) => {
+        {name + 1}. {args.desc.split('\n').map((i, index) => {
           if (index) return <><br />{i}</>;
           return i;
         })}
