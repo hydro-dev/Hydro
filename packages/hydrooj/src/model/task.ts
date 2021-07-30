@@ -26,35 +26,33 @@ async function getFirst(query: FilterQuery<Task>) {
 class Consumer {
     consuming: boolean;
     running?: any;
-    timeout: NodeJS.Timeout;
 
     constructor(public filter: any, public func: Function, public destoryOnError = true) {
         this.consuming = true;
-        this.get = this.get.bind(this);
-        this.get();
-        this.destory = this.destory.bind(this);
+        this.consume();
         bus.on('app/exit', this.destory);
     }
 
-    async get() {
-        if (this.running || !this.consuming) return;
-        try {
-            const res = await getFirst(this.filter);
-            if (res) {
-                this.running = res;
-                await this.func(res);
-                this.running = null;
+    async consume() {
+        while (this.consuming) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const res = await getFirst(this.filter);
+                if (res) {
+                    this.running = res;
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.func(res);
+                    this.running = null;
+                }
+            } catch (err) {
+                logger.error(err);
+                if (this.destoryOnError) this.destory();
             }
-        } catch (e) {
-            logger.error(e);
-            if (this.destoryOnError) this.destory();
         }
-        this.timeout = setTimeout(this.get, 100);
     }
 
     async destory() {
         this.consuming = false;
-        clearTimeout(this.timeout);
     }
 }
 
@@ -123,8 +121,8 @@ class TaskModel {
         return [0, now];
     }
 
-    static async consume(query: any, cb: Function) {
-        return new Consumer(query, cb);
+    static async consume(query: any, cb: Function, destoryOnError = true) {
+        return new Consumer(query, cb, destoryOnError);
     }
 
     static Consumer = Consumer;

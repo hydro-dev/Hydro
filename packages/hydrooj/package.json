@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.30.2",
+    "version": "2.30.3",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
