@@ -42,6 +42,11 @@ const logger = new Logger('server');
 export const app = new Koa();
 export const server = http.createServer(app.callback());
 export const router = new Router();
+app.on('error', (error) => {
+    if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
+        logger.error('Koa app-level error', { error });
+    }
+});
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
 type Converter = (value: any) => any;
