@@ -69,6 +69,11 @@
             <p>{{ _('No testdata at current.') }}</p>
           </blockquote>
         {% endif %}
+        {% if typeof(pdoc.config) == 'string' %}
+          <blockquote class="warn">
+            <p>{{ pdoc.config }}</p>
+          </blockquote>
+        {% endif %}
         {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
