@@ -13,9 +13,13 @@
   </a>
   {% if badge %}
     {% set level = udoc.level|default(0) %}
-    <a class="user-profile-badge v-center badge--lv{{ level }}" href="{{ url('user_detail', uid=udoc._id) }}" title="LV {{ level }}: Top {{ model.builtin.LEVELS[level]|default('N/A') }}%">LV {{ level }}</a>
-    {% if modbadge and udoc.hasPerm(perm.PERM_MOD_BADGE) %}
-      <span class="user-profile-badge v-center badge--mod" title="Moderator">MOD</span>
+    <a class="user-profile-badge v-center badge--lv{{ level }}" href="{{ url('user_detail', uid=udoc._id) }}" data-tooltip="LV {{ level }}: Top {{ model.builtin.LEVELS[level]|default('N/A') }}%">LV {{ level }}</a>
+    {% if modbadge %}
+      {% if udoc.hasPriv(PRIV.PRIV_MOD_BADGE) %}
+        <span class="user-profile-badge v-center badge--su" data-tooltip="{{ _('SuperUser') }}">SU</span>
+      {% elif udoc.hasPerm(perm.PERM_MOD_BADGE) %}
+        <span class="user-profile-badge v-center badge--mod" data-tooltip="{{ _('Moderator') }}">MOD</span>
+      {% endif %}
     {% endif %}
   {% endif %}
 </span>

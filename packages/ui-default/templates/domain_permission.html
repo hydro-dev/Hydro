@@ -30,7 +30,7 @@
               {%- for role in roles -%}
                 <td class="col--p">
                   <label class="compact checkbox">
-                    <input name="{{ role._id }}" data-checkbox-group="{{ role._id }}" data-checkbox-range value="{{ log2(perm.key) }}" type="checkbox"{% if role.perm|bitand(perm.key) %} checked{% endif %}{% if role._id == 'admin' %} disabled{% endif %}>
+                    <input name="{{ role._id }}" data-checkbox-group="{{ role._id }}" data-checkbox-range value="{{ log2(perm.key) }}" type="checkbox"{% if role.perm|bitand(perm.key) %} checked{% endif %}{% if role._id == 'root' %} disabled{% endif %}>
                   </label>
                 </td>
               {%- endfor -%}

@@ -440,6 +440,7 @@ Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
+Moderator: 管理员
 Month: 月
 Monthly Popular: 月度最受欢迎
 Most Upvoted Solutions: 最被赞同的题解
@@ -557,8 +558,8 @@ problem_submit: 递交代码
 problem_type.default: 传统题
 problem_type.fileio: '文件IO ({0})'
 problem_type.interactive: 交互题
-problem_type.remote_judge: 远端评测题
 problem_type.objective: 客观题
+problem_type.remote_judge: 远端评测题
 problem_type.submit_answer: 提交答案题
 problem-category-delim: '|'
 problem-subcategory-delim: 、
@@ -710,6 +711,7 @@ Submit to Judge: 递交以评测
 Submit Your Code: 递交代码进行正式评测
 Submit: 递交
 Submitted: 已递交
+SuperUser: 超级管理员
 Support: 支持
 Tags: 标签
 tasks_list: 任务列表

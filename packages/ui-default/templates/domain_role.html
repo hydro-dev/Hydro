@@ -47,7 +47,7 @@
       </thead>
       <tbody>
       {%- for role in roles -%}
-        {% set isBuiltin = role._id in ['default', 'guest', 'admin'] %}
+        {% set isBuiltin = role._id in ['default', 'guest', 'root'] %}
         <tr{% if not isBuiltin %} data-role="{{ role._id }}"{% endif %}>
           <td class="col--checkbox">
             <label class="compact checkbox">

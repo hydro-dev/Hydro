@@ -226,6 +226,7 @@ PERM.PERM_ADMIN = PERM.PERM_ALL;
 
 export const PRIV = {
     PRIV_NONE: 0,
+    PRIV_MOD_BADGE: 1 << 25,
     PRIV_EDIT_SYSTEM: 1 << 0, // renamed from PRIV_SET_PRIV
     PRIV_SET_PERM: 1 << 1,
     PRIV_USER_PROFILE: 1 << 2,
