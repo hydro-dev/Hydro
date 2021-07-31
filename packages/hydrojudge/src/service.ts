@@ -237,7 +237,9 @@ async function postInit() {
                 { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();
-            await judge[this.config.type || 'default'].judge(this);
+            const type = this.config.type || 'default';
+            if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
+            await judge[type].judge(this);
         }
 
         async run() {
