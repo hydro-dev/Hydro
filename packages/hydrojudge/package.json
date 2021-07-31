@@ -1,12 +1,12 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.9.2",
+    "version": "2.9.3",
     "main": "package.json",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
-        "@hydrooj/utils": "^1.0.14",
+        "@hydrooj/utils": "workspace:*",
         "axios": "^0.21.1",
         "cac": "^6.7.3",
         "esbuild": "^0.12.17",
