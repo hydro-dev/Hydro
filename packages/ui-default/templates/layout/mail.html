@@ -18,7 +18,7 @@ body, .hydro { margin:0;color:#333;font-size:14px;font-family:"Tahoma","Segoe UI
 </style>
 <div class="hydro">
 <div class="hydro-box">
-<div class="hydro-header">{% block title %}{% endblock %} - {{ model.system.get('server.name') }}</div>
+<div class="hydro-header">{% block title %}{% endblock %} - {{ handler.domain.ui.name|default(model.system.get('server.name')) }}</div>
 <div class="hydro-content">
 {% block content %}{% endblock %}
 </div>

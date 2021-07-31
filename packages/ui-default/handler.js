@@ -71,7 +71,7 @@ class UiSettingsHandler extends Handler {
     this.response.body = await this.renderHTML('extra.css', {
       nav_logo_dark,
       nav_logo_dark_2x,
-      ...ddoc,
+      ...(ddoc.ui || {}),
     });
     this.response.type = 'text/css';
     this.ctx.set('nolog', '1');

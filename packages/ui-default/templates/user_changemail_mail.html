@@ -1,6 +1,6 @@
 {% extends "layout/mail.html" %}
 {% block title %}{{ _('Change Email') }}{% endblock %}
 {% block content %}
-<p>{{ _('Hello, {0}! You can click following link to active your new email of your {1} account:').format(uname, model.system.get('server.name')) }}</p>
+<p>{{ _('Hello, {0}! You can click following link to active your new email of your {1} account:').format(uname, handler.domain.ui.name|default(model.system.get('server.name'))) }}</p>
 <p><a href="{{ url_prefix }}{{ path }}">{{ url_prefix }}{{ path }}</a></p>
 {% endblock %}

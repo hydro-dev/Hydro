@@ -143,6 +143,7 @@
 
 .nav__logo
   display: block
+  background-size:100% 100%;
   width: 0
   opacity: 0
   height: rem($nav-logo-height)
@@ -150,8 +151,6 @@
   background: no-repeat
   transition: width .3s, opacity .3s
   transition-timing-function: ease-out-cubic
-  +retina()
-    background-size: $nav-logo-width $nav-logo-height
 
   &:hover
     text-decoration: none

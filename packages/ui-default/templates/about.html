@@ -1,6 +1,6 @@
 {% extends "layout/wiki_base.html" %}
 {% block wiki_content %}
-{% set name = model.system.get('server.name') %}
+{% set name = handler.domain.ui.name|default(model.system.get('server.name')) %}
 <div class="section" data-heading-extract-to="#menu-item-wiki_about">
   <div class="section__header">
     <h1 class="section__title" id="about" data-heading>{{ _('About {0}').format(name) }}</h1>

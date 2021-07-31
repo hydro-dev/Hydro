@@ -19,7 +19,7 @@
   <link rel="icon" type="image/png" href="{{ static_url('favicon-16x16.png') }}" sizes="16x16">
   <meta name="theme-color" content="#56758f">
   {% block ogp %}
-  <meta property="og:site_name" content="{{ model.system.get('server.name') }}" />
+  <meta property="og:site_name" content="{{ handler.domain.ui.name|default(model.system.get('server.name')) }}" />
   <meta property="og:title" content="{{ handler.renderTitle(page_name) }}" />
   <meta property="og:url" content="{{ model.system.get('server.url') }}{{ handler.ctx.request.path }}" />
   <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
