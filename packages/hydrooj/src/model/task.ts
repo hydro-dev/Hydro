@@ -1,5 +1,6 @@
 import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { sleep } from '@hydrooj/utils/lib/utils';
 import { BaseService, Task } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
@@ -43,7 +44,8 @@ class Consumer {
                     // eslint-disable-next-line no-await-in-loop
                     await this.func(res);
                     this.running = null;
-                }
+                    // eslint-disable-next-line no-await-in-loop
+                } else await sleep(100);
             } catch (err) {
                 logger.error(err);
                 if (this.destoryOnError) this.destory();
