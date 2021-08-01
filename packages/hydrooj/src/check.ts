@@ -22,11 +22,7 @@ const checks: Dictionary<CheckItem> = {
             error(`Mongo Error: Database read-write failed.\n${e.message}`);
         }
     },
-    async checkPerm(ctx, log, warn) {
-        const { username } = os.userInfo();
-        if (username === 'root') warn('Hydro should not be run as root.');
-        // TODO check cwd read-write
-    },
+    // TODO check storage
     async checkSystem(ctx, log, warn) {
         const platform = os.platform();
         if (platform !== 'linux') {
@@ -37,7 +33,9 @@ const checks: Dictionary<CheckItem> = {
         const from = system.get('smtp.from');
         if (!from) warn('SMTP account was not provided, email verification disabled.');
     },
-    async checkIpHeader(ctx, log, warn) {
+    async checkSetting(ctx, log, warn) {
+        const url = system.get('server.url');
+        if (url === '/') warn("server.url wasn't set.");
         const header = system.get('server.xff');
         if (header && !ctx.request.ip) warn('IP header seems incorrect.\nCheck dashboard>settings>server.');
     },

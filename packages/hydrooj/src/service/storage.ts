@@ -193,13 +193,14 @@ class StorageService {
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
+            const headers = {};
+            if (filename) headers['response-content-disposition'] = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
+            if (/\.(jpe?g|png|gif)$/i.test(target)) headers['cache-control'] = 'max-age=604800';
             const url = await this.client.presignedGetObject(
                 this.opts.bucket,
                 target,
                 noExpire ? 24 * 60 * 60 * 7 : 30 * 60,
-                filename
-                    ? { 'response-content-disposition': `attachment; filename="${encodeRFC5987ValueChars(filename)}"` }
-                    : {},
+                headers,
             );
             if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
             return url;

@@ -386,7 +386,7 @@ export class Handler extends HandlerCommon {
     args: any;
     ctx: Koa.Context;
 
-    request: {
+    declare request: {
         method: string,
         host: string,
         hostname: string,
@@ -747,7 +747,7 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 export class ConnectionHandler extends HandlerCommon {
     conn: sockjs.Connection;
     args: Record<string, any>;
-    request: {
+    declare request: {
         params: Record<string, any>;
         headers: Record<string, string>;
         ip: string;
