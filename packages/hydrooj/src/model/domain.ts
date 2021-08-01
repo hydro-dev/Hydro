@@ -154,7 +154,7 @@ class DomainModel {
         return roles;
     }
 
-    static async setRoles(domainId: string, roles: Dictionary<bigint>) {
+    static async setRoles(domainId: string, roles: Dictionary<bigint | string>) {
         deleteUserCache(domainId);
         const current = await DomainModel.get(domainId);
         for (const role in roles) {

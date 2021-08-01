@@ -427,6 +427,14 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _38_39() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain(async (ddoc) => {
+            ddoc.roles.root = '-1';
+            await domain.setRoles(ddoc._id, ddoc.roles);
+        });
+        return true;
+    },
 ];
 
 export default scripts;
