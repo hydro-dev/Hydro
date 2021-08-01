@@ -70,7 +70,7 @@
                 >
                   SU
                 </span>
-              {% else if udoc.hasPerm(perm.PERM_MOD_BADGE) %}
+              {% elif udoc.hasPerm(perm.PERM_MOD_BADGE) %}
                 <span
                   class="profile-header__contact-item user-profile-badge badge--mod"
                   data-tooltip="{{ _('{0} is a moderator of this domain.').format(_('She' if udoc.gender == 1 else 'He')) }}"
