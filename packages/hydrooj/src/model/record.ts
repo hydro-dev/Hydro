@@ -218,7 +218,9 @@ class RecordModel {
 
     @ArgMethod
     static getByUid(domainId: string, uid: number, limit: number): Promise<RecordDoc[]> {
-        return RecordModel.coll.find({ domainId, uid, hidden: false }).sort({ _id: -1 }).limit(limit).toArray();
+        return RecordModel.coll.find({
+            domainId, uid, hidden: false, 'contest.tid': null,
+        }).sort({ _id: -1 }).limit(limit).toArray();
     }
 }
 
