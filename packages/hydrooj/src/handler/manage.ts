@@ -198,7 +198,8 @@ class SystemUserImportHandler extends SystemHandler {
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;
-            const [email, username, password, displayName] = u.split(',').map((t) => t.trim());
+            let [email, username, password, displayName] = u.split(',').map((t) => t.trim());
+            if (!email || !username || !password) [email, username, password, displayName] = u.split('\t').map((t) => t.trim());
             if (email && username && password) {
                 if (!isEmail(email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!isUname(username)) messages.push(`Line ${+i + 1}: Invalid username`);
