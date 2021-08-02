@@ -232,9 +232,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.get(this.domainId, rdoc.pid),
+            problem.get(rdoc.pdomain, rdoc.pid),
         ]);
-        const tdoc = this.tid ? contest.get(this.domainId, new ObjectID(this.tid)) : null;
+        const tdoc = this.tid ? await contest.get(this.domainId, new ObjectID(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;

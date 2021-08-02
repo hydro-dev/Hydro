@@ -103,9 +103,9 @@ export interface EventMap extends Record<string, any> {
 
 function getHooks<K extends keyof EventMap>(name: K) {
     const hooks = _hooks[name] || (_hooks[name] = []);
-    if (hooks.length >= 128) {
+    if (hooks.length >= 2048) {
         logger.warn(
-            'max listener count (128) for event "%s" exceeded, which may be caused by a memory leak',
+            'max listener count (2048) for event "%s" exceeded, which may be caused by a memory leak',
             name,
         );
     }

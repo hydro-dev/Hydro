@@ -1,6 +1,10 @@
 {% extends "layout/basic.html" %}
 {% block content %}
-{{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId) }}
+{% if filterTid %}
+  {{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId + "&tid=" + filterTid) }}
+{% else %}
+  {{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId) }}
+{% endif %}
 {{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
 <div class="row">
   <div class="medium-12 columns">
@@ -15,7 +19,6 @@
         </div>
         <div class="section__body">
           <div class="row">
-            <!-- TODO: replace with form_builder -->
             <div class="medium-3 columns">
               <label class="filter-user">
                 {{ _('By Username / UID') }}
