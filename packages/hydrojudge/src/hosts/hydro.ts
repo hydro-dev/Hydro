@@ -233,7 +233,7 @@ export default class Hydro {
             const tasks = [];
             const queue = new PQueue({ concurrency: 10 });
             for (const name in res.data.links) {
-                tasks.push(queue.add(() => download(name)));
+                tasks.push(queue.add(() => download.call(this, name)));
             }
             queue.start();
             await Promise.all(tasks);
