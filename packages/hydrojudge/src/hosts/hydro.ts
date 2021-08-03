@@ -3,6 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import fs from 'fs-extra';
 import WebSocket from 'ws';
+import PQueue from 'p-queue';
 import cac from 'cac';
 import { noop } from 'lodash';
 import { ObjectID } from 'mongodb';
@@ -212,13 +213,14 @@ export default class Hydro {
         }
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
-            if (next) next({ judge_text: '正在同步测试数据，请稍后' });
+            if (next) next({ judge_text: '正在同步测试数据，请稍候' });
             await this.ensureLogin();
             const res = await this.axios.post(`/d/${domainId}/judge/files`, {
                 pid,
                 files: filenames,
             });
-            for (const name in res.data.links) {
+            // eslint-disable-next-line no-inner-declarations
+            async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
                 const f = await this.axios.get(res.data.links[name], { responseType: 'stream' });
                 const w = fs.createWriteStream(path.join(filePath, name));
@@ -228,6 +230,13 @@ export default class Hydro {
                     w.on('error', reject);
                 });
             }
+            const tasks = [];
+            const queue = new PQueue({ concurrency: 10 });
+            for (const name in res.data.links) {
+                tasks.push(queue.add(() => download(name)));
+            }
+            queue.start();
+            await Promise.all(tasks);
             fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
             await this.processData(filePath).catch(noop);
         }

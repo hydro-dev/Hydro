@@ -88,6 +88,10 @@ function judgeCase(c, sid: string) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
+        await Promise.all([
+            fs.remove(stdout),
+            fs.remove(stderr),
+        ]).catch(() => { /* Ignore file doesn't exist */ });
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;
