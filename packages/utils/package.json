@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "hydrooj utils",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -16,7 +16,7 @@
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.12",
-        "@types/node": "^15.14.3",
+        "@types/node": "^15.14.5",
         "moment-timezone": "^0.5.33"
     }
 }

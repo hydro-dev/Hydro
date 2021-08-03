@@ -18,16 +18,10 @@ const Score = {
 
 function judgeCase(c, sid: string) {
     return async (ctx, ctxSubtask) => {
-        if (ctx.config.template) {
-            if (ctx.config.template[ctx.lang]) {
-                const tpl = ctx.config.template[ctx.lang];
-                ctx.code = tpl[0] + ctx.code + tpl[1];
-            } else throw new CompileError('Language not supported by provided templates');
-        }
-        if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
+        if (ctx.failed[sid] || ctx.errored
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || (ctxSubtask.subtask.if && ctx.failed[sid])
-            || ctx.errored) {
+            || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
+        ) {
             ctx.next({
                 case: {
                     status: STATUS.STATUS_CANCELED,
@@ -94,6 +88,7 @@ function judgeCase(c, sid: string) {
         ]).catch(() => { /* Ignore file doesn't exist */ });
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
+        if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({
@@ -128,7 +123,6 @@ function judgeSubtask(subtask, sid: string) {
             throw e;
         });
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
-        if (ctx.total_status !== STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
         return ctxSubtask.score;
     };
 }
@@ -136,6 +130,12 @@ function judgeSubtask(subtask, sid: string) {
 export const judge = async (ctx) => {
     if (!ctx.config.subtasks.length) throw new SystemError('Problem data not found.');
     ctx.next({ status: STATUS.STATUS_COMPILING });
+    if (ctx.config.template) {
+        if (ctx.config.template[ctx.lang]) {
+            const tpl = ctx.config.template[ctx.lang];
+            ctx.code = tpl[0] + ctx.code + tpl[1];
+        } else throw new CompileError('Language not supported by provided templates');
+    }
     [ctx.execute, ctx.checker] = await Promise.all([
         (() => {
             const copyIn = {};

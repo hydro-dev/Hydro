@@ -60,7 +60,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
                 });
             }
             config.subtasks.push({
-                score: parseInt(subtask.score, 10) || 100,
+                score: Number.isSafeInteger(+subtask.score) ? +subtask.score : 100,
                 if: subtask.if || [],
                 cases,
                 type: subtask.type || 'min',
