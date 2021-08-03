@@ -35,14 +35,6 @@ jobs:
         yarn build:ui:production
     - name: Lint
       run: yarn lint:ci
-    # - name: Unit Test
-    #   run: yarn jest
-    # - name: Report Coverage
-    #   uses: codecov/codecov-action@v1
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
-    #     file: ./.coverage/lcov.info
-    #     name: codecov
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js

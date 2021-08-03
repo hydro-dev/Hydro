@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
@@ -10,9 +10,9 @@
     },
     "preferUnplugged": true,
     "scripts": {
-        "postinstall": "node download.js"
+        "prepublish": "node download.js"
     },
     "peerDependencies": {
-        "hydrooj": "^2.15.0"
+        "hydrooj": "*"
     }
 }

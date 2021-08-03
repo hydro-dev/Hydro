@@ -16,7 +16,6 @@
         "lint:ui": "yarn run --cwd=packages/ui-default eslint . --fix",
         "lint:ui:ci": "yarn run --cwd=packages/ui-default eslint .",
         "pub": "node build/publish",
-        "jest": "node build/jest",
         "typedoc": "cross-env NODE_OPTIONS=--max_old_space_size=8192 typedoc",
         "debug:all": "node --async-stack-traces --trace-deprecation --enable-source-maps build/start --debug --template",
         "debug": "node --async-stack-traces --trace-deprecation --enable-source-maps node_modules/hydrooj/bin/hydrooj --debug --template",
@@ -28,9 +27,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
-        "@shelf/jest-mongodb": "^1.3.4",
         "@types/cross-spawn": "^6.0.2",
-        "@types/jest": "^26.0.24",
         "@types/node": "^15.14.3",
         "@types/semver": "^7.3.8",
         "@typescript-eslint/eslint-plugin": "^4.28.4",
@@ -44,13 +41,11 @@
         "eslint-plugin-import": "^2.23.4",
         "fs-extra": "^10.0.0",
         "globby": "^11.0.4",
-        "jest": "^27.0.6",
         "latest-version": "^5.1.0",
         "mongodb": "^3.6.10",
         "nmls": "^3.0.1",
         "ora": "^5.4.1",
         "semver": "^7.3.5",
-        "ts-jest": "^27.0.4",
         "typedoc": "^0.21.4",
         "typescript": "4.2.4"
     }
