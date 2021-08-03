@@ -24,7 +24,9 @@ function judgeCase(c, sid: string) {
                 ctx.code = tpl[0] + ctx.code + tpl[1];
             } else throw new CompileError('Language not supported by provided templates');
         }
-        if ((ctxSubtask.subtask.if && ctx.failed[sid])
+        if ((ctxSubtask.subtask.type === 'min' && ctxSubtask.score === -1)
+            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
+            || (ctxSubtask.subtask.if && ctx.failed[sid])
             || ctx.errored) {
             ctx.next({
                 case: {
@@ -90,7 +92,13 @@ function judgeCase(c, sid: string) {
             fs.remove(stdout),
             fs.remove(stderr),
         ]).catch(() => { /* Ignore file doesn't exist */ });
-        ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
+        if (ctxSubtask.subtask.type === "min") {
+            if (score === 0) ctxSubtask.score = -1;
+            else ctxSubtask.score = Math.min(ctxSubtask.score, score);
+        }
+        else {
+            ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
+        }
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
@@ -174,7 +182,9 @@ export const judge = async (ctx) => {
         for (const required of ctx.config.subtasks[sid].if || []) {
             if (ctx.failed[required.toString()]) effective = false;
         }
-        if (effective) ctx.total_score += scores[sid];
+        if (effective) {
+            if (scores[sid] !== -1) ctx.total_score += scores[sid];
+        }
         console.log(effective, ctx.total_score, scores[sid], sid);
     }
     ctx.stat.done = new Date();
