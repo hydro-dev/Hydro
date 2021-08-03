@@ -24,9 +24,7 @@ function judgeCase(c, sid: string) {
                 ctx.code = tpl[0] + ctx.code + tpl[1];
             } else throw new CompileError('Language not supported by provided templates');
         }
-        if ((ctxSubtask.subtask.type === 'min' && !ctxSubtask.score)
-            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || (ctxSubtask.subtask.if && ctx.failed[sid])
+        if ((ctxSubtask.subtask.if && ctx.failed[sid])
             || ctx.errored) {
             ctx.next({
                 case: {
