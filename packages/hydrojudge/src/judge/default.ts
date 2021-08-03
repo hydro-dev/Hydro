@@ -93,8 +93,8 @@ function judgeCase(c, sid: string) {
             fs.remove(stderr),
         ]).catch(() => { /* Ignore file doesn't exist */ });
         if (ctxSubtask.subtask.type === "min") {
-            if (score === 0) ctxSubtask.score = -1;
-            else ctxSubtask.score = Math.min(ctxSubtask.score, score);
+            if (status === STATUS.STATUS_ACCEPTED) ctxSubtask.score = Math.min(ctxSubtask.score, score);
+            else ctxSubtask.score = -1;
         }
         else {
             ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
