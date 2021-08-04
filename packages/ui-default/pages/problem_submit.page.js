@@ -20,14 +20,10 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
       if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
-    if (Object.keys(options).length > 1) {
-      setOptions($('#codelang-sub-select'), options);
-      $('#codelang-sub-container').show();
-      if (update) $('[name="lang"]').val($('#codelang-sub-select').val());
-    } else {
-      $('#codelang-sub-container').hide();
-      if (update) $('[name="lang"]').val(this.value);
-    }
+    setOptions($('#codelang-sub-select'), options);
+    if (Object.keys(options).length > 1) $('#codelang-sub-container').show();
+    else $('#codelang-sub-container').hide();
+    if (update) $('[name="lang"]').val($('#codelang-sub-select').val());
   }
   const main = {};
   for (const key in window.LANGS) {
