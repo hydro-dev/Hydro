@@ -9,12 +9,10 @@
 <nav class="nav slideout-menu" id="menu">
   <div class="row"><div class="columns clearfix">
     <ol class="nav__list nav__list--main clearfix">
-      <li class="nav__list-item"><a href="/" class="nav__logo">&nbsp;</a></li>
-      {%- for item in ui.nodes.nav -%}
-        {% if item.checker(handler) %}
+      <li class="nav__list-item"><a href="/" class="nav__logo" style="background-size: 100% 100%;">&nbsp;</a></li>
+      {%- for item in ui.nodes.nav -%}{% if item.checker(handler) %}
           {{ nav_item(item.name, item.args, item.prefix) }}
-        {% endif %}
-      {%- endfor -%}
+      {% endif %}{%- endfor -%}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">
     {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
