@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.30.14",
+    "version": "2.31.0",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "engines": {
-        "node": ">=14"
+        "node": ">=10.4"
     },
     "preferUnplugged": true,
     "dependencies": {
@@ -30,11 +30,11 @@
         "lru-cache": "^6.0.0",
         "minio": "7.0.17",
         "moment-timezone": "^0.5.33",
-        "mongodb": "^3.6.10",
+        "mongodb": "^3.6.11",
         "nodemailer": "^6.6.3",
-        "p-queue": "^6.6.2",
+        "p-queue": "^7.1.0",
         "reflect-metadata": "^0.1.13",
-        "serialize-javascript": "^5.0.1",
+        "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.21",
         "superagent": "^6.1.0"
     },

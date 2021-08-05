@@ -177,7 +177,6 @@ export const judge = async (ctx) => {
             if (ctx.failed[required.toString()]) effective = false;
         }
         if (effective) ctx.total_score += scores[sid];
-        console.log(effective, ctx.total_score, scores[sid], sid);
     }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });

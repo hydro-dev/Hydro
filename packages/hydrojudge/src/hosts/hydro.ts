@@ -261,13 +261,13 @@ export default class Hydro {
                 : '{"key":"ping"}';
             setInterval(() => this.ws.send(content), 30000);
         });
-        this.ws.on('message', (data) => {
-            const request = JSON.parse(data.toString());
+        this.ws.on('message', (data, isBinary) => {
+            const request = JSON.parse(isBinary ? data : data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
         });
         this.ws.on('close', (data, reason) => {
-            log.warn(`[${this.config.host}] Websocket 断开:`, data, reason);
+            log.warn(`[${this.config.host}] Websocket 断开:`, data, reason.toString());
             setTimeout(() => this.retry(queue), 30000);
         });
         this.ws.on('error', (e) => {
