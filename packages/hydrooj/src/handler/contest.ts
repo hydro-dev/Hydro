@@ -60,7 +60,7 @@ export class ContestDetailHandler extends Handler {
         if (tsdoc) {
             attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
-            if (contest.canShowRecord.call(this, tdoc)) {
+            if (contest.canShowSelfRecord.call(this, tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
                 rdict = await record.getList(domainId, q, true);
@@ -373,7 +373,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             ]);
         }
         bus.boardcast('record/change', rdoc);
-        if (!pretest && !contest.canShowRecord.call(this, this.tdoc)) {
+        if (!pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });
         } else {

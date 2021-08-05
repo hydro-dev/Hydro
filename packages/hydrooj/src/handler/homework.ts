@@ -68,7 +68,7 @@ class HomeworkDetailHandler extends Handler {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
             }
-            if (contest.canShowRecord.call(this, tdoc) && tsdoc.journal) {
+            if (contest.canShowSelfRecord.call(this, tdoc) && tsdoc.journal) {
                 rdict = await record.getList(
                     domainId,
                     tsdoc.journal.map((pdetail) => pdetail.rid),
@@ -243,7 +243,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         bus.boardcast('record/change', rdoc);
         this.response.body.tid = tid;
         this.response.body.rid = rid;
-        if (pretest || contest.canShowRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
+        if (pretest || contest.canShowSelfRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
         else this.response.redirect = this.url('homework_detail', { tid });
     }
 }
