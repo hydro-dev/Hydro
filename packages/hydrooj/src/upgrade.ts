@@ -435,6 +435,17 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _39_40() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain(async ({ _id }) => {
+            const ddocs = await discussion.getMulti(_id, { parentType: document.TYPE_PROBLEM }).toArray();
+            for (const ddoc of ddocs) {
+                const pdoc = await problem.get(_id, ddoc.parentId as any);
+                await document.set(_id, document.TYPE_DISCUSSION, ddoc.docId, { parentId: pdoc.docId });
+            }
+        });
+        return true;
+    },
 ];
 
 export default scripts;

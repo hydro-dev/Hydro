@@ -147,24 +147,19 @@ class DiscussionCreateHandler extends DiscussionHandler {
     }
 
     @param('type', Types.Name)
-    @param('name', Types.Name)
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
     async post(
-        domainId: string, type: string, _name: string,
-        title: string, content: string, highlight = false, pin = false,
+        domainId: string, type: string, title: string,
+        content: string, highlight = false, pin = false,
     ) {
         await this.limitRate('add_discussion', 3600, 60);
-        let name: ObjectID | string | number;
-        if (ObjectID.isValid(_name)) name = new ObjectID(_name);
-        else if (isSafeInteger(+name)) name = +name;
-        else name = _name;
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
         const did = await discussion.add(
-            domainId, typeMapper[type], name, this.user._id,
+            domainId, typeMapper[type], this.vnode.docId, this.user._id,
             title, content, this.request.ip, highlight, pin,
         );
         this.response.body = { did };
