@@ -114,6 +114,10 @@ class TaskModel {
         return coll.deleteOne({ _id });
     }
 
+    static deleteMany(query: FilterQuery<Task>) {
+        return coll.deleteMany(query);
+    }
+
     static getFirst = getFirst;
 
     static async getDelay(query?: FilterQuery<Task>): Promise<[number, Date]> {

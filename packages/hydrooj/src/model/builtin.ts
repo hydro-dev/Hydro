@@ -30,7 +30,7 @@ export const PERM = {
     PERM_VIEW_PROBLEM_HIDDEN: 1n << 8n,
     PERM_SUBMIT_PROBLEM: 1n << 9n,
     PERM_READ_PROBLEM_DATA: 1n << 10n,
-    PERM_READ_RECORD: 1n << 12n,
+    PERM_READ_RECORD_CODE: 1n << 12n,
     PERM_REJUDGE_PROBLEM: 1n << 13n,
     PERM_REJUDGE: 1n << 14n,
 
@@ -113,7 +113,7 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
-    Permission('perm_record', PERM.PERM_READ_RECORD, 'Read all records'),
+    Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read record codes'),
     Permission('perm_record', PERM.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
     Permission('perm_record', PERM.PERM_REJUDGE, 'Rejudge records'),
     Permission('perm_problem_solution', PERM.PERM_VIEW_PROBLEM_SOLUTION, 'View problem solutions'),
@@ -232,7 +232,7 @@ export const PRIV = {
     PRIV_USER_PROFILE: 1 << 2,
     PRIV_REGISTER_USER: 1 << 3,
     PRIV_READ_PROBLEM_DATA: 1 << 4,
-    PRIV_READ_RECORD: 1 << 7,
+    PRIV_READ_RECORD_CODE: 1 << 7,
     PRIV_VIEW_HIDDEN_RECORD: 1 << 8,
     PRIV_JUDGE: 1 << 9, // (renamed)
     PRIV_CREATE_DOMAIN: 1 << 10,

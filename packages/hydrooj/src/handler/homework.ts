@@ -393,8 +393,8 @@ class HomeworkCodeHandler extends Handler {
         const [tdoc, tsdocs] = await contest.getAndListStatus(
             domainId, tid, document.TYPE_HOMEWORK,
         );
-        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD)) {
-            this.checkPerm(PERM.PERM_READ_RECORD);
+        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
+            this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         }
         const rnames = {};
         for (const tsdoc of tsdocs) {
