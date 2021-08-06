@@ -234,7 +234,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.domainId, rdoc.uid),
             problem.get(rdoc.pdomain, rdoc.pid),
         ]);
-        const tdoc = this.tid ? await contest.get(this.domainId, new ObjectID(this.tid)) : null;
+        const tdoc = this.tid ? await contest.get(this.domainId, new ObjectID(this.tid), -1) : null;
         if (pdoc && !rdoc.contest) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
