@@ -41,7 +41,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     $('#codelang-main-select').val(m);
     const fallback = onChangeMain.call({ value: m }, false);
     $('#codelang-sub-select').val(current);
-    if (!$('#codelang-sub-select').val()) {
+    if (fallback && !$('#codelang-sub-select').val()) {
       $('#codelang-sub-select').val(fallback);
       $('[name="lang"]').val(fallback);
     }
