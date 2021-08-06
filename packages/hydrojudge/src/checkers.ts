@@ -53,6 +53,7 @@ const checkers: Record<string, Checker> = {
                 }
             }
         } else status = STATUS.STATUS_ACCEPTED;
+        if (message.length > 1024000) message = '';
         return {
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
             status,
