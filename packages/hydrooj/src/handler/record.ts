@@ -104,8 +104,8 @@ class RecordDetailHandler extends Handler {
                 throw new PermissionError(rid);
             }
         }
-        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) rdoc.code = null;
+        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD)) {
+            this.checkPerm(PERM.PERM_READ_RECORD);
         }
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
@@ -188,7 +188,10 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (pretest || contest.canShowScoreboard.call(this, tdoc, true)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
-        if (uidOrName) {
+        if (pretest) {
+            this.pretest = true;
+            this.uid = this.user._id;
+        } else if (uidOrName) {
             let udoc = await user.getById(domainId, +uidOrName);
             if (udoc) this.uid = udoc._id;
             else {
@@ -207,7 +210,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             } else throw new ProblemNotFoundError(domainId, pid);
         }
         if (status) this.status = status;
-        if (pretest) this.pretest = true;
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
@@ -260,6 +262,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         if (rdoc.contest && rdoc.input === undefined) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
             if (!contest.canShowRecord.call(this, tdoc)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
+        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD)) {
+            this.checkPerm(PERM.PERM_READ_RECORD);
         }
         this.rid = rid.toString();
         this.dispose = bus.on('record/change', this.onRecordChange.bind(this));

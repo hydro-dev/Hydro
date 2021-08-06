@@ -603,7 +603,7 @@ Recalculates nSubmit and nAccept in problem status.: 重新计算每道题目的
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
 record_detail: 记录详情
-record_main: 评测队列
+record_main: 评测记录
 Records per page: 每页展示的评测记录数量
 Records: 评测记录
 Refresh Records: 刷新评测记录

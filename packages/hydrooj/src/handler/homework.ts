@@ -389,11 +389,13 @@ class HomeworkScoreboardDownloadHandler extends Handler {
 class HomeworkCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
-        if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) this.checkPerm(PERM.PERM_READ_RECORD_CODE);
-        await this.limitRate('homework_code', 3600, 60);
+        await this.limitRate('contest_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(
             domainId, tid, document.TYPE_HOMEWORK,
         );
+        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD)) {
+            this.checkPerm(PERM.PERM_READ_RECORD);
+        }
         const rnames = {};
         for (const tsdoc of tsdocs) {
             for (const pid in tsdoc.detail || {}) {

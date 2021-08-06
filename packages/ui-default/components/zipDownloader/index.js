@@ -1,5 +1,5 @@
 import { dump } from 'js-yaml';
-import * as streamsaver from 'streamsaver';
+import streamsaver from 'streamsaver';
 import { createZipStream } from 'vj/utils/zip';
 import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';

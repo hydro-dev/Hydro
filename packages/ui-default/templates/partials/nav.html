@@ -11,7 +11,7 @@
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item"><a href="/" class="nav__logo" style="background-size: 100% 100%;">&nbsp;</a></li>
       {%- for item in ui.nodes.nav -%}{% if item.checker(handler) %}
-          {{ nav_item(item.name, item.args, item.prefix) }}
+        {{ nav_item(item.name, item.args(handler), item.prefix) }}
       {% endif %}{%- endfor -%}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">

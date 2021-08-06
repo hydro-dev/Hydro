@@ -386,11 +386,11 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
 export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
-        if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            this.checkPerm(PERM.PERM_READ_RECORD_CODE);
-        }
-        await this.limitRate('homework_code', 3600, 60);
+        await this.limitRate('contest_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
+        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD)) {
+            this.checkPerm(PERM.PERM_READ_RECORD);
+        }
         if (!contest.canShowRecord.call(this, tdoc as any, true)) {
             throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }

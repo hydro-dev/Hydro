@@ -584,9 +584,9 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
+Read all records: 读取所有提交记录
 Read data of own problems: 读取自己题目的数据
 Read data of problem: 读取题目数据
-Read record codes: 读取记录的代码
 Ready (☆▽☆): 马上开始 (☆▽☆)
 Ready: 即将开始
 Recent {0} Records: 最近 {0} 条记录
@@ -597,7 +597,7 @@ Recently Created Discussions: 最近创建的讨论
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
 record_detail: 记录详情
-record_main: 评测队列
+record_main: 评测记录
 Records: 评测记录
 Refresh Records: 刷新评测记录
 Refresh: 刷新
