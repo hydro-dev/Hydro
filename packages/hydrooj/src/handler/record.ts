@@ -113,13 +113,12 @@ class RecordDetailHandler extends Handler {
             problem.get(rdoc.pdomain, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
-        if (!rdoc.contest && pdoc.hidden && this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         if (
             !pdoc
             || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
             || (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))
         ) {
-            pdoc = { ...problem.default, docId: pdoc?.docId || 0, pid: '*' };
+            throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         }
         this.response.body = { udoc, rdoc, pdoc };
         if (rdoc.contest) {
@@ -262,7 +261,11 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             }
         }
         const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
-        if (!rdoc.contest && pdoc.hidden && this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+        let canView = this.user.own(pdoc);
+        canView ||= !pdoc.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
+        canView ||= this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
+        if (!canView) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
