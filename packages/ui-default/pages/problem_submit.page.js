@@ -21,9 +21,13 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     setOptions($('#codelang-sub-select'), options);
-    if (Object.keys(options).length) $('#codelang-sub-container').show();
-    else $('#codelang-sub-container').hide();
-    if (update) $('[name="lang"]').val($('#codelang-sub-select').val());
+    if (Object.keys(options).length) {
+      $('#codelang-sub-container').show();
+      if (update) $('[name="lang"]').val($('#codelang-sub-select').val());
+    } else {
+      $('#codelang-sub-container').hide();
+      if (update) $('[name="lang"]').val(this.value);
+    }
     return Object.keys(options)[0];
   }
   const main = {};
