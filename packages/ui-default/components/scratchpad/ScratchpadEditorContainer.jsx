@@ -1,8 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import load from 'vj/components/wastyle/index';
-import monaco from 'vj/components/monaco/index';
-import Notification from 'vj/components/notification';
+import monaco, { registerAction } from 'vj/components/monaco/index';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
@@ -53,29 +51,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       const fontSize = localStorage.getItem('scratchpad.editor.fontSize');
       if (fontSize && !Number.isNaN(+fontSize)) config.fontSize = +fontSize;
       this.editor = monaco.editor.create(this.containerElement, config);
-      this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_P, () => {
-        this.editor.getAction('editor.action.quickCommand').run();
-      });
-      load().then(([loaded, format]) => {
-        if (!loaded) return;
-        const formatAction = {
-          id: 'hydro.format',
-          label: 'Format Code',
-          contextMenuOrder: 0,
-          contextMenuGroupId: 'operation',
-          keybindings: [monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F],
-          run: () => {
-            if (!['cpp', 'c'].includes(this.model._languageIdentifier.language)) return;
-            const [success, result] = format(this.editor.getValue(), `${UserContext.astyleOptions.trim()} mode=c`);
-            if (success) this.editor.setValue(result);
-            else Notification.warn(result);
-          },
-        };
-        this.editor.addAction(formatAction);
-        this.editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, () => {
-          this.editor.getAction('hydro.format').run();
-        });
-      });
+      registerAction(this.editor, this.model);
       this.disposable.push(
         this.editor.onDidChangeModelContent((event) => {
           if (!this.__prevent_trigger_change_event) {

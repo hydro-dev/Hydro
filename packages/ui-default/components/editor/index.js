@@ -36,7 +36,7 @@ export default class Editor extends DOMAttachedObject {
   }
 
   async initMonaco() {
-    const { default: monaco } = await import('vj/components/monaco/index');
+    const { default: monaco, registerAction } = await import('vj/components/monaco/index');
     const {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
@@ -95,16 +95,7 @@ export default class Editor extends DOMAttachedObject {
       cfg.scrollBeyondLastLine = false;
     }
     this.editor = monaco.editor.create(ele, cfg);
-    this.editor.addAction({
-      id: 'theme-dark',
-      label: 'Use dark theme',
-      run: () => monaco.editor.setTheme('vs-dark'),
-    });
-    this.editor.addAction({
-      id: 'theme-light',
-      label: 'Use light theme',
-      run: () => monaco.editor.setTheme('vs-light'),
-    });
+    registerAction(this.editor, this.model, this.$dom);
     if (autoResize) {
       this.editor.onDidChangeModelDecorations(() => {
         updateEditorHeight(); // typing
