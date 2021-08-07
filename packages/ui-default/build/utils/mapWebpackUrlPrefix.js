@@ -1,9 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import _ from 'lodash';
+import { escapeRegExp } from 'lodash';
 
 export default function mapWebpackUrlPrefix(mapList) {
   const rules = mapList.map((mappingRule) => {
-    const regex = mappingRule.prefix.split('/').map((s) => _.escapeRegExp(s)).join('[\\/\\\\]');
+    const regex = mappingRule.prefix.split('/').map((s) => escapeRegExp(s)).join('[\\/\\\\]');
     return {
       from: new RegExp(`^${regex}`, mappingRule.flag),
       to: mappingRule.replace,

@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.15.2",
+  "version": "4.16.0",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -75,7 +75,6 @@
     "nanoid": "^3.1.23",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.8",
     "pickadate": "^3.6.4",
     "plugin-error": "^1.0.1",
     "postcss-loader": "^3.0.0",

@@ -1,23 +1,28 @@
-/*
-
-To add a new language to highlight:
-1. Add language in babel in package.json
-2. Add new import statement in `components/cmeditor/vjcmeditor.js`
-3. Add new import statement in `components/scratchpad/ScratchpadEditorContainer.js`
-4. Add new meta data in `components/highlighter/meta.js`
-
- */
-
 import Prism from 'prismjs';
-
+import components from 'prismjs/components';
+import getLoader from 'prismjs/dependencies';
+import 'prismjs/plugins/toolbar/prism-toolbar';
+import 'prismjs/plugins/toolbar/prism-toolbar.css';
+import 'prismjs/plugins/line-numbers/prism-line-numbers';
+import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 import Clipboard from 'clipboard';
 import Notification from 'vj/components/notification/index';
 import i18n from 'vj/utils/i18n';
-
 import languageMeta from './meta';
 
-const languageExtMap = {};
+const files = require.context('prismjs/components/', true, /prism-[a-z0-9-]+\.js/);
+const loadedLanguages = new Set();
+function loadLanguages() {
+  const languages = Object.keys(components.languages).filter((l) => l !== 'meta');
+  const loaded = [...loadedLanguages, ...Object.keys(Prism.languages)];
+  getLoader(components, languages, loaded).load((lang) => {
+    files(`./prism-${lang}.js`);
+    loadedLanguages.add(lang);
+  });
+}
 
+const languageExtMap = {};
+loadLanguages();
 // Map possible language names to Prism language name
 languageMeta.forEach((meta) => {
   for (let i = 0; i < meta.ext.length; ++i) {

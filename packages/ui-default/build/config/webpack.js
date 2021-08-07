@@ -1,10 +1,12 @@
+/* eslint-disable global-require */
 /* eslint-disable import/no-extraneous-dependencies */
 import { dirname } from 'path';
 import webpack from 'webpack';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import { ESBuildMinifyPlugin } from 'esbuild-loader';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
-import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
@@ -20,22 +22,13 @@ const beautifyOutputUrl = mapWebpackUrlPrefix([
 const smp = new SpeedMeasurePlugin();
 
 export default function (env = {}) {
-  function babelLoader() {
-    return {
-      loader: 'babel-loader',
-      options: {
-        ...require(root('babel.config.js')), // eslint-disable-line
-        cacheDirectory: true,
-      },
-    };
-  }
-
   function esbuildLoader() {
     return {
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
         target: 'es2015',
+        sourcemap: true,
       },
     };
   }
@@ -113,13 +106,7 @@ export default function (env = {}) {
           use: [fileLoader()],
         },
         {
-          test: /\.jsx?$/,
-          exclude: /node_modules[/\\]/,
-          use: [babelLoader()],
-        },
-        {
-          test: /\.tsx?$/,
-          exclude: /node_modules[/\\]/,
+          test: /\.[jt]sx?$/,
           use: [esbuildLoader()],
         },
         {
@@ -139,14 +126,55 @@ export default function (env = {}) {
     },
     optimization: {
       splitChunks: {
-        minSize: 80000,
-        maxAsyncRequests: 15,
-        maxInitialRequests: 10,
+        minSize: 256000,
+        maxAsyncRequests: 5,
+        maxInitialRequests: 3,
+        automaticNameDelimiter: '-',
+        cacheGroups: {
+          blockly: {
+            test: /[\\/]@?blockly[\\/]/,
+            priority: 10,
+            name: 'blockly',
+          },
+          monaco: {
+            test: /[\\/]monaco-editor[\\/]/,
+            priority: 9,
+            name: `monaco-${require('monaco-editor/package.json').version}`,
+          },
+          vditor: {
+            test: /[\\/]vditor[\\/]/,
+            priority: 8,
+            name: `vditor-${require('vditor/package.json').version}`,
+          },
+          vendors: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            name: 'vendors',
+            reuseExistingChunk: true,
+          },
+          default: {
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+        },
       },
+      minimizer: [new ESBuildMinifyPlugin({
+        css: true,
+        minify: true,
+        minifySyntax: true,
+        minifyWhitespace: true,
+        minifyIdentifiers: true,
+        treeShaking: true,
+        target: [
+          'chrome60',
+        ],
+        exclude: [/mathmaps/, /\.min\.js$/],
+      })],
       moduleIds: env.production ? 'size' : 'named',
       chunkIds: env.production ? 'size' : 'named',
     },
     plugins: [
+      new CleanWebpackPlugin(),
       new WebpackBar(),
       new webpack.ProvidePlugin({
         $: 'jquery',
@@ -183,12 +211,6 @@ export default function (env = {}) {
           NODE_ENV: env.production ? '"production"' : '"debug"',
         },
       }),
-      ...(env.production || env.measure)
-        ? [
-          new OptimizeCssAssetsPlugin(),
-          new webpack.LoaderOptionsPlugin({ minimize: true }),
-        ]
-        : [],
       new webpack.LoaderOptionsPlugin({
         options: {
           context: root(),

@@ -1,5 +1,5 @@
 import Drop from 'tether-drop';
-import _ from 'lodash';
+import { assign } from 'lodash';
 import 'jquery-scroll-lock';
 
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -194,5 +194,5 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 }
 
-_.assign(AutoComplete, DOMAttachedObject);
+assign(AutoComplete, DOMAttachedObject);
 window.Hydro.components.autocomplete = AutoComplete;

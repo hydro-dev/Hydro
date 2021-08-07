@@ -1,5 +1,4 @@
 import React from 'react';
-import _ from 'lodash';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
 import moment from 'dayjs';
@@ -55,7 +54,7 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
 
   renderInner() {
     if (this.props.activeId === null) return [];
-    return _.map(this.props.item.messages, (msg) => (
+    return this.props.item.messages.map((msg) => (
       <Message
         key={msg._id}
         isSelf={msg.from === UserContext._id}

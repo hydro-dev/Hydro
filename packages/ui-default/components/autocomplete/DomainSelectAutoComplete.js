@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { assign } from 'lodash';
 import tpl from 'vj/utils/tpl';
 import request from 'vj/utils/request';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -40,5 +40,5 @@ export default class DomainSelectAutoComplete extends AutoComplete {
   }
 }
 
-_.assign(DomainSelectAutoComplete, DOMAttachedObject);
+assign(DomainSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.DomainSelectAutoComplete = DomainSelectAutoComplete;
