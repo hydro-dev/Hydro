@@ -93,11 +93,10 @@ const checkers: Record<string, Checker> = {
             },
         });
         const status = code ? STATUS.STATUS_WRONG_ANSWER : STATUS.STATUS_ACCEPTED;
-        const message = (await fs.readFile(stdout)).toString();
         return {
             status,
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
-            message,
+            message: stdout,
         };
     },
 

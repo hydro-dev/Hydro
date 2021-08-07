@@ -214,9 +214,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(rdoc: RecordDoc) {
-        if (rdoc.domainId !== this.domainId) return;
         if (!this.pretest && rdoc.input) return;
-        if (!rdoc.input && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (rdoc.domainId !== this.domainId) return;
+        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
         if (this.pid && (rdoc.pid !== this.pid || rdoc.pdomain !== this.pdomain)) return;
         // eslint-disable-next-line prefer-const
