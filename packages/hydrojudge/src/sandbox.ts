@@ -48,7 +48,6 @@ function proc({
         memoryLimit: memory * 1024 * 1024,
         stackLimit: memory * 1024 * 1024,
         procLimit: process_limit,
-        strictMemoryLimit: true,
         copyIn,
         copyOut,
         copyOutCached,
