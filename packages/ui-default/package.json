@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.15.1",
+  "version": "4.15.2",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -113,6 +113,7 @@
     "webpackbar": "^5.0.0-3"
   },
   "dependencies": {
+    "clean-webpack-plugin": "^4.0.0-alpha.0",
     "esbuild": "^0.12.18",
     "esbuild-loader": "^2.14.0",
     "js-yaml": "^4.1.0",
