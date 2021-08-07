@@ -187,7 +187,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             if (drdoc.reply) uids.push(...drdoc.reply.map((drrdoc) => drrdoc.owner));
         }
         const udict = await user.getList(domainId, uids);
-        if (!dsdoc.view) {
+        if (!dsdoc?.view) {
             await Promise.all([
                 discussion.inc(domainId, did, 'views', 1),
                 discussion.setStatus(domainId, did, this.user._id, { view: true }),
