@@ -36,10 +36,10 @@ export function getMany(keys: string[]): any[] {
     return keys.map((key) => cache[key]);
 }
 
-export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K], boardcast?: boolean): Promise<SystemKeys[K]>;
-export async function set<K>(_id: string, value: K, boardcast?: boolean): Promise<K>;
-export async function set(_id: string, value: any, boardcast = true) {
-    if (boardcast) bus.boardcast('system/setting', { [_id]: value });
+export async function set<K extends keyof SystemKeys>(_id: K, value: SystemKeys[K], broadcast?: boolean): Promise<SystemKeys[K]>;
+export async function set<K>(_id: string, value: K, broadcast?: boolean): Promise<K>;
+export async function set(_id: string, value: any, broadcast = true) {
+    if (broadcast) bus.broadcast('system/setting', { [_id]: value });
     const res = await coll.findOneAndUpdate(
         { _id },
         { $set: { value } },

@@ -240,7 +240,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
                     rid, pid, false, 0, document.TYPE_HOMEWORK),
             ]);
         }
-        bus.boardcast('record/change', rdoc);
+        bus.broadcast('record/change', rdoc);
         this.response.body.tid = tid;
         this.response.body.rid = rid;
         if (pretest || contest.canShowSelfRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });

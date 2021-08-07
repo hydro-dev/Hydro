@@ -184,7 +184,7 @@ export async function bail<K extends keyof EventMap>(name: K, ...args: Parameter
     return null;
 }
 
-export function boardcast<K extends keyof EventMap>(event: K, ...payload: Parameters<EventMap[K]>) {
+export function broadcast<K extends keyof EventMap>(event: K, ...payload: Parameters<EventMap[K]>) {
     // Process forked by pm2 would also have process.send
     if (process.send && !cluster.isMaster) {
         process.send({
@@ -217,5 +217,5 @@ process.on('message', messageHandler);
 cluster.on('message', messageHandler);
 
 global.Hydro.service.bus = {
-    addListener, bail, boardcast, emit, on, off, once, parallel, prependListener, removeListener, serial,
+    addListener, bail, broadcast, emit, on, off, once, parallel, prependListener, removeListener, serial,
 };

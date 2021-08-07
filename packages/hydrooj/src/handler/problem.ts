@@ -267,7 +267,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
             ]);
         }
-        bus.boardcast('record/change', rdoc);
+        bus.broadcast('record/change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -284,7 +284,7 @@ export class ProblemPretestHandler extends ProblemDetailHandler {
             lang, code, true, input,
         );
         const rdoc = await record.get(domainId, rid);
-        bus.boardcast('record/change', rdoc);
+        bus.broadcast('record/change', rdoc);
         this.response.body = { rid };
     }
 }

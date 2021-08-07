@@ -113,9 +113,9 @@ export class ContestBoardcastHandler extends Handler {
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
             [tdoc.title, 'contest_detail', { tid }, true],
-            ['contest_boardcast'],
+            ['contest_broadcast'],
         ];
-        this.response.template = 'contest_boardcast.html';
+        this.response.template = 'contest_broadcast.html';
         this.response.body = path;
     }
 
@@ -372,7 +372,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
                 contest.updateStatus(domainId, tid, this.user._id, rid, pid),
             ]);
         }
-        bus.boardcast('record/change', rdoc);
+        bus.broadcast('record/change', rdoc);
         if (!pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url('contest_detail', { tid });
@@ -415,7 +415,7 @@ export async function apply() {
     Route('contest_create', '/contest/create', ContestEditHandler);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_boardcast', '/contest/:tid/boardcast', ContestBoardcastHandler);
+    Route('contest_broadcast', '/contest/:tid/broadcast', ContestBoardcastHandler);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);

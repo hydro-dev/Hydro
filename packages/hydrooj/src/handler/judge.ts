@@ -72,7 +72,7 @@ export async function next(body: JudgeResultBody) {
     if (body.memory !== undefined) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push);
-    bus.boardcast('record/change', rdoc, $set, $push);
+    bus.broadcast('record/change', rdoc, $set, $push);
 }
 
 export async function end(body: JudgeResultBody) {
@@ -98,7 +98,7 @@ export async function end(body: JudgeResultBody) {
     await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
-    bus.boardcast('record/change', rdoc); // trigger a full update
+    bus.broadcast('record/change', rdoc); // trigger a full update
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
@@ -153,7 +153,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
         const rdoc = await record.update(t.domainId, t.rid, $set, {});
-        bus.boardcast('record/change', rdoc, $set, {});
+        bus.broadcast('record/change', rdoc, $set, {});
     }
 
     async message(msg) {

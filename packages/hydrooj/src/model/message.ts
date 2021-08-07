@@ -22,7 +22,7 @@ class MessageModel {
         const mdoc = {
             from, to, content, _id: res.insertedId, flag,
         };
-        if (from !== to) bus.boardcast('user/message', to, mdoc);
+        if (from !== to) bus.broadcast('user/message', to, mdoc);
         await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }
