@@ -9,6 +9,7 @@ import TaskModel from './task';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
 import { buildProjection } from '../utils';
+import { NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
 
 export interface DiscussionDoc extends Document { }
@@ -110,6 +111,12 @@ export function edit(
         title, content, highlight, pin,
     };
     return document.set(domainId, document.TYPE_DISCUSSION, did, payload);
+}
+
+export function inc(
+    domainId: string, did: ObjectID, key: NumberKeys<DiscussionDoc>, value: number,
+): Promise<DiscussionDoc | null> {
+    return document.inc(domainId, document.TYPE_DISCUSSION, did, key, value);
 }
 
 export function del(domainId: string, did: ObjectID): Promise<never> {
@@ -221,6 +228,10 @@ export function getStatus(domainId: string, did: ObjectID, uid: number) {
     return document.getStatus(domainId, document.TYPE_DISCUSSION, did, uid);
 }
 
+export function setStatus(domainId: string, did: ObjectID, uid: number, $set) {
+    return document.setStatus(domainId, document.TYPE_DISCUSSION, did, uid, $set);
+}
+
 export function addNode(domainId: string, _id: string, category: string, args: any = {}) {
     return document.add(
         domainId, category, 1, document.TYPE_DISCUSSION_NODE,
@@ -327,6 +338,7 @@ global.Hydro.model.discussion = {
 
     add,
     get,
+    inc,
     edit,
     del,
     count,
@@ -344,6 +356,7 @@ global.Hydro.model.discussion = {
     react,
     setStar,
     getStatus,
+    setStatus,
     addNode,
     getNode,
     getNodes,

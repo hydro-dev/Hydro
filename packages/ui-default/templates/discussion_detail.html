@@ -18,6 +18,7 @@
               {{ vnode['title'] }}
             </a>
           </li>
+          <li><h2>{{ ddoc.title }}</h2></li>
           <li>
             {{ user.render_inline(udict[ddoc.owner]) }}
             @
@@ -30,13 +31,11 @@
       </div>
       <ul class="section__footer supplementary dot list">
       {% if handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) or (handler.user.own(ddoc) and handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION_SELF)) %}
-        <li>
-          <a href="{{ url('discussion_edit', did=ddoc.docId) }}"><span class="icon icon-edit"></span> {{ _('Edit') }}</a>
-        </li>
+        <li><a href="{{ url('discussion_edit', did=ddoc.docId) }}">
+          <span class="icon icon-edit"></span> {{ _('Edit') }}
+        </a></li>
       {% endif %}
-        <li>
-          {{ _('{0} views').format(ddoc.views) }}
-        </li>
+        <li>{{ _('{0} views').format(ddoc.views) }}</li>
       {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <li><form class="form--inline" method="post">
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
@@ -47,9 +46,9 @@
           </button>
         </form></li>
       {% endif %}
-        <li>
-          <a href="{{ url('wiki_help', anchor='contact') }}"><span class="icon icon-warning"></span> {{ _('Report') }}</a>
-        </li>
+        <li><a href="{{ url('wiki_help', anchor='contact') }}">
+          <span class="icon icon-warning"></span> {{ _('Report') }}
+        </a></li>
       </ul>
     </div>
     <div class="section">
