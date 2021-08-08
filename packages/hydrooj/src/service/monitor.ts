@@ -46,6 +46,11 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,
+    }, {
+        replacer: (key, value) => {
+            if (typeof value === 'function') return '';
+            return value;
+        },
     }));
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })
