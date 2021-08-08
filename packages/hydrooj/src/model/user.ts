@@ -21,18 +21,21 @@ const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
-export function deleteUserCache(udoc: User | Udoc | string) {
+export function deleteUserCache(udoc: User | Udoc | string | undefined | null) {
+    if (!udoc) return;
+    bus.broadcast('user/delcache', JSON.stringify(udoc));
     if (typeof udoc === 'string') {
         for (const key of cache.keys().filter((k) => k.endsWith(`/${udoc}`))) {
             cache.del(key);
         }
-    } else if (udoc) {
+    } else {
         const id = [udoc._id.toString(), udoc.uname.toLowerCase(), udoc.mail.toLowerCase()];
         for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
             cache.del(key);
         }
     }
 }
+bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content)));
 
 class User implements _User {
     _id: number;
@@ -145,7 +148,7 @@ class UserModel {
 
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
-        if (cache.has(`${_id}/${domainId}`)) return cache.get(`${_id}/${domainId}`);
+        if (cache.has(`${_id}/${domainId}`)) return cache.get(`${_id}/${domainId}`) || null;
         const udoc = await coll.findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
@@ -159,16 +162,16 @@ class UserModel {
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
         const _uids = new Set(uids);
-        const r = {};
+        const r: Udict = {};
         // eslint-disable-next-line no-await-in-loop
-        for (const uid of _uids) r[uid] = (await UserModel.getById(domainId, uid)) || UserModel.defaultUser;
+        for (const uid of _uids) r[uid] = (await UserModel.getById(domainId, uid)) || new User(UserModel.defaultUser, {});
         return r;
     }
 
     @ArgMethod
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
-        if (cache.has(`${unameLower}/${domainId}`)) return cache.get(`${unameLower}/${domainId}`);
+        if (cache.has(`${unameLower}/${domainId}`)) return cache.get(`${unameLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
@@ -182,7 +185,7 @@ class UserModel {
     @ArgMethod
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
         const mailLower = mail.trim().toLowerCase();
-        if (cache.has(`${mailLower}/${domainId}`)) return cache.get(`${mailLower}/${domainId}`);
+        if (cache.has(`${mailLower}/${domainId}`)) return cache.get(`${mailLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
@@ -209,7 +212,7 @@ class UserModel {
     }
 
     @ArgMethod
-    static async setPassword(uid: number, password: string): Promise<Udoc> {
+    static async setPassword(uid: number, password: string): Promise<Udoc | null> {
         const salt = String.random();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
@@ -217,7 +220,7 @@ class UserModel {
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
-        return res.value;
+        return res.value || null;
     }
 
     @ArgMethod
@@ -300,7 +303,7 @@ class UserModel {
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
-        return res.value;
+        return res.value || null;
     }
 
     @ArgMethod

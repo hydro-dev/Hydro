@@ -104,17 +104,17 @@ export async function get(domainId: string, tid: ObjectID) {
     return tdoc;
 }
 
+export const getMulti = (domainId: string, query: FilterQuery<TrainingDoc> = {}) =>
+    document.getMulti(domainId, document.TYPE_TRAINING, query).sort({ pin: -1, _id: -1 });
+
 export async function getList(domainId: string, tids: ObjectID[]) {
-    const tdocs = await this.getMulti(
+    const tdocs = await getMulti(
         domainId, { _id: { $in: Array.from(new Set(tids)) } },
     ).toArray();
     const r = {};
     for (const tdoc of tdocs) r[tdoc.docId] = tdoc;
     return r;
 }
-
-export const getMulti = (domainId: string, query: FilterQuery<TrainingDoc> = {}) =>
-    document.getMulti(domainId, document.TYPE_TRAINING, query).sort({ pin: -1, _id: -1 });
 
 global.Hydro.model.training = {
     getPids,
