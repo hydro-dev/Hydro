@@ -307,7 +307,7 @@ class HomeDomainHandler extends Handler {
         const canManage = {};
         for (const ddoc of ddocs) {
             // eslint-disable-next-line no-await-in-loop
-            const udoc = await user.getById(ddoc._id, this.user._id);
+            const udoc = (await user.getById(ddoc._id, this.user._id))!;
             canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)
                 || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
         }
@@ -415,7 +415,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 
     async onMessageReceived(uid: number, mdoc: MessageDoc) {
         if (uid !== this.user._id) return;
-        const udoc = await user.getById(this.domainId, mdoc.from);
+        const udoc = (await user.getById(this.domainId, mdoc.from))!;
         udoc.avatarUrl = avatar(udoc.avatar, 64);
         this.send({ udoc, mdoc });
     }

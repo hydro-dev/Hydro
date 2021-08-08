@@ -10,7 +10,7 @@ import domain from './domain';
 import storage from './storage';
 import { buildProjection } from '../utils';
 import type {
-    ProblemStatusDoc, ProblemDict, Document, ProblemId,
+    ProblemStatusDoc, ProblemDict, Document, ProblemId, DomainDoc,
 } from '../interface';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
@@ -77,7 +77,7 @@ export class ProblemModel {
     };
 
     static async add(
-        domainId: string, pid: string = null, title: string, content: string, owner: number,
+        domainId: string, pid: string = '', title: string, content: string, owner: number,
         tag: string[] = [], hidden = false,
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
@@ -88,7 +88,7 @@ export class ProblemModel {
     }
 
     static async addWithId(
-        domainId: string, docId: number, pid: string = null, title: string,
+        domainId: string, docId: number, pid: string = '', title: string,
         content: string, owner: number, tag: string[] = [], hidden = false,
     ) {
         const args: Partial<ProblemDoc> = {
@@ -107,7 +107,7 @@ export class ProblemModel {
     static async get(
         domainId: string, pid: string | number,
         projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
-    ): Promise<ProblemDoc> {
+    ): Promise<ProblemDoc | null> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
         }
@@ -192,6 +192,7 @@ export class ProblemModel {
         const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
         if (!meta) throw new Error('Upload failed');
         const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
+        payload.lastModified ||= new Date();
         if (!fileinfo) await ProblemModel.push(domainId, pid, 'data', { _id: name, ...payload });
         else await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', name, payload);
         await bus.emit('problem/addTestdata', domainId, pid, name, payload);
@@ -243,20 +244,20 @@ export class ProblemModel {
             })),
             'domainId',
         );
-        const r = {};
-        const l = {};
+        const r: Record<ProblemId, ProblemDoc> = {};
+        const l: Record<string, ProblemDoc> = {};
         const ddocs = await Promise.all(Object.keys(parsed).map((i) => domain.get(i)));
         const f = ddocs.filter((i) => !(
-            i?._id === domainId
-            || i?.share === '*'
-            || (`,${(i?.share || '').replace(/，/g, ',').split(',').map((q) => q.trim()).join(',')},`).includes(`,${domainId},`)
-        ));
+            !i || i._id === domainId
+            || i.share === '*'
+            || (`,${(i.share || '').replace(/，/g, ',').split(',').map((q) => q.trim()).join(',')},`).includes(`,${domainId},`)
+        )) as DomainDoc[];
         if (f.length) {
             if (doThrow) throw new ProblemNotFoundError(f[0]._id, parsed[f[0]._id][0].pid);
             else {
                 for (const sf of f) {
                     for (const pinfo of parsed[sf._id]) {
-                        r[pinfo.pid] = { ...ProblemModel.default, domainId: sf._id, pid: pinfo.pid };
+                        r[pinfo.pid] = { ...ProblemModel.default, domainId: sf._id, pid: pinfo.pid.toString() };
                     }
                     delete parsed[sf._id];
                 }
@@ -290,7 +291,7 @@ export class ProblemModel {
             for (const pid of pids) {
                 if (!(r[pid] || l[pid])) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-                    else r[pid] = { ...ProblemModel.default, domainId, pid };
+                    else r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
                 }
             }
         }

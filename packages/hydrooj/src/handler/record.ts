@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { pick } from 'lodash';
 import { postJudge } from './judge';
 import {
     ContestNotFoundError, PermissionError, ProblemNotFoundError,
@@ -32,6 +33,7 @@ class RecordListHandler extends Handler {
         uidOrName?: string, status?: number, full = false, all = false,
     ) {
         let tdoc = null;
+        let invalid = false;
         this.response.template = 'record_main.html';
         const q: FilterQuery<RecordDoc> = { 'contest.tid': tid, hidden: false };
         if (full) uidOrName = this.user._id.toString();
@@ -41,23 +43,19 @@ class RecordListHandler extends Handler {
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (uidOrName) {
-            let udoc = await user.getById(domainId, +uidOrName);
+            const udoc = await user.getById(domainId, +uidOrName) ?? await user.getByUname(domainId, uidOrName);
             if (udoc) q.uid = udoc._id;
-            else {
-                udoc = await user.getByUname(domainId, uidOrName);
-                if (udoc) q.uid = udoc._id;
-                else q.uid = null;
-            }
+            else invalid = true;
         }
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) q.pid = pdoc.docId;
-            else q.pid = null;
+            else invalid = true;
         }
         if (status) q.status = status;
         let cursor = record.getMulti(domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
-        const [rdocs] = await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
+        const [rdocs] = invalid ? [[]] : await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = full ? [{}, {}]
@@ -104,7 +102,7 @@ class RecordDetailHandler extends Handler {
         }
         if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
-                rdoc.code = null;
+                rdoc.code = '';
                 rdoc.compilerTexts = [];
             }
         }
@@ -118,7 +116,8 @@ class RecordDetailHandler extends Handler {
             || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
             || (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))
         ) {
-            throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+            if (this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+            else pdoc = { ...problem.default, ...pdoc ? pick(pdoc, ['domainId', 'docId', 'pid']) : {} };
         }
         this.response.body = { udoc, rdoc, pdoc };
         if (rdoc.contest) {
@@ -154,14 +153,14 @@ class RecordDetailHandler extends Handler {
                 record.update(domainId, rid, $set),
                 TaskModel.deleteMany({ rid: rdoc._id }),
             ]);
-            await postJudge(latest);
+            if (latest) await postJudge(latest);
         }
         this.back();
     }
 }
 
 class RecordMainConnectionHandler extends ConnectionHandler {
-    cleanup: bus.Disposable;
+    cleanup: bus.Disposable = () => { };
     tid: string;
     uid: number;
     pdomain: string;
@@ -218,7 +217,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (rdoc.domainId !== this.domainId) return;
         if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
-        if (this.pid && (rdoc.pid !== this.pid || rdoc.pdomain !== this.pdomain)) return;
+
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
@@ -241,12 +240,13 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 }
 
 class RecordDetailConnectionHandler extends ConnectionHandler {
-    cleanup: bus.Disposable;
-    rid: string;
+    cleanup: bus.Disposable = () => { };
+    rid: string = '';
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         const rdoc = await record.get(domainId, rid);
+        if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {
             const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
             let canView = this.user.own(tdoc);
@@ -256,13 +256,13 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         }
         if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
-                rdoc.code = null;
+                rdoc.code = '';
                 rdoc.compilerTexts = [];
             }
         }
         const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
-        let canView = this.user.own(pdoc);
-        canView ||= !pdoc.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
+        let canView = pdoc && this.user.own(pdoc);
+        canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         canView ||= this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
         if (!canView) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
