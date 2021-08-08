@@ -1,6 +1,6 @@
 import { Collection } from 'mongodb';
 import LRU from 'lru-cache';
-import { escapeRegExp } from 'lodash';
+import { escapeRegExp, pick } from 'lodash';
 import * as system from './system';
 import token from './token';
 import * as setting from './setting';
@@ -23,7 +23,12 @@ const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
     if (!udoc) return;
-    if (!receiver) bus.broadcast('user/delcache', JSON.stringify(udoc));
+    if (!receiver) {
+        bus.broadcast(
+            'user/delcache',
+            JSON.stringify(typeof udoc === 'string' ? udoc : pick(udoc, ['uname', 'mail', '_id'])),
+        );
+    }
     if (typeof udoc === 'string') {
         for (const key of cache.keys().filter((k) => k.endsWith(`/${udoc}`))) {
             cache.del(key);
