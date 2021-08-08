@@ -18,7 +18,7 @@ const Score = {
 
 function judgeCase(c, sid: string) {
     return async (ctx, ctxSubtask) => {
-        if (ctx.failed[sid] || ctx.errored
+        if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
         ) {
