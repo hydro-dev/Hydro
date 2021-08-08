@@ -8,6 +8,7 @@ import { filter } from 'lodash';
 import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
+import { noop } from '@hydrooj/utils/lib/utils';
 import { ValidationError, RemoteOnlineJudgeError } from '../error';
 import { Logger } from '../logger';
 import type { ContentNode, ProblemConfigFile, SubtaskConfig } from '../interface';
@@ -282,6 +283,15 @@ class ProblemImportSYZOJHandler extends Handler {
         domainId: string, url: string, targetPid: string, hidden = false,
         prefix: string, start: number, end: number,
     ) {
+        if (/^(.+)(\d+)\.\.(\d+)$/.test(url)) {
+            const res = /^(.+)(\d+)\.\.(\d+)$/.exec(url)!;
+            prefix = res[1];
+            start = +res[2];
+            end = +res[3];
+            if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end) {
+                throw new ValidationError('end');
+            }
+        }
         if (prefix) {
             let version = 2;
             if (!prefix.endsWith('/')) prefix += '/';
@@ -293,9 +303,9 @@ class ProblemImportSYZOJHandler extends Handler {
             (async () => {
                 for (let i = start; i <= end; i++) {
                     // eslint-disable-next-line no-await-in-loop
-                    if (version === 3) await this.v3(domainId, undefined, hidden, protocol, host, i, true);
+                    if (version === 3) await this.v3(domainId, undefined, hidden, protocol, host, i, true).catch(noop);
                     // eslint-disable-next-line no-await-in-loop
-                    else await this.v2(domainId, undefined, hidden, prefix + i);
+                    else await this.v2(domainId, undefined, hidden, prefix + i).catch(noop);
                     logger.info('%s %d-%d-%d', prefix, start, i, end);
                 }
             })().catch(logger.error);
