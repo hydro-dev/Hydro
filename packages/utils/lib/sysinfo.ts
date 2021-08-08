@@ -26,6 +26,7 @@ export async function get(): Promise<StatusFull> {
         systeminformation.battery(),
     ]);
     const mid = uuid.hardware;
+    delete osinfo.fqdn;
     cache.cpu = cpu;
     cache.osinfo = osinfo;
     cache.mid = mid;
