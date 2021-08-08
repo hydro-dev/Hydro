@@ -112,7 +112,7 @@ export async function getList(domainId: string, tids: ObjectID[]) {
         domainId, { _id: { $in: Array.from(new Set(tids)) } },
     ).toArray();
     const r = {};
-    for (const tdoc of tdocs) r[tdoc.docId] = tdoc;
+    for (const tdoc of tdocs) r[tdoc.docId.toString()] = tdoc;
     return r;
 }
 
