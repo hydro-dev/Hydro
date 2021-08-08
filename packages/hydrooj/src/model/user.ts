@@ -21,9 +21,9 @@ const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
-export function deleteUserCache(udoc: User | Udoc | string | undefined | null) {
+export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
     if (!udoc) return;
-    bus.broadcast('user/delcache', JSON.stringify(udoc));
+    if (!receiver) bus.broadcast('user/delcache', JSON.stringify(udoc));
     if (typeof udoc === 'string') {
         for (const key of cache.keys().filter((k) => k.endsWith(`/${udoc}`))) {
             cache.del(key);
@@ -35,7 +35,7 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null) {
         }
     }
 }
-bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content)));
+bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));
 
 class User implements _User {
     _id: number;
