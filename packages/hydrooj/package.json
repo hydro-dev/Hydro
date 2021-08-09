@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.32.11",
+    "version": "2.32.12",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -36,6 +36,7 @@
         "reflect-metadata": "^0.1.13",
         "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.21",
+        "source-map-support": "^0.5.19",
         "superagent": "^6.1.0"
     },
     "devDependencies": {

@@ -2,6 +2,7 @@
 
 /* eslint-disable consistent-return */
 
+require('source-map-support').install();
 const os = require('os');
 const path = require('path');
 const cluster = require('cluster');

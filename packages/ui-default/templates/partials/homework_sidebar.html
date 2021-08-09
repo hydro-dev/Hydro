@@ -58,7 +58,7 @@
       </a></li>
     {% endif %}
     {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}">
+      <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}" data-no-instant>
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>
     {% endif %}
