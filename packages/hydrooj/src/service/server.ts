@@ -868,7 +868,6 @@ let started = false;
 export function start() {
     if (started) return;
     const port = system.get('server.port');
-    router.all('domain_main_redirect', '/d/:domain', (ctx) => ctx.redirect(`/d/${ctx.params.domain}/`));
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.options.port || port);
     logger.success('Server listening at: %d', argv.options.port || port);
