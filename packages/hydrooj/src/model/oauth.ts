@@ -21,7 +21,7 @@ class OauthModel {
             { $set: { value } },
             { upsert: true, returnDocument: 'after' },
         );
-        return res.value.uid;
+        return res.value?.uid;
     }
 }
 

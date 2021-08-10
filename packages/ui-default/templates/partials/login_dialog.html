@@ -3,7 +3,7 @@
     <div class="dialog--signin__bg">
       <div class="dialog--signin__side">
         <h1>{{ _("Don't have an account?") }}</h1>
-        <p>{{ _('By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.').format(handler.domain.ui.name|default(model.system.get('server.name'))) }}</p>
+        <p>{{ _('By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.').format((handler.domain|default({ui:[]})).ui.name|default(model.system.get('server.name'))) }}</p>
         <div><a href="{{ url('user_register') }}" class="inverse rounded button">{{ _('Sign Up Now') }}</a></div>
       </div>
     </div>

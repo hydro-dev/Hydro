@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
-import moment from 'dayjs';
+import moment from 'moment';
 import _ from 'lodash';
 
 import substitute from 'vj/utils/substitute';

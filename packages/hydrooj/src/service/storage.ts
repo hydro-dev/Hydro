@@ -193,7 +193,7 @@ class StorageService {
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
-            const headers = {};
+            const headers: Record<string, string> = {};
             if (filename) headers['response-content-disposition'] = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
             if (/\.(jpe?g|png|gif)$/i.test(target)) headers['cache-control'] = 'max-age=604800';
             const url = await this.client.presignedGetObject(
@@ -208,6 +208,19 @@ class StorageService {
             e.stack = new Error().stack;
             throw e;
         }
+    }
+
+    async signUpload(target: string, size: number) {
+        const policy = this.client.newPostPolicy();
+        policy.setBucket(this.opts.bucket);
+        policy.setKey(target);
+        policy.setExpires(new Date(Date.now() + 30 * 60 * 1000));
+        if (size) policy.setContentLengthRange(size - 50, size + 50);
+        const policyResult = await this.client.presignedPostPolicy(policy);
+        return {
+            url: this.replaceWithAlternativeUrlFor.user(policyResult.postURL),
+            extraFormData: policyResult.formData,
+        };
     }
 }
 

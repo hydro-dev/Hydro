@@ -3,14 +3,15 @@ import {
     PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
     FilterQuery,
 } from 'mongodb';
-import { sum } from 'lodash';
+import { omit, sum } from 'lodash';
 import moment from 'moment';
 import { STATUS } from './builtin';
 import task from './task';
 import problem from './problem';
 import {
-    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId,
+    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId, FileInfo,
 } from '../interface';
+import { ProblemNotFoundError } from '../error';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { MaybeArray } from '../typeutils';
 import * as bus from '../service/bus';
@@ -34,7 +35,7 @@ class RecordModel {
 
     static async get(_id: ObjectID): Promise<RecordDoc | null>
     static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null>
-    static async get(arg0, arg1?) {
+    static async get(arg0: string | ObjectID, arg1?: any) {
         const _id = arg1 || arg0;
         const domainId = arg1 ? arg0 : null;
         const res = await RecordModel.coll.findOne({ _id });
@@ -61,15 +62,16 @@ class RecordModel {
 
     static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}) {
         const rdoc = await RecordModel.get(domainId, rid);
-        let data = [];
-        delete rdoc._id;
+        if (!rdoc) return null;
+        let data: FileInfo[] = [];
         if (rdoc.pid) {
             const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
+            if (!pdoc) throw new ProblemNotFoundError(rdoc?.pdomain, rdoc.pid);
             data = pdoc.data;
-            if (typeof pdoc.config === 'string') throw new Error(); // Just for typings. This won't happen.
+            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
             if (pdoc.config.type === 'remote_judge') {
                 return await task.add({
-                    ...rdoc,
+                    ...omit(rdoc, ['_id']),
                     priority,
                     type: 'remotejudge',
                     subType: pdoc.config.subType,
@@ -82,7 +84,7 @@ class RecordModel {
             }
         }
         return await task.add({
-            ...rdoc,
+            ...omit(rdoc, ['_id']),
             priority,
             type: 'judge',
             rid,
@@ -162,7 +164,7 @@ class RecordModel {
                 $update,
                 { returnDocument: 'after' },
             );
-            return res.value;
+            return res.value || null;
         }
         return await RecordModel.get(domainId, _id);
     }
@@ -204,14 +206,13 @@ class RecordModel {
     static async getList(
         domainId: string, rids: ObjectID[], showHidden: boolean, fields?: (keyof RecordDoc)[],
     ): Promise<Record<string, Partial<RecordDoc>>> {
-        const r = {};
+        const r: Record<string, RecordDoc> = {};
         rids = Array.from(new Set(rids));
         let cursor = RecordModel.coll.find({ domainId, _id: { $in: rids } });
         if (fields) cursor = cursor.project(buildProjection(fields));
         const rdocs = await cursor.toArray();
         for (const rdoc of rdocs) {
-            if (rdoc.hidden && !showHidden) r[rdoc._id.toHexString()] = null;
-            else r[rdoc._id.toHexString()] = rdoc;
+            if (!rdoc.hidden || showHidden) r[rdoc._id.toHexString()] = rdoc;
         }
         return r;
     }

@@ -48,7 +48,7 @@ class MessageModel {
             { $bit: { flag: { xor: flag } } },
             { returnDocument: 'after' },
         );
-        return result.value;
+        return result.value || null;
     }
 
     static async del(_id: ObjectID) {

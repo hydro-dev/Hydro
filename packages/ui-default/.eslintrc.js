@@ -69,6 +69,7 @@ module.exports = {
     'consistent-return': 'warn',
     'func-names': 'off',
     'import/first': 'off',
+    'import/extensions': 'off',
     'import/no-extraneous-dependencies': 'off',
     'max-classes-per-file': 'off',
     'no-empty': ['warn', { allowEmptyCatch: true }],

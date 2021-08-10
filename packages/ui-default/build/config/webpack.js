@@ -147,7 +147,7 @@ export default function (env = {}) {
             name: `vditor-${require('vditor/package.json').version}`,
           },
           vendors: {
-            test: /[\\/]node_modules[\\/]/,
+            test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
             priority: -10,
             name: 'vendors',
             reuseExistingChunk: true,

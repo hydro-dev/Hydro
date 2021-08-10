@@ -63,7 +63,7 @@ class DomainModel {
         const query: FilterQuery<DomainDoc> = { lower: domainId.toLowerCase() };
         await bus.serial('domain/before-get', query);
         const result = await coll.findOne(query);
-        await bus.serial('domain/get', result);
+        if (result) await bus.serial('domain/get', result);
         return result;
     }
 
@@ -72,7 +72,7 @@ class DomainModel {
         const query: FilterQuery<DomainDoc> = { host };
         await bus.serial('domain/before-get', query);
         const result = await coll.findOne(query);
-        await bus.serial('domain/get', result);
+        if (result) await bus.serial('domain/get', result);
         return result;
     }
 
@@ -83,7 +83,7 @@ class DomainModel {
     static async edit(domainId: string, $set: Partial<DomainDoc>) {
         await bus.serial('domain/before-update', domainId, $set);
         const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnDocument: 'after' });
-        await bus.serial('domain/update', domainId, $set, result.value);
+        if (result.value) await bus.serial('domain/update', domainId, $set, result.value);
         return result.value;
     }
 
@@ -96,12 +96,12 @@ class DomainModel {
             { $inc: { [field]: n } },
             { returnDocument: 'after' },
         );
-        return res.value[field];
+        return res.value?.[field];
     }
 
     @ArgMethod
-    static async getList(domainIds: string[]): Promise<Dictionary<DomainDoc>> {
-        const r = {};
+    static async getList(domainIds: string[]) {
+        const r: Record<string, DomainDoc | null> = {};
         // eslint-disable-next-line no-await-in-loop
         for (const domainId of domainIds) r[domainId] = await DomainModel.get(domainId);
         return r;

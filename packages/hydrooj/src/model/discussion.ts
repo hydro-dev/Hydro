@@ -89,7 +89,7 @@ export async function add(
     };
     await bus.serial('discussion/before-add', payload);
     const res = await document.add(
-        payload.domainId, payload.content, payload.owner, document.TYPE_DISCUSSION,
+        payload.domainId!, payload.content!, payload.owner!, document.TYPE_DISCUSSION,
         null, payload.parentType, payload.parentId, omit(payload, ['domainId', 'content', 'owner', 'parentType', 'parentId']),
     );
     payload.docId = res;
