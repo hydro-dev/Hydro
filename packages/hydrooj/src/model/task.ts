@@ -60,25 +60,19 @@ class Consumer {
 
 class WorkerService implements BaseService {
     private handlers: Record<string, Function> = {};
-    public consumer: Consumer;
-    public started = false;
-
-    public start() {
-        this.consumer = new Consumer(
-            { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
-            async (doc) => {
-                try {
-                    logger.debug('Worker task: %o', doc);
-                    await this.handlers[doc.subType](doc);
-                } catch (e) {
-                    logger.error('Worker task fail: ', e);
-                    logger.error('%o', doc);
-                }
-            },
-            false,
-        );
-        this.started = true;
-    }
+    public consumer = new Consumer(
+        { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
+        async (doc) => {
+            try {
+                logger.debug('Worker task: %o', doc);
+                await this.handlers[doc.subType](doc);
+            } catch (e) {
+                logger.error('Worker task fail: ', e);
+                logger.error('%o', doc);
+            }
+        },
+        false,
+    );
 
     public addHandler(type: string, handler: Function) {
         this.handlers[type] = handler;
@@ -87,7 +81,6 @@ class WorkerService implements BaseService {
 }
 
 const Worker = new WorkerService();
-Worker.start();
 
 class TaskModel {
     static async add(task: Partial<Task> & { type: string }) {
@@ -122,7 +115,7 @@ class TaskModel {
 
     static async getDelay(query?: FilterQuery<Task>): Promise<[number, Date]> {
         const now = new Date();
-        const res = await coll.findOne(query, { sort: { executeAfter: 1 } });
+        const [res] = await coll.find(query).sort({ executeAfter: 1 }).limit(1).toArray();
         if (res) return [Math.max(0, now.getTime() - res.executeAfter.getTime()), res.executeAfter];
         return [0, now];
     }
@@ -136,7 +129,21 @@ class TaskModel {
     static Worker = Worker;
 }
 
+Worker.addHandler('task.daily', async () => {
+    await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
+    await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
+});
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
+bus.once('app/started', async () => {
+    if (!await TaskModel.count({ type: 'schedule', subType: 'task.daily' })) {
+        await TaskModel.add({
+            type: 'schedule',
+            subType: 'task.daily',
+            executeAfter: moment().hour(3).minute(0).second(0).millisecond(0).toDate(),
+            interval: [1, 'day'],
+        });
+    }
+});
 
 export default TaskModel;
 global.Hydro.model.task = TaskModel;

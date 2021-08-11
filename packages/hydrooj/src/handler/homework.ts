@@ -175,18 +175,14 @@ class HomeworkDetailProblemHandler extends Handler {
 }
 
 export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHandler {
-    @query('type', Types.Range(['additional_file', 'testdata']), true)
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     // @ts-ignore
-    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
-        if (type === 'testdata' && !this.user.own(this.pdoc)) {
-            if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
-        }
+    async get(domainId: string, filename: string, noDisposition = false) {
         // @ts-ignore
         if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
         this.response.redirect = await storage.signDownloadLink(
-            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
+            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`,
             noDisposition ? undefined : filename, false, 'user',
         );
     }
