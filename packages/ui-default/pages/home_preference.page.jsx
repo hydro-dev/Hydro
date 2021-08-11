@@ -18,9 +18,7 @@ const page = new NamedPage('home_preference', async () => {
         super(props);
         this.state = { value: UserContext.astyleOptions };
         [this.success, this.preview] = format(code, `${this.state.value.trim()} mode=c`);
-        this.state.highlight = this.success
-          ? prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++')
-          : prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
+        this.state.highlight = prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
       }
 
       render() {
@@ -39,9 +37,7 @@ const page = new NamedPage('home_preference', async () => {
                     onChange={(ev) => {
                       ev.stopPropagation();
                       [this.success, this.preview] = format(code, `${ev.target.value.trim()} mode=c`);
-                      const highlight = this.success
-                        ? prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++')
-                        : prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
+                      const highlight = prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
                       this.setState({ value: ev.target.value, highlight });
                     }}
                     className="textbox"

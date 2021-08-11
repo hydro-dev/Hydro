@@ -18,7 +18,7 @@ import record from '../model/record';
 import user from '../model/user';
 import message from '../model/message';
 import {
-    Route, Handler, Types, param, query,
+    Route, Handler, Types, param,
 } from '../service/server';
 import * as bus from '../service/bus';
 import storage from '../service/storage';

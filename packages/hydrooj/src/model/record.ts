@@ -66,7 +66,7 @@ class RecordModel {
         let data: FileInfo[] = [];
         if (rdoc.pid) {
             const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
-            if (!pdoc) throw new ProblemNotFoundError(rdoc?.pdomain, rdoc.pid);
+            if (!pdoc) throw new ProblemNotFoundError(rdoc.pdomain, rdoc.pid);
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
             if (pdoc.config.type === 'remote_judge') {

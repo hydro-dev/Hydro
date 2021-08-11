@@ -67,7 +67,7 @@ export default class ObjectiveContainer extends React.PureComponent {
     return (
       <form onSubmit={this.onSubmit}>
         {this.props.panel.map((i, name) => (
-          <div className="row">
+          <div className="row" key={i}>
             <div className="medium-7 columns form__item end">
               {i.choices ? this.Radio(i, name) : this.Textbox(i, name)}
             </div>

@@ -11,7 +11,7 @@ import {
     PenaltyRules, Tdoc, ProblemDoc, User,
 } from '../interface';
 import {
-    Route, Handler, Types, param, query,
+    Route, Handler, Types, param,
 } from '../service/server';
 import * as bus from '../service/bus';
 import domain from '../model/domain';
