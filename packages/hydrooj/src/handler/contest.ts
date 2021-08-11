@@ -317,6 +317,8 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
+        // @ts-ignore
+        if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
         this.response.redirect = await storage.signDownloadLink(
             `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
             noDisposition ? undefined : filename, false, 'user',
