@@ -66,7 +66,7 @@ export default class Tab extends DOMAttachedObject {
         {
           duration: TAB_TRANSITION_DURATION,
           easing: 'linear',
-        }
+        },
       );
     $newTab
       .transition(
@@ -74,7 +74,7 @@ export default class Tab extends DOMAttachedObject {
         {
           duration: TAB_TRANSITION_DURATION,
           easing: 'linear',
-        }
+        },
       );
     await this.$content
       .transition({

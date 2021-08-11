@@ -279,7 +279,7 @@ export default class Calendar {
           for (; vIndex < vIndexMax; ++vIndex) {
             if (_.every(_
               .range(beginDay, endDay + 1)
-              .map((day) => !dayBitmap[day][vIndex]) // eslint-disable-line no-loop-func
+              .map((day) => !dayBitmap[day][vIndex]), // eslint-disable-line no-loop-func
             )) { // eslint-disable-line function-paren-newline
               break;
             }

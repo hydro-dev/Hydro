@@ -42,7 +42,7 @@ export default class DomDialog extends DOMAttachedObject {
       {
         duration: 100,
         easing: 'easeOutCubic',
-      }
+      },
     );
 
     const $dgContent = this.$dom.find('.dialog__content');

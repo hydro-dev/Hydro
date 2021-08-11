@@ -3,8 +3,8 @@ const path = require('path');
 
 module.exports = {
   root: true,
-  parser: '@babel/eslint-parser',
-  plugins: ['babel', 'react'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'react'],
   env: {
     browser: true,
     es6: true,
@@ -14,15 +14,14 @@ module.exports = {
   extends: ['airbnb'],
   parserOptions: {
     sourceType: 'module',
-    ecmaVersion: 7,
+    ecmaVersion: 2020,
     ecmaFeatures: {
       impliedStrict: true,
       experimentalObjectRestSpread: true,
       jsx: true,
+      defaultParams: true,
       legacyDecorators: true,
-    },
-    babelOptions: {
-      configFile: `${__dirname}/babel.config.js`,
+      allowImportExportEverywhere: true,
     },
   },
   settings: {
@@ -48,21 +47,25 @@ module.exports = {
     window: true,
   },
   rules: {
+    '@typescript-eslint/dot-notation': 'off',
+    '@typescript-eslint/no-implied-eval': 'off',
+    '@typescript-eslint/no-throw-literal': 'off',
+    '@typescript-eslint/return-await': 'off',
+
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
-    indent: 'off',
 
     'comma-dangle': [
       'error',
       'always-multiline',
     ],
-    // indent: [
-    //   'error',
-    //   2,
-    //   {
-    //     SwitchCase: 0,
-    //   },
-    // ],
+    indent: [
+      'error',
+      2,
+      {
+        SwitchCase: 0,
+      },
+    ],
     'max-len': ['error', 150],
     quotes: 'warn',
     'class-methods-use-this': 'off',

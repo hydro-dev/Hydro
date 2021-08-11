@@ -1,5 +1,4 @@
 import i18n from './i18n';
-import substitute from './substitute';
 
 const request = {
   /**
@@ -24,7 +23,7 @@ const request = {
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
             const { error } = jqXHR.responseJSON;
             if (error.params) {
-              const message = substitute(error.message, ...error.params);
+              const message = i18n(error.message, ...error.params);
               const err = new Error(message);
               err.rawMessage = error.message;
               err.params = error.params;
