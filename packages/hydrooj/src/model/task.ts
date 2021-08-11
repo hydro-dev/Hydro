@@ -60,6 +60,8 @@ class Consumer {
 
 class WorkerService implements BaseService {
     private handlers: Record<string, Function> = {};
+    public started = true;
+    public start = () => { };
     public consumer = new Consumer(
         { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
         async (doc) => {
