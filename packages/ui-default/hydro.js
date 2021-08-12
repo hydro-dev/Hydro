@@ -6,11 +6,7 @@ import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
 
 const start = new Date();
-window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
-
-// eslint-disable-next-line
-try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }
 
 function buildSequence(pages, type) {
   if (process.env.NODE_ENV !== 'production') {

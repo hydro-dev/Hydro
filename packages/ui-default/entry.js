@@ -18,4 +18,10 @@ console.log(
       /____/                   
 `,
 );
+
+window.UiContext = JSON.parse(window.UiContext);
+
+// eslint-disable-next-line
+try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }
+
 import('./hydro');

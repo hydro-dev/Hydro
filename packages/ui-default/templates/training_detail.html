@@ -9,7 +9,7 @@
         {{ tdoc['content'] }}
       </div>
       <div class="section__body typo">
-        {{ tdoc['desc']|default('')|markdown|safe }}
+        {{ tdoc.description|default('')|markdown|safe }}
       </div>
     </div>
     <div class="section">
