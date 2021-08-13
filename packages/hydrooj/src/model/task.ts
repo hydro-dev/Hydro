@@ -141,7 +141,7 @@ bus.once('app/started', async () => {
         await TaskModel.add({
             type: 'schedule',
             subType: 'task.daily',
-            executeAfter: moment().hour(3).minute(0).second(0).millisecond(0).toDate(),
+            executeAfter: moment().add(1, 'day').hour(3).minute(0).second(0).millisecond(0).toDate(),
             interval: [1, 'day'],
         });
     }

@@ -488,7 +488,7 @@ export interface JudgeResultBody {
 export interface Task {
     _id: ObjectID,
     type: string,
-    executeAfter?: Date,
+    executeAfter: Date,
     priority: number,
     [key: string]: any
 }
@@ -624,24 +624,26 @@ export interface UI {
     UserDropdown: typeof import('./lib/ui').UserDropdown,
 }
 
+export interface HydroGlobal {
+    version: Record<string, string>,
+    model: Model,
+    handler: Record<string, Function>,
+    script: Record<string, Script>,
+    service: Service,
+    lib: Lib,
+    stat: any,
+    ui: UI,
+    error: typeof import('./error'),
+    Logger: typeof import('./logger').Logger,
+    logger: typeof import('./logger').logger,
+    locales: Record<string, Record<string, string>>,
+    isFirstWorker: boolean,
+}
+
 declare global {
     namespace NodeJS {
         interface Global {
-            Hydro: {
-                version: Record<string, string>,
-                model: Model,
-                handler: Dict<Function>,
-                script: Dict<Script>,
-                service: Service,
-                lib: Lib,
-                stat: any,
-                ui: UI,
-                error: typeof import('./error'),
-                Logger: typeof import('./logger').Logger,
-                logger: typeof import('./logger').logger,
-                locales: Dict<Dict<string>>,
-                isFirstWorker: boolean,
-            },
+            Hydro: HydroGlobal,
             addons: string[],
         }
     }

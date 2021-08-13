@@ -152,9 +152,10 @@
   {{ container_attr('textbox-container', args) }}
 >
   <input
-    type="{{ args.type or 'text' }}"
+    type="{{ 'number' if args.type === 'float' else args.type|default('text') }}"
     name="{{ args.name }}"
     value="{{ args.value }}"
+    {% if args.type === 'float' %} step="any"{% endif %}
     placeholder="{{ args.placeholder }}"
     {{ form_attr('textbox', args) }}
   >

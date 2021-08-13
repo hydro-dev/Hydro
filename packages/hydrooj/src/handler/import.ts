@@ -177,14 +177,6 @@ class ProblemImportSYZOJHandler extends Handler {
                 text: p.limit_and_hint,
             });
         }
-        if (p.have_additional_file) {
-            content.push({
-                type: 'Text',
-                subType: 'markdown',
-                sectionTitle: this.translate('Additional File'),
-                text: `${url}download/additional_file`,
-            });
-        }
         const c = buildContent(content, 'markdown');
         const docId = await problem.add(
             domainId, target, p.title, c, this.user._id, p.tags || [], hidden,
@@ -214,6 +206,25 @@ class ProblemImportSYZOJHandler extends Handler {
             await problem.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
         } finally {
             fs.unlinkSync(file);
+        }
+        if (p.have_additional_file) {
+            const r1 = download(`${url}download/additional_file`);
+            const file1 = path.resolve(os.tmpdir(), 'hydro', `import_${domainId}_${docId}_a.zip`);
+            const w1 = fs.createWriteStream(file1);
+            try {
+                await new Promise((resolve, reject) => {
+                    w1.on('finish', resolve);
+                    w1.on('error', reject);
+                    r1.pipe(w1);
+                });
+                const zip = new AdmZip(file1);
+                const entries = zip.getEntries();
+                for (const entry of entries) {
+                    await problem.addAdditionalFile(domainId, docId, entry.entryName.replace('/', '_'), entry.getData());
+                }
+            } finally {
+                fs.unlinkSync(file1);
+            }
         }
         return docId;
     }
@@ -296,7 +307,7 @@ class ProblemImportSYZOJHandler extends Handler {
             let version = 2;
             if (!prefix.endsWith('/')) prefix += '/';
             if (prefix.endsWith('/p/')) version = 3;
-            else if (!prefix.endsWith('/problem/')) prefix += 'problem/';
+            else prefix = `${prefix.split('/problem/')[0]}/problem/`;
             const base = `${prefix}${start}/`;
             assert(base.match(RE_SYZOJ), new ValidationError('prefix'));
             const [, protocol, host] = RE_SYZOJ.exec(base);

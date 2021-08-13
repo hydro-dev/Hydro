@@ -48,7 +48,7 @@ parallelism:
   desc: Runner parallelism
   default: 2
 rate:
-  type: number
+  type: float
   name: rate
   desc: (?)
   default: 1
