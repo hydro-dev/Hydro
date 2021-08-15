@@ -57,6 +57,11 @@ disable:
   name: disable
   desc: Disable builtin judge
   default: false
+strict_memory:
+  type: boolean
+  name: strict_memory
+  desc: Strict Memory Mode
+  default: false
 env:
   type: textarea
   name: env

@@ -14,6 +14,7 @@ let config = {
     tmpfs_size: '256m',
     stdio_size: '32m',
     memoryMax: '512m',
+    strict_memory: false,
     retry_delay_sec: 15,
     sandbox_host: 'http://localhost:5050',
     testcases_max: 100,

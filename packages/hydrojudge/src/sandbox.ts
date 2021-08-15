@@ -46,6 +46,7 @@ function proc({
         cpuLimit: time * 1000 * 1000 * rate,
         realCpuLimit: time * 3000 * 1000 * rate,
         memoryLimit: memory * 1024 * 1024,
+        strictMemoryLimit: getConfig('strict_memory'),
         // stackLimit: memory * 1024 * 1024,
         procLimit: process_limit,
         copyIn,
