@@ -30,14 +30,13 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
         );
     }
     if (typeof udoc === 'string') {
-        for (const key of cache.keys().filter((k) => k.endsWith(`/${udoc}`))) {
-            cache.del(key);
-        }
-    } else {
-        const id = [udoc._id.toString(), udoc.uname.toLowerCase(), udoc.mail.toLowerCase()];
-        for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
-            cache.del(key);
-        }
+        // is domainId
+        for (const key of cache.keys().filter((i) => i.endsWith(`/${udoc}`))) cache.del(key);
+        return;
+    }
+    const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
+    for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
+        cache.del(key);
     }
 }
 bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));
@@ -153,15 +152,15 @@ class UserModel {
 
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
-        if (cache.has(`${_id}/${domainId}`)) return cache.get(`${_id}/${domainId}`) || null;
+        if (cache.has(`id/${_id}/${domainId}`)) return cache.get(`id/${_id}/${domainId}`) || null;
         const udoc = await coll.findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         if (typeof scope === 'string') scope = BigInt(scope);
         const res = await new User(udoc, dudoc, scope).init();
-        cache.set(`${res._id}/${domainId}`, res);
-        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`id/${res._id}/${domainId}`, res);
+        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
         return res;
     }
 
@@ -176,28 +175,28 @@ class UserModel {
     @ArgMethod
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
-        if (cache.has(`${unameLower}/${domainId}`)) return cache.get(`${unameLower}/${domainId}`) || null;
+        if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();
-        cache.set(`${res._id}/${domainId}`, res);
-        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`id/${res._id}/${domainId}`, res);
+        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
         return res;
     }
 
     @ArgMethod
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
         const mailLower = mail.trim().toLowerCase();
-        if (cache.has(`${mailLower}/${domainId}`)) return cache.get(`${mailLower}/${domainId}`) || null;
+        if (cache.has(`mail/${mailLower}/${domainId}`)) return cache.get(`mail/${mailLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();
-        cache.set(`${res._id}/${domainId}`, res);
-        cache.set(`${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`id/${res._id}/${domainId}`, res);
+        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
         return res;
     }
 
