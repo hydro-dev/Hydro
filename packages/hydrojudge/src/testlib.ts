@@ -26,8 +26,6 @@ export function parse(output: string, fullscore: number) {
             message = `partially correct ${output.split('points ')[1] || ''}`;
             score = Math.floor(fullscore * (p / 100));
         }
-    } else if (output.startsWith('FAIL ')) {
-        status = STATUS.STATUS_SYSTEM_ERROR;
     }
     return { status, score, message };
 }
