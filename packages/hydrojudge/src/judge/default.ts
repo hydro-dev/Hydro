@@ -17,7 +17,7 @@ const Score = {
 };
 
 function judgeCase(c, sid: string) {
-    return async (ctx, ctxSubtask) => {
+    return async (ctx, ctxSubtask, runner?: Function) => {
         if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
@@ -86,6 +86,11 @@ function judgeCase(c, sid: string) {
             fs.remove(stdout),
             fs.remove(stderr),
         ]).catch(() => { /* Ignore file doesn't exist */ });
+        if (runner && ctx.rerun && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
+            ctx.rerun--;
+            await runner(ctx, ctxSubtask);
+            return;
+        }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
@@ -116,7 +121,8 @@ function judgeSubtask(subtask, sid: string) {
         };
         const cases = [];
         for (const cid in subtask.cases) {
-            cases.push(ctx.queue.add(() => judgeCase(subtask.cases[cid], sid)(ctx, ctxSubtask)));
+            const runner = judgeCase(subtask.cases[cid], sid);
+            cases.push(ctx.queue.add(() => runner(ctx, ctxSubtask, runner)));
         }
         await Promise.all(cases).catch((e) => {
             ctx.errored = true;
@@ -167,6 +173,7 @@ export const judge = async (ctx) => {
     ctx.total_score = 0;
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
+    ctx.rerun = getConfig('rerun') || 0;
     ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
     ctx.failed = {};
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));

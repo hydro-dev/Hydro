@@ -52,6 +52,11 @@ rate:
   name: rate
   desc: (?)
   default: 1
+rerun:
+  type: number
+  name: rerun
+  desc: Re-Run testcase if time-limit-exceeded (max per submission)
+  default: 0
 disable:
   type: boolean
   name: disable
