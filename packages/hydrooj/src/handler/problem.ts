@@ -23,7 +23,7 @@ import * as document from '../model/document';
 import * as contest from '../model/contest';
 import solution from '../model/solution';
 import { PERM, PRIV } from '../model/builtin';
-import storage from '../service/storage';
+import storage from '../model/storage';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Types, param, post, route, query,
