@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import { Route, Handler } from 'hydrooj/src/service/server';
-import { BadRequestError, ValidationError } from 'hydrooj/src/error';
+import { ValidationError } from 'hydrooj/src/error';
 import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import problem from 'hydrooj/src/model/problem';
 import { PERM } from 'hydrooj/src/model/builtin';

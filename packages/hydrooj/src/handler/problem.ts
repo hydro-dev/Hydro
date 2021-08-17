@@ -419,11 +419,11 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         const file = await storage.getMeta(target);
         if (!file) throw new NotFoundError(filename);
         this.response.etag = file.etag;
-        const type = lookup(filename).toString();
-        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
+        const fileType = lookup(filename).toString();
+        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => fileType.includes(i)).length;
         if (shouldProxy && file.size! < 32 * 1024 * 1024) {
             this.response.body = await storage.get(target);
-            this.response.type = file['Content-Type'] || type;
+            this.response.type = file['Content-Type'] || fileType;
             if (!noDisposition) this.response.addHeader('Content-Disposition', `attachment; filename=${filename}`);
         } else {
             this.response.redirect = await storage.signDownloadLink(
