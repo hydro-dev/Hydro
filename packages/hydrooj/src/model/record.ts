@@ -141,7 +141,7 @@ class RecordModel {
     }
 
     static getMulti(domainId: string, query: any) {
-        return RecordModel.coll.find({ ...query, domainId });
+        return RecordModel.coll.find({ domainId, ...query });
     }
 
     static async update(

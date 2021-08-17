@@ -20,6 +20,7 @@
   {% else %}
     *
   {% endif %}
+  {% if rdoc.input %}({{ _('Pretest') }}){% endif %}
   </td>
   <td class="col--submit-by">
     <a href="{{ url('user_detail', uid=rdoc.uid) }}">
