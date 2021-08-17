@@ -2,10 +2,11 @@ import { isSafeInteger, flatten } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
+import { lookup } from 'mime-types';
 import {
     NoProblemError, PermissionError, ValidationError,
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
-    ForbiddenError,
+    ForbiddenError, NotFoundError,
 } from '../error';
 import {
     ProblemDoc, User, ProblemStatusDoc,
@@ -373,7 +374,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             throw new ForbiddenError('File size limit exceeded.');
         }
         if (!filename) filename = this.request.files.file.name || String.random(16);
-        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', 'Bad filename');
+        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
@@ -414,10 +415,21 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
-        this.response.redirect = await storage.signDownloadLink(
-            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`,
-            noDisposition ? undefined : filename, false, 'user',
-        );
+        const target = `problem/${domainId}/${this.pdoc.docId}/${type}/${filename}`;
+        const file = await storage.getMeta(target);
+        if (!file) throw new NotFoundError(filename);
+        this.response.etag = file.etag;
+        const type = lookup(filename).toString();
+        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
+        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
+            this.response.body = await storage.get(target);
+            this.response.type = file['Content-Type'] || type;
+            if (!noDisposition) this.response.addHeader('Content-Disposition', `attachment; filename=${filename}`);
+        } else {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+        }
     }
 }
 

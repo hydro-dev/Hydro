@@ -2,9 +2,12 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
+import { lookup } from 'mime-types';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError, InvalidTokenError, RecordNotFoundError,
+    ContestNotAttendedError, PermissionError, BadRequestError,
+    ContestNotFoundError, InvalidTokenError, RecordNotFoundError,
+    NotFoundError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
@@ -315,10 +318,21 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
     async get(domainId: string, filename: string, noDisposition = false) {
         // @ts-ignore
         if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
-        this.response.redirect = await storage.signDownloadLink(
-            `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`,
-            noDisposition ? undefined : filename, false, 'user',
-        );
+        const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
+        const file = await storage.getMeta(target);
+        if (!file) throw new NotFoundError(filename);
+        this.response.etag = file.etag;
+        const type = lookup(filename).toString();
+        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
+        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
+            this.response.body = await storage.get(target);
+            this.response.type = file['Content-Type'] || type;
+            if (!noDisposition) this.response.addHeader('Content-Disposition', `attachment; filename=${filename}`);
+        } else {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+        }
     }
 }
 

@@ -321,7 +321,9 @@ Extension Score Penalty: 延期递交扣分规则
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
+Field {0} or {1} validation failed. ({2}): 字段 {0} 或 {1} 验证失败。 ({2})
 Field {0} validation failed.: 字段 {0} 验证失败。
+Field {0} validation failed. ({2}): 字段 {0} 验证失败。 ({2})
 Filter: 过滤
 Footer: 页脚
 Forgot Password and/or Username: 忘记密码和/或用户名

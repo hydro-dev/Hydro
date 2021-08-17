@@ -1,6 +1,9 @@
 import { escapeRegExp } from 'lodash';
 import { ItemBucketMetadata } from 'minio';
+import { nanoid } from 'nanoid';
+import { lookup } from 'mime-types';
 import moment from 'moment';
+import { extname } from 'path';
 import type { Readable } from 'stream';
 import TaskModel from './task';
 import storage from '../service/storage';
@@ -11,25 +14,15 @@ export class StorageModel {
     static coll = db.collection('storage');
 
     static async put(path: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
-        const [current, place] = await Promise.all([
-            StorageModel.coll.findOne({ path }),
-            StorageModel.coll.findOne({ _id: path }),
-        ]);
-        if (current) {
-            await storage.put(current._id, file, meta);
-            const { metaData, size, etag } = await storage.getMeta(current._id);
-            await StorageModel.coll.updateOne({ path }, {
-                $set: {
-                    meta: metaData, size, etag, lastModified: new Date(), autoDelete: null,
-                },
-            });
-            return path;
-        }
-        const target = place ? path + Math.random().toString(16) : path;
-        await storage.put(target, file, meta);
-        const { metaData, size, etag } = await storage.getMeta(target);
+        await StorageModel.del([path]);
+        meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
+            ? 'text/plain'
+            : lookup(path) || 'application/octet-stream';
+        const _id = nanoid() + extname(path);
+        await storage.put(_id, file, meta);
+        const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
-            _id: target, meta: metaData, path, size, etag, lastModified: new Date(),
+            _id, meta: metaData, path, size, etag, lastModified: new Date(),
         });
         return path;
     }
@@ -71,8 +64,9 @@ export class StorageModel {
     }
 
     static async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge') {
-        await StorageModel.coll.updateOne({ path: target }, { $set: { lastUsage: new Date() } });
-        return await storage.signDownloadLink(target, filename, noExpire, useAlternativeEndpointFor);
+        const res = await StorageModel.coll.findOneAndUpdate({ path: target }, { $set: { lastUsage: new Date() } });
+        if (!res.value) return '';
+        return await storage.signDownloadLink(res.value._id, filename, noExpire, useAlternativeEndpointFor);
     }
 }
 

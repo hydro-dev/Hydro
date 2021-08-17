@@ -409,7 +409,9 @@ export class Handler extends HandlerCommon {
         template?: string,
         redirect?: string,
         disposition?: string,
+        etag?: string,
         attachment: (name: string, stream?: any) => void,
+        addHeader: (name: string, value: string) => void,
     };
 
     csrfToken: string;
@@ -452,6 +454,7 @@ export class Handler extends HandlerCommon {
                     ctx.body = streamOrBuffer.pipe(new PassThrough());
                 }
             },
+            addHeader: (name: string, value: string) => this.ctx.set(name, value),
             disposition: null,
         };
         this.UiContext = cloneDeep(UiContextBase);
@@ -592,18 +595,23 @@ export class Handler extends HandlerCommon {
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
         if (!this.response.body) return;
-        if (this.response.redirect && !this.request.json) {
+        if (this.response.etag) {
+            this.ctx.set('ETag', this.response.etag);
+            this.ctx.set('Cache-Control', 'public');
+        }
+        if (this.response.etag && this.request.headers['if-none-match'] === this.response.etag) {
+            this.ctx.response.status = 304;
+        } else if (this.response.redirect && !this.request.json) {
             this.ctx.response.type = 'application/octet-stream';
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            this.ctx.response.body = this.response.body;
+            this.ctx.body = this.response.body;
             this.ctx.response.status = this.response.status || 200;
-            this.ctx.response.type = this.request.json
-                ? 'application/json'
-                : this.response.type
-                    ? this.response.type
-                    : this.ctx.response.type;
+            this.ctx.response.type = this.response.type
+                || (this.request.json
+                    ? 'application/json'
+                    : this.ctx.response.type);
         }
     }
 
@@ -731,7 +739,7 @@ const Checker = (permPrivChecker) => {
             perm = item;
         }
     }
-    return function check() {
+    return function check(this: Handler) {
         checker();
         if (perm) this.checkPerm(perm); // lgtm [js/trivial-conditional]
         if (priv) this.checkPriv(priv);

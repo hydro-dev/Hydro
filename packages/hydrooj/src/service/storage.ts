@@ -195,11 +195,10 @@ class StorageService {
         try {
             const headers: Record<string, string> = {};
             if (filename) headers['response-content-disposition'] = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
-            if (/\.(jpe?g|png|gif)$/i.test(target)) headers['cache-control'] = 'max-age=604800';
             const url = await this.client.presignedGetObject(
                 this.opts.bucket,
                 target,
-                noExpire ? 24 * 60 * 60 * 7 : 30 * 60,
+                noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
                 headers,
             );
             if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);

@@ -50,7 +50,7 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
             parsed.push(newNode);
         }
     } catch (e) {
-        throw new ValidationError('dag', [e.message]);
+        throw new ValidationError('dag', null, e.message);
     }
     return parsed;
 }
