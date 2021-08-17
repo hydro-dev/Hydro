@@ -800,8 +800,8 @@ export class ConnectionHandler extends HandlerCommon {
             const parts = cookie.split('=');
             cookies[parts[0].trim()] = (parts[1] || '').trim();
         }
-        this.session = await token.get(cookies.sid || '', token.TYPE_SESSION);
-        if (!this.session) this.session = { uid: 0, domainId: 'system' };
+        this.session = await token.get(cookies.sid || '', token.TYPE_SESSION)
+            || { uid: 0, domainId: 'system' };
     }
 
     @param('cookie', Types.String)

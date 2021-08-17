@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
-    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError, InvalidTokenError,
+    ContestNotAttendedError, PermissionError, BadRequestError, ContestNotFoundError, InvalidTokenError, RecordNotFoundError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';
@@ -363,6 +363,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
         const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
         const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const rdoc = await record.get(domainId, rid);
+        if (!rdoc) throw new RecordNotFoundError(domainId, rid);
         if (!pretest) {
             await Promise.all([
                 (this.tsdoc.journal || []).filter((i) => i.pid === pid).length ? Promise.resolve() : problem.inc(pdomainId, ppid, 'nSubmit', 1),

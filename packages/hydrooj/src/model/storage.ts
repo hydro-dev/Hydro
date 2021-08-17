@@ -36,8 +36,7 @@ export class StorageModel {
 
     static async get(path: string, savePath?: string) {
         const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnDocument: 'after' });
-        if (value) return await storage.get(value._id, savePath);
-        return await storage.get(path, savePath);
+        return await storage.get(value?._id || path, savePath);
     }
 
     static async rename(path: string, newPath: string) {

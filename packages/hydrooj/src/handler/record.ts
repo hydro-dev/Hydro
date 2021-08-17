@@ -53,6 +53,10 @@ class RecordListHandler extends Handler {
             else invalid = true;
         }
         if (status) q.status = status;
+        if (all) {
+            this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+            q.domainId = { $exists: true };
+        }
         let cursor = record.getMulti(domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
         const [rdocs] = invalid ? [[]] : await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
@@ -73,6 +77,7 @@ class RecordListHandler extends Handler {
             tdoc,
             pdict,
             udict,
+            all,
             filterPid: pid,
             filterTid: tid,
             filterUidOrName: uidOrName,
@@ -161,19 +166,24 @@ class RecordDetailHandler extends Handler {
 
 class RecordMainConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
+    all = false;
     tid: string;
     uid: number;
     pdomain: string;
     pid: number;
     status: number;
-    pretest: boolean;
+    pretest = false;
 
     @param('tid', Types.ObjectID, true)
     @param('pid', Types.Name, true)
     @param('uidOrName', Types.Name, true)
     @param('status', Types.Int, true)
     @param('pretest', Types.Boolean)
-    async prepare(domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string, status?: number, pretest = false) {
+    @param('allDomain', Types.Boolean)
+    async prepare(
+        domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string,
+        status?: number, pretest = false, all = false,
+    ) {
         if (tid) {
             const tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, tid);
@@ -202,6 +212,10 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             } else throw new ProblemNotFoundError(domainId, pid);
         }
         if (status) this.status = status;
+        if (all) {
+            this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+            this.all = true;
+        }
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
@@ -213,9 +227,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(rdoc: RecordDoc) {
-        if (!this.pretest && rdoc.input) return;
-        if (rdoc.domainId !== this.domainId) return;
-        if (rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (!this.all && !this.pretest && rdoc.input) return;
+        if (!this.all && rdoc.domainId !== this.domainId) return;
+        if (!this.all && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
 
         // eslint-disable-next-line prefer-const
@@ -223,7 +237,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.domainId, rdoc.uid),
             problem.get(rdoc.pdomain, rdoc.pid),
         ]);
-        const tdoc = this.tid ? await contest.get(this.domainId, new ObjectID(this.tid), -1) : null;
+        const tdoc = this.tid ? await contest.get(rdoc.domainId, new ObjectID(this.tid), -1) : null;
         if (pdoc && !rdoc.contest) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
