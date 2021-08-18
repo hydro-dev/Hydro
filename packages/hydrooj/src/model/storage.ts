@@ -28,32 +28,52 @@ export class StorageModel {
     }
 
     static async get(path: string, savePath?: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnDocument: 'after' });
+        const { value } = await StorageModel.coll.findOneAndUpdate(
+            { path, autoDelete: { $exists: false } },
+            { $set: { lastUsage: new Date() } },
+            { returnDocument: 'after' },
+        );
         return await storage.get(value?._id || path, savePath);
     }
 
     static async rename(path: string, newPath: string) {
-        return await StorageModel.coll.updateOne({ path }, { $set: { path: newPath } });
+        return await StorageModel.coll.updateOne(
+            { path, autoDelete: { $exists: false } },
+            { $set: { path: newPath } },
+        );
     }
 
     static async del(path: string[]) {
         const autoDelete = moment().add(7, 'day').toDate();
-        await StorageModel.coll.updateMany({ path: { $in: path } }, { $set: { autoDelete } });
+        await StorageModel.coll.updateMany(
+            { path: { $in: path }, autoDelete: { $exists: false } },
+            { $set: { autoDelete } },
+        );
     }
 
     static async list(target: string, recursive = true) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (target.length && !target.endsWith('/')) target += '/';
         const results = recursive
-            ? await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') } }).toArray()
-            : await StorageModel.coll.find({ path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) } }).toArray();
+            ? await StorageModel.coll.find({
+                path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') },
+                autoDelete: { $exists: false },
+            }).toArray()
+            : await StorageModel.coll.find({
+                path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) },
+                autoDelete: { $exists: false },
+            }).toArray();
         return results.map((i) => ({
             ...i, name: i.path.split(target)[1], prefix: target,
         }));
     }
 
     static async getMeta(path: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate({ path }, { $set: { lastUsage: new Date() } }, { returnDocument: 'after' });
+        const { value } = await StorageModel.coll.findOneAndUpdate(
+            { path, autoDelete: { $exists: false } },
+            { $set: { lastUsage: new Date() } },
+            { returnDocument: 'after' },
+        );
         if (!value) return null;
         return {
             ...value.meta,
@@ -64,7 +84,10 @@ export class StorageModel {
     }
 
     static async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge') {
-        const res = await StorageModel.coll.findOneAndUpdate({ path: target }, { $set: { lastUsage: new Date() } });
+        const res = await StorageModel.coll.findOneAndUpdate(
+            { path: target, autoDelete: { $exists: false } },
+            { $set: { lastUsage: new Date() } },
+        );
         if (!res.value) return '';
         return await storage.signDownloadLink(res.value._id, filename, noExpire, useAlternativeEndpointFor);
     }
