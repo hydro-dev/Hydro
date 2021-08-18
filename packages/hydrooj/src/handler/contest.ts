@@ -7,7 +7,6 @@ import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError, BadRequestError,
     ContestNotFoundError, InvalidTokenError, RecordNotFoundError,
-    NotFoundError,
 } from '../error';
 import { ProblemDoc, Tdoc, User } from '../interface';
 import paginate from '../lib/paginate';

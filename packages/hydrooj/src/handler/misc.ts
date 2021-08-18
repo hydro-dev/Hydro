@@ -2,8 +2,7 @@
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import {
-    BadRequestError, ForbiddenError, NotFoundError,
-    ValidationError,
+    BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
 import { sortFiles } from '../utils';
 import { PRIV } from '../model/builtin';

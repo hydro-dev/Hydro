@@ -6,7 +6,7 @@ import { Time } from '@hydrooj/utils/lib/utils';
 import { lookup } from 'mime-types';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
-    HomeworkNotAttendedError, BadRequestError, NotFoundError,
+    HomeworkNotAttendedError, BadRequestError,
 } from '../error';
 import {
     PenaltyRules, Tdoc, ProblemDoc, User,

@@ -6,7 +6,7 @@ import { lookup } from 'mime-types';
 import {
     NoProblemError, PermissionError, ValidationError,
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
-    ForbiddenError, NotFoundError,
+    ForbiddenError,
 } from '../error';
 import {
     ProblemDoc, User, ProblemStatusDoc,
