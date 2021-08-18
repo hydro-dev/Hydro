@@ -424,7 +424,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         if (shouldProxy && file.size! < 32 * 1024 * 1024) {
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || fileType;
-            if (!noDisposition) this.response.addHeader('Content-Disposition', `attachment; filename=${filename}`);
+            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
         } else {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
