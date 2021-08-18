@@ -449,7 +449,8 @@ const scripts: UpgradeScript[] = [
     },
     async function _40_41() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await db.collection('storage').dropIndex('path_1');
+        // Ignore drop index failure
+        await db.collection('storage').dropIndex('path_1').catch(() => { });
         await db.collection('storage').createIndex({ path: 1, autoDelete: 1 }, { sparse: true });
         await db.collection('storage').updateMany(
             { autoDelete: { $gte: moment().add(5, 'days').toDate() } },
