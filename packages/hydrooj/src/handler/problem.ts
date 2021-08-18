@@ -417,7 +417,12 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         }
         const target = `problem/${domainId}/${this.pdoc.docId}/${type}/${filename}`;
         const file = await storage.getMeta(target);
-        if (!file) throw new NotFoundError(filename);
+        if (!file) {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+            return;
+        }
         this.response.etag = file.etag;
         const fileType = lookup(filename).toString();
         const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => fileType.includes(i)).length;

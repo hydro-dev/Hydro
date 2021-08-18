@@ -18,7 +18,7 @@ export class StorageModel {
         meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
             ? 'text/plain'
             : lookup(path) || 'application/octet-stream';
-        const _id = nanoid() + extname(path);
+        const _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
         await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
@@ -88,7 +88,7 @@ export class StorageModel {
             { path: target, autoDelete: { $exists: false } },
             { $set: { lastUsage: new Date() } },
         );
-        if (!res.value) return '';
+        if (!res.value) return await storage.signDownloadLink(target, filename, noExpire, useAlternativeEndpointFor);
         return await storage.signDownloadLink(res.value._id, filename, noExpire, useAlternativeEndpointFor);
     }
 }
