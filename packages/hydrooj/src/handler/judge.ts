@@ -11,11 +11,11 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import task from '../model/task';
 import * as system from '../model/system';
+import storage from '../model/storage';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, post, Types,
 } from '../service/server';
-import storage from '../service/storage';
 import { updateJudge } from '../service/monitor';
 
 const logger = new Logger('judge');
@@ -81,6 +81,7 @@ export async function next(body: JudgeResultBody) {
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
+    if (!rdoc) return;
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     const $unset: any = { progress: '' };

@@ -88,8 +88,7 @@ export class StorageModel {
             { path: target, autoDelete: { $exists: false } },
             { $set: { lastUsage: new Date() } },
         );
-        if (!res.value) return await storage.signDownloadLink(target, filename, noExpire, useAlternativeEndpointFor);
-        return await storage.signDownloadLink(res.value._id, filename, noExpire, useAlternativeEndpointFor);
+        return await storage.signDownloadLink(res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 }
 

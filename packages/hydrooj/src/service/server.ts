@@ -838,6 +838,7 @@ export function Connection(
     const sock = sockjs.createServer({ prefix, log });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
+        if (!conn) return;
         const h: Dictionary<any> = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };
