@@ -40,6 +40,7 @@ __langname: 简体中文
 "Split by ', '.": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
+(leave blank if none): （若不需要则留空）
 (None): (无)
 (Not changed): 未更改
 Aborted: 已放弃
@@ -97,6 +98,7 @@ By clicking the button, you will become a member of the domain {0}.: 点击按�
 By Contest: 由比赛
 By Problem: 由题目
 By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.: 注册一个 {0} 通用账户，您就可以在我们提供的所有在线评测服务上提交代码、参与讨论。
+By Status: 由状态
 By Username / UID: 由用户名或 UID
 Calendar View: 日历视图
 Calendar: 日历
@@ -167,6 +169,7 @@ Create Discussion in {0}: 在 {0} 下创建讨论
 Create Discussion: 创建讨论
 Create discussions: 创建讨论
 Create Domain: 创建域
+Create File: 创建文件
 Create homework: 创建作业
 Create Homework: 创建作业
 Create Link: 创建链接
@@ -315,6 +318,7 @@ Filename: 文件名
 Files: 文件
 Filter: 过滤
 Footer: 页脚
+Footnote: 脚注
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
@@ -329,6 +333,7 @@ Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
 Hide categorical tags: 隐藏分类标签
+Hide tags: 隐藏标签
 Highlight discussions: 高亮讨论
 Highlight: 高亮
 Hint: 提示
@@ -358,6 +363,7 @@ Host: 主持人
 hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
+Images With Size: 指定大小的图片
 Images: 图片
 Import from: 导入自
 Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
@@ -464,6 +470,7 @@ New Password: 新密码
 New Training Plan: 新训练计划
 New: 创建
 No additional file at current: 当前没有附加文件
+No additional file at current.: 暂无附加文件。
 No comments so far...: 目前还没有评论...
 no discussion yet...: 目前没有讨论…
 No Permission to Attend Contest: 您没有权限参加比赛
@@ -528,6 +535,7 @@ perm_training: 训练
 Permission: 权限
 Permissions: 权限
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
+Pin: 置顶
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
@@ -660,6 +668,7 @@ Send Message: 发送站内信息
 Send Password Reset Email: 发送密码重置邮件
 Send Verification Email: 发送验证邮件
 Send: 发送
+Seperated with ',': 用 ',' 分隔
 Service Status: 服务状态
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
@@ -806,6 +815,7 @@ Using your {0} universal account: 使用您的 {0} 通用账户
 Valid for registered users who are not members of the domain: 对域外注册用户有效
 Valid for visitors: 对未登录的游客有效
 Version: 版本
+Videos: 视频
 View contest scoreboard: 查看比赛成绩表
 View Contest: 查看比赛
 View contests: 查看比赛
