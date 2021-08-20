@@ -211,6 +211,11 @@ class UserModel {
     }
 
     @ArgMethod
+    static setUname(uid: number, uname: string) {
+        return UserModel.setById(uid, { uname, unameLower: uname.trim().toLowerCase() });
+    }
+
+    @ArgMethod
     static setEmail(uid: number, mail: string) {
         return UserModel.setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
     }
