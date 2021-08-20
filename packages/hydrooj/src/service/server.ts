@@ -17,6 +17,7 @@ import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import cac from 'cac';
 import { createHash } from 'crypto';
+import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import * as bus from './bus';
 import { errorMessage } from '../utils';
 import { User, DomainDoc } from '../interface';
@@ -36,7 +37,6 @@ import blacklist from '../model/blacklist';
 import token from '../model/token';
 import * as opcount from '../model/opcount';
 import { PERM, PRIV } from '../model/builtin';
-import { parseMemoryMB } from '../../../utils/lib/utils';
 
 const argv = cac().parse();
 const logger = new Logger('server');
