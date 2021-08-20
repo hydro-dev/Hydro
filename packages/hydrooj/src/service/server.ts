@@ -310,7 +310,7 @@ export class HandlerCommon {
 
     translate(str: string) {
         if (!str) return '';
-        return str.toString().translate(this.user.viewLang, this.session.viewLang, system.get('server.language'));
+        return str.toString().translate(this.user?.viewLang, this.session?.viewLang, system.get('server.language'));
     }
 
     renderTitle(str: string) {
@@ -333,8 +333,8 @@ export class HandlerCommon {
     async renderHTML(name: string, context: any): Promise<string> {
         const UserContext: any = {
             ...this.user,
-            avatar: avatar(this.user.avatar || '', 128),
-            perm: this.user.perm.toString(),
+            avatar: avatar(this.user?.avatar || '', 128),
+            perm: this.user?.perm?.toString(),
             viewLang: this.translate('__id'),
         };
         if (!global.Hydro.lib.template) return JSON.stringify(context, serializer);

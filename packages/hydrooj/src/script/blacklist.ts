@@ -16,7 +16,7 @@ async function _address(
     if (bset.has(ip)) return;
     bset.add(ip);
     report({ message: `ip ${ip}` });
-    const users = await db.collection('user').find({ loginip: ip }).toArray();
+    const users = await db.collection('user').find({ $or: [{ loginip: ip }, { regip: ip }] }).toArray();
     const tasks = [];
     for (const udoc of users) {
         tasks.push(_user(udoc._id, bset, uset, dset, dryrun, report));
@@ -50,7 +50,7 @@ async function _user(
     const udoc = await user.getById('system', uid);
     if (!udoc) return;
     report({ message: `user ${udoc._id} ${udoc.uname}` });
-    await _address(udoc.loginip(), bset, uset, dset, dryrun, report);
+    await _address(udoc._loginip, bset, uset, dset, dryrun, report);
     const ddocs = await db.collection('document').find({ docType: document.TYPE_DISCUSSION, owner: uid })
         .sort({ domainId: 1, docId: 1 }).toArray();
     const tasks = [];
