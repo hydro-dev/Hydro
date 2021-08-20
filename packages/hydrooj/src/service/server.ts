@@ -650,11 +650,15 @@ export class Handler extends HandlerCommon {
             logger.error(`User: ${this.user._id}(${this.user.uname}) Path: ${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
         }
-        this.response.status = error instanceof UserFacingError ? error.code : 500;
-        this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-        this.response.body = {
-            error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack) },
-        };
+        if (this.user?._id === 0) {
+            this.response.redirect = this.url('user_login', { query: { redirect: this.request.path + this.ctx.search } });
+        } else {
+            this.response.status = error instanceof UserFacingError ? error.code : 500;
+            this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
+            this.response.body = {
+                error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack) },
+            };
+        }
         await this.finish().catch(() => { });
     }
 }
