@@ -35,7 +35,7 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
         return;
     }
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
-    for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
+    for (const key of cache.keys().filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
         cache.del(key);
     }
 }
