@@ -36,6 +36,7 @@ import blacklist from '../model/blacklist';
 import token from '../model/token';
 import * as opcount from '../model/opcount';
 import { PERM, PRIV } from '../model/builtin';
+import { parseMemoryMB } from '../../../utils/lib/utils';
 
 const argv = cac().parse();
 const logger = new Logger('server');
@@ -271,8 +272,10 @@ export async function prepare() {
     }
     app.use(Body({
         multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
         formidable: {
-            maxFileSize: 256 * 1024 * 1024,
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
         },
     }));
 }
