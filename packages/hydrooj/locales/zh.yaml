@@ -66,7 +66,9 @@ All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All: 全部
 Allow builtin-login: 启用内置登录
-Allow using gravatar:email qq:id github:name format.: 允许使用 gravatar:email，qq:id，github:name 格式。
+Allow users send messages: 允许用户使用私信
+Allow using gravatar:email qq:id github:name url:link format.: 允许使用 gravatar:email，qq:id，github:name，url:link 格式。
+Allowed langs: 域内允许使用的提交语言
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
@@ -320,10 +322,10 @@ Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
 Feedback: 反馈
-Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} or {1} validation failed. ({2}): 字段 {0} 或 {1} 验证失败。 ({2})
-Field {0} validation failed.: 字段 {0} 验证失败。
+Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed. ({2}): 字段 {0} 验证失败。 ({2})
+Field {0} validation failed.: 字段 {0} 验证失败。
 Filter: 过滤
 Footer: 页脚
 Forgot Password and/or Username: 忘记密码和/或用户名
@@ -353,6 +355,7 @@ home_files: 我的文件
 home_messages: 站内消息
 home_preference: 偏好设置
 home_security: 安全设置
+Homepage Config: 主页设置
 homepage: 首页
 Homework Introduction: 作业介绍
 Homework scoreboard is not visible.: 目前无法查看作业成绩表。
@@ -452,6 +455,12 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Yellow: 标黄
+Max files for user: 单用户最大文件数量
+Max files per problem: 单题最大文件数量
+Max files size per problem: 单题最大总文件大小
+Max pretest count per minute: 每分钟自测数量限制
+Max submission count per minute: 每分钟提交数量限制
+Max total file size for user: 单用户最大总文件大小
 Memory Cost: 内存占用
 Memory Info: 内存信息
 Memory: 内存
@@ -687,6 +696,7 @@ setting_session: Session 设置
 setting_smtp: SMTP 设置
 setting_usage: 使用偏好
 Settings: 设置
+Share problem with domain (* for any): 允许引用该域题目的域（* 表示所有域均允许）
 Share: 分享
 She: 她
 Show all tags: 显示所有标签
@@ -821,6 +831,7 @@ Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户
 Valid for registered users who are not members of the domain: 对域外注册用户有效
 Valid for visitors: 对未登录的游客有效
+Verify register email: 注册需邮件验证
 Version: 版本
 View contest scoreboard: 查看比赛成绩表
 View Contest: 查看比赛
