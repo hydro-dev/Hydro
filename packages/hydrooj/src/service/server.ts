@@ -27,6 +27,7 @@ import {
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError, SystemError,
+    LoginError,
 } from '../error';
 import { isContent, isName, isTitle } from '../lib/validator';
 import avatar from '../lib/avatar';
@@ -650,7 +651,7 @@ export class Handler extends HandlerCommon {
             logger.error(`User: ${this.user._id}(${this.user.uname}) Path: ${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
         }
-        if (this.user?._id === 0) {
+        if (this.user?._id === 0 && !(error instanceof LoginError)) {
             this.response.redirect = this.url('user_login', { query: { redirect: this.request.path + this.ctx.search } });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
