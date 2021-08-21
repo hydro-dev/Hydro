@@ -696,7 +696,7 @@ async function handle(ctx, HandlerClass, checker) {
             } else if (typeof h.post !== 'function') {
                 throw new MethodNotAllowedError(method);
             }
-        } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
+        } else if (typeof h[method] !== 'function') {
             throw new MethodNotAllowedError(method);
         }
 

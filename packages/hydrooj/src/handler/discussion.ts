@@ -159,7 +159,7 @@ class DiscussionCreateHandler extends DiscussionHandler {
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
         const did = await discussion.add(
-            domainId, typeMapper[type], this.vnode.docId, this.user._id,
+            domainId, typeMapper[type], this.vnode.id, this.user._id,
             title, content, this.request.ip, highlight, pin,
         );
         this.response.body = { did };
