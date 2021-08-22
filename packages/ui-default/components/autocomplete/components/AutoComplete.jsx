@@ -151,33 +151,33 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       setSelected(items);
       setSelectedKeys(items.map(i => itemKey(i)));
     },
-    getQuery: () => inputRef.current.value,
-    setQuery: query => inputRef.current.value = query,
-    triggerQuery: () => queryList(inputRef.current.value),
+    getQuery: () => inputRef.current?.value,
+    setQuery: query => inputRef.current && (inputRef.current.value = query),
+    triggerQuery: () => queryList(inputRef.current?.value),
     closeList: () => {
       setItemList([]);
       setCurrentItem(null);
     },
-    getValue: () => multi ? selectedKeys.join(', ') : inputRef.current.value,
-    getValueArray: () => multi ? selected : [inputRef.current.value],
+    getValue: () => multi ? selectedKeys.join(', ') : (inputRef.current.value ?? ''),
+    getValueArray: () => multi ? selected : [inputRef.current?.value].filter(i => !!i),
     getValueWithQuery: () => {
-      const query = inputRef.current.value;
+      const query = inputRef.current?.value;
       if (!query) return multi ? selectedKeys.join(', ') : "";
       return multi ? selectedKeys.join(', ') + ', ' + query : query;
     },
     getValueArrayWithQuery: () => {
-      const query = inputRef.current.value;
+      const query = inputRef.current?.value;
       if (!query) return multi ? selected : [""];
       return multi ? [...selected, query] : [query];
     },
     clear: () => {
       setSelected([]);
       setSelectedKeys([]);
-      inputRef.current.value = "";
+      if (inputRef.current) inputRef.current.value = "";
     },
     focus: () => {
       setFocused(true);
-      inputRef.current.focus();
+      inputRef.current?.focus();
     },
   }));
 
