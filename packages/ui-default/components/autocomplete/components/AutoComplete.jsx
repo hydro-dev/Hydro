@@ -1,7 +1,6 @@
 import React, { forwardRef, useState, useRef, useImperativeHandle, createRef, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
-import './AutoComplete.css';
 
 export const CloseIcon = (props) => {
     return (
