@@ -32,7 +32,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? [];
   const defaultItems = typeof rawDefaultItems === 'string' ?
-    props.defaultItems.split(',').map(i => i.trim()) : rawDefaultItems;
+    props.defaultItems.split(',').map(i => i.trim()).filter(i => i.length > 0) : rawDefaultItems;
   const allowEmptyQuery = props.allowEmptyQuery ?? false;
   const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? (i => i) : (i => i);
@@ -187,7 +187,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         className={focused ? "autocomplete-wrapper focused" : "autocomplete-wrapper"}
         style={{ width, height }}
       >
-        {selected.map((item, idx) => (
+        {multi && selected.map((item, idx) => (
           <div className="autocomplete-tag" key={selectedKeys[idx]}>
             <div>{itemText(item)}</div>
             <CloseIcon onClick={() => toggleItem(item)} />
