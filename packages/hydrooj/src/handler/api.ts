@@ -22,8 +22,7 @@ const root = {
         if (arg.uname) return UserModel.getByUname(ctx.domainId, arg.uname);
         return ctx.user;
     },
-    problem: async (arg, ctx, node) => {
-    },
+    problem: async () => { },
 };
 
 class ApiHandler extends Handler {
