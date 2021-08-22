@@ -57,7 +57,8 @@ export namespace Lock {
     const data = {};
 
     export async function aquire(key: string) {
-        while (data[key]) sleep(100);
+        // eslint-disable-next-line no-await-in-loop
+        while (data[key]) await sleep(100);
         data[key] = true;
     }
 
