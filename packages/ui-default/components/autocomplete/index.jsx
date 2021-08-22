@@ -29,14 +29,12 @@ export default class AutoComplete extends DOMAttachedObject {
   attach() {
     this._name = this.$dom.attr('name');
     this.container = document.createElement('div');
-    const width = `${this.$dom.width()}px`;
     const value = this.$dom.val();
     this.$dom.removeAttr('name').css('display', 'none').after(this.container);
     ReactDOM.render(
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
         name={this._name}
-        width={width}
         height="34px"
         itemsFn={this.options.items}
         renderItem={this.options.render}
