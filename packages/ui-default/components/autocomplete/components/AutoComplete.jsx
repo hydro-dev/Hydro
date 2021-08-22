@@ -156,6 +156,10 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         getQuery: () => inputRef.current.value,
         setQuery: query => inputRef.current.value = query,
         triggerQuery: () => queryList(inputRef.current.value),
+        closeList: () => {
+            setItemList([]);
+            setCurrentItem(null);
+        },
         getValue: () => multi ? selectedKeys.join(', ') : inputRef.current.value,
         getValueArray: () => multi ? selected : [inputRef.current.value],
         getValueWithQuery: () => {

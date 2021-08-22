@@ -1,44 +1,39 @@
-import _ from 'lodash';
-import tpl from 'vj/utils/tpl';
-import request from 'vj/utils/request';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import AutoComplete from './index';
-
-function getText(user) {
-  return user.uname;
-}
-
-function getItems(val) {
-  return request.get('/user/search', { q: val });
-}
-
-function renderItem(user) {
-  return tpl`
-    <div class="media">
-      <div class="media__left medium">
-        <img class="small user-profile-avatar" src="${user.avatarUrl}" width="30" height="30">
-      </div>
-      <div class="media__body medium">
-        <div class="user-select__uname">${user.uname}</div>
-        <div class="user-select__uid">UID = ${user._id}</div>
-      </div>
-    </div>
-  `;
-}
+import AutoComplete from '.';
+import UserSelectAutoCompleteFC from './components/UserSelectAutoComplete';
 
 export default class UserSelectAutoComplete extends AutoComplete {
-  static DOMAttachKey = 'vjUserSelectAutoCompleteInstance';
+  static DOMAttachKey = 'ucwUserSelectAutoCompleteInstance';
 
   constructor($dom, options) {
     super($dom, {
       classes: 'user-select',
-      items: getItems,
-      render: renderItem,
-      text: getText,
       ...options,
     });
   }
+
+  attach() {
+    this._name = this.$dom.attr('name');
+    this.container = document.createElement('div');
+    const width = this.$dom.width();
+    const value = this.$dom.val();
+    this.$dom.removeAttr('name').css('display', 'none').after(this.container);
+    ReactDOM.render(
+      <UserSelectAutoCompleteFC
+        ref={(ref) => { this.ref = ref; }}
+        name={this._name}
+        width={width}
+        height="34px"
+        defaultItems={value}
+        multi={this.options.multi}
+      />,
+      this.container,
+    );
+  }
 }
 
-_.assign(UserSelectAutoComplete, DOMAttachedObject);
+assign(UserSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.UserSelectAutoComplete = UserSelectAutoComplete;

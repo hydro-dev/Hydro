@@ -1,42 +1,37 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { assign } from 'lodash';
-import tpl from 'vj/utils/tpl';
-import request from 'vj/utils/request';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
-
-function getText(domain) {
-  return domain._id;
-}
-
-function getItems(val) {
-  return request.get('/domain/search', { q: val });
-}
-
-function renderItem(domain) {
-  return tpl`
-    <div class="media">
-      <div class="media__left medium">
-        <img class="small domain-profile-avatar" src="${domain.avatarUrl}" width="30" height="30">
-      </div>
-      <div class="media__body medium">
-        <div class="domain-select__name">${domain.name}</div>
-        <div class="domain-select__id">ID = ${domain._id}</div>
-      </div>
-    </div>
-  `;
-}
+import DomainSelectAutoCompleteFC from './components/DomainSelectAutoComplete';
 
 export default class DomainSelectAutoComplete extends AutoComplete {
-  static DOMAttachKey = 'vjDomainSelectAutoCompleteInstance';
+  static DOMAttachKey = 'ucwDomainSelectAutoCompleteInstance';
 
   constructor($dom, options) {
     super($dom, {
       classes: 'domain-select',
-      items: getItems,
-      render: renderItem,
-      text: getText,
       ...options,
     });
+  }
+
+  attach() {
+    this._name = this.$dom.attr('name');
+    this.container = document.createElement('div');
+    const width = this.$dom.width();
+    const value = this.$dom.val();
+    this.$dom.removeAttr('name').css('display', 'none').after(this.container);
+    ReactDOM.render(
+      <DomainSelectAutoCompleteFC
+        ref={(ref) => { this.ref = ref; }}
+        name={this._name}
+        width={width}
+        height="34px"
+        defaultItems={value}
+        multi={this.options.multi}
+      />,
+      this.container,
+    );
   }
 }
 

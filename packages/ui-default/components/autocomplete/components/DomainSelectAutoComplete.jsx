@@ -8,12 +8,12 @@ const DomainSelectAutoComplete = forwardRef(function DomainSelectAutoComplete(pr
         return request.get('/domain/search', { q: query });
     };
 
-    const itemText = (domain) => {
+    /* const itemText = (domain) => {
         return domain.name;
-    };
+    }; */
 
     const itemKey = (domain) => {
-        return domain._id;
+        return domain._id || domain;
     };
 
     const renderItem = (domain) => {
@@ -34,7 +34,7 @@ const DomainSelectAutoComplete = forwardRef(function DomainSelectAutoComplete(pr
         <AutoComplete
             ref={ref}
             itemsFn={itemsFn}
-            itemText={itemText}
+            itemText={itemKey}
             itemKey={itemKey}
             renderItem={renderItem}
             {...props}

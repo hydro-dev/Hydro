@@ -9,7 +9,7 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
     };
 
     const itemText = (user) => {
-        return user.uname;
+        return user.uname || user;
     };
 
     const renderItem = (user) => {

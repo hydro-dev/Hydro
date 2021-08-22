@@ -13,7 +13,7 @@ const ProblemSelectAutoComplete = forwardRef(function ProblemSelectAutoComplete(
     }; */
 
     const itemKey = (pdoc) => {
-        return pdoc.docId;
+        return pdoc.docId || pdoc;
     };
 
     const renderItem = (pdoc) => {
