@@ -18,7 +18,8 @@ export default class UserSelectAutoComplete extends AutoComplete {
   attach() {
     this._name = this.$dom.attr('name');
     this.container = document.createElement('div');
-    const width = `${this.$dom.width()}px`;
+    const width = `${parseInt(this.$dom.width())}px`;
+    console.log(width);
     const value = this.$dom.val();
     this.$dom.removeAttr('name').css('display', 'none').after(this.container);
     ReactDOM.render(

@@ -101,7 +101,6 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 
   const handleInputKeyDown = e => {
     const { key, target } = e;
-    console.log(e);
     if (key === 'Escape') {
       setItemList([]);
       setCurrentItem(null);
