@@ -45,7 +45,7 @@ ProblemSelectAutoComplete.propTypes = {
   name: PropTypes.string,
   listStyle: PropTypes.object,
   multi: PropTypes.bool,
-  defaultItems: PropTypes.arrayOf(PropTypes.object),
+  defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
 };
 

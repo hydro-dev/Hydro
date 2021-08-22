@@ -142,7 +142,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   };
 
   const inputValue = useMemo(() => {
-    return multi ? selectedKeys.join(', ') : inputRef.current.value;
+    return multi ? selectedKeys.join(', ') : inputRef.current?.value;
   }, [multi, selectedKeys, inputRef.current?.value]);
 
   useImperativeHandle(ref, () => ({
