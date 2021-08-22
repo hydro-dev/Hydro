@@ -5,8 +5,12 @@ import { render } from 'react-dom';
 import 'graphiql/graphiql.css';
 
 const Logo = () => <span>Hydro API Console </span>;
-
-// @ts-ignore
+const defaultQuery = `\
+query {
+  user(id: 1) {
+    uname
+  }
+}`;
 
 const page = new NamedPage('api', async () => {
   const [{ default: GraphiQL }, { buildSchema }, res] = await Promise.all([
@@ -16,11 +20,10 @@ const page = new NamedPage('api', async () => {
   ]);
   // @ts-ignore
   GraphiQL.Logo = Logo;
-  console.log(res);
   const App = () => (
     <GraphiQL
       schema={buildSchema(res.schema)}
-      style={{ height: '100vh' }}
+      defaultQuery={defaultQuery}
       fetcher={async (graphQLParams) => {
         const data = await fetch(
           '/api',
