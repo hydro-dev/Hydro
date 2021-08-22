@@ -246,7 +246,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         else {
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
-                    rdoc, udoc, pdoc, tdoc,
+                    rdoc, udoc, pdoc, tdoc, all: this.all,
                 }),
             });
         }

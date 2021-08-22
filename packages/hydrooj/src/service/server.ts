@@ -439,7 +439,7 @@ export class Handler extends HandlerCommon {
             query: ctx.query,
             path: ctx.path,
             params: ctx.params,
-            referer: ctx.request.headers.referer,
+            referer: ctx.request.headers.referer || '',
             json: (ctx.request.headers.accept || '').includes('application/json'),
         };
         this.response = {
@@ -679,11 +679,9 @@ async function handle(ctx, HandlerClass, checker) {
     h.domainId = args.domainId;
     try {
         const method = ctx.method.toLowerCase();
-        let operation: string;
-        if (method === 'post' && ctx.request.body.operation) {
-            operation = `_${ctx.request.body.operation}`
-                .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
-        }
+        const operation = (method === 'post' && ctx.request.body.operation)
+            ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
+            : '';
 
         await bus.serial('handler/create', h);
 

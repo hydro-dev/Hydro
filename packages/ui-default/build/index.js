@@ -29,6 +29,9 @@ require.extensions['.js'] = function loader(module, filename) {
   const content = fs.readFileSync(filename, 'utf-8');
   return module._compile(content, filename);
 };
+require.extensions['.ts'] = function loader(module, filename) {
+  return module._compile(transform(filename), filename);
+};
 const main = require('./main.js');
 
 if (!module.parent) main();

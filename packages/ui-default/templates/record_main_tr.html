@@ -1,10 +1,10 @@
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
 <tr data-rid="{{ rdoc['_id'] }}">
-  {{ record.render_status_td(rdoc) }}
+  {{ record.render_status_td(rdoc, allDomain = all) }}
   <td class="col--problem col--problem-name">
   {% if handler.user.hasPerm(perm.PERM_REJUDGE) %}
-    <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id) }}">
+    <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
       <input type="hidden" name="operation" value="rejudge">
       <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
       <button type="submit" class="link text-maroon lighter">

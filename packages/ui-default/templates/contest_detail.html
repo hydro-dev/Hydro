@@ -10,14 +10,14 @@
         <h1 class="section__title">{{ tdoc.title }}</h1>
       </div>
       <div class="section__body">
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Status') }}: {{ _(model.contest.statusText(tdoc)) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-book">{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _(model.contest.statusText(tdoc)) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-award">{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Start at') }}: {{ contest.render_time(tdoc.beginAt) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('End at') }}: {{ contest.render_time(tdoc.endAt) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-schedule">{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Host') }}: {{ user.render_inline(udict[tdoc.owner], badge=false) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Partic.') }}: {{ tdoc['attend']|default(0) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-user--multiple">{{ tdoc['attend']|default(0) }}</span>
         {% if attended %}
-          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-tick">{{ _('Attended') }}</span>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
         {% endif %}
       </div>
     </div>
