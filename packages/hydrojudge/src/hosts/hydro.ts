@@ -328,7 +328,7 @@ export default class Hydro {
 
     async ensureLogin() {
         try {
-            await this.axios.get('judge?check=true');
+            await this.axios.get('judge/files');
         } catch (e) {
             await this.login();
         }

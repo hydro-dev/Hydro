@@ -106,6 +106,10 @@ export async function end(body: JudgeResultBody) {
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    async get() {
+        this.response.body = 'ok';
+    }
+
     noCheckPermView = true;
     @post('files', Types.Set)
     @post('pid', Types.UnsignedInt)
