@@ -18,7 +18,9 @@ export default class AutoComplete extends DOMAttachedObject {
     };
     this.ref = null;
     this.onChange = this.onChange.bind(this);
-    this.attach();
+    this.container = document.createElement('div');
+    this.$dom.addClass('autocomplete-dummy').after(this.container);
+    setTimeout(() => this.attach(), 0);
   }
 
   clear(clearValue = true) {
@@ -32,9 +34,7 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   attach() {
-    this.container = document.createElement('div');
     const value = this.$dom.val();
-    this.$dom.css('display', 'none').after(this.container);
     ReactDOM.render(
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
@@ -65,7 +65,7 @@ export default class AutoComplete extends DOMAttachedObject {
     if (this.detached) return;
     super.detach();
     ReactDOM.unmountComponentAtNode(this.container);
-    this.$dom.css('display', '');
+    this.$dom.removeClass('autocomplete-dummy');
     this.container.parentNode.removeChild(this.container);
   }
 

@@ -16,9 +16,7 @@ export default class ProblemSelectAutoComplete extends AutoComplete {
   }
 
   attach() {
-    this.container = document.createElement('div');
     const value = this.$dom.val();
-    this.$dom.css('display', 'none').after(this.container);
     ReactDOM.render(
       <ProblemSelectAutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
