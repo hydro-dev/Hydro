@@ -27,7 +27,6 @@ import {
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError, SystemError,
-    LoginError,
 } from '../error';
 import { isContent, isName, isTitle } from '../lib/validator';
 import avatar from '../lib/avatar';
