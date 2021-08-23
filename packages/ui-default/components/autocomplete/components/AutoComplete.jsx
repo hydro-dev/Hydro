@@ -5,24 +5,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
-
-// eslint-disable-next-line arrow-body-style
-export const CloseIcon = (props) => {
-  return (
-    <svg {...props} className="autocomplete-icon" viewBox="0 0 24 24">
-      <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
-    </svg>
-  );
-};
-
-// eslint-disable-next-line arrow-body-style
-export const CheckIcon = (props) => {
-  return (
-    <svg {...props} className="autocomplete-icon" viewBox="0 0 24 24">
-      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-    </svg>
-  );
-};
+import { Icon } from '@blueprintjs/core';
 
 // eslint-disable-next-line prefer-arrow-callback
 const AutoComplete = forwardRef(function AutoComplete(props, ref) {
@@ -203,7 +186,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         {multi && selected.map((item, idx) => (
           <div className="autocomplete-tag" key={selectedKeys[idx]}>
             <div>{itemText(item)}</div>
-            <CloseIcon onClick={() => toggleItem(item)} />
+            <Icon icon="cross" onClick={() => toggleItem(item)} />
           </div>
         ))}
         <input
@@ -231,7 +214,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
               data-focus={idx === currentItem}
             >
               <div>{renderItem(item)}</div>
-              <CheckIcon />
+              <Icon icon="tick" />
             </li>
           ))}
         </ul>
