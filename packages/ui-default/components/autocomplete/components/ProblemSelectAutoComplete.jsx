@@ -3,19 +3,17 @@ import PropTypes from 'prop-types';
 import request from 'vj/utils/request';
 import AutoComplete from './AutoComplete';
 
+// eslint-disable-next-line prefer-arrow-callback
 const ProblemSelectAutoComplete = forwardRef(function ProblemSelectAutoComplete(props, ref) {
-  const itemsFn = (query) => {
-    return request.get(`/d/${UiContext.domainId}/problem/list`, { prefix: query });
-  };
+  const itemsFn = (query) => request.get(`/d/${UiContext.domainId}/problem/list`, { prefix: query });
 
   /* const itemText = (pdoc) => {
       return (pdoc.pid ? `${pdoc.pid} ` : '') + pdoc.title;
   }; */
 
-  const itemKey = (pdoc) => {
-    return pdoc.docId || pdoc;
-  };
+  const itemKey = (pdoc) => pdoc.docId || pdoc;
 
+  // eslint-disable-next-line arrow-body-style
   const renderItem = (pdoc) => {
     return (
       <div className="media">

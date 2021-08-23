@@ -13,7 +13,7 @@ import 'vj/misc/textalign.styl';
 import 'vj/misc/grid.styl';
 import 'vj/misc/slideout.styl';
 
-import 'vj/misc/.iconfont/webicon.styl';
+import 'vj/misc/icons/template/webicon.styl';
 import 'vj/misc/immersive.styl';
 import 'vj/misc/structure.styl';
 import 'vj/misc/section.styl';

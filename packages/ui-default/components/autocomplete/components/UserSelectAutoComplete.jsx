@@ -3,20 +3,18 @@ import PropTypes from 'prop-types';
 import request from 'vj/utils/request';
 import AutoComplete from './AutoComplete';
 
+// eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props, ref) {
-  const itemsFn = (query) => {
-    return request.get('/user/search', { q: query });
-  };
+  const itemsFn = (query) => request.get('/user/search', { q: query });
 
-  const itemText = (user) => {
-    return user.uname || user;
-  };
+  const itemText = (user) => user.uname || user;
 
+  // eslint-disable-next-line arrow-body-style
   const renderItem = (user) => {
     return (
       <div className="media">
         <div className="media__left medium">
-          <img className="small user-profile-avatar" src={user.avatarUrl} width="30" height="30" />
+          <img className="small user-profile-avatar" alt="" src={user.avatarUrl} width="30" height="30" />
         </div>
         <div className="media__body medium">
           <div className="user-select__uname">{user.uname}</div>

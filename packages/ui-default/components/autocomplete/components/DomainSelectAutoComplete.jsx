@@ -3,24 +3,22 @@ import PropTypes from 'prop-types';
 import request from 'vj/utils/request';
 import AutoComplete from './AutoComplete';
 
+// eslint-disable-next-line prefer-arrow-callback
 const DomainSelectAutoComplete = forwardRef(function DomainSelectAutoComplete(props, ref) {
-  const itemsFn = (query) => {
-    return request.get('/domain/search', { q: query });
-  };
+  const itemsFn = (query) => request.get('/domain/search', { q: query });
 
   /* const itemText = (domain) => {
       return domain.name;
   }; */
 
-  const itemKey = (domain) => {
-    return domain._id || domain;
-  };
+  const itemKey = (domain) => domain._id || domain;
 
+  // eslint-disable-next-line arrow-body-style
   const renderItem = (domain) => {
     return (
       <div className="media">
         <div className="media__left medium">
-          <img className="small domain-profile-avatar" src={domain.avatarUrl} width="30" height="30" />
+          <img className="small domain-profile-avatar" src={domain.avatarUrl} alt="" width="30" height="30" />
         </div>
         <div className="media__body medium">
           <div className="domain-select__name">{domain.name}</div>
