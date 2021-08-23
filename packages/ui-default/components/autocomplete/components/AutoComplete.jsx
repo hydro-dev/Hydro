@@ -197,9 +197,9 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         ))}
         <input
           ref={inputRef}
-          onChange={() => {
+          onChange={(e) => {
             setExportValue(calculateValue());
-            handleInputChange();
+            handleInputChange(e);
           }}
           onFocus={() => {
             setFocused(true);
