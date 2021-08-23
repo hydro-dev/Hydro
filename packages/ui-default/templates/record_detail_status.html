@@ -51,7 +51,6 @@
               <a href="/d/bzoj/p/{{rdoc.pid}}/file/{{loop.index}}.in?type=testdata&rid={{ rdoc._id }}">input</a>
               <a href="/d/bzoj/p/{{rdoc.pid}}/file/{{loop.index}}.out?type=testdata&rid={{ rdoc._id }}">output</a>
             {% endif %}{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
-            <a class="tool-button" href="{{ url('wiki_help', anchor='status') }}"><span class="icon icon-help"></span></a>
           </td>
           <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
           <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>

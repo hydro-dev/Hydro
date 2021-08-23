@@ -56,21 +56,27 @@ export const InvalidTokenError = Err('InvalidTokenError', ForbiddenError);
 export const BlacklistedError = Err('BlacklistedError', ForbiddenError, 'Address or user {0} is blacklisted.');
 export const VerifyPasswordError = Err('VerifyPasswordError', ForbiddenError, "Passwords don't match.");
 export const OpcountExceededError = Err('OpcountExceededError', ForbiddenError, 'Too frequent operations of {0} (limit: {2} operations in {1} seconds).');
-export const PermissionError = Err('PermissionError', ForbiddenError, function () {
+export const PermissionError = Err('PermissionError', ForbiddenError, function (this: HydroError) {
     if (typeof this.params[0] === 'bigint') {
         this.params[0] = require('./model/builtin').PERMS.find(({ key }) => key === this.params[0])?.desc || this.params[0];
     }
     return "You don't have the required permission ({0}) in this domain.";
 });
-export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function () {
+export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function (this: HydroError) {
     if (this.params.includes(global.Hydro.model.builtin.PRIV.PRIV_USER_PROFILE)) {
         return "You're not logged in.";
     }
     return "You don't have the required privilege.";
 });
-export const ValidationError = Err('ValidationError', ForbiddenError, function () {
-    if (this.params.length === 1) return 'Field {0} validation failed.';
-    return 'Field {0} or {1} validation failed.';
+export const ValidationError = Err('ValidationError', ForbiddenError, function (this: HydroError) {
+    if (this.params.length === 3) {
+        return this.params[1]
+            ? 'Field {0} or {1} validation failed. ({2})'
+            : 'Field {0} validation failed. ({2})';
+    }
+    return this.params[1]
+        ? 'Field {0} or {1} validation failed.'
+        : 'Field {0} validation failed.';
 });
 export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenError, "You haven't attended this contest yet.");
 export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');

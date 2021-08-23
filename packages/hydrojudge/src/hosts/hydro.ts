@@ -10,7 +10,9 @@ import { ObjectID } from 'mongodb';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as tmpfs from '../tmpfs';
 import log from '../log';
-import { compilerText, md5, Queue } from '../utils';
+import {
+    compilerText, Lock, md5, Queue,
+} from '../utils';
 import { getConfig } from '../config';
 import { FormatError, CompileError, SystemError } from '../error';
 import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
@@ -69,6 +71,7 @@ class JudgeTask {
         this.data = this.request.data;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
+        await Lock.aquire(`${this.host}/${this.domainId}/${this.rid}`);
         fs.ensureDirSync(this.tmpdir);
         tmpfs.mount(this.tmpdir, '512m');
         log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
@@ -94,10 +97,12 @@ class JudgeTask {
                     status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             }
+        } finally {
+            Lock.release(`${this.host}/${this.domainId}/${this.rid}`);
+            for (const clean of this.clean) await clean().catch(noop);
+            tmpfs.umount(this.tmpdir);
+            fs.removeSync(this.tmpdir);
         }
-        for (const clean of this.clean) await clean().catch(noop);
-        tmpfs.umount(this.tmpdir);
-        fs.removeSync(this.tmpdir);
     }
 
     async run() {
@@ -193,8 +198,18 @@ export default class Hydro {
     }
 
     async cacheOpen(domainId: string, pid: string, files: any[], next?) {
+        await Lock.aquire(`${this.config.host}/${domainId}/${pid}`);
+        try {
+            return this._cacheOpen(domainId, pid, files, next);
+        } finally {
+            Lock.release(`${this.config.host}/${domainId}/${pid}`);
+        }
+    }
+
+    async _cacheOpen(domainId: string, pid: string, files: any[], next?) {
         const domainDir = path.join(getConfig('cache_dir'), this.config.host, domainId);
-        const filePath = path.join(domainDir, pid); await fs.ensureDir(filePath);
+        const filePath = path.join(domainDir, pid);
+        await fs.ensureDir(filePath);
         if (!files?.length) throw new SystemError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
@@ -313,7 +328,9 @@ export default class Hydro {
 
     async ensureLogin() {
         try {
-            await this.axios.get('judge?check=true');
+            const res = await this.axios.get('judge/files');
+            // Redirected to /login
+            if (res.data.url) await this.login();
         } catch (e) {
             await this.login();
         }

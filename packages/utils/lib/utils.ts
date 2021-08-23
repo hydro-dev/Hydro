@@ -275,7 +275,7 @@ export namespace Time {
 export function errorMessage(err: Error | string) {
     const t = typeof err === 'string' ? err : err.stack;
     const parsed = t
-        .replace(/[A-Z]:\\.+\\@hydrooj\\/g, '\\')
+        .replace(/[A-Z]:\\.+\\@hydrooj\\/g, '@hydrooj\\')
         .replace(/\/.+\/@hydrooj\//g, '\\')
         .replace(/[A-Z]:\\.+\\hydrooj\\/g, 'hydrooj\\')
         .replace(/\/.+\/hydrooj\//g, 'hydrooj/')

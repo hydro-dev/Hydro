@@ -57,7 +57,7 @@ const replacer = (k, v) => {
 class Nunjucks extends nunjucks.Environment {
   constructor() {
     super(new Loader(), { autoescape: true, trimBlocks: true });
-    this.addFilter('json', (self) => JSON.stringify(self, replacer));
+    this.addFilter('json', (self) => (self ? JSON.stringify(self, replacer) : ''));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
     this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));

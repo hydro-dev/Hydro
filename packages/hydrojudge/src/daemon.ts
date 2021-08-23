@@ -48,6 +48,13 @@ process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise ', p);
 });
 
+async function worker(queue: Queue<any>) {
+    while ('Orz Soha') {
+        const [task] = await queue.get();
+        task.handle();
+    }
+}
+
 async function daemon() {
     const _hosts = getConfig('hosts');
     const retry_delay_sec = getConfig('retry_delay_sec');
@@ -59,17 +66,17 @@ async function daemon() {
         await hosts[i].init();
     }
     global.hosts = hosts;
-    while ('Orz twd2') {
-        try {
-            for (const i in hosts) await hosts[i].consume(queue);
-            while ('Orz iceb0y') {
-                const [task] = await queue.get();
-                await task.handle();
+    worker(queue);
+    for (const i in hosts) {
+        while ('Orz twd2') {
+            try {
+                await hosts[i].consume(queue);
+                break;
+            } catch (e) {
+                log.error(e, e.stack);
+                log.info(`在 ${retry_delay_sec} 秒后重试`);
+                await sleep(retry_delay_sec * 1000);
             }
-        } catch (e) {
-            log.error(e, e.stack);
-            log.info(`在 ${retry_delay_sec} 秒后重试`);
-            await sleep(retry_delay_sec * 1000);
         }
     }
 }

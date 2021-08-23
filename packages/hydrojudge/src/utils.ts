@@ -4,6 +4,7 @@ import path from 'path';
 import { parse } from 'shell-quote';
 import _ from 'lodash';
 import { EventEmitter } from 'events';
+import { sleep } from '@hydrooj/utils/lib/utils';
 import { FormatError } from './error';
 
 const EMPTY_STR = /^[ \r\n\t]*$/i;
@@ -35,7 +36,7 @@ export class Queue<T> extends EventEmitter {
             });
         }
         const items = [];
-        for (let i = 0; i < count; i++) { items.push(this.queue[i]); }
+        for (let i = 0; i < count; i++) items.push(this.queue[i]);
         this.queue = _.drop(this.queue, count);
         return items as T[];
     }
@@ -44,11 +45,25 @@ export class Queue<T> extends EventEmitter {
         this.queue.push(value);
         if (this.waiting.length && this.waiting[0].count <= this.queue.length) {
             const items = [];
-            for (let i = 0; i < this.waiting[0].count; i++) { items.push(this.queue[i]); }
+            for (let i = 0; i < this.waiting[0].count; i++) items.push(this.queue[i]);
             this.queue = _.drop(this.queue, this.waiting[0].count);
             this.waiting[0].resolve(items);
             this.waiting.shift();
         }
+    }
+}
+
+export namespace Lock {
+    const data = {};
+
+    export async function aquire(key: string) {
+        // eslint-disable-next-line no-await-in-loop
+        while (data[key]) await sleep(100);
+        data[key] = true;
+    }
+
+    export function release(key: string) {
+        data[key] = false;
     }
 }
 

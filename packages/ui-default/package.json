@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.17.3",
+  "version": "4.18.1",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -41,6 +41,7 @@
     "file-loader": "^6.2.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
     "fs-extra": "^10.0.0",
+    "graphiql": "^1.4.2",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.3.0",
     "gulp-iconfont": "^11.0.0",

@@ -7,6 +7,7 @@ import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { BucketItem } from 'minio';
+import moment from 'moment';
 import { Progress } from './ui';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
@@ -444,6 +445,17 @@ const scripts: UpgradeScript[] = [
                 await document.set(_id, document.TYPE_DISCUSSION, ddoc.docId, { parentId: pdoc.docId });
             }
         });
+        return true;
+    },
+    async function _40_41() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        // Ignore drop index failure
+        await db.collection('storage').dropIndex('path_1').catch(() => { });
+        await db.collection('storage').createIndex({ path: 1, autoDelete: 1 }, { sparse: true });
+        await db.collection('storage').updateMany(
+            { autoDelete: { $gte: moment().add(5, 'days').toDate() } },
+            { $unset: { autoDelete: '' } },
+        );
         return true;
     },
 ];

@@ -1,10 +1,13 @@
 {% extends "layout/basic.html" %}
 {% block content %}
-{% if filterTid %}
-  {{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId + "&tid=" + filterTid) }}
-{% else %}
-  {{ set(UiContext, 'socketUrl', "/record-conn?domainId=" + handler.domainId) }}
-{% endif %}
+{{ set(
+  UiContext, 'socketUrl',
+  "/record-conn?domainId=" + handler.domainId
+  + (("&tid=" + filterTid) if filterTid else "")
+  + (("&uidOrName=" + filterUidOrName) if filterUidOrName else "")
+  + (("&pid=" + filterPid) if filterPid else "")
+  + ("&allDomain=1" if all else "")
+) }}
 {{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
 <div class="row">
   <div class="medium-12 columns">

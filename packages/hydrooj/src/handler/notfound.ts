@@ -12,7 +12,11 @@ class NotFoundHandler extends Handler {
         throw new NotFoundError(this.request.path);
     }
 
-    all() { }
+    get() { }
+    post() { }
+    head() { }
+    put() { }
+    delete() { }
 }
 
 export async function apply() {

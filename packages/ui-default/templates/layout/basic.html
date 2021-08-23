@@ -1,14 +1,14 @@
 {% set layout_name = "basic" %}
 {% extends "layout/html5.html" %}
 {% block body %}
-{% include "partials/nav.html" %}
+{% if UserContext %}{% include "partials/nav.html" %}{% endif %}
 <div class="slideout-panel" id="panel">
   <div class="slideout-overlay"></div>
-  {% include "partials/header_mobile.html" %}
+  {% if UserContext %}{% include "partials/header_mobile.html" %}{% endif %}
   <div class="main">
     {% block content %}{% endblock %}
   </div>
   {% include "partials/footer.html" %}
 </div>
-{% include "partials/login_dialog.html" %}
+{% if UserContext %}{% include "partials/login_dialog.html" %}{% endif %}
 {% endblock %}

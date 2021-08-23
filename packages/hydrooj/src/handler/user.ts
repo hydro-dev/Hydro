@@ -33,17 +33,18 @@ class UserLoginHandler extends Handler {
     @param('uname', Types.String)
     @param('password', Types.String)
     @param('rememberme', Types.Boolean)
-    async post(domainId: string, uname: string, password: string, rememberme = false) {
+    @param('redirect', Types.String, true)
+    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '') {
         if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         const udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
-        if (udoc.priv === PRIV.PRIV_NONE) throw new BlacklistedError(uname);
+        if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname);
         this.session.uid = udoc._id;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = (this.request.referer || '/login').endsWith('/login')
+        this.response.redirect = redirect || (this.request.referer || '/login').endsWith('/login')
             ? this.url('homepage')
             : this.request.referer;
     }

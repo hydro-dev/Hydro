@@ -90,6 +90,8 @@ class Service {
 }
 
 async function loadAccounts() {
+    // Only start a single daemon
+    if (!global.Hydro.isFirstWorker) return;
     const accounts = await coll.find().toArray();
     for (const account of accounts) {
         if (!providers[account.type]) continue;

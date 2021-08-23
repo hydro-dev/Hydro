@@ -1,9 +1,12 @@
-{% macro render_status_td(rdoc, rid_key='_id', class='') %}
+{% macro render_status_td(rdoc, rid_key='_id', class='', allDomain = false) %}
 <td class="col--status record-status--border {{ class }} {{ model.builtin.STATUS_CODES[rdoc.status] }}">
   <div class="col--status__text">
     <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc.status] }}"></span>
     <span style="color: {{ utils.status.getScoreColor(rdoc.score|default(0)) }}">{{ rdoc.score|default(0) }}</span>
-    <a href="{{ url('record_detail', rid=rdoc[rid_key]) }}" class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.status] }}">
+    <a 
+      href="{{ url('record_detail', rid=rdoc[rid_key], domainId=rdoc.domainId) if allDomain else url('record_detail', rid=rdoc[rid_key]) }}"
+      class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.status] }}"
+    >
       {{ model.builtin.STATUS_TEXTS[rdoc.status] }}
     </a>
   </div>

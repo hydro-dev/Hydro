@@ -17,6 +17,7 @@ import cache from 'koa-static-cache';
 import sockjs from 'sockjs';
 import cac from 'cac';
 import { createHash } from 'crypto';
+import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import * as bus from './bus';
 import { errorMessage } from '../utils';
 import { User, DomainDoc } from '../interface';
@@ -26,6 +27,7 @@ import {
     UserFacingError, ValidationError, PrivilegeError,
     CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, HydroError, SystemError,
+    LoginError,
 } from '../error';
 import { isContent, isName, isTitle } from '../lib/validator';
 import avatar from '../lib/avatar';
@@ -271,8 +273,10 @@ export async function prepare() {
     }
     app.use(Body({
         multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
         formidable: {
-            maxFileSize: 256 * 1024 * 1024,
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
         },
     }));
 }
@@ -307,7 +311,7 @@ export class HandlerCommon {
 
     translate(str: string) {
         if (!str) return '';
-        return str.toString().translate(this.user.viewLang, this.session.viewLang, system.get('server.language'));
+        return str.toString().translate(this.user?.viewLang, this.session?.viewLang, system.get('server.language'));
     }
 
     renderTitle(str: string) {
@@ -330,8 +334,8 @@ export class HandlerCommon {
     async renderHTML(name: string, context: any): Promise<string> {
         const UserContext: any = {
             ...this.user,
-            avatar: avatar(this.user.avatar || '', 128),
-            perm: this.user.perm.toString(),
+            avatar: avatar(this.user?.avatar || '', 128),
+            perm: this.user?.perm?.toString(),
             viewLang: this.translate('__id'),
         };
         if (!global.Hydro.lib.template) return JSON.stringify(context, serializer);
@@ -409,7 +413,9 @@ export class Handler extends HandlerCommon {
         template?: string,
         redirect?: string,
         disposition?: string,
+        etag?: string,
         attachment: (name: string, stream?: any) => void,
+        addHeader: (name: string, value: string) => void,
     };
 
     csrfToken: string;
@@ -433,7 +439,7 @@ export class Handler extends HandlerCommon {
             query: ctx.query,
             path: ctx.path,
             params: ctx.params,
-            referer: ctx.request.headers.referer,
+            referer: ctx.request.headers.referer || '',
             json: (ctx.request.headers.accept || '').includes('application/json'),
         };
         this.response = {
@@ -452,6 +458,7 @@ export class Handler extends HandlerCommon {
                     ctx.body = streamOrBuffer.pipe(new PassThrough());
                 }
             },
+            addHeader: (name: string, value: string) => this.ctx.set(name, value),
             disposition: null,
         };
         this.UiContext = cloneDeep(UiContextBase);
@@ -592,18 +599,23 @@ export class Handler extends HandlerCommon {
     async putResponse() {
         if (this.response.disposition) this.ctx.set('Content-Disposition', this.response.disposition);
         if (!this.response.body) return;
-        if (this.response.redirect && !this.request.json) {
+        if (this.response.etag) {
+            this.ctx.set('ETag', this.response.etag);
+            this.ctx.set('Cache-Control', 'public');
+        }
+        if (this.response.etag && this.request.headers['if-none-match'] === this.response.etag) {
+            this.ctx.response.status = 304;
+        } else if (this.response.redirect && !this.request.json) {
             this.ctx.response.type = 'application/octet-stream';
             this.ctx.response.status = 302;
             this.ctx.redirect(this.response.redirect);
         } else {
-            this.ctx.response.body = this.response.body;
+            this.ctx.body = this.response.body;
             this.ctx.response.status = this.response.status || 200;
-            this.ctx.response.type = this.request.json
-                ? 'application/json'
-                : this.response.type
-                    ? this.response.type
-                    : this.ctx.response.type;
+            this.ctx.response.type = this.response.type
+                || (this.request.json
+                    ? 'application/json'
+                    : this.ctx.response.type);
         }
     }
 
@@ -639,11 +651,15 @@ export class Handler extends HandlerCommon {
             logger.error(`User: ${this.user._id}(${this.user.uname}) Path: ${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
         }
-        this.response.status = error instanceof UserFacingError ? error.code : 500;
-        this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-        this.response.body = {
-            error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack) },
-        };
+        if (this.user?._id === 0 && !(error instanceof LoginError) && !(error instanceof NotFoundError)) {
+            this.response.redirect = this.url('user_login', { query: { redirect: this.request.path + this.ctx.search } });
+        } else {
+            this.response.status = error instanceof UserFacingError ? error.code : 500;
+            this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
+            this.response.body = {
+                error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack) },
+            };
+        }
         await this.finish().catch(() => { });
     }
 }
@@ -663,11 +679,9 @@ async function handle(ctx, HandlerClass, checker) {
     h.domainId = args.domainId;
     try {
         const method = ctx.method.toLowerCase();
-        let operation: string;
-        if (method === 'post' && ctx.request.body.operation) {
-            operation = `_${ctx.request.body.operation}`
-                .replace(/_([a-z])/gm, (s) => s[1].toUpperCase());
-        }
+        const operation = (method === 'post' && ctx.request.body.operation)
+            ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
+            : '';
 
         await bus.serial('handler/create', h);
 
@@ -681,7 +695,7 @@ async function handle(ctx, HandlerClass, checker) {
             } else if (typeof h.post !== 'function') {
                 throw new MethodNotAllowedError(method);
             }
-        } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
+        } else if (typeof h[method] !== 'function') {
             throw new MethodNotAllowedError(method);
         }
 
@@ -731,7 +745,7 @@ const Checker = (permPrivChecker) => {
             perm = item;
         }
     }
-    return function check() {
+    return function check(this: Handler) {
         checker();
         if (perm) this.checkPerm(perm); // lgtm [js/trivial-conditional]
         if (priv) this.checkPriv(priv);
@@ -800,8 +814,8 @@ export class ConnectionHandler extends HandlerCommon {
             const parts = cookie.split('=');
             cookies[parts[0].trim()] = (parts[1] || '').trim();
         }
-        this.session = await token.get(cookies.sid || '', token.TYPE_SESSION);
-        if (!this.session) this.session = { uid: 0, domainId: 'system' };
+        this.session = await token.get(cookies.sid || '', token.TYPE_SESSION)
+            || { uid: 0, domainId: 'system' };
     }
 
     @param('cookie', Types.String)
@@ -830,6 +844,7 @@ export function Connection(
     const sock = sockjs.createServer({ prefix, log });
     const checker = Checker(permPrivChecker);
     sock.on('connection', async (conn) => {
+        if (!conn) return;
         const h: Dictionary<any> = new RouteConnHandler(conn);
         try {
             const args = { domainId: 'system', ...h.request.params };

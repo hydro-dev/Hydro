@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import { Route, Handler } from 'hydrooj/src/service/server';
-import { BadRequestError, ValidationError } from 'hydrooj/src/error';
+import { ValidationError } from 'hydrooj/src/error';
 import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import problem from 'hydrooj/src/model/problem';
 import { PERM } from 'hydrooj/src/model/builtin';
@@ -122,7 +122,7 @@ class ImportQduojHandler extends Handler {
     async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
         const stat = await fs.stat(this.request.files.file.path);
-        if (stat.size > 128 * 1024 * 1024) throw new BadRequestError('File too large');
+        if (stat.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
         await this.ImportFromFile(domainId, this.request.files.file.path);
         this.response.redirect = this.url('problem_main');
     }

@@ -1,6 +1,10 @@
 /* eslint-disable camelcase */
 import { pick } from 'lodash';
-import { BadRequestError, ForbiddenError, ValidationError } from '../error';
+import { lookup } from 'mime-types';
+import {
+    BadRequestError, ForbiddenError, ValidationError,
+} from '../error';
+import { sortFiles } from '../utils';
 import { PRIV } from '../model/builtin';
 import storage from '../model/storage';
 import * as system from '../model/system';
@@ -8,7 +12,6 @@ import user from '../model/user';
 import {
     Route, Handler, Types, param, post,
 } from '../service/server';
-import { sortFiles } from '../utils';
 
 class CheckInHandler extends Handler {
     async prepare() {
@@ -78,7 +81,7 @@ export class FilesHandler extends Handler {
             throw new ForbiddenError('File size limit exceeded.');
         }
         if (!filename) filename = this.request.files.file.name || String.random(16);
-        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', 'Bad filename');
+        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (this.user._files.filter((i) => i.name === filename).length) throw new BadRequestError('file exists');
         await storage.put(`user/${this.user._id}/${filename}`, this.request.files.file.path);
         const meta = await storage.getMeta(`user/${this.user._id}/${filename}`);
@@ -104,9 +107,27 @@ export class FSDownloadHandler extends Handler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
-        this.response.redirect = await storage.signDownloadLink(
-            `user/${uid}/${filename}`, noDisposition ? undefined : filename, false, 'user',
-        );
+        this.response.addHeader('Cache-Control', 'public');
+        const target = `user/${uid}/${filename}`;
+        const file = await storage.getMeta(target);
+        if (!file) {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+            return;
+        }
+        this.response.etag = file.etag;
+        const type = lookup(filename).toString();
+        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
+        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
+            this.response.body = await storage.get(target);
+            this.response.type = file['Content-Type'] || type;
+            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
+        } else {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+        }
     }
 }
 

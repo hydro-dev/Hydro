@@ -9,6 +9,9 @@ const request = {
       $
         .ajax({
           dataType: 'json',
+          headers: {
+            Accept: 'application/json',
+          },
           ...options,
         })
         .fail((jqXHR, textStatus, errorThrown) => {

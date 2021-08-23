@@ -35,7 +35,7 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
         return;
     }
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
-    for (const key of cache.keys().filter((k) => id.includes(k.split('/')[0]))) {
+    for (const key of cache.keys().filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
         cache.del(key);
     }
 }
@@ -208,6 +208,11 @@ class UserModel {
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
         deleteUserCache(res.value);
         return res;
+    }
+
+    @ArgMethod
+    static setUname(uid: number, uname: string) {
+        return UserModel.setById(uid, { uname, unameLower: uname.trim().toLowerCase() });
     }
 
     @ArgMethod

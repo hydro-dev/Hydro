@@ -50,6 +50,7 @@ const xss = new Xss.FilterXSS({
     small: [],
     span: ['class'],
     sub: [],
+    summary: [],
     sup: [],
     strong: [],
     table: ['width', 'border', 'align', 'valign'],

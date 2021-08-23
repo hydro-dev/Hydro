@@ -71,6 +71,8 @@ async function cli() {
             args[i] = new ObjectID(args[i]);
         } else if ((+args[i]).toString() === args[i]) {
             args[i] = +args[i];
+        } else if (args[i].startsWith('~')) {
+            args[i] = argv.options[args[i].substr(1)];
         }
     }
     let result = global.Hydro.model[modelName][func](...args);

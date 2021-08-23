@@ -8,7 +8,7 @@ export async function run(_: {}, report: Function) {
     const cursor = storage.coll.find({ path: { $regex: /^problem\//i } }).sort({ path: 1 });
     const count = await cursor.count();
     report({ message: `Total ${count} files` });
-    let current: string;
+    let current = '';
     let memory = 0;
     let start = new Date().getTime();
     // eslint-disable-next-line no-constant-condition

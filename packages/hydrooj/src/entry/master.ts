@@ -78,5 +78,7 @@ export async function load(call: Entry) {
         await modelSystem.set('db.ver', dbVer);
     }
     await bus.serial('app/started');
-    return await modelSystem.get('server.worker');
+    return typeof argv.options.worker === 'number'
+        ? argv.options.worker
+        : await modelSystem.get('server.worker');
 }

@@ -11,11 +11,11 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import task from '../model/task';
 import * as system from '../model/system';
+import storage from '../model/storage';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, post, Types,
 } from '../service/server';
-import storage from '../service/storage';
 import { updateJudge } from '../service/monitor';
 
 const logger = new Logger('judge');
@@ -34,18 +34,21 @@ export async function postJudge(rdoc: RecordDoc) {
     const pdoc = (accept && updated)
         ? await problem.inc(rdoc.pdomain, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.pdomain, rdoc.pid);
-    const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-    await Promise.all([
-        problem.edit(pdoc.domainId, pdoc.docId, { difficulty }),
-        problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-        problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
-    ]);
+    if (pdoc) {
+        const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
+        await Promise.all([
+            problem.edit(pdoc.domainId, pdoc.docId, { difficulty }),
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
+        ]);
+    }
     await bus.serial('record/judge', rdoc, updated);
 }
 
 export async function next(body: JudgeResultBody) {
     body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
+    if (!rdoc) return;
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     if (body.case) {
@@ -72,12 +75,13 @@ export async function next(body: JudgeResultBody) {
     if (body.memory !== undefined) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push);
-    bus.broadcast('record/change', rdoc, $set, $push);
+    bus.broadcast('record/change', rdoc!, $set, $push);
 }
 
 export async function end(body: JudgeResultBody) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
+    if (!rdoc) return;
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     const $unset: any = { progress: '' };
@@ -102,6 +106,10 @@ export async function end(body: JudgeResultBody) {
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    async get() {
+        this.response.body = 'ok';
+    }
+
     noCheckPermView = true;
     @post('files', Types.Set)
     @post('pid', Types.UnsignedInt)
