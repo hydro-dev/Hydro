@@ -55,6 +55,10 @@ module.exports = {
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
 
+    // Note: must disable the base rule as it can report incorrect errors
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': ['error'],
+
     'comma-dangle': [
       'error',
       'always-multiline',
