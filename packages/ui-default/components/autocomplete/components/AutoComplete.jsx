@@ -117,7 +117,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         toggleItem(itemList[currentItem]);
         return;
       }
-      if (freeSolo) {
+      if (freeSolo && target.value !== '') {
         toggleItem(freeSoloConverter(target.value));
       }
       return;
