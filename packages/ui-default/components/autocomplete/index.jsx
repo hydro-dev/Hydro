@@ -41,6 +41,7 @@ export default class AutoComplete extends DOMAttachedObject {
         itemText={this.options.text}
         defaultItems={value}
         multi={this.options.multi}
+        freeSolo={this.options.multi}
       />,
       this.container,
     );

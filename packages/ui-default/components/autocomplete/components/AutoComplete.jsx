@@ -96,7 +96,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       setCurrentItem(null);
       return;
     }
-    if (key === 'Enter') {
+    if (key === 'Enter' || key === ',') {
+      e.preventDefault();
       if (currentItem !== null) {
         toggleItem(itemList[currentItem]);
         return;

@@ -27,6 +27,7 @@ export default class ProblemSelectAutoComplete extends AutoComplete {
         height="34px"
         defaultItems={value}
         multi={this.options.multi}
+        freeSolo={this.options.multi}
       />,
       this.container,
     );
