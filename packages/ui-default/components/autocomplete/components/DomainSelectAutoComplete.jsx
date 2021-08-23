@@ -45,6 +45,8 @@ DomainSelectAutoComplete.propTypes = {
   multi: PropTypes.bool,
   defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
+  freeSolo: PropTypes.bool,
+  freeSoloConverter: PropTypes.func,
 };
 
 DomainSelectAutoComplete.defaultProps = {
@@ -55,6 +57,8 @@ DomainSelectAutoComplete.defaultProps = {
   multi: false,
   defaultItems: [],
   allowEmptyQuery: false,
+  freeSolo: false,
+  freeSoloConverter: (input) => input,
 };
 
 DomainSelectAutoComplete.displayName = 'DomainSelectAutoComplete';

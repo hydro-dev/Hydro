@@ -40,6 +40,8 @@ UserSelectAutoComplete.propTypes = {
   multi: PropTypes.bool,
   defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
+  freeSolo: PropTypes.bool,
+  freeSoloConverter: PropTypes.func,
 };
 
 UserSelectAutoComplete.defaultProps = {
@@ -50,6 +52,8 @@ UserSelectAutoComplete.defaultProps = {
   multi: false,
   defaultItems: [],
   allowEmptyQuery: false,
+  freeSolo: false,
+  freeSoloConverter: (input) => input,
 };
 
 UserSelectAutoComplete.displayName = 'UserSelectAutoComplete';

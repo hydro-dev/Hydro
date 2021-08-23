@@ -42,6 +42,8 @@ ProblemSelectAutoComplete.propTypes = {
   multi: PropTypes.bool,
   defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
+  freeSolo: PropTypes.bool,
+  freeSoloConverter: PropTypes.func,
 };
 
 ProblemSelectAutoComplete.defaultProps = {
@@ -52,6 +54,8 @@ ProblemSelectAutoComplete.defaultProps = {
   multi: false,
   defaultItems: [],
   allowEmptyQuery: false,
+  freeSolo: false,
+  freeSoloConverter: (input) => input,
 };
 
 ProblemSelectAutoComplete.displayName = 'ProblemSelectAutoComplete';
