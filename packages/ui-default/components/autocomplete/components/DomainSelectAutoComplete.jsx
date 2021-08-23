@@ -13,20 +13,17 @@ const DomainSelectAutoComplete = forwardRef(function DomainSelectAutoComplete(pr
 
   const itemKey = (domain) => domain._id || domain;
 
-  // eslint-disable-next-line arrow-body-style
-  const renderItem = (domain) => {
-    return (
-      <div className="media">
-        <div className="media__left medium">
-          <img className="small domain-profile-avatar" src={domain.avatarUrl} alt="" width="30" height="30" />
-        </div>
-        <div className="media__body medium">
-          <div className="domain-select__name">{domain.name}</div>
-          <div className="domain-select__id">ID = {domain._id}</div>
-        </div>
+  const renderItem = (domain) => (
+    <div className="media">
+      <div className="media__left medium">
+        <img className="small domain-profile-avatar" src={domain.avatarUrl} alt="" width="30" height="30" />
       </div>
-    );
-  };
+      <div className="media__body medium">
+        <div className="domain-select__name">{domain.name}</div>
+        <div className="domain-select__id">ID = {domain._id}</div>
+      </div>
+    </div>
+  );
 
   return (
     <AutoComplete

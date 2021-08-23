@@ -9,20 +9,17 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
 
   const itemText = (user) => user.uname || user;
 
-  // eslint-disable-next-line arrow-body-style
-  const renderItem = (user) => {
-    return (
-      <div className="media">
-        <div className="media__left medium">
-          <img className="small user-profile-avatar" alt="" src={user.avatarUrl} width="30" height="30" />
-        </div>
-        <div className="media__body medium">
-          <div className="user-select__uname">{user.uname}</div>
-          <div className="user-select__uid">UID = {user._id}</div>
-        </div>
+  const renderItem = (user) => (
+    <div className="media">
+      <div className="media__left medium">
+        <img className="small user-profile-avatar" alt="" src={user.avatarUrl} width="30" height="30" />
       </div>
-    );
-  };
+      <div className="media__body medium">
+        <div className="user-select__uname">{user.uname}</div>
+        <div className="user-select__uid">UID = {user._id}</div>
+      </div>
+    </div>
+  );
 
   return (
     <AutoComplete

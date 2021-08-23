@@ -13,17 +13,14 @@ const ProblemSelectAutoComplete = forwardRef(function ProblemSelectAutoComplete(
 
   const itemKey = (pdoc) => pdoc.docId || pdoc;
 
-  // eslint-disable-next-line arrow-body-style
-  const renderItem = (pdoc) => {
-    return (
-      <div className="media">
-        <div className="media__body medium">
-          <div className="problem-select__name">{pdoc.pid ? `${pdoc.pid} ` : ''}{pdoc.title}</div>
-          <div className="problem-select__id">ID = {pdoc.docId}</div>
-        </div>
+  const renderItem = (pdoc) => (
+    <div className="media">
+      <div className="media__body medium">
+        <div className="problem-select__name">{pdoc.pid ? `${pdoc.pid} ` : ''}{pdoc.title}</div>
+        <div className="problem-select__id">ID = {pdoc.docId}</div>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <AutoComplete
