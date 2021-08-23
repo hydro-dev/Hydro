@@ -325,10 +325,10 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
             );
             return;
         }
-        this.response.etag = file.etag;
         const type = lookup(filename).toString();
         const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
         if (shouldProxy && file.size! < 32 * 1024 * 1024) {
+            this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || type;
             this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;

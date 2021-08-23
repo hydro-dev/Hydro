@@ -424,10 +424,10 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
             );
             return;
         }
-        this.response.etag = file.etag;
         const fileType = lookup(filename).toString();
         const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => fileType.includes(i)).length;
         if (shouldProxy && file.size! < 32 * 1024 * 1024) {
+            this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || fileType;
             this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
