@@ -3,6 +3,7 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import { lookup } from 'mime-types';
+import { registerResolver, registerValue } from './api';
 import {
     NoProblemError, PermissionError, ValidationError,
     SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
@@ -31,6 +32,36 @@ import {
 
 export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split(',')).map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
+
+registerValue('FileInfo', [
+    ['_id', 'String!'],
+    ['name', 'String!'],
+    ['size', 'Int'],
+    ['lastModified', 'Date'],
+]);
+registerValue('Problem', [
+    ['_id', 'ObjectID!'],
+    ['owner', 'Int!'],
+    ['domainId', 'String!'],
+    ['docId', 'Int!'],
+    ['docType', 'Int!'],
+    ['title', 'String!'],
+    ['content', 'String!'],
+    ['config', 'String!'],
+    ['data', '[FileInfo]'],
+    ['additional_file', '[FileInfo]'],
+    ['nSubmit', 'Int'],
+    ['nAccept', 'Int'],
+    ['difficulty', 'Int'],
+    ['tag', '[String]'],
+    ['hidden', 'Boolean'],
+]);
+registerResolver('Query', 'problem(id: Int, pid: String)', 'Problem', async (arg, ctx) => {
+    const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
+    if (!pdoc) return null;
+    if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+    return pdoc;
+});
 
 export class ProblemHandler extends Handler {
     async cleanup() {

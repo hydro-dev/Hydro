@@ -4,6 +4,7 @@ import { Handler, Route } from '../service/server';
 import * as bus from '../service/bus';
 
 const types: Record<string, Record<string, string>> = {};
+const unions: Record<string, string> = {};
 const descriptions: Record<string, Record<string, string>> = {};
 const handlers: Record<string, Record<string, any>> = {};
 let root: Record<string, any> = {};
@@ -30,18 +31,23 @@ export function registerResolver(typeName: string, key: string, value: string, f
     bus.emit('api/update');
 }
 
+export function registerUnion(typeName: string, ...unionTypes: string[]) {
+    unions[typeName] = unionTypes.join(' | ');
+    bus.emit('api/update');
+}
+
 function setDescription(desc: string) {
     if (desc.includes('\n')) return ['"""', desc, '"""'].join('\n');
     return JSON.stringify(desc);
 }
 
 function buildSchemaStr() {
-    let res = `${typeDefs.join('\n')}\n`;
+    let res = `${Object.keys(unions).map((i) => `union ${i} = ${unions[i]}`)}\n${typeDefs.join('\n')}\n`;
     for (const key in types) {
-        if (descriptions[key]._description) res += `${setDescription(descriptions[key]._description)}\n`;
+        if (descriptions[key]?._description) res += `${setDescription(descriptions[key]._description)}\n`;
         res += `type ${key}{\n`;
         for (const k in types[key]) {
-            if (descriptions[key][k]) res += `  ${setDescription(descriptions[key][k])}\n`;
+            if (descriptions[key]?.[k]) res += `  ${setDescription(descriptions[key][k])}\n`;
             res += `  ${k}: ${types[key][k]}\n`;
         }
         res += '}\n';
