@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React, {
-  forwardRef, useState, useRef, useImperativeHandle, createRef,
+  forwardRef, useState, useRef, useImperativeHandle, createRef, useEffect,
 } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
@@ -32,6 +32,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const [selectedKeys, setSelectedKeys] = useState(defaultItems.map((i) => itemKey(i))); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
+  const [exportValue, setExportValue] = useState(defaultItems.map((i) => itemKey(i)).join(',')); // value to export
 
   const inputRef = createRef();
   const listRef = createRef();
@@ -57,15 +58,19 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 
   const calculateValue = () => {
     const query = inputRef.current?.value;
-    if (!query) return multi ? selectedKeys.join(', ') : '';
-    return multi ? `${selectedKeys.join(', ')}, ${query}` : query;
+    if (!query) return multi ? selectedKeys.join(',') : '';
+    return multi ? `${selectedKeys.join(',')},${query}` : query;
   };
+
+  useEffect(() => {
+    setExportValue(calculateValue());
+  }, [selectedKeys, multi]);
 
   const handleInputChange = debounce(async (e) => {
     const { target } = e;
     const { value } = target;
     queryList(value);
-  }, 500);
+  }, 300);
 
   const toggleItem = (item) => {
     if (multi) {
@@ -145,7 +150,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
-    getSelectedItemsAsString: () => selectedKeys.join(', '),
+    getSelectedItemsAsString: () => selectedKeys.join(','),
     setSelectedItems: (items) => {
       setSelected(items);
       setSelectedKeys(items.map((i) => itemKey(i)));
@@ -159,7 +164,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       setItemList([]);
       setCurrentItem(null);
     },
-    getValue: () => (multi ? selectedKeys.join(', ') : (inputRef.current.value ?? '')),
+    getValue: () => (multi ? selectedKeys.join(',') : (inputRef.current.value ?? '')),
     getValueArray: () => (multi ? selected : [inputRef.current?.value].filter((i) => !!i)),
     getValueWithQuery: () => calculateValue(),
     getValueArrayWithQuery: () => {
@@ -192,7 +197,10 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         ))}
         <input
           ref={inputRef}
-          onChange={handleInputChange}
+          onChange={() => {
+            setExportValue(calculateValue());
+            handleInputChange();
+          }}
           onFocus={() => {
             setFocused(true);
             if (allowEmptyQuery) {
@@ -203,7 +211,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
           onKeyDown={handleInputKeyDown}
         />
       </div>
-      <input type="hidden" name={name} value={calculateValue()} />
+      <input type="hidden" name={name} value={exportValue} />
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
           {itemList.map((item, idx) => (
