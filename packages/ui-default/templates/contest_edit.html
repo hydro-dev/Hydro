@@ -7,100 +7,102 @@
         <form method="post">
           <div class="row">
             {{ form.form_select({
-                 columns:3,
-                 label:'Rule',
-                 name:'rule',
-                 options:rules,
-                 value:tdoc['rule']|default(''),
-                 row:false
-               }) }}
+            columns:3,
+            label:'Rule',
+            name:'rule',
+            options:rules,
+            value:tdoc['rule']|default(''),
+            row:false
+            }) }}
             {{ form.form_text({
-                 columns:4,
-                 label:'Title',
-                 name:'title',
-                 placeholder:_('title'),
-                 value:tdoc.title|default(''),
-                 autofocus:true,
-                 row:false
-               }) }}
+            columns:4,
+            label:'Title',
+            name:'title',
+            placeholder:_('title'),
+            value:tdoc.title|default(''),
+            autofocus:true,
+            row:false
+            }) }}
             {{ form.form_text({
-                 columns:3,
-                 label:'Invitation Code',
-                 name:'code',
-                 placeholder:_('(leave blank if none)'),
-                 value:tdoc._code|default(''),
-                 row:false
-               }) }}
+            columns:3,
+            label:'Invitation Code',
+            name:'code',
+            placeholder:_('(leave blank if none)'),
+            value:tdoc._code|default(''),
+            row:false
+            }) }}
             {{ form.form_checkbox({
-                columns:2,
-                label:'Rated',
-                name:'rated',
-                placeholder:_('Is rated'),
-                value:tdoc.rated|default(true),
-                row:false
-              }) }}
-          </div><div class="row">
+            columns:2,
+            label:'Rated',
+            name:'rated',
+            placeholder:_('Is rated'),
+            value:tdoc.rated|default(true),
+            row:false
+            }) }}
+          </div>
+          <div class="row">
             {{ form.form_text({
-                 columns:4,
-                 label:'Begin Date',
-                 name:'beginAtDate',
-                 placeholder:'YYYY-mm-dd',
-                 value:date_text,
-                 date:true,
-                 row:false
-               }) }}
+            columns:4,
+            label:'Begin Date',
+            name:'beginAtDate',
+            placeholder:'YYYY-mm-dd',
+            value:date_text,
+            date:true,
+            row:false
+            }) }}
             {{ form.form_text({
-                 columns:4,
-                 label:'Begin Time',
-                 name:'beginAtTime',
-                 placeholder:'HH:MM',
-                 value:time_text,
-                 time:true,
-                 row:false
-               }) }}
+            columns:4,
+            label:'Begin Time',
+            name:'beginAtTime',
+            placeholder:'HH:MM',
+            value:time_text,
+            time:true,
+            row:false
+            }) }}
             {{ form.form_text({
-                 columns:4,
-                 label:'Duration (hours)',
-                 name:'duration',
-                 value:duration|default('3'),
-                 row:false
-               }) }}
+            columns:4,
+            label:'Duration (hours)',
+            name:'duration',
+            value:duration|default('3'),
+            row:false
+            }) }}
           </div>
           {{ form.form_text({
-               columns:null,
-               label:'Problems',
-               name:'pids',
-               value:pids,
-               noAutocomplete:true,
-               placeholder:_("Seperated with ','")
-             }) }}
+          columns:null,
+          label:'Problems',
+          name:'pids',
+          value:pids,
+          placeholder:_("Seperated with ','")
+          }) }}
           {{ form.form_textarea({
-               columns:null,
-               label:'Content',
-               name:'content',
-               value:tdoc['content']|default(''),
-               markdown:true
-             }) }}
-          <div class="row"><div class="columns">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-          {% if page_name == 'contest_edit' %}
-            <button type="submit" class="rounded primary button">
-              {{ _('Update') }}
-            </button>
-            {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
+          columns:null,
+          label:'Content',
+          name:'content',
+          value:tdoc['content']|default(''),
+          markdown:true
+          }) }}
+          <div class="row">
+            <div class="columns">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              {% if page_name == 'contest_edit' %}
+              <button type="submit" class="rounded primary button">
+                {{ _('Update') }}
+              </button>
+              {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
               <button name="operation" value="delete" type="submit" class="rounded button">
                 {{ _('Delete') }}
               </button>
-            {% endif %}
-          {% else %}
-            <button type="submit" class="rounded primary button">
-              {{ _('Create') }}
-            </button>
-          {% endif %}
-            <button type="button" class="rounded button" onclick="window.history.go(-1)">
-              {{ _('Cancel') }}
-            </button>
-          </div></div>
+              {% endif %}
+              {% else %}
+              <button type="submit" class="rounded primary button">
+                {{ _('Create') }}
+              </button>
+              {% endif %}
+              <button type="button" class="rounded button" onclick="window.history.go(-1)">
+                {{ _('Cancel') }}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
