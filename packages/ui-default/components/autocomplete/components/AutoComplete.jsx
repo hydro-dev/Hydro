@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React, {
-  forwardRef, useState, useRef, useImperativeHandle, createRef, useMemo,
+  forwardRef, useState, useRef, useImperativeHandle, createRef,
 } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
@@ -53,6 +53,12 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     }
     setItemList(items);
     setCurrentItem(null);
+  };
+
+  const calculateValue = () => {
+    const query = inputRef.current?.value;
+    if (!query) return multi ? selectedKeys.join(', ') : '';
+    return multi ? `${selectedKeys.join(', ')}, ${query}` : query;
   };
 
   const handleInputChange = debounce(async (e) => {
@@ -137,12 +143,6 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     // TODO: handle other keys
   };
 
-  const inputValue = useMemo(() => {
-    const query = inputRef.current?.value;
-    if (!query) return multi ? selectedKeys.join(', ') : '';
-    return multi ? `${selectedKeys.join(', ')}, ${query}` : query;
-  }, [multi, selectedKeys, inputRef.current?.value]);
-
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
     getSelectedItemsAsString: () => selectedKeys.join(', '),
@@ -161,11 +161,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     },
     getValue: () => (multi ? selectedKeys.join(', ') : (inputRef.current.value ?? '')),
     getValueArray: () => (multi ? selected : [inputRef.current?.value].filter((i) => !!i)),
-    getValueWithQuery: () => {
-      const query = inputRef.current?.value;
-      if (!query) return multi ? selectedKeys.join(', ') : '';
-      return multi ? `${selectedKeys.join(', ')}, ${query}` : query;
-    },
+    getValueWithQuery: () => calculateValue(),
     getValueArrayWithQuery: () => {
       const query = inputRef.current?.value;
       if (!query) return multi ? selected : [''];
@@ -207,7 +203,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
           onKeyDown={handleInputKeyDown}
         />
       </div>
-      <input type="hidden" name={name} value={inputValue} />
+      <input type="hidden" name={name} value={calculateValue()} />
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
           {itemList.map((item, idx) => (

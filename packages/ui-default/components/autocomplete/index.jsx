@@ -60,8 +60,9 @@ export default class AutoComplete extends DOMAttachedObject {
   detach() {
     if (this.detached) return;
     super.detach();
+    const value = this.ref?.getValueWithQuery();
     ReactDOM.unmountComponentAtNode(this.container);
-    this.$dom.attr('name', this._name).css('display', '');
+    this.$dom.attr('name', this._name).val(value).css('display', '');
     this.container.parentNode.removeChild(this.container);
   }
 
