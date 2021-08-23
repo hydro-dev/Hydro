@@ -16,16 +16,15 @@ export default class DomainSelectAutoComplete extends AutoComplete {
   }
 
   attach() {
-    this._name = this.$dom.attr('name');
     this.container = document.createElement('div');
     const value = this.$dom.val();
-    this.$dom.removeAttr('name').css('display', 'none').after(this.container);
+    this.$dom.css('display', 'none').after(this.container);
     ReactDOM.render(
       <DomainSelectAutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
-        name={this._name}
         height="34px"
         defaultItems={value}
+        onChange={this.onChange}
         multi={this.options.multi}
         freeSolo={this.options.multi}
       />,

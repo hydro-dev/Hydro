@@ -40,8 +40,8 @@ const DomainSelectAutoComplete = forwardRef(function DomainSelectAutoComplete(pr
 DomainSelectAutoComplete.propTypes = {
   width: PropTypes.string,
   height: PropTypes.string,
-  name: PropTypes.string,
   listStyle: PropTypes.object,
+  onChange: PropTypes.func.isRequired,
   multi: PropTypes.bool,
   defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
@@ -52,7 +52,6 @@ DomainSelectAutoComplete.propTypes = {
 DomainSelectAutoComplete.defaultProps = {
   width: '100%',
   height: 'auto',
-  name: '',
   listStyle: {},
   multi: false,
   defaultItems: [],

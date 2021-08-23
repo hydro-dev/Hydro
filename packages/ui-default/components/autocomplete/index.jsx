@@ -17,6 +17,7 @@ export default class AutoComplete extends DOMAttachedObject {
       ...options,
     };
     this.ref = null;
+    this.onChange = this.onChange.bind(this);
     this.attach();
   }
 
@@ -26,20 +27,23 @@ export default class AutoComplete extends DOMAttachedObject {
     else this.ref.closeList();
   }
 
+  onChange(val) {
+    this.$dom.val(val);
+  }
+
   attach() {
-    this._name = this.$dom.attr('name');
     this.container = document.createElement('div');
     const value = this.$dom.val();
-    this.$dom.removeAttr('name').css('display', 'none').after(this.container);
+    this.$dom.css('display', 'none').after(this.container);
     ReactDOM.render(
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
-        name={this._name}
         height="34px"
         itemsFn={this.options.items}
         renderItem={this.options.render}
         itemText={this.options.text}
         defaultItems={value}
+        onChange={this.onChange}
         multi={this.options.multi}
         freeSolo={this.options.multi}
       />,
@@ -60,9 +64,8 @@ export default class AutoComplete extends DOMAttachedObject {
   detach() {
     if (this.detached) return;
     super.detach();
-    const value = this.ref?.getValueWithQuery();
     ReactDOM.unmountComponentAtNode(this.container);
-    this.$dom.attr('name', this._name).val(value).css('display', '');
+    this.$dom.css('display', '');
     this.container.parentNode.removeChild(this.container);
   }
 

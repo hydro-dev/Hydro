@@ -13,12 +13,12 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   // if you need fix height, set to at least "30px"
   // for Hydro, no less then "34px" can be better
   const height = props.height ?? 'auto';
-  const name = props.name ?? '';
   const listStyle = props.listStyle ?? {};
   const itemsFn = props.itemsFn ?? (async () => []);
   const renderItem = props.renderItem ?? ((item) => item);
   const itemText = props.itemText ?? ((item) => item);
   const itemKey = props.itemKey ?? itemText;
+  const onChange = props.onChange ?? (() => { });
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? [];
   const defaultItems = typeof rawDefaultItems === 'string'
@@ -32,7 +32,6 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const [selectedKeys, setSelectedKeys] = useState(defaultItems.map((i) => itemKey(i))); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
-  const [exportValue, setExportValue] = useState(defaultItems.map((i) => itemKey(i)).join(',')); // value to export
 
   const inputRef = createRef();
   const listRef = createRef();
@@ -59,11 +58,16 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const calculateValue = () => {
     const query = inputRef.current?.value;
     if (!query) return multi ? selectedKeys.join(',') : '';
-    return multi ? `${selectedKeys.join(',')},${query}` : query;
+    return (multi && selectedKeys.length > 0) ? `${selectedKeys.join(',')},${query}` : query;
+  };
+
+  const dispatchChange = () => {
+    const value = calculateValue();
+    onChange(value);
   };
 
   useEffect(() => {
-    setExportValue(calculateValue());
+    dispatchChange();
   }, [selectedKeys, multi]);
 
   const handleInputChange = debounce(async (e) => {
@@ -198,7 +202,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         <input
           ref={inputRef}
           onChange={(e) => {
-            setExportValue(calculateValue());
+            dispatchChange();
             handleInputChange(e);
           }}
           onFocus={() => {
@@ -211,7 +215,6 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
           onKeyDown={handleInputKeyDown}
         />
       </div>
-      <input type="hidden" name={name} value={exportValue} />
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
           {itemList.map((item, idx) => (
@@ -235,12 +238,12 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 AutoComplete.propTypes = {
   width: PropTypes.string,
   height: PropTypes.string,
-  name: PropTypes.string,
   listStyle: PropTypes.object,
   itemsFn: PropTypes.func.isRequired,
   itemKey: PropTypes.func,
   renderItem: PropTypes.func,
   itemText: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
   multi: PropTypes.bool,
   defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
   allowEmptyQuery: PropTypes.bool,
@@ -251,7 +254,6 @@ AutoComplete.propTypes = {
 AutoComplete.defaultProps = {
   width: '100%',
   height: 'auto',
-  name: '',
   listStyle: {},
   renderItem: (item) => item,
   itemText: (item) => item,
