@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.33.4",
+    "version": "2.33.5",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -20,6 +20,7 @@
         "detect-browser": "^5.2.0",
         "fs-extra": "^10.0.0",
         "graphql": "^15.5.1",
+        "graphql-scalars": "^1.10.0",
         "js-yaml": "^4.1.0",
         "koa": "^2.13.1",
         "koa-body": "^4.2.0",

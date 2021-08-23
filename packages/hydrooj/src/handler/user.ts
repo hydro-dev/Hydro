@@ -1,4 +1,5 @@
 import moment from 'moment-timezone';
+import { registerResolver, registerValue } from './api';
 import {
     UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
     UserNotFoundError, SystemError, BlacklistedError,
@@ -21,6 +22,34 @@ import { isEmail, isPassword, isUname } from '../lib/validator';
 import { sendMail } from '../lib/mail';
 import paginate from '../lib/paginate';
 import avatar from '../lib/avatar';
+
+registerValue('User', [
+    ['_id', 'Int!'],
+    ['uname', 'String!'],
+    ['mail', 'String!'],
+    ['perm', 'Int'],
+    ['scope', 'Int'],
+    ['role', 'String'],
+    ['loginat', 'Date'],
+    ['regat', 'Date'],
+    ['priv', 'Int', 'User Privilege'],
+]);
+
+registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
+    if (arg.id) return user.getById(ctx.domainId, arg.id);
+    if (arg.mail) return user.getByEmail(ctx.domainId, arg.mail);
+    if (arg.uname) return user.getByUname(ctx.domainId, arg.uname);
+    return ctx.user;
+}, `Get a user by id, uname, or mail.
+Returns current user if no argument is provided.`);
+
+registerResolver('Query', 'users(ids: [Int], search: String)', '[User]', async (arg, ctx) => {
+    if (arg.ids) {
+        const res = await user.getList(ctx.domainId, arg.ids);
+        return Object.keys(res).map((id) => res[+id]);
+    }
+    return arg.search ? await user.getPrefixList(ctx.domainId, arg.search) : [];
+}, 'Get a list of user by ids, or search users with the prefix.');
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
