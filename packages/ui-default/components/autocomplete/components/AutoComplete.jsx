@@ -137,7 +137,11 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     // TODO: handle other keys
   };
 
-  const inputValue = useMemo(() => (multi ? selectedKeys.join(', ') : inputRef.current?.value), [multi, selectedKeys, inputRef.current?.value]);
+  const inputValue = useMemo(() => {
+    const query = inputRef.current?.value;
+    if (!query) return multi ? selectedKeys.join(', ') : '';
+    return multi ? `${selectedKeys.join(', ')}, ${query}` : query;
+  }, [multi, selectedKeys, inputRef.current?.value]);
 
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
