@@ -201,6 +201,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         ))}
         <input
           ref={inputRef}
+          autoComplete="off"
           onChange={(e) => {
             dispatchChange();
             handleInputChange(e);
