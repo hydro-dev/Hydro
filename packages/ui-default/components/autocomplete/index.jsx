@@ -20,6 +20,8 @@ export default class AutoComplete extends DOMAttachedObject {
     this.onChange = this.onChange.bind(this);
     this.container = document.createElement('div');
     this.$dom.addClass('autocomplete-dummy').after(this.container);
+    // Note: use `setTimeout(fn, 0)` to ensure that code is executed after browser autofill
+    // also see https://stackoverflow.com/a/779785/13553984
     setTimeout(() => this.attach(), 0);
   }
 
