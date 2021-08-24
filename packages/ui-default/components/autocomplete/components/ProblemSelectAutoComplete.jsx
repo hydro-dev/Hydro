@@ -11,7 +11,7 @@ const ProblemSelectAutoComplete = forwardRef(function ProblemSelectAutoComplete(
       return (pdoc.pid ? `${pdoc.pid} ` : '') + pdoc.title;
   }; */
 
-  const itemKey = (pdoc) => pdoc.docId || pdoc;
+  const itemKey = (pdoc) => `${pdoc.docId || pdoc}`; // force string
 
   const renderItem = (pdoc) => (
     <div className="media">

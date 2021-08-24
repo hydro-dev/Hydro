@@ -53,7 +53,7 @@
     white-space: nowrap
     text-overflow: ellipsis
 
-  &>svg
+  &>span.bp3-icon>svg
     font-size: 12px
     cursor: pointer
     padding: 4px
@@ -78,35 +78,19 @@
     &>div
       flex-grow: 1
 
-    &>svg
+    &>span.bp3-icon>svg
       color: transparent
 
     &[aria-selected='true']
       background-color: #fafafa
       font-weight: 600
 
-      svg
+      &>span.bp3-icon>svg
         color: #1890ff
 
     &[data-focus='true']
       background-color: #e6f7ff
       cursor: pointer
 
-      svg
+      &>span.bp3-icon>svg
         color: currentColor
-
-svg.autocomplete-icon
-    -webkit-user-select: none
-    -moz-user-select: none
-    -ms-user-select: none
-    user-select: none
-    width: 1em
-    height: 1em
-    display: inline-block
-    fill: currentColor
-    -webkit-flex-shrink: 0
-    -ms-flex-negative: 0
-    flex-shrink: 0
-    -webkit-transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms
-    transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms
-    font-size: 1.25rem
