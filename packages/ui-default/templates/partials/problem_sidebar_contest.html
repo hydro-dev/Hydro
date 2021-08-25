@@ -24,7 +24,8 @@
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
     {% elif model.contest.isDone(tdoc) %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ url('problem_detail', pid=pdoc.docId) }}">
+      {% set _docId = pdoc.docId.toString() %}
+      <li class="menu__item scratchpad--hide"><a class="menu__link" href="{{ url('problem_detail', pid=_docId.split(':')[1], domainId=_docId.split(':')[0]) if _docId.includes(':') else url('problem_detail', pid=pdoc.docId) }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>
     {% endif %}
