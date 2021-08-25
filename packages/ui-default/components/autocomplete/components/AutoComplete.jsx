@@ -98,6 +98,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       inputRef.current.value = '';
       inputRef.current.focus();
     } else {
+      setSelected([item]);
       inputRef.current.value = itemKey(item);
       dispatchChange();
     }

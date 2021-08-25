@@ -71,6 +71,11 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 
   value() {
+    if (this.ref?.getSelectedItems) {
+      const selected = this.ref.getSelectedItems();
+      if (this.options.multi) return selected;
+      return selected[0];
+    }
     return this.$dom.val();
   }
 
