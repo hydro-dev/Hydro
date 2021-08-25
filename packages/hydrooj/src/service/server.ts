@@ -18,6 +18,7 @@ import sockjs from 'sockjs';
 import cac from 'cac';
 import { createHash } from 'crypto';
 import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import Cookies from 'cookies';
 import * as bus from './bus';
 import { errorMessage } from '../utils';
 import { User, DomainDoc } from '../interface';
@@ -636,7 +637,8 @@ export class Handler extends HandlerCommon {
         } else {
             [, this.session] = await token.add(token.TYPE_SESSION, expireSeconds, { ...this.session, ...$update, ...$create });
         }
-        const cookie = {
+        const cookie: Cookies.SetOption = {
+            expires: new Date(Date.now() + expireSeconds * 1010),
             secure: !!system.get('session.secure'),
             httpOnly: false,
         };
