@@ -458,6 +458,7 @@ export async function del(domainId: string, tid: ObjectID, type: Type = document
     await Promise.all([
         document.deleteOne(domainId, type, tid),
         document.deleteMultiStatus(domainId, type, { docId: tid }),
+        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { parentType: type, parentId: tid }),
     ]);
 }
 

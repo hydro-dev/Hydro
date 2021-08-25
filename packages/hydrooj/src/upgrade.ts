@@ -458,6 +458,18 @@ const scripts: UpgradeScript[] = [
         );
         return true;
     },
+    async function _41_42() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain(async (ddoc) => {
+            const cursor = discussion.getMulti(ddoc._id, { parentType: document.TYPE_CONTEST });
+            while (await cursor.hasNext()) {
+                const doc = await cursor.next();
+                const tdoc = await document.coll.findOne({ docType: doc.parentType, docId: doc.parentId });
+                if (!tdoc) await discussion.del(ddoc._id, doc.docId);
+            }
+        });
+        return true;
+    },
 ];
 
 export default scripts;

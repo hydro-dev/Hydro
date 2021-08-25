@@ -172,14 +172,16 @@ const getHash = (i) => {
 const getUrl = (files) => files.map((i) => `/${i}?${getHash(i)}`);
 
 bus.on('app/started', () => {
-  const files = readdirSync(join(tmpdir(), 'hydro', 'public'));
-  const pages = files.filter((file) => file.endsWith('.page.js'));
-  const themes = files.filter((file) => file.endsWith('.theme.js'));
-  UiContextBase.extraPages = getUrl(pages);
-  UiContextBase.themes = {};
-  for (const theme of themes) {
-    UiContextBase.themes[theme] = `/${theme}?${getHash(theme)}`;
-  }
+  setTimeout(() => {
+    const files = readdirSync(join(tmpdir(), 'hydro', 'public'));
+    const pages = files.filter((file) => file.endsWith('.page.js'));
+    const themes = files.filter((file) => file.endsWith('.theme.js'));
+    UiContextBase.extraPages = getUrl(pages);
+    UiContextBase.themes = {};
+    for (const theme of themes) {
+      UiContextBase.themes[theme] = `/${theme}?${getHash(theme)}`;
+    }
+  }, 1000);
 });
 
 global.Hydro.handler.ui = async () => {
