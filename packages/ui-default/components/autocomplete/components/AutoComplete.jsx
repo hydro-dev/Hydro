@@ -28,8 +28,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
 
   const [focused, setFocused] = useState(false); // is focused
-  const [selected, setSelected] = useState(defaultItems); // selected items
-  const [selectedKeys, setSelectedKeys] = useState(defaultItems.map((i) => itemKey(i))); // keys of selected items
+  const [selected, setSelected] = useState(multi ? defaultItems : []); // selected items
+  const [selectedKeys, setSelectedKeys] = useState(multi ? defaultItems.map((i) => itemKey(i)) : []); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
 
@@ -99,6 +99,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       inputRef.current.focus();
     } else {
       inputRef.current.value = itemKey(item);
+      dispatchChange();
     }
     setItemList([]);
     setCurrentItem(null);
@@ -214,6 +215,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
           }}
           onBlur={() => setFocused(false)}
           onKeyDown={handleInputKeyDown}
+          defaultValue={multi ? '' : defaultItems.join(',')}
         />
       </div>
       {focused && itemList.length > 0 && (

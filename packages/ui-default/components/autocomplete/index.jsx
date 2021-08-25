@@ -17,7 +17,14 @@ export default class AutoComplete extends DOMAttachedObject {
       ...options,
     };
     this.ref = null;
+    this.clear = this.clear.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.attach = this.attach.bind(this);
+    this.open = this.open.bind(this);
+    this.close = this.close.bind(this);
+    this.value = this.value.bind(this);
+    this.detach = this.detach.bind(this);
+    this.focus = this.focus.bind(this);
     this.container = document.createElement('div');
     this.$dom.addClass('autocomplete-dummy').after(this.container);
     // Note: use `setTimeout(fn, 0)` to ensure that code is executed after browser autofill
@@ -61,6 +68,10 @@ export default class AutoComplete extends DOMAttachedObject {
   close() {
     if (!this.ref) return;
     this.ref.closeList();
+  }
+
+  value() {
+    return this.$dom.val();
   }
 
   detach() {
