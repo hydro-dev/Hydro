@@ -3,12 +3,15 @@ import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import { lookup } from 'mime-types';
+import { intersection } from 'lodash';
 import {
     ContestNotLiveError, ValidationError, ProblemNotFoundError,
     ContestNotAttendedError, PermissionError, BadRequestError,
     ContestNotFoundError, InvalidTokenError, RecordNotFoundError,
 } from '../error';
-import { ProblemDoc, Tdoc, User } from '../interface';
+import {
+    ProblemDoc, Tdoc, User, DomainDoc,
+} from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -341,8 +344,25 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
 }
 
 export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
-    async prepare() {
+    pdomainId: string;
+    ppid: number;
+    pdomain: DomainDoc;
+
+    @param('pid', Types.Name)
+    async prepare(domainId: string, _pid: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+        if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
         if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        this.pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
+        this.ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
+        this.pdomain = await domain.get(this.pdomainId);
+        if (this.pdomain.langs) {
+            this.response.body.pdoc.config.langs = intersection(
+                this.response.body.pdoc.config.langs || this.pdomain.langs.split(','),
+                this.pdomain.langs.split(','),
+            );
+        }
+        this.response.body.pdoc.config.domainId = this.pdomainId;
     }
 
     @param('tid', Types.ObjectID)
@@ -367,24 +387,20 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
     @param('input', Types.String, true)
     async post(domainId: string, tid: ObjectID, lang: string, code: string, _pid: string, pretest = false, input = '') {
         const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
+        if (!(this.response.body.pdoc.config.langs || [lang]).includes(lang)) {
             throw new BadRequestError('Language not allowed.');
-        }
-        if (this.domain.langs && !this.domain.langs.includes(lang)) {
-            throw new BadRequestError('Language not allowed');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
             type: document.TYPE_CONTEST,
             tid,
         });
-        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
-        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length ? Promise.resolve() : problem.inc(pdomainId, ppid, 'nSubmit', 1),
+                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length
+                && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id, rid, pid),
             ]);

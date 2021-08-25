@@ -4,12 +4,13 @@ import { ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
 import { lookup } from 'mime-types';
+import { intersection } from 'lodash';
 import {
     ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
     HomeworkNotAttendedError, BadRequestError,
 } from '../error';
 import {
-    PenaltyRules, Tdoc, ProblemDoc, User,
+    PenaltyRules, Tdoc, ProblemDoc, User, DomainDoc,
 } from '../interface';
 import {
     Route, Handler, Types, param,
@@ -206,10 +207,26 @@ export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHan
 }
 
 class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
+    pdomainId: string;
+    ppid: number;
+    pdomain: DomainDoc;
+
     @param('tid', Types.ObjectID)
-    async prepare(domainId: string, tid: ObjectID) {
+    @param('pid', Types.Name)
+    async prepare(domainId: string, tid: ObjectID, _pid: string) {
+        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
         if (!this.attended) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
+        this.pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
+        this.ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
+        this.pdomain = await domain.get(this.pdomainId);
+        if (this.pdomain.langs) {
+            this.response.body.pdoc.config.langs = intersection(
+                this.response.body.pdoc.config.langs || this.pdomain.langs.split(','),
+                this.pdomain.langs.split(','),
+            );
+        }
+        this.response.body.pdoc.config.domainId = this.pdomainId;
     }
 
     @param('tid', Types.ObjectID)
@@ -236,20 +253,16 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
-        if (this.domain.langs && !this.domain.langs.includes(lang)) {
-            throw new BadRequestError('Language not allowed');
-        }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
             type: document.TYPE_HOMEWORK,
             tid,
         });
-        const pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
-        const ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
         const rdoc = await record.get(domainId, rid);
-        if (pretest) {
+        if (!pretest) {
             await Promise.all([
-                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length ? Promise.resolve() : problem.inc(pdomainId, ppid, 'nSubmit', 1),
+                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length
+                && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id,
                     rid, pid, false, 0, document.TYPE_HOMEWORK),
