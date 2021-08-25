@@ -77,8 +77,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   }, 300);
 
   const toggleItem = (item) => {
+    const key = itemKey(item);
     if (multi) {
-      const key = itemKey(item);
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {
         setSelected((s) => {
@@ -99,7 +99,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       inputRef.current.focus();
     } else {
       setSelected([item]);
-      inputRef.current.value = itemKey(item);
+      setSelectedKeys([key]);
+      inputRef.current.value = key;
       dispatchChange();
     }
     setItemList([]);
