@@ -58,6 +58,8 @@ module.exports = {
     // Note: must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': ['error'],
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
 
     'comma-dangle': [
       'error',
@@ -80,7 +82,6 @@ module.exports = {
     'import/no-extraneous-dependencies': 'off',
     'max-classes-per-file': 'off',
     'no-empty': ['warn', { allowEmptyCatch: true }],
-    'no-unused-vars': 'warn',
     'no-console': 'off',
     'no-continue': 'off',
     'no-mixed-operators': 'off',

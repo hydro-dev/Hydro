@@ -649,7 +649,7 @@ export class Handler extends HandlerCommon {
         if (!error.msg) error.msg = () => error.message;
         if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
         if (!(error instanceof NotFoundError)) {
-            logger.error(`User: ${this.user._id}(${this.user.uname}) Path: ${this.request.path}`, error.msg(), error.params);
+            logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: ${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
         }
         if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
