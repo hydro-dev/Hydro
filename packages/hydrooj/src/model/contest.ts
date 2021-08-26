@@ -2,7 +2,7 @@ import { ObjectID, FilterQuery } from 'mongodb';
 import user from './user';
 import problem from './problem';
 import * as document from './document';
-import { PERM } from './builtin';
+import { PERM, STATUS } from './builtin';
 import {
     ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
     ContestNotAttendedError, ContestScoreboardHiddenError,
@@ -18,6 +18,19 @@ import ranked from '../lib/rank';
 
 type Type = 30 | 60;
 
+interface AcmJournal {
+    rid: ObjectID;
+    pid: ProblemId;
+    score: number;
+    status: number;
+    time: number;
+}
+interface AcmDetail extends AcmJournal {
+    naccept?: number;
+    penalty: number;
+    real: number;
+}
+
 const acm: ContestRule = {
     TEXT: 'ACM/ICPC',
     check: () => { },
@@ -25,17 +38,19 @@ const acm: ContestRule = {
     showScoreboard: () => true,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat: (tdoc, journal) => {
-        const naccept = {};
-        const effective = {};
-        const detail = [];
+    stat: (tdoc, journal: AcmJournal[]) => {
+        const naccept: Record<ProblemId, number> = {};
+        const effective: Record<number, AcmJournal> = {};
+        const detail: AcmDetail[] = [];
         let accept = 0;
         let time = 0;
         for (const j of journal) {
             if (tdoc.pids.includes(j.pid)
                 && !(effective[j.pid] && effective[j.pid].accept)) {
                 effective[j.pid] = j;
-                if (!j.accept) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
+                if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
+                    naccept[j.pid] = (naccept[j.pid] || 0) + 1;
+                }
             }
         }
         for (const key in effective) {
@@ -47,8 +62,8 @@ const acm: ContestRule = {
             });
         }
         for (const d of detail) {
-            if (d.accept) {
-                accept += d.accept;
+            if (d.status === STATUS.STATUS_ACCEPTED) {
+                accept += 1;
                 time += d.time;
             }
         }
@@ -488,7 +503,7 @@ export function getStatus(
 
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
-    accept = false, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
+    status = STATUS.STATUS_WRONG_ANSWER, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
 ) {
     const [tdoc, otsdoc] = await Promise.all([
         get(domainId, tid, type),
@@ -496,7 +511,7 @@ export async function updateStatus(
     ]);
     if (!otsdoc.attend) throw new ContestNotAttendedError(tid, uid);
     const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
-        rid, pid, accept, score,
+        rid, pid, status, score,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);

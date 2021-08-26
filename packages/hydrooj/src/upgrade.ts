@@ -20,11 +20,12 @@ import db from './service/db';
 import difficultyAlgorithm from './lib/difficulty';
 import problem from './model/problem';
 import user from './model/user';
+import * as contest from './model/contest';
 import * as discussion from './model/discussion';
 import domain from './model/domain';
 import * as document from './model/document';
 import * as system from './model/system';
-import { PRIV } from './model/builtin';
+import { PRIV, STATUS } from './model/builtin';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import { size } from './lib/misc';
@@ -466,6 +467,28 @@ const scripts: UpgradeScript[] = [
                 const doc = await cursor.next();
                 const tdoc = await document.coll.findOne({ docType: doc.parentType, docId: doc.parentId });
                 if (!tdoc) await discussion.del(ddoc._id, doc.docId);
+            }
+        });
+        return true;
+    },
+    async function _42_43() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const processer = (i) => {
+            i.status = i.accept ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
+            return i;
+        };
+        await iterateAllDomain(async (ddoc) => {
+            const tdocs = await contest.getMulti(ddoc._id, { rule: 'acm' }).toArray();
+            for (const tdoc of tdocs) {
+                const tsdocs = await contest.getMultiStatus(ddoc._id, { docId: tdoc.docId }).toArray();
+                for (const tsdoc of tsdocs) {
+                    const $set: any = {};
+                    if (tsdoc.journal?.length) $set.journal = tsdoc.journal.map(processer);
+                    if (tsdoc.detail?.length) $set.detail = tsdoc.detail.map(processer);
+                    if (Object.keys($set).length) {
+                        await contest.setStatus(ddoc._id, tdoc.docId, tsdoc.uid, $set);
+                    }
+                }
             }
         });
         return true;

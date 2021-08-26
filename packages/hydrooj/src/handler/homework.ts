@@ -17,7 +17,7 @@ import {
 } from '../service/server';
 import * as bus from '../service/bus';
 import domain from '../model/domain';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
 import user from '../model/user';
 import * as system from '../model/system';
 import * as contest from '../model/contest';
@@ -265,7 +265,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
                 && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id,
-                    rid, pid, false, 0, document.TYPE_HOMEWORK),
+                    rid, pid, STATUS.STATUS_WAITING, 0, document.TYPE_HOMEWORK),
             ]);
         }
         bus.broadcast('record/change', rdoc);
