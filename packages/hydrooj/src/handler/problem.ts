@@ -1,4 +1,4 @@
-import { isSafeInteger, flatten } from 'lodash';
+import { isSafeInteger, flatten, intersection } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
@@ -277,6 +277,13 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             udoc: this.udoc,
             title: this.pdoc.title,
         };
+        if (this.domain.langs) {
+            this.response.body.pdoc.config.langs = intersection(
+                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
+                this.domain.langs.split(','),
+            );
+        }
+        this.response.body.pdoc.config.domainId = this.domainId;
     }
 
     @param('lang', Types.Name)
@@ -286,9 +293,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     async post(domainId: string, lang: string, code: string, pretest = false, input = '') {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
-        }
-        if (this.domain.langs && !this.domain.langs.includes(lang)) {
-            throw new BadRequestError('Language not allowed');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);
