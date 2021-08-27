@@ -42,7 +42,7 @@ class Service {
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);
             for (const pid of pids) {
-                if (syncing[`${domainId}/${pid}`] || await ProblemModel.get(domainId, pid)) continue;
+                if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
                     const res = await this.api.getProblem(pid);
