@@ -4,7 +4,7 @@ import Notification from 'vj/components/notification/index';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
 
-const notification = tpl`<div style="position: fixed; left: 0px; bottom: -30px; width: 100%; \
+const notification = tpl`<div style="position: fixed; left: 0px; bottom: -100px; width: 100%; \
 background: rgb(255, 241, 184); z-index: 2147483647; color: rgb(97, 52, 0); \
 text-align: center; font-size: 18px; font-family: Consolas, Menlo, Courier, monospace; \
 padding: 8px 0px; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px;" id="disconnect_notification" \
@@ -13,10 +13,10 @@ padding: 8px 0px; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px;" id="disconnect_no
 const $el = $(notification);
 $el.appendTo('body');
 function create() {
-  $el.animate({ bottom: 0 }, 500);
+  $el.animate({ bottom: 0 }, 100);
 }
 function remove() {
-  $el.animate({ bottom: -30 }, 300);
+  $el.animate({ bottom: -100 }, 100);
 }
 
 export default class Sock {
