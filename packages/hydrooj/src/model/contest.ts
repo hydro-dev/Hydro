@@ -219,7 +219,7 @@ const oi: ContestRule = {
             );
             for (const tpsdoc of psdocs) {
                 for (const psdoc of tpsdoc) {
-                    psdict[`${psdoc.uid}/${psdoc.docId}`] = psdoc;
+                    psdict[`${psdoc.uid}/${psdoc.domainId}/${psdoc.docId}`] = psdoc;
                 }
             }
         }
@@ -236,8 +236,11 @@ const oi: ContestRule = {
                 { type: 'string', value: tsdoc.score || 0 },
             );
             for (const pid of tdoc.pids) {
+                const index = pid.toString().includes(':')
+                    ? `${tsdoc.uid}/${pid.toString().replace(':', '/')}`
+                    : `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                if (isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[`${tsdoc.uid}/${pid}`]?.rid?.toHexString()) {
+                if (isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()) {
                     row.push({
                         type: 'records',
                         value: '',
@@ -247,8 +250,8 @@ const oi: ContestRule = {
                                 raw: tsddict[pid]?.rid || null,
                             },
                             {
-                                value: psdict[`${tsdoc.uid}/${pid}`]?.score ?? '-',
-                                raw: psdict[`${tsdoc.uid}/${pid}`]?.rid ?? null,
+                                value: psdict[index]?.score ?? '-',
+                                raw: psdict[index]?.rid ?? null,
                             },
                         ],
                     });
