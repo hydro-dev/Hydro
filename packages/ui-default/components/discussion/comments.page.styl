@@ -29,6 +29,13 @@ $downvote-color = red
     border-top: 0
 
 .dczcomments__reply
+  >.media
+    // FIXME doesn't work on IE 11
+    display: flex
+
+    >.media__body
+      width: calc(100% - (50px + 0.625rem))
+
   &:last-child
     >.media
       padding-bottom: 0
@@ -36,7 +43,7 @@ $downvote-color = red
 .dczcomments__item > .media
   display: flex
   >.media__body
-    max-width: calc(100% - 6.5em);
+    max-width: calc(100% - 6.5em)
 
 .dczcomments__supplementary
   float: left

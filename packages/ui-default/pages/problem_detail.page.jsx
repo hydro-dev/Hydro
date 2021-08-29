@@ -108,7 +108,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     await $('#scratchpad')
       .transition(
         { opacity: 1 },
-        { duration: 200, easing: 'easeOutCubic' }
+        { duration: 200, easing: 'easeOutCubic' },
       )
       .promise();
   }
@@ -117,7 +117,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     await $('#scratchpad')
       .transition(
         { opacity: 0 },
-        { duration: 200, easing: 'easeOutCubic' }
+        { duration: 200, easing: 'easeOutCubic' },
       )
       .promise();
   }
@@ -262,7 +262,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   });
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();
-    $('span.tags').show();
+    $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download').on('click', handleClickDownloadProblem);
   if (UiContext.pdoc.config?.type === 'objective') loadObjective();

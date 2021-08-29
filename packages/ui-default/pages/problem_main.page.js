@@ -200,8 +200,7 @@ async function handleDownload(ev) {
 }
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {
-  const doc = document.documentElement;
-  doc.className += ' display-mode';
+  const doc = document.getElementById('listSection');
   buildCategoryFilter();
   parseCategorySelection();
   $('[name="leave-edit-mode"]').on('click', () => {

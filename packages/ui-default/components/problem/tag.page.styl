@@ -4,6 +4,8 @@
   list-style: none !important
   font-size: 0
   word-break: keep-all
+  display: flex
+  flex-wrap: wrap
 
 .problem__tag
   display: inline-block
@@ -13,11 +15,15 @@
   padding: 0 !important
 
 .problem__tag-item
-  padding: rem(0px)
+  padding: 0 10px !important
   margin-left: rem(3px)
   margin-bottom: rem(5px)
+  line-height: 30px !important
   &:hover
     text-decoration: none
+  > span
+    display: flex
+    align-items: center
 
 .problem__tag-link
   display: inline-block
