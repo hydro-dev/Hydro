@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog } from 'vj/components/dialog';
@@ -200,7 +201,9 @@ async function handleDownload(ev) {
 }
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {
-  const doc = document.getElementById('listSection');
+  const doc = document.body;
+  doc.className += ' display-mode';
+  $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   parseCategorySelection();
   $('[name="leave-edit-mode"]').on('click', () => {
