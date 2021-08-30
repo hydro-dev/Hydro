@@ -46,7 +46,7 @@ const acm: ContestRule = {
         let time = 0;
         for (const j of journal) {
             if (tdoc.pids.includes(j.pid)
-                && !(effective[j.pid] && effective[j.pid].accept)) {
+                && !(effective[j.pid]?.status === STATUS.STATUS_ACCEPTED)) {
                 effective[j.pid] = j;
                 if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
                     naccept[j.pid] = (naccept[j.pid] || 0) + 1;
@@ -127,10 +127,11 @@ const acm: ContestRule = {
             }
             for (const pid of tdoc.pids) {
                 const doc = tsddict[pid] || {};
-                const rid = doc.accept ? doc.rid : null;
-                const colAccepted = `${doc.accept ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
-                const colTime = doc.accept ? doc.time : '-';
-                const colTimeStr = doc.accept ? misc.formatSeconds(colTime) : '-';
+                const accept = doc.status === STATUS.STATUS_ACCEPTED;
+                const rid = accept ? doc.rid : null;
+                const colAccepted = `${accept ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
+                const colTime = accept ? doc.time : '-';
+                const colTimeStr = accept ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {
                     row.push({ type: 'string', value: colAccepted });
                     row.push({ type: 'string', value: colTime });
@@ -138,7 +139,7 @@ const acm: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        score: doc.accept ? 100 : 0,
+                        score: accept ? 100 : 0,
                         value: '{0}\n{1}'.format(colAccepted, colTimeStr),
                         raw: rid,
                     });
@@ -200,7 +201,7 @@ const oi: ContestRule = {
             const tsddict = {};
             for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
             for (const pid of tdoc.pids) {
-                if (tsddict[pid]?.accept && tsddict[pid].rid.generationTime < first[pid]) {
+                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
                     first[pid] = tsddict[pid].rid.generationTime;
                 }
             }
@@ -261,7 +262,7 @@ const oi: ContestRule = {
                         value: tsddict[pid]?.score ?? '-',
                         raw: tsddict[pid]?.rid || null,
                     };
-                    if (tsddict[pid]?.accept && tsddict[pid]?.rid.generationTime === first[pid]) {
+                    if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === first[pid]) {
                         node.style = 'background-color: rgb(217, 240, 199);';
                     }
                     row.push(node);
@@ -291,7 +292,7 @@ const homework: ContestRule = {
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid) && (!effective[j.pid] || j.accept)) {
+            if (tdoc.pids.includes(j.pid) && (!effective[j.pid] || j.status === STATUS.STATUS_ACCEPTED)) {
                 effective[j.pid] = j;
             }
         }

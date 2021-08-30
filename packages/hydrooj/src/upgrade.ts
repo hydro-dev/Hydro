@@ -493,6 +493,28 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _43_44() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const processer = (i) => {
+            i.status = i.accept ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
+            return i;
+        };
+        await iterateAllDomain(async (ddoc) => {
+            const tdocs = await contest.getMulti(ddoc._id, { rule: { $ne: 'acm' } }).toArray();
+            for (const tdoc of tdocs) {
+                const tsdocs = await contest.getMultiStatus(ddoc._id, { docId: tdoc.docId }).toArray();
+                for (const tsdoc of tsdocs) {
+                    const $set: any = {};
+                    if (tsdoc.journal?.length) $set.journal = tsdoc.journal.map(processer);
+                    if (tsdoc.detail?.length) $set.detail = tsdoc.detail.map(processer);
+                    if (Object.keys($set).length) {
+                        await contest.setStatus(ddoc._id, tdoc.docId, tsdoc.uid, $set);
+                    }
+                }
+            }
+        });
+        return true;
+    },
 ];
 
 export default scripts;
