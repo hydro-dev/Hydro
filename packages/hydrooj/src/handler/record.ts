@@ -230,6 +230,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (!this.all && !this.pretest && rdoc.input) return;
         if (!this.all && rdoc.domainId !== this.domainId) return;
         if (!this.all && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
+        if (!this.all && rdoc.pid !== this.pid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
 
         // eslint-disable-next-line prefer-const
