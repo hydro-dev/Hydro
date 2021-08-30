@@ -92,19 +92,21 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     if (!keys.includes(this.props.editorLang)) this.props.setEditorLanguage(keys[0]);
     return (
       <Toolbar>
-        <ToolbarButton
-          disabled={this.props.isPosting || this.props.isRunning}
-          className="scratchpad__toolbar__pretest"
-          onClick={() => this.props.postPretest(this.props)}
-          data-global-hotkey="f9"
-          data-tooltip={`${i18n('Pretest Your Code')} (F9)`}
-        >
-          <Icon name="debug" />
-          {' '}
-          {i18n('Run Pretest')}
-          {' '}
-          (F9)
-        </ToolbarButton>
+        {UiContext.pdoc.config?.type === 'default' && (
+          <ToolbarButton
+            disabled={this.props.isPosting || this.props.isRunning}
+            className="scratchpad__toolbar__pretest"
+            onClick={() => this.props.postPretest(this.props)}
+            data-global-hotkey="f9"
+            data-tooltip={`${i18n('Pretest Your Code')} (F9)`}
+          >
+            <Icon name="debug" />
+            {' '}
+            {i18n('Run Pretest')}
+            {' '}
+            (F9)
+          </ToolbarButton>
+        )}
         <ToolbarButton
           disabled={this.props.isPosting}
           className="scratchpad__toolbar__submit"
@@ -154,16 +156,18 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           </select>
         </ToolbarItem>
         <ToolbarSplit />
-        <ToolbarButton
-          activated={this.props.pretestVisible}
-          onClick={() => this.props.togglePanel('pretest')}
-          data-global-hotkey="alt+p"
-          data-tooltip={`${i18n('Toggle Pretest Panel')} (Alt+P)`}
-        >
-          <Icon name="edit" />
-          {' '}
-          {i18n('Pretest')}
-        </ToolbarButton>
+        {UiContext.pdoc.config?.type === 'default' && (
+          <ToolbarButton
+            activated={this.props.pretestVisible}
+            onClick={() => this.props.togglePanel('pretest')}
+            data-global-hotkey="alt+p"
+            data-tooltip={`${i18n('Toggle Pretest Panel')} (Alt+P)`}
+          >
+            <Icon name="edit" />
+            {' '}
+            {i18n('Pretest')}
+          </ToolbarButton>
+        )}
         {UiContext.canViewRecord && (
           <ToolbarButton
             activated={this.props.recordsVisible}

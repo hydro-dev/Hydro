@@ -46,7 +46,7 @@ const acm: ContestRule = {
         let time = 0;
         for (const j of journal) {
             if (tdoc.pids.includes(j.pid)
-                && !(effective[j.pid]?.status === STATUS.STATUS_ACCEPTED)) {
+                && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
                 effective[j.pid] = j;
                 if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
                     naccept[j.pid] = (naccept[j.pid] || 0) + 1;

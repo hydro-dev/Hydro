@@ -294,6 +294,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
+        if (pretest && this.response.body.pdoc.config?.type !== 'default') throw new BadRequestError('unable to run pretest');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);
         const rdoc = await record.get(domainId, rid);
