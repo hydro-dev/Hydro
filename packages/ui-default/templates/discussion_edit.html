@@ -6,16 +6,16 @@
       <div class="section__body">
         <form method="post">
           {% include "partials/discussion_edit_form.html" %}
-          <div class="row"><div class="columns">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-            <button name="operation" value="update" type="submit" class="rounded primary button">
-              {{ _('Update') }} (Ctrl+Enter)
-            </button>
-          {% if handler.user.own(ddoc) or handler.user.hasPerm(perm.PERM_DELETE_DISCUSSION) %}
-            <button name="operation" value="delete" type="submit" class="rounded button">
-              {{ _('Delete') }}
-            </button>
-          {% endif %}
+            <div class="row"><div class="columns">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              <button name="operation" value="update" type="submit" class="rounded primary button">
+                {{ _('Update') }} (Ctrl+Enter)
+              </button>
+            {% if handler.user.own(ddoc) or handler.user.hasPerm(perm.PERM_DELETE_DISCUSSION) %}
+              <button name="operation" value="delete" type="submit" class="rounded button">
+                {{ _('Delete') }}
+              </button>
+            {% endif %}
             <button type="button" class="rounded button" onclick="window.history.go(-1)">
               {{ _('Cancel') }}
             </button>

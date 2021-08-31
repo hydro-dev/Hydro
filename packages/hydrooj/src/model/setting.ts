@@ -133,6 +133,7 @@ AccountSetting(
     Setting('setting_storage', 'unreadMsg', 0, 'number', 'Unread Message Count', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'checkincnt', 0, 'number', 'Check In Counter', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'lastcheckin', 0, 'number', 'Last checkin time', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'badge', '', 'text', 'badge info', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
 
 DomainSetting(
@@ -172,7 +173,6 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.secure', false, 'boolean', 'smtp.secure', 'SSL'),
     Setting('setting_smtp', 'smtp.verify', true, 'boolean', 'smtp.verify', 'Verify register email'),
     Setting('setting_server', 'server.center', 'https://hydro.undefined.moe:8443/center', 'text', 'server.center', '', FLAG_HIDDEN),
-    Setting('setting_server', 'server.proxy', false, 'boolean', 'server.proxy', 'Use hydro center proxy to send problems'),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
     Setting('setting_server', 'server.displayName', 'Hydro', 'text', 'server.name', 'Server Name (Global Display)', FLAG_PRO),
     Setting('setting_server', 'server.worker', 1, 'number', 'server.worker', 'Server Workers Number', FLAG_PRO),
@@ -200,7 +200,7 @@ SystemSetting(
     Setting('setting_basic', 'pagination.training', 10, 'number', 'pagination.training', 'Trainings per page'),
     Setting('setting_basic', 'pagination.reply', 50, 'number', 'pagination.reply', 'Replies per page'),
     Setting('setting_session', 'session.keys', [String.random(32)], 'text', 'session.keys', 'session.keys', FLAG_HIDDEN),
-    Setting('setting_session', 'session.secure', false, 'boolean', 'session.secure', 'session.secure'),
+    Setting('setting_session', 'session.secure', false, 'boolean', 'session.secure', 'session.secure', FLAG_HIDDEN),
     Setting('setting_session', 'session.saved_expire_seconds', 3600 * 24 * 30,
         'number', 'session.saved_expire_seconds', 'Saved session expire seconds'),
     Setting('setting_session', 'session.unsaved_expire_seconds', 3600 * 3,
