@@ -68,6 +68,7 @@ const problemConfigSchema = {
     cases: { $ref: '#/def/cases' },
     subtasks: { type: 'array', items: { $ref: '#/def/subtask' } },
     filename: { type: 'string' },
+    detail: { type: 'boolean' },
     time: { $ref: '#/def/time' },
     memory: { $ref: '#/def/memory' },
     score: { $ref: '#/def/score' },

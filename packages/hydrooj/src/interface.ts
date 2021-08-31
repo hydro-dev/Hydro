@@ -158,6 +158,7 @@ export interface ProblemConfigFile {
     interactor?: string;
     user_extra_files?: string[];
     judge_extra_files?: string[];
+    detail?: boolean;
     outputs?: [string, number][];
     cases?: TestCaseConfig[];
     subtasks?: SubtaskConfig[];

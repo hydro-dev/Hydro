@@ -10,6 +10,6 @@
         "@types/mongodb": "^3.6.20"
     },
     "dependencies": {
-        "mongodb": "^3.6.11"
+        "mongodb": "^3.6.12"
     }
 }

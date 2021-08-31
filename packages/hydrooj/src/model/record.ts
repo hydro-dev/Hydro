@@ -135,7 +135,7 @@ class RecordModel {
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, isContest ? 50 : 0);
-            await RecordModel.judge(domainId, res.insertedId, priority);
+            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {});
         }
         return res.insertedId;
     }
