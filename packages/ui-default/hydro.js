@@ -24,25 +24,7 @@ function buildSequence(pages, type) {
 }
 
 async function load() {
-  if (UiContext.extraPages) {
-    const tasks = [];
-    const ts = new Date().getTime();
-    for (const page of UiContext.extraPages) {
-      const head = document.getElementsByTagName('head')[0];
-      const script = document.createElement('script');
-      if (page.includes('.module.')) script.type = 'module';
-      script.src = page;
-      head.appendChild(script);
-      tasks.push(new Promise((resolve) => {
-        script.onload = resolve;
-      }));
-    }
-    await Promise.all(tasks);
-    const time = new Date().getTime() - ts;
-    if ((process.env.NODE_ENV !== 'production' && time > 16) || time > 256) {
-      console.warn(`Extra pages loading took ${time}ms`);
-    }
-  }
+  for (const page of window.Hydro.preload) await eval(page); // eslint-disable-line no-eval
 
   const pageLoader = new PageLoader();
 

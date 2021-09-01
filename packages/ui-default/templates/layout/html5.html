@@ -26,9 +26,9 @@
   {% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}"></script>
+    <script type="text/javascript" src="{{ static_url('hydro.js') }}"></script>
   {% endif %}
   <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.css') }}">
-  <link rel="stylesheet" media="all" href="{{ url('ui_extracss') }}">
   <title>{{ handler.renderTitle(page_name) }}</title>
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
@@ -46,9 +46,6 @@
     UiContext = '{{ UiContext|json|jsesc|safe }}';
     UserContext = '{{ UserContext|json|jsesc|safe }}';
   </script>
-  <script type="text/javascript" src="{{ ('/locale/{0}.js'.format(handler.translate('__id'))) }}"></script>
-  <script type="text/javascript" src="/ui-constants.js"></script>
-  <script type="text/javascript" src="{{ static_url('hydro.js') }}"></script>
   {% endif %}
 </body>
 </html>
