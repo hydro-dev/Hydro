@@ -88,7 +88,7 @@ export default function (env = {}) {
       hashDigest: 'hex',
       hashDigestLength: 10,
       filename: '[name].js?[hash]',
-      chunkFilename: '[name].chunk.js?[hash]',
+      chunkFilename: '[name].[chunkhash].chunk.js',
     },
     resolve: {
       modules: [root('node_modules'), root('../../node_modules')],
@@ -139,12 +139,22 @@ export default function (env = {}) {
           monaco: {
             test: /[\\/]monaco-editor[\\/]/,
             priority: 9,
-            name: `monaco-${require('monaco-editor/package.json').version}`,
+            name: 'monaco',
           },
           vditor: {
             test: /[\\/]vditor[\\/]/,
             priority: 8,
-            name: `vditor-${require('vditor/package.json').version}`,
+            name: 'vditor',
+          },
+          echarts: {
+            test: /[\\/]echarts[\\/]/,
+            priority: 7,
+            name: 'echarts',
+          },
+          graphql: {
+            test: /[\\/](graphiql|codemirror)[\\/]/,
+            priority: 6,
+            name: 'gql-cm',
           },
           vendors: {
             test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
@@ -214,7 +224,7 @@ export default function (env = {}) {
       new webpack.LoaderOptionsPlugin({
         options: {
           context: root(),
-          customInterpolateName: (url) => beautifyOutputUrl(url),
+          customInterpolateName: beautifyOutputUrl,
         },
       }),
       new MonacoWebpackPlugin({
