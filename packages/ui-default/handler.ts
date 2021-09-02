@@ -7,6 +7,7 @@ import { tmpdir } from 'os';
 import { ObjectID } from 'mongodb';
 import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
+import * as db from 'hydrooj/src/service/db';
 import { PERM } from 'hydrooj/src/model/builtin';
 import markdown from './backendlib/markdown';
 
@@ -19,7 +20,17 @@ interface ConstantArgs {
   domainId: string;
 }
 
+declare module 'hydrooj/src/interface' {
+  interface Collections {
+    cache: {
+      _id: string;
+      value: any;
+    }
+  }
+}
+
 const cache = {};
+const coll = db.collection('cache');
 
 const basedir = join(tmpdir(), 'hydro', 'public');
 async function constant(args: ConstantArgs) {
@@ -63,6 +74,7 @@ async function constant(args: ConstantArgs) {
   c.update(JSON.stringify(payload));
   const version = c.digest('hex');
   cache[version] = { version, payload };
+  await coll.updateOne({ _id: version }, { $set: { value: { version, payload } } }, { upsert: true });
   return version;
 }
 
@@ -124,7 +136,8 @@ class UiConstantsHandler extends Handler {
   noCheckPermView = true;
 
   async get({ version }) {
-    this.response.body = cache[version];
+    this.response.body = cache[version]
+      || (await coll.findOne({ _id: version }))?.value;
   }
 }
 
