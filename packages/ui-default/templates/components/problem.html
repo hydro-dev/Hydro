@@ -25,11 +25,11 @@
 
 {% macro render_problem_tags(pdoc, show_none_label=false, inline=false) %}
 {%- if pdoc.tag|length > 0 %}
-  {%- if inline %}<ul class="problem__tags">{% endif -%}
+  {%- if not inline %}<ul class="problem__tags">{% endif -%}
   {%- for tag in pdoc['tag'] %}
     <li class="problem__tag"><a class="problem__tag-link" href="{{ url('problem_category', category=tag) }}">{{ tag }}</a></li>
   {%- endfor %}
-  {%- if inline %}</ul>{% endif -%}
+  {%- if not inline %}</ul>{% endif -%}
 {%- else %}
   {%- if show_none_label %}
     {{ _('(None)') }}
