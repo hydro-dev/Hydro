@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
 
-const logger = new Logger('common', true);
+const logger = new Logger('common');
 
 export const builtinLib = [
     'jwt', 'download', 'i18n', 'mail', 'useragent',

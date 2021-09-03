@@ -2,8 +2,8 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import { pick } from 'lodash';
 import { postJudge } from './judge';
 import {
-    ContestNotFoundError, PermissionError, ProblemNotFoundError,
-    RecordNotFoundError, UserNotFoundError,
+    ContestNotAttendedError, ContestNotFoundError, PermissionError,
+    ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { buildProjection } from '../utils';
 import { RecordDoc } from '../interface';
@@ -41,6 +41,9 @@ class RecordListHandler extends Handler {
             tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
+                throw new ContestNotAttendedError(domainId, tid);
+            }
         }
         if (uidOrName) {
             const udoc = await user.getById(domainId, +uidOrName) ?? await user.getByUname(domainId, uidOrName);
@@ -59,16 +62,16 @@ class RecordListHandler extends Handler {
         }
         let cursor = record.getMulti(domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
-        const [rdocs] = invalid ? [[]] : await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
+        const [rdocs] = invalid ? [[] as RecordDoc[]] : await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
-        const canViewProblemHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        const canViewProblemHidden = (!!tid) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = full ? [{}, {}]
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
                 canViewProblem
                     ? problem.getList(domainId, rdocs.map(
                         (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
-                    ), (!!tid) || canViewProblemHidden || this.user._id, false)
+                    ), canViewProblemHidden || this.user._id, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {

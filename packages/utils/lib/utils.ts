@@ -5,6 +5,7 @@ import { Duplex } from 'stream';
 import { ObjectID } from 'mongodb';
 import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';
+import { inspect } from 'util';
 
 declare global {
     interface StringConstructor {
@@ -41,12 +42,16 @@ String.random = function random(digit = 32, dict = defaultDict) {
 
 String.prototype.format = function formatStr(...args) {
     let result = this;
-    if (args.length > 0) {
-        if (args.length === 1 && typeof (args[0]) === 'object') {
-            for (const key in args) {
-                if (args[key] !== undefined) {
+    if (args.length) {
+        if (args.length === 1 && typeof args[0] === 'object') {
+            const t = args[0];
+            for (const key in t) {
+                if (!key.startsWith('_') && t[key] !== undefined) {
+                    if (t._inspect && typeof t[key] === 'object') {
+                        t[key] = inspect(t[key], { colors: process?.stderr?.isTTY });
+                    }
                     const reg = new RegExp(`(\\{${key}\\})`, 'g');
-                    result = result.replace(reg, args[key]);
+                    result = result.replace(reg, t[key]);
                 }
             }
         } else return this.formatFromArray(args);

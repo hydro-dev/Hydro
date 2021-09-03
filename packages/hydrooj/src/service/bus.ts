@@ -17,7 +17,7 @@ import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
-const logger = new Logger('bus', true);
+const logger = new Logger('bus');
 const argv = cac().parse();
 
 function isBailed(value: any) {

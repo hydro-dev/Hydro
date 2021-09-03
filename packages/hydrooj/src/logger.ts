@@ -1,5 +1,5 @@
-import { inspect, format, InspectOptions } from 'util';
-import { Time } from './utils';
+import { nanoid } from 'nanoid';
+import { format, inspect, InspectOptions } from 'util';
 
 const colors = [
     20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62,
@@ -20,9 +20,7 @@ export class Logger {
     static readonly WARN = 2;
     static readonly DEBUG = 3;
     static baseLevel = process.env.DEV ? 3 : 2;
-    static showDiff = false;
     static levels: Record<string, number> = {};
-    static lastTime = 0;
     private code: number;
     private displayName: string;
     public stream: NodeJS.WritableStream = process.stderr;
@@ -41,7 +39,7 @@ export class Logger {
         return `\u001B[3${code < 8 ? code : `8;5;${code}`}${decoration}m${value}\u001B[0m`;
     }
 
-    constructor(public name: string, private showDiff = false) {
+    constructor(public name: string) {
         if (name in instances) return instances[name];
         let hash = 0;
         for (let i = 0; i < name.length; i++) {
@@ -59,13 +57,32 @@ export class Logger {
     }
 
     private color(value: any, decoration = '') {
-        return Logger.color(this.code, value, decoration);
+        if (!process.stderr.isTTY) return value;
+        return `\u001B[3${this.code < 8 ? this.code : `8;5;${this.code}`}${decoration}m${value}\u001B[0m`;
     }
 
     private createMethod(name: LogType, prefix: string, minLevel: number) {
         this[name] = (...args: [any, ...any[]]) => {
             if (this.level < minLevel) return false;
-            const msg = `${prefix} ${this.displayName} ${this.format(...args)}`;
+            if (typeof args[0] === 'string' && /^[a-zA-Z]+\.[a-zA-Z]+(\.[a-zA-Z]+)?$/.test(args[0])) {
+                const [type, ...payload] = args;
+                if (global.Hydro.service.db?.started) {
+                    global.Hydro.service.db.collection('log').insertOne({
+                        _id: nanoid(),
+                        _pid: process.pid,
+                        _time: new Date(),
+                        _level: name,
+                        _category: this.name,
+                        _message: type,
+                        ...payload,
+                    });
+                }
+                const msg = `${prefix} ${this.displayName} ${type.translate('en').format({ _inspect: true, payload })}`;
+                if (process.send) process.send({ event: 'message/log', payload: [msg] });
+                else global.Hydro.service.bus.parallel('message/log', msg);
+                return true;
+            }
+            const msg = `${prefix} ${this.displayName} ${this.format(...args)})}`;
             if (process.send) process.send({ event: 'message/log', payload: [msg] });
             else global.Hydro.service.bus.parallel('message/log', msg);
             return true;
@@ -75,8 +92,6 @@ export class Logger {
     get level() {
         return Logger.levels[this.name] ?? Logger.baseLevel;
     }
-
-    extend = (namespace: string, showDiff = this.showDiff) => new Logger(`${this.name}:${namespace}`, showDiff);
 
     format: (format: any, ...param: any[]) => string = (...args) => {
         if (args[0] instanceof Error) args[0] = args[0].stack || args[0].message;
@@ -93,13 +108,6 @@ export class Logger {
             }
             return match;
         }).split('\n').join('\n    ');
-        if (Logger.showDiff || this.showDiff) {
-            const now = Date.now();
-            if (Logger.lastTime) {
-                args.push(this.color(`+${Time.formatTimeShort(now - Logger.lastTime)}`));
-            }
-            Logger.lastTime = now;
-        }
         return format(...args);
     };
 }
