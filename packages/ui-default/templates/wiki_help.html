@@ -17,7 +17,7 @@
     <h1 class="section__title" id="compiler" data-heading>{{ _("Compilers' Version and Parameters") }}</h1>
   </div>
   <div class="section__body typo">
-    <p>{{ name }} 使用<a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a>进行评测，以docker镜像的形式安装至评测机。所使用的编译器均为创建镜像时<a href="https://wiki.debian.org/DebianTesting">debian testing</a>分支的最新版。编译参数如下：</p>
+    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数如下：</p>
     {% if languages %}
       <blockquote><ul>
         {%- for k, v in languages -%}
@@ -56,8 +56,8 @@
       <li><span class="record-status--text progress">Judging</span> 评测：编译成功，正在评测中</li>
       <li><span class="record-status--text pass">Accepted</span> 通过：程序输出完全正确</li>
       <li><span class="record-status--text fail">Wrong Answer</span> 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）</li>
-      <li><span class="record-status--text fail">Time Exceeded</span> 不通过：程序运行时间超过了题目限制</li>
-      <li><span class="record-status--text fail">Memory Exceeded</span> 不通过：程序运行内存空间超过了题目限制</li>
+      <li><span class="record-status--text fail">Time Limit Exceeded</span> 不通过：程序运行时间超过了题目限制</li>
+      <li><span class="record-status--text fail">Memory Limit Exceeded</span> 不通过：程序运行内存空间超过了题目限制</li>
       <li><span class="record-status--text fail">Runtime Error</span> 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）</li>
       <li><span class="record-status--text fail">Compile Error</span> 不通过：编译失败</li>
       <li><span class="record-status--text fail">System Error</span> 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）</li>
