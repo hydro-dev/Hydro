@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-import { ObjectID } from 'mongodb';
+import { ObjectID, GridFSBucket } from 'mongodb';
 import AdmZip from 'adm-zip';
 import Queue from 'p-queue';
 import yaml from 'js-yaml';
@@ -8,15 +8,14 @@ import { pick } from 'lodash';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { BucketItem } from 'minio';
 import moment from 'moment';
+import db from './service/db';
 import { Progress } from './ui';
 import { Logger } from './logger';
 import { streamToBuffer } from './utils';
 import {
     iterateAllDomain, iterateAllProblem, iterateAllPsdoc, iterateAllUser,
 } from './pipelineUtils';
-import gridfs from './service/gridfs';
 import storage from './service/storage';
-import db from './service/db';
 import difficultyAlgorithm from './lib/difficulty';
 import problem from './model/problem';
 import user from './model/user';
@@ -81,6 +80,7 @@ const scripts: UpgradeScript[] = [
         else savedProgress = { pdocs: [] };
         const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
         logger.info('Found %d domains.', ddocs.length);
+        const gridfs = new GridFSBucket(db.db2);
         for (let i = 0; i < ddocs.length; i++) {
             const ddoc = ddocs[i];
             logger.info('Domain %s (%d/%d)', ddoc._id, i + 1, ddocs.length);

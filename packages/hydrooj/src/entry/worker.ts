@@ -50,9 +50,8 @@ export async function load() {
     if (detail) logger.info('finish: lib.builtin');
     await lib(pending, fail);
     if (detail) logger.info('finish: lib.extra');
-    require('../service/gridfs');
     require('../service/monitor');
-    if (detail) logger.info('finish: gridfs/monitor');
+    if (detail) logger.info('finish: monitor');
     const server = require('../service/server');
     await server.prepare();
     if (detail) logger.info('finish: server');

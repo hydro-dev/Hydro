@@ -95,7 +95,6 @@ export async function load() {
     await lib(pending, fail);
     const systemModel = require('../model/system');
     await systemModel.runConfig();
-    require('../service/gridfs');
     await service(pending, fail);
     for (const i of builtinModel) require(`../model/${i}`);
     await model(pending, fail);
