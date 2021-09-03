@@ -38,7 +38,7 @@
         <div class="vote-number">0</div>
       </div>
     </div>
-    <div class="media__body top no-heading">
+    <div class="media__body top">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
           {{ user.render_inline(handler.user) }}
@@ -64,7 +64,7 @@
       <ul style="display:none">
         <li class="dczcomments__reply commentbox-container">
           <div class="media">
-            <div class="media__body top no-heading">
+            <div class="media__body top">
               <div class="clearfix">
                 <div class="supplementary dczcomments__supplementary">
                   {{ user.render_inline(handler.user, badge=false) }}
@@ -106,7 +106,7 @@
       {% endif %}
       </div>
     </div>
-    <div class="media__body top no-heading">
+    <div class="media__body top">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
           {{ user.render_inline(udoc) }}
@@ -139,7 +139,7 @@
         {% set udoc = udict[rdoc['owner']] %}
         <li class="dczcomments__reply{% if mode_create %} commentbox-container{% endif %}">
           <div class="media">
-            <div class="media__body top no-heading">
+            <div class="media__body top">
               <div class="clearfix">
                 <div class="supplementary dczcomments__supplementary">
                   {{ user.render_inline(udoc, badge=false) }} @ {{ datetimeSpan(rdoc['_id'])|safe }}
