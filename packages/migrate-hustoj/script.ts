@@ -1,10 +1,10 @@
 /* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
 import mysql from 'mysql';
-import 'hydrooj';
 import { buildContent } from 'hydrooj/src/lib/content';
-
-const { user, problem, system } = global.Hydro.model;
+import user from 'hydrooj/src/model/user';
+import problem from 'hydrooj/src/model/problem';
+import * as system from 'hydrooj/src/model/system';
 
 export async function run({
     host = 'localhost', port = 27017, name = 'vijos4', username, password,
@@ -93,7 +93,7 @@ export async function run({
                     samples: [[pdoc.sample_input, pdoc.sample_output]],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }, 'html'),
+                }),
                 1, pdoc.source.split(' '), pdoc.defunct === 'Y',
             );
             const [cdoc] = await query(`SELECT * FROM 'privilege' WHERE rightstr = 'p${pdoc.problem_id}'`);

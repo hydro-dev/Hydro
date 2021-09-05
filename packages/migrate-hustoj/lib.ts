@@ -1,6 +1,5 @@
-import { } from 'hydrooj';
+import { md5, sha1 } from 'hydrooj/src/lib/crypto';
 
-const { md5, sha1 } = global.Hydro.lib;
 const RE_MD5 = /^[\da-fA-F]{32}$/;
 
 function hash(password: string, stored: string) {
