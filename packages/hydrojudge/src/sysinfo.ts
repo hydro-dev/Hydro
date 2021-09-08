@@ -55,11 +55,3 @@ export async function get() {
     info.stack = await stackSize();
     return info;
 }
-
-declare global {
-    namespace NodeJS {
-        interface Global {
-            reqCount: number,
-        }
-    }
-}

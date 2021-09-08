@@ -1,6 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import cluster, { Worker } from 'cluster';
-import serialize from 'serialize-javascript';
 import cac from 'cac';
 import type {
     Db, FilterQuery, ObjectID, OnlyFieldsOfType,
@@ -39,15 +37,11 @@ export interface EventMap extends Record<string, any> {
     'app/load/service': () => VoidReturn
     'app/exit': () => VoidReturn
 
-    'message/log': (message: string) => VoidReturn
-    'message/reload': (count: number) => VoidReturn
-    'message/run': (command: string) => VoidReturn
-
     'database/connect': (db: Db) => void
     'database/config': () => VoidReturn
 
     'system/setting': (args: Record<string, any>) => VoidReturn
-
+    'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
 
     'user/message': (uid: number, mdoc: MessageDoc) => void
@@ -153,9 +147,9 @@ export function off<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
 
 export async function parallel<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
     const tasks: Promise<any>[] = [];
-    if (argv.options.showBus && name !== 'message/log') logger.debug('parallel: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('parallel: %s %o', name, args);
     for (const callback of _hooks[name] || []) {
-        if (argv.options.busDetail && name !== 'message/log') logger.debug(callback.toString());
+        if (argv.options.busDetail) logger.debug(callback.toString());
         tasks.push(callback.apply(this, args));
     }
     await Promise.all(tasks);
@@ -166,7 +160,7 @@ export function emit<K extends keyof EventMap>(name: K, ...args: Parameters<Even
 }
 
 export async function serial<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<void> {
-    if (argv.options.showBus && name !== 'message/log') logger.debug('serial: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('serial: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         if (argv.options.busDetail) logger.debug(callback.toString());
@@ -175,7 +169,7 @@ export async function serial<K extends keyof EventMap>(name: K, ...args: Paramet
 }
 
 export async function bail<K extends keyof EventMap>(name: K, ...args: Parameters<EventMap[K]>): Promise<ReturnType<EventMap[K]>> {
-    if (argv.options.showBus && name !== 'message/log') logger.debug('bail: %s %o', name, args);
+    if (argv.options.showBus) logger.debug('bail: %s %o', name, args);
     const hooks = Array.from(_hooks[name] || []);
     for (const callback of hooks) {
         let result = callback.apply(this, args);
@@ -186,36 +180,8 @@ export async function bail<K extends keyof EventMap>(name: K, ...args: Parameter
 }
 
 export function broadcast<K extends keyof EventMap>(event: K, ...payload: Parameters<EventMap[K]>) {
-    // Process forked by pm2 would also have process.send
-    if (process.send && !cluster.isMaster) {
-        process.send({
-            event: 'bus',
-            eventName: event,
-            payload: serialize(payload),
-        });
-    } else parallel(event, ...payload);
+    return parallel('bus/broadcast', event, payload);
 }
-
-async function messageHandler(worker: Worker, msg: any) {
-    if (!msg) msg = worker;
-    // eslint-disable-next-line no-eval
-    if (typeof msg.payload === 'string') msg.payload = eval(msg.payload);
-    if (msg.event) {
-        if (msg.event === 'bus') {
-            if (cluster.isMaster) {
-                for (const i in cluster.workers) {
-                    cluster.workers[i].send(msg);
-                }
-            }
-            emit(msg.eventName, ...msg.payload);
-        } else if (msg.event === 'stat') {
-            global.Hydro.stat.reqCount += msg.count;
-        } else await emit(msg.event, ...msg.payload);
-    }
-}
-
-process.on('message', messageHandler);
-cluster.on('message', messageHandler);
 
 global.Hydro.service.bus = {
     addListener, bail, broadcast, emit, on, off, once, parallel, prependListener, removeListener, serial,

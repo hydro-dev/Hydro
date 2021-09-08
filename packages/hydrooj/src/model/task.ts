@@ -1,4 +1,5 @@
 import moment from 'moment-timezone';
+import { hostname } from 'os';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { BaseService, Task } from '../interface';
@@ -8,6 +9,7 @@ import * as bus from '../service/bus';
 
 const logger = new Logger('model/task');
 const coll = db.collection('task');
+const collEvent = db.collection('event');
 
 async function getFirst(query: FilterQuery<Task>) {
     const q = { ...query };
@@ -45,7 +47,7 @@ class Consumer {
                     await this.func(res);
                     this.running = null;
                     // eslint-disable-next-line no-await-in-loop
-                } else await sleep(100);
+                } else await sleep(1000);
             } catch (err) {
                 logger.error(err);
                 if (this.destoryOnError) this.destory();
@@ -145,6 +147,29 @@ bus.once('app/started', async () => {
             interval: [1, 'day'],
         });
     }
+    await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
+    const id = hostname() + process.env.NODE_APP_INSTANCE;
+    (async () => {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            // eslint-disable-next-line no-await-in-loop
+            const res = await collEvent.findOneAndUpdate(
+                { ack: { $not: { $elemMatch: { $eq: id } } } },
+                { $push: { ack: id } },
+            );
+            if (res.value) bus.parallel(res.value.event, ...JSON.parse(res.value.payload));
+            // eslint-disable-next-line no-await-in-loop
+            else await sleep(100);
+        }
+    })();
+});
+bus.on('bus/broadcast', (event, payload) => {
+    collEvent.insertOne({
+        ack: [],
+        event,
+        payload: JSON.stringify(payload),
+        expire: new Date(Date.now() + 10000),
+    });
 });
 
 export default TaskModel;

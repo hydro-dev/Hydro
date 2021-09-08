@@ -151,11 +151,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (this.processing) return;
         let t;
         while (!t) {
-            // eslint-disable-next-line no-await-in-loop
-            await sleep(100);
             if (this.closed) return;
             // eslint-disable-next-line no-await-in-loop
             t = await task.getFirst(this.query);
+            // eslint-disable-next-line no-await-in-loop
+            if (!t) await sleep(500);
         }
         this.send({ task: t });
         this.processing = t;

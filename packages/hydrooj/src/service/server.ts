@@ -671,9 +671,8 @@ async function bail(name: string, ...args: any[]) {
 }
 
 async function handle(ctx, HandlerClass, checker) {
-    global.Hydro.stat.reqCount++;
     const args = {
-        domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body,
+        domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
     };
     const h = new HandlerClass(ctx);
     h.args = args;
@@ -887,6 +886,7 @@ export function start() {
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.options.port || port);
     logger.success('Server listening at: %d', argv.options.port || port);
+    if (process.send) process.send('ready'); // PM2 0-sec-down reload
     started = true;
 }
 

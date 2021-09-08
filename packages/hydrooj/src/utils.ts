@@ -1,10 +1,4 @@
-import cluster from 'cluster';
 import type { Logger } from './logger';
-
-if (!cluster.worker) {
-    // @ts-ignore
-    cluster.worker = { id: 0 };
-}
 
 export function buildProjection(fields: string[]): Record<string, 1> {
     const o = {};

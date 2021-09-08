@@ -113,12 +113,11 @@ const acm: ContestRule = {
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
             for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
-            const row: ScoreboardRow = [];
-            row.push(
+            const row: ScoreboardRow = [
                 { type: 'string', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
                 { type: 'string', value: tsdoc.accept || 0 },
-            );
+            ];
             if (isExport) {
                 row.push(
                     { type: 'string', value: tsdoc.time || 0.0 },
@@ -133,9 +132,11 @@ const acm: ContestRule = {
                 const colTime = accept ? doc.time : '-';
                 const colTimeStr = accept ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {
-                    row.push({ type: 'string', value: colAccepted });
-                    row.push({ type: 'string', value: colTime });
-                    row.push({ type: 'string', value: colTimeStr });
+                    row.push(
+                        { type: 'string', value: colAccepted },
+                        { type: 'string', value: colTime },
+                        { type: 'string', value: colTimeStr },
+                    );
                 } else {
                     row.push({
                         type: 'record',

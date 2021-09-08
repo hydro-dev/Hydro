@@ -1,5 +1,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
+import os from 'os';
+import fs from 'fs-extra';
+import path from 'path';
 import cac from 'cac';
 import {
     locale, template, lib, service, model, handler, script, setting, uistatic,
@@ -12,17 +15,22 @@ import { Logger } from '../logger';
 
 const logger = new Logger('loader/worker');
 const detail = cac().parse().options.loaderDetail;
+const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 
 export async function load() {
+    fs.ensureDirSync(tmpdir);
+    require('../lib/i18n');
+    require('../utils');
+    require('../error');
+    const config = require('../options')();
+    if (!config) {
+        logger.info('Starting setup');
+        return require('./setup').load();
+    }
     const pending = global.addons;
     const fail = [];
     const active = [];
     if (detail) logger.info('start');
-    require('../lib/i18n');
-    require('../utils');
-    require('../error');
-    require('../options');
-    if (detail) logger.info('finish: options');
     await Promise.all([
         locale(pending, fail),
         template(pending, fail),
@@ -80,9 +88,23 @@ export async function load() {
     if (detail) logger.info('finish: bus.serial(start)');
     await server.start();
     if (detail) logger.info('finish: server.start');
-    setInterval(() => {
-        process.send({ event: 'stat', count: global.Hydro.stat.reqCount });
-        global.Hydro.stat.reqCount = 0;
-    }, 30 * 1000);
+    if (process.env.NODE_APP_INSTANCE === '0') {
+        const scripts = require('../upgrade').default;
+        let dbVer = (await modelSystem.get('db.ver')) ?? 0;
+        const isFresh = !dbVer;
+        const expected = scripts.length;
+        while (dbVer < expected) {
+            const func = scripts[dbVer];
+            if (typeof func !== 'function' || (isFresh && func.toString().includes('_FRESH_INSTALL_IGNORE'))) {
+                dbVer++;
+                continue;
+            }
+            logger.info('Upgrading database: from %d to %d', dbVer, expected);
+            const result = await func();
+            if (!result) break;
+            dbVer++;
+            await modelSystem.set('db.ver', dbVer);
+        }
+    }
     return { active, fail };
 }

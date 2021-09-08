@@ -122,6 +122,8 @@ env.addGlobal('static_url', (assetName) => {
 });
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
+env.addGlobal('Date', Date);
+env.addGlobal('process', process);
 env.addGlobal('global', global);
 env.addGlobal('typeof', (o) => typeof o);
 env.addGlobal('datetimeSpan', misc.datetimeSpan);

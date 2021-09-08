@@ -123,7 +123,6 @@ export async function del(fileId: string) {
 
 export async function run(execute, params?) {
     let result;
-    global.reqCount++;
     // eslint-disable-next-line no-return-await
     if (typeof execute === 'object') return await runMultiple(execute);
     try {

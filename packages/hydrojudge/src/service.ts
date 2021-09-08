@@ -34,7 +34,7 @@ const logger = new Logger('judge');
 
 async function postInit() {
     // Only start a single daemon
-    if (!global.Hydro.isFirstWorker) return;
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
     const judge = require('./judge');
 
     const {

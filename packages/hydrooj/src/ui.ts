@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-shadow */
-import cluster from 'cluster';
+import { Logger } from './logger';
 import * as bus from './service/bus';
 
 export namespace Progress {
@@ -36,21 +36,28 @@ async function terminate() {
     process.exit(hasError ? 1 : 0);
 }
 process.on('SIGINT', terminate);
-if (cluster.isMaster) {
-    bus.on('message/log', (message) => {
-        process.stdout.write(`${message}\n`);
+
+const shell = new Logger('shell');
+async function executeCommand(input: string) {
+    input = input.trim();
+    // Clear the stack
+    setImmediate(async () => {
+        if (input === 'exit' || input === 'quit' || input === 'shutdown') {
+            return process.kill(process.pid, 'SIGINT');
+        }
+        try {
+            // eslint-disable-next-line no-eval
+            shell.info(await eval(input));
+        } catch (e) {
+            shell.warn(e);
+        }
+        return true;
     });
-    if (process.env.NODE_ENV !== 'test') {
-        process.stdin.setEncoding('utf-8');
-        if (process.stdin.setRawMode) process.stdin.setRawMode(false);
-        process.stdin.on('data', (buf) => {
-            const input = buf.toString();
-            if (input[0] === '@') {
-                for (const i in cluster.workers) {
-                    cluster.workers[i].send({ event: 'message/run', payload: [input.substr(1, input.length - 1)] });
-                    break;
-                }
-            } else bus.parallel('message/run', input);
-        });
-    }
 }
+
+process.stdin.setEncoding('utf-8');
+if (process.stdin.setRawMode) process.stdin.setRawMode(false);
+process.stdin.on('data', (buf) => {
+    const input = buf.toString();
+    executeCommand(input);
+});

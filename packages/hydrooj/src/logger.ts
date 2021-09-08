@@ -78,13 +78,11 @@ export class Logger {
                     });
                 }
                 const msg = `${prefix} ${this.displayName} ${type.translate('en').format({ _inspect: true, payload })}`;
-                if (process.send) process.send({ event: 'message/log', payload: [msg] });
-                else global.Hydro.service.bus.parallel('message/log', msg);
+                process.stdout.write(`${msg}\n`);
                 return true;
             }
             const msg = `${prefix} ${this.displayName} ${this.format(...args)}`;
-            if (process.send) process.send({ event: 'message/log', payload: [msg] });
-            else global.Hydro.service.bus.parallel('message/log', msg);
+            process.stdout.write(`${msg}\n`);
             return true;
         };
     }

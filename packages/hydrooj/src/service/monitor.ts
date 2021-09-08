@@ -1,4 +1,3 @@
-import cluster from 'cluster';
 import crypto from 'crypto';
 import superagent from 'superagent';
 import { dump } from 'js-yaml';
@@ -57,7 +56,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         .then((res) => {
             if (res.body.updateUrl) system.set('server.center', res.body.updateUrl);
         })
-        .catch(() => logger.warn('Cannot connect to hydro center.'));
+        .catch(() => logger.debug('Cannot connect to hydro center.'));
     return [mid, $update];
 }
 
@@ -66,7 +65,7 @@ export async function update() {
     const $set = {
         ...$update,
         updateAt: new Date(),
-        reqCount: global.Hydro.stat.reqCount,
+        reqCount: 0,
     };
     await bus.serial('monitor/update', 'server', $set);
     await coll.updateOne(
@@ -74,7 +73,6 @@ export async function update() {
         { $set },
         { upsert: true },
     );
-    global.Hydro.stat.reqCount = 0;
 }
 
 export async function updateJudge(args) {
@@ -87,7 +85,7 @@ export async function updateJudge(args) {
     );
 }
 
-if (cluster.isMaster) {
+if (process.env.NODE_APP_INSTANCE === '0') {
     bus.on('app/started', async () => {
         sysinfo.get().then((info) => {
             coll.updateOne(
