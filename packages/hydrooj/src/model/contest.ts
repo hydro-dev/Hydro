@@ -292,7 +292,7 @@ const homework: ContestRule = {
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid) && (!effective[j.pid] || j.status === STATUS.STATUS_ACCEPTED)) {
+            if (tdoc.pids.includes(j.pid)) {
                 effective[j.pid] = j;
             }
         }
