@@ -82,7 +82,7 @@ export class Logger {
                 else global.Hydro.service.bus.parallel('message/log', msg);
                 return true;
             }
-            const msg = `${prefix} ${this.displayName} ${this.format(...args)})}`;
+            const msg = `${prefix} ${this.displayName} ${this.format(...args)}`;
             if (process.send) process.send({ event: 'message/log', payload: [msg] });
             else global.Hydro.service.bus.parallel('message/log', msg);
             return true;
