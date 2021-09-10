@@ -14,7 +14,6 @@ import record from '../model/record';
 import * as contest from '../model/contest';
 import user from '../model/user';
 import TaskModel from '../model/task';
-import paginate from '../lib/paginate';
 import * as bus from '../service/bus';
 import {
     Route, Handler, Connection, ConnectionHandler, Types, param,
@@ -62,7 +61,10 @@ class RecordListHandler extends Handler {
         }
         let cursor = record.getMulti(domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
-        const [rdocs] = invalid ? [[] as RecordDoc[]] : await paginate(cursor, page, full ? 10 : system.get('pagination.record'));
+        const limit = full ? 10 : system.get('pagination.record');
+        const rdocs = invalid
+            ? [[] as RecordDoc[]]
+            : await cursor.skip((page - 1) * limit).limit(limit).toArray();
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = (!!tid) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         const [udict, pdict] = full ? [{}, {}]

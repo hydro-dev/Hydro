@@ -1,3 +1,4 @@
+/* eslint-disable object-curly-newline */
 import {
     ObjectID, Collection, UpdateQuery,
     PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
@@ -231,6 +232,14 @@ bus.on('domain/delete', (domainId) => Promise.all([
     RecordModel.coll.deleteMany({ domainId }),
     RecordModel.coll.updateMany({ pdomain: domainId }, { $set: { docId: -1 } }),
 ]));
+
+bus.on('app/started', () => {
+    RecordModel.coll.createIndexes([
+        { key: { 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
+        { key: { 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
+        { key: { 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+    ]);
+});
 
 export default RecordModel;
 global.Hydro.model.record = RecordModel;
