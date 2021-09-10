@@ -1,6 +1,9 @@
-import { Collection, Db, MongoClient } from 'mongodb';
+import { Collection, Db, IndexSpecification, MongoClient } from 'mongodb';
 import { BaseService, Collections } from '../interface';
+import { Logger } from '../logger';
 import * as bus from './bus';
+
+const logger = new Logger('mongo');
 
 interface MongoConfig {
     protocol?: string,
@@ -43,6 +46,21 @@ class MongoService implements BaseService {
     public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
         if (this.opts.prefix) return this.db.collection(`${this.opts.prefix}.${c}`);
         return this.db.collection(c);
+    }
+
+    public async ensureIndexes<T>(coll: Collection<T>, ...args: IndexSpecification[]) {
+        const existed = await coll.listIndexes().toArray();
+        for (const index of args) {
+            const i = existed.find(t => t.name == index.name);
+            if (!i) {
+                logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
+                await coll.createIndexes([index]);
+            } else if (i.v < 2 || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
+                logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);
+                await coll.dropIndex(index.name);
+                await coll.createIndexes([index]);
+            }
+        }
     }
 }
 

@@ -2,14 +2,15 @@
 import { omit, sum } from 'lodash';
 import moment from 'moment';
 import {
-    Collection,     FilterQuery,
-    MatchKeysAndValues,     ObjectID, OnlyFieldsOfType,
-    PushOperator, UpdateQuery,
+    Collection, FilterQuery, MatchKeysAndValues,
+    ObjectID, OnlyFieldsOfType, PushOperator,
+    UpdateQuery,
 } from 'mongodb';
 import { ProblemNotFoundError } from '../error';
 import {
     ContestInfo, ExternalProblemId, FileInfo,
-    ProblemConfigFile,     RecordDoc } from '../interface';
+    ProblemConfigFile, RecordDoc,
+} from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { MaybeArray } from '../typeutils';
@@ -221,7 +222,7 @@ class RecordModel {
     @ArgMethod
     static getByUid(domainId: string, uid: number, limit: number): Promise<RecordDoc[]> {
         return RecordModel.coll.find({
-            domainId, uid, hidden: false, 'contest.tid': null,
+            domainId, 'contest.tid': null, hidden: false, uid,
         }).sort({ _id: -1 }).limit(limit).toArray();
     }
 }
@@ -234,11 +235,12 @@ bus.on('domain/delete', (domainId) => Promise.all([
 ]));
 
 bus.on('app/started', () => {
-    RecordModel.coll.createIndexes([
-        { key: { 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
-        { key: { 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
-        { key: { 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
-    ]);
+    return db.ensureIndexes(
+        RecordModel.coll,
+        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
+        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
+        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+    );
 });
 
 export default RecordModel;

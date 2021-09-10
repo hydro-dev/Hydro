@@ -6,11 +6,11 @@ export default function reducer(state = {
     size: '50%',
   },
   pretest: {
-    visible: false,
+    visible: localStorage.getItem('scratchpad/pretest') === 'true',
     size: 200,
   },
   records: {
-    visible: UiContext.canViewRecord,
+    visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
     size: 200,
     isLoading: false,
   },
@@ -29,6 +29,7 @@ export default function reducer(state = {
   }
   case 'SCRATCHPAD_UI_SET_VISIBILITY': {
     const { uiElement, visibility } = action.payload;
+    localStorage.setItem(`scratchpad/${uiElement}`, visibility.toString());
     return {
       ...state,
       [uiElement]: {
@@ -39,6 +40,7 @@ export default function reducer(state = {
   }
   case 'SCRATCHPAD_UI_TOGGLE_VISIBILITY': {
     const { uiElement } = action.payload;
+    localStorage.setItem(`scratchpad/${uiElement}`, (!state[uiElement].visible).toString());
     return {
       ...state,
       [uiElement]: {
