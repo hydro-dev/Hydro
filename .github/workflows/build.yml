@@ -6,6 +6,7 @@ on:
 
 env:
   CI: true
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
 
 jobs:
   build:
