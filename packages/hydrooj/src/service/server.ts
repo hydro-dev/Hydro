@@ -13,18 +13,18 @@ import proxy from 'koa-proxies';
 import Router from 'koa-router';
 import cache from 'koa-static-cache';
 import {
-    cloneDeep,
-    Dictionary, filter,     isSafeInteger } from 'lodash';
+    cloneDeep, Dictionary, filter, isSafeInteger,
+} from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import sockjs from 'sockjs';
 import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import {
-    BlacklistedError,     CsrfTokenError, HydroError, InvalidOperationError, MethodNotAllowedError,
-    NotFoundError, PermissionError,
-    PrivilegeError,
-    SystemError,
-    UserFacingError,     UserNotFoundError, ValidationError } from '../error';
+    BlacklistedError, CsrfTokenError, HydroError,
+    InvalidOperationError, MethodNotAllowedError, NotFoundError,
+    PermissionError, PrivilegeError, SystemError,
+    UserFacingError, UserNotFoundError, ValidationError,
+} from '../error';
 import { DomainDoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { isContent, isName, isTitle } from '../lib/validator';
@@ -890,7 +890,6 @@ export function start() {
     app.use(router.routes()).use(router.allowedMethods());
     server.listen(argv.options.port || port);
     logger.success('Server listening at: %d', argv.options.port || port);
-    if (process.send) process.send('ready'); // PM2 0-sec-down reload
     started = true;
 }
 

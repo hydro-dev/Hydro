@@ -32,10 +32,9 @@ class BlackListModel {
     }
 }
 
-async function ensureIndexes() {
-    return await coll.createIndex('expireAt', { expireAfterSeconds: 0 });
-}
-
-bus.once('app/started', ensureIndexes);
+bus.once('app/started', () => db.ensureIndexes(
+    coll,
+    { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
+));
 export default BlackListModel;
 global.Hydro.model.blacklist = BlackListModel;

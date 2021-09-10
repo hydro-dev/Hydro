@@ -49,15 +49,16 @@ class MongoService implements BaseService {
     }
 
     public async ensureIndexes<T>(coll: Collection<T>, ...args: IndexSpecification[]) {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
         const existed = await coll.listIndexes().toArray();
         for (const index of args) {
-            const i = existed.find(t => t.name == index.name);
+            const i = existed.find(t => t.name == index.name || JSON.stringify(t.key) == JSON.stringify(index.key));
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.createIndexes([index]);
-            } else if (i.v < 2 || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
+            } else if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
                 logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);
-                await coll.dropIndex(index.name);
+                await coll.dropIndex(i.name);
                 await coll.createIndexes([index]);
             }
         }

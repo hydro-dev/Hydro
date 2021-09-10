@@ -234,14 +234,12 @@ bus.on('domain/delete', (domainId) => Promise.all([
     RecordModel.coll.updateMany({ pdomain: domainId }, { $set: { docId: -1 } }),
 ]));
 
-bus.on('app/started', () => {
-    return db.ensureIndexes(
-        RecordModel.coll,
-        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
-        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
-        { key: { domainId: 1, 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
-    );
-});
+bus.once('app/started', () => db.ensureIndexes(
+    RecordModel.coll,
+    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
+    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
+    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+));
 
 export default RecordModel;
 global.Hydro.model.record = RecordModel;

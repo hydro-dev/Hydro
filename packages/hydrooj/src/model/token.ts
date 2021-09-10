@@ -92,13 +92,10 @@ class TokenModel {
     }
 }
 
-function ensureIndexes() {
-    return Promise.all([
-        TokenModel.coll.createIndex({ uid: 1, tokenType: 1, updateAt: -1 }, { sparse: true }),
-        TokenModel.coll.createIndex('expireAt', { expireAfterSeconds: 0 }),
-    ]);
-}
-
-bus.once('app/started', ensureIndexes);
+bus.once('app/started', () => db.ensureIndexes(
+    TokenModel.coll,
+    { key: { uid: 1, tokenType: 1, updateAt: -1 }, name: 'basic', sparse: true },
+    { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
+));
 export default TokenModel;
 global.Hydro.model.token = TokenModel;

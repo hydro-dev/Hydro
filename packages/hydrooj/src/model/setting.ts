@@ -163,6 +163,7 @@ SystemSetting(
     Setting('setting_file', 'file.secretKey', null, 'password', 'file.secretKey', 'Storage engine secret', FLAG_SECRET),
     Setting('setting_file', 'file.bucket', 'hydro', 'text', 'file.bucket', 'Storage engine bucket'),
     Setting('setting_file', 'file.region', 'us-east-1', 'text', 'file.region', 'Storage engine region'),
+    Setting('setting_file', 'file.pathStyle', true, 'boolean', 'file.pathStyle', 'pathStyle endpoint'),
     Setting('setting_file', 'file.endPointForUser', '/fs/', 'text', 'file.endPointForUser', 'EndPoint for user'),
     Setting('setting_file', 'file.endPointForJudge', '/fs/', 'text', 'file.endPointForJudge', 'EndPoint for judge'),
     Setting('setting_smtp', 'smtp.user', null, 'text', 'smtp.user', 'SMTP Username'),

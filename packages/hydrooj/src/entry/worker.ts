@@ -12,7 +12,7 @@ import {
     builtinScript, handler, lib, locale, model, script, service, setting, template, uistatic,
 } from './common';
 
-const logger = new Logger('loader/worker');
+const logger = new Logger('worker');
 const detail = cac().parse().options.loaderDetail;
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 
@@ -105,5 +105,7 @@ export async function load() {
             await modelSystem.set('db.ver', dbVer);
         }
     }
+    logger.success('Server started');
+    if (process.send) process.send('ready');
     return { active, fail };
 }

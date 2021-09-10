@@ -3,8 +3,9 @@ import LRU from 'lru-cache';
 import { Collection } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    FileInfo,
-    Udict, Udoc,     User as _User } from '../interface';
+    FileInfo, Udict, Udoc,
+    User as _User,
+} from '../interface';
 import pwhash from '../lib/hash.hydro';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
@@ -338,13 +339,10 @@ class UserModel {
     }
 }
 
-function ensureIndexes() {
-    return Promise.all([
-        coll.createIndex('unameLower', { unique: true }),
-        coll.createIndex('mailLower', { sparse: true }),
-    ]);
-}
-
-bus.once('app/started', ensureIndexes);
+bus.once('app/started', () => db.ensureIndexes(
+    coll,
+    { key: { unameLower: 1 }, name: 'uname', unique: true },
+    { key: { mailLower: 1 }, name: 'mail', unique: true },
+));
 export default UserModel;
 global.Hydro.model.user = UserModel;

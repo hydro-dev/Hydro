@@ -15,6 +15,7 @@ interface StorageOptions {
     secretKey: string;
     bucket: string;
     region?: string;
+    pathStyle: boolean;
     endPointForUser?: string;
     endPointForJudge?: string;
 }
@@ -81,15 +82,20 @@ class StorageService {
 
     async start() {
         try {
-            const [endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge] = system.getMany([
+            const [
+                endPoint, accessKey, secretKey, bucket, region,
+                pathStyle, endPointForUser, endPointForJudge,
+            ] = system.getMany([
                 'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-                'file.endPointForUser', 'file.endPointForJudge',
+                'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
             ]);
             this.opts = {
-                endPoint, accessKey, secretKey, bucket, region, endPointForUser, endPointForJudge,
+                endPoint, accessKey, secretKey, bucket, region,
+                pathStyle, endPointForUser, endPointForJudge,
             };
             this.client = new Client({
                 ...parseMainEndpointUrl(this.opts.endPoint),
+                pathStyle: this.opts.pathStyle,
                 accessKey: this.opts.accessKey,
                 secretKey: this.opts.secretKey,
             });

@@ -65,13 +65,10 @@ class MessageModel {
     }
 }
 
-function ensureIndexes() {
-    return Promise.all([
-        coll.createIndex({ to: 1, _id: -1 }),
-        coll.createIndex({ from: 1, _id: -1 }),
-    ]);
-}
-
-bus.once('app/started', ensureIndexes);
+bus.once('app/started', () => db.ensureIndexes(
+    coll,
+    { key: { to: 1, _id: -1 }, name: 'to' },
+    { key: { from: 1, _id: -1 }, name: 'from' },
+));
 export default MessageModel;
 global.Hydro.model.message = MessageModel;
