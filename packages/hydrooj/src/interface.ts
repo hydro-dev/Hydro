@@ -19,6 +19,7 @@ export interface SystemKeys {
     'file.secretKey': string,
     'file.bucket': string,
     'file.region': string,
+    'file.pathStyle': boolean,
     'file.endPointForUser': string,
     'file.endPointForJudge': string,
     'smtp.user': string,

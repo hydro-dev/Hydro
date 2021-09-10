@@ -22,7 +22,7 @@
         "start:all": "node build/start",
         "start": "node_modules/.bin/hydrooj",
         "postinstall": "node build/hack",
-        "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./packages/*/dist ./.coverage\""
+        "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./.coverage\""
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
