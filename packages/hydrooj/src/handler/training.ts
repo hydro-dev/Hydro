@@ -1,19 +1,19 @@
 import assert from 'assert';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { ProblemNotFoundError, ValidationError } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
-import { ValidationError, ProblemNotFoundError } from '../error';
-import { isContent, isDescription } from '../lib/validator';
 import paginate from '../lib/paginate';
-import * as system from '../model/system';
+import { isContent, isDescription } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
-import problem from '../model/problem';
 import * as builtin from '../model/builtin';
+import problem from '../model/problem';
+import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Types, param,
-} from '../service/server';
+    Handler, param,
+    Route, Types } from '../service/server';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];

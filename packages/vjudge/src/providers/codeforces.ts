@@ -1,16 +1,16 @@
 /* eslint-disable no-await-in-loop */
+import { PassThrough } from 'stream';
+import { JSDOM } from 'jsdom';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
-import { JSDOM } from 'jsdom';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { buildContent } from 'hydrooj/src/lib/content';
-import * as setting from 'hydrooj/src/model/setting';
 import { Logger } from 'hydrooj/src/logger';
-import { PassThrough } from 'stream';
+import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent);
+proxy(superagent as any);
 const logger = new Logger('codeforces');
 
 const VERDICT = {

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { ObjectID } from 'mongodb';
-import * as document from '../model/document';
-import * as discussion from '../model/discussion';
-import user from '../model/user';
 import blacklist from '../model/blacklist';
+import * as discussion from '../model/discussion';
+import * as document from '../model/document';
+import user from '../model/user';
 import db from '../service/db';
 
 export const description = 'Add blacklist by ip, uid';

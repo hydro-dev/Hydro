@@ -1,4 +1,4 @@
-import { inspect, InspectOptions, format } from 'util';
+import { format, inspect, InspectOptions } from 'util';
 import cac from 'cac';
 
 const argv = cac().parse();

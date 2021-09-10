@@ -1,16 +1,16 @@
-import { FilterQuery, ObjectID } from 'mongodb';
 import { omit } from 'lodash';
 import moment from 'moment';
-import problem from './problem';
-import * as contest from './contest';
-import * as training from './training';
-import * as document from './document';
-import TaskModel from './task';
+import { FilterQuery, ObjectID } from 'mongodb';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
-import { buildProjection } from '../utils';
-import { NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
+import { NumberKeys } from '../typeutils';
+import { buildProjection } from '../utils';
+import * as contest from './contest';
+import * as document from './document';
+import problem from './problem';
+import TaskModel from './task';
+import * as training from './training';
 
 export interface DiscussionDoc extends Document { }
 export namespace DiscussionDoc {

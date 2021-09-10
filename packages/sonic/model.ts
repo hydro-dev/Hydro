@@ -1,5 +1,5 @@
-import * as bus from 'hydrooj/src/service/bus';
 import * as system from 'hydrooj/src/model/system';
+import * as bus from 'hydrooj/src/service/bus';
 import sonic from './service';
 
 bus.on('problem/add', async (doc, docId) => {

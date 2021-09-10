@@ -1,5 +1,5 @@
-import superagent, { SuperAgentRequest } from 'superagent';
 import fs from 'fs';
+import superagent, { SuperAgentRequest } from 'superagent';
 
 async function _download(url: string, path: string, retry: number) {
     const w = fs.createWriteStream(path);

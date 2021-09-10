@@ -1,11 +1,11 @@
-import moment from 'moment-timezone';
 import { hostname } from 'os';
+import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { BaseService, Task } from '../interface';
 import { Logger } from '../logger';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
 
 const logger = new Logger('model/task');
 const coll = db.collection('task');

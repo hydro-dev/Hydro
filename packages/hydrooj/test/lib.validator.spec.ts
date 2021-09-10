@@ -1,4 +1,5 @@
 import 'hydrooj/src/loader';
+
 import * as validator from 'hydrooj/src/lib/validator';
 
 describe('Validator', () => {

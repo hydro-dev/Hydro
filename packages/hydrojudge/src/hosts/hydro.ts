@@ -1,24 +1,24 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import axios from 'axios';
-import fs from 'fs-extra';
-import WebSocket from 'ws';
-import PQueue from 'p-queue';
 import cac from 'cac';
+import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { ObjectID } from 'mongodb';
+import PQueue from 'p-queue';
+import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
-import * as tmpfs from '../tmpfs';
+import readCases from '../cases';
+import { getConfig } from '../config';
+import { CompileError, FormatError, SystemError } from '../error';
+import judge from '../judge';
 import log from '../log';
+import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
+import * as sysinfo from '../sysinfo';
+import * as tmpfs from '../tmpfs';
 import {
     compilerText, Lock, md5, Queue,
 } from '../utils';
-import { getConfig } from '../config';
-import { FormatError, CompileError, SystemError } from '../error';
-import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
-import readCases from '../cases';
-import judge from '../judge';
-import * as sysinfo from '../sysinfo';
 
 const argv = cac().parse();
 

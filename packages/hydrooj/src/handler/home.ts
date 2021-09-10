@@ -1,32 +1,32 @@
-import { ObjectID } from 'mongodb';
 import yaml from 'js-yaml';
+import { ObjectID } from 'mongodb';
 import {
-    VerifyPasswordError, UserAlreadyExistError, InvalidTokenError,
-    NotFoundError, UserNotFoundError, PermissionError,
-    DomainAlreadyExistsError, ValidationError, BlacklistedError,
-} from '../error';
-import { MessageDoc, Setting, DomainDoc } from '../interface';
-import * as bus from '../service/bus';
-import {
-    Route, Connection, Handler, ConnectionHandler, param, Types,
-} from '../service/server';
-import { md5 } from '../lib/crypto';
-import { isPassword, isEmail, isDomainId } from '../lib/validator';
+    BlacklistedError,
+    DomainAlreadyExistsError, InvalidTokenError,
+    NotFoundError, PermissionError,
+    UserAlreadyExistError, UserNotFoundError, ValidationError,     VerifyPasswordError } from '../error';
+import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar from '../lib/avatar';
+import { md5 } from '../lib/crypto';
 import * as mail from '../lib/mail';
+import { isDomainId, isEmail, isPassword } from '../lib/validator';
+import BlackListModel from '../model/blacklist';
+import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
-import message from '../model/message';
-import * as document from '../model/document';
-import * as system from '../model/system';
-import user from '../model/user';
-import * as setting from '../model/setting';
-import domain from '../model/domain';
 import * as discussion from '../model/discussion';
+import * as document from '../model/document';
+import domain from '../model/domain';
+import message from '../model/message';
+import ProblemModel from '../model/problem';
+import * as setting from '../model/setting';
+import * as system from '../model/system';
 import token from '../model/token';
 import * as training from '../model/training';
-import { PERM, PRIV } from '../model/builtin';
-import BlackListModel from '../model/blacklist';
-import ProblemModel from '../model/problem';
+import user from '../model/user';
+import * as bus from '../service/bus';
+import {
+    Connection, ConnectionHandler, Handler, param,     Route, Types,
+} from '../service/server';
 
 const { geoip, useragent } = global.Hydro.lib;
 

@@ -1,4 +1,5 @@
 import 'hydrooj';
+
 import * as superagent from 'superagent';
 
 declare module 'hydrooj' {

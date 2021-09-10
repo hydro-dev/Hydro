@@ -1,5 +1,5 @@
 import superagent from 'superagent';
-import { ValidationError, ForbiddenError } from 'hydrooj/src/error';
+import { ForbiddenError, ValidationError } from 'hydrooj/src/error';
 import { PRIV } from 'hydrooj/src/model/builtin';
 import * as system from 'hydrooj/src/model/system';
 import * as bus from 'hydrooj/src/service/bus';

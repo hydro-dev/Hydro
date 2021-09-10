@@ -1,34 +1,34 @@
-import { isSafeInteger, flatten, intersection } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
 import AdmZip from 'adm-zip';
-import { sortFiles } from '@hydrooj/utils/lib/utils';
+import { flatten, intersection, isSafeInteger } from 'lodash';
 import { lookup } from 'mime-types';
-import { registerResolver, registerValue } from './api';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
-    NoProblemError, PermissionError, ValidationError,
-    SolutionNotFoundError, ProblemNotFoundError, BadRequestError,
+    BadRequestError,
     ForbiddenError,
+    NoProblemError, PermissionError, ProblemNotFoundError,     SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
-    ProblemDoc, User, ProblemStatusDoc,
-} from '../interface';
+    ProblemDoc, ProblemStatusDoc,
+    User } from '../interface';
+import difficultyAlgorithm from '../lib/difficulty';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
-import difficultyAlgorithm from '../lib/difficulty';
-import * as system from '../model/system';
+import { PERM, PRIV } from '../model/builtin';
+import * as contest from '../model/contest';
+import * as document from '../model/document';
+import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
-import domain from '../model/domain';
-import user from '../model/user';
-import * as document from '../model/document';
-import * as contest from '../model/contest';
 import solution from '../model/solution';
-import { PERM, PRIV } from '../model/builtin';
 import storage from '../model/storage';
+import * as system from '../model/system';
+import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Types, param, post, route, query,
-} from '../service/server';
+    Handler, param, post, query,
+    Route, route, Types } from '../service/server';
+import { registerResolver, registerValue } from './api';
 
 export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split(',')).map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);

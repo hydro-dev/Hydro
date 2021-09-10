@@ -1,11 +1,11 @@
-import { Readable } from 'stream';
 import assert from 'assert';
+import { Readable } from 'stream';
 import { URL } from 'url';
-import { Client, BucketItem, ItemBucketMetadata } from 'minio';
 import { createReadStream } from 'fs-extra';
+import { BucketItem, Client, ItemBucketMetadata } from 'minio';
 import { Logger } from '../logger';
-import { streamToBuffer } from '../utils';
 import * as system from '../model/system';
+import { streamToBuffer } from '../utils';
 
 const logger = new Logger('storage');
 

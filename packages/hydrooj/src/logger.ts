@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid';
 import { format, inspect, InspectOptions } from 'util';
+import { nanoid } from 'nanoid';
 
 const colors = [
     20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62,

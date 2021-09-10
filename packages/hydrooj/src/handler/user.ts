@@ -1,27 +1,27 @@
 import moment from 'moment-timezone';
-import { registerResolver, registerValue } from './api';
 import {
-    UserAlreadyExistError, InvalidTokenError, VerifyPasswordError,
-    UserNotFoundError, SystemError, BlacklistedError,
-    UserFacingError, LoginError,
+    BlacklistedError,
+    InvalidTokenError, LoginError,
+    SystemError,     UserAlreadyExistError,     UserFacingError,     UserNotFoundError, VerifyPasswordError,
 } from '../error';
 import { User } from '../interface';
-import {
-    Route, Handler, Types, param, post,
-} from '../service/server';
-import user from '../model/user';
-import oauth from '../model/oauth';
-import token from '../model/token';
-import record from '../model/record';
-import problem, { ProblemDoc } from '../model/problem';
-import task from '../model/task';
-import * as system from '../model/system';
-import { PERM, PRIV } from '../model/builtin';
-import BlackListModel from '../model/blacklist';
-import { isEmail, isPassword, isUname } from '../lib/validator';
+import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import paginate from '../lib/paginate';
-import avatar from '../lib/avatar';
+import { isEmail, isPassword, isUname } from '../lib/validator';
+import BlackListModel from '../model/blacklist';
+import { PERM, PRIV } from '../model/builtin';
+import oauth from '../model/oauth';
+import problem, { ProblemDoc } from '../model/problem';
+import record from '../model/record';
+import * as system from '../model/system';
+import task from '../model/task';
+import token from '../model/token';
+import user from '../model/user';
+import {
+    Handler, param, post,
+    Route, Types } from '../service/server';
+import { registerResolver, registerValue } from './api';
 
 registerValue('User', [
     ['_id', 'Int!'],

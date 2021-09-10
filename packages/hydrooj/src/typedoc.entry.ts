@@ -1,23 +1,23 @@
 import * as interfaces from './interface';
-import * as document from './model/document';
-import user from './model/user';
-import domain from './model/domain';
-import problem from './model/problem';
-import record from './model/record';
-import task from './model/task';
-import * as training from './model/training';
 import blacklist from './model/blacklist';
 import * as builtin from './model/builtin';
+import * as contest from './model/contest';
+import * as discussion from './model/discussion';
+import * as document from './model/document';
+import domain from './model/domain';
+import message from './model/message';
 import oauth from './model/oauth';
+import * as opcount from './model/opcount';
 import * as oplog from './model/oplog';
-import * as system from './model/system';
+import problem from './model/problem';
+import record from './model/record';
 import * as setting from './model/setting';
 import solution from './model/solution';
+import * as system from './model/system';
+import task from './model/task';
 import token from './model/token';
-import message from './model/message';
-import * as discussion from './model/discussion';
-import * as contest from './model/contest';
-import * as opcount from './model/opcount';
+import * as training from './model/training';
+import user from './model/user';
 
 export const Interface = interfaces;
 

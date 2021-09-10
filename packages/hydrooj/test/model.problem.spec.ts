@@ -1,4 +1,5 @@
 import 'hydrooj/src/loader';
+
 import { connect, dispose } from './db';
 
 jest.setTimeout(30000);

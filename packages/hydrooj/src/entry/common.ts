@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';

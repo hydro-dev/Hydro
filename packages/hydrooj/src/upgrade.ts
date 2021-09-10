@@ -1,34 +1,34 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-import { ObjectID, GridFSBucket } from 'mongodb';
 import AdmZip from 'adm-zip';
-import Queue from 'p-queue';
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
-import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { BucketItem } from 'minio';
 import moment from 'moment';
-import db from './service/db';
-import { Progress } from './ui';
+import { GridFSBucket, ObjectID } from 'mongodb';
+import Queue from 'p-queue';
+import { convertIniConfig } from '@hydrooj/utils/lib/cases';
+import { buildContent } from './lib/content';
+import difficultyAlgorithm from './lib/difficulty';
+import { size } from './lib/misc';
 import { Logger } from './logger';
-import { streamToBuffer } from './utils';
+import { PRIV, STATUS } from './model/builtin';
+import * as contest from './model/contest';
+import * as discussion from './model/discussion';
+import * as document from './model/document';
+import domain from './model/domain';
+import problem from './model/problem';
+import RecordModel from './model/record';
+import StorageModel from './model/storage';
+import * as system from './model/system';
+import user from './model/user';
 import {
     iterateAllDomain, iterateAllProblem, iterateAllPsdoc, iterateAllUser,
 } from './pipelineUtils';
+import db from './service/db';
 import storage from './service/storage';
-import difficultyAlgorithm from './lib/difficulty';
-import problem from './model/problem';
-import user from './model/user';
-import * as contest from './model/contest';
-import * as discussion from './model/discussion';
-import domain from './model/domain';
-import * as document from './model/document';
-import * as system from './model/system';
-import { PRIV, STATUS } from './model/builtin';
-import RecordModel from './model/record';
-import StorageModel from './model/storage';
-import { size } from './lib/misc';
-import { buildContent } from './lib/content';
+import { Progress } from './ui';
+import { streamToBuffer } from './utils';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);

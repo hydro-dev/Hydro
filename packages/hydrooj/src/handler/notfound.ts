@@ -2,7 +2,7 @@
 /* eslint-disable class-methods-use-this */
 import { NotFoundError } from '../error';
 import {
-    Route, Handler, param, Types,
+    Handler, param,     Route, Types,
 } from '../service/server';
 
 class NotFoundHandler extends Handler {

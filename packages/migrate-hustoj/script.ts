@@ -2,9 +2,9 @@
 /* eslint-disable no-await-in-loop */
 import mysql from 'mysql';
 import { buildContent } from 'hydrooj/src/lib/content';
-import user from 'hydrooj/src/model/user';
 import problem from 'hydrooj/src/model/problem';
 import * as system from 'hydrooj/src/model/system';
+import user from 'hydrooj/src/model/user';
 
 export async function run({
     host = 'localhost', port = 27017, name = 'vijos4', username, password,

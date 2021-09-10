@@ -1,6 +1,6 @@
+import { PRIV } from '../model/builtin';
 import user from '../model/user';
 import db from '../service/db';
-import { PRIV } from '../model/builtin';
 
 export const description = 'Delete a user';
 

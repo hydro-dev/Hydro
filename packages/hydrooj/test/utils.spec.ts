@@ -1,4 +1,5 @@
 import 'hydrooj/src/loader';
+
 import * as utils from 'hydrooj/src/utils';
 
 describe('Utils', () => {

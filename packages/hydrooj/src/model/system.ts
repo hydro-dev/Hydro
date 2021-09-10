@@ -1,8 +1,8 @@
-import { SYSTEM_SETTINGS } from './setting';
-import { NumberKeys } from '../typeutils';
 import { SystemKeys } from '../interface';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
+import { NumberKeys } from '../typeutils';
+import { SYSTEM_SETTINGS } from './setting';
 
 const coll = db.collection('system');
 const cache: Record<string, any> = {};

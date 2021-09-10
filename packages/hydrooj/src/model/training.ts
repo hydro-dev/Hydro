@@ -1,8 +1,8 @@
-import { FilterQuery, ObjectID } from 'mongodb';
 import { flatten } from 'lodash';
-import * as document from './document';
-import { TrainingNotFoundError, TrainingAlreadyEnrollError } from '../error';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { TrainingAlreadyEnrollError, TrainingNotFoundError } from '../error';
 import { TrainingDoc, TrainingNode } from '../interface';
+import * as document from './document';
 
 export function getStatus(domainId: string, tid: ObjectID, uid: number) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);

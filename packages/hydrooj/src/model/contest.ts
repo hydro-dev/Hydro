@@ -1,20 +1,20 @@
-import { ObjectID, FilterQuery } from 'mongodb';
-import user from './user';
-import problem from './problem';
-import * as document from './document';
-import { PERM, STATUS } from './builtin';
+import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ValidationError, ContestNotFoundError, ContestAlreadyAttendedError,
-    ContestNotAttendedError, ContestScoreboardHiddenError,
-} from '../error';
+    ContestAlreadyAttendedError,
+    ContestNotAttendedError, ContestNotFoundError, ContestScoreboardHiddenError,
+    ValidationError } from '../error';
 import {
-    ProblemId, ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, Tdoc,
+    ContestRule, ContestRules, ProblemDict,
+    ProblemId,     ScoreboardNode, ScoreboardRow, Tdoc,
     Udict,
 } from '../interface';
-import * as bus from '../service/bus';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
+import * as bus from '../service/bus';
+import { PERM, STATUS } from './builtin';
+import * as document from './document';
+import problem from './problem';
+import user from './user';
 
 type Type = 30 | 60;
 

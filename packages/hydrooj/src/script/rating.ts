@@ -1,16 +1,16 @@
 /* eslint-disable no-await-in-loop */
-import { unionWith, NumericDictionary } from 'lodash';
-import { ObjectID, FilterQuery } from 'mongodb';
-import { Tdoc, ProblemDoc, Udoc } from '../interface';
-import db from '../service/db';
-import domain from '../model/domain';
-import * as contest from '../model/contest';
-import problem from '../model/problem';
-import UserModel from '../model/user';
-import record from '../model/record';
-import { PRIV, STATUS } from '../model/builtin';
-import rating from '../lib/rating';
+import { NumericDictionary, unionWith } from 'lodash';
+import { FilterQuery, ObjectID } from 'mongodb';
+import { ProblemDoc, Tdoc, Udoc } from '../interface';
 import paginate from '../lib/paginate';
+import rating from '../lib/rating';
+import { PRIV, STATUS } from '../model/builtin';
+import * as contest from '../model/contest';
+import domain from '../model/domain';
+import problem from '../model/problem';
+import record from '../model/record';
+import UserModel from '../model/user';
+import db from '../service/db';
 
 export const description = 'Calculate rp of a domain, or all domains';
 

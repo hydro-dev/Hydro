@@ -1,5 +1,5 @@
-import readYamlCases from '@hydrooj/utils/lib/cases';
 import { load } from 'js-yaml';
+import readYamlCases from '@hydrooj/utils/lib/cases';
 import type { ProblemConfig, ProblemConfigFile } from '../interface';
 
 export async function parseConfig(config: string | ProblemConfigFile = {}) {

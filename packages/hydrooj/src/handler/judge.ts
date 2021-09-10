@@ -1,22 +1,22 @@
 import { ObjectID } from 'mongodb';
 import { JudgeResultBody, RecordDoc, TestCase } from '../interface';
-import { sleep } from '../utils';
-import { Logger } from '../logger';
 import difficultyAlgorithm from '../lib/difficulty';
-import record from '../model/record';
-import problem from '../model/problem';
-import * as setting from '../model/setting';
+import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
-import task from '../model/task';
-import * as system from '../model/system';
+import problem from '../model/problem';
+import record from '../model/record';
+import * as setting from '../model/setting';
 import storage from '../model/storage';
+import * as system from '../model/system';
+import task from '../model/task';
 import * as bus from '../service/bus';
-import {
-    Route, Handler, Connection, ConnectionHandler, post, Types,
-} from '../service/server';
 import { updateJudge } from '../service/monitor';
+import {
+    Connection, ConnectionHandler, Handler, post,     Route, Types,
+} from '../service/server';
+import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 

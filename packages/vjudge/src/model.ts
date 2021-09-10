@@ -1,15 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import { Logger } from 'hydrooj/src/logger';
-import db from 'hydrooj/src/service/db';
-import * as bus from 'hydrooj/src/service/bus';
+import { sleep } from '@hydrooj/utils/lib/utils';
 import * as Judge from 'hydrooj/src/handler/judge';
-import TaskModel from 'hydrooj/src/model/task';
+import { Logger } from 'hydrooj/src/logger';
+import { STATUS } from 'hydrooj/src/model/builtin';
 import DomainModel from 'hydrooj/src/model/domain';
 import ProblemModel from 'hydrooj/src/model/problem';
-import { STATUS } from 'hydrooj/src/model/builtin';
-import { sleep } from '@hydrooj/utils/lib/utils';
-import providers from './providers/index';
+import TaskModel from 'hydrooj/src/model/task';
+import * as bus from 'hydrooj/src/service/bus';
+import db from 'hydrooj/src/service/db';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
+import providers from './providers/index';
 
 const coll = db.collection('vjudge');
 const Pool = {};

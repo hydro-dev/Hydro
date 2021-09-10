@@ -1,23 +1,23 @@
-import { ObjectID, FilterQuery } from 'mongodb';
 import {
     Dictionary, escapeRegExp, flatten, groupBy, pick,
 } from 'lodash';
-import { streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { FilterQuery, ObjectID } from 'mongodb';
 import type { Readable } from 'stream';
-import * as document from './document';
-import { STATUS } from './builtin';
-import domain from './domain';
-import storage from './storage';
-import { buildProjection } from '../utils';
+import { streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    ProblemStatusDoc, ProblemDict, Document, ProblemId, DomainDoc,
-} from '../interface';
+    Document, DomainDoc,
+    ProblemDict, ProblemId,     ProblemStatusDoc } from '../interface';
+import { parseConfig } from '../lib/testdataConfig';
+import * as bus from '../service/bus';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
-import { ProblemNotFoundError, ValidationError } from '../error';
-import * as bus from '../service/bus';
-import { parseConfig } from '../lib/testdataConfig';
+import { buildProjection } from '../utils';
+import { STATUS } from './builtin';
+import * as document from './document';
+import domain from './domain';
+import storage from './storage';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;

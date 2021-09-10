@@ -2,9 +2,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { get as _get } from '@hydrooj/utils/lib/sysinfo';
+import { getConfig } from './config';
 import { judge } from './judge/run';
 import * as tmpfs from './tmpfs';
-import { getConfig } from './config';
 
 export { update } from '@hydrooj/utils/lib/sysinfo';
 

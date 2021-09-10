@@ -1,12 +1,12 @@
-import fs from 'fs-extra';
 import path from 'path';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { max, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
-import { FormatError, SystemError } from './error';
-import { parseTimeMS, parseMemoryMB, ensureFile } from './utils';
 import { getConfig } from './config';
+import { FormatError, SystemError } from './error';
+import { ensureFile, parseMemoryMB, parseTimeMS } from './utils';
 
 interface Re0 {
     reg: RegExp,

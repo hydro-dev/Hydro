@@ -1,19 +1,20 @@
 // Hydro Integration
 /* eslint-disable no-await-in-loop */
 import 'hydrooj';
+
 import path from 'path';
-import { ObjectID } from 'mongodb';
 import fs from 'fs-extra';
 import { noop } from 'lodash';
+import { ObjectID } from 'mongodb';
 import { Logger } from 'hydrooj/src/logger';
 import * as monitor from 'hydrooj/src/service/monitor';
-import * as sysinfo from './sysinfo';
-import * as tmpfs from './tmpfs';
-import { FormatError, CompileError, SystemError } from './error';
-import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
-import { compilerText, md5 } from './utils';
 import readCases from './cases';
 import { getConfig } from './config';
+import { CompileError, FormatError, SystemError } from './error';
+import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
+import * as sysinfo from './sysinfo';
+import * as tmpfs from './tmpfs';
+import { compilerText, md5 } from './utils';
 
 declare module 'hydrooj/src/interface' {
     interface SystemKeys {

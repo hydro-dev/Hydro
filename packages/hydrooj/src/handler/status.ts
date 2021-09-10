@@ -1,11 +1,11 @@
 import { PRIV } from '../model/builtin';
-import RecordModel from '../model/record';
-import DomainModel from '../model/domain';
 import * as DocumentModel from '../model/document';
-import db from '../service/db';
-import * as bus from '../service/bus';
-import { Route, Handler } from '../service/server';
+import DomainModel from '../model/domain';
+import RecordModel from '../model/record';
 import UserModel from '../model/user';
+import * as bus from '../service/bus';
+import db from '../service/db';
+import { Handler, Route } from '../service/server';
 
 const coll = db.collection('status');
 

@@ -1,13 +1,14 @@
 /* eslint-disable no-await-in-loop */
 import { FilterQuery } from 'mongodb';
 import type {
-    DomainDoc, Udoc, ProblemStatusDoc, RecordDoc,
+    DomainDoc, ProblemStatusDoc, RecordDoc,
+    Udoc,
 } from './interface';
-import domain from './model/domain';
 import * as document from './model/document';
-import user from './model/user';
+import domain from './model/domain';
 import problem, { Field, ProblemDoc } from './model/problem';
 import RecordModel from './model/record';
+import user from './model/user';
 
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().toArray();

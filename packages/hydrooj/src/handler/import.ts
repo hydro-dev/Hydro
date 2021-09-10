@@ -1,27 +1,27 @@
 /* eslint-disable no-await-in-loop */
-import fs from 'fs-extra';
-import path from 'path';
-import os from 'os';
 import assert from 'assert';
-import superagent from 'superagent';
-import { filter } from 'lodash';
+import os from 'os';
+import path from 'path';
 import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
+import { filter } from 'lodash';
+import superagent from 'superagent';
 import { noop } from '@hydrooj/utils/lib/utils';
-import { ValidationError, RemoteOnlineJudgeError } from '../error';
-import { Logger } from '../logger';
+import { RemoteOnlineJudgeError, ValidationError } from '../error';
 import type { ContentNode, ProblemConfigFile, SubtaskConfig } from '../interface';
+import { buildContent } from '../lib/content';
+import download from '../lib/download';
+import { ProblemAdd } from '../lib/ui';
+import { isPid, parsePid } from '../lib/validator';
+import { Logger } from '../logger';
+import { PERM, PRIV } from '../model/builtin';
 import problem, { ProblemDoc } from '../model/problem';
 import TaskModel from '../model/task';
-import { PERM, PRIV } from '../model/builtin';
 import {
-    Route, Handler, Types, post,
-} from '../service/server';
-import { isPid, parsePid } from '../lib/validator';
-import download from '../lib/download';
-import { buildContent } from '../lib/content';
-import { ProblemAdd } from '../lib/ui';
+    Handler, post,
+    Route, Types } from '../service/server';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');

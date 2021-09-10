@@ -1,14 +1,14 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-import moment from 'moment-timezone';
-import { Dictionary } from 'lodash';
 import yaml from 'js-yaml';
-import { retry } from '@hydrooj/utils/lib/utils';
+import { Dictionary } from 'lodash';
+import moment from 'moment-timezone';
 import { parseLang } from '@hydrooj/utils/lib/lang';
-import * as builtin from './builtin';
+import { retry } from '@hydrooj/utils/lib/utils';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
+import * as builtin from './builtin';
 
 type SettingDict = Dictionary<_Setting>;
 
@@ -208,7 +208,6 @@ SystemSetting(
     Setting('setting_storage', 'installid', String.random(64), 'text', 'installid', 'Installation ID', FLAG_HIDDEN | FLAG_DISABLED),
 );
 
-// eslint-disable-next-line import/no-mutable-exports
 export let langs = {};
 
 bus.once('app/started', async () => {

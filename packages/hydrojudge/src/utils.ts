@@ -1,9 +1,9 @@
-import fs from 'fs-extra';
 import crypto from 'crypto';
-import path from 'path';
-import { parse } from 'shell-quote';
-import _ from 'lodash';
 import { EventEmitter } from 'events';
+import path from 'path';
+import fs from 'fs-extra';
+import _ from 'lodash';
+import { parse } from 'shell-quote';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { FormatError } from './error';
 

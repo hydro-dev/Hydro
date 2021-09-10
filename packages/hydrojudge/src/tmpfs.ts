@@ -1,6 +1,6 @@
 import child from 'child_process';
-import fs from 'fs-extra';
 import os from 'os';
+import fs from 'fs-extra';
 import log from './log';
 
 const linux = os.platform() === 'linux';

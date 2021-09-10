@@ -12,10 +12,10 @@
      `-.__          听取人生经验。  __.-'
           ````- - -.......- - -'''    ~
        ~                   */
-import * as Session from './hosts/index';
-import { sleep, Queue } from './utils';
 import { getConfig } from './config';
+import * as Session from './hosts/index';
 import log from './log';
+import { Queue, sleep } from './utils';
 
 declare global {
     namespace NodeJS {

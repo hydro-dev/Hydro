@@ -1,6 +1,6 @@
+import WebSocket from 'ws';
 import { } from 'hydrooj';
 import * as bus from 'hydrooj/src/service/bus';
-import WebSocket from 'ws';
 
 declare module 'hydrooj' {
     interface SystemKeys {

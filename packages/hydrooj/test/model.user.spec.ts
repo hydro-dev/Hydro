@@ -1,6 +1,7 @@
 import 'hydrooj/src/loader';
-import * as bus from 'hydrooj/src/service/bus';
+
 import { PRIV } from 'hydrooj/src/model/builtin';
+import * as bus from 'hydrooj/src/service/bus';
 import { connect, dispose } from './db';
 
 jest.setTimeout(30000);

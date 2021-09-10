@@ -1,43 +1,43 @@
 import assert from 'assert';
-import { PassThrough } from 'stream';
-import { resolve } from 'path';
-import os from 'os';
+import { createHash } from 'crypto';
 import http from 'http';
-import moment from 'moment-timezone';
-import {
-    isSafeInteger, Dictionary, filter, cloneDeep,
-} from 'lodash';
-import { ObjectID } from 'mongodb';
+import os from 'os';
+import { resolve } from 'path';
+import { PassThrough } from 'stream';
+import cac from 'cac';
+import Cookies from 'cookies';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
-import Router from 'koa-router';
 import proxy from 'koa-proxies';
+import Router from 'koa-router';
 import cache from 'koa-static-cache';
-import sockjs from 'sockjs';
-import cac from 'cac';
-import { createHash } from 'crypto';
-import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
-import Cookies from 'cookies';
-import * as bus from './bus';
-import { errorMessage } from '../utils';
-import { User, DomainDoc } from '../interface';
-import { Logger } from '../logger';
 import {
-    UserNotFoundError, BlacklistedError, PermissionError,
-    UserFacingError, ValidationError, PrivilegeError,
-    CsrfTokenError, InvalidOperationError, MethodNotAllowedError,
-    NotFoundError, HydroError, SystemError,
-} from '../error';
-import { isContent, isName, isTitle } from '../lib/validator';
+    cloneDeep,
+    Dictionary, filter,     isSafeInteger } from 'lodash';
+import moment from 'moment-timezone';
+import { ObjectID } from 'mongodb';
+import sockjs from 'sockjs';
+import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import {
+    BlacklistedError,     CsrfTokenError, HydroError, InvalidOperationError, MethodNotAllowedError,
+    NotFoundError, PermissionError,
+    PrivilegeError,
+    SystemError,
+    UserFacingError,     UserNotFoundError, ValidationError } from '../error';
+import { DomainDoc, User } from '../interface';
 import avatar from '../lib/avatar';
-import user from '../model/user';
-import domain from '../model/domain';
-import * as system from '../model/system';
+import { isContent, isName, isTitle } from '../lib/validator';
+import { Logger } from '../logger';
 import blacklist from '../model/blacklist';
-import token from '../model/token';
-import * as opcount from '../model/opcount';
 import { PERM, PRIV } from '../model/builtin';
+import domain from '../model/domain';
+import * as opcount from '../model/opcount';
+import * as system from '../model/system';
+import token from '../model/token';
+import user from '../model/user';
+import { errorMessage } from '../utils';
+import * as bus from './bus';
 
 const argv = cac().parse();
 const logger = new Logger('server');
@@ -702,11 +702,15 @@ async function handle(ctx, HandlerClass, checker) {
         await bail('handler/init', h);
         await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before-prepare', h);
+        h.args.__prepare = Date.now();
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
+        h.args.__prepareDone = Date.now();
         await bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before', h);
+        h.args.__method = Date.now();
         if (h[method]) await h[method](args);
+        h.args.__methodDone = Date.now();
         await bail(`handler/before-operation/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before-operation', h);
         if (operation) await h[`post${operation}`](args);

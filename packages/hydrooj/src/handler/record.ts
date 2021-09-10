@@ -1,23 +1,23 @@
-import { FilterQuery, ObjectID } from 'mongodb';
 import { pick } from 'lodash';
-import { postJudge } from './judge';
+import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
-import { buildProjection } from '../utils';
 import { RecordDoc } from '../interface';
-import { PERM, STATUS, PRIV } from '../model/builtin';
-import * as system from '../model/system';
+import { PERM, PRIV, STATUS } from '../model/builtin';
+import * as contest from '../model/contest';
 import problem from '../model/problem';
 import record from '../model/record';
-import * as contest from '../model/contest';
-import user from '../model/user';
+import * as system from '../model/system';
 import TaskModel from '../model/task';
+import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Route, Handler, Connection, ConnectionHandler, Types, param,
-} from '../service/server';
+    Connection, ConnectionHandler, Handler, param,
+    Route, Types } from '../service/server';
+import { buildProjection } from '../utils';
+import { postJudge } from './judge';
 
 class RecordListHandler extends Handler {
     @param('page', Types.PositiveInt, true)

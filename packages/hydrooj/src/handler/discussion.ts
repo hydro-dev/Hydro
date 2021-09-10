@@ -1,17 +1,17 @@
-import { ObjectID } from 'mongodb';
 import { isSafeInteger } from 'lodash';
+import { ObjectID } from 'mongodb';
 import { DiscussionNotFoundError, DocumentNotFoundError, PermissionError } from '../error';
-import { DiscussionReplyDoc, DiscussionDoc, DiscussionTailReplyDoc } from '../interface';
+import { DiscussionDoc, DiscussionReplyDoc, DiscussionTailReplyDoc } from '../interface';
 import paginate from '../lib/paginate';
-import * as system from '../model/system';
-import user from '../model/user';
-import * as oplog from '../model/oplog';
+import { PERM, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
-import { PERM, PRIV } from '../model/builtin';
+import * as oplog from '../model/oplog';
+import * as system from '../model/system';
+import user from '../model/user';
 import {
-    Route, Handler, Types, param,
-} from '../service/server';
+    Handler, param,
+    Route, Types } from '../service/server';
 
 export const typeMapper = {
     problem: document.TYPE_PROBLEM,

@@ -1,15 +1,15 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable import/no-dynamic-require */
-import { ObjectID } from 'mongodb';
 import cac from 'cac';
-import {
-    lib, service, model, script,
-    builtinLib, builtinModel, builtinScript,
-} from './common';
-import options from '../options';
+import { ObjectID } from 'mongodb';
 import { validate } from '../lib/validator';
+import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import {
+    builtinLib, builtinModel, builtinScript,
+    lib, model, script,
+    service,
+} from './common';
 
 const argv = cac().parse();
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;

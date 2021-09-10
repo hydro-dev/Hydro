@@ -3,16 +3,16 @@ import cac from 'cac';
 import type {
     Db, FilterQuery, ObjectID, OnlyFieldsOfType,
 } from 'mongodb';
-import type { Handler } from './server';
-import { Logger } from '../logger';
-import type {
-    MessageDoc, ProblemDoc, RecordDoc,
-    TrainingDoc, User, DiscussionDoc,
-    DomainDoc, FileInfo, Tdoc,
-} from '../interface';
-import type { DocType } from '../model/document';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
+import type {
+    DiscussionDoc,
+    DomainDoc, FileInfo,     MessageDoc, ProblemDoc, RecordDoc,
+    Tdoc,
+    TrainingDoc, User } from '../interface';
+import { Logger } from '../logger';
+import type { DocType } from '../model/document';
+import type { Handler } from './server';
 
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 const logger = new Logger('bus');

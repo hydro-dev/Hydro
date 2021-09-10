@@ -1,8 +1,8 @@
 import { FilterQuery } from 'mongodb';
-import { ArgMethod } from '../utils';
 import { TokenDoc } from '../interface';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
+import { ArgMethod } from '../utils';
 
 class TokenModel {
     static coll = db.collection('token');

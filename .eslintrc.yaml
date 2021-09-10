@@ -10,6 +10,7 @@ globals:
 parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
+  - simple-import-sort
 rules:
   '@typescript-eslint/dot-notation': 0
   '@typescript-eslint/no-implied-eval': 0
@@ -30,6 +31,7 @@ rules:
   global-require: 0
   guard-for-in: 0
   implicit-arrow-linebreak: 0
+  import/extensions: 0
   import/newline-after-import: 0
   import/no-cycle: 0
   import/no-extraneous-dependencies: 0
@@ -55,6 +57,17 @@ rules:
   no-return-await: 0
   no-underscore-dangle: 0
   prefer-destructuring: 0
+  simple-import-sort/imports: 
+   - warn
+   - groups:
+     - ["^\\u0000"]
+     - 
+      - "^(assert|buffer|child_process|cluster|console|constants|crypto|dgram|dns|domain|events|fs|http|https|module|net|os|path|punycode|querystring|readline|repl|stream|string_decoder|sys|timers|tls|tty|url|util|vm|zlib|freelist|v8|process|async_hooks|http2|perf_hooks)(/.*|$)"
+      - "^(?!@?hydrooj)(@?\\w.+)"
+      - "^@?hydrooj"
+      - "^"
+      - "^\\."
+  simple-import-sort/exports: 0
 settings:
   import/parsers:
     '@typescript-eslint/parser':

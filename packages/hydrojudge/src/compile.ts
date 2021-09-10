@@ -1,9 +1,9 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
-import * as STATUS from './status';
-import { run, del } from './sandbox';
 import { CompileError } from './error';
-import { compilerText } from './utils';
 import { Execute } from './interface';
+import { del, run } from './sandbox';
+import * as STATUS from './status';
+import { compilerText } from './utils';
 
 export = async function compile(
     lang: LangConfig, code: string, target: string, copyIn: any = {}, next?: Function,

@@ -7,10 +7,10 @@
  * e.g.: object?.property
  */
 import {
-    STATUS, STATUS_TEXTS, STATUS_CODES,
-    USER_GENDER_MALE, USER_GENDER_FEMALE, USER_GENDER_OTHER,
-    USER_GENDER_ICONS, USER_GENDERS, USER_GENDER_RANGE,
-} from '@hydrooj/utils/lib/status';
+    STATUS, STATUS_CODES,
+    STATUS_TEXTS, USER_GENDER_FEMALE,     USER_GENDER_ICONS,     USER_GENDER_MALE, USER_GENDER_OTHER,
+    USER_GENDER_RANGE,
+    USER_GENDERS } from '@hydrooj/utils/lib/status';
 
 export * from '@hydrooj/utils/lib/status';
 

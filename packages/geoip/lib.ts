@@ -1,4 +1,5 @@
 import 'hydrooj';
+
 import fs from 'fs';
 import { Reader } from 'maxmind';
 import { findFileSync } from '@hydrooj/utils/lib/utils';

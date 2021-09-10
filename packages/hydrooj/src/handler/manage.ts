@@ -1,22 +1,22 @@
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
-import * as judge from './judge';
-import { ValidationError } from '../error';
 import * as check from '../check';
+import { ValidationError } from '../error';
+import {
+    isEmail, isPassword,
+    isUname,     validate } from '../lib/validator';
 import { Logger } from '../logger';
+import { PRIV, STATUS } from '../model/builtin';
+import domain from '../model/domain';
+import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
-import { STATUS, PRIV } from '../model/builtin';
-import record from '../model/record';
-import domain from '../model/domain';
-import {
-    Route, Connection, Handler, ConnectionHandler, param, Types,
-} from '../service/server';
 import * as bus from '../service/bus';
 import {
-    validate, isEmail, isUname, isPassword,
-} from '../lib/validator';
+    Connection, ConnectionHandler, Handler, param,     Route, Types,
+} from '../service/server';
+import * as judge from './judge';
 
 const logger = new Logger('manage');
 

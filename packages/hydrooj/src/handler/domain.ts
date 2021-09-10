@@ -1,24 +1,24 @@
-import moment from 'moment-timezone';
 import { Dictionary } from 'lodash';
+import moment from 'moment-timezone';
 import {
-    RoleAlreadyExistError, ValidationError, DomainJoinForbiddenError,
-    DomainJoinAlreadyMemberError, InvalidJoinInvitationCodeError,
-} from '../error';
-import { log2 } from '../utils';
+    DomainJoinAlreadyMemberError, DomainJoinForbiddenError,
+    InvalidJoinInvitationCodeError,
+    RoleAlreadyExistError, ValidationError } from '../error';
 import type { DomainDoc } from '../interface';
-import user from '../model/user';
-import domain from '../model/domain';
-import * as discussion from '../model/discussion';
-import * as system from '../model/system';
-import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
-import {
-    DEFAULT_NODES, PERM, PERMS_BY_FAMILY, PRIV,
-} from '../model/builtin';
 import avatar from '../lib/avatar';
 import paginate from '../lib/paginate';
 import {
-    Route, Handler, Types, param, query, post,
-} from '../service/server';
+    DEFAULT_NODES, PERM, PERMS_BY_FAMILY, PRIV,
+} from '../model/builtin';
+import * as discussion from '../model/discussion';
+import domain from '../model/domain';
+import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
+import * as system from '../model/system';
+import user from '../model/user';
+import {
+    Handler, param, post,
+    query,     Route, Types } from '../service/server';
+import { log2 } from '../utils';
 
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)

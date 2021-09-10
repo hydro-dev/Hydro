@@ -1,9 +1,9 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import user from './user';
 import { MessageDoc } from '../interface';
-import { ArgMethod } from '../utils';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
+import { ArgMethod } from '../utils';
+import user from './user';
 
 const coll = db.collection('message');
 

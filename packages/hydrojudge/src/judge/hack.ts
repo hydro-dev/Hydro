@@ -1,13 +1,13 @@
 // Not implemented
 import path from 'path';
 import fs from 'fs-extra';
-import * as STATUS from '../status';
-import { CompileError } from '../error';
-import { copyInDir, parseFilename } from '../utils';
-import { run } from '../sandbox';
-import compile from '../compile';
-import signals from '../signals';
 import { check, compileChecker } from '../check';
+import compile from '../compile';
+import { CompileError } from '../error';
+import { run } from '../sandbox';
+import signals from '../signals';
+import * as STATUS from '../status';
+import { copyInDir, parseFilename } from '../utils';
 
 export const judge = async (ctx) => {
     if (ctx.config.template) {

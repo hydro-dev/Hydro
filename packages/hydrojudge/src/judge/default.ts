@@ -1,14 +1,14 @@
-import Queue from 'p-queue';
 import path from 'path';
 import fs from 'fs-extra';
-import * as STATUS from '../status';
-import { CompileError, SystemError } from '../error';
-import { parseFilename } from '../utils';
-import { run } from '../sandbox';
-import compile from '../compile';
-import signals from '../signals';
+import Queue from 'p-queue';
 import { check, compileChecker } from '../check';
+import compile from '../compile';
 import { getConfig } from '../config';
+import { CompileError, SystemError } from '../error';
+import { run } from '../sandbox';
+import signals from '../signals';
+import * as STATUS from '../status';
+import { parseFilename } from '../utils';
 
 const Score = {
     sum: (a: number, b: number) => (a + b),

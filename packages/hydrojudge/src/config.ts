@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
-import cac from 'cac';
 import os from 'os';
 import path from 'path';
+import cac from 'cac';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 

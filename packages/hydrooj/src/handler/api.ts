@@ -1,7 +1,7 @@
 import graphql from 'graphql';
-import { typeDefs, resolvers } from 'graphql-scalars';
-import { Handler, Route } from '../service/server';
+import { resolvers, typeDefs } from 'graphql-scalars';
 import * as bus from '../service/bus';
+import { Handler, Route } from '../service/server';
 
 const types: Record<string, Record<string, string>> = {};
 const unions: Record<string, string> = {};

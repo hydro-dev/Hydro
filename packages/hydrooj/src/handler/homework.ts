@@ -1,32 +1,32 @@
+import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
+import { intersection } from 'lodash';
+import { lookup } from 'mime-types';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import AdmZip from 'adm-zip';
 import { Time } from '@hydrooj/utils/lib/utils';
-import { lookup } from 'mime-types';
-import { intersection } from 'lodash';
 import {
-    ValidationError, HomeworkNotLiveError, ProblemNotFoundError,
-    HomeworkNotAttendedError, BadRequestError,
-} from '../error';
+    BadRequestError,
+    HomeworkNotAttendedError, HomeworkNotLiveError, ProblemNotFoundError,
+    ValidationError } from '../error';
 import {
-    PenaltyRules, Tdoc, ProblemDoc, User, DomainDoc,
-} from '../interface';
-import {
-    Route, Handler, Types, param,
-} from '../service/server';
-import * as bus from '../service/bus';
-import domain from '../model/domain';
+    DomainDoc,
+    PenaltyRules, ProblemDoc, Tdoc, User } from '../interface';
+import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
-import user from '../model/user';
-import * as system from '../model/system';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
+import * as document from '../model/document';
+import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
 import storage from '../model/storage';
-import * as document from '../model/document';
-import paginate from '../lib/paginate';
+import * as system from '../model/system';
+import user from '../model/user';
+import * as bus from '../service/bus';
+import {
+    Handler, param,
+    Route, Types } from '../service/server';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;

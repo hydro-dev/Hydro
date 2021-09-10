@@ -1,14 +1,14 @@
-import { escapeRegExp } from 'lodash';
-import { ItemBucketMetadata } from 'minio';
-import { nanoid } from 'nanoid';
-import { lookup } from 'mime-types';
-import moment from 'moment';
 import { extname } from 'path';
+import { escapeRegExp } from 'lodash';
+import { lookup } from 'mime-types';
+import { ItemBucketMetadata } from 'minio';
+import moment from 'moment';
+import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
-import TaskModel from './task';
-import storage from '../service/storage';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import storage from '../service/storage';
+import TaskModel from './task';
 
 export class StorageModel {
     static coll = db.collection('storage');

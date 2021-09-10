@@ -1,4 +1,4 @@
-import { parseTimeMS, parseMemoryMB } from './utils';
+import { parseMemoryMB, parseTimeMS } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default async function readYamlCases(cfg: Record<string, any> = {}, checkFile = (s: string, errMsg: string) => s) {

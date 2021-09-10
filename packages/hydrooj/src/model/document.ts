@@ -1,16 +1,16 @@
 /* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
-    ObjectID, Cursor, FilterQuery, UpdateQuery, OnlyFieldsOfType,
-} from 'mongodb';
+    Cursor, FilterQuery,     ObjectID, OnlyFieldsOfType,
+    UpdateQuery } from 'mongodb';
 import {
-    ProblemDoc, DiscussionDoc, DiscussionReplyDoc, Tdoc, TrainingDoc,
-    ProblemStatusDoc, Content,
+    Content,
+    DiscussionDoc, DiscussionReplyDoc,     ProblemDoc,     ProblemStatusDoc, Tdoc, TrainingDoc,
 } from '../interface';
-import { buildProjection } from '../utils';
-import { NumberKeys, ArrayKeys, Projection, MaybeArray } from '../typeutils';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
+import { ArrayKeys, MaybeArray, NumberKeys, Projection } from '../typeutils';
+import { buildProjection } from '../utils';
 
 type DocID = ObjectID | string | number;
 
@@ -234,7 +234,7 @@ export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
     domainId: string, docType: T, docId: DocType[T]['docId'],
     key: K, subId: DocType[T][K][0]['_id'], args: Partial<DocType[T][K][0]>,
 ): Promise<DocType[T]> {
-    const $set = {};
+    const $set: Record<string, any> = {};
     for (const k in args) $set[`${key}.$.${k}`] = args[k];
     const res = await coll.findOneAndUpdate(
         {

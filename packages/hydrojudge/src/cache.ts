@@ -1,8 +1,8 @@
 import path from 'path';
-import fs from 'fs-extra';
 import cac from 'cac';
-import { Logger } from './log';
+import fs from 'fs-extra';
 import { getConfig } from './config';
+import { Logger } from './log';
 
 const argv = cac().parse();
 

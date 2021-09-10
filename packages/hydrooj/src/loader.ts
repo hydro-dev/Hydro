@@ -1,4 +1,4 @@
-/* eslint-disable import/no-dynamic-require */
+/* eslint-disable simple-import-sort/imports */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 import 'reflect-metadata';
@@ -50,6 +50,6 @@ export async function load() {
 }
 
 export async function loadCli() {
-    require('./entry/cli').load();
+    await require('./entry/cli').load();
     process.kill(process.pid, 'SIGINT');
 }

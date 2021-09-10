@@ -1,12 +1,12 @@
+import http from 'http';
 import os from 'os';
 import path from 'path';
-import http from 'http';
+import cac from 'cac';
 import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import cache from 'koa-static-cache';
 import mongodb from 'mongodb';
-import cac from 'cac';
 import { Logger } from '../logger';
 
 const logger = new Logger('setup');

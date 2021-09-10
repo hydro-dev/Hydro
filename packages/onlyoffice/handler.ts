@@ -1,5 +1,5 @@
-import { UiContextBase } from 'hydrooj/src/service/server';
 import * as system from 'hydrooj/src/model/system';
+import { UiContextBase } from 'hydrooj/src/service/server';
 
 declare module 'hydrooj/src/service/server' {
     interface UiContextBase {

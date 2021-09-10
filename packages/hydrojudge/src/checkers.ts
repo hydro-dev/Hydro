@@ -1,8 +1,8 @@
 /* eslint-disable no-template-curly-in-string */
+import { SystemError } from './error';
+import { run } from './sandbox';
 import * as STATUS from './status';
 import { parse } from './testlib';
-import { run } from './sandbox';
-import { SystemError } from './error';
 
 interface CheckResult {
     status: number,

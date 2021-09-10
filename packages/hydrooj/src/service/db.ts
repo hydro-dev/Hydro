@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient } from 'mongodb';
+import { BaseService, Collections } from '../interface';
 import * as bus from './bus';
-import { Collections, BaseService } from '../interface';
 
 interface MongoConfig {
     protocol?: string,

@@ -1,4 +1,5 @@
 import 'hydrooj/src/loader';
+
 import * as bus from 'hydrooj/src/service/bus';
 
 jest.mock('hydrooj/src/service/db');

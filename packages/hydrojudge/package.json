@@ -7,16 +7,16 @@
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
-        "axios": "^0.21.1",
+        "axios": "^0.21.4",
         "cac": "^6.7.3",
-        "esbuild": "^0.12.24",
+        "esbuild": "^0.12.26",
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
-        "mongodb": "^3.6.12",
+        "mongodb": "^3.7.0",
         "p-queue": "^7.1.0",
         "shell-quote": "^1.7.2",
-        "ws": "^8.2.1"
+        "ws": "^8.2.2"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",

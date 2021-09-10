@@ -1,17 +1,17 @@
 /* eslint-disable no-await-in-loop */
 import AdmZip from 'adm-zip';
-import xml2js from 'xml2js';
+import decodeHTML from 'decode-html';
 import fs from 'fs-extra';
 import { filter } from 'lodash';
-import decodeHTML from 'decode-html';
-import { Route, Handler } from 'hydrooj/src/service/server';
+import xml2js from 'xml2js';
+import type { ContentNode, ProblemConfigFile } from 'hydrooj';
+import { FileTooLargeError, ValidationError } from 'hydrooj/src/error';
 import { buildContent } from 'hydrooj/src/lib/content';
 import { ProblemAdd } from 'hydrooj/src/lib/ui';
-import solution from 'hydrooj/src/model/solution';
-import problem from 'hydrooj/src/model/problem';
 import { PERM } from 'hydrooj/src/model/builtin';
-import { FileTooLargeError, ValidationError } from 'hydrooj/src/error';
-import type { ContentNode, ProblemConfigFile } from 'hydrooj';
+import problem from 'hydrooj/src/model/problem';
+import solution from 'hydrooj/src/model/solution';
+import { Handler, Route } from 'hydrooj/src/service/server';
 
 class FpsProblemImportHandler extends Handler {
     async get() {

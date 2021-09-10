@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb';
-import * as document from './document';
 import { SolutionNotFoundError } from '../error';
 import * as bus from '../service/bus';
+import * as document from './document';
 
 class SolutionModel {
     static add(domainId: string, pid: number, owner: number, content: string) {

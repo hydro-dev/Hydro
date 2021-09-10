@@ -1,21 +1,21 @@
-import { Collection } from 'mongodb';
-import LRU from 'lru-cache';
 import { escapeRegExp, pick } from 'lodash';
+import LRU from 'lru-cache';
+import { Collection } from 'mongodb';
+import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
+import {
+    FileInfo,
+    Udict, Udoc,     User as _User } from '../interface';
+import pwhash from '../lib/hash.hydro';
+import { Logger } from '../logger';
+import * as bus from '../service/bus';
+import db from '../service/db';
+import { Value } from '../typeutils';
+import { ArgMethod } from '../utils';
+import { PERM, PRIV } from './builtin';
+import domain from './domain';
+import * as setting from './setting';
 import * as system from './system';
 import token from './token';
-import * as setting from './setting';
-import domain from './domain';
-import { PERM, PRIV } from './builtin';
-import { ArgMethod } from '../utils';
-import { UserNotFoundError, UserAlreadyExistError, LoginError } from '../error';
-import {
-    User as _User, Udoc, Udict, FileInfo,
-} from '../interface';
-import { Value } from '../typeutils';
-import { Logger } from '../logger';
-import pwhash from '../lib/hash.hydro';
-import db from '../service/db';
-import * as bus from '../service/bus';
 
 const coll: Collection<Udoc> = db.collection('user');
 const logger = new Logger('model/user');

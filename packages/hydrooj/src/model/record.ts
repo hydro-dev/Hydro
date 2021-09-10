@@ -1,22 +1,22 @@
 /* eslint-disable object-curly-newline */
-import {
-    ObjectID, Collection, UpdateQuery,
-    PushOperator, MatchKeysAndValues, OnlyFieldsOfType,
-    FilterQuery,
-} from 'mongodb';
 import { omit, sum } from 'lodash';
 import moment from 'moment';
-import { STATUS } from './builtin';
-import task from './task';
-import problem from './problem';
 import {
-    RecordDoc, ContestInfo, ProblemConfigFile, ExternalProblemId, FileInfo,
-} from '../interface';
+    Collection,     FilterQuery,
+    MatchKeysAndValues,     ObjectID, OnlyFieldsOfType,
+    PushOperator, UpdateQuery,
+} from 'mongodb';
 import { ProblemNotFoundError } from '../error';
-import { ArgMethod, buildProjection, Time } from '../utils';
-import { MaybeArray } from '../typeutils';
+import {
+    ContestInfo, ExternalProblemId, FileInfo,
+    ProblemConfigFile,     RecordDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import { MaybeArray } from '../typeutils';
+import { ArgMethod, buildProjection, Time } from '../utils';
+import { STATUS } from './builtin';
+import problem from './problem';
+import task from './task';
 
 class RecordModel {
     static coll: Collection<RecordDoc> = db.collection('record');

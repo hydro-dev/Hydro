@@ -4,14 +4,14 @@ import { lookup } from 'mime-types';
 import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
-import { sortFiles } from '../utils';
 import { PRIV } from '../model/builtin';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Route, Handler, Types, param, post,
-} from '../service/server';
+    Handler, param, post,
+    Route, Types } from '../service/server';
+import { sortFiles } from '../utils';
 
 class CheckInHandler extends Handler {
     async prepare() {

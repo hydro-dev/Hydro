@@ -1,4 +1,5 @@
 import 'hydrooj/src/loader';
+
 import { md5, sha1 } from 'hydrooj/src/lib/crypto';
 import pwhash from 'hydrooj/src/lib/hash.hydro';
 

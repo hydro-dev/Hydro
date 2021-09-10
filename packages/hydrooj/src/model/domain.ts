@@ -1,11 +1,11 @@
 import { Dictionary } from 'lodash';
 import { FilterQuery } from 'mongodb';
-import { BUILTIN_ROLES, PRIV } from './builtin';
 import { DomainDoc } from '../interface';
-import { ArgMethod } from '../utils';
-import { MaybeArray, NumberKeys } from '../typeutils';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import { MaybeArray, NumberKeys } from '../typeutils';
+import { ArgMethod } from '../utils';
+import { BUILTIN_ROLES, PRIV } from './builtin';
 import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');

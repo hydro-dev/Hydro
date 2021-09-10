@@ -1,12 +1,12 @@
-import Queue from 'p-queue';
 import fs from 'fs-extra';
+import Queue from 'p-queue';
+import compile from '../compile';
+import { getConfig } from '../config';
+import { run } from '../sandbox';
+import signals from '../signals';
 import * as STATUS from '../status';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
-import { run } from '../sandbox';
-import compile from '../compile';
-import signals from '../signals';
-import { getConfig } from '../config';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {

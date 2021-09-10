@@ -1,17 +1,16 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable import/no-dynamic-require */
 import os from 'os';
-import fs from 'fs-extra';
 import path from 'path';
 import cac from 'cac';
-import {
-    locale, template, lib, service, model, handler, script, setting, uistatic,
-    builtinLib, builtinScript, builtinHandler, builtinModel,
-} from './common';
+import fs from 'fs-extra';
+import { Logger } from '../logger';
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import { Logger } from '../logger';
+import {
+    builtinHandler, builtinLib, builtinModel,
+    builtinScript, handler, lib, locale, model, script, service, setting, template, uistatic,
+} from './common';
 
 const logger = new Logger('loader/worker');
 const detail = cac().parse().options.loaderDetail;

@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import db from '../service/db';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
+import db from '../service/db';
 
 export const description = 'Recalculates nSubmit and nAccept in problem status.';
 

@@ -1,11 +1,11 @@
 import Axios from 'axios';
-import fs from 'fs-extra';
 import cac from 'cac';
-import * as STATUS from './status';
-import { FormatError, SystemError } from './error';
-import { cmd, parseMemoryMB } from './utils';
+import fs from 'fs-extra';
 import { getConfig } from './config';
+import { FormatError, SystemError } from './error';
 import { Logger } from './log';
+import * as STATUS from './status';
+import { cmd, parseMemoryMB } from './utils';
 
 const argv = cac().parse();
 const logger = new Logger('sandbox');

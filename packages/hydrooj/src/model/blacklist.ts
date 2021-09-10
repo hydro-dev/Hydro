@@ -1,7 +1,7 @@
 import moment from 'moment';
-import { ArgMethod } from '../utils';
-import db from '../service/db';
 import * as bus from '../service/bus';
+import db from '../service/db';
+import { ArgMethod } from '../utils';
 
 const coll = db.collection('blacklist');
 

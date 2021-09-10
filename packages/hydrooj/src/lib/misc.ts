@@ -1,6 +1,6 @@
 import AnsiUp from 'ansi_up';
 import { ObjectID } from 'mongodb';
-import { size, formatSeconds } from '@hydrooj/utils/lib/utils';
+import { formatSeconds, size } from '@hydrooj/utils/lib/utils';
 
 export { size, formatSeconds } from '@hydrooj/utils/lib/utils';
 
