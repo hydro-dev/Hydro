@@ -69,7 +69,10 @@ class WorkerService implements BaseService {
         async (doc) => {
             try {
                 logger.debug('Worker task: %o', doc);
+                const start = Date.now();
                 await this.handlers[doc.subType](doc);
+                const spent = Date.now() - start;
+                if (spent > 500) logger.warn('Slow worker task (%d ms): %s', spent, doc);
             } catch (e) {
                 logger.error('Worker task fail: ', e);
                 logger.error('%o', doc);

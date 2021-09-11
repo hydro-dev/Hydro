@@ -28,8 +28,6 @@ class JudgeTask {
     host: string;
     request: any;
     ws: WebSocket;
-    tag: any;
-    type: any;
     domainId: string;
     pid: string;
     rid: string;
@@ -59,8 +57,6 @@ class JudgeTask {
         this.next = this.next.bind(this);
         this.end = this.end.bind(this);
         this.stat.handle = new Date();
-        this.tag = this.request.tag;
-        this.type = this.request.type;
         this.domainId = this.request.pdomain;
         this.pid = this.request.pid.toString();
         this.rid = this.request.rid;

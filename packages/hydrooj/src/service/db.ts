@@ -50,7 +50,12 @@ class MongoService implements BaseService {
 
     public async ensureIndexes<T>(coll: Collection<T>, ...args: IndexSpecification[]) {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
-        const existed = await coll.listIndexes().toArray();
+        let existed: any[];
+        try {
+            existed = await coll.listIndexes().toArray();
+        } catch (e) {
+            existed = [];
+        }
         for (const index of args) {
             const i = existed.find(t => t.name == index.name || JSON.stringify(t.key) == JSON.stringify(index.key));
             if (!i) {
