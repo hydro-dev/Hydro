@@ -12,6 +12,8 @@
      `-.__          听取人生经验。  __.-'
           ````- - -.......- - -'''    ~
        ~                   */
+import './utils';
+
 import { getConfig } from './config';
 import * as Session from './hosts/index';
 import log from './log';
