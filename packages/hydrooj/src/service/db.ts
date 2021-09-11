@@ -61,17 +61,17 @@ class MongoService implements BaseService {
             if (!i && Object.keys(index.key).map(k => index.key[k]).includes('text')) {
                 i = existed.find(t => t.textIndexVersion);
             }
-            if (i.textIndexVersion) {
-                const cur = Object.keys(i.key).filter(t => !t.startsWith('_')).map(k => k + ':' + i.key[k]);
-                for (const key of Object.keys(i.weights)) cur.push(key + ':text');
-                const wanted = Object.keys(index.key).map(key => key + ':' + index.key[key]);
-                if (cur.sort().join(' ') === wanted.sort().join(' ') && i.name === index.name) continue;
-            }
             index.background = true;
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.createIndexes([index]);
             } else if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
+                if (i.textIndexVersion) {
+                    const cur = Object.keys(i.key).filter(t => !t.startsWith('_')).map(k => k + ':' + i.key[k]);
+                    for (const key of Object.keys(i.weights)) cur.push(key + ':text');
+                    const wanted = Object.keys(index.key).map(key => key + ':' + index.key[key]);
+                    if (cur.sort().join(' ') === wanted.sort().join(' ') && i.name === index.name) continue;
+                }
                 logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.dropIndex(i.name);
                 await coll.createIndexes([index]);
