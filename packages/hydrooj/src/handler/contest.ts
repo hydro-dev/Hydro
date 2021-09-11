@@ -5,13 +5,13 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError,
-    ContestNotAttendedError,     ContestNotFoundError,     ContestNotLiveError, InvalidTokenError, PermissionError, ProblemNotFoundError,
-    RecordNotFoundError,
-    ValidationError } from '../error';
+    BadRequestError, ContestNotAttendedError, ContestNotFoundError,
+    ContestNotLiveError, InvalidTokenError, PermissionError,
+    ProblemNotFoundError, RecordNotFoundError, ValidationError,
+} from '../error';
 import {
-    DomainDoc,
-    ProblemDoc, Tdoc, User } from '../interface';
+    DomainDoc, ProblemDoc, Tdoc, User,
+} from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -24,15 +24,15 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Handler, param,
-    Route, Types } from '../service/server';
+    Handler, param, Route, Types,
+} from '../service/server';
 import storage from '../service/storage';
 
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
-        const cursor = contest.getMulti(domainId, rule ? { rule } : undefined).sort({ beginAt: -1 });
+        const cursor = contest.getMulti(domainId, rule ? { rule } : undefined);
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate(cursor, page, system.get('pagination.contest'));
         const tids = [];

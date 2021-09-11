@@ -591,7 +591,7 @@ export function count(domainId: string, query: any, type: Type = document.TYPE_C
 export function getMulti<K extends Type & keyof document.DocType>(
     domainId: string, query: FilterQuery<document.DocType[K]> = {}, type?: K,
 ) {
-    return document.getMulti(domainId, type || document.TYPE_CONTEST, query);
+    return document.getMulti(domainId, type || document.TYPE_CONTEST, query).sort({ beginAt: -1 });
 }
 
 export async function getAndListStatus(

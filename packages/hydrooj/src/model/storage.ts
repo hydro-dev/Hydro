@@ -29,7 +29,7 @@ export class StorageModel {
 
     static async get(path: string, savePath?: string) {
         const { value } = await StorageModel.coll.findOneAndUpdate(
-            { path, autoDelete: { $exists: false } },
+            { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
         );
@@ -38,7 +38,7 @@ export class StorageModel {
 
     static async rename(path: string, newPath: string) {
         return await StorageModel.coll.updateOne(
-            { path, autoDelete: { $exists: false } },
+            { path, autoDelete: null },
             { $set: { path: newPath } },
         );
     }
@@ -46,7 +46,7 @@ export class StorageModel {
     static async del(path: string[]) {
         const autoDelete = moment().add(7, 'day').toDate();
         await StorageModel.coll.updateMany(
-            { path: { $in: path }, autoDelete: { $exists: false } },
+            { path: { $in: path }, autoDelete: null },
             { $set: { autoDelete } },
         );
     }
@@ -57,11 +57,11 @@ export class StorageModel {
         const results = recursive
             ? await StorageModel.coll.find({
                 path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') },
-                autoDelete: { $exists: false },
+                autoDelete: null,
             }).toArray()
             : await StorageModel.coll.find({
                 path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) },
-                autoDelete: { $exists: false },
+                autoDelete: null,
             }).toArray();
         return results.map((i) => ({
             ...i, name: i.path.split(target)[1], prefix: target,
@@ -70,7 +70,7 @@ export class StorageModel {
 
     static async getMeta(path: string) {
         const { value } = await StorageModel.coll.findOneAndUpdate(
-            { path, autoDelete: { $exists: false } },
+            { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
         );
@@ -85,7 +85,7 @@ export class StorageModel {
 
     static async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge') {
         const res = await StorageModel.coll.findOneAndUpdate(
-            { path: target, autoDelete: { $exists: false } },
+            { path: target, autoDelete: null },
             { $set: { lastUsage: new Date() } },
         );
         return await storage.signDownloadLink(res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);

@@ -1,11 +1,10 @@
 /* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
-    Cursor, FilterQuery,     ObjectID, OnlyFieldsOfType,
-    UpdateQuery } from 'mongodb';
+    Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, UpdateQuery,
+} from 'mongodb';
 import {
-    Content,
-    DiscussionDoc, DiscussionReplyDoc,     ProblemDoc,     ProblemStatusDoc, Tdoc, TrainingDoc,
+    Content, DiscussionDoc, DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc, Tdoc, TrainingDoc,
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -402,41 +401,37 @@ export async function revSetStatus<T extends keyof DocStatusType>(
     return res.value;
 }
 
-async function ensureIndexes() {
-    const ic = coll.createIndex.bind(coll);
-    const is = collStatus.createIndex.bind(collStatus);
-    const u = { unique: true };
-    const s = { sparse: true };
-    await ic({ domainId: 1, docType: 1, docId: 1 }, u);
-    await ic({ domainId: 1, docType: 1, owner: 1, docId: -1 });
-    // For problem
-    await ic({ domainId: 1, docType: 1, search: 'text', title: 'text' }, s);
-    await ic({ domainId: 1, docType: 1, tag: 1, docId: 1 }, s);
-    await ic({ domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1 }, s);
-    // For problem solution
-    await ic({ domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, s);
-    // For discussion
-    await ic({ domainId: 1, docType: 1, pin: -1, updateAt: -1, docId: -1 }, s);
-    await ic({ domainId: 1, docType: 1, parentType: 1, parentId: 1, updateAt: -1, docId: -1 }, s);
-    // Hidden doc
-    await ic({ domainId: 1, docType: 1, hidden: 1, docId: -1 }, s);
-    // For contest
-    await ic({ domainId: 1, docType: 1, pids: 1 }, s);
-    await ic({ domainId: 1, docType: 1, rule: 1, docId: -1 }, s);
-    // For training
-    await ic({ domainId: 1, docType: 1, 'dag.pids': 1 }, s);
-    await is({ domainId: 1, docType: 1, uid: 1, docId: 1 }, u);
-    // For rp system
-    await is({ domainId: 1, docType: 1, docId: 1, status: 1, rid: 1, rp: 1 }, s);
-    // For contest rule OI
-    await is({ domainId: 1, docType: 1, docId: 1, score: -1 }, s);
-    // For contest rule ACM
-    await is({ domainId: 1, docType: 1, docId: 1, accept: -1, time: 1 }, s);
-    // For training
-    await is({ domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, s);
-}
-
-bus.once('app/started', ensureIndexes);
+bus.once('app/started', async () => {
+    await db.ensureIndexes(
+        coll,
+        { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
+        { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },
+        // For problem
+        { key: { domainId: 1, docType: 1, search: 'text', title: 'text' }, name: 'search', sparse: true },
+        { key: { domainId: 1, docType: 1, tag: 1, docId: 1 }, name: 'tag', sparse: true },
+        { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1 }, name: 'hidden', sparse: true },
+        // For problem solution
+        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
+        // For discussion
+        { key: { domainId: 1, docType: 1, pin: -1, sort: -1, docId: -1 }, name: 'discussionSort', sparse: true },
+        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, pin: -1, sort: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
+        // Hidden doc
+        { key: { domainId: 1, docType: 1, hidden: 1, docId: -1 }, name: 'hiddenDoc', sparse: true },
+        // For contest
+        { key: { domainId: 1, docType: 1, pids: 1 }, name: 'contest', sparse: true },
+        { key: { domainId: 1, docType: 1, rule: 1, docId: -1 }, name: 'contestRule', sparse: true },
+        // For training
+        { key: { domainId: 1, docType: 1, 'dag.pids': 1 }, name: 'training', sparse: true },
+    );
+    await db.ensureIndexes(
+        collStatus,
+        { key: { domainId: 1, docType: 1, docId: 1, uid: 1 }, name: 'basic', unique: true },
+        { key: { domainId: 1, docType: 1, docId: 1, status: 1, rid: 1, rp: 1 }, name: 'rp', sparse: true },
+        { key: { domainId: 1, docType: 1, docId: 1, score: -1 }, name: 'contestRuleOI', sparse: true },
+        { key: { domainId: 1, docType: 1, docId: 1, accept: -1, time: 1 }, name: 'contestRuleACM', sparse: true },
+        { key: { domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, name: 'training', sparse: true },
+    );
+});
 bus.on('domain/delete', (domainId) => Promise.all([
     coll.deleteMany({ domainId }),
     collStatus.deleteMany({ domainId }),

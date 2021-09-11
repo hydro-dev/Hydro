@@ -93,7 +93,6 @@ class TaskModel {
     static async add(task: Partial<Task> & { type: string }) {
         const t: Task = {
             ...task,
-            count: task.count ?? 1,
             priority: task.priority ?? 0,
             executeAfter: task.executeAfter || new Date(),
             _id: new ObjectID(),

@@ -131,7 +131,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     ], (a, b) => a.uid === b.uid);
     for (const dudoc of dudocs) deltaudict[dudoc.uid] = dudoc.rpdelta;
     const contests: Tdoc<30 | 60>[] = await contest.getMulti('', { domainId, rated: true })
-        .sort('endAt', -1).toArray() as any;
+        .toArray() as any;
     await report({ message: `Found ${contests.length} contests in ${id}` });
     for (const i in contests) {
         const tdoc = contests[i];

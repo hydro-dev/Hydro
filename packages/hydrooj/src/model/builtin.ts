@@ -1,16 +1,8 @@
-// @ts-nocheck
-
-/*
- * Why nocheck?
- * BitInt requires at least ES2020, but we can't use it as
- * NodeJS doesn't support some of this new features.
- * e.g.: object?.property
- */
 import {
-    STATUS, STATUS_CODES,
-    STATUS_TEXTS, USER_GENDER_FEMALE,     USER_GENDER_ICONS,     USER_GENDER_MALE, USER_GENDER_OTHER,
-    USER_GENDER_RANGE,
-    USER_GENDERS } from '@hydrooj/utils/lib/status';
+    STATUS, STATUS_CODES, STATUS_TEXTS,
+    USER_GENDER_FEMALE, USER_GENDER_ICONS, USER_GENDER_MALE,
+    USER_GENDER_OTHER, USER_GENDER_RANGE, USER_GENDERS,
+} from '@hydrooj/utils/lib/status';
 
 export * from '@hydrooj/utils/lib/status';
 

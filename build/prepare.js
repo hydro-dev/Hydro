@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const compilerOptionsBase = {
-    target: 'es2019',
+    target: 'es2020',
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',

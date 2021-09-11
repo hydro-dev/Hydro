@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.34.4",
+    "version": "2.34.5",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -31,7 +31,7 @@
         "lodash": "^4.17.21",
         "lru-cache": "^6.0.0",
         "mime-types": "^2.1.32",
-        "minio": "7.0.17",
+        "minio": "7.0.19",
         "moment-timezone": "^0.5.33",
         "mongodb": "^3.7.0",
         "nanoid": "^3.1.25",

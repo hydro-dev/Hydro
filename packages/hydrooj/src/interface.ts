@@ -487,11 +487,12 @@ export interface JudgeResultBody {
 }
 
 export interface Task {
-    _id: ObjectID,
-    type: string,
-    executeAfter: Date,
-    priority: number,
-    [key: string]: any
+    _id: ObjectID;
+    type: string;
+    subType?: string;
+    executeAfter: Date;
+    priority: number;
+    [key: string]: any;
 }
 
 export interface UploadStream extends Writable {

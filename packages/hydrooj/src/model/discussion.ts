@@ -306,10 +306,10 @@ const t = Math.exp(-0.15);
 
 async function updateSort() {
     const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-    // eslint-disable-next-line no-await-in-loop
-    while (await cursor.hasNext()) {
+    while (true) {
         // eslint-disable-next-line no-await-in-loop
         const data = await cursor.next();
+        if (!data) return;
         // eslint-disable-next-line no-await-in-loop
         const rCount = await getMultiReply(data.domainId, data.docId).count();
         const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;

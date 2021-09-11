@@ -57,7 +57,17 @@ class MongoService implements BaseService {
             existed = [];
         }
         for (const index of args) {
-            const i = existed.find(t => t.name == index.name || JSON.stringify(t.key) == JSON.stringify(index.key));
+            let i = existed.find(t => t.name == index.name || JSON.stringify(t.key) == JSON.stringify(index.key));
+            if (!i && Object.keys(index.key).map(k => index.key[k]).includes('text')) {
+                i = existed.find(t => t.textIndexVersion);
+            }
+            if (i.textIndexVersion) {
+                const cur = Object.keys(i.key).filter(t => !t.startsWith('_')).map(k => k + ':' + i.key[k]);
+                for (const key of Object.keys(i.weights)) cur.push(key + ':text');
+                const wanted = Object.keys(index.key).map(key => key + ':' + index.key[key]);
+                if (cur.sort().join(' ') === wanted.sort().join(' ') && i.name === index.name) continue;
+            }
+            index.background = true;
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.createIndexes([index]);

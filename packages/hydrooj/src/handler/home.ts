@@ -1,10 +1,10 @@
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import {
-    BlacklistedError,
-    DomainAlreadyExistsError, InvalidTokenError,
-    NotFoundError, PermissionError,
-    UserAlreadyExistError, UserNotFoundError, ValidationError,     VerifyPasswordError } from '../error';
+    BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
+    NotFoundError, PermissionError, UserAlreadyExistError,
+    UserNotFoundError, ValidationError, VerifyPasswordError,
+} from '../error';
 import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar from '../lib/avatar';
 import { md5 } from '../lib/crypto';
@@ -25,7 +25,7 @@ import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param,     Route, Types,
+    Connection, ConnectionHandler, Handler, param, Route, Types,
 } from '../service/server';
 
 const { geoip, useragent } = global.Hydro.lib;
@@ -40,7 +40,7 @@ class HomeHandler extends Handler {
     async getHomework(domainId: string, limit: number = 5) {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
-                .sort('beginAt', -1).limit(limit).toArray();
+                .limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id,
                 tdocs.map((tdoc) => tdoc.docId), document.TYPE_HOMEWORK,
@@ -53,7 +53,7 @@ class HomeHandler extends Handler {
     async getContest(domainId: string, limit: number = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
-                .sort('beginAt', -1).limit(limit).toArray();
+                .limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
@@ -88,7 +88,7 @@ class HomeHandler extends Handler {
 
     async getRanking(domainId: string, limit: number = 50) {
         if (this.user.hasPerm(PERM.PERM_VIEW_RANKING)) {
-            const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $nin: [0, 1] } })
+            const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 } })
                 .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
             const uids = dudocs.map((dudoc) => dudoc.uid);
             this.collectUser(uids);

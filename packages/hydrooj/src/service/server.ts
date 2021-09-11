@@ -420,7 +420,7 @@ export class Handler extends HandlerCommon {
 
     csrfToken: string;
     loginMethods: any;
-    noCheckPermView: boolean;
+    noCheckPermView = false;
     notUsage: boolean;
     __param: Record<string, ParamOption[]>;
 
@@ -467,7 +467,6 @@ export class Handler extends HandlerCommon {
         const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
         if (xff) this.request.ip = this.request.headers[xff.toLowerCase()] || this.request.ip;
         if (xhost) this.request.host = this.request.headers[xhost.toLowerCase()] || this.request.host;
-        this.noCheckPermView = false;
     }
 
     // eslint-disable-next-line class-methods-use-this

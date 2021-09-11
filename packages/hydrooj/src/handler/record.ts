@@ -14,8 +14,8 @@ import TaskModel from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param,
-    Route, Types } from '../service/server';
+    Connection, ConnectionHandler, Handler, param, Route, Types,
+} from '../service/server';
 import { buildProjection } from '../utils';
 import { postJudge } from './judge';
 
@@ -57,9 +57,8 @@ class RecordListHandler extends Handler {
         if (status) q.status = status;
         if (all) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
-            q.domainId = { $exists: true };
         }
-        let cursor = record.getMulti(domainId, q).sort('_id', -1);
+        let cursor = record.getMulti(all ? '' : domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
         const limit = full ? 10 : system.get('pagination.record');
         const rdocs = invalid

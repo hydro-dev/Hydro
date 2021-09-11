@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Collection, Db, MongoClient } from 'mongodb';
 import { BaseService, Collections } from '../../interface';
 import * as bus from '../bus';
@@ -40,8 +39,6 @@ class MongoService implements BaseService {
     public async stop() {
         await this.client.close();
         await this.client2.close();
-        await this.db.close();
-        await this.db2.close();
     }
 }
 

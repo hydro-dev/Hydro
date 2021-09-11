@@ -1,9 +1,9 @@
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    DomainJoinAlreadyMemberError, DomainJoinForbiddenError,
-    InvalidJoinInvitationCodeError,
-    RoleAlreadyExistError, ValidationError } from '../error';
+    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, InvalidJoinInvitationCodeError,
+    RoleAlreadyExistError, ValidationError,
+} from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
 import paginate from '../lib/paginate';
@@ -16,15 +16,15 @@ import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post,
-    query,     Route, Types } from '../service/server';
+    Handler, param, post, query, Route, Types,
+} from '../service/server';
 import { log2 } from '../utils';
 
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await paginate(
-            domain.getMultiUserInDomain(domainId, { uid: { $nin: [0, 1] } }).sort({ rp: -1 }),
+            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 } }).sort({ rp: -1 }),
             page,
             100,
         );
@@ -33,13 +33,9 @@ class DomainRankHandler extends Handler {
             udocs.push(user.getById(domainId, dudoc.uid));
         }
         udocs = await Promise.all(udocs);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['ranking', null],
-        ];
         this.response.template = 'ranking.html';
         this.response.body = {
-            udocs, upcount, ucount, page, path,
+            udocs, upcount, ucount, page,
         };
     }
 }
@@ -55,13 +51,8 @@ class ManageHandler extends Handler {
 
 class DomainEditHandler extends ManageHandler {
     async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_edit', null],
-        ];
         this.response.template = 'domain_edit.html';
-        this.response.body = { current: this.domain, settings: DOMAIN_SETTINGS, path };
+        this.response.body = { current: this.domain, settings: DOMAIN_SETTINGS };
     }
 
     async post(args) {
@@ -76,13 +67,8 @@ class DomainEditHandler extends ManageHandler {
 
 class DomainDashboardHandler extends ManageHandler {
     async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_dashboard', null],
-        ];
         this.response.template = 'domain_dashboard.html';
-        this.response.body = { domain: this.domain, path };
+        this.response.body = { domain: this.domain };
     }
 
     async postInitDiscussionNode({ domainId }) {
@@ -165,9 +151,7 @@ class DomainPermissionHandler extends ManageHandler {
             const perms = this.request.body[role] instanceof Array
                 ? this.request.body[role]
                 : [this.request.body[role]];
-            // @ts-expect-error
             roles[role] = 0n;
-            // @ts-expect-error
             for (const r of perms) roles[role] |= 1n << BigInt(r);
         }
         await domain.setRoles(domainId, roles);
@@ -178,13 +162,8 @@ class DomainPermissionHandler extends ManageHandler {
 class DomainRoleHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await domain.getRoles(domainId, true);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_role', null],
-        ];
         this.response.template = 'domain_role.html';
-        this.response.body = { roles, domain: this.domain, path };
+        this.response.body = { roles, domain: this.domain };
     }
 
     @param('role', Types.Name)
@@ -220,11 +199,6 @@ class DomainJoinApplicationsHandler extends ManageHandler {
             delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
         }
         this.response.body.url_prefix = (this.domain.host || [])[0] || system.get('server.url');
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_join_applications', null],
-        ];
         this.response.template = 'domain_join_applications.html';
     }
 
@@ -255,11 +229,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
 
 class DomainJoinHandler extends Handler {
     joinSettings: any;
-
-    constructor(ctx) {
-        super(ctx);
-        this.noCheckPermView = true;
-    }
+    noCheckPermView = true;
 
     async prepare() {
         const r = await domain.getRoles(this.domain);
@@ -274,10 +244,6 @@ class DomainJoinHandler extends Handler {
         this.response.template = 'domain_join.html';
         this.response.body.joinSettings = this.joinSettings;
         this.response.body.code = code;
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['domain_join', 'domain_join', { domainId, code }],
-        ];
     }
 
     @param('code', Types.Content, true)
