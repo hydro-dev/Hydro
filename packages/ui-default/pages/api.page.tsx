@@ -2,7 +2,6 @@ import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 import React from 'react';
 import { render } from 'react-dom';
-import 'graphiql/graphiql.css';
 
 const Logo = () => <span>Hydro API Console </span>;
 const defaultQuery = `\
@@ -17,6 +16,7 @@ const page = new NamedPage('api', async () => {
     import('graphiql'),
     import('graphql'),
     request.get('/api?schema'),
+    import('graphiql/graphiql.css'),
   ]);
   // @ts-ignore
   GraphiQL.Logo = Logo;

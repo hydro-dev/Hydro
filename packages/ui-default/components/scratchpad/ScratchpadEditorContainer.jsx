@@ -61,7 +61,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
         this.editor.onDidChangeConfiguration(() => {
           const current = this.editor.getOptions()._values[40].fontSize;
           localStorage.setItem('scratchpad.editor.fontSize', current);
-        })
+        }),
       );
     }
   }
@@ -94,7 +94,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
             range: model.getFullModelRange(),
             text: value,
           },
-        ]
+        ],
       );
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;

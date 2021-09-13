@@ -122,7 +122,7 @@ monaco.languages.registerCompletionItemProvider('markdown', {
       startLineNumber: position.lineNumber,
       endLineNumber: position.lineNumber,
       startColumn: word.startColumn - 1,
-      endColumn: position.column - 1,
+      endColumn: word.startColumn - 1,
     });
     if (![':', '/'].includes(prefix)) return { suggestions: [] };
     const range = {

@@ -4,7 +4,7 @@ import Notification from 'vj/components/notification/index';
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 
-const highlighterPage = new AutoloadPage('highlighterPage', async () => {
+const highlighterPage = new AutoloadPage('highlighterPage', () => {
   Promise.all([
     import('./prismjs'),
     UserContext.formatCode ? load() : [true, null],
