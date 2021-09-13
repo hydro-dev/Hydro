@@ -71,7 +71,7 @@ class User implements _User {
         this._dudoc = dudoc;
         this._salt = udoc.salt;
         this._hash = udoc.hash;
-        this._regip = udoc.ip[0];
+        this._regip = udoc.ip?.[0] || '';
         this._loginip = udoc.loginip;
         this._files = udoc._files || [];
 
