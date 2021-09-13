@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable prefer-destructuring */
 
+const { randomUUID } = require('crypto');
 const { escapeHtml } = require('vj/../../node_modules/markdown-it/lib/common/utils');
 
 /* eslint-disable no-restricted-properties */
@@ -118,9 +119,25 @@ module.exports = function videoPlugin(md) {
         + `render?url=https://osf.io/${videoID}/?action=download%26mode=render");`
         + '    }); </script>';
     }
-    if (service === 'pdf') return `<iframe src="${videoID}?noDisposition=on#view=fit" width="100%" style="min-height: 100vh;border: none;"></iframe>`;
-    if (options[service]) {
-      return `<div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width || 640
+    if (service === 'pdf') {
+      return `\
+        <object classid="clsid:${randomUUID().toUpperCase()}">
+          <param name="SRC" value="${videoID}" >
+          <embed width="100%" style="min-height: 100vh;border: none;" fullscreen="yes" src="${videoID}">
+            <noembed></noembed>
+          </embed>
+        </object>`;
+    }
+    if (['url', 'video'].includes(service)) {
+      return `\
+        <video width="100%" controls>
+          <source src="${videoID}" type="${videoID.endsWith('ogg') ? 'video/ogg' : 'video/mp4'}">
+          Your browser doesn't support video tag.
+        </video>`;
+    }
+    if (options[service]?.width) {
+      return `<div class="embed-responsive embed-responsive-16by9">
+      <iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width || 640
         }" height="${options[service].height || 390
         }" src="${options.url(service, videoID, tokens[idx].url, options)
         }" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>`;
