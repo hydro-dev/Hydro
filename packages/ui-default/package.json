@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.20.1",
+  "version": "4.20.2",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -32,6 +32,8 @@
     "diff-dom": "^4.2.2",
     "echarts": "^5.2.0",
     "emojify.js": "^1.1.0",
+    "emojis-keywords": "2.0.0",
+    "emojis-list": "2.1.0",
     "esbuild-loader": "^2.15.1",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",

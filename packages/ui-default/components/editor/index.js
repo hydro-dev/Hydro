@@ -55,8 +55,7 @@ export default class Editor extends DOMAttachedObject {
     // eslint-disable-next-line no-nested-ternary
     this.model = typeof model === 'string'
       ? monaco.editor.getModel(monaco.Uri.parse(model))
-        ? monaco.editor.getModel(monaco.Uri.parse(model))
-        : monaco.editor.createModel(value, language, monaco.Uri.parse(model))
+      || monaco.editor.createModel(value, language, monaco.Uri.parse(model))
       : model;
     this.model.setValue(value);
     this.model.updateOptions({ language });
@@ -111,6 +110,8 @@ export default class Editor extends DOMAttachedObject {
     this.isValid = true;
     if (hasFocus) this.focus();
     if (autoResize) updateEditorHeight();
+    window.model = this.model;
+    window.editor = this.editor;
   }
 
   async initVditor() {
