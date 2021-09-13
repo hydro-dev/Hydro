@@ -16,7 +16,7 @@ async function _address(
     if (bset.has(ip)) return;
     bset.add(ip);
     report({ message: `ip ${ip}` });
-    const users = await db.collection('user').find({ $or: [{ loginip: ip }, { regip: ip }] }).toArray();
+    const users = await db.collection('user').find({ ip }).toArray();
     const tasks = [];
     for (const udoc of users) {
         tasks.push(_user(udoc._id, bset, uset, dset, dryrun, report));

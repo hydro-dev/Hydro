@@ -515,6 +515,11 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _44_45() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllUser((udoc) => user.setById(udoc._id, { ip: [udoc.regip] }, { regip: '' }));
+        return true;
+    },
 ];
 
 export default scripts;

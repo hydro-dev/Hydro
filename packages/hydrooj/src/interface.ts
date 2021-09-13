@@ -58,19 +58,19 @@ export interface Setting {
 }
 
 export interface Udoc extends Dictionary<any> {
-    _id: number,
-    mail: string,
-    mailLower: string,
-    uname: string,
-    unameLower: string,
-    salt: string,
-    hash: string,
-    hashType: string,
-    priv: number,
-    regat: Date,
-    loginat: Date,
-    regip: string,
-    loginip: string,
+    _id: number;
+    mail: string;
+    mailLower: string;
+    uname: string;
+    unameLower: string;
+    salt: string;
+    hash: string;
+    hashType: string;
+    priv: number;
+    regat: Date;
+    loginat: Date;
+    ip: string[];
+    loginip: string;
 }
 
 export type ownerInfo = { owner: number, maintainer?: number[] };
