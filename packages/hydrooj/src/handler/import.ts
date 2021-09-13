@@ -20,8 +20,8 @@ import { PERM, PRIV } from '../model/builtin';
 import problem, { ProblemDoc } from '../model/problem';
 import TaskModel from '../model/task';
 import {
-    Handler, post,
-    Route, Types } from '../service/server';
+    Handler, post, Route, Types,
+} from '../service/server';
 
 const RE_SYZOJ = /(https?):\/\/([^/]+)\/(problem|p)\/([0-9]+)\/?/i;
 const logger = new Logger('import.syzoj');

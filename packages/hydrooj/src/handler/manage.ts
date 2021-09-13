@@ -3,8 +3,8 @@ import * as yaml from 'js-yaml';
 import * as check from '../check';
 import { ValidationError } from '../error';
 import {
-    isEmail, isPassword,
-    isUname,     validate } from '../lib/validator';
+    isEmail, isPassword, isUname, validate,
+} from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -14,7 +14,8 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param,     Route, Types,
+    Connection, ConnectionHandler, Handler,
+    param, Route, Types,
 } from '../service/server';
 import * as judge from './judge';
 

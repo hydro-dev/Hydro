@@ -209,6 +209,7 @@ SystemSetting(
     Setting('setting_storage', 'installid', String.random(64), 'text', 'installid', 'Installation ID', FLAG_HIDDEN | FLAG_DISABLED),
 );
 
+// eslint-disable-next-line import/no-mutable-exports
 export let langs = {};
 
 bus.once('app/started', async () => {

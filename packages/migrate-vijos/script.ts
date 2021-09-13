@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    DiscussionTailReplyDoc, MessageDoc,     RecordDoc, TestCase, TrainingNode,
+    DiscussionTailReplyDoc, MessageDoc, RecordDoc, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const dst = global.Hydro.service.db;

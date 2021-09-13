@@ -12,8 +12,8 @@ import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Handler, param,
-    Route, Types } from '../service/server';
+    Handler, param, Route, Types,
+} from '../service/server';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];

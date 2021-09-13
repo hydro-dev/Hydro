@@ -37,7 +37,7 @@
         "cross-spawn": "^7.0.3",
         "esbuild": "^0.12.26",
         "eslint": "^7.32.0",
-        "eslint-config-airbnb-typescript": "^14.0.0",
+        "eslint-config-airbnb-typescript": "12.3.1",
         "eslint-import-resolver-typescript": "^2.4.0",
         "eslint-plugin-import": "^2.24.2",
         "eslint-plugin-simple-import-sort": "^7.0.0",

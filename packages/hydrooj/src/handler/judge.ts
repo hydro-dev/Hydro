@@ -14,7 +14,7 @@ import task from '../model/task';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
-    Connection, ConnectionHandler, Handler, post,     Route, Types,
+    Connection, ConnectionHandler, Handler, post, Route, Types,
 } from '../service/server';
 import { sleep } from '../utils';
 

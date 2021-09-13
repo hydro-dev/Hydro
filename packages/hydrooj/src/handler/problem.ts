@@ -4,13 +4,13 @@ import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError,
-    ForbiddenError,
-    NoProblemError, PermissionError, ProblemNotFoundError,     SolutionNotFoundError, ValidationError,
+    BadRequestError, ForbiddenError, NoProblemError,
+    PermissionError, ProblemNotFoundError, SolutionNotFoundError,
+    ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemStatusDoc,
-    User } from '../interface';
+    ProblemDoc, ProblemStatusDoc, User,
+} from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -26,8 +26,8 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Handler, param, post, query,
-    Route, route, Types } from '../service/server';
+    Handler, param, post, query, Route, route, Types,
+} from '../service/server';
 import { registerResolver, registerValue } from './api';
 
 export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split(',')).map((e) => e.trim());

@@ -90,8 +90,14 @@ class StorageService {
                 'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
             ]);
             this.opts = {
-                endPoint, accessKey, secretKey, bucket, region,
-                pathStyle, endPointForUser, endPointForJudge,
+                endPoint,
+                accessKey,
+                secretKey,
+                bucket,
+                region,
+                pathStyle,
+                endPointForUser,
+                endPointForJudge,
             };
             this.client = new Client({
                 ...parseMainEndpointUrl(this.opts.endPoint),

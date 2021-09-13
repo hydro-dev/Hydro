@@ -1,13 +1,14 @@
 import {
-    Dictionary, escapeRegExp, flatten, groupBy, pick,
+    escapeRegExp, flatten, groupBy, pick,
 } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import type { Readable } from 'stream';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, DomainDoc,
-    ProblemDict, ProblemId,     ProblemStatusDoc } from '../interface';
+    Document, DomainDoc, ProblemDict,
+    ProblemId, ProblemStatusDoc,
+} from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
 import {
@@ -309,7 +310,7 @@ export class ProblemModel {
         const psdocs = await ProblemModel.getMultiStatus(
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
         ).toArray();
-        const r: Dictionary<ProblemStatusDoc> = {};
+        const r: Record<string, ProblemStatusDoc> = {};
         for (const psdoc of psdocs) r[psdoc.docId] = psdoc;
         return r;
     }

@@ -10,8 +10,8 @@ import * as oplog from '../model/oplog';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param,
-    Route, Types } from '../service/server';
+    Handler, param, Route, Types,
+} from '../service/server';
 
 export const typeMapper = {
     problem: document.TYPE_PROBLEM,

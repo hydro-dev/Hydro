@@ -6,12 +6,12 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError,
-    HomeworkNotAttendedError, HomeworkNotLiveError, ProblemNotFoundError,
-    ValidationError } from '../error';
+    BadRequestError, HomeworkNotAttendedError, HomeworkNotLiveError,
+    ProblemNotFoundError, ValidationError,
+} from '../error';
 import {
-    DomainDoc,
-    PenaltyRules, ProblemDoc, Tdoc, User } from '../interface';
+    DomainDoc, PenaltyRules, ProblemDoc, Tdoc, User,
+} from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -25,8 +25,8 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Handler, param,
-    Route, Types } from '../service/server';
+    Handler, param, Route, Types,
+} from '../service/server';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;

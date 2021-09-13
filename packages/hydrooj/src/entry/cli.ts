@@ -1,3 +1,4 @@
+/* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 import cac from 'cac';
 import { ObjectID } from 'mongodb';

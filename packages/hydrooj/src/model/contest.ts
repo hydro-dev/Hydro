@@ -1,12 +1,12 @@
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ContestAlreadyAttendedError,
-    ContestNotAttendedError, ContestNotFoundError, ContestScoreboardHiddenError,
-    ValidationError } from '../error';
+    ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
+    ContestScoreboardHiddenError, ValidationError,
+} from '../error';
 import {
     ContestRule, ContestRules, ProblemDict,
-    ProblemId,     ScoreboardNode, ScoreboardRow, Tdoc,
-    Udict,
+    ProblemId, ScoreboardNode, ScoreboardRow,
+    Tdoc, Udict,
 } from '../interface';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';

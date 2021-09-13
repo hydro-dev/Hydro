@@ -37,7 +37,7 @@ class HomeHandler extends Handler {
         uids.forEach((uid) => this.uids.add(uid));
     }
 
-    async getHomework(domainId: string, limit: number = 5) {
+    async getHomework(domainId: string, limit = 5) {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
             const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
                 .limit(limit).toArray();
@@ -50,7 +50,7 @@ class HomeHandler extends Handler {
         return ['homework', [], {}];
     }
 
-    async getContest(domainId: string, limit: number = 10) {
+    async getContest(domainId: string, limit = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
             const tdocs = await contest.getMulti(domainId)
                 .limit(limit).toArray();
@@ -62,7 +62,7 @@ class HomeHandler extends Handler {
         return ['contest', [], {}];
     }
 
-    async getTraining(domainId: string, limit: number = 10) {
+    async getTraining(domainId: string, limit = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti(domainId)
                 .sort('_id', 1).limit(limit).toArray();
@@ -74,7 +74,7 @@ class HomeHandler extends Handler {
         return ['training', [], {}];
     }
 
-    async getDiscussion(domainId: string, limit: number = 20) {
+    async getDiscussion(domainId: string, limit = 20) {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti(domainId).limit(limit).toArray();
             const vndict = await discussion.getListVnodes(
@@ -86,7 +86,7 @@ class HomeHandler extends Handler {
         return ['discussion', [], {}];
     }
 
-    async getRanking(domainId: string, limit: number = 50) {
+    async getRanking(domainId: string, limit = 50) {
         if (this.user.hasPerm(PERM.PERM_VIEW_RANKING)) {
             const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 } })
                 .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();

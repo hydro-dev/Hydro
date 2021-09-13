@@ -18,7 +18,9 @@ import * as system from '../model/system';
 import task from '../model/task';
 import token from '../model/token';
 import user from '../model/user';
-import { Handler, param, post, Route, Types } from '../service/server';
+import {
+    Handler, param, post, Route, Types,
+} from '../service/server';
 import { registerResolver, registerValue } from './api';
 
 registerValue('User', [

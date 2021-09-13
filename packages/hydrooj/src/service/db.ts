@@ -1,4 +1,7 @@
-import { Collection, Db, IndexSpecification, MongoClient } from 'mongodb';
+/* eslint-disable no-await-in-loop */
+import {
+    Collection, Db, IndexSpecification, MongoClient,
+} from 'mongodb';
 import { BaseService, Collections } from '../interface';
 import { Logger } from '../logger';
 import * as bus from './bus';
@@ -57,9 +60,9 @@ class MongoService implements BaseService {
             existed = [];
         }
         for (const index of args) {
-            let i = existed.find(t => t.name == index.name || JSON.stringify(t.key) == JSON.stringify(index.key));
-            if (!i && Object.keys(index.key).map(k => index.key[k]).includes('text')) {
-                i = existed.find(t => t.textIndexVersion);
+            let i = existed.find((t) => t.name === index.name || JSON.stringify(t.key) === JSON.stringify(index.key));
+            if (!i && Object.keys(index.key).map((k) => index.key[k]).includes('text')) {
+                i = existed.find((t) => t.textIndexVersion);
             }
             index.background = true;
             if (!i) {
@@ -67,9 +70,9 @@ class MongoService implements BaseService {
                 await coll.createIndexes([index]);
             } else if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
                 if (i.textIndexVersion) {
-                    const cur = Object.keys(i.key).filter(t => !t.startsWith('_')).map(k => k + ':' + i.key[k]);
-                    for (const key of Object.keys(i.weights)) cur.push(key + ':text');
-                    const wanted = Object.keys(index.key).map(key => key + ':' + index.key[key]);
+                    const cur = Object.keys(i.key).filter((t) => !t.startsWith('_')).map((k) => `${k}:${i.key[k]}`);
+                    for (const key of Object.keys(i.weights)) cur.push(`${key}:text`);
+                    const wanted = Object.keys(index.key).map((key) => `${key}:${index.key[key]}`);
                     if (cur.sort().join(' ') === wanted.sort().join(' ') && i.name === index.name) continue;
                 }
                 logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);

@@ -1,6 +1,7 @@
 import {
-    Ingest, PushOptions,
-    QueryOptions,     Search, SuggestOptions } from 'sonic-channel';
+    Ingest, PushOptions, QueryOptions,
+    Search, SuggestOptions,
+} from 'sonic-channel';
 import { BaseService } from 'hydrooj';
 import { Logger } from 'hydrooj/src/logger';
 import * as system from 'hydrooj/src/model/system';

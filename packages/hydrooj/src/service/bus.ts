@@ -6,10 +6,10 @@ import type {
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
-    DiscussionDoc,
-    DomainDoc, FileInfo,     MessageDoc, ProblemDoc, RecordDoc,
-    Tdoc,
-    TrainingDoc, User } from '../interface';
+    DiscussionDoc, DomainDoc, FileInfo,
+    MessageDoc, ProblemDoc, RecordDoc,
+    Tdoc, TrainingDoc, User,
+} from '../interface';
 import { Logger } from '../logger';
 import type { DocType } from '../model/document';
 import type { Handler } from './server';
