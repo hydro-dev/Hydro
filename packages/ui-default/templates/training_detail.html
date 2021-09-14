@@ -190,7 +190,7 @@
           {% if tsdoc['enroll'] %}
           <dt>{{ _('Progress') }}</dt><dd>{{ _('Completed') }} {{ (100 * tsdoc['donePids']|length / pids|length)|round|int }}%</dd>
           {% endif %}
-          <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc['enroll']|default(0) }}</dd>
+          <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc.attend|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>
           <dd>{{ user.render_inline(owner, badge=false) }}</dd>
         </dl>
