@@ -247,7 +247,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   }
   $main.val(getContent(activeTab));
   function onChange(val) {
-    console.log('onChange', activeTab, val);
     try {
       val = JSON.parse(val);
       if (!(val instanceof Array)) val = JSON.stringify(val);
@@ -255,7 +254,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     const empty = /^\s*$/g.test(val);
     if (empty) delete content[activeTab];
     else content[activeTab] = val;
-    console.log(content);
     if (!Object.keys(content).length) $field.text('');
     else $field.text(JSON.stringify(content));
   }
@@ -265,5 +263,17 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     activeTab = lang;
     const val = getContent(lang);
     editor.value(val);
+  });
+  $('[type="submit"]').on('click', (ev) => {
+    if (!$('[name="title"]').val().toString().length) {
+      Notification.error(i18n('Title is required.'));
+      $('body').scrollTop();
+      $('html, body').animate(
+        { scrollTop: 0 },
+        300,
+        () => $('[name="title"]').focus(),
+      );
+      ev.preventDefault();
+    }
   });
 });
