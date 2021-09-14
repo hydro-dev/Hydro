@@ -23,12 +23,14 @@ export default class Sock {
   constructor(url, showNotification = true) {
     this.url = url;
     this.isreconnect = false;
+    this.retryCount = 0;
     this.init();
     this.showNotification = showNotification;
   }
 
   onauth() {
     remove();
+    this.retryCount = 0;
     if (this.onopen) this.onopen(this.sock);
   }
 
@@ -37,12 +39,13 @@ export default class Sock {
     // SockJS wouldn't send cookie. hack.
     this.sock.onopen = () => this.send(document.cookie);
     this.sock.onclose = ({ code, reason }) => {
+      this.retryCount++;
       console.warn('Connection closed, ', code, reason);
       if (code >= 4000) this.closed = true;
       if (!this.closed) {
-        if (this.showNotification) create();
         this.isreconnect = setTimeout(this.init.bind(this), 3000);
-      } else if (this.showNotification) create();
+      }
+      if (this.showNotification && this.retryCount > 3) create();
       if (this.onclose) this.onclose(code, reason);
     };
     this.sock.onmessage = (message) => {
