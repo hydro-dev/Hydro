@@ -2,7 +2,6 @@
 import { NumericDictionary, unionWith } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { ProblemDoc, Tdoc, Udoc } from '../interface';
-import paginate from '../lib/paginate';
 import rating from '../lib/rating';
 import { PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';

@@ -20,7 +20,7 @@ export async function run({
     const query = (q: string | mysql.Query): Promise<[values: any[], fields: mysql.FieldInfo[]]> => new Promise((res, rej) => {
         src.query(q, (err, val, fields) => {
             if (err) rej(err);
-            res([val, fields]);
+            else res([val, fields]);
         });
     });
     report({ message: 'Connected to database' });
