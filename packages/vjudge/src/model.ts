@@ -30,10 +30,14 @@ class Service {
         const next = (payload) => Judge.next({ ...payload, rid: task.rid });
         const end = (payload) => Judge.end({ ...payload, rid: task.rid });
         await next({ status: STATUS.STATUS_FETCHED });
-        const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
-        if (!rid) return;
-        await next({ status: STATUS.STATUS_JUDGING });
-        await this.api.waitForSubmission(rid, next, end);
+        try {
+            const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
+            if (!rid) return;
+            await next({ status: STATUS.STATUS_JUDGING });
+            await this.api.waitForSubmission(rid, next, end);
+        } catch (e) {
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: e.message });
+        }
     }
 
     async sync(domainId: string, resync = false) {
