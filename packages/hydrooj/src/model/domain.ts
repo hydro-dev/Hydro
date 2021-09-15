@@ -103,7 +103,9 @@ class DomainModel {
     static async getList(domainIds: string[]) {
         const r: Record<string, DomainDoc | null> = {};
         // eslint-disable-next-line no-await-in-loop
-        for (const domainId of domainIds) r[domainId] = await DomainModel.get(domainId);
+        const tasks = [];
+        for (const domainId of domainIds) tasks.push(DomainModel.get(domainId).then((ddoc) => { r[domainId] = ddoc; }));
+        await Promise.all(tasks);
         return r;
     }
 

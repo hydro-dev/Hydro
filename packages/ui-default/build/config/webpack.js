@@ -12,7 +12,6 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
 import WebpackBar from 'webpackbar';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
-import StaticManifestPlugin from '../plugins/manifest.webpack';
 import root from '../utils/root';
 
 const beautifyOutputUrl = mapWebpackUrlPrefix([
@@ -236,13 +235,6 @@ export default function (env = {}) {
             entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/yaml.worker.js'),
           },
         }],
-      }),
-      new StaticManifestPlugin({
-        fileName: 'static-manifest.json',
-        ignore: [
-          'img/emoji/',
-          'katex/',
-        ],
       }),
       ...env.measure ? [new BundleAnalyzerPlugin({ analyzerPort: 'auto' })] : [],
     ],

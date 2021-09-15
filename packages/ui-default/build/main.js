@@ -76,6 +76,9 @@ async function main() {
   await runWebpack(argv.options);
   if (argv.options.production) {
     fs.removeSync('public/vditor/dist/js/mathjax');
+    fs.removeSync('public/vditor/dist/js/echarts');
+    fs.removeSync('public/vditor/dist/js/graphviz');
+    fs.removeSync('public/vditor/dist/js/mermaid');
     fs.removeSync('public/vditor/dist/js/abcjs');
   }
   process.chdir(dir);

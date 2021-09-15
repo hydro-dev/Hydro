@@ -30,7 +30,17 @@ export function addon(addonPath: string, prepend = false) {
             const packagejson = require.resolve(`${addonPath}/package.json`);
             const modulePath = path.dirname(packagejson);
             const publicPath = path.resolve(modulePath, 'public');
-            if (fs.existsSync(publicPath)) global.publicDirs[prepend ? 'push' : 'unshift'](publicPath);
+            if (fs.existsSync(publicPath)) {
+                global.publicDirs[prepend ? 'push' : 'unshift'](publicPath);
+                const targets = fs.readdirSync(publicPath);
+                for (const target of targets) {
+                    if (global.ui.manifest[target] && !prepend) {
+                        global.ui.manifest[target] = publicPath;
+                    } else if (!global.staticFiles[target]) {
+                        global.ui.manifest[target] = publicPath;
+                    }
+                }
+            }
             global.addons[prepend ? 'unshift' : 'push'](modulePath);
         } catch (e) {
             logger.error(`Addon not found: ${addonPath}`);

@@ -23,25 +23,16 @@ async function runProblem(...arg: any[]) {
         ? await problem.get(arg[0], arg[1])
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
-    const [, nPages] = await paginate(
-        problem.getMultiStatus(
+    const nPages = Math.floor(
+        (await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
-        ),
-        1,
-        100,
+        ).count() + 99) / 100,
     );
-    const nAccept = await problem.getMultiStatus(
-        pdoc.domainId, { docId: pdoc.docId, status: STATUS.STATUS_ACCEPTED },
-    ).count();
-    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(nAccept)) + 1);
+    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1);
     for (let page = 1; page <= nPages; page++) {
-        const [psdocs] = await paginate(
-            problem.getMultiStatus(
-                pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
-            ),
-            page,
-            100,
-        ) as any[][];
+        const psdocs = await problem.getMultiStatus(
+            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+        ).limit(100).skip((page - 1) * 100).project({ rid: 1 }).toArray();
         const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
         for (const psdoc of psdocs) {
             if (rdict[psdoc.rid.toHexString()]) {
@@ -95,8 +86,10 @@ export async function calcLevel(domainId: string, report: Function) {
     const coll = db.collection('domain.user');
     const ducur = domain.getMultiUserInDomain(domainId, filter).project({ rp: 1 }).sort({ rp: -1 });
     let bulk = coll.initializeUnorderedBulkOp();
-    while (await ducur.hasNext()) {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
         const dudoc = await ducur.next();
+        if (!dudoc) break;
         if ([0, 1].includes(dudoc.uid)) continue;
         count++;
         if (!dudoc.rp) dudoc.rp = null;
@@ -130,18 +123,6 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
         ...await domain.getMultiUserInDomain('', { domainId }).toArray(),
     ], (a, b) => a.uid === b.uid);
     for (const dudoc of dudocs) deltaudict[dudoc.uid] = dudoc.rpdelta;
-    const contests: Tdoc<30 | 60>[] = await contest.getMulti('', { domainId, rated: true })
-        .toArray() as any;
-    await report({ message: `Found ${contests.length} contests in ${id}` });
-    for (const i in contests) {
-        const tdoc = contests[i];
-        await runContest(tdoc, udict, report);
-        if (!isSub) {
-            await report({
-                progress: Math.floor(((parseInt(i, 10) + 1) / contests.length) * 100),
-            });
-        }
-    }
     // TODO pagination
     const problems = await problem.getMulti('', { domainId, hidden: false }).toArray();
     await report({ message: `Found ${problems.length} problems in ${id}` });
@@ -150,7 +131,19 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
         await runProblem(pdoc, udict);
         if (!isSub) {
             await report({
-                progress: Math.floor(((parseInt(i, 10) + 1) / problems.length) * 100),
+                progress: Math.floor(((+i + 1) / problems.length) * 100),
+            });
+        }
+    }
+    const contests: Tdoc<30 | 60>[] = await contest.getMulti('', { domainId, rated: true })
+        .toArray() as any;
+    await report({ message: `Found ${contests.length} contests in ${id}` });
+    for (const i in contests) {
+        const tdoc = contests[i];
+        await runContest(tdoc, udict, report);
+        if (!isSub) {
+            await report({
+                progress: Math.floor(((+i + 1) / contests.length) * 100),
             });
         }
     }
@@ -182,7 +175,7 @@ export async function run({ domainId }, report: Function) {
                     memory: 0,
                     score: 0,
                 },
-                progress: Math.floor(((parseInt(i, 10) + 1) / domains.length) * 100),
+                progress: Math.floor(((+i + 1) / domains.length) * 100),
             });
         }
     } else await runInDomain(domainId, false, report);

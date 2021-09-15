@@ -64,7 +64,6 @@ echo 'Installing g++'
 apt-get install -y g++ >/dev/null
 
 # Install HydroOJ
-# TODO: install basic addons?
 echo "Installing Hydro"
 yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge
 wget https://s3.undefined.moe/file/executor-amd64 -O /usr/bin/sandbox

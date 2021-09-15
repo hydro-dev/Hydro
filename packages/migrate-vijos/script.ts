@@ -6,7 +6,6 @@ import {
 
 const dst = global.Hydro.service.db;
 const { discussion, document } = global.Hydro.model;
-// TODO output enhancement
 const map = {};
 
 const pid = (id) => {

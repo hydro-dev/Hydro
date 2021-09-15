@@ -54,7 +54,6 @@ const scripts: UpgradeScript[] = [
             await document.getMulti(d._id, document.TYPE_DISCUSSION_REPLY).forEach((drdoc) => {
                 bulk.find({ _id: drdoc._id }).updateOne({ $set: { history: [] } });
             });
-            // TODO tail reply
             await document.getMulti(d._id, document.TYPE_PROBLEM_SOLUTION).forEach((psdoc) => {
                 bulk.find({ _id: psdoc._id }).updateOne({ $set: { history: [] } });
             });

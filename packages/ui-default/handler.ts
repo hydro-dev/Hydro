@@ -1,9 +1,8 @@
 /* eslint-disable no-return-await */
 /* eslint-disable camelcase */
 import crypto from 'crypto';
-import { readdir, readFile } from 'fs-extra';
+import { readFileSync } from 'fs-extra';
 import { join } from 'path';
-import { tmpdir } from 'os';
 import { ObjectID } from 'mongodb';
 import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
@@ -31,8 +30,10 @@ declare module 'hydrooj/src/interface' {
 
 const cache = {};
 const coll = db.collection('cache');
+const pages = Object.keys(global.ui.manifest)
+  .filter((file) => file.endsWith('.page.js'))
+  .map((i) => readFileSync(join(global.ui.manifest[i], i), 'utf-8'));
 
-const basedir = join(tmpdir(), 'hydro', 'public');
 async function constant(args: ConstantArgs) {
   // CompileLangs
   const payload = [`window.LANGS=${JSON.stringify(setting.langs)};`];
@@ -64,11 +65,7 @@ async function constant(args: ConstantArgs) {
     }` : ''}\`;
     document.body.appendChild(e);`;
 
-  const files = await readdir(basedir);
-  const pages = files
-    .filter((file) => file.endsWith('.page.js'))
-    .map((i) => readFile(join(basedir, i), 'utf-8'));
-  payload.push(...await Promise.all(pages));
+  payload.push(...pages);
 
   const c = crypto.createHash('sha1');
   c.update(JSON.stringify(payload));

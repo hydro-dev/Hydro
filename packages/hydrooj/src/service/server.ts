@@ -309,7 +309,7 @@ export class HandlerCommon {
     }
 
     renderTitle(str: string) {
-        const name = this.domain.ui?.name || system.get('server.name');
+        const name = this.domain?.ui?.name || system.get('server.name');
         if (this.extraTitleContent) return `${this.translate(str)} - ${this.extraTitleContent} - ${name}`;
         return `${this.translate(str)} - ${name}`;
     }

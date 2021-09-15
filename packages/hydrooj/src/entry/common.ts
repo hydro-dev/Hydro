@@ -148,19 +148,6 @@ export async function template(pending: string[], fail: string[]) {
     await bus.serial('app/load/template');
 }
 
-export async function uistatic(pending: string[], fail: string[]) {
-    for (const i of pending) {
-        const p = path.resolve(i, 'public', 'static-manifest.json');
-        if (fs.existsSync(p) && fs.statSync(p).isFile() && !fail.includes(i)) {
-            try {
-                Object.assign(global.Hydro.ui.manifest, eval('require')(p));
-            } catch (e) {
-                fail.push(i);
-            }
-        }
-    }
-}
-
 export async function model(pending: string[], fail: string[]) {
     for (const i of pending) {
         let p = path.resolve(i, 'model.ts');

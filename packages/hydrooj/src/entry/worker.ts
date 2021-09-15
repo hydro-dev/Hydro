@@ -10,7 +10,7 @@ import * as bus from '../service/bus';
 import db from '../service/db';
 import {
     builtinHandler, builtinLib, builtinModel,
-    builtinScript, handler, lib, locale, model, script, service, setting, template, uistatic,
+    builtinScript, handler, lib, locale, model, script, service, setting, template,
 } from './common';
 
 const logger = new Logger('worker');
@@ -34,7 +34,6 @@ export async function load() {
     await Promise.all([
         locale(pending, fail),
         template(pending, fail),
-        uistatic(pending, fail),
     ]);
     if (detail) logger.info('finish: locale/template/static');
     const opts = options();
