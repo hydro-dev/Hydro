@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.35.0",
+    "version": "2.35.1",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -41,7 +41,8 @@
         "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.21",
         "source-map-support": "^0.5.20",
-        "superagent": "^6.1.0"
+        "superagent": "^6.1.0",
+        "tx2": "^1.0.4"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",

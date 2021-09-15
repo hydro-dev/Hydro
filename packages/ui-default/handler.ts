@@ -30,9 +30,9 @@ declare module 'hydrooj/src/interface' {
 
 const cache = {};
 const coll = db.collection('cache');
-const pages = Object.keys(global.ui.manifest)
+const pages = Object.keys(global.Hydro.ui.manifest)
   .filter((file) => file.endsWith('.page.js'))
-  .map((i) => readFileSync(join(global.ui.manifest[i], i), 'utf-8'));
+  .map((i) => readFileSync(join(global.Hydro.ui.manifest[i], i), 'utf-8'));
 
 async function constant(args: ConstantArgs) {
   // CompileLangs

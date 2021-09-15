@@ -16,6 +16,7 @@ import {
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import sockjs from 'sockjs';
+import tx2 from 'tx2';
 import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import {
     BlacklistedError, CsrfTokenError, HydroError,
@@ -39,6 +40,12 @@ import * as bus from './bus';
 
 const argv = cac().parse();
 const logger = new Logger('server');
+const reqCount = tx2.meter({
+    name: 'req/sec',
+    samples: 1,
+    timeframe: 60,
+});
+const connCount = tx2.counter({ name: 'connections' });
 export const app = new Koa();
 export const server = http.createServer(app.callback());
 export const router = new Router();
@@ -664,6 +671,7 @@ async function bail(name: string, ...args: any[]) {
 }
 
 async function handle(ctx, HandlerClass, checker) {
+    reqCount.mark();
     const args = {
         domainId: 'system', ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
     };
@@ -862,9 +870,11 @@ export function Connection(
                     h.message(JSON.parse(data));
                 });
             }
+            connCount.inc();
             conn.on('close', async () => {
                 if (h.cleanup) await h.cleanup(args);
                 if (h.finish) await h.finish(args);
+                connCount.dec();
             });
         } catch (e) {
             logger.warn('%o', e);

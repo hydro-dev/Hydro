@@ -34,16 +34,17 @@ export function addon(addonPath: string, prepend = false) {
                 global.publicDirs[prepend ? 'push' : 'unshift'](publicPath);
                 const targets = fs.readdirSync(publicPath);
                 for (const target of targets) {
-                    if (global.ui.manifest[target] && !prepend) {
-                        global.ui.manifest[target] = publicPath;
-                    } else if (!global.staticFiles[target]) {
-                        global.ui.manifest[target] = publicPath;
+                    if (global.Hydro.ui.manifest[target] && !prepend) {
+                        global.Hydro.ui.manifest[target] = publicPath;
+                    } else if (!global.Hydro.ui.manifest[target]) {
+                        global.Hydro.ui.manifest[target] = publicPath;
                     }
                 }
             }
             global.addons[prepend ? 'unshift' : 'push'](modulePath);
         } catch (e) {
             logger.error(`Addon not found: ${addonPath}`);
+            logger.error(e);
         }
     } else logger.error(`Addon not found: ${addonPath}`);
 }
