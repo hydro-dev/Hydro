@@ -5,7 +5,6 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
-import cache from 'koa-static-cache';
 import mongodb from 'mongodb';
 import { Logger } from '../logger';
 
@@ -117,9 +116,6 @@ export function load() {
     const server = http.createServer(app.callback());
     app.keys = ['Hydro'];
     app
-        .use(cache(path.join(os.tmpdir(), 'hydro', 'public'), {
-            maxAge: 365 * 24 * 60 * 60,
-        }))
         .use(Body())
         .use((ctx) => {
             if (ctx.request.method.toLowerCase() === 'post') return post(ctx);

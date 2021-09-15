@@ -1,8 +1,6 @@
 import assert from 'assert';
 import { createHash } from 'crypto';
 import http from 'http';
-import os from 'os';
-import { resolve } from 'path';
 import { PassThrough } from 'stream';
 import cac from 'cac';
 import Cookies from 'cookies';
@@ -252,13 +250,9 @@ export async function prepare() {
         rewrite: (p) => p.replace('/fs', ''),
     }));
     app.use(Compress());
-    if (argv.options.public) {
-        app.use(cache(argv.options.public, {
-            maxAge: 0,
-        }));
-    } else {
-        app.use(cache(resolve(os.tmpdir(), 'hydro', 'public'), {
-            maxAge: 30 * 24 * 60 * 60,
+    for (const dir of global.publicDirs) {
+        app.use(cache(dir, {
+            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
         }));
     }
     if (process.env.DEV) {

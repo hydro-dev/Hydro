@@ -4,7 +4,6 @@
 import 'reflect-metadata';
 import './init';
 import './interface';
-import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import './utils';
@@ -24,8 +23,6 @@ logger.debug('%o', argv);
 process.on('unhandledRejection', logger.error);
 process.on('uncaughtException', logger.error);
 
-const publicTemp = path.resolve(os.tmpdir(), 'hydro', 'public');
-
 export function addon(addonPath: string, prepend = false) {
     if (!(fs.existsSync(addonPath) && fs.statSync(addonPath).isFile())) {
         try {
@@ -33,9 +30,8 @@ export function addon(addonPath: string, prepend = false) {
             const packagejson = require.resolve(`${addonPath}/package.json`);
             const modulePath = path.dirname(packagejson);
             const publicPath = path.resolve(modulePath, 'public');
-            if (fs.existsSync(publicPath)) fs.copySync(publicPath, publicTemp);
-            if (prepend) global.addons.unshift(modulePath);
-            else global.addons.push(modulePath);
+            if (fs.existsSync(publicPath)) global.publicDirs[prepend ? 'push' : 'unshift'](publicPath);
+            global.addons[prepend ? 'unshift' : 'push'](modulePath);
         } catch (e) {
             logger.error(`Addon not found: ${addonPath}`);
         }
