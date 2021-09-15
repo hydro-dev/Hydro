@@ -4,7 +4,7 @@ import monaco, { registerAction } from 'vj/components/monaco/index';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
-  language: window.LANGS[state.editor.lang].monaco,
+  language: window.LANGS[state.editor.lang]?.monaco,
   theme: 'vs-light',
   mainSize: state.ui.main.size,
   pretestSize: state.ui.pretest.size,
