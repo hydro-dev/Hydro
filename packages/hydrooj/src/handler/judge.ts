@@ -140,6 +140,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
         this.sendLanguageConfig = this.sendLanguageConfig.bind(this);
         bus.on('system/setting', this.sendLanguageConfig);
+        // Ensure language sent
+        await sleep(100);
         this.newTask();
     }
 
