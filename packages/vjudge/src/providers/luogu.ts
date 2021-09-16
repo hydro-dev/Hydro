@@ -121,7 +121,7 @@ export default class LuoguProvider implements IBasicProvider {
         const done = {};
         let fail = 0;
         let count = 0;
-        while (count < 60 && fail < 5) {
+        while (count < 120 && fail < 5) {
             await sleep(1500);
             count++;
             try {
@@ -135,24 +135,24 @@ export default class LuoguProvider implements IBasicProvider {
                 }
                 logger.info('Fetched with length', JSON.stringify(body).length);
                 const total = flattenDeep(body.currentData.testCaseGroup).length;
+                logger.info(total);
+                logger.info(!!data.detail.judgeResult);
                 // TODO sorted
-                if (data.detail.judgeResult) {
-                    for (const subtask of data.detail.judgeResult?.subtasks || []) {
-                        for (const cid of Object.keys(subtask.testCases)) {
-                            if (done[`${subtask.id}.${cid}`]) continue;
-                            done[`${subtask.id}.${cid}`] = true;
-                            const testcase = subtask.testCases[cid];
-                            await next({
-                                status: STATUS.STATUS_JUDGING,
-                                case: {
-                                    status: STATUS_MAP[testcase.status],
-                                    time: testcase.time,
-                                    memory: testcase.memory,
-                                    message: testcase.description,
-                                },
-                                progress: (Object.keys(done).length / total) * 100,
-                            });
-                        }
+                for (const subtask of data.detail.judgeResult?.subtasks || []) {
+                    for (const cid of Object.keys(subtask.testCases)) {
+                        if (done[`${subtask.id}.${cid}`]) continue;
+                        done[`${subtask.id}.${cid}`] = true;
+                        const testcase = subtask.testCases[cid];
+                        await next({
+                            status: STATUS.STATUS_JUDGING,
+                            case: {
+                                status: STATUS_MAP[testcase.status],
+                                time: testcase.time,
+                                memory: testcase.memory,
+                                message: testcase.description,
+                            },
+                            progress: (Object.keys(done).length / total) * 100,
+                        });
                     }
                 }
                 if (data.status < 2) continue;

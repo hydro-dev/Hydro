@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/vjudge",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "description": "Submit problems to remote oj",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -10,11 +10,13 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "jsdom": "^16.7.0",
+        "lodash": "^4.17.21",
         "superagent": "^6.1.0",
         "superagent-proxy": "^2.1.0"
     },
     "devDependencies": {
         "@types/jsdom": "^16.2.13",
+        "@types/lodash": "^4.14.172",
         "@types/superagent": "^4.1.12",
         "@types/superagent-proxy": "^2.0.1"
     }
