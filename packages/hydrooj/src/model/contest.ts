@@ -501,8 +501,9 @@ export async function getRelated(domainId: string, pid: ProblemId, type: Type = 
 
 export function getStatus(
     domainId: string, tid: ObjectID, uid: number,
-    type: 30 | 60 = document.TYPE_CONTEST,
+    type: 30 | 60 | -1 = document.TYPE_CONTEST,
 ) {
+    if (type === -1) type = { $in: [30, 60] } as any;
     return document.getStatus(domainId, type, tid, uid);
 }
 
