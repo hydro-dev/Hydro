@@ -18,6 +18,7 @@
         "cac": "^6.7.3",
         "cookies": "^0.8.0",
         "detect-browser": "^5.2.0",
+        "esbuild-register": "^3.0.0",
         "fs-extra": "^10.0.0",
         "graphql": "^15.5.3",
         "graphql-scalars": "^1.10.1",
@@ -40,7 +41,6 @@
         "reflect-metadata": "^0.1.13",
         "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.21",
-        "source-map-support": "^0.5.20",
         "superagent": "^6.1.0",
         "tx2": "^1.0.4"
     },
