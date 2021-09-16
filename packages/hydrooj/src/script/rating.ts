@@ -31,7 +31,7 @@ async function runProblem(...arg: any[]) {
     for (let page = 1; page <= nPages; page++) {
         const psdocs = await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
-        ).limit(100).skip((page - 1) * 100).project({ rid: 1 }).toArray();
+        ).limit(100).skip((page - 1) * 100).project({ rid: 1, uid: 1 }).toArray();
         const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
         for (const psdoc of psdocs) {
             if (rdict[psdoc.rid.toHexString()]) {
