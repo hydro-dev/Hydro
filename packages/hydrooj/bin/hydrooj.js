@@ -2,17 +2,64 @@
 
 /* eslint-disable consistent-return */
 
-require('esbuild-register/dist/node').register({
-    target: `node${process.version.slice(1)}`,
-    jsx: 'transform',
+const map = {};
+require('source-map-support').install({
+    handleUncaughtExceptions: false,
+    environment: 'node',
+    retrieveSourceMap(file) {
+        if (map[file]) {
+            return {
+                url: file,
+                map: map[file],
+            };
+        }
+        return null;
+    },
 });
 const os = require('os');
 const path = require('path');
 const fs = require('fs-extra');
 const argv = require('cac')().parse();
 const child = require('child_process');
+const esbuild = require('esbuild');
 
 if (!process.env.NODE_APP_INSTANCE) process.env.NODE_APP_INSTANCE = '0';
+const major = +process.version.split('.')[0].split('v')[1];
+const minor = +process.version.split('.')[1];
+
+let transformTimeUsage = 0;
+let transformCount = 0;
+let displayTimeout;
+function transform(filename) {
+    const start = Date.now();
+    const code = fs.readFileSync(filename, 'utf-8');
+    const result = esbuild.transformSync(code, {
+        sourcefile: filename,
+        sourcemap: 'both',
+        format: 'cjs',
+        loader: 'tsx',
+        target: `node${major}.${minor}`,
+        jsx: 'transform',
+    });
+    if (result.warnings.length) console.warn(result.warnings);
+    transformTimeUsage += Date.now() - start;
+    transformCount++;
+    if (displayTimeout) clearTimeout(displayTimeout);
+    displayTimeout = setTimeout(() => console.log(`Transformed ${transformCount} files. (${transformTimeUsage}ms)`), 1000);
+    map[filename] = result.map;
+    return result.code;
+}
+const ESM = ['p-queue', 'p-timeout'];
+require.extensions['.js'] = function loader(module, filename) {
+    if (ESM.filter((i) => filename.includes(i)).length || major < 14) {
+        return module._compile(transform(filename), filename);
+    }
+    const content = fs.readFileSync(filename, 'utf-8');
+    return module._compile(content, filename);
+};
+require.extensions['.ts'] = require.extensions['.tsx'] = function loader(module, filename) {
+    return module._compile(transform(filename), filename);
+};
 
 function buildUrl(opts) {
     let mongourl = `${opts.protocol || 'mongodb'}://`;
