@@ -136,21 +136,23 @@ export default class LuoguProvider implements IBasicProvider {
                 logger.info('Fetched with length', JSON.stringify(body).length);
                 const total = flattenDeep(body.currentData.testCaseGroup).length;
                 // TODO sorted
-                for (const subtask of data.detail?.judgeResult?.subtasks || []) {
-                    for (const cid of Object.keys(subtask.testCases)) {
-                        if (done[`${subtask.id}.${cid}`]) continue;
-                        done[`${subtask.id}.${cid}`] = true;
-                        const testcase = subtask.testCases[cid];
-                        await next({
-                            status: STATUS.STATUS_JUDGING,
-                            case: {
-                                status: STATUS_MAP[testcase.status],
-                                time: testcase.time,
-                                memory: testcase.memory,
-                                message: testcase.description,
-                            },
-                            progress: (Object.keys(done).length / total) * 100,
-                        });
+                if (data.detail.judgeResult) {
+                    for (const subtask of data.detail.judgeResult?.subtasks || []) {
+                        for (const cid of Object.keys(subtask.testCases)) {
+                            if (done[`${subtask.id}.${cid}`]) continue;
+                            done[`${subtask.id}.${cid}`] = true;
+                            const testcase = subtask.testCases[cid];
+                            await next({
+                                status: STATUS.STATUS_JUDGING,
+                                case: {
+                                    status: STATUS_MAP[testcase.status],
+                                    time: testcase.time,
+                                    memory: testcase.memory,
+                                    message: testcase.description,
+                                },
+                                progress: (Object.keys(done).length / total) * 100,
+                            });
+                        }
                     }
                 }
                 if (data.status < 2) continue;
