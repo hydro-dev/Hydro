@@ -40,7 +40,7 @@ class RecordListHandler extends Handler {
             tdoc = await contest.get(domainId, tid, -1);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
+            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id, -1))?.attend) {
                 throw new ContestNotAttendedError(domainId, tid);
             }
         }
