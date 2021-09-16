@@ -121,6 +121,7 @@ export default class LuoguProvider implements IBasicProvider {
         const done = {};
         let fail = 0;
         let count = 0;
+        let finished = 0;
         while (count < 120 && fail < 5) {
             await sleep(1500);
             count++;
@@ -135,12 +136,11 @@ export default class LuoguProvider implements IBasicProvider {
                 }
                 logger.info('Fetched with length', JSON.stringify(body).length);
                 const total = flattenDeep(body.currentData.testCaseGroup).length;
-                logger.info(total);
-                logger.info(!!data.detail.judgeResult);
                 // TODO sorted
                 for (const subtask of data.detail.judgeResult?.subtasks || []) {
-                    for (const cid of Object.keys(subtask.testCases)) {
+                    for (const cid in subtask.testCases || {}) {
                         if (done[`${subtask.id}.${cid}`]) continue;
+                        finished++;
                         done[`${subtask.id}.${cid}`] = true;
                         const testcase = subtask.testCases[cid];
                         await next({
@@ -151,7 +151,7 @@ export default class LuoguProvider implements IBasicProvider {
                                 memory: testcase.memory,
                                 message: testcase.description,
                             },
-                            progress: (Object.keys(done).length / total) * 100,
+                            progress: (finished / total) * 100,
                         });
                     }
                 }
