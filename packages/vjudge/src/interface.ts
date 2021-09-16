@@ -6,6 +6,7 @@ export interface RemoteAccount {
     password: string;
     endpoint?: string;
     proxy?: string;
+    query?: string;
 }
 declare module 'hydrooj/src/interface' {
     interface Collections {
