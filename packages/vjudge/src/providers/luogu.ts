@@ -137,7 +137,9 @@ export default class LuoguProvider implements IBasicProvider {
                 logger.info('Fetched with length', JSON.stringify(body).length);
                 const total = flattenDeep(body.currentData.testCaseGroup).length;
                 // TODO sorted
-                for (const subtask of data.detail.judgeResult?.subtasks || []) {
+                if (!data.detail.judgeResult?.subtasks) continue;
+                for (const key in data.detail.judgeResult.subtasks) {
+                    const subtask = data.detail.judgeResult.subtasks[key];
                     for (const cid in subtask.testCases || {}) {
                         if (done[`${subtask.id}.${cid}`]) continue;
                         finished++;
