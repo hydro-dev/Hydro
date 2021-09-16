@@ -4,6 +4,7 @@ import Notification from 'vj/components/notification';
 import './languages/markdown';
 import './languages/typescript';
 import './languages/yaml';
+import './monaco.css';
 
 export default monaco;
 

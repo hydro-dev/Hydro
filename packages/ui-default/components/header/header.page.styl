@@ -8,26 +8,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
   &.warning
     background: #ffe1a6
 
-.header
-  position: relative
-  height: rem($header-bg-height)
-  background: #5eafca no-repeat center top
-  background-size: cover
-  transition: height .5s
-  transition-timing-function: ease-out-cubic
-  overflow: hidden
-  +retina()
-    background-size: rem($header-bg-width $header-bg-height)
-
-  &.mini
-    height: rem($header-bg-height-mini)
-
-  +mobile()
-    background: #FFF
-    height: auto !important
-    .header__content
-      display: none
-
 .header__logo
   display: block
   width: rem($header-logo-width-real)
@@ -46,13 +26,6 @@ $header-gap-mini-domain = ($header-bg-height-mini - $nav-item-height - $header-l
 
   #panel
     padding-top: $header-bg-height
-
-  .header
-    position: absolute
-    left: 0
-    top: 0
-    width: 100%
-    height: 0
 
   .header__logo
     transform: scale(0)

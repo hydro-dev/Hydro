@@ -1,6 +1,8 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import list from 'emojis-list';
 import keyword from 'emojis-keywords';
+import request from 'vj/utils/request';
+import api from 'vj/utils/api';
 
 const qqEmojies = [
   'weixiao',
@@ -109,28 +111,75 @@ function qqEmoji(range) {
   return qqEmojies.map((i, index) => ({
     label: `/${i}`,
     kind: monaco.languages.CompletionItemKind.Keyword,
-    documentation: `/${i}`,
+    documentation: `![${i}](//qq-face.vercel.app/gif/s${index}.gif)`,
     insertText: `![${i}](//qq-face.vercel.app/gif/s${index}.gif =32x32) `,
     range,
   }));
 }
 
+monaco.editor.registerCommand('hydro.openUserPage', (accesser, uid) => {
+  window.open(`/user/${uid}`);
+});
+
+monaco.languages.registerCodeLensProvider('markdown', {
+  async provideCodeLenses(model) {
+    const users = model.findMatches('\\[\\]\\(/user/(\\d+)\\)', true, true, true, null, true);
+    const { data } = await api(`
+      query {
+        users(ids: [${users.map((i) => i.matches[1]).join(',')}]) {
+          _id
+          uname
+        }
+      }
+    `);
+    return {
+      lenses: users.map((i, index) => ({
+        range: i.range,
+        id: `${index}.${i.matches[1]}`,
+        command: {
+          id: 'hydro.openUserPage',
+          arguments: [i.matches[1]],
+          title: `@${data.users.find((doc) => doc._id.toString() === i.matches[1])?.uname || i.matches[1]}`,
+        },
+      })),
+      dispose: () => { },
+    };
+  },
+  resolveCodeLens(model, codeLens) {
+    return codeLens;
+  },
+});
+
 monaco.languages.registerCompletionItemProvider('markdown', {
-  provideCompletionItems(model, position) {
+  async provideCompletionItems(model, position) {
     const word = model.getWordAtPosition(position);
+    if (word.word.length < 2) return { suggestions: [] };
     const prefix = model.getValueInRange({
       startLineNumber: position.lineNumber,
       endLineNumber: position.lineNumber,
       startColumn: word.startColumn - 1,
-      endColumn: word.startColumn - 1,
+      endColumn: word.startColumn,
     });
-    if (![':', '/'].includes(prefix)) return { suggestions: [] };
+    if (![':', '/', '@'].includes(prefix)) return { suggestions: [] };
     const range = {
       startLineNumber: position.lineNumber,
       endLineNumber: position.lineNumber,
       startColumn: word.startColumn - 1,
       endColumn: word.endColumn,
     };
+    if (prefix === '@') {
+      const users = await request.get(`/user/search?q=${word.word}`);
+      return {
+        suggestions: users.map((i) => ({
+          label: `@${i.uname} (UID=${i._id})`,
+          kind: monaco.languages.CompletionItemKind.Property,
+          documentation: { value: `![monaco_avatar](${i.avatarUrl})`, isTrusted: true },
+          insertText: `[](/user/${i._id}) `,
+          range,
+          tags: i.priv === 0 ? [1] : [],
+        })),
+      };
+    }
     return {
       suggestions: prefix === ':' ? emoji(range) : qqEmoji(range),
     };
