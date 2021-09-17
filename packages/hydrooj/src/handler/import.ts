@@ -294,8 +294,8 @@ class ProblemImportSYZOJHandler extends Handler {
         domainId: string, url: string, targetPid: string, hidden = false,
         prefix: string, start: number, end: number,
     ) {
-        if (/\/(\d+)\.\.(\d+)$/.test(url)) {
-            const res = /\/(\d+)\.\.(\d+)$/.exec(url)!;
+        if (/^(.+)\/(\d+)\.\.(\d+)$/.test(url)) {
+            const res = /^(.+)\/(\d+)\.\.(\d+)$/.exec(url)!;
             prefix = res[1];
             start = +res[2];
             end = +res[3];
