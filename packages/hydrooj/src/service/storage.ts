@@ -99,6 +99,11 @@ class StorageService {
                 endPointForUser,
                 endPointForJudge,
             };
+            if (process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY) {
+                logger.info('Using MinIO key from environment variables');
+                this.opts.accessKey = process.env.MINIO_ACCESS_KEY;
+                this.opts.secretKey = process.env.MINIO_SECRET_KEY;
+            }
             this.client = new Client({
                 ...parseMainEndpointUrl(this.opts.endPoint),
                 pathStyle: this.opts.pathStyle,
