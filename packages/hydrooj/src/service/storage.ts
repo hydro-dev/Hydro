@@ -99,7 +99,7 @@ class StorageService {
                 endPointForUser,
                 endPointForJudge,
             };
-            if (process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY) {
+            if (process.env.MINIO_ACCESS_KEY) {
                 logger.info('Using MinIO key from environment variables');
                 this.opts.accessKey = process.env.MINIO_ACCESS_KEY;
                 this.opts.secretKey = process.env.MINIO_SECRET_KEY;
