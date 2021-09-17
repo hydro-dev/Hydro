@@ -312,7 +312,7 @@ export class HandlerCommon {
 
     translate(str: string) {
         if (!str) return '';
-        return str.toString().translate(this.user?.viewLang, this.session?.viewLang, system.get('server.language'));
+        return str.toString().translate(this.user?.viewLang || system.get('server.language'), this.session?.viewLang);
     }
 
     renderTitle(str: string) {
