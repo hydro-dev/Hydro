@@ -37,7 +37,7 @@
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
-                <a class="profile-header__contact-item" href="{{ url('home_messages', query={target_uid:udoc._id}) }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
+                <a class="profile-header__contact-item" href="{{ url('home_messages', query={target:udoc._id}) }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
               {% if udoc['mail'] %}

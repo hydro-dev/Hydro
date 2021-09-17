@@ -31,8 +31,9 @@ registerValue('User', [
     ['scope', 'Int'],
     ['role', 'String'],
     ['loginat', 'Date'],
-    ['regat', 'Date'],
-    ['priv', 'Int', 'User Privilege'],
+    ['regat', 'Date!'],
+    ['priv', 'Int!', 'User Privilege'],
+    ['avatarUrl', 'String'],
 ]);
 
 registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
@@ -43,12 +44,26 @@ registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', 
 }, `Get a user by id, uname, or mail.
 Returns current user if no argument is provided.`);
 
-registerResolver('Query', 'users(ids: [Int], search: String)', '[User]', async (arg, ctx) => {
-    if (arg.ids) {
+registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, ctx) => {
+    if (arg.ids?.length) {
         const res = await user.getList(ctx.domainId, arg.ids);
         return Object.keys(res).map((id) => res[+id]);
     }
-    return arg.search ? await user.getPrefixList(ctx.domainId, arg.search) : [];
+    if (!arg.search) return [];
+    const udoc = await user.getById(ctx.domainId, +arg.search)
+        || await user.getByUname(ctx.domainId, arg.search)
+        || await user.getByEmail(ctx.domainId, arg.search);
+    const udocs: User[] = arg.exact
+        ? []
+        : await user.getPrefixList(ctx.domainId, arg.search, Math.min(arg.limit || 10, 10));
+    if (udoc && !udocs.find((i) => i._id === udoc._id)) {
+        udocs.pop();
+        udocs.unshift(udoc);
+    }
+    for (const i in udocs) {
+        udocs[i].avatarUrl = avatar(udocs[i].avatar);
+    }
+    return udocs;
 }, 'Get a list of user by ids, or search users with the prefix.');
 
 class UserLoginHandler extends Handler {
@@ -275,28 +290,6 @@ class UserDeleteHandler extends Handler {
     }
 }
 
-class UserSearchHandler extends Handler {
-    @param('q', Types.String)
-    @param('exectMatch', Types.Boolean)
-    async get(domainId: string, q: string, exactMatch = false) {
-        let udoc = await user.getById(domainId, +q);
-        const udocs: User[] = udoc ? [udoc] : [];
-        if (!udocs.length) {
-            udoc = await user.getByUname(domainId, q);
-            if (udoc) udocs.push(udoc);
-            else {
-                udoc = await user.getByEmail(domainId, q);
-                if (udoc) udocs.push(udoc);
-            }
-        }
-        if (!exactMatch) udocs.push(...await user.getPrefixList(domainId, q, 20));
-        for (const i in udocs) {
-            udocs[i].avatarUrl = avatar(udocs[i].avatar);
-        }
-        this.response.body = udocs;
-    }
-}
-
 class OauthHandler extends Handler {
     @param('type', Types.String)
     async get(domainId: string, type: string) {
@@ -355,7 +348,6 @@ export async function apply() {
     Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_lostpass', '/lostpass', UserLostPassHandler);
     Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
-    Route('user_search', '/user/search', UserSearchHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_detail', '/user/:uid', UserDetailHandler);
 }

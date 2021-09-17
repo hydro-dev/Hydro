@@ -1,8 +1,7 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import list from 'emojis-list';
 import keyword from 'emojis-keywords';
-import request from 'vj/utils/request';
-import api from 'vj/utils/api';
+import api, { e } from 'vj/utils/api';
 
 const qqEmojies = [
   'weixiao',
@@ -168,7 +167,13 @@ monaco.languages.registerCompletionItemProvider('markdown', {
       endColumn: word.endColumn,
     };
     if (prefix === '@') {
-      const users = await request.get(`/user/search?q=${word.word}`);
+      const users = await api(e`
+        users(search: ${word.word}) {
+          _id
+          uname
+          avatarUrl
+        }
+      `, ['data', 'users']);
       return {
         suggestions: users.map((i) => ({
           label: `@${i.uname} (UID=${i._id})`,

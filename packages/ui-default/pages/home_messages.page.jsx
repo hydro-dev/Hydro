@@ -1,5 +1,5 @@
 import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import api, { e } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import parseQueryString from 'vj/utils/parseQueryString';
 
@@ -79,16 +79,16 @@ const page = new NamedPage('home_messages', () => {
    */
   async function loadSendTarget() {
     const queryString = parseQueryString();
-    if (!queryString.target) {
-      return;
-    }
-    const user = await request.get('/user/search', {
-      q: queryString.target,
-      exact_match: true,
-    });
-    if (!user || user.length === 0) {
-      return;
-    }
+    if (!queryString.target) return;
+    const user = await api(e`
+      users(search: ${queryString.target}, exact: true) {
+        _id
+        uname
+        avatarUrl
+        mail
+      }
+    `, ['data', 'users']);
+    if (!user?.length) return;
     createDialog(user[0]);
   }
 
