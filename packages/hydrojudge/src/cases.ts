@@ -20,7 +20,7 @@ interface Re1 extends Re0 {
 
 const RE0: Re0[] = [
     {
-        reg: /^([^\d]*)(\d+).(in|txt)$/,
+        reg: /^(.+).(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -30,7 +30,7 @@ const RE0: Re0[] = [
         id: (a) => +a[2],
     },
     {
-        reg: /^([^\d]*)\.in(\d+)$/,
+        reg: /^(.+).(in|txt)$/,
         output: [
             (a) => `${a[1]}.ou${a[2]}`,
             (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
@@ -40,7 +40,7 @@ const RE0: Re0[] = [
 ];
 const RE1: Re1[] = [
     {
-        reg: /^([^\d]*)([0-9]+)-([0-9]+).in$/,
+        reg: /^(.+).(in|txt)$/,
         output: [(a) => `${a[1] + a[2]}-${a[3]}.out`],
         subtask: (a) => +a[2],
         id: (a) => +a[3],
