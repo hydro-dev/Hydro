@@ -110,6 +110,7 @@ class FpsProblemImportHandler extends Handler {
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {
+            if (e instanceof FileTooLargeError) throw e;
             console.log(e);
             const zip = new AdmZip(this.request.files.file.path);
             for (const entry of zip.getEntries()) {
