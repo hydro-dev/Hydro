@@ -3,6 +3,7 @@ __langname: English
 Can be Extended For: Extension
 contest_create: Contest Create
 contest_detail_problem_submit: Submit Contest Problem
+contest_detail: Contest Detail
 contest_edit: Contest Edit
 contest_main: Contest
 contest_scoreboard: Scoreboard
