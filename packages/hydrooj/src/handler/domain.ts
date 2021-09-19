@@ -1,3 +1,4 @@
+import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import {
@@ -8,7 +9,7 @@ import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
 import paginate from '../lib/paginate';
 import {
-    DEFAULT_NODES, PERM, PERMS_BY_FAMILY, PRIV,
+    PERM, PERMS_BY_FAMILY, PRIV,
 } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
@@ -72,8 +73,9 @@ class DomainDashboardHandler extends ManageHandler {
     }
 
     async postInitDiscussionNode({ domainId }) {
-        for (const category of Object.keys(DEFAULT_NODES)) {
-            for (const item of DEFAULT_NODES[category]) {
+        const nodes = load(system.get('discussion.nodes'));
+        for (const category of Object.keys(nodes)) {
+            for (const item of nodes[category]) {
                 // eslint-disable-next-line no-await-in-loop
                 const curr = await discussion.getNode(domainId, item.name);
                 // eslint-disable-next-line no-await-in-loop

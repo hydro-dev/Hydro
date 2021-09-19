@@ -192,6 +192,7 @@ SystemSetting(
     Setting('setting_limits', 'limit.submission', 30, 'number', 'limit.submission', 'Max submission count per minute'),
     Setting('setting_limits', 'limit.pretest', 60, 'number', 'limit.pretest', 'Max pretest count per minute'),
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege', FLAG_PRO),
+    Setting('setting_basic', 'discussion.nodes', builtin.DEFAULT_NODES, 'yaml', 'discussion.nodes', 'Discussion Nodes'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'pagination.problem', 'Problems per page'),
     Setting('setting_basic', 'pagination.contest', 20, 'number', 'pagination.contest', 'Contests per page'),
