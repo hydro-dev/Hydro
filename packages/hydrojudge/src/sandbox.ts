@@ -27,7 +27,7 @@ function proc({
     execute = '',
     time = 16000,
     memory = parseMemoryMB(getConfig('memoryMax')),
-    process_limit = 32,
+    process_limit = 64,
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
     if (!supportOptional) {
