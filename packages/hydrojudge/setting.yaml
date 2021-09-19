@@ -18,6 +18,11 @@ stdio_size:
   name: stdio_size
   desc: Stdout/Stderr size
   default: 32m
+processLimit:
+  type: number
+  name: processLimit
+  desc: Process Limit
+  default: 32
 testcases_max:
   type: number
   name: testcases_max

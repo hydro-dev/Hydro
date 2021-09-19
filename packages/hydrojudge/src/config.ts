@@ -19,6 +19,7 @@ let config = {
     sandbox_host: 'http://localhost:5050',
     testcases_max: 100,
     total_time_limit: 60,
+    processLimit: 32,
     parallelism: 2,
     rerun: 0,
     rate: 1,
