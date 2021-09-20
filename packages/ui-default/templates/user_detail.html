@@ -46,12 +46,12 @@
                 </a>
               {% endif %}
               {% if udoc['qq'] %}
-                <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['qq'] | base64_encode }}" data-tooltip="{{ _('Copy QQ Number') }}">
+                <a class="profile-header__contact-item" href="javascript:;" name="profile_qq_copy" data-content="{{ udoc['qq'] | base64_encode }}" data-tooltip="{{ _('Copy QQ Number') }}">
                   <span class="icon icon-qq"></span>
                 </a>
               {% endif %}
               {% if udoc['wechat'] %}
-                <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['wechat'] | base64_encode }}" data-tooltip="{{ _('Copy WeChat Account') }}">
+                <a class="profile-header__contact-item" href="javascript:;" name="profile_wechat_copy" data-content="{{ udoc['wechat'] | base64_encode }}" data-tooltip="{{ _('Copy WeChat Account') }}">
                   <span class="icon icon-wechat"></span>
                 </a>
               {% endif %}
@@ -98,65 +98,6 @@
               {% endif %}
               </div>
             </li>
-            <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Contributions') }} ({{ pcount }})</h1>
-              <div class="section__tab-main">
-              {% if not pdocs %}
-                {{ nothing.render("Oh, the user doesn't have any contributions!") }}
-              {% else %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Contributed Problems') }}</h1>
-                </div>
-                <div class="section__body">
-                {%- for pdoc in pdocs -%}
-                  <p><a href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}">{{ pdoc['title'] }}</a></p>
-                {%- endfor -%}
-                </div>
-              {% endif %}
-              </div>
-            </li>
-            <li class="section__tab-item">
-              <h1 class="section__tab-title">{{ _('Submissions') }} ({{ udoc['nSubmit']|default(0) }})</h1>
-              <div class="section__tab-main">
-              {% if not rdocs %}
-                {{ nothing.render("Oh, the user hasn't submitted yet!") }}
-              {% else %}
-                <div class="section__header">
-                  <h1 class="section__title">{{ _('Recent Submissions') }}</h1>
-                </div>
-                <div class="section__body no-padding">
-                  <table class="data-table record_main__table">
-                    <colgroup>
-                      <col class="col--status">
-                      <col class="col--problem">
-                      <col class="col--submit-by">
-                      <col class="col--time">
-                      <col class="col--memory">
-                      <col class="col--lang">
-                      <col class="col--submit-at">
-                    </colgroup>
-                    <thead>
-                      <tr>
-                        <th class="col--status record-status--border">{{ _('Status') }}</th>
-                        <th class="col--problem">{{ _('Problem') }}</th>
-                        <th class="col--submit-by">{{ _('Submit By') }}</th>
-                        <th class="col--time">{{ _('Time') }}</th>
-                        <th class="col--memory">{{ _('Memory') }}</th>
-                        <th class="col--lang">{{ _('Language') }}</th>
-                        <th class="col--submit-at">{{ _('Submit At') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {%- for rdoc in rdocs -%}
-                      {% set pdoc = pdict[rdoc.pid] %}
-                      {% include 'record_main_tr.html' %}
-                    {%- endfor -%}
-                    </tbody>
-                  </table>
-                </div>
-              {% endif %}
-              </div>
-            </li>
           </ul>
         </div>
       </div>
@@ -176,6 +117,12 @@
         <div class="balancer sidebar-user-stat">
           <div class="balancer__body">
             <div class="numbox">
+              <div class="numbox__num medium">{{ udoc.nSubmit or 0 }}</div>
+              <div class="numbox__text">{{ _('Submitted') }}</div>
+            </div>
+          </div>
+          <div class="balancer__body">
+            <div class="numbox">
               <div class="numbox__num medium">{{ udoc.nAccept or 0 }}</div>
               <div class="numbox__text">{{ _('Accepted') }}</div>
             </div>
@@ -184,12 +131,6 @@
             <div class="numbox">
               <div class="numbox__num medium">{{ udoc.nLiked or 0 }}</div>
               <div class="numbox__text">{{ _('Solutions Liked') }}</div>
-            </div>
-          </div>
-          <div class="balancer__body">
-            <div class="numbox">
-              <div class="numbox__num medium">{{ udoc.nProblems or 0 }}</div>
-              <div class="numbox__text">{{ _('Upload Problem') }}</div>
             </div>
           </div>
         </div>

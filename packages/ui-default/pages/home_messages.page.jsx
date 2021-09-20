@@ -2,7 +2,7 @@ import { NamedPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import parseQueryString from 'vj/utils/parseQueryString';
-
+import VjNotification from 'vj/components/notification';
 import { ActionDialog } from 'vj/components/dialog';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 
@@ -39,6 +39,13 @@ const page = new NamedPage('home_messages', () => {
         type: 'DIALOGUES_MESSAGE_PUSH',
         payload: msg,
       });
+      new VjNotification({
+        title: msg.udoc.uname,
+        avatar: msg.udoc.avatarUrl,
+        message: msg.mdoc.content,
+        duration: 15000,
+        action: () => createDialog(msg.udoc),
+      }).show();
     };
 
     const userSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--user-select [name="user"]'));

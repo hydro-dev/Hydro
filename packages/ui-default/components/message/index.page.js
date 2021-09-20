@@ -5,7 +5,8 @@ import { FLAG_ALERT } from 'vj/constant/message';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
 
-const messagePage = new AutoloadPage('messagePage', () => {
+const messagePage = new AutoloadPage('messagePage', (pagename) => {
+  if (pagename === 'home_messages') return;
   let visible = true;
   document.addEventListener('visibilitychange', () => {
     const state = document.visibilityState;
