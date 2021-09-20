@@ -1,11 +1,11 @@
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
-import api, { e } from 'vj/utils/api';
+import api, { gql } from 'vj/utils/api';
 import AutoComplete from './AutoComplete';
 
 // eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props, ref) {
-  const itemsFn = (query) => api(e`
+  const itemsFn = (query) => api(gql`
     users(search: ${query}) {
       _id
       uname

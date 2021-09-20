@@ -1,5 +1,5 @@
 import { NamedPage } from 'vj/misc/Page';
-import api, { e } from 'vj/utils/api';
+import api, { gql } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import parseQueryString from 'vj/utils/parseQueryString';
 
@@ -80,7 +80,7 @@ const page = new NamedPage('home_messages', () => {
   async function loadSendTarget() {
     const queryString = parseQueryString();
     if (!queryString.target) return;
-    const user = await api(e`
+    const user = await api(gql`
       users(search: ${queryString.target}, exact: true) {
         _id
         uname

@@ -1,7 +1,7 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import list from 'emojis-list';
 import keyword from 'emojis-keywords';
-import api, { e } from 'vj/utils/api';
+import api, { gql } from 'vj/utils/api';
 
 const qqEmojies = [
   'weixiao',
@@ -167,7 +167,7 @@ monaco.languages.registerCompletionItemProvider('markdown', {
       endColumn: word.endColumn,
     };
     if (prefix === '@') {
-      const users = await api(e`
+      const users = await api(gql`
         users(search: ${word.word}) {
           _id
           uname
