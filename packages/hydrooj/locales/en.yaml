@@ -2,6 +2,7 @@ __id: en
 __langname: English
 Can be Extended For: Extension
 contest_create: Contest Create
+contest_detail_problem: Problem Detail
 contest_detail_problem_submit: Submit Contest Problem
 contest_detail: Contest Detail
 contest_edit: Contest Edit
