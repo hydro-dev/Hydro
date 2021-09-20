@@ -6,6 +6,7 @@ import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
 import log from 'fancy-log';
 import chalk from 'chalk';
+import package from '../package.json';
 import root from './utils/root';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
@@ -76,6 +77,9 @@ async function main() {
   process.chdir(root());
   await runGulp();
   await runWebpack(argv.options);
+  if (fs.existsSync('public/hydro.js')) {
+    fs.copyFileSync('public/hydro.js', `public/hydro-${package.version}.js`);
+  }
   if (argv.options.production) {
     fs.removeSync('public/vditor/dist/js/mathjax');
     fs.removeSync('public/vditor/dist/js/echarts');
