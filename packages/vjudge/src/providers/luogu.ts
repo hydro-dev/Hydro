@@ -162,7 +162,7 @@ export default class LuoguProvider implements IBasicProvider {
                 // TODO calc total status
                 return await end({
                     status: STATUS_MAP[data.status],
-                    score: STATUS_MAP[data.status] === STATUS.STATUS_ACCEPTED ? 100 : 0,
+                    score: data.score,
                     time: data.time,
                     memory: data.memory,
                 });
