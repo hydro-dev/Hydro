@@ -241,24 +241,23 @@ const oi: ContestRule = {
                 const index = pid.toString().includes(':')
                     ? `${tsdoc.uid}/${pid.toString().replace(':', '/')}`
                     : `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
-                const node: ScoreboardNode =
-                    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                    isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()
-                        ? {
-                            type: 'records',
-                            value: '',
-                            raw: [{
-                                value: tsddict[pid]?.score ?? '-',
-                                raw: tsddict[pid]?.rid || null,
-                            }, {
-                                value: psdict[index]?.score ?? '-',
-                                raw: psdict[index]?.rid ?? null,
-                            }],
-                        } : {
-                            type: 'record',
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                const node: ScoreboardNode = isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()
+                    ? {
+                        type: 'records',
+                        value: '',
+                        raw: [{
                             value: tsddict[pid]?.score ?? '-',
                             raw: tsddict[pid]?.rid || null,
-                        };
+                        }, {
+                            value: psdict[index]?.score ?? '-',
+                            raw: psdict[index]?.rid ?? null,
+                        }],
+                    } : {
+                        type: 'record',
+                        value: tsddict[pid]?.score ?? '-',
+                        raw: tsddict[pid]?.rid || null,
+                    };
                 if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === first[pid]) {
                     node.style = 'background-color: rgb(217, 240, 199);';
                 }

@@ -519,6 +519,22 @@ const scripts: UpgradeScript[] = [
         await iterateAllUser((udoc) => user.setById(udoc._id, { ip: [udoc.regip] }, { regip: '' }));
         return true;
     },
+    async function _45_46() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await iterateAllDomain(async (ddoc) => {
+            const ddocs = await discussion.getMulti(ddoc._id, {
+                docType: document.TYPE_DISCUSSION,
+                parentType: { $in: [document.TYPE_CONTEST, document.TYPE_HOMEWORK, document.TYPE_TRAINING] },
+                parentId: { $type: 'string' },
+            }).toArray();
+            for (const doc of ddocs) {
+                if (ObjectID.isValid(doc.parentId)) {
+                    await document.set(ddoc._id, document.TYPE_DISCUSSION, doc.docId, { parentId: new ObjectID(doc.parentId) });
+                }
+            }
+        });
+        return true;
+    },
 ];
 
 export default scripts;

@@ -258,7 +258,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             const tsdoc = await model.getStatus(domainId, _id, uid);
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
-        return { ...tdoc, type, id };
+        return { ...tdoc, type, id: _id };
     }
     return {
         ...await getNode(domainId, id),
