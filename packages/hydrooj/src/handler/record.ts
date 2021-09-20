@@ -45,9 +45,14 @@ class RecordListHandler extends Handler {
             }
         }
         if (uidOrName) {
-            const udoc = await user.getById(domainId, +uidOrName) ?? await user.getByUname(domainId, uidOrName);
+            const udoc = await user.getById(domainId, +uidOrName)
+                || await user.getByUname(domainId, uidOrName)
+                || await user.getByEmail(domainId, uidOrName);
             if (udoc) q.uid = udoc._id;
             else invalid = true;
+        }
+        if (pid && tdoc && /^[A-Z]$/.test(pid)) {
+            pid = tdoc.pids[parseInt(pid, 36) - 10];
         }
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
@@ -62,7 +67,7 @@ class RecordListHandler extends Handler {
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
         const limit = full ? 10 : system.get('pagination.record');
         const rdocs = invalid
-            ? [[] as RecordDoc[]]
+            ? [] as RecordDoc[]
             : await cursor.skip((page - 1) * limit).limit(limit).toArray();
         const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewProblemHidden = (!!tid) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);

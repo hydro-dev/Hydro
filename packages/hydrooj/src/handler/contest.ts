@@ -20,13 +20,13 @@ import domain from '../model/domain';
 import message from '../model/message';
 import problem from '../model/problem';
 import record from '../model/record';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
     Handler, param, Route, Types,
 } from '../service/server';
-import storage from '../service/storage';
 
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
