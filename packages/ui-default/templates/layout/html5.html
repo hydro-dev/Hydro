@@ -25,10 +25,10 @@
   <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
   {% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
-    <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}"></script>
-    <script type="text/javascript" src="{{ static_url('hydro.js') }}"></script>
+    <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}?version={{ global.Hydro.version.ui }}"></script>
+    <script type="text/javascript" src="{{ static_url('hydro.js') }}?version={{ global.Hydro.version.ui }}"></script>
   {% endif %}
-  <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.css') }}">
+  <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.css') }}?version={{ global.Hydro.version.ui }}">
   <title>{{ handler.renderTitle(page_name) }}</title>
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>

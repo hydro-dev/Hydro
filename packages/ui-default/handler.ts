@@ -13,6 +13,7 @@ import markdown from './backendlib/markdown';
 const {
   system, domain, user, setting, problem, contest,
 } = global.Hydro.model;
+global.Hydro.version.ui = require('./package.json').version;
 
 interface ConstantArgs {
   lang: string;
