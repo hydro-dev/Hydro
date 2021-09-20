@@ -41,11 +41,24 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
   }
 
   renderContent(msg) {
+    // TODO: FLAG_RICHTEXT
     if (msg.from === 1) {
       // Is system message
       try {
         const data = JSON.parse(msg.content);
-        return i18n(data.message, ...data.params);
+        const str = i18n(data.message).replace(/\{([^{}]+)\}/g, (match, key) => `%substitude%${key}%substitude%`);
+        const arr = str.split('%substitude%');
+        data.params = data.params || {};
+        for (let i = 1; i < arr.length; i += 2) {
+          if (arr[i].endsWith(':link')) {
+            const link = data.params[arr[i].split(':link')[0]];
+            if (!link) continue;
+            arr[i] = <a style={{ color: 'wheat' }} href={link} key={i} target="_blank" rel="noreferrer">{link}</a>;
+          } else {
+            arr[i] = <span style={{ color: 'wheat' }} key={i}>{data.params[arr[i]]}</span>;
+          }
+        }
+        return arr;
       } catch (e) { }
       return i18n(msg.content);
     }

@@ -368,12 +368,8 @@ class HomeMessagesHandler extends Handler {
             }
             parsed[target].messages.push(m);
         }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['home_messages', null],
-        ];
         await user.setById(this.user._id, { unreadMsg: 0 });
-        this.response.body = { messages: parsed, path };
+        this.response.body = { messages: parsed };
         this.response.template = 'home_messages.html';
     }
 

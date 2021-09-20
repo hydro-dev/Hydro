@@ -812,6 +812,7 @@ Use admin specificed: 由管理员指定
 Use algorithm calculated: 使用算法计算
 Use average of above: 使用上面的平均值
 User {0} already exists.: 用户 {0} 已存在。
+User {0} mentioned you in {1:link}: 用户 {0} 在 {1:link} 中提到了你。
 User {0} not found.: 用户 {0} 不存在。
 User can join this domain by visiting the following URL: 用户可以访问此链接来加入此域
 User ID: 用户 ID

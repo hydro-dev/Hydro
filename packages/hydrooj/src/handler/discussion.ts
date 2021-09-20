@@ -6,6 +6,7 @@ import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
+import message from '../model/message';
 import * as oplog from '../model/oplog';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -224,7 +225,15 @@ class DiscussionDetailHandler extends DiscussionHandler {
     async postReply(domainId: string, did: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
-        // Notify related users
+        const targets = new Set(Array.from(content.matchAll(/@\[\]\(\/user\/(\d+)\)/g)).map((i) => +i[1]));
+        const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
+        const msg = JSON.stringify({
+            message: 'User {0} mentioned you in {1:link}',
+            params: [this.user.uname, this.request.path],
+        });
+        for (const uid of uids) {
+            message.send(1, uid, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
+        }
         await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
         this.back();
     }
@@ -234,6 +243,15 @@ class DiscussionDetailHandler extends DiscussionHandler {
     async postTailReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
         await this.limitRate('add_discussion', 3600, 60);
+        const targets = new Set(Array.from(content.matchAll(/@\[\]\(\/user\/(\d+)\)/g)).map((i) => +i[1]));
+        const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
+        const msg = JSON.stringify({
+            message: 'User {0} mentioned you in {1:link}',
+            params: [this.user.uname, this.request.path],
+        });
+        for (const uid of uids) {
+            message.send(1, uid, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
+        }
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
         this.back();
     }

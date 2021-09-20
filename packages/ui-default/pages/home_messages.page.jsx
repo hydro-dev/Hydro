@@ -44,7 +44,10 @@ const page = new NamedPage('home_messages', () => {
         avatar: msg.udoc.avatarUrl,
         message: msg.mdoc.content,
         duration: 15000,
-        action: () => createDialog(msg.udoc),
+        action: () => store.dispatch({
+          type: 'DIALOGUES_SWITCH_TO',
+          payload: msg.udoc._id,
+        }),
       }).show();
     };
 

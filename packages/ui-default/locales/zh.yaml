@@ -1,5 +1,6 @@
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
+'[Richtext message]': '[富文本消息]'
 '{} is a moderator of this domain.': '{}是这个域的管理者之一。'
 '{0} comments': '{0} 条评论'
 '{0} discussions': '{0} 条讨论'
@@ -873,6 +874,7 @@ You have uncompleted domain creation operation. You can click "Continue" to fini
 You haven't attended this contest yet.: 您还没有参加本次比赛。
 You haven't claimed this homework yet.: 您还未认领过该作业。
 You need to enter the invitation code to join the domain.: 您需要输入邀请码来加入此域。
+You received a system message, click here to view.: 您收到一条系统通知，点击查看。
 You're not logged in.: 您没有登录。
 You've already attended this contest.: 您已经参加本次比赛。
 You've already claimed this homework.: 您已认领过该作业。
