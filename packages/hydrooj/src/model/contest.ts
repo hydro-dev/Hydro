@@ -241,33 +241,28 @@ const oi: ContestRule = {
                 const index = pid.toString().includes(':')
                     ? `${tsdoc.uid}/${pid.toString().replace(':', '/')}`
                     : `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
-                // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                if (isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()) {
-                    row.push({
-                        type: 'records',
-                        value: '',
-                        raw: [
-                            {
+                const node: ScoreboardNode =
+                    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                    isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()
+                        ? {
+                            type: 'records',
+                            value: '',
+                            raw: [{
                                 value: tsddict[pid]?.score ?? '-',
                                 raw: tsddict[pid]?.rid || null,
-                            },
-                            {
+                            }, {
                                 value: psdict[index]?.score ?? '-',
                                 raw: psdict[index]?.rid ?? null,
-                            },
-                        ],
-                    });
-                } else {
-                    const node: ScoreboardNode = {
-                        type: 'record',
-                        value: tsddict[pid]?.score ?? '-',
-                        raw: tsddict[pid]?.rid || null,
-                    };
-                    if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === first[pid]) {
-                        node.style = 'background-color: rgb(217, 240, 199);';
-                    }
-                    row.push(node);
+                            }],
+                        } : {
+                            type: 'record',
+                            value: tsddict[pid]?.score ?? '-',
+                            raw: tsddict[pid]?.rid || null,
+                        };
+                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === first[pid]) {
+                    node.style = 'background-color: rgb(217, 240, 199);';
                 }
+                row.push(node);
             }
             rows.push(row);
         }
