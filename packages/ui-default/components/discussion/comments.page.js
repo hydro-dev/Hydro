@@ -109,14 +109,14 @@ async function onCommentClickReplyComment(ev, options = {}) {
 async function onCommentClickReplyReply(ev) {
   const $evTarget = $(ev.currentTarget);
   const $mediaBody = $evTarget.closest('.media__body');
-  const username = $mediaBody
-    .find('.user-profile-name').eq(0)
-    .text();
+  const uid = $mediaBody
+    .find('.user-profile-name')
+    .attr('href').split('/user/')[1];
 
   $evTarget
     .closest('.dczcomments__item')
     .find('[name="dczcomments__op-reply-comment"]').eq(0)
-    .trigger('click', { initialText: `@${username.trim()}: ` });
+    .trigger('click', { initialText: `@[](/user/${uid.trim()}) ` });
 }
 
 async function onCommentClickEdit(mode, ev) {
