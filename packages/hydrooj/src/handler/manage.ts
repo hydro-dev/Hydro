@@ -1,6 +1,5 @@
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
-import { sleep } from '@hydrooj/utils/lib/utils';
 import * as check from '../check';
 import { ValidationError } from '../error';
 import {
