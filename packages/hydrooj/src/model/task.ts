@@ -160,11 +160,13 @@ bus.once('app/started', async () => {
                 { ack: { $not: { $elemMatch: { $eq: id } } } },
                 { $push: { ack: id } },
             );
-            const payload = JSON.parse(res.value.payload);
-            if (process.send) process.send({ type: 'hydro:broadcast', data: { event: res.value.event, payload } });
-            if (res.value) bus.parallel(res.value.event, ...payload);
             // eslint-disable-next-line no-await-in-loop
-            else await sleep(100);
+            if (!res.value) await sleep(100);
+            else {
+                const payload = JSON.parse(res.value.payload);
+                if (process.send) process.send({ type: 'hydro:broadcast', data: { event: res.value.event, payload } });
+                if (res.value) bus.parallel(res.value.event, ...payload);
+            }
         }
     })();
 });
