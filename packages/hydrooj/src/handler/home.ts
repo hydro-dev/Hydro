@@ -27,6 +27,7 @@ import * as bus from '../service/bus';
 import {
     Connection, ConnectionHandler, Handler, param, Route, Types,
 } from '../service/server';
+import { sleep } from '../utils';
 
 const { geoip, useragent } = global.Hydro.lib;
 
@@ -260,6 +261,7 @@ class HomeSettingsHandler extends Handler {
         }
         for (const key in booleanKeys) if (!args[key]) $set[key] = false;
         await setter($set);
+        await sleep(100);
         this.back();
     }
 }

@@ -1,5 +1,6 @@
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
+import { sleep } from '@hydrooj/utils/lib/utils';
 import * as check from '../check';
 import { ValidationError } from '../error';
 import {
@@ -178,6 +179,7 @@ class SystemSettingHandler extends SystemHandler {
         }
         tasks.push(bus.parallel('system/setting', args));
         await Promise.all(tasks);
+        await sleep(100);
         this.back();
     }
 }
