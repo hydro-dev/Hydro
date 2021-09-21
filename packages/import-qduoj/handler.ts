@@ -107,8 +107,6 @@ class ImportQduojHandler extends Handler {
                     problem.edit(domainId, pid, { html: true }),
                 ]);
             }
-        } catch (e) {
-            console.error(e);
         } finally {
             await fs.remove(tmp);
         }
