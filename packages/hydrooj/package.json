@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.36.15",
+    "version": "2.37.0",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -64,6 +64,10 @@
         "@types/source-map-support": "^0",
         "@types/superagent": "^4.1.12",
         "formidable": "^1.2.2",
-        "moment": "^2.29.1"
+        "moment": "^2.29.1",
+        "pm2": "^5.1.1"
+    },
+    "peerDependencies": {
+        "pm2": "*"
     }
 }

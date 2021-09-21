@@ -135,12 +135,14 @@ class TaskModel {
     static Worker = Worker;
 }
 
+const id = hostname();
 Worker.addHandler('task.daily', async () => {
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
     await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
 });
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
 bus.once('app/started', async () => {
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (!await TaskModel.count({ type: 'schedule', subType: 'task.daily' })) {
         await TaskModel.add({
             type: 'schedule',
@@ -150,7 +152,6 @@ bus.once('app/started', async () => {
         });
     }
     await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
-    const id = hostname() + process.env.NODE_APP_INSTANCE;
     (async () => {
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -167,7 +168,7 @@ bus.once('app/started', async () => {
 });
 bus.on('bus/broadcast', (event, payload) => {
     collEvent.insertOne({
-        ack: [],
+        ack: [id],
         event,
         payload: JSON.stringify(payload),
         expire: new Date(Date.now() + 10000),

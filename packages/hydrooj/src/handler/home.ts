@@ -261,7 +261,6 @@ class HomeSettingsHandler extends Handler {
         }
         for (const key in booleanKeys) if (!args[key]) $set[key] = false;
         await setter($set);
-        await sleep(100);
         this.back();
     }
 }

@@ -183,6 +183,24 @@ export function broadcast<K extends keyof EventMap>(event: K, ...payload: Parame
     return parallel('bus/broadcast', event, payload);
 }
 
+try {
+    if (!process.send) throw new Error();
+    const pm2: typeof import('pm2') = require('pm2');
+    pm2.launchBus((err, bus) => {
+        if (err) throw new Error();
+        bus.on('hydro:broadcast', (packet) => {
+            parallel(packet.data.event, ...packet.data.payload);
+        });
+        on('bus/broadcast', (event, payload) => {
+            process.send({ type: 'hydro:broadcast', data: { event, payload } });
+        });
+        console.debug('Using pm2 event bus');
+    });
+} catch (e) {
+    on('bus/broadcast', (event, payload) => parallel(event, ...payload));
+    console.debug('Using mongodb external event bus');
+}
+
 global.Hydro.service.bus = {
     addListener, bail, broadcast, emit, on, off, once, parallel, prependListener, removeListener, serial,
 };

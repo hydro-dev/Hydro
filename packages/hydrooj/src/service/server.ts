@@ -887,13 +887,17 @@ export function Connection(
 let started = false;
 
 // TODO use postInit?
-export function start() {
+export async function start() {
     if (started) return;
     const port = system.get('server.port');
     app.use(router.routes()).use(router.allowedMethods());
-    server.listen(argv.options.port || port);
-    logger.success('Server listening at: %d', argv.options.port || port);
-    started = true;
+    await new Promise((resolve) => {
+        server.listen(argv.options.port || port, () => {
+            logger.success('Server listening at: %d', argv.options.port || port);
+            started = true;
+            resolve(true);
+        });
+    });
 }
 
 global.Hydro.service.server = {
