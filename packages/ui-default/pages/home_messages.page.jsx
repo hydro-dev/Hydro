@@ -39,16 +39,20 @@ const page = new NamedPage('home_messages', () => {
         type: 'DIALOGUES_MESSAGE_PUSH',
         payload: msg,
       });
-      new VjNotification({
+      const notification = new VjNotification({
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
         message: msg.mdoc.content,
         duration: 15000,
-        action: () => store.dispatch({
-          type: 'DIALOGUES_SWITCH_TO',
-          payload: msg.udoc._id,
-        }),
-      }).show();
+        action: () => {
+          store.dispatch({
+            type: 'DIALOGUES_SWITCH_TO',
+            payload: msg.udoc._id,
+          });
+          notification.hide();
+        },
+      });
+      notification.show();
     };
 
     const userSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--user-select [name="user"]'));

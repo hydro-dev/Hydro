@@ -88,9 +88,9 @@ export interface Types {
 }
 
 export const Types: Types = {
-    Content: [(v) => v.toString(), isContent],
-    Name: [(v) => v.toString(), isName],
-    Title: [(v) => v.toString(), isTitle],
+    Content: [(v) => v.toString().trim(), isContent],
+    Name: [(v) => v.toString().trim(), isName],
+    Title: [(v) => v.toString().trim(), isTitle],
     String: [(v) => v.toString(), null],
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
     UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],

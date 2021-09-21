@@ -37,6 +37,7 @@ const problemConfigSchema = {
   type: 'object',
   def: problemConfigSchemaDef,
   properties: {
+    redirect: { type: 'string', pattern: '[0-9a-z_-]+\\/[0-9]+' },
     key: { type: 'string', pattern: '[0-9a-f]{32}' },
     type: { enum: ['default', 'interactive', 'submit_answer', 'objective', 'remote_judge'] },
     subType: { type: 'string' },

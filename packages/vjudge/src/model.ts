@@ -71,11 +71,11 @@ class Service {
 
     async login() {
         const login = await this.api.ensureLogin();
-        if (login) {
+        if (login === true) {
             logger.info(`${this.account.type}/${this.account.handle}: logged in`);
             return true;
         }
-        logger.warn(`${this.account.type}/${this.account.handle}: login fail`);
+        logger.warn(`${this.account.type}/${this.account.handle}: login fail`, login || '');
         return false;
     }
 

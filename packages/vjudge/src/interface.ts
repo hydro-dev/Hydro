@@ -19,7 +19,7 @@ declare module 'hydrooj/src/interface' {
     }
 }
 export interface IBasicProvider {
-    ensureLogin(): Promise<boolean>;
+    ensureLogin(): Promise<boolean | string>;
     getProblem(id: string): Promise<{
         title: string;
         data: Record<string, any>;
