@@ -229,7 +229,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
         result.subtasks = c.subtasks;
         result.count = c.count;
     }
-    if (args.key && args.key !== result.key) throw new FormatError('Incorrect secret key');
-    if (!args.key) isValidConfig(result);
+    if (result.key && args.key !== result.key) throw new FormatError('Incorrect secret key');
+    if (!result.key) isValidConfig(result);
     return result;
 }
