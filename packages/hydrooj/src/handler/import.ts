@@ -316,7 +316,7 @@ class ProblemImportSYZOJHandler extends Handler {
                     // eslint-disable-next-line no-await-in-loop
                     if (version === 3) await this.v3(domainId, undefined, hidden, protocol, host, i, true).catch(noop);
                     // eslint-disable-next-line no-await-in-loop
-                    else await this.v2(domainId, undefined, hidden, prefix + i).catch(noop);
+                    else await this.v2(domainId, undefined, hidden, `${prefix + i}/`).catch(noop);
                     logger.info('%s %d-%d-%d', prefix, start, i, end);
                 }
             })().catch(logger.error);
