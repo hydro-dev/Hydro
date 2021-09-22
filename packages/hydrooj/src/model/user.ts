@@ -4,7 +4,7 @@ import { Collection } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     FileInfo, Udict, Udoc,
-    User as _User,
+    User as _User, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import { Logger } from '../logger';
@@ -19,6 +19,8 @@ import * as system from './system';
 import token from './token';
 
 const coll: Collection<Udoc> = db.collection('user');
+// Virtual user, only for display in contest.
+const collV: Collection<VUdoc> = db.collection('vuser');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
@@ -154,7 +156,7 @@ class UserModel {
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
         if (cache.has(`id/${_id}/${domainId}`)) return cache.get(`id/${_id}/${domainId}`) || null;
-        const udoc = await coll.findOne({ _id });
+        const udoc = await (_id < -999 ? collV : coll).findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         if (typeof scope === 'string') scope = BigInt(scope);
@@ -177,7 +179,8 @@ class UserModel {
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
         if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`) || null;
-        const udoc = await coll.findOne({ unameLower });
+        let udoc = await coll.findOne({ unameLower });
+        if (!udoc) udoc = await collV.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();
@@ -203,6 +206,7 @@ class UserModel {
 
     @ArgMethod
     static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>) {
+        if (uid < 1000) return null;
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
@@ -236,6 +240,7 @@ class UserModel {
 
     @ArgMethod
     static async inc(_id: number, field: string, n: number = 1) {
+        if (_id < -999) return null;
         const udoc = await coll.findOne({ _id });
         if (!udoc) throw new UserNotFoundError(_id);
         udoc[field] = udoc[field] + n || n;
@@ -279,16 +284,29 @@ class UserModel {
     }
 
     @ArgMethod
-    static async changeUsername(uid: number, uname: string) {
-        const udoc = await coll.findOne({ _id: uid });
-        deleteUserCache(udoc);
-        const res = await coll.findOneAndUpdate(
-            { _id: uid },
-            { $set: { uname, unameLower: uname.trim().toLowerCase() } },
-            { returnDocument: 'after' },
-        );
-        deleteUserCache(res.value);
-        return res.value;
+    static async ensureVuser(uname: string) {
+        const [[min], current] = await Promise.all([
+            collV.find({}).sort({ _id: -1 }).limit(1).toArray(),
+            collV.findOne({ unameLower: uname.toLowerCase() }),
+        ]);
+        if (current) return current._id;
+        const uid = min?._id ? min._id - 1 : -1000;
+        await collV.insertOne({
+            _id: uid,
+            mail: `${-uid}@vuser.local`,
+            mailLower: `${-uid}@vuser.local`,
+            uname,
+            unameLower: uname.trim().toLowerCase(),
+            hash: '',
+            salt: '',
+            hashType: 'hydro',
+            regat: new Date(),
+            ip: ['127.0.0.1'],
+            loginat: new Date(),
+            loginip: '127.0.0.1',
+            priv: 0,
+        });
+        return uid;
     }
 
     static getMulti(params: any = {}) {

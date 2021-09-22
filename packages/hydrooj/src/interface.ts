@@ -73,6 +73,22 @@ export interface Udoc extends Dictionary<any> {
     loginip: string;
 }
 
+export interface VUdoc {
+    _id: number;
+    mail: string;
+    mailLower: string;
+    uname: string;
+    unameLower: string;
+    salt: '';
+    hash: '';
+    hashType: 'hydro';
+    priv: 0;
+    regat: Date;
+    loginat: Date;
+    ip: ['127.0.0.1'];
+    loginip: '127.0.0.1';
+}
+
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export interface User extends Record<string, any> {
@@ -539,6 +555,14 @@ export interface EventDoc {
     expire: Date;
 }
 
+export interface OpCountDoc {
+    _id: ObjectID;
+    op: string;
+    ident: string;
+    expireAt: Date;
+    opcount: number;
+}
+
 export interface Collections {
     'blacklist': BlacklistDoc;
     'contest': Tdoc;
@@ -547,8 +571,10 @@ export interface Collections {
     'domain.union': DomainUnion;
     'record': RecordDoc;
     'document': any;
+    'document.status': any;
     'problem': ProblemDoc;
     'user': Udoc;
+    'vuser': VUdoc;
     'check': any;
     'message': MessageDoc;
     'token': TokenDoc;
@@ -559,10 +585,9 @@ export interface Collections {
     'storage': FileNode;
     'oplog': OplogDoc;
     'event': EventDoc;
-    'opcount': any;
+    'opcount': OpCountDoc;
     'fs.chunks': any;
     'fs.files': any;
-    'document.status': any;
 }
 
 export interface Model {

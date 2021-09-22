@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.37.8",
+    "version": "2.38.0",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -18,7 +18,7 @@
         "cac": "^6.7.3",
         "cookies": "^0.8.0",
         "detect-browser": "^5.2.1",
-        "esbuild": "^0.12.28",
+        "esbuild": "^0.12.29",
         "fs-extra": "^10.0.0",
         "graphql": "^15.6.0",
         "graphql-scalars": "^1.10.1",
@@ -47,7 +47,7 @@
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
-        "@types/fs-extra": "^9.0.12",
+        "@types/fs-extra": "^9.0.13",
         "@types/js-yaml": "^4.0.3",
         "@types/koa": "^2.13.4",
         "@types/koa-compress": "^4.0.3",
