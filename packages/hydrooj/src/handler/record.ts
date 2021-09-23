@@ -4,7 +4,7 @@ import {
     ContestNotAttendedError, ContestNotFoundError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
-import { RecordDoc } from '../interface';
+import { RecordDoc, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import problem from '../model/problem';
@@ -34,13 +34,13 @@ class RecordListHandler extends Handler {
         let tdoc = null;
         let invalid = false;
         this.response.template = 'record_main.html';
-        const q: FilterQuery<RecordDoc> = { 'contest.tid': tid, hidden: false };
+        const q: FilterQuery<RecordDoc> = { contest: tid };
         if (full) uidOrName = this.user._id.toString();
         if (tid) {
-            tdoc = await contest.get(domainId, tid, -1);
+            tdoc = await contest.get(domainId, tid);
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id, -1))?.attend) {
+            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
                 throw new ContestNotAttendedError(domainId, tid);
             }
         }
@@ -108,7 +108,7 @@ class RecordDetailHandler extends Handler {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(rid);
         if (rdoc.contest) {
-            const tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
+            const tdoc = await contest.get(domainId, rdoc.contest);
             let canView = this.user.own(tdoc);
             canView ||= contest.canShowRecord.call(this, tdoc);
             canView ||= contest.canShowSelfRecord.call(this, tdoc, true) && rdoc.uid === this.user._id;
@@ -135,7 +135,7 @@ class RecordDetailHandler extends Handler {
         }
         this.response.body = { udoc, rdoc, pdoc };
         if (rdoc.contest) {
-            this.response.body.tdoc = await contest.get(domainId, rdoc.contest.tid, rdoc.contest.type);
+            this.response.body.tdoc = await contest.get(domainId, rdoc.contest);
         }
     }
 
@@ -182,6 +182,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pid: number;
     status: number;
     pretest = false;
+    tdoc: Tdoc<30>;
 
     @param('tid', Types.ObjectID, true)
     @param('pid', Types.Name, true)
@@ -194,9 +195,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         status?: number, pretest = false, all = false,
     ) {
         if (tid) {
-            const tdoc = await contest.get(domainId, tid, -1);
-            if (!tdoc) throw new ContestNotFoundError(domainId, tid);
-            if (pretest || contest.canShowScoreboard.call(this, tdoc, true)) this.tid = tid.toHexString();
+            this.tdoc = await contest.get(domainId, tid);
+            if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
+            if (pretest || contest.canShowScoreboard.call(this, this.tdoc, true)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (pretest) {
@@ -236,10 +237,12 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async onRecordChange(rdoc: RecordDoc) {
-        if (!this.all && !this.pretest && rdoc.input) return;
-        if (!this.all && rdoc.domainId !== this.domainId) return;
-        if (!this.all && rdoc.contest && rdoc.contest.tid.toString() !== this.tid) return;
-        if (!this.all && this.pid && rdoc.pid !== this.pid) return;
+        if (!this.all) {
+            if (!this.pretest && rdoc.input) return;
+            if (rdoc.domainId !== this.domainId) return;
+            if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
+        }
+        if (this.pid && rdoc.pid !== this.pid) return;
         if (this.uid && rdoc.uid !== this.uid) return;
 
         // eslint-disable-next-line prefer-const
@@ -247,7 +250,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.domainId, rdoc.uid),
             problem.get(rdoc.pdomain, rdoc.pid),
         ]);
-        const tdoc = this.tid ? await contest.get(rdoc.domainId, new ObjectID(this.tid), -1) : null;
+        const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
             if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
@@ -272,7 +275,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {
-            const tdoc = await contest.get(domainId, rdoc.contest.tid, -1);
+            const tdoc = await contest.get(domainId, rdoc.contest);
             let canView = this.user.own(tdoc);
             canView ||= contest.canShowRecord.call(this, tdoc);
             canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);

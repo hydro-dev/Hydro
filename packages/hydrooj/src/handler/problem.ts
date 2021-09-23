@@ -16,7 +16,6 @@ import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
-import * as document from '../model/document';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -258,12 +257,8 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        const [ctdocs, htdocs] = await Promise.all([
-            contest.getRelated(this.domainId, this.pdoc.docId, document.TYPE_CONTEST),
-            contest.getRelated(this.domainId, this.pdoc.docId, document.TYPE_HOMEWORK),
-        ]);
-        if (ctdocs.length) throw new BadRequestError('Problem already used by contest {0}', ctdocs[0]._id);
-        if (htdocs.length) throw new BadRequestError('Problem already used by homwrork {0}', htdocs[0]._id);
+        const tdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
+        if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
     }

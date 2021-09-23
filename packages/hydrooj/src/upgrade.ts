@@ -39,7 +39,7 @@ const scripts: UpgradeScript[] = [
     // Init
     async function _1_2() {
         const ddoc = await domain.get('system');
-        if (!ddoc) await domain.add('system', 1, 'Hydro', 'Hydro System');
+        if (!ddoc) await domain.add('system', 1, 'Hydro', 'Welcome to Hydro!');
         // TODO discussion node?
         return true;
     },
@@ -451,7 +451,6 @@ const scripts: UpgradeScript[] = [
         const _FRESH_INSTALL_IGNORE = 1;
         // Ignore drop index failure
         await db.collection('storage').dropIndex('path_1').catch(() => { });
-        await db.collection('storage').createIndex({ path: 1, autoDelete: 1 }, { sparse: true });
         await db.collection('storage').updateMany(
             { autoDelete: { $gte: moment().add(5, 'days').toDate() } },
             { $unset: { autoDelete: '' } },
@@ -524,7 +523,7 @@ const scripts: UpgradeScript[] = [
         await iterateAllDomain(async (ddoc) => {
             const ddocs = await discussion.getMulti(ddoc._id, {
                 docType: document.TYPE_DISCUSSION,
-                parentType: { $in: [document.TYPE_CONTEST, document.TYPE_HOMEWORK, document.TYPE_TRAINING] },
+                parentType: { $in: [document.TYPE_CONTEST, 60, document.TYPE_TRAINING] },
                 parentId: { $type: 'string' },
             }).toArray();
             for (const doc of ddocs) {
@@ -533,6 +532,18 @@ const scripts: UpgradeScript[] = [
                 }
             }
         });
+        return true;
+    },
+    null,
+    async function _46_47() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await document.coll.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
+        await document.collStatus.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
+        await RecordModel.coll.deleteMany({ 'contest.tid': { $ne: null }, hidden: true });
+        await RecordModel.coll.updateMany({}, { $unset: { hidden: '' } });
+        await RecordModel.coll.updateMany({ 'contest.tid': { $exists: true } }, { $rename: { 'contest.tid': 'contest1' } });
+        await RecordModel.coll.updateMany({ contest1: { $exists: true } }, { $rename: { contest1: 'contest' } });
+        await RecordModel.coll.updateMany({ contest: { $exists: true } }, { $unset: { contest: '' } });
         return true;
     },
 ];

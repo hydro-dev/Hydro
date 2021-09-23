@@ -1,4 +1,6 @@
+/* eslint-disable no-constant-condition */
 /* eslint-disable no-await-in-loop */
+import { ObjectID } from 'mongodb';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
 import db from '../service/db';
@@ -6,11 +8,12 @@ import db from '../service/db';
 export const description = 'Recalculates nSubmit and nAccept in problem status.';
 
 const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
+const $match = { contest: { $ne: new ObjectID('000000000000000000000000') } };
 
 export async function udoc(report) {
     report({ message: 'Udoc' });
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' } } },
+        { $match },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -28,8 +31,9 @@ export async function udoc(report) {
     ];
     let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
     const cursor = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
-    while (await cursor.hasNext()) {
+    while (true) {
         const adoc = await cursor.next() as any;
+        if (!adoc) break;
         bulk.find({
             domainId: adoc._id.domainId,
             uid: adoc._id.uid,
@@ -50,7 +54,7 @@ export async function udoc(report) {
 export async function psdoc(report) {
     report({ message: 'Psdoc' });
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' } } },
+        { $match },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -59,8 +63,9 @@ export async function psdoc(report) {
         },
     ];
     const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
-    while (await data.hasNext()) {
+    while (true) {
         const adoc = await data.next() as any;
+        if (!adoc) break;
         await document.setStatus(adoc._id.domainId, document.TYPE_PROBLEM, adoc._id.pid, adoc._id.uid, { nSubmit: adoc.nSubmit });
     }
 }
@@ -68,7 +73,7 @@ export async function psdoc(report) {
 export async function pdoc(report) {
     report({ message: 'Pdoc' });
     const pipeline = [
-        { $match: { hidden: false, type: { $ne: 'run' } } },
+        { $match },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -106,8 +111,9 @@ export async function pdoc(report) {
     let bulk = db.collection('document').initializeUnorderedBulkOp();
     const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
     let cnt = 0;
-    while (await data.hasNext()) {
+    while (true) {
         const adoc = await data.next() as any;
+        if (!adoc) break;
         const $set = {
             nSubmit: adoc.nSubmit,
             nAccept: adoc.nAccept,

@@ -14,7 +14,6 @@ import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import * as document from '../model/document';
 import domain from '../model/domain';
 import message from '../model/message';
 import ProblemModel from '../model/problem';
@@ -39,11 +38,10 @@ class HomeHandler extends Handler {
 
     async getHomework(domainId: string, limit = 5) {
         if (this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) {
-            const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK)
+            const tdocs = await contest.getMulti(domainId, { rule: 'homework' })
                 .limit(limit).toArray();
             const tsdict = await contest.getListStatus(
-                domainId, this.user._id,
-                tdocs.map((tdoc) => tdoc.docId), document.TYPE_HOMEWORK,
+                domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
             return ['homework', tdocs, tsdict];
         }
@@ -52,7 +50,7 @@ class HomeHandler extends Handler {
 
     async getContest(domainId: string, limit = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
-            const tdocs = await contest.getMulti(domainId)
+            const tdocs = await contest.getMulti(domainId, { rule: { $ne: 'homework' } })
                 .limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),

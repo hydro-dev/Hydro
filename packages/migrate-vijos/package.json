@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/migrate-vijos",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",

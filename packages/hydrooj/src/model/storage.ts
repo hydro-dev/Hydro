@@ -103,6 +103,11 @@ async function cleanFiles() {
 }
 TaskModel.Worker.addHandler('storage.prune', cleanFiles);
 bus.once('app/started', async () => {
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
+    await db.ensureIndexes(
+        StorageModel.coll,
+        { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+    );
     if (!await TaskModel.count({ type: 'schedule', subType: 'storage.prune' })) {
         await TaskModel.add({
             type: 'schedule',

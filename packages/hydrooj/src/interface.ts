@@ -28,7 +28,6 @@ export interface SystemKeys {
     'smtp.host': string,
     'smtp.port': number,
     'smtp.secure': boolean,
-    'user': number,
     'installid': string,
     'server.name': string,
     'server.url': string,
@@ -276,11 +275,6 @@ export interface TestCase {
     message: string,
 }
 
-export interface ContestInfo {
-    type: 30 | 60,
-    tid: ObjectID,
-}
-
 export interface RecordDoc {
     _id: ObjectID;
     domainId: string;
@@ -301,11 +295,10 @@ export interface RecordDoc {
     judgeAt: Date;
     status: number;
     progress?: number;
-    /** pretest/script */
-    hidden?: boolean;
     /** pretest */
     input?: string;
-    contest?: ContestInfo;
+    /** 0 if pretest&script */
+    contest?: ObjectID;
 }
 
 export interface ScoreboardNode {
@@ -329,7 +322,7 @@ export interface TrainingNode {
 export type ExternalProblemId = string; // ${string}:${number}
 export type ProblemId = ExternalProblemId | number;
 
-export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_HOMEWORK'] | document['TYPE_TRAINING']> extends Document {
+export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
     docId: ObjectID,
     docType: docType & number,
     beginAt: Date,
@@ -461,15 +454,15 @@ export interface ContestRule {
     TEXT: string;
     check: (args: any) => any;
     statusSort: any;
-    showScoreboard: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
-    showSelfRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
-    showRecord: (tdoc: Tdoc<30 | 60>, now: Date) => boolean;
-    stat: (tdoc: Tdoc<30 | 60>, journal: any[]) => ContestStat;
+    showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
+    showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
+    showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
+    stat: (tdoc: Tdoc<30>, journal: any[]) => ContestStat;
     scoreboard: (
         isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30 | 60>, pdict: ProblemDict, cursor: Cursor<any>, page: number,
+        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<any>, page: number,
     ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
-    ranked: (tdoc: Tdoc<30 | 60>, cursor: Cursor<any>) => Promise<any[]>;
+    ranked: (tdoc: Tdoc<30>, cursor: Cursor<any>) => Promise<any[]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;

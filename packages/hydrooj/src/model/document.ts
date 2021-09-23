@@ -35,7 +35,6 @@ export interface DocType {
     [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc,
     [TYPE_CONTEST]: Tdoc,
     [TYPE_TRAINING]: TrainingDoc,
-    [TYPE_HOMEWORK]: Tdoc,
 }
 
 export interface DocStatusType {

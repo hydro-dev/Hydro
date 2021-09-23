@@ -5,7 +5,7 @@ import {
 } from 'hydrooj';
 
 const dst = global.Hydro.service.db;
-const { discussion, document } = global.Hydro.model;
+const { discussion } = global.Hydro.model;
 const map = {};
 
 const pid = (id) => {
@@ -201,6 +201,7 @@ const tasks = {
         userfile_usage: null,
     },
     record: async (doc) => {
+        if (doc.hidden) return null;
         const testCases: TestCase[] = [];
         for (const c of doc.cases || []) {
             testCases.push({
@@ -227,16 +228,10 @@ const tasks = {
             judgeTexts: doc.judge_texts || [],
             compilerTexts: doc.compiler_texts || [],
             testCases,
-            hidden: !!doc.hidden,
             rejudged: !!doc.rejudged,
         };
         if (doc.rejudged) rdoc.rejudged = true;
-        if (doc.tid) {
-            rdoc.contest = {
-                type: doc.ttype || document.TYPE_CONTEST,
-                tid: doc.tid,
-            };
-        }
+        if (doc.tid) rdoc.contest = doc.tid;
         return rdoc;
     },
     domain: {

@@ -58,5 +58,5 @@ export async function load() {
 
 export async function loadCli() {
     await require('./entry/cli').load();
-    process.kill(process.pid, 'SIGINT');
+    setTimeout(() => process.exit(0), 300);
 }

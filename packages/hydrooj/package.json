@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "2.38.0",
+    "version": "2.39.0",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -36,7 +36,7 @@
         "moment-timezone": "^0.5.33",
         "mongodb": "^3.7.1",
         "nanoid": "^3.1.25",
-        "nodemailer": "^6.6.3",
+        "nodemailer": "^6.6.4",
         "p-queue": "^7.1.0",
         "reflect-metadata": "^0.1.13",
         "serialize-javascript": "^6.0.0",

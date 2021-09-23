@@ -8,8 +8,8 @@ import {
 } from 'mongodb';
 import { ProblemNotFoundError } from '../error';
 import {
-    ContestInfo, ExternalProblemId, FileInfo,
-    ProblemConfigFile, RecordDoc,
+    ExternalProblemId, FileInfo, ProblemConfigFile,
+    RecordDoc,
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -23,9 +23,8 @@ class RecordModel {
     static coll: Collection<RecordDoc> = db.collection('record');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
-        'uid', 'pid', 'rejudged', 'hidden', 'progress',
+        'uid', 'pid', 'rejudged', 'progress', 'pdomain',
         'contest', 'judger', 'judgeAt', 'status', 'domainId',
-        'pdomain',
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {
@@ -98,7 +97,7 @@ class RecordModel {
 
     static async add(
         domainId: string, pid: ExternalProblemId | number, uid: number,
-        lang: string, code: string, addTask: boolean, contestOrConfig?: ContestInfo | string,
+        lang: string, code: string, addTask: boolean, contestOrConfig?: ObjectID | string,
     ) {
         let pdomain = domainId;
         if (typeof pid === 'string') {
@@ -117,7 +116,6 @@ class RecordModel {
             score: 0,
             time: 0,
             memory: 0,
-            hidden: false,
             judgeTexts: [],
             compilerTexts: [],
             testCases: [],
@@ -129,7 +127,7 @@ class RecordModel {
         if (typeof contestOrConfig === 'string') {
             // is Run
             data.input = contestOrConfig;
-            data.hidden = true;
+            data.contest = new ObjectID('000000000000000000000000');
         } else {
             data.contest = contestOrConfig;
             isContest = true;
@@ -207,16 +205,14 @@ class RecordModel {
     }
 
     static async getList(
-        domainId: string, rids: ObjectID[], showHidden: boolean, fields?: (keyof RecordDoc)[],
+        domainId: string, rids: ObjectID[], fields?: (keyof RecordDoc)[],
     ): Promise<Record<string, Partial<RecordDoc>>> {
         const r: Record<string, RecordDoc> = {};
         rids = Array.from(new Set(rids));
         let cursor = RecordModel.coll.find({ domainId, _id: { $in: rids } });
         if (fields) cursor = cursor.project(buildProjection(fields));
         const rdocs = await cursor.toArray();
-        for (const rdoc of rdocs) {
-            if (!rdoc.hidden || showHidden) r[rdoc._id.toHexString()] = rdoc;
-        }
+        for (const rdoc of rdocs) r[rdoc._id.toHexString()] = rdoc;
         return r;
     }
 }
@@ -230,9 +226,9 @@ bus.on('domain/delete', (domainId) => Promise.all([
 
 bus.once('app/started', () => db.ensureIndexes(
     RecordModel.coll,
-    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, _id: -1 }, name: 'basic' },
-    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, uid: 1, _id: -1 }, name: 'withUser' },
-    { key: { domainId: 1, 'contest.tid': 1, hidden: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+    { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
+    { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
+    { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
 ));
 
 export default RecordModel;

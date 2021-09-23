@@ -8,9 +8,7 @@ import {
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
 import paginate from '../lib/paginate';
-import {
-    PERM, PERMS_BY_FAMILY, PRIV,
-} from '../model/builtin';
+import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';

@@ -32,7 +32,7 @@ async function runProblem(...arg: any[]) {
         const psdocs = await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
         ).limit(100).skip((page - 1) * 100).project({ rid: 1, uid: 1 }).toArray();
-        const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid), true);
+        const rdict = await record.getList(pdoc.domainId, psdocs.map((psdoc) => psdoc.rid));
         for (const psdoc of psdocs) {
             if (rdict[psdoc.rid.toHexString()]) {
                 const rp = rdict[psdoc.rid.toHexString()].score * p;
@@ -48,12 +48,12 @@ async function runContest(
 ): Promise<void>;
 async function runContest(...arg: any[]) {
     const start = new Date().getTime();
-    const tdoc: Tdoc<30 | 60> = (typeof arg[0] === 'string')
-        ? await contest.get(arg[0], arg[1], -1)
+    const tdoc: Tdoc<30> = (typeof arg[0] === 'string')
+        ? await contest.get(arg[0], arg[1])
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
-    const cursor = contest.getMultiStatus(tdoc.domainId, tdoc.docId, tdoc.docType)
+    const cursor = contest.getMultiStatus(tdoc.domainId, tdoc.docId)
         .sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
     const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);

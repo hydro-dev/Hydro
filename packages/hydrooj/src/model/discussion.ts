@@ -252,7 +252,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
         const _id = new ObjectID(id);
-        const tdoc = await model.get(domainId, _id, type as any);
+        const tdoc = await model.get(domainId, _id);
         if (!tdoc) throw new DiscussionNodeNotFoundError(id);
         if (uid) {
             const tsdoc = await model.getStatus(domainId, _id, uid);

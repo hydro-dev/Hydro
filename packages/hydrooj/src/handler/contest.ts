@@ -15,7 +15,6 @@ import {
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
-import * as document from '../model/document';
 import domain from '../model/domain';
 import message from '../model/message';
 import problem from '../model/problem';
@@ -32,19 +31,15 @@ export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
-        const cursor = contest.getMulti(domainId, rule ? { rule } : undefined);
+        const cursor = contest.getMulti(domainId, rule ? { rule } : { rule: { $ne: 'homework' } });
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate(cursor, page, system.get('pagination.contest'));
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc.docId);
         const tsdict = await contest.getListStatus(domainId, this.user._id, tids);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', null],
-        ];
         this.response.template = 'contest_main.html';
         this.response.body = {
-            page, tpcount, qs, rule, tdocs, tsdict, path,
+            page, tpcount, qs, rule, tdocs, tsdict,
         };
     }
 }
@@ -68,17 +63,12 @@ export class ContestDetailHandler extends Handler {
             if (contest.canShowSelfRecord.call(this, tdoc)) {
                 const q = [];
                 for (const i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(domainId, q, true);
+                rdict = await record.getList(domainId, q);
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         } else attended = false;
         const udict = await user.getList(domainId, [tdoc.owner]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            [tdoc.title, null, null, true],
-        ];
         const index = tdoc.pids.map((i) => i.toString());
         for (const key in pdict) {
             pdict[key].tag.length = 0;
@@ -86,7 +76,7 @@ export class ContestDetailHandler extends Handler {
             if (i !== '9') pdict[key].pid = i;
         }
         this.response.body = {
-            path, tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
+            tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
         };
     }
 
@@ -258,7 +248,7 @@ export class ContestEditHandler extends Handler {
 }
 
 export class ContestProblemHandler extends Handler {
-    tdoc: Tdoc<30 | 60>;
+    tdoc: Tdoc<30>;
     pdoc: ProblemDoc;
     tsdoc: any;
     udoc: User;
@@ -391,10 +381,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
-            type: document.TYPE_CONTEST,
-            tid,
-        });
+        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : tid);
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(domainId, rid);
         if (!pretest) {

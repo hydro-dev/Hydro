@@ -1,11 +1,9 @@
-import assert from 'assert';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { createReadStream } from 'fs-extra';
 import { BucketItem, Client, ItemBucketMetadata } from 'minio';
 import { Logger } from '../logger';
 import * as system from '../model/system';
-import { streamToBuffer } from '../utils';
 
 const logger = new Logger('storage');
 
@@ -116,19 +114,13 @@ class StorageService {
                 user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
                 judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),
             };
-            await this.put('storage.test', Buffer.from('test'));
-            const result = await streamToBuffer(await this.get('storage.test'));
-            assert(result.toString() === 'test');
-            await this.del('storage.test');
             logger.success('Storage connected.');
             this.error = null;
         } catch (e) {
             logger.warn('Storage init fail. will retry later.');
             if (process.env.DEV) logger.warn(e);
             this.error = e.toString();
-            setTimeout(async () => {
-                await this.start();
-            }, 10000);
+            setTimeout(() => this.start(), 10000);
         }
     }
 

@@ -19,7 +19,7 @@ export const typeMapper = {
     contest: document.TYPE_CONTEST,
     node: document.TYPE_DISCUSSION_NODE,
     training: document.TYPE_TRAINING,
-    homework: document.TYPE_HOMEWORK,
+    homework: document.TYPE_CONTEST,
 };
 
 class DiscussionHandler extends Handler {

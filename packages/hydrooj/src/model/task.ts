@@ -137,6 +137,7 @@ class TaskModel {
 
 const id = hostname();
 Worker.addHandler('task.daily', async () => {
+    await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
     await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
 });

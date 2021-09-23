@@ -286,7 +286,7 @@ class UserModel {
     @ArgMethod
     static async ensureVuser(uname: string) {
         const [[min], current] = await Promise.all([
-            collV.find({}).sort({ _id: -1 }).limit(1).toArray(),
+            collV.find({}).sort({ _id: 1 }).limit(1).toArray(),
             collV.findOne({ unameLower: uname.toLowerCase() }),
         ]);
         if (current) return current._id;

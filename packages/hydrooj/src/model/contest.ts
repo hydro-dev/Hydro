@@ -16,8 +16,6 @@ import * as document from './document';
 import problem from './problem';
 import user from './user';
 
-type Type = 30 | 60;
-
 interface AcmJournal {
     rid: ObjectID;
     pid: ProblemId;
@@ -439,7 +437,7 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: ProblemId[] = [],
-    rated = false, data: Partial<Tdoc> = {}, type: Type = document.TYPE_CONTEST,
+    rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!this.RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -448,101 +446,79 @@ export async function add(
     });
     this.RULES[rule].check(data);
     await bus.serial('contest/before-add', data);
-    const res = await document.add(domainId, content, owner, type, null, null, null, {
+    const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
     await bus.serial('contest/add', data, res);
     return res;
 }
 
-export async function edit(
-    domainId: string, tid: ObjectID,
-    $set: any, type: Type = document.TYPE_CONTEST,
-) {
-    if ($set.rule) {
-        if (!this.RULES[$set.rule]) throw new ValidationError('rule');
-    }
-    const tdoc = await document.get(domainId, type, tid);
+export async function edit(domainId: string, tid: ObjectID, $set: any) {
+    if ($set.rule && !this.RULES[$set.rule]) throw new ValidationError('rule');
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
     this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
-    return await document.set(domainId, type, tid, $set);
+    return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
 }
 
-export async function del(domainId: string, tid: ObjectID, type: Type = document.TYPE_CONTEST) {
+export async function del(domainId: string, tid: ObjectID) {
     await Promise.all([
-        document.deleteOne(domainId, type, tid),
-        document.deleteMultiStatus(domainId, type, { docId: tid }),
-        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { parentType: type, parentId: tid }),
+        document.deleteOne(domainId, document.TYPE_CONTEST, tid),
+        document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
+        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { parentType: document.TYPE_CONTEST, parentId: tid }),
     ]);
 }
 
-export async function get(domainId: string, tid: ObjectID, type: -1): Promise<Tdoc<30 | 60>>;
-export async function get<T extends Type>(domainId: string, tid: ObjectID, type: T): Promise<Tdoc<T>>;
-export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>>;
-export async function get(domainId: string, tid: ObjectID, type: Type | -1 = document.TYPE_CONTEST) {
-    let tdoc: Tdoc;
-    if (type === -1) {
-        tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
-        if (!tdoc) tdoc = await document.get(domainId, document.TYPE_HOMEWORK, tid);
-    } else tdoc = await document.get(domainId, type, tid);
+export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
 }
 
-export async function getRelated(domainId: string, pid: ProblemId, type: Type = document.TYPE_CONTEST) {
-    return await document.getMulti(domainId, type, { pids: pid }).toArray();
+export async function getRelated(domainId: string, pid: ProblemId) {
+    return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid }).toArray();
 }
 
-export function getStatus(
-    domainId: string, tid: ObjectID, uid: number,
-    type: 30 | 60 | -1 = document.TYPE_CONTEST,
-) {
-    if (type === -1) type = { $in: [30, 60] } as any;
-    return document.getStatus(domainId, type, tid, uid);
+export function getStatus(domainId: string, tid: ObjectID, uid: number) {
+    return document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
-    status = STATUS.STATUS_WRONG_ANSWER, score = 0, type: 30 | 60 = document.TYPE_CONTEST,
+    status = STATUS.STATUS_WRONG_ANSWER, score = 0,
 ) {
     const [tdoc, otsdoc] = await Promise.all([
-        get(domainId, tid, type),
-        getStatus(domainId, tid, uid, type),
+        get(domainId, tid),
+        getStatus(domainId, tid, uid),
     ]);
     if (!otsdoc.attend) throw new ContestNotAttendedError(tid, uid);
-    const tsdoc = await document.revPushStatus(domainId, type, tid, uid, 'journal', {
+    const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, uid, 'journal', {
         rid, pid, status, score,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    return await document.revSetStatus(domainId, type, tid, uid, tsdoc.rev, { journal, ...stats });
+    return await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, uid, tsdoc.rev, { journal, ...stats });
 }
 
-export async function getListStatus(
-    domainId: string, uid: number, tids: ObjectID[],
-    type: 30 | 60 = document.TYPE_CONTEST,
-) {
+export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
     const r = {};
     // eslint-disable-next-line no-await-in-loop
-    for (const tid of tids) r[tid.toHexString()] = await getStatus(domainId, tid, uid, type);
+    for (const tid of tids) r[tid.toHexString()] = await getStatus(domainId, tid, uid);
     return r;
 }
 
-export async function attend(
-    domainId: string, tid: ObjectID, uid: number,
-    type: Type = document.TYPE_CONTEST,
-) {
+export async function attend(domainId: string, tid: ObjectID, uid: number) {
     try {
-        await document.cappedIncStatus(domainId, type, tid, uid, 'attend', 1, 0, 1);
+        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1);
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
-    await document.inc(domainId, type, tid, 'attend', 1);
+    await document.inc(domainId, document.TYPE_CONTEST, tid, 'attend', 1);
     return {};
 }
 
-export function getMultiStatus(domainId: string, query: any, docType: 30 | 60 = document.TYPE_CONTEST) {
-    return document.getMultiStatus(domainId, docType, query);
+export function getMultiStatus(domainId: string, query: any) {
+    return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
 export function isNew(tdoc: Tdoc, days = 1) {
@@ -579,30 +555,28 @@ export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: an
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
 
-export function count(domainId: string, query: any, type: Type = document.TYPE_CONTEST) {
-    return document.count(domainId, type, query);
+export function count(domainId: string, query: any) {
+    return document.count(domainId, document.TYPE_CONTEST, query);
 }
 
-export function getMulti<K extends Type & keyof document.DocType>(
-    domainId: string, query: FilterQuery<document.DocType[K]> = {}, type?: K,
+export function getMulti(
+    domainId: string, query: FilterQuery<document.DocType['30']> = {},
 ) {
-    return document.getMulti(domainId, type || document.TYPE_CONTEST, query).sort({ beginAt: -1 });
+    return document.getMulti(domainId, document.TYPE_CONTEST, query).sort({ beginAt: -1 });
 }
 
-export async function getAndListStatus(
-    domainId: string, tid: ObjectID, docType: Type | -1 = document.TYPE_CONTEST,
-): Promise<[Tdoc, any[]]> {
+export async function getAndListStatus(domainId: string, tid: ObjectID): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
-    const tdoc = await get(domainId, tid, docType as any);
-    const tsdocs = await document.getMultiStatus(domainId, docType, { docId: tid })
+    const tdoc = await get(domainId, tid);
+    const tsdocs = await document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid })
         .sort(RULES[tdoc.rule].statusSort).toArray();
     return [tdoc, tsdocs];
 }
 
-export async function recalcStatus(domainId: string, tid: ObjectID, type: Type = document.TYPE_CONTEST) {
+export async function recalcStatus(domainId: string, tid: ObjectID) {
     const [tdoc, tsdocs] = await Promise.all([
-        document.get(domainId, type, tid),
-        document.getMultiStatus(domainId, type, { docId: tid }).toArray(),
+        document.get(domainId, document.TYPE_CONTEST, tid),
+        document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
     ]);
     const tasks = [];
     for (const tsdoc of tsdocs || []) {
@@ -611,7 +585,7 @@ export async function recalcStatus(domainId: string, tid: ObjectID, type: Type =
             const stats = RULES[tdoc.rule].stat(tdoc, journal);
             tasks.push(
                 document.revSetStatus(
-                    domainId, type, tid,
+                    domainId, document.TYPE_CONTEST, tid,
                     tsdoc.uid, tsdoc.rev, { journal, ...stats },
                 ),
             );
@@ -624,19 +598,19 @@ export function canViewHiddenScoreboard() {
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+export function canShowRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
     return false;
 }
 
-export function canShowSelfRecord(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+export function canShowSelfRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
     return false;
 }
 
-export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true) {
+export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
     return false;
@@ -644,11 +618,11 @@ export function canShowScoreboard(tdoc: Tdoc<30 | 60>, allowPermOverride = true)
 
 export async function getScoreboard(
     domainId: string, tid: ObjectID,
-    isExport = false, page: number, docType: 30 | 60 = document.TYPE_CONTEST,
+    isExport = false, page: number,
 ): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict, number]> {
-    const tdoc = await get(domainId, tid, docType);
+    const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
-    const tsdocsCursor = getMultiStatus(domainId, { docId: tid }, docType).sort(RULES[tdoc.rule].statusSort);
+    const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
     const [rows, udict, nPages] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),

@@ -6,17 +6,16 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, HomeworkNotAttendedError, HomeworkNotLiveError,
-    ProblemNotFoundError, ValidationError,
+    BadRequestError, ContestNotFoundError, HomeworkNotAttendedError,
+    HomeworkNotLiveError, ProblemNotFoundError, ValidationError,
 } from '../error';
 import {
-    DomainDoc, PenaltyRules, ProblemDoc, Tdoc, User,
+    DomainDoc, PenaltyRules, ProblemDoc, ProblemId, Tdoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import * as document from '../model/document';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -33,7 +32,7 @@ const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
     async get({ domainId }) {
-        const tdocs = await contest.getMulti(domainId, {}, document.TYPE_HOMEWORK).toArray();
+        const tdocs = await contest.getMulti(domainId, { rule: 'homework' }).toArray();
         const calendar = [];
         for (const tdoc of tdocs) {
             const cal = { ...tdoc, url: this.url('homework_detail', { tid: tdoc.docId }) };
@@ -43,11 +42,7 @@ class HomeworkMainHandler extends Handler {
             } else cal.endAt = tdoc.penaltySince;
             calendar.push(cal);
         }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', null],
-        ];
-        this.response.body = { tdocs, calendar, path };
+        this.response.body = { tdocs, calendar };
         this.response.template = 'homework_main.html';
     }
 }
@@ -56,9 +51,10 @@ class HomeworkDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
-        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         const [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK),
+            contest.getStatus(domainId, tdoc.docId, this.user._id),
             problem.getList(domainId, tdoc.pids, true),
         ]);
         const psdict = {};
@@ -74,7 +70,6 @@ class HomeworkDetailHandler extends Handler {
                 rdict = await record.getList(
                     domainId,
                     tsdoc.journal.map((pdetail) => pdetail.rid),
-                    true,
                 );
             }
         }
@@ -87,11 +82,6 @@ class HomeworkDetailHandler extends Handler {
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(tdoc.owner);
         const udict = await user.getList(domainId, uids);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            [tdoc.title, null, null, true],
-        ];
         const index = tdoc.pids.map((i) => i.toString());
         for (const key in pdict) {
             const i = (index.indexOf(key) + 10).toString(36).toUpperCase();
@@ -99,31 +89,32 @@ class HomeworkDetailHandler extends Handler {
         }
         this.response.template = 'homework_detail.html';
         this.response.body = {
-            tdoc, tsdoc, attended, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount, path,
+            tdoc, tsdoc, attended, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount,
         };
     }
 
     @param('tid', Types.ObjectID)
     async postAttend(domainId: string, tid: ObjectID) {
         this.checkPerm(PERM.PERM_ATTEND_HOMEWORK);
-        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        const tdoc = await contest.get(domainId, tid);
         if (contest.isDone(tdoc)) throw new HomeworkNotLiveError(tdoc.docId);
-        await contest.attend(domainId, tdoc.docId, this.user._id, document.TYPE_HOMEWORK);
+        await contest.attend(domainId, tdoc.docId, this.user._id);
         this.back();
     }
 
     @param('tid', Types.ObjectID)
     async postDelete(domainId: string, tid: ObjectID) {
-        const tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
+        const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
-        await contest.del(domainId, tid, document.TYPE_HOMEWORK);
+        await contest.del(domainId, tid);
         this.response.redirect = this.url('homework_main');
     }
 }
 
 class HomeworkDetailProblemHandler extends Handler {
-    tdoc: Tdoc<60>;
+    tdoc: Tdoc<30>;
     pdoc: ProblemDoc;
+    pid: ProblemId;
     tsdoc: any;
     udoc: User;
     attended: boolean;
@@ -131,19 +122,20 @@ class HomeworkDetailProblemHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('pid', Types.String)
     async _prepare(domainId: string, tid: ObjectID, _pid: string) {
-        this.tdoc = await contest.get(domainId, tid, document.TYPE_HOMEWORK);
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        if (!pid) throw new ProblemNotFoundError(domainId, tid, _pid);
+        this.tdoc = await contest.get(domainId, tid);
+        if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
+        this.pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+        if (!this.pid) throw new ProblemNotFoundError(domainId, tid, _pid);
         [this.udoc, this.pdoc, this.tsdoc] = await Promise.all([
             user.getById(domainId, this.tdoc.owner),
-            problem.get(domainId, pid),
-            contest.getStatus(domainId, tid, this.user._id, document.TYPE_HOMEWORK),
+            problem.get(domainId, this.pid),
+            contest.getStatus(domainId, tid, this.user._id),
         ]);
-        if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
+        if (!this.pdoc) throw new ProblemNotFoundError(domainId, this.pid);
         // @ts-ignore
         if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.pdoc.pid = _pid;
-        this.attended = this.tsdoc && this.tsdoc.attend === 1;
+        this.attended = this.tsdoc?.attend === 1;
         this.response.body = {
             tdoc: this.tdoc,
             pdoc: this.pdoc,
@@ -212,13 +204,11 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     pdomain: DomainDoc;
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.Name)
-    async prepare(domainId: string, tid: ObjectID, _pid: string) {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+    async prepare(domainId: string, tid: ObjectID) {
         if (!this.attended) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        this.pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
-        this.ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
+        this.pdomainId = typeof this.pid === 'string' ? this.pid.split(':')[0] : domainId;
+        this.ppid = typeof this.pid === 'number' ? this.pid : +this.pid.split(':')[1];
         this.pdomain = await domain.get(this.pdomainId);
         if (this.pdomain.langs) {
             this.response.body.pdoc.config.langs = intersection(
@@ -243,29 +233,23 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @param('pid', Types.String)
     @param('code', Types.Content)
     @param('lang', Types.Name)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
-    async post(domainId: string, tid: ObjectID, _pid: string, code: string, lang: string, pretest = false, input = '') {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+    async post(domainId: string, tid: ObjectID, code: string, lang: string, pretest = false, input = '') {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : {
-            type: document.TYPE_HOMEWORK,
-            tid,
-        });
+        const rid = await record.add(domainId, this.pid, this.user._id, lang, code, true, pretest ? input : tid);
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length
+                (this.tsdoc.journal || []).filter((i) => i.pid === this.pid).length
                 && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-                contest.updateStatus(domainId, tid, this.user._id,
-                    rid, pid, STATUS.STATUS_WAITING, 0, document.TYPE_HOMEWORK),
+                contest.updateStatus(domainId, tid, this.user._id, rid, this.pid, STATUS.STATUS_WAITING),
             ]);
         }
         bus.broadcast('record/change', rdoc);
@@ -279,9 +263,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
 class HomeworkEditHandler extends Handler {
     @param('tid', Types.ObjectID, true)
     async get(domainId: string, tid: ObjectID) {
-        const tdoc = tid
-            ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
-            : null;
+        const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
@@ -290,16 +272,6 @@ class HomeworkEditHandler extends Handler {
                 (tdoc.endAt.getTime() - tdoc.penaltySince.getTime()) / (Time.day / 100),
             ) / 100
             : 1;
-        const path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            ...tid
-                ? [
-                    [tdoc.title, 'homework_detail', { tid }, true],
-                    ['homework_edit', null],
-                ]
-                : [['homework_create', null]],
-        ];
         const beginAt = tid
             ? moment(tdoc.beginAt).tz(this.user.timeZone)
             : moment().add(1, 'day').tz(this.user.timeZone).hour(0).minute(0).millisecond(0);
@@ -316,7 +288,6 @@ class HomeworkEditHandler extends Handler {
             extensionDays,
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
             pids: tid ? tdoc.pids.join(',') : '',
-            path,
             page_name: tid ? 'homework_edit' : 'homework_create',
         };
     }
@@ -344,9 +315,7 @@ class HomeworkEditHandler extends Handler {
             if (!i.includes(':')) throw new ValidationError('pids');
             return i;
         }).filter((i) => i);
-        const tdoc = tid
-            ? await contest.get(domainId, tid, document.TYPE_HOMEWORK)
-            : null;
+        const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
@@ -361,16 +330,16 @@ class HomeworkEditHandler extends Handler {
         if (!tid) {
             tid = await contest.add(domainId, title, content, this.user._id,
                 'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-                { penaltySince: penaltySince.toDate(), penaltyRules }, document.TYPE_HOMEWORK);
+                { penaltySince: penaltySince.toDate(), penaltyRules });
         } else {
             await contest.edit(domainId, tid, {
                 title, content, beginAt: beginAt.toDate(), endAt: endAt.toDate(), pids, penaltySince: penaltySince.toDate(), penaltyRules, rated,
-            }, document.TYPE_HOMEWORK);
+            });
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()
                 || tdoc.penaltySince !== penaltySince.toDate()
                 || tdoc.pids.sort().join(' ') !== pids.sort().join(' ')) {
-                await contest.recalcStatus(domainId, tdoc.docId, document.TYPE_HOMEWORK);
+                await contest.recalcStatus(domainId, tdoc.docId);
             }
         }
         this.response.body = { tid };
@@ -383,8 +352,7 @@ class HomeworkScoreboardHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
         const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(
-            this, domainId, tid, false,
-            page, document.TYPE_HOMEWORK,
+            this, domainId, tid, false, page,
         );
         const path = [
             ['Hydro', 'homepage'],
@@ -409,7 +377,7 @@ class HomeworkScoreboardDownloadHandler extends Handler {
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
         if (!getContent[ext]) throw new ValidationError('ext');
-        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0, document.TYPE_HOMEWORK);
+        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }
 }
@@ -418,9 +386,7 @@ class HomeworkCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         await this.limitRate('contest_code', 3600, 60);
-        const [tdoc, tsdocs] = await contest.getAndListStatus(
-            domainId, tid, document.TYPE_HOMEWORK,
-        );
+        const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             this.checkPerm(PERM.PERM_READ_RECORD_CODE);
         }
