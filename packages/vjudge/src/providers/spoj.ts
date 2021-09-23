@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import * as superagent from 'superagent';
+import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { parseMemoryMB, sleep } from '@hydrooj/utils/lib/utils';
@@ -9,7 +9,7 @@ import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent as any);
+proxy(superagent);
 const logger = new Logger('spoj');
 
 const VERDICT = {

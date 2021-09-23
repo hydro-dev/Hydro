@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
 import { flattenDeep } from 'lodash';
-import * as superagent from 'superagent';
+import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { sleep } from '@hydrooj/utils/lib/utils';
@@ -9,7 +9,7 @@ import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent as any);
+proxy(superagent);
 const logger = new Logger('remote/luogu');
 
 const STATUS_MAP = [
