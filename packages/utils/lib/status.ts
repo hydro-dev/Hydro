@@ -15,6 +15,7 @@ export const STATUS = {
     STATUS_COMPILING: 21,
     STATUS_FETCHED: 22,
     STATUS_IGNORED: 30,
+    STATUS_FORMAT_ERROR: 31,
 };
 
 export const STATUS_TEXTS = {
@@ -34,6 +35,7 @@ export const STATUS_TEXTS = {
     [STATUS.STATUS_COMPILING]: 'Compiling',
     [STATUS.STATUS_FETCHED]: 'Fetched',
     [STATUS.STATUS_IGNORED]: 'Ignored',
+    [STATUS.STATUS_FORMAT_ERROR]: 'Format Error',
 };
 
 export const STATUS_SHORT_TEXTS = {
@@ -48,6 +50,7 @@ export const STATUS_SHORT_TEXTS = {
     [STATUS.STATUS_CANCELED]: 'IGN',
     [STATUS.STATUS_HACKED]: 'HK',
     [STATUS.STATUS_IGNORED]: 'IGN',
+    [STATUS.STATUS_FORMAT_ERROR]: 'FE',
 };
 
 export const STATUS_CODES = {
@@ -67,6 +70,7 @@ export const STATUS_CODES = {
     21: 'progress',
     22: 'progress',
     30: 'ignored',
+    31: 'ignored',
 };
 
 export function getScoreColor(score: number | string): string {
