@@ -1,9 +1,9 @@
-import * as STATUS from './status';
+import { STATUS } from '@hydrooj/utils/lib/status';
 
 export function parse(output: string, fullscore: number) {
     let status = STATUS.STATUS_WRONG_ANSWER;
     let score = 0;
-    let message = output;
+    let message = output.substr(0, 1024);
     if (output.startsWith('ok ')) {
         status = STATUS.STATUS_ACCEPTED;
         score = fullscore;
@@ -13,19 +13,18 @@ export function parse(output: string, fullscore: number) {
         message = `PE ${output.split('wrong output format ')[1] || ''}`;
     } else if (output.startsWith('partially correct ')) {
         message = `PC ${output.split('partially correct ')[1] || ''}`;
-        const p = +output.split('partially correct (')[1].split(')')[0];
-        score = Math.floor(fullscore * (p / 200));
+        let p = +output.split('partially correct (')[1].split(')')[0] || 0;
+        if (p > 1) p /= 100;
+        score = Math.floor(fullscore * p);
     } else if (output.startsWith('points ')) {
-        const p = +output.split('points ')[1].split(' ')[0];
-        if (p === 100) {
+        let p = +output.split('points ')[1].split(' ')[0] || 0;
+        if (p > 1) p /= 100;
+        if (p === 1) {
             status = STATUS.STATUS_ACCEPTED;
             score = fullscore;
             const base = output.split('points ')[1] || '';
             message = base.substr(base.indexOf(' '), 1024);
-        } else {
-            message = `partially correct ${output.split('points ')[1] || ''}`;
-            score = Math.floor(fullscore * (p / 100));
-        }
+        } else score = Math.floor(fullscore * p);
     }
     return { status, score, message };
 }

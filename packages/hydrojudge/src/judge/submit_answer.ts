@@ -1,4 +1,4 @@
-import * as STATUS from '../status';
+import { STATUS } from '@hydrooj/utils/lib/status';
 
 export async function judge({
     next, end, config, code,

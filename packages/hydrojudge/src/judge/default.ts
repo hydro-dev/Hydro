@@ -1,13 +1,13 @@
 import path from 'path';
 import fs from 'fs-extra';
 import Queue from 'p-queue';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
 import compile from '../compile';
 import { getConfig } from '../config';
 import { CompileError, SystemError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
-import * as STATUS from '../status';
 import { parseFilename } from '../utils';
 
 const Score = {

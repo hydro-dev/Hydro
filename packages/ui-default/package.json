@@ -89,7 +89,7 @@
     "tether": "^1.4.7",
     "tether-drop": "^1.4.2",
     "through2": "^4.0.2",
-    "timeago-react": "^3.0.3",
+    "timeago-react": "^3.0.4",
     "timeago.js": "^4.0.2",
     "vditor": "^3.8.7",
     "vinyl-buffer": "^1.0.1",
@@ -101,7 +101,7 @@
     "webpackbar": "^5.0.0-3"
   },
   "dependencies": {
-    "esbuild": "^0.12.28",
+    "esbuild": "^0.12.29",
     "js-yaml": "^4.1.0",
     "jsesc": "^3.0.2",
     "katex": "^0.13.18",

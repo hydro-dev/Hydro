@@ -1,8 +1,8 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { CompileError } from './error';
 import { Execute } from './interface';
 import { del, run } from './sandbox';
-import * as STATUS from './status';
 import { compilerText } from './utils';
 
 export = async function compile(

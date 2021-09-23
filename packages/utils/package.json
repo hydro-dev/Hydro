@@ -15,7 +15,7 @@
         "systeminformation": "^5.9.3"
     },
     "devDependencies": {
-        "@types/fs-extra": "^9.0.12",
+        "@types/fs-extra": "^9.0.13",
         "moment-timezone": "^0.5.33"
     }
 }

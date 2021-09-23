@@ -8,12 +8,12 @@ import { ObjectID } from 'mongodb';
 import PQueue from 'p-queue';
 import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import readCases from '../cases';
 import { getConfig } from '../config';
 import { CompileError, FormatError, SystemError } from '../error';
 import judge from '../judge';
 import log from '../log';
-import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from '../status';
 import * as sysinfo from '../sysinfo';
 import * as tmpfs from '../tmpfs';
 import {
@@ -78,19 +78,19 @@ class JudgeTask {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
                 this.end({
-                    status: STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             } else if (e instanceof FormatError) {
                 this.next({ judge_text: 'Testdata configuration incorrect.' });
                 this.next({ judge_text: { message: e.message, params: e.params } });
                 this.end({
-                    status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_FORMAT_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             } else {
                 log.error(e);
                 this.next({ message: { message: e.message, params: e.params || [], ...argv.options.debug ? { stack: e.stack } : {} } });
                 this.end({
-                    status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                 });
             }
         } finally {

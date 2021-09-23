@@ -1,10 +1,10 @@
 import Axios from 'axios';
 import cac from 'cac';
 import fs from 'fs-extra';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
-import * as STATUS from './status';
 import { cmd, parseMemoryMB } from './utils';
 
 const argv = cac().parse();
@@ -111,7 +111,7 @@ export async function runMultiple(execute) {
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res.data));
     } catch (e) {
         if (e instanceof FormatError) throw e;
-        throw new SystemError('Sandbox Error');
+        throw new SystemError('Sandbox Error', [e]);
     }
     return await Promise.all(res.data.map((i) => adaptResult(i, {})));
 }

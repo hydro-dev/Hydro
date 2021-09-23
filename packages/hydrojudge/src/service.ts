@@ -6,12 +6,12 @@ import path from 'path';
 import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { ObjectID } from 'mongodb';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { Logger } from 'hydrooj/src/logger';
 import * as monitor from 'hydrooj/src/service/monitor';
 import readCases from './cases';
 import { getConfig } from './config';
 import { CompileError, FormatError, SystemError } from './error';
-import { STATUS_COMPILE_ERROR, STATUS_SYSTEM_ERROR } from './status';
 import * as sysinfo from './sysinfo';
 import * as tmpfs from './tmpfs';
 import { compilerText, md5 } from './utils';
@@ -207,18 +207,18 @@ async function postInit() {
                 if (e instanceof CompileError) {
                     this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
                     this.end({
-                        status: STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                        status: STATUS.STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else if (e instanceof FormatError) {
                     this.next({ message: { message: e.message, params: e.params } });
                     this.end({
-                        status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                        status: STATUS.STATUS_FORMAT_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 } else {
                     logger.error(e);
                     this.next({ message: { message: e.message, params: e.params, ...process.env.DEV ? { stack: e.stack } : {} } });
                     this.end({
-                        status: STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                        status: STATUS.STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
                     });
                 }
             }

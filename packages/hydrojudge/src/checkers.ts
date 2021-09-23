@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
 import { run } from './sandbox';
-import * as STATUS from './status';
 import { parse } from './testlib';
 
 interface CheckResult {

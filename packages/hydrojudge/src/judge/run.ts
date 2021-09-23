@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { CompileError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
-import * as STATUS from '../status';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
 
 export const judge = async (ctx) => {
