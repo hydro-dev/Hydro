@@ -543,7 +543,7 @@ const scripts: UpgradeScript[] = [
         await RecordModel.coll.updateMany({}, { $unset: { hidden: '' } });
         await RecordModel.coll.updateMany({ 'contest.tid': { $exists: true } }, { $rename: { 'contest.tid': 'contest1' } });
         await RecordModel.coll.updateMany({ contest1: { $exists: true } }, { $rename: { contest1: 'contest' } });
-        await RecordModel.coll.updateMany({ contest: { $exists: true } }, { $unset: { contest: '' } });
+        await RecordModel.coll.updateMany({ contest: null }, { $unset: { contest: '' } });
         return true;
     },
 ];

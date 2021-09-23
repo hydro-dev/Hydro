@@ -45,8 +45,8 @@
             <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
             <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
-          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
-          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
+          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, tid:tdoc|default({}).tid}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
+          <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, tid:tdoc|default({}).tid, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</span>
           <span class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% if pdoc.tag.length %}
