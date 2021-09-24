@@ -312,7 +312,7 @@ export class HandlerCommon {
 
     translate(str: string) {
         if (!str) return '';
-        return str.toString().translate(this.user?.viewLang || system.get('server.language'), this.session?.viewLang);
+        return str.toString().translate(this.user?.viewLang || this.session?.viewLang || system.get('server.language'));
     }
 
     renderTitle(str: string) {
@@ -527,7 +527,8 @@ export class Handler extends HandlerCommon {
             this.session.scope = PERM.PERM_ALL.toString();
             this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
-        if (this.user._id === 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
+        if (this.user._id !== 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
+        else if (this.user._id === 0) delete this.user.viewLang;
         this.user.avatarUrl = avatar(this.user.avatar, 128);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UiContext.csrfToken = this.csrfToken;
