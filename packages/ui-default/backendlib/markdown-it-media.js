@@ -94,7 +94,7 @@ function videoUrl(service, videoID, url, options) {
 const trusted_iframe = [
   /^https:\/\/github.com/,
   /^https:\/\/gitee.com/,
-  /^[\/|.\/|..\/]/, // local
+  /^[(\/)|(.\/)|(..\/)]/, // local
 ]
 module.exports = function videoPlugin(md) {
   const options = {
@@ -113,7 +113,7 @@ module.exports = function videoPlugin(md) {
     const checkUrl = /http(?:s?):\/\/(?:www\.)?[a-zA-Z0-9-:.]{1,}\/render(?:\/)?[a-zA-Z0-9.&;?=:%]{1,}url=http(?:s?):\/\/[a-zA-Z0-9 -:.]{1,}\/[a-zA-Z0-9]{1,5}\/\?[a-zA-Z0-9.=:%]{1,}/;
     let num;
     if (service == 'iframe') {
-      for (let i in trusted_iframe) {
+      for (let i of trusted_iframe) {
         if (videoID.match(i)) {
           return `<iframe height="640" width="390" src="${videoID}"></iframe>`
         }
