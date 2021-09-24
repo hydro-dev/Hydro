@@ -91,6 +91,11 @@ function videoUrl(service, videoID, url, options) {
   }
 }
 
+const trusted_iframe = [
+  /^https:\/\/github.com/,
+  /^https:\/\/gitee.com/,
+  /^[\/|.\/|..\/]/, // local
+]
 module.exports = function videoPlugin(md) {
   const options = {
     url: videoUrl,
@@ -107,6 +112,13 @@ module.exports = function videoPlugin(md) {
     const service = md.utils.escapeHtml(tokens[idx].service).toLowerCase();
     const checkUrl = /http(?:s?):\/\/(?:www\.)?[a-zA-Z0-9-:.]{1,}\/render(?:\/)?[a-zA-Z0-9.&;?=:%]{1,}url=http(?:s?):\/\/[a-zA-Z0-9 -:.]{1,}\/[a-zA-Z0-9]{1,5}\/\?[a-zA-Z0-9.=:%]{1,}/;
     let num;
+    if (service == 'iframe') {
+      for (let i in trusted_iframe) {
+        if (videoID.match(i)) {
+          return `<iframe height="640" width="390" src="${videoID}"></iframe>`
+        }
+      }
+    }
     if (service === 'osf' && videoID) {
       num = Math.random() * 0x10000;
       if (videoID.match(checkUrl)) {
