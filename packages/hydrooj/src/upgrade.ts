@@ -535,7 +535,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     null,
-    async function _46_47() {
+    async function _47_48() {
         const _FRESH_INSTALL_IGNORE = 1;
         await document.coll.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
         await document.collStatus.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
@@ -544,6 +544,11 @@ const scripts: UpgradeScript[] = [
         await RecordModel.coll.updateMany({ 'contest.tid': { $exists: true } }, { $rename: { 'contest.tid': 'contest1' } });
         await RecordModel.coll.updateMany({ contest1: { $exists: true } }, { $rename: { contest1: 'contest' } });
         await RecordModel.coll.updateMany({ contest: null }, { $unset: { contest: '' } });
+        return true;
+    },
+    async function _48_49() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectID('000000000000000000000000') } });
         return true;
     },
 ];

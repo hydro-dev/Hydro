@@ -52,7 +52,7 @@ export default connect(mapStateToProps, null, mergeProps)(class ScratchpadRecord
   handleRowClick(ev, id) {
     const url = substitute(
       decodeURIComponent(UiContext.getRecordDetailUrl),
-      { rid: id }
+      { rid: id },
     );
     emulateAnchorClick(ev, url, true);
   }
@@ -60,7 +60,8 @@ export default connect(mapStateToProps, null, mergeProps)(class ScratchpadRecord
   render() {
     const { data } = this.props;
     const submitAt = parseMongoId(data._id).timestamp * 1000;
-    return data.hidden ? null : (
+    // Is pretest
+    return data.contest?.toString() === '000000000000000000000000' ? null : (
       <tr onClick={(ev) => this.handleRowClick(ev, data._id)}>
         <td className={`col--detail record-status--border ${recordEnum.STATUS_CODES[data.status]}`}>
           <span className={`icon record-status--icon ${recordEnum.STATUS_CODES[data.status]}`}></span>
