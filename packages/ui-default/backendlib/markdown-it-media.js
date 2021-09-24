@@ -92,8 +92,8 @@ function videoUrl(service, videoID, url, options) {
 }
 
 const trusted_iframe = [
-  /^https:\/\/github.com/,
-  /^https:\/\/gitee.com/,
+  /^https:\/\/github.com\/[a-zA-Z0-9]{1,}\/[a-zA-Z0-9-]{1,}/,
+  /^https:\/\/gitee.com\/[a-zA-Z0-9]{1,}\/[a-zA-Z0-9-]{1,}/,
 ]
 module.exports = function videoPlugin(md) {
   const options = {
