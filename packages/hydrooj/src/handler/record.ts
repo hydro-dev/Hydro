@@ -136,7 +136,7 @@ class RecordDetailHandler extends Handler {
             else pdoc = { ...problem.default, ...pdoc ? pick(pdoc, ['domainId', 'docId', 'pid']) : {} };
         }
         this.response.body = { udoc, rdoc, pdoc };
-        if (rdoc.contest) {
+        if (rdoc.contest && rdoc.contest.toHexString() !== '000000000000000000000000') {
             this.response.body.tdoc = await contest.get(domainId, rdoc.contest);
         }
     }
