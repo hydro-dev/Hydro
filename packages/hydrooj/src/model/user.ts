@@ -206,7 +206,7 @@ class UserModel {
 
     @ArgMethod
     static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>) {
-        if (uid < 1000) return null;
+        if (uid < -999) return null;
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;

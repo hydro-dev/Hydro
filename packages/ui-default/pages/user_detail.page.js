@@ -69,8 +69,8 @@ async function initChart() {
 }
 
 const page = new NamedPage('user_detail', () => {
-  $('[name="profile_contact_copy"]').get().forEach((el) => {
-    const data = $(el).attr('data-content');
+  $('[data-copy]').get().forEach((el) => {
+    const data = $(el).attr('data-copy');
     const decoded = base64.decode(data);
     const clip = new Clipboard(el, { text: () => decoded });
     clip.on('success', () => {
