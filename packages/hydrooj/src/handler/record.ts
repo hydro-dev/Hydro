@@ -107,7 +107,7 @@ class RecordDetailHandler extends Handler {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(rid);
-        if (rdoc.contest.toHexString() === '000000000000000000000000') {
+        if (rdoc.contest?.toHexString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
             const tdoc = await contest.get(domainId, rdoc.contest);
