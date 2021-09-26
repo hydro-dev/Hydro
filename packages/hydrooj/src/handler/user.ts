@@ -77,7 +77,8 @@ class UserLoginHandler extends Handler {
     @param('redirect', Types.String, true)
     async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '') {
         if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
-        const udoc = await user.getByUname(domainId, uname);
+        let udoc = await user.getByEmail(domainId, uname);
+        if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
