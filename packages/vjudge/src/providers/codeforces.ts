@@ -73,6 +73,9 @@ export default class CodeforcesProvider implements IBasicProvider {
             this.cookie = header['set-cookie'];
         }
         const $dom = new JSDOM(html);
+        if ($dom.window.document.body.children.length < 2 && html.length < 1000) {
+            throw new Error($dom.window.document.body.textContent);
+        }
         return $dom.window.document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
     }
 
