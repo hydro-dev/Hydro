@@ -5,7 +5,6 @@ import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import Notification from 'vj/components/notification';
-import { pick } from 'lodash';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -47,7 +46,7 @@ export default async function download(name, targets) {
           });
         }
       } catch (e) {
-        // eslint-disable-next-line no-use-before-define
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         stopDownload();
         Notification.error(i18n('Download Error', [targets[i].filename, e.toString()]));
       }
@@ -73,16 +72,17 @@ export async function downloadProblemSet(pids, name = 'Export') {
         filename: `${pid}/problem.yaml`,
         content: dump({
           pid: pdoc.pid,
-          content: pdoc.content,
           owner: pdoc.owner,
           title: pdoc.title,
           tag: pdoc.tag,
           nSubmit: pdoc.nSubmit,
           nAccept: pdoc.nAccept,
-          data: (pdoc.data || []).map((i) => pick(i, ['name'])),
-          additional_file: (pdoc.additional_file || []).map((i) => pick(i, ['name'])),
           difficulty: pdoc.difficulty,
         }),
+      });
+      targets.push({
+        filename: `${pid}/problem.md`,
+        content: pdoc.content,
       });
       let { links } = await request.post(
         `/d/${UiContext.domainId}/p/${pid}/files`,

@@ -114,13 +114,6 @@ TaskModel.Worker.addHandler('import.syzoj', syzojSync);
 class ProblemImportSYZOJHandler extends Handler {
     async get() {
         this.response.template = 'problem_import_syzoj.html';
-        this.response.body = {
-            path: [
-                ['Hydro', 'homepage'],
-                ['problem_main', 'problem_main'],
-                ['problem_import_syzoj', null],
-            ],
-        };
     }
 
     async v2(domainId: string, target: string, hidden = false, url: string) {
@@ -359,8 +352,10 @@ class ProblemImportHydroHandler extends Handler {
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 const current = await problem.get(domainId, pdoc.pid);
                 const pid = current ? undefined : pdoc.pid;
+                const overrideContent = fs.existsSync(path.join(tmpdir, i, 'problem.md'))
+                    ? fs.readFileSync(path.join(tmpdir, i, 'problem.md'), 'utf8') : '';
                 const docId = await problem.add(
-                    domainId, pid, pdoc.title, pdoc.content,
+                    domainId, pid, pdoc.title, overrideContent || pdoc.content,
                     keepUser ? pdoc.owner : this.user._id, pdoc.tag, pdoc.hidden,
                 );
                 if (files.includes('testdata')) {

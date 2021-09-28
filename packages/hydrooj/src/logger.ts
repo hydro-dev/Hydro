@@ -19,7 +19,7 @@ export class Logger {
     static readonly INFO = 2;
     static readonly WARN = 2;
     static readonly DEBUG = 3;
-    static baseLevel = process.env.DEV ? 3 : 2;
+    static baseLevel = process.env.DEV ? 4 : 2;
     static levels: Record<string, number> = {};
     private code: number;
     private displayName: string;
