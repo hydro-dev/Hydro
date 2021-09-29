@@ -15,10 +15,10 @@ type Checker = (config: any) => Promise<CheckResult>;
 
 const checkers: Record<string, Checker> = {
     async default(config) {
-        const { stdout } = await run('/usr/bin/diff -BZ usrout stdout', {
+        const { stdout } = await run('/usr/bin/diff -BZ usrout answer', {
             copyIn: {
                 usrout: { src: config.user_stdout },
-                stdout: { src: config.output },
+                answer: { src: config.output },
                 ...config.copyIn,
             },
         });
@@ -61,10 +61,10 @@ const checkers: Record<string, Checker> = {
     },
 
     async strict(config) {
-        const { stdout } = await run('/usr/bin/diff usrout stdout', {
+        const { stdout } = await run('/usr/bin/diff usrout answer', {
             copyIn: {
                 usrout: { src: config.user_stdout },
-                stdout: { src: config.output },
+                answer: { src: config.output },
                 ...config.copyIn,
             },
         });
@@ -83,10 +83,10 @@ const checkers: Record<string, Checker> = {
      * exit code：返回判断结果
      */
     async hustoj(config) {
-        const { code, stdout } = await run('${dir}/checker input stdout usrout', {
+        const { code, stdout } = await run('${dir}/checker input answer usrout', {
             copyIn: {
                 usrout: { src: config.user_stdout },
-                stdout: { src: config.output },
+                answer: { src: config.output },
                 input: { src: config.input },
                 ...config.copyIn,
             },
@@ -108,10 +108,10 @@ const checkers: Record<string, Checker> = {
      * argv[6]：输出错误报告的文件
      */
     async lemon(config) {
-        const { files } = await run(`\${dir}/checker input usrout stdout ${config.score} score message`, {
+        const { files } = await run(`\${dir}/checker input usrout answer ${config.score} score message`, {
             copyIn: {
                 usrout: { src: config.user_stdout },
-                stdout: { src: config.output },
+                answer: { src: config.output },
                 input: { src: config.input },
                 ...config.copyIn,
             },
