@@ -527,8 +527,7 @@ export class Handler extends HandlerCommon {
             this.session.scope = PERM.PERM_ALL.toString();
             this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
-        if (this.user._id !== 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
-        else if (this.user._id === 0) delete this.user.viewLang;
+        if (this.user._id === 0) delete this.user.viewLang;
         this.user.avatarUrl = avatar(this.user.avatar, 128);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UiContext.csrfToken = this.csrfToken;
