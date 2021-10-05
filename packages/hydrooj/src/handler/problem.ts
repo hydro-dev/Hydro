@@ -1,4 +1,5 @@
 import AdmZip from 'adm-zip';
+import { statSync } from 'fs-extra';
 import { flatten, intersection, isSafeInteger } from 'lodash';
 import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
@@ -400,35 +401,52 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
-        if (!this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
-            if ((this.pdoc.data?.length || 0) + (this.pdoc.additional_file?.length || 0)
-                >= system.get('limit.problem_files_max')) {
-                throw new ForbiddenError('File limit exceeded.');
-            }
-            const size = Math.sum((this.pdoc.data || []).map((i) => i.size), (this.pdoc.additional_file || []).map((i) => i.size));
-            if (size >= system.get('limit.problem_files_max_size')) {
-                throw new ForbiddenError('File size limit exceeded.');
-            }
-        }
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        const files = [];
         if (filename.endsWith('.zip')) {
             const zip = new AdmZip(this.request.files.file.path);
             const entries = zip.getEntries();
             for (const entry of entries) {
-                // TODO check file size
                 if (!entry.name) continue;
-                if (type === 'testdata') {
-                    // eslint-disable-next-line no-await-in-loop
-                    await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.getData());
-                } else {
-                    // eslint-disable-next-line no-await-in-loop
-                    await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.getData());
-                }
+                files.push({
+                    type,
+                    name: entry.name,
+                    size: entry.header.size,
+                    data: () => entry.getData(),
+                });
             }
-        } else if (type === 'testdata') {
-            await problem.addTestdata(domainId, this.pdoc.docId, filename, this.request.files.file.path);
         } else {
-            await problem.addAdditionalFile(domainId, this.pdoc.docId, filename, this.request.files.file.path);
+            files.push({
+                type,
+                name: filename,
+                size: statSync(this.request.files.file.path).size,
+                data: () => this.request.files.file.path,
+            });
+        }
+        if (!this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
+            if ((this.pdoc.data?.length || 0)
+                + (this.pdoc.additional_file?.length || 0)
+                + files.length
+                >= system.get('limit.problem_files_max')) {
+                throw new ForbiddenError('File limit exceeded.');
+            }
+            const size = Math.sum(
+                (this.pdoc.data || []).map((i) => i.size),
+                (this.pdoc.additional_file || []).map((i) => i.size),
+                files.map((i) => i.size),
+            );
+            if (size >= system.get('limit.problem_files_max_size')) {
+                throw new ForbiddenError('File size limit exceeded.');
+            }
+        }
+        for (const entry of files) {
+            if (entry.type === 'testdata') {
+                // eslint-disable-next-line no-await-in-loop
+                await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.data());
+            } else {
+                // eslint-disable-next-line no-await-in-loop
+                await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.data());
+            }
         }
         this.back();
     }
