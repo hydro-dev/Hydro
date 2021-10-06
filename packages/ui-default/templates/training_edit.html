@@ -24,14 +24,14 @@
           <div class="row"><div class="columns">
             <label>
               {{ _('Introduce') }}
-              <textarea name="content" class="textbox">{{ tdoc['content']|default('') }}</textarea>
+              <textarea name="content" class="textbox">{{ tdoc['content']|default(_("This person is lazy and didn't write anything...")) }}</textarea>
               <p class="help-text">{{ _('Introduce must not exceed 500 characters and it will be shown in the list view.') }}</p>
             </label>
           </div></div>
           <div class="row"><div class="columns">
             <label>
               {{ _('Description') }}
-              <textarea name="description" class="textbox" data-markdown style="height: 200px">{{ tdoc['description']|default('') }}</textarea>
+              <textarea name="description" class="textbox" data-markdown style="height: 200px">{{ tdoc['description']|default(_("This person is lazy and didn't write anything...")) }}</textarea>
             </label>
           </div></div>
           <div class="row"><div class="columns">
