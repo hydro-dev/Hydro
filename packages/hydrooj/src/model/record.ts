@@ -97,7 +97,7 @@ class RecordModel {
 
     static async add(
         domainId: string, pid: ExternalProblemId | number, uid: number,
-        lang: string, code: string, addTask: boolean, contestOrConfig?: ObjectID | string,
+        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean
     ) {
         let pdomain = domainId;
         if (typeof pid === 'string') {
@@ -123,15 +123,11 @@ class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
-        let isContest = false;
-        if (typeof contestOrConfig === 'string') {
+        if (typeof tidOrInput === 'string') {
             // is Run
-            data.input = contestOrConfig;
+            data.input = tidOrInput;
             data.contest = new ObjectID('000000000000000000000000');
-        } else {
-            data.contest = contestOrConfig;
-            isContest = true;
-        }
+        } else data.contest = tidOrInput;
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, isContest ? 50 : 0);
