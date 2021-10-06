@@ -156,7 +156,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           </select>
         </ToolbarItem>
         <ToolbarSplit />
-        {UiContext.pdoc.config?.type === 'default' && (
+        {['default', 'fileio'].includes(UiContext.pdoc.config?.type) && (
           <ToolbarButton
             activated={this.props.pretestVisible}
             onClick={() => this.props.togglePanel('pretest')}
