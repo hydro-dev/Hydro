@@ -14,6 +14,7 @@ import './ui';
 export * from './interface';
 const argv = cac().parse();
 if (argv.options.debug) {
+    console.log('Debug mode enabled');
     process.env.NODE_ENV = 'development';
     process.env.DEV = 'on';
 } else process.env.NODE_ENV = process.env.NODE_ENV || 'production';
