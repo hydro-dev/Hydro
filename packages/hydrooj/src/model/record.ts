@@ -97,7 +97,7 @@ class RecordModel {
 
     static async add(
         domainId: string, pid: ExternalProblemId | number, uid: number,
-        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean
+        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean,
     ) {
         let pdomain = domainId;
         if (typeof pid === 'string') {

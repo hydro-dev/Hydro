@@ -200,10 +200,13 @@ export default class UOJProvider implements IBasicProvider {
         return $dom.window.document.querySelector('tbody>tr>td>a').innerHTML.split('#')[1];
     }
 
+    // eslint-disable-next-line consistent-return
     async waitForSubmission(id: string, next, end) {
         let i = 1;
+        let count = 0;
         // eslint-disable-next-line no-constant-condition
-        while (true) {
+        while (count < 120) {
+            count++;
             await sleep(3000);
             const { text } = await this.get(`/submission/${id}`);
             const { window: { document } } = new JSDOM(text);
@@ -215,9 +218,12 @@ export default class UOJProvider implements IBasicProvider {
                     status: STATUS.STATUS_COMPILE_ERROR, score: 0, time: 0, memory: 0,
                 });
             }
-            const time = parseTimeMS(document.querySelector('tbody>tr').children[4].innerHTML);
-            const memory = parseMemoryMB(document.querySelector('tbody>tr').children[5].innerHTML) * 1024;
+            const summary = document.querySelector('tbody>tr');
+            if (!summary) continue;
+            const time = parseTimeMS(summary.children[4].innerHTML);
+            const memory = parseMemoryMB(summary.children[5].innerHTML) * 1024;
             const root = document.getElementById('details_details_accordion');
+            if (!root) continue;
             for (let t = 0; t < i; t++) root.children[0].remove();
             for (const node of root.children) {
                 const info = node.children[0].children[0];
@@ -233,7 +239,7 @@ export default class UOJProvider implements IBasicProvider {
                 });
             }
             if (document.querySelector('tbody').innerHTML.includes('Judging')) continue;
-            const score = +document.querySelector('tbody>tr').children[3].children[0].innerHTML;
+            const score = +summary.children[3]?.children[0].innerHTML || 0;
             const status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
             return await end({
                 status,
