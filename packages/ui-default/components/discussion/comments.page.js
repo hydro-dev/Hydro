@@ -165,10 +165,7 @@ async function onCommentClickDelete(type, ev) {
     ? 'Confirm deleting this comment? Its replies will be deleted as well.'
     : 'Confirm deleting this reply?';
   const action = await new ConfirmDialog({
-    $body: tpl`
-      <div class="typo">
-        <p>${i18n(message)}</p>
-      </div>`,
+    $body: tpl.typoMsg(i18n(message)),
   }).open();
   if (action !== 'yes') return;
 

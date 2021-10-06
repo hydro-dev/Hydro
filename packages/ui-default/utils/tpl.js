@@ -13,6 +13,14 @@ export default function tpl(pieces, ...substitutions) {
   return result;
 }
 
+tpl.typoMsg = function (msg) {
+  return tpl`
+    <div class="typo">
+      <p>${msg}</p>
+    </div>
+  `;
+};
+
 export function rawHtml(html) {
   return {
     templateRaw: true,

@@ -16,14 +16,14 @@
         "mongodb": "^3.7.1",
         "p-queue": "^7.1.0",
         "shell-quote": "^1.7.2",
-        "ws": "^8.2.2"
+        "ws": "^8.2.3"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/js-yaml": "^4.0.3",
-        "@types/lodash": "^4.14.174",
+        "@types/lodash": "^4.14.175",
         "@types/shell-quote": "^1.7.1",
         "@types/ws": "^7.4.7"
     },
