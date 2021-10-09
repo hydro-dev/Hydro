@@ -240,6 +240,12 @@ export default class POJProvider implements IBasicProvider {
                 const { text: info } = await this.get(`/showcompileinfo?solution_id=${id}`);
                 const ceInfo = new JSDOM(info);
                 await next({ compilerText: ceInfo.window.document.querySelector('pre>font').innerHTML });
+                return await end({
+                    status,
+                    score: 0,
+                    time: 0,
+                    memory: 0,
+                });
             }
             const memory = parseMemoryMB(submission.children[4].innerHTML.trim() || 0) * 1024;
             const time = parseTimeMS(submission.children[5].innerHTML.trim() || 0);
