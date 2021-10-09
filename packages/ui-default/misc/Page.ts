@@ -1,5 +1,5 @@
 export class Page {
-  constructor(name, autoload, afterLoading, beforeLoading) {
+  constructor(public name: string | string[], public autoload: boolean, public afterLoading, public beforeLoading) {
     if (process.env.NODE_ENV !== 'production') {
       if (typeof name !== 'string' && !(name instanceof Array)) {
         // eslint-disable-next-line quotes
@@ -14,13 +14,9 @@ export class Page {
         throw new Error(`'beforeLoading' should be a function`);
       }
     }
-    this.name = name;
-    this.autoload = autoload;
-    this.afterLoading = afterLoading;
-    this.beforeLoading = beforeLoading;
   }
 
-  isNameMatch(name) {
+  isNameMatch(name: string) {
     if (typeof this.name === 'string') return this.name === name;
     if (this.name instanceof Array) return this.name.includes(name);
     return false;
@@ -28,13 +24,13 @@ export class Page {
 }
 
 export class NamedPage extends Page {
-  constructor(name, afterLoading = null, beforeLoading = null) {
+  constructor(name: string | string[], afterLoading = null, beforeLoading = null) {
     super(name, false, afterLoading, beforeLoading);
   }
 }
 
 export class AutoloadPage extends Page {
-  constructor(name, afterLoading = null, beforeLoading = null) {
+  constructor(name: string | string[], afterLoading = null, beforeLoading = null) {
     super(name, true, afterLoading, beforeLoading);
   }
 }

@@ -2,6 +2,7 @@ __langname: English
 Can be Extended For: Extension
 Current Status: Status
 Handled Requests: Req
+Hint::icon::difficulty: The difficulty of the problems in Hydro will be calculated by algorithm, depending on current submission, sometimes the difficulty may not so exact.
 manage: System Manage
 no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
 page.problem_detail.sidebar.show_category: Click to Show
@@ -27,8 +28,8 @@ problem_submit: Problem Submit
 problem_type.default: 'Type: Default'
 problem_type.fileio: 'Type: FileIO ({0})'
 problem_type.interactive: 'Type: Interactive'
-problem_type.remote_judge: 'Type: RemoteJudge'
 problem_type.objective: 'Type: Objective'
+problem_type.remote_judge: 'Type: RemoteJudge'
 problem_type.submit_answer: 'Type: SubmitAnswer'
 problem-category-delim: '|'
 problem-subcategory-delim: ', '

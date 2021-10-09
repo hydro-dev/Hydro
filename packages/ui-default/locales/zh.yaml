@@ -137,6 +137,7 @@ Confirm deleting this reply?: 确认删除这个回复吗？
 Confirm rejudge this problem?: 确定要重测这道题吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
 Confirm to delete the selected files?: 确认删除所选文件吗？
+Confirm to delete the selected problems?: 确认要删除所选题目吗？
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
 Congratulations! Your submission is accepted.: 恭喜！您的递交已评测通过。
 Contact Us: 联系我们
@@ -339,6 +340,7 @@ Hide tags: 隐藏标签
 Highlight discussions: 高亮讨论
 Highlight: 高亮
 Hint: 提示
+Hint::icon::difficulty: Hydro 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，综合计算得出，可能不准确。
 Hint::page::main: 欢迎来到 Hydro！ 您可在右上角注册或登录。此类提示仅会显示一次。
 Hint::page::problem_detail: 这是题目详情页面。您可点击右侧“进入在线编程模式"开始编写您的代码。
 Hint::page::problem_files: 您可以将文件或压缩包拖拽至对应区域来上传文件。点击文件名在线编辑或按住 Ctrl 后点击文件名下载单个文件。
@@ -664,6 +666,7 @@ Select a node to create discussion.: 选择一个节点来发表讨论。
 Select a role: 选择一个角色
 Select User: 选择用户
 Selected files have been deleted.: 所选文件已被删除。
+Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
 Send Code after acceptance: 通过题目后发送源代码

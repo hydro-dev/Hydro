@@ -102,6 +102,7 @@ module.exports = {
     'no-await-in-loop': 'off',
     'no-lonely-if': 'off',
     'no-param-reassign': 'off',
+    'no-script-url': 'off',
     'no-bitwise': 'off',
     'react/prefer-stateless-function': 'off',
     'react/static-property-placement': 'off',
