@@ -8,6 +8,7 @@ import { parseMemoryMB, parseTimeMS, sleep } from '@hydrooj/utils/lib/utils';
 import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
+import { VERDICT } from '../verdict';
 
 proxy(superagent as any);
 const logger = new Logger('remote/uoj');
@@ -22,22 +23,6 @@ const MAPPING = {
     八: 8,
     九: 9,
     十: 10,
-};
-
-const VERDICT = {
-    RUNTIME_ERROR: STATUS.STATUS_RUNTIME_ERROR,
-    WRONG_ANSWER: STATUS.STATUS_WRONG_ANSWER,
-    OK: STATUS.STATUS_ACCEPTED,
-    TIME_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    MEMORY_LIMIT_EXCEEDED: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    IDLENESS_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    ACCEPTED: STATUS.STATUS_ACCEPTED,
-    'WRONG ANSWER': STATUS.STATUS_WRONG_ANSWER,
-    'RUNTIME ERROR': STATUS.STATUS_RUNTIME_ERROR,
-    'TIME LIMIT EXCEEDED': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    'MEMORY LIMIT EXCEEDED': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    'IDLENESS LIMIT EXCEEDED': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    'EXTRA TEST PASSED': STATUS.STATUS_ACCEPTED,
 };
 
 export default class UOJProvider implements IBasicProvider {

@@ -171,14 +171,14 @@ export function parseTimeMS(str: string | number) {
     if (typeof str === 'number') return str;
     const match = TIME_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing time`);
-    return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2]]);
+    return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
 }
 
 export function parseMemoryMB(str: string | number) {
     if (typeof str === 'number') return str;
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
-    return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2]]);
+    return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
 }
 
 export function isClass(obj: any, strict = false) {
@@ -432,3 +432,12 @@ export function sortFiles(files: { _id: string }[] | string[]) {
         });
     return isString ? result.map((x) => x.name) : result;
 }
+
+export const htmlEncode = (str) => str.replace(/[&<>'"]/g,
+    (tag) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+    }[tag]));
