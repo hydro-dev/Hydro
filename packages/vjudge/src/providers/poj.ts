@@ -104,7 +104,7 @@ export default class POJProvider implements IBasicProvider {
         if (await this.loggedIn) return true;
         logger.info('retry login');
         await this.getCsrfToken('/');
-        const res = await this.post('/login')
+        await this.post('/login')
             .set('referer', 'http://poj.org/')
             .send({
                 user_id1: this.account.handle,
