@@ -234,7 +234,7 @@ export default class POJProvider implements IBasicProvider {
             const { text } = await this.get(`/status?top=${+id + 1}`);
             const { window: { document } } = new JSDOM(text);
             const submission = document.querySelector('.a>tbody>tr[align="center"]');
-            const status = VERDICT[submission.children[3].children[0].textContent.toUpperCase()]
+            const status = VERDICT[submission.children[3].children[0].textContent.trim().toUpperCase()]
                 || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
             if (status === STATUS.STATUS_COMPILE_ERROR) {
