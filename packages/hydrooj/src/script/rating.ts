@@ -27,7 +27,7 @@ async function runProblem(...arg: any[]) {
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
         ).count() + 99) / 100,
     );
-    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1);
+    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
     for (let page = 1; page <= nPages; page++) {
         const psdocs = await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
@@ -151,7 +151,6 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     async function update(uid: number, rp: number) {
         const udoc = await UserModel.getById(id, +uid);
         const $upd: any = { $set: { rp } };
-        if (isSub) $upd.$push = { ratingHistory: rp };
         if (udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
     }
     for (const uid in udict) tasks.push(update(+uid, udict[uid] + (deltaudict[uid] || 0)));
