@@ -159,7 +159,7 @@
       <div class="section__body">&nbsp;<!-- space placeholder --></div>
     </div>
   </div>
-  <div class="medium-3 columns">
+  <div class="medium-3 columns" data-sticky="large">
     <div class="section side">
       <div>
         <ol class="menu">
@@ -201,7 +201,7 @@
     </div>
     <div class="section side"><div data-sticky="large">
       <ol class="menu">
-        {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list') }}
+        {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list', menu_item='training_detail') }}
       </ol>
     </div></div>
   </div>
