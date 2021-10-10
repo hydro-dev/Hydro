@@ -5,7 +5,7 @@
     </div>
     <ol class="section__list contest__list">
       {%- for tdoc in tdocs -%}
-        <li class="section__list__item contest__item contest-type--{{ tdoc.rule }}">
+        <li class="section__list__item contest__item contest-type--{{ tdoc.rule }} {% if model.contest.isOngoing(tdoc) %}{{ 'live' }}{% elif model.contest.isUpcoming(tdoc) %}{{ 'ready' }}{% endif %}">
           <div class="media">
             <div class="media__left medium">
               <div class="contest__date numbox">

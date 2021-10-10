@@ -8,6 +8,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/hydro-dev/Hydro)
 
 Hydro是一个高效的信息学在线测评系统。特点：易于部署（且提供安装脚本），轻量，功能强大且易于扩展。  
+Also see previous version at [vijos/vj4](https://github.com/vijos/vj4)
 
 [中文文档](https://hydro.js.org/)  
 

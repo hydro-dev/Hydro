@@ -527,7 +527,7 @@ export function isNew(tdoc: Tdoc, days = 1) {
     return (now < readyAt - days * 24 * 3600 * 1000);
 }
 
-export function isUpcoming(tdoc: Tdoc, days = 1) {
+export function isUpcoming(tdoc: Tdoc, days = 7) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
     return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt.getTime());
