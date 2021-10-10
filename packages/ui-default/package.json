@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.23.2",
+  "version": "4.24.0",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -10,10 +10,8 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@blockly/block-extension-tooltip": "^1.0.19",
     "@blueprintjs/core": "^3.51.0",
     "@blueprintjs/icons": "^3.30.2",
-    "@blueprintjs/select": "^3.18.7",
     "@hydrooj/utils": "workspace:*",
     "@types/jquery": "^3.5.6",
     "@types/json-schema": "^7.0.9",
@@ -22,7 +20,6 @@
     "@undefined-moe/monaco-yaml": "^2.5.0",
     "ansi_up": "^5.0.1",
     "autoprefixer": "^9.8.8",
-    "blockly": "^6.20210701.0",
     "chalk": "^4.1.2",
     "classnames": "^2.3.1",
     "clean-webpack-plugin": "^4.0.0",

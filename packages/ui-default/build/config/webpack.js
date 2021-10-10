@@ -130,11 +130,6 @@ export default function (env = {}) {
         maxInitialRequests: 3,
         automaticNameDelimiter: '-',
         cacheGroups: {
-          blockly: {
-            test: /[\\/]@?blockly[\\/]/,
-            priority: 10,
-            name: 'blockly',
-          },
           monaco: {
             test: /[\\/]monaco-editor[\\/]/,
             priority: 9,
