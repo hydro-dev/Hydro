@@ -48,7 +48,6 @@ function decProgress() {
 }
 
 pjax.request = async (opt) => {
-  if (typeof opt === 'string') opt = { url: opt };
   const options = {
     method: 'get',
     push: true,
