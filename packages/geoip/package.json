@@ -10,7 +10,7 @@
     },
     "preferUnplugged": true,
     "scripts": {
-        "prepublish": "node download.js"
+        "prepublish": "./download.sh"
     },
     "peerDependencies": {
         "hydrooj": "*"

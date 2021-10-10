@@ -90,9 +90,10 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     }
     const keys = Object.keys(LANGS);
     if (!keys.includes(this.props.editorLang)) this.props.setEditorLanguage(keys[0]);
+    const canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
     return (
       <Toolbar>
-        {UiContext.pdoc.config?.type === 'default' && (
+        {canUsePretest && (
           <ToolbarButton
             disabled={this.props.isPosting || this.props.isRunning}
             className="scratchpad__toolbar__pretest"
@@ -156,7 +157,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           </select>
         </ToolbarItem>
         <ToolbarSplit />
-        {['default', 'fileio'].includes(UiContext.pdoc.config?.type) && (
+        {canUsePretest && (
           <ToolbarButton
             activated={this.props.pretestVisible}
             onClick={() => this.props.togglePanel('pretest')}
