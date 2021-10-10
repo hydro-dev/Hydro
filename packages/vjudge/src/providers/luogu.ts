@@ -35,6 +35,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 export default class LuoguProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
+        setInterval(() => this.getCsrfToken('/'), 5 * 60 * 1000);
     }
 
     cookie: string[] = [];
@@ -77,7 +78,6 @@ export default class LuoguProvider implements IBasicProvider {
     async ensureLogin() {
         if (await this.loggedIn) {
             this.getCsrfToken('/');
-            setInterval(() => this.getCsrfToken('/'), 5 * 60 * 1000);
             return true;
         }
         logger.info('retry login');
