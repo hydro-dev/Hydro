@@ -99,7 +99,7 @@ export class ContestDetailHandler extends Handler {
     }
 }
 
-export class ContestBoardcastHandler extends Handler {
+export class ContestBroadcastHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
@@ -435,7 +435,7 @@ export async function apply() {
     Route('contest_create', '/contest/create', ContestEditHandler);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_broadcast', '/contest/:tid/broadcast', ContestBoardcastHandler);
+    Route('contest_broadcast', '/contest/:tid/broadcast', ContestBroadcastHandler);
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);

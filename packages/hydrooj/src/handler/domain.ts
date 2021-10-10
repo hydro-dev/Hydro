@@ -72,6 +72,7 @@ class DomainDashboardHandler extends ManageHandler {
 
     async postInitDiscussionNode({ domainId }) {
         const nodes = load(system.get('discussion.nodes'));
+        await discussion.flushNodes(domainId);
         for (const category of Object.keys(nodes)) {
             for (const item of nodes[category]) {
                 // eslint-disable-next-line no-await-in-loop
