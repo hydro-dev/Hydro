@@ -4,18 +4,12 @@ import { slideUp, slideDown } from 'vj/utils/slide';
 import responsiveCutoff from 'vj/breakpoints.json';
 
 const footerPage = new AutoloadPage('footerPage', () => {
-  if ($('.footer').length === 0) {
-    return;
-  }
-  $('.footer__category.expandable > h1').click(async (ev) => {
-    if (!isBelow(responsiveCutoff.mobile)) {
-      return;
-    }
+  if (!$('.footer').length) return;
+  $('.footer__category.expandable > h1').on('click', async (ev) => {
+    if (!isBelow(responsiveCutoff.mobile)) return;
     const $category = $(ev.currentTarget).closest('.footer__category');
     const $list = $category.find('.footer__category__expander');
-    if ($category.hasClass('animating')) {
-      return;
-    }
+    if ($category.hasClass('animating')) return;
     $category.addClass('animating');
     if ($category.hasClass('expanded')) {
       $category.removeClass('expanded');

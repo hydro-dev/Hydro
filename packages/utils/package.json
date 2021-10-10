@@ -11,8 +11,8 @@
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "moment": "^2.29.1",
-        "mongodb": "^3.7.1",
-        "systeminformation": "^5.9.4"
+        "mongodb": "^3.7.2",
+        "systeminformation": "^5.9.7"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

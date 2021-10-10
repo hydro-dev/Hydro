@@ -8,12 +8,12 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "axios": "^0.21.4",
-        "cac": "^6.7.3",
-        "esbuild": "^0.12.29",
+        "cac": "^6.7.8",
+        "esbuild": "^0.13.4",
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
-        "mongodb": "^3.7.1",
+        "mongodb": "^3.7.2",
         "p-queue": "^7.1.0",
         "shell-quote": "^1.7.2",
         "ws": "^8.2.3"

@@ -1,17 +1,11 @@
 import { AutoloadPage } from 'vj/misc/Page';
-import load from 'vj/components/wastyle/index';
-import Notification from 'vj/components/notification/index';
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 
 const highlighterPage = new AutoloadPage('highlighterPage', () => {
-  Promise.all([
-    import('./prismjs'),
-    UserContext.formatCode ? load() : [true, null],
-  ]).then(([{ default: prismjs }, [success, format]]) => {
-    if (!success) Notification.error(`Astyle load fail: ${format}`);
+  import('./prismjs').then(({ default: prismjs }) => {
     function runHighlight($container) {
-      prismjs.highlightBlocks($container, success ? format : null);
+      prismjs.highlightBlocks($container);
       $container.find('pre code').get().forEach((code) => {
         const $code = $(code);
         const $root = $code.parent().parent();

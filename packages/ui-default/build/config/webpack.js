@@ -211,7 +211,6 @@ export default function (env = {}) {
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
-          { from: root(`${dirname(require.resolve('emojify.js/package.json'))}/dist/images/basic`), to: 'img/emoji/' },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}`), to: 'vditor/' },
         ],
       }),

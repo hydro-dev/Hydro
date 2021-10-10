@@ -45,6 +45,7 @@ module.exports = {
     UserContext: true,
     LOCALES: true,
     window: true,
+    JQuery: true,
   },
   rules: {
     '@typescript-eslint/dot-notation': 'off',
