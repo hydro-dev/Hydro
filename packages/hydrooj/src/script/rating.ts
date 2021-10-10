@@ -53,7 +53,7 @@ async function runContest(...arg: any[]) {
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
-    const cursor = contest.getMultiStatus(tdoc.domainId, tdoc.docId)
+    const cursor = contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId, journal: { $ne: null } })
         .sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
     const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
