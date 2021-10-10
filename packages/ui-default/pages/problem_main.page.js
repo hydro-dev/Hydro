@@ -230,12 +230,12 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
   });
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
-    pjax.request({ url: $(ev.currentTaget).attr('href') }).then(() => window.scrollTo(0, 0));
+    pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
   });
   $(document).on('vjContentNew', (e) => {
-    createHint('Hint::icon::difficulty', $(e.target).find('th.col--difficulty'))
+    createHint('Hint::icon::difficulty', $(e.target).find('th.col--difficulty'));
   });
-  createHint('Hint::icon::difficulty', $(document).find('th.col--difficulty'))
+  createHint('Hint::icon::difficulty', $(document).find('th.col--difficulty'));
 });
 
 export default page;
