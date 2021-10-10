@@ -200,6 +200,7 @@ export default class POJProvider implements IBasicProvider {
     }
 
     async submitProblem(id: string, lang: string, code: string, info) {
+        await this.ensureLogin();
         const language = lang.includes('poj.') ? lang.split('poj.')[1] : '0';
         const comment = setting.langs[lang].comment;
         if (comment) {
