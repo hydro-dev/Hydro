@@ -40,7 +40,7 @@ problem.import.output_format: '## Output Format'
 problem.import.problem_description: '## Description'
 ranking: Ranking
 record_detail: Record Detail
-record_main: Judging Queue
+record_main: Record
 setting_customize: Customize
 setting_display: Display Preference
 setting_function: Function
