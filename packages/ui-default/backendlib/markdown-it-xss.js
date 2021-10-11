@@ -68,7 +68,6 @@ const xss = new Xss.FilterXSS({
   },
   safeAttrValue(tag, name, value) {
     if (name === 'id') return `xss-id-${value}`;
-    if (name === 'href' && value.startsWith('#')) return `#xss-id-${value.substring(1)}`;
     return value;
   },
 });
