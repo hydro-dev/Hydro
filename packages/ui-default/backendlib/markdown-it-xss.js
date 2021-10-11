@@ -24,17 +24,17 @@ const xss = new Xss.FilterXSS({
     dd: [],
     del: ['datetime'],
     details: ['open'],
-    div: ['class'],
+    div: ['id','class'],
     dl: [],
     dt: [],
     em: [],
     font: ['color', 'size', 'face'],
-    h1: [],
-    h2: ['class'],
-    h3: [],
-    h4: [],
-    h5: [],
-    h6: [],
+    h1: ['id'],
+    h2: ['id','class'],
+    h3: ['id'],
+    h4: ['id'],
+    h5: ['id'],
+    h6: ['id'],
     header: [],
     hr: [],
     i: [],
@@ -52,7 +52,7 @@ const xss = new Xss.FilterXSS({
     sub: [],
     summary: [],
     sup: [],
-    strong: [],
+    strong: ['id'],
     table: ['width', 'border', 'align', 'valign'],
     tbody: ['align', 'valign'],
     td: ['width', 'rowspan', 'colspan', 'align', 'valign', 'bgcolor'],
@@ -65,6 +65,11 @@ const xss = new Xss.FilterXSS({
     ul: [],
     var: [],
     video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
+  },
+  safeAttrValue(tag, name, value) {
+    if (name === 'id') return `xss-id-${value}`;
+    if (name === 'href' && value.startsWith('#')) return `#xss-id-${value.substring(1)}`;
+    return value;
   },
 });
 
