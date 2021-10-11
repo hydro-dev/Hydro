@@ -1,9 +1,13 @@
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
-import DomDialog from './DomDialog';
+import DomDialog, { DialogOptions } from './DomDialog';
 
 export class Dialog {
-  constructor(options = {}) {
+  options: DialogOptions;
+  $dom: JQuery<any>;
+  domDialogInstance: DomDialog;
+
+  constructor(options: Partial<DialogOptions> = {}) {
     this.options = {
       classes: '',
       $body: null,
@@ -60,7 +64,7 @@ const buttonYes = tpl`<button class="primary rounded button" data-action="yes">$
 const buttonNo = tpl`<button class="rounded button" data-action="no">${i18n('No')}</button>`;
 
 export class InfoDialog extends Dialog {
-  constructor(options = {}) {
+  constructor(options: Partial<DialogOptions> = {}) {
     super({
       $action: buttonOk,
       cancelByClickingBack: true,
@@ -71,7 +75,7 @@ export class InfoDialog extends Dialog {
 }
 
 export class ActionDialog extends Dialog {
-  constructor(options = {}) {
+  constructor(options: Partial<DialogOptions> = {}) {
     super({
       $action: [buttonCancel, buttonOk].join('\n'),
       cancelByClickingBack: true,
@@ -82,7 +86,7 @@ export class ActionDialog extends Dialog {
 }
 
 export class ConfirmDialog extends Dialog {
-  constructor(options = {}) {
+  constructor(options: Partial<DialogOptions> = {}) {
     let buttons = [];
     if (options.canCancel) {
       buttons = [buttonCancel, buttonNo, buttonYes];

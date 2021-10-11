@@ -62,6 +62,16 @@ module.exports = {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
 
+    '@typescript-eslint/lines-between-class-members': [
+      'error',
+      'always',
+      { exceptAfterSingleLine: true },
+    ],
+    'lines-between-class-members': [
+      'error',
+      'always',
+      { exceptAfterSingleLine: true },
+    ],
     'comma-dangle': [
       'error',
       'always-multiline',
@@ -69,9 +79,7 @@ module.exports = {
     indent: [
       'error',
       2,
-      {
-        SwitchCase: 0,
-      },
+      { SwitchCase: 0 },
     ],
     'max-len': ['error', 150],
     quotes: 'warn',

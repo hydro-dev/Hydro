@@ -144,10 +144,6 @@ function buildCategoryFilter() {
 }
 
 export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
-  $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
-    $(ev.currentTarget).hide();
-    $('[name="problem-sidebar__categories"]').show();
-  });
   let confirmed = false;
   $(document).on('click', '[name="operation"]', (ev) => {
     ev.preventDefault();
@@ -178,7 +174,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     $('img').each(function () {
       if (this.src.startsWith('file://')) this.setAttribute('src', this.src.replace('file://', './file/'));
     });
-  }, 50);
+  }, 200);
 
   const $main = $('textarea[data-editor]');
   const $field = $('textarea[data-markdown-upload]');

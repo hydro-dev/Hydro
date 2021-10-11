@@ -47,7 +47,7 @@ export const ForbiddenError = Err('ForbiddenError', UserFacingError, 'ForbiddenE
 export const NotFoundError = Err('NotFoundError', UserFacingError, 'NotFoundError', 404);
 export const MethodNotAllowedError = Err('MethodNotAllowedError', UserFacingError, 'MethodNotAllowedError', 405);
 export const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 'RemoteOnlineJudgeError', 500);
-export const SendMailError = Err('SendMailError', UserFacingError, 'Failed to send mail to {0}.', 500);
+export const SendMailError = Err('SendMailError', UserFacingError, 'Failed to send mail to {0}. (1)', 500);
 
 export const AlreadyVotedError = Err('AlreadyVotedError', ForbiddenError, "You've already voted.");
 export const LoginError = Err('LoginError', ForbiddenError, 'Invalid password for user {0}.');

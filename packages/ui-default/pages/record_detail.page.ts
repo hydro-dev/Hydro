@@ -1,8 +1,10 @@
 import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('record_detail', async () => {
-  const { default: SockJs } = await import('../components/socket');
-  const { DiffDOM } = await import('diff-dom');
+  const [{ default: SockJs }, { DiffDOM }] = await Promise.all([
+    import('../components/socket'),
+    import('diff-dom'),
+  ]);
 
   const sock = new SockJs(UiContext.socketUrl);
   const dd = new DiffDOM();

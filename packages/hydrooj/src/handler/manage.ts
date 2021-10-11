@@ -49,11 +49,6 @@ function set(key: string, value: any) {
 class SystemHandler extends Handler {
     async prepare() {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
-        this.response.body = {
-            path: [
-                ['Hydro', 'homepage'],
-            ],
-        };
     }
 }
 
@@ -86,12 +81,6 @@ class SystemCheckConnHandler extends ConnectionHandler {
 class SystemDashboardHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_dashboard.html';
-        this.response.body.path.push(['manage_dashboard', null]);
-    }
-
-    async postRestart() {
-        // TODO handle restart
-        this.back();
     }
 }
 
@@ -99,7 +88,6 @@ class SystemScriptHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_script.html';
         this.response.body.scripts = global.Hydro.script;
-        this.response.body.path.push(['manage_script', null]);
     }
 
     @param('id', Types.Name)
@@ -147,7 +135,6 @@ class SystemScriptHandler extends SystemHandler {
 class SystemSettingHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_setting.html';
-        this.response.body.path.push(['manage_setting', null]);
         this.response.body.current = {};
         this.response.body.settings = setting.SYSTEM_SETTINGS;
         for (const s of this.response.body.settings) {
@@ -185,7 +172,6 @@ class SystemSettingHandler extends SystemHandler {
 class SystemUserImportHandler extends SystemHandler {
     async get() {
         this.response.body.users = [];
-        this.response.body.path.push(['manage_user_import']);
         this.response.template = 'manage_user_import.html';
     }
 
@@ -232,7 +218,6 @@ class SystemUserImportHandler extends SystemHandler {
                 }
             }
         }
-        this.response.body.path.push(['manage_user_import']);
         this.response.body.users = udocs;
         this.response.body.messages = messages;
     }

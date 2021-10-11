@@ -40,9 +40,7 @@ const page = new NamedPage('domain_role', () => {
 
   async function handleClickCreateRole() {
     const action = await createRoleDialog.clear().open();
-    if (action !== 'ok') {
-      return;
-    }
+    if (action !== 'ok') return;
     const role = createRoleDialog.$dom.find('[name="role"]').val();
     try {
       await request.post('', {

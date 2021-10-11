@@ -1,9 +1,6 @@
 import yaml from 'js-yaml';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
 import { NamedPage } from 'vj/misc/Page';
-import tpl from 'vj/utils/tpl';
-import i18n from 'vj/utils/i18n';
-import { ConfirmDialog } from 'vj/components/dialog';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
@@ -263,15 +260,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     leaveScratchpadMode();
     ev.preventDefault();
   });
-  $(document).on('click', '[name="problem-sidebar__rejudge"]', (ev) => {
-    ev.preventDefault();
-    new ConfirmDialog({
-      $body: tpl.typoMsg(i18n('Confirm rejudge this problem?')),
-    }).open().then((action) => {
-      if (action !== 'yes') return;
-      $(ev.currentTarget).closest('form').trigger('submit');
-    });
-  });
+
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();
     $('span.tags').css('display', 'inline-block');

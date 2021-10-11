@@ -33,11 +33,11 @@
       <div class="section__body">
         <a href="{{ url('contest_detail', tid=tdoc.docId) }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
-        {% if tsdict[tdoc.docId].attend %}
-          <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
-        {% else %}
-          <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
-        {% endif %}
+          {% if tsdict[tdoc.docId].attend %}
+            <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
+          {% else %}
+            <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -48,23 +48,25 @@
 <div class="row">
   <div class="medium-9 columns">
   {%- for tdoc in tdocs -%}
-  {% if model.contest.isOngoing(tdoc) %}
-    {{ render_important_contest('live', 'Live...', tdoc) }}
-  {% elif model.contest.isUpcoming(tdoc) %}
-    {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
-  {% endif %}
+    {% if model.contest.isOngoing(tdoc) %}
+      {{ render_important_contest('live', 'Live...', tdoc) }}
+    {% elif model.contest.isUpcoming(tdoc) %}
+      {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
+    {% endif %}
   {%- endfor -%}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{% if not rule %}{{ _('All Contests') }}{% else %}{{ _('All {0} Contests').format(_(model.contest.RULES[rule].TEXT)) }}{% endif %}</h1>
+        <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0} Contests').format(model.contest.RULES[rule].TEXT) }}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
             <select class="inline compact select" name="rule">
               <option value="0"{% if not rule %} selected{% endif %}>{{ _('All') }}</option>
-            {%- for k, v in model.contest.RULES -%}
-              <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(_(v.TEXT)) }}</option>
-            {%- endfor -%}
+              {%- for k, v in model.contest.RULES -%}
+                {% if k != 'homework' %}
+                  <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(v.TEXT) }}</option>
+                {% endif %}
+              {%- endfor -%}
             </select>
             <button type="submit" class="button hasjs--hide">
               {{ _('Search') }}

@@ -677,6 +677,8 @@ declare global {
             addons: string[],
         }
     }
+    var Hydro: HydroGlobal; // eslint-disable-line
+    var addons: string[]; // eslint-disable-line
 }
 
 declare module 'koa' {

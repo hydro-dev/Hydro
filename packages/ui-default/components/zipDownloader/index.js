@@ -5,6 +5,7 @@ import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import Notification from 'vj/components/notification';
+import api from 'vj/utils/api';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -67,7 +68,24 @@ export async function downloadProblemSet(pids, name = 'Export') {
   const targets = [];
   try {
     for (const pid of pids) {
-      const { pdoc } = await request.get(`/d/${UiContext.domainId}/p/${pid}`);
+      const { pdoc } = await request.get(`/d/${UiContext.domainId}/api`);
+      await api(gql`
+        problem(id: ${pid}) {
+          pid
+          owner
+          title
+          content
+          tag
+          nSubmit
+          nAccept
+          data {
+            name
+          }
+          additional_file {
+            name
+          }
+        }
+      `);
       targets.push({
         filename: `${pid}/problem.yaml`,
         content: dump({
@@ -77,7 +95,6 @@ export async function downloadProblemSet(pids, name = 'Export') {
           tag: pdoc.tag,
           nSubmit: pdoc.nSubmit,
           nAccept: pdoc.nAccept,
-          difficulty: pdoc.difficulty,
         }),
       });
       targets.push({

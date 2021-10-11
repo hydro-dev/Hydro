@@ -2,20 +2,33 @@ import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import zIndexManager from 'vj/utils/zIndexManager';
 
+export interface DialogOptions {
+  classes: string;
+  $body: HTMLElement;
+  $action: any;
+  width?: string;
+  height?: string;
+  cancelByClickingBack?: boolean;
+  cancelByEsc?: boolean;
+  canCancel?: boolean;
+  onDispatch?: (data: any) => any;
+}
+
 export default class DomDialog extends DOMAttachedObject {
   static DOMAttachKey = 'vjDomDialogInstance';
+  isShown = false;
+  isAnimating = false;
+  options: DialogOptions;
+  _resolve: (value: string | PromiseLike<string>) => void;
 
-  constructor($dom, options = {}) {
+  constructor($dom, options: Partial<DialogOptions> = {}) {
     super($dom);
-    this.isShown = false;
-    this.isAnimating = false;
     this.options = {
       cancelByClickingBack: false,
       cancelByEsc: false,
       onDispatch: () => { },
-      ...options,
+      ...options as any,
     };
-    this._defer = null;
   }
 
   async _show() {
@@ -70,9 +83,7 @@ export default class DomDialog extends DOMAttachedObject {
     $(document).off(`keyup.${this.eventNS}`);
     this.$dom.off(`click.${this.eventNS}`);
 
-    this.$dom.css({
-      opacity: 1,
-    });
+    this.$dom.css({ opacity: 1 });
     this.$dom.transition({
       opacity: 0,
     }, {
@@ -80,17 +91,15 @@ export default class DomDialog extends DOMAttachedObject {
     });
 
     const $dgContent = this.$dom.find('.dialog__content');
-    $dgContent.css({
-      scale: 1,
-    });
+    $dgContent.css({ scale: 1 });
     await $dgContent
-      .transition({
-        scale: 0.8,
-      }, {
-        duration: 200,
-        easing: 'easeOutCubic',
-      })
-      .promise();
+      .transition(
+        { scale: 0.8 },
+        {
+          duration: 200,
+          easing: 'easeOutCubic',
+        },
+      ).promise();
 
     this.$dom.css('display', 'none');
 
@@ -103,28 +112,23 @@ export default class DomDialog extends DOMAttachedObject {
     if (this.isShown || this.isAnimating) {
       return Promise.reject();
     }
-    this._defer = new $.Deferred();
+    const promise = new Promise<string>((resolve) => {
+      this._resolve = resolve;
+    });
     this._show();
-    return this._defer.promise();
+    return promise;
   }
 
   hide() {
-    if (!this.isShown || this.isAnimating) {
-      return false;
-    }
-    if (this._defer.state() === 'pending') {
-      this._defer.resolve('cancel');
-    }
-    this._defer = null;
+    if (!this.isShown || this.isAnimating) return false;
+    this._resolve('cancel');
     this._hide();
     return true;
   }
 
-  dispatchAction(data) {
-    if (this.options.onDispatch(data) === false) {
-      return;
-    }
-    this._defer.resolve(data);
+  dispatchAction(data: string) {
+    if (this.options.onDispatch(data) === false) return;
+    this._resolve(data);
     this.hide();
   }
 
