@@ -235,6 +235,16 @@ const page = new NamedPage('problem_files', () => {
     await pjax.request({ push: false });
   }
 
+  $(document).on('click', '[name="problem-sidebar__rejudge"]', (ev) => {
+    ev.preventDefault();
+    new ConfirmDialog({
+      $body: tpl.typoMsg(i18n('Confirm rejudge this problem?')),
+    }).open().then((action) => {
+      if (action !== 'yes') return;
+      $(ev.currentTarget).closest('form').trigger('submit');
+    });
+  });
+
   if ($('[name="upload_testdata"]').length) {
     $(document).on('click', '.problem-files-testdata .col--name', (ev) => handleEdit('testdata', ev));
     $(document).on('click', '.problem-files-additional_file .col--name', (ev) => handleEdit('additional_file', ev));
