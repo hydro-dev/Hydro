@@ -56,7 +56,7 @@ async function runContest(...arg: any[]) {
     const cursor = contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId, journal: { $ne: null } })
         .sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
-    const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
+    const [rankedTsdocs] = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
     const users = [];
     for (const result of rankedTsdocs) {
         users.push({ uid: result[1].uid, rank: result[0], old: udict[result[1].uid] || 1500 });
