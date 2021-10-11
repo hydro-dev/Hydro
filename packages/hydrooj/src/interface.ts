@@ -580,6 +580,7 @@ export interface Collections {
     'oplog': OplogDoc;
     'event': EventDoc;
     'opcount': OpCountDoc;
+    'log': any;
     'fs.chunks': any;
     'fs.files': any;
 }
