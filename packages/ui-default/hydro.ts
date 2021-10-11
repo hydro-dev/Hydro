@@ -5,6 +5,16 @@ import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
 
+declare global {
+  interface Window {
+    UserContext: any;
+    UiContext: any;
+    Hydro: any;
+    // eslint-disable-next-line camelcase
+    node_modules: any;
+  }
+}
+
 const start = new Date();
 window.UserContext = JSON.parse(window.UserContext);
 

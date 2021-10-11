@@ -3,6 +3,7 @@
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
 {% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
