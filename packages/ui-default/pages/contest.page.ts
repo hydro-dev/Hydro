@@ -7,13 +7,9 @@ export default new NamedPage(['contest_detail', 'contest_detail_problem'], () =>
   NProgress.configure({ trickle: false, showSpinner: false, minimum: 0 });
   function updateProgress() {
     const now = Date.now();
-    console.log(now, beginAt, endAt);
     if (beginAt <= now && now <= endAt) NProgress.set((now - beginAt) / (endAt - beginAt));
     else if (now > endAt) NProgress.set(1);
-    else {
-      console.log('set');
-      NProgress.set(0);
-    }
+    else NProgress.set(0);
   }
   NProgress.start();
   updateProgress();

@@ -19,6 +19,9 @@
                 <li>
                   <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
                 </li>
+                {% if tdoc.rated %}
+                  <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
+                {% endif %}
                 <li>
                   <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
                 </li>

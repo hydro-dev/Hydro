@@ -94,13 +94,16 @@
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
                   </li>
+                  {% if tdoc.rated %}
+                    <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
+                  {% endif %}
                   <li>
                     <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
                   </li>
                   <li>
                     <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
                   </li>
-                {% if tsdict[tdoc.docId]['attend'] == 1 %}
+                {% if tsdict[tdoc.docId].attend %}
                   <li class="contest__info-attended">
                     <span class="icon icon-check"></span> {{ _('Attended') }}
                   </li>
