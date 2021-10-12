@@ -620,16 +620,18 @@ export class Handler extends HandlerCommon {
     }
 
     async saveCookie() {
+        const ua = this.request.headers['user-agent'] || '';
+        if (!this.session.uid && system.get('server.ignoreUA').split('\n').filter((i) => i && ua.includes(i)).length) return;
         const expireSeconds = this.session.save
             ? system.get('session.saved_expire_seconds')
             : system.get('session.unsaved_expire_seconds');
         const $update = {
             updateIp: this.request.ip,
-            updateUa: this.request.headers['user-agent'] || '',
+            updateUa: ua,
         };
         const $create = {
             createIp: this.request.ip,
-            createUa: this.request.headers['user-agent'] || '',
+            createUa: ua,
             createHost: this.request.host,
         };
         if (this.session._id) {

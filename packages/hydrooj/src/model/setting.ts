@@ -154,6 +154,14 @@ DomainUserSetting(
     Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
+const ignoreUA = [
+    'bingbot',
+    'Gatus',
+    'Googlebot',
+    'Uptime',
+    'YandexBot',
+].join('\n');
+
 SystemSetting(
     Setting('setting_file', 'file.endPoint', 'http://127.0.0.1:9000', 'text', 'file.endPoint', 'Storage engine endPoint'),
     Setting('setting_file', 'file.accessKey', null, 'text', 'file.accessKey', 'Storage engine accessKey'),
@@ -182,6 +190,7 @@ SystemSetting(
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'server.language', 'Default display language'),
     Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login', FLAG_PRO),
     Setting('setting_server', 'server.message', true, 'boolean', 'server.message', 'Allow users send messages'),
+    Setting('setting_server', 'server.ignoreUA', ignoreUA, 'textarea', 'server.ignoreUA', 'ignoredUA'),
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
     Setting('setting_limits', 'limit.problem_files_size_max', 128 * 1024 * 1024, 'number', 'limit.problem_files_size_max', 'Max files size per problem'),
     Setting('setting_limits', 'limit.user_files', 100, 'number', 'limit.user_files', 'Max files for user'),
