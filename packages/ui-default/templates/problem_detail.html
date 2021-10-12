@@ -82,7 +82,7 @@
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
         {% endif %}
-        {{ pdoc.content|content(handler.user.viewLang, pdoc.html)|safe }}
+        {{ pdoc.content|content(handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
         </div>
       </div></div>
     </div>
