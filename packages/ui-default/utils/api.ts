@@ -3,7 +3,7 @@ import request from './request';
 export default async (q: string, path: string[] = []) => {
   let query = q.trim();
   if (!query.startsWith('query')) query = `query{${query}}`;
-  const res = await request.post('/api', { query });
+  const res = await request.post(`/d/${UiContext.domainId}/api`, { query });
   if (res.errors) throw new Error(res.errors[0].message);
   let cursor = res;
   for (const p of path) {

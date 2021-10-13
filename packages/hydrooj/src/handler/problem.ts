@@ -45,6 +45,7 @@ registerValue('Problem', [
     ['domainId', 'String!'],
     ['docId', 'Int!'],
     ['docType', 'Int!'],
+    ['pid', 'String'],
     ['title', 'String!'],
     ['content', 'String!'],
     ['config', 'String!'],

@@ -5,7 +5,7 @@ import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import Notification from 'vj/components/notification';
-import api from 'vj/utils/api';
+import api, { gql } from 'vj/utils/api';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -21,11 +21,15 @@ if (window.location.protocol === 'https:'
   streamsaver.mitm = '/streamsaver/mitm.html';
 }
 
-export default async function download(name, targets) {
-  if (!window.WritableStream) {
-    window.WritableStream = (await import('web-streams-polyfill/dist/ponyfill.es6')).WritableStream;
+const waitForWritableStream = window.WritableStream
+  ? Promise.resolve()
+  : import('web-streams-polyfill/dist/ponyfill.es6').then(({ WritableStream }) => {
+    window.WritableStream = WritableStream;
     streamsaver.WritableStream = window.WritableStream;
-  }
+  });
+
+export default async function download(name, targets) {
+  await waitForWritableStream;
   const fileStream = streamsaver.createWriteStream(name);
   let i = 0;
   const zipStream = createZipStream({
@@ -68,9 +72,8 @@ export async function downloadProblemSet(pids, name = 'Export') {
   const targets = [];
   try {
     for (const pid of pids) {
-      const { pdoc } = await request.get(`/d/${UiContext.domainId}/api`);
-      await api(gql`
-        problem(id: ${pid}) {
+      const pdoc = await api(gql`
+        problem(id: ${+pid}) {
           pid
           owner
           title
@@ -85,7 +88,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
             name
           }
         }
-      `);
+      `, ['data', 'problem']);
       targets.push({
         filename: `${pid}/problem.yaml`,
         content: dump({
@@ -117,7 +120,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
     }
     await download(`${name}.zip`, targets);
   } catch (e) {
-    Notification.warn(`${e.error.message} ${e.error.params[0]}`);
+    Notification.warn(`${e.error?.message} ${e.error?.params?.[0]}`);
   }
 }
 
