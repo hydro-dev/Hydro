@@ -101,7 +101,7 @@ function block(state, start, end, silent) {
 }
 
 module.exports = function plugin(md) {
-  const options = { throwOnError: false, strict: false };
+  const options = { throwOnError: false, strict: 'ignore' };
   const katexInline = function (latex) {
     options.displayMode = false;
     try {
