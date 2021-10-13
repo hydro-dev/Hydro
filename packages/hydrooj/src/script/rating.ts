@@ -24,7 +24,7 @@ async function runProblem(...arg: any[]) {
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const nPages = Math.floor(
         (await problem.getMultiStatus(
-            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null }, uid: { $ne: pdoc.owner } },
         ).count() + 99) / 100,
     );
     const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
@@ -40,6 +40,7 @@ async function runProblem(...arg: any[]) {
             }
         }
     }
+    udict[pdoc.owner] = (udict[pdoc.owner] || 1500) + (pdoc.difficulty || 5);
 }
 
 async function runContest(tdoc: Tdoc<30 | 60>, udict: ND, report: Function): Promise<void>;
