@@ -207,21 +207,49 @@ export default class UOJProvider implements IBasicProvider {
             if (!summary) continue;
             const time = parseTimeMS(summary.children[4].innerHTML);
             const memory = parseMemoryMB(summary.children[5].innerHTML) * 1024;
-            const root = document.getElementById('details_details_accordion');
-            if (!root) continue;
-            for (let t = 0; t < i; t++) root.children[0].remove();
-            for (const node of root.children) {
-                const info = node.children[0].children[0];
-                i++;
-                await next({
-                    status: STATUS.STATUS_JUDGING,
-                    case: {
-                        status: VERDICT[info.children[2]?.innerHTML?.trim().toUpperCase()] || STATUS.STATUS_WRONG_ANSWER,
-                        time: parseTimeMS(info.children[3]?.innerHTML?.split('time: ')?.[1] || 0),
-                        memory: parseMemoryMB(info.children[4]?.innerHTML?.split('memory: ')?.[1] || 0) * 1024,
-                        message: node.children[1]?.children[0]?.children[5].innerHTML,
-                    },
-                });
+            let panel = document.getElementById('details_details_accordion_collapse_subtask_1');
+            if (!panel) {
+                panel = document.getElementById('details_details_accordion');
+                if (!panel) continue;
+                for (let t = 0; t < i; t++) panel.children[0].remove();
+                for (const node of panel.children) {
+                    const info = node.children[0].children[0];
+                    i++;
+                    await next({
+                        status: STATUS.STATUS_JUDGING,
+                        case: {
+                            status: VERDICT[info.children[2]?.innerHTML?.trim().toUpperCase()] || STATUS.STATUS_WRONG_ANSWER,
+                            time: parseTimeMS(info.children[3]?.innerHTML?.split('time: ')?.[1] || 0),
+                            memory: parseMemoryMB(info.children[4]?.innerHTML?.split('memory: ')?.[1] || 0) * 1024,
+                            message: node.children[1]?.children[0]?.children[5].innerHTML,
+                        },
+                    });
+                }
+            } else {
+                let subtaskId = 1;
+                let removed = 0;
+                while (panel) {
+                    panel.children[0]?.remove();
+                    while (removed < i - 1 && panel.children.length) {
+                        panel.children[0].remove();
+                        removed++;
+                    }
+                    for (const node of panel.children) {
+                        const info = node.children[0].children[0];
+                        i++;
+                        await next({
+                            status: STATUS.STATUS_JUDGING,
+                            case: {
+                                status: VERDICT[info.children[2]?.innerHTML?.trim().toUpperCase()] || STATUS.STATUS_WRONG_ANSWER,
+                                time: parseTimeMS(info.children[3]?.innerHTML?.split('time: ')?.[1] || 0),
+                                memory: parseMemoryMB(info.children[4]?.innerHTML?.split('memory: ')?.[1] || 0) * 1024,
+                                message: node.children[1]?.children[0]?.children[5].innerHTML,
+                            },
+                        });
+                    }
+                    subtaskId++;
+                    panel = document.getElementById(`details_details_accordion_collapse_subtask_${subtaskId}`);
+                }
             }
             if (document.querySelector('tbody').innerHTML.includes('Judging')) continue;
             const score = +summary.children[3]?.children[0].innerHTML || 0;

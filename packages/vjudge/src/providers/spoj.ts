@@ -60,7 +60,6 @@ export default class SPOJProvider implements IBasicProvider {
             login_user: this.account.handle,
             password: this.account.password,
         });
-        console.log(res.body, res.header);
         const cookie = res.header['set-cookie'];
         if (cookie) {
             await this.save({ cookie });
