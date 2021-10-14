@@ -1,9 +1,9 @@
 __id: ko
 __langname: 한국어
 '"{data}" copied to clipboard!': “{data}”복사 완료
-'{} is a moderator of this domain.': '{}가 그룹의 관리자입니다.'
 '{0} comments': '{0} 댓글'
 '{0} discussions': '{0} 토론'
+'{0} is a moderator of this domain.': '{}가 그룹의 관리자입니다.'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 제한 초과：{1} 초 {2} 번'
 '{0} problems': '{0} 문제'
 '{0} sections': '{0} 단락'
@@ -39,6 +39,9 @@ __langname: 한국어
 (All Problems): (전체 문제)
 (None): (N/A)
 (Not changed): 수정되지 않음
+#Sample Input: Sample Input
+#Sample Output: Sample Output
+#Star: Star
 Aborted: 중지됨
 About {0}: '{0}에 대하여'
 About Markdown: Markdown에 대하여
@@ -142,11 +145,11 @@ Contest: 대회
 Continue: 계속
 Contributed Problems: 기여한 문제
 Contributions: 기여
+Copt Problem: 문제 복사
 Copy Email: 이메일 복사
 Copy from: 복사
 Copy QQ Number: QQ 계정 복사
 Copy WeChat Account: WeChat 계정 복사
-Copt Problem: 문제 복사
 Copy: 복사
 Copyright Complaint: 저작권 항의
 CPU Info: CPU 정보
@@ -222,8 +225,8 @@ discussion_node: 토론
 Discussion: 토론
 Discussions: 토론
 Display name {1} you want to set is used by others.: 이름 {1}이(가) 공개됩니다
-Display Name: 이름
 display name: 이름
+Display Name: 이름
 display_name: 이름
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 풀이에 대해 토론할 경우 불이익을 받을 수 있습니다.
 Document {2} not found.: 문서 {2} 없음
@@ -236,12 +239,12 @@ Domain Settings: 그룹 설정
 domain_dashboard: 그룹 게시판
 domain_discussion: 그룹 토론
 domain_edit: 그룹 수정
+domain_join_applications: 그룹 참여 요청
 domain_join: 그룹 참가
 domain_main: 그룹
 domain_permission: 그룹 권한
 domain_role: 그룹 역할
 domain_user: 그룹 구성원
-domain_join_applications: 그룹 참여 요청
 domain: 그룹
 Domain: 그룹
 Don't have an account?: 계정이 없으신가요?
@@ -258,8 +261,8 @@ Edit description of this domain: 그룹 설명 수정
 Edit discussion replies of own discussion: 본인의 토론에 대한 댓글 수정
 Edit discussion replies: 토론에서 본인 댓글 수정
 Edit discussions: 토론 수정
-Edit Domain: 그룹 수정
 Edit domain settings: 그룹 설정 수정
+Edit Domain: 그룹 수정
 Edit Homework: 과제 수정
 Edit own contests: 본인의 대회 수정
 Edit own discussion replies: 본인의 토론 댓글 수정
@@ -490,9 +493,9 @@ perm_general: 일반
 perm_homework: 과제
 perm_problem_solution: 해설
 perm_problem: 문제
+perm_ranking: 랭킹
 perm_record: 제출
 perm_training: 학습
-perm_ranking: 랭킹
 Permission: 권한
 Permissions: 권한
 Pick a problem randomly based on current filter: 필터 기반 무작위 추천
@@ -562,8 +565,8 @@ Records: 제출
 Refresh Records: 새로고침
 Refresh: 새로고침
 Registered at: '등록'
-Rejudge problems: 재채점
 Rejudge all submissions: 모든 제출 재채점
+Rejudge problems: 재채점
 Rejudge records: 재평가
 Rejudge: 재채점
 Related Discussions: 관련 토론
@@ -593,8 +596,6 @@ RP Algorithm: RP 알고리즘
 Rule: 규칙
 Run Pretest: 프리테스트 실행
 Run: 실행
-#Sample Input: Sample Input
-#Sample Output: Sample Output
 Save All Changes: 변경사항 저장
 Saved session: 세션 저장
 score canceled: 점수 취소됨
@@ -621,10 +622,6 @@ Service Status: 서비스 현황
 Set Role: 역할 설정
 Set Roles for Selected User: 선택 사용자 역할 설정
 Set Roles for selected users: 선택 사용자 역할 설정
-setting_storage: 설정 저장
-setting_server: 서버 설정
-setting_session: 세션 설정
-setting_smtp: SMTP 설정
 setting_customize: 개인 설정
 setting_display: 표시 설정
 setting_domain: 그룹 설정
@@ -632,6 +629,10 @@ setting_file: 설정 파일
 setting_info_domain: 그룹 정보 설정
 setting_info: 정보 설정
 setting_privacy: 개인정보 설정
+setting_server: 서버 설정
+setting_session: 세션 설정
+setting_smtp: SMTP 설정
+setting_storage: 설정 저장
 setting_usage: 언어 설정
 Settings: 설정
 Share: 공유
@@ -655,7 +656,6 @@ Sorry: 죄송합니다.
 Sort by: '정렬 기준'
 Source type: 소스 방식
 Star Topic: 주제 북마크
-#Star: Star
 Start at: '시작 시각'
 Statistics: 분석
 Status is hidden: 결과 비공개
