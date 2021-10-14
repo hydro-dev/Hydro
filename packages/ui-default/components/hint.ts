@@ -12,7 +12,7 @@ export default function createHint(message: string, element?: any) {
   a.onclick = () => {
     new InfoDialog({
       cancelByClickingBack: false,
-      $body: tpl.typoMsg(i18n(message)),
+      $body: tpl.typoMsg(i18n(message), true),
     }).open();
   };
   $(element).append(a);

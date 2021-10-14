@@ -3,6 +3,7 @@ import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog, ActionDialog, Dialog } from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
+import createHint from 'vj/components/hint';
 import request from 'vj/utils/request';
 import pjax from 'vj/utils/pjax';
 import tpl from 'vj/utils/tpl';
@@ -210,6 +211,7 @@ const page = new NamedPage('problem_files', () => {
       ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
       // eslint-disable-next-line no-alert
       : prompt('Filename');
+    if (!filename) return;
     const filesize = ev
       ? +ev.currentTarget.closest('[data-size]').getAttribute('data-size')
       : 0;
@@ -251,6 +253,10 @@ const page = new NamedPage('problem_files', () => {
   $(document).on('drop', '.problem-files-additional_file', (ev) => handleDrop('additional_file', ev));
   $(document).on('click', '[name="download_selected_testdata"]', () => handleClickDownloadSelected('testdata'));
   $(document).on('click', '[name="download_selected_file"]', () => handleClickDownloadSelected('additional_file'));
+  $(document).on('vjContentNew', (e) => {
+    createHint('Hint::icon::testdata', $(e.target).find('[name="create_testdata"]').get(0).parentNode.parentNode.children[0]);
+  });
+  createHint('Hint::icon::testdata', $(document).find('[name="create_testdata"]').get(0).parentNode.parentNode.children[0]);
 });
 
 export default page;

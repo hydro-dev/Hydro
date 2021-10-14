@@ -13,10 +13,10 @@ export default function tpl(pieces, ...substitutions) {
   return result;
 }
 
-tpl.typoMsg = function (msg) {
+tpl.typoMsg = function (msg, raw = false) {
   return tpl`
     <div class="typo">
-      <p>${msg}</p>
+      <p>${raw ? { html: msg, templateRaw: true } : msg}</p>
     </div>
   `;
 };

@@ -67,6 +67,7 @@ module.exports = {
       'always',
       { exceptAfterSingleLine: true },
     ],
+
     'lines-between-class-members': [
       'error',
       'always',
@@ -90,6 +91,7 @@ module.exports = {
     'import/extensions': 'off',
     'import/no-extraneous-dependencies': 'off',
     'max-classes-per-file': 'off',
+    'newline-per-chained-call': 'off',
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'no-console': 'off',
     'no-continue': 'off',
