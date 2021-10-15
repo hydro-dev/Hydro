@@ -254,9 +254,9 @@ const page = new NamedPage('problem_files', () => {
   $(document).on('click', '[name="download_selected_testdata"]', () => handleClickDownloadSelected('testdata'));
   $(document).on('click', '[name="download_selected_file"]', () => handleClickDownloadSelected('additional_file'));
   $(document).on('vjContentNew', (e) => {
-    createHint('Hint::icon::testdata', $(e.target).find('[name="create_testdata"]').get(0).parentNode.parentNode.children[0]);
+    createHint('Hint::icon::testdata', $(e.target).find('[name="create_testdata"]').get(0)?.parentNode?.parentNode?.children?.[0]);
   });
-  createHint('Hint::icon::testdata', $(document).find('[name="create_testdata"]').get(0).parentNode.parentNode.children[0]);
+  createHint('Hint::icon::testdata', $(document).find('[name="create_testdata"]').get(0)?.parentNode?.parentNode?.children?.[0]);
 });
 
 export default page;
