@@ -270,10 +270,11 @@ export interface ProblemStatusDoc extends StatusDoc {
 }
 
 export interface TestCase {
-    time: number,
-    memory: number,
-    status: number,
-    message: string,
+    id?: number;
+    time: number;
+    memory: number;
+    status: number;
+    message: string;
 }
 
 export interface RecordDoc {
@@ -476,26 +477,23 @@ export interface Script {
 }
 
 export interface JudgeResultBody {
-    domainId: string,
-    rid: ObjectID,
-    judger?: number,
-    progress?: number
+    domainId: string;
+    rid: ObjectID;
+    judger?: number;
+    progress?: number;
     case?: {
-        status: number,
-        time: number,
-        memory: number,
-        message?: string,
+        id?: number;
+        status: number;
+        time: number;
+        memory: number;
+        message?: string;
     },
-    status?: number,
-    score?: number,
-    time?: number,
-    memory?: number,
-    message?: string,
+    status?: number;
+    score?: number;
+    time?: number;
+    memory?: number;
+    message?: string;
     compilerText?: string,
-
-    // For pretest
-    stdout?: string,
-    stderr?: string,
 }
 
 export interface Task {

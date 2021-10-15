@@ -59,6 +59,7 @@ export async function next(body: JudgeResultBody) {
     const $push: any = {};
     if (body.case) {
         const c: TestCase = {
+            id: body.case.id || 0,
             memory: body.case.memory,
             time: body.case.time,
             message: body.case.message || '',

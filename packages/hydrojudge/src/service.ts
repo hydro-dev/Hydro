@@ -100,8 +100,6 @@ async function postInit() {
     }
 
     function getNext(that) {
-        that.nextId = 1;
-        that.nextWaiting = [];
         return (data, id = 0) => {
             logger.debug('Next: %d %o', id, data);
             data.rid = new ObjectID(that.rid);
@@ -113,30 +111,14 @@ async function postInit() {
             delete data.compiler_text;
             if (data.case) {
                 data.case = {
+                    id,
                     status: data.case.status,
                     time: data.case.time_ms || data.case.time,
                     memory: data.case.memory_kb || data.case.memory,
                     message: data.case.message || data.case.judgeText || '',
                 };
             }
-            if (id) {
-                if (id === that.nextId) {
-                    _judge.next(data);
-                    that.nextId++;
-                    let t = true;
-                    while (t) {
-                        t = false;
-                        for (const i in that.nextWaiting) {
-                            if (that.nextId === that.nextWaiting[i].id) {
-                                _judge.next(that.nextWaiting[i].data);
-                                that.nextId++;
-                                that.nextWaiting.splice(i, 1);
-                                t = true;
-                            }
-                        }
-                    }
-                } else that.nextWaiting.push({ data, id });
-            } else _judge.next(data);
+            _judge.next(data);
         };
     }
 
