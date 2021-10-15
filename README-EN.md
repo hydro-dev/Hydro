@@ -30,6 +30,6 @@ AGPL3
 
 In dictionary order:
 
-- [Github](https://github.com/) Code hosting and workflow。  
-- [criyle](https://github.com/criyle) Sandbox。  
-- [Vijos](https://github.com/vijos/vj4) UI framework。  
+- [Github](https://github.com/) Code hosting and workflow.  
+- [criyle](https://github.com/criyle) Sandbox.  
+- [Vijos](https://github.com/vijos/vj4) UI framework.  
