@@ -8,6 +8,7 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
+import * as system from '../model/system';
 import UserModel from '../model/user';
 import db from '../service/db';
 
@@ -24,7 +25,17 @@ async function runProblem(...arg: any[]) {
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const nPages = Math.floor(
         (await problem.getMultiStatus(
-            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null }, uid: { $ne: pdoc.owner } },
+            pdoc.domainId,
+            {
+                docId: pdoc.docId,
+                rid: { $ne: null },
+                uid: {
+                    $nin: [
+                        pdoc.owner,
+                        system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i),
+                    ],
+                },
+            },
         ).count() + 99) / 100,
     );
     const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
@@ -54,8 +65,11 @@ async function runContest(...arg: any[]) {
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
-    const cursor = contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId, journal: { $ne: null } })
-        .sort(contest.RULES[tdoc.rule].statusSort);
+    const cursor = contest.getMultiStatus(tdoc.domainId, {
+        docId: tdoc.docId,
+        journal: { $ne: null },
+        uid: { $nin: system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i) },
+    }).sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
     const [rankedTsdocs] = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
     const users = [];
@@ -79,6 +93,7 @@ async function runContest(...arg: any[]) {
 export async function calcLevel(domainId: string, report: Function) {
     const filter = { rp: { $ne: 1500, $exists: true } };
     const ducnt = await domain.getMultiUserInDomain(domainId, filter).count();
+    await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
     if (!ducnt) return;
     let last = { rp: null };
     let rank = 0;
