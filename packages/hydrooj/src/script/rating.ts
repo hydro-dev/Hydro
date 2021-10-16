@@ -32,7 +32,7 @@ async function runProblem(...arg: any[]) {
                 uid: {
                     $nin: [
                         pdoc.owner,
-                        system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i),
+                        ...system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i),
                     ],
                 },
             },
@@ -139,7 +139,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     ], (a, b) => a.uid === b.uid);
     for (const dudoc of dudocs) deltaudict[dudoc.uid] = dudoc.rpdelta;
     // TODO pagination
-    const problems = await problem.getMulti('', { domainId, hidden: false }).toArray();
+    const problems = await problem.getMulti('', { domainId, nSubmit: { $gt: 0 }, hidden: false }).toArray();
     await report({ message: `Found ${problems.length} problems in ${id}` });
     for (const i in problems) {
         const pdoc = problems[i];
