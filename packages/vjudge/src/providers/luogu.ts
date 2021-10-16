@@ -122,6 +122,7 @@ export default class LuoguProvider implements IBasicProvider {
         let fail = 0;
         let count = 0;
         let finished = 0;
+        next({ progress: 5 });
         while (count < 120 && fail < 5) {
             await sleep(1500);
             count++;
