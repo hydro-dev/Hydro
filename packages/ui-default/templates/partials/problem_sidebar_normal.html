@@ -56,7 +56,7 @@
         <form method="post" action="{{ url('problem_detail', pid=pdoc.docId) }}">
           <input type="hidden" name="operation" value="rejudge">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-          <button type="submit" class="menu__link">
+          <button type="submit" class="menu__link" name="problem-sidebar__rejudge">
             <span class="icon icon-refresh"></span> {{ _('Rejudge all submissions') }}
           </button>
         </form>

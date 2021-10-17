@@ -38,7 +38,7 @@ homework_main: Homework
 homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
-manage_dashboard: Control Panel
+manage_dashboard: System
 manage_module: Module Management
 manage_script: Scripts
 manage_setting: System Settings
@@ -77,7 +77,7 @@ problem.import.output_format: '## Output Format'
 problem.import.problem_description: '## Description'
 ranking: Ranking
 record_detail: Record Detail
-record_main: Judging Queue
+record_main: Record
 setting_customize: Customize
 setting_display: Display Preference
 setting_function: Function

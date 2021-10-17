@@ -45,6 +45,7 @@ module.exports = {
     UserContext: true,
     LOCALES: true,
     window: true,
+    JQuery: true,
   },
   rules: {
     '@typescript-eslint/dot-notation': 'off',
@@ -61,6 +62,17 @@ module.exports = {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
 
+    '@typescript-eslint/lines-between-class-members': [
+      'error',
+      'always',
+      { exceptAfterSingleLine: true },
+    ],
+
+    'lines-between-class-members': [
+      'error',
+      'always',
+      { exceptAfterSingleLine: true },
+    ],
     'comma-dangle': [
       'error',
       'always-multiline',
@@ -68,9 +80,7 @@ module.exports = {
     indent: [
       'error',
       2,
-      {
-        SwitchCase: 0,
-      },
+      { SwitchCase: 0 },
     ],
     'max-len': ['error', 150],
     quotes: 'warn',
@@ -81,6 +91,7 @@ module.exports = {
     'import/extensions': 'off',
     'import/no-extraneous-dependencies': 'off',
     'max-classes-per-file': 'off',
+    'newline-per-chained-call': 'off',
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'no-console': 'off',
     'no-continue': 'off',
@@ -102,6 +113,7 @@ module.exports = {
     'no-await-in-loop': 'off',
     'no-lonely-if': 'off',
     'no-param-reassign': 'off',
+    'no-script-url': 'off',
     'no-bitwise': 'off',
     'react/prefer-stateless-function': 'off',
     'react/static-property-placement': 'off',

@@ -18,10 +18,7 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
       }
       const message = `Confirm deleting this ${pagename.split('_')[0]}? Its status will be deleted as well.`;
       return new ConfirmDialog({
-        $body: tpl`
-          <div class="typo">
-            <p>${i18n(message)}</p>
-          </div>`,
+        $body: tpl.typoMsg(i18n(message)),
       }).open().then((action) => {
         if (action !== 'yes') return;
         confirmed = true;

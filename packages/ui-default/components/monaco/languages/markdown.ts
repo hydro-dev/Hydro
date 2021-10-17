@@ -123,6 +123,12 @@ monaco.editor.registerCommand('hydro.openUserPage', (accesser, uid) => {
 monaco.languages.registerCodeLensProvider('markdown', {
   async provideCodeLenses(model) {
     const users = model.findMatches('\\[\\]\\(/user/(\\d+)\\)', true, true, true, null, true);
+    if (!users.length) {
+      return {
+        lenses: [],
+        dispose: () => { },
+      };
+    }
     const { data } = await api(gql`
       users(ids: ${users.map((i) => +i.matches[1])}) {
         _id

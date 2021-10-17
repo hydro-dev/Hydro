@@ -114,18 +114,12 @@ class DiscussionNodeHandler extends DiscussionHandler {
             user.getList(domainId, uids),
             discussion.getNodes(domainId),
         ]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['discussion_main', 'discussion_main'],
-            [this.vnode.title, null, true],
-        ];
         const vndict = { [typeMapper[type]]: { [name.toString()]: this.vnode } };
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
             ddocs,
             dpcount,
             udict,
-            path,
             page,
             vndict,
             vnode: this.vnode,

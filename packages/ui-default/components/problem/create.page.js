@@ -7,10 +7,7 @@ export default new NamedPage(['problem_create', 'problem_edit', 'problem_import_
   $('input[name="pid"]').on('blur', () => {
     if (/^[0-9]+$/.test($('input[name="pid"]').val())) {
       new InfoDialog({
-        $body: tpl`
-          <div class="typo">
-            <p>${i18n('Problem ID cannot be a pure number. Leave blank if you want to use numberic id.')}</p>
-          </div>`,
+        $body: tpl.typoMsg(i18n('Problem ID cannot be a pure number. Leave blank if you want to use numberic id.')),
       }).open();
     }
   });

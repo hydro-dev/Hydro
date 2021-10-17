@@ -110,7 +110,7 @@ class WikiAboutHandler extends Handler {
 }
 
 class SetThemeHandler extends Handler {
-  noCheckPermView = true
+  noCheckPermView = true;
 
   async get({ theme }) {
     await user.setById(this.user._id, { theme });

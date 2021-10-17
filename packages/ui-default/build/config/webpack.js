@@ -130,11 +130,6 @@ export default function (env = {}) {
         maxInitialRequests: 3,
         automaticNameDelimiter: '-',
         cacheGroups: {
-          blockly: {
-            test: /[\\/]@?blockly[\\/]/,
-            priority: 10,
-            name: 'blockly',
-          },
           monaco: {
             test: /[\\/]monaco-editor[\\/]/,
             priority: 9,
@@ -211,7 +206,6 @@ export default function (env = {}) {
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
-          { from: root(`${dirname(require.resolve('emojify.js/package.json'))}/dist/images/basic`), to: 'img/emoji/' },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}`), to: 'vditor/' },
         ],
       }),

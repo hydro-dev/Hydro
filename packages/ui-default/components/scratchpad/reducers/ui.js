@@ -6,7 +6,9 @@ export default function reducer(state = {
     size: '50%',
   },
   pretest: {
-    visible: localStorage.getItem('scratchpad/pretest') === 'true',
+    visible: ['default', 'fileio'].includes(UiContext.pdoc.config?.type)
+      ? localStorage.getItem('scratchpad/pretest') === 'true'
+      : false,
     size: 200,
   },
   records: {

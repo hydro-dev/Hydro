@@ -33,7 +33,7 @@ class Service {
         try {
             const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
             if (!rid) return;
-            await next({ status: STATUS.STATUS_JUDGING });
+            await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
             await this.api.waitForSubmission(rid, next, end);
         } catch (e) {
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: e.message });

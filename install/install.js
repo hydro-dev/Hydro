@@ -45,7 +45,7 @@ for (const line of lines) {
     if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
-if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('不支持的系统');
+if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('不支持的系统，请尝试手动安装');
 const Arch = values.id === 'arch';
 
 const steps = [
@@ -69,6 +69,8 @@ const steps = [
                 + 'mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
             ]
             : [
+                // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
+                ['apt-get upgrade openssl -y', { retry: true }],
                 ['wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -', { retry: true }],
                 [`echo "deb [ arch=amd64 ] ${_MONGODB_[retry % _MONGODB_.length]} ${values.ubuntu_codename}\
 /mongodb-org/4.4 multiverse" >/etc/apt/sources.list.d/mongodb-org-4.4.list && \

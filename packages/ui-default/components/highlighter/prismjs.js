@@ -70,7 +70,7 @@ function addInvisibles(grammar) {
   for (const name in grammar) {
     if (Object.prototype.hasOwnProperty.call(grammar, name) && !invisibles[name]) {
       if (name === 'rest') addInvisibles(grammar.rest);
-      else handlerInvisiblesToken(grammar, name); // eslint-disable-line no-use-before-define
+      else handlerInvisiblesToken(grammar, name); // eslint-disable-line @typescript-eslint/no-use-before-define
     }
   }
 }
@@ -95,19 +95,12 @@ Prism.hooks.add('before-highlight', (env) => {
 });
 
 const prismjsApiWrap = {
-  highlightBlocks: ($dom, format) => {
+  highlightBlocks: ($dom) => {
     $dom.find('pre code').get().forEach((code) => {
       const $code = $(code);
       const $pre = $code.parent();
       $pre.addClass('syntax-hl');
       const language = ($(code).attr('class') || '').trim();
-      const astyle = language.match(/astyle-([a-z]+)/);
-      if (format && astyle && astyle[1]) {
-        const [success, result] = format($code.text(), `${UserContext.astyleOptions.trim()} mode=${astyle[1]}`);
-        code.original = $code.text();
-        if (!success) Notification.error('Code format fail');
-        else $code.text(result);
-      }
       // try to map the language name
       const m = language.match(/language-([a-z]+)/);
       if (m && m[1]) {

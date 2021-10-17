@@ -1,6 +1,6 @@
 import {
-    STATUS, STATUS_CODES, STATUS_TEXTS,
-    USER_GENDER_FEMALE, USER_GENDER_ICONS, USER_GENDER_MALE,
+    getScoreColor, STATUS, STATUS_CODES, STATUS_SHORT_TEXTS,
+    STATUS_TEXTS, USER_GENDER_FEMALE, USER_GENDER_ICONS, USER_GENDER_MALE,
     USER_GENDER_OTHER, USER_GENDER_RANGE, USER_GENDERS,
 } from '@hydrooj/utils/lib/status';
 
@@ -486,6 +486,7 @@ export const CATEGORIES = {
 
 global.Hydro.model.builtin = {
     Permission,
+    getScoreColor,
     PERM,
     PERMS,
     PERMS_BY_FAMILY,
@@ -496,6 +497,7 @@ global.Hydro.model.builtin = {
     CATEGORIES,
     STATUS,
     STATUS_TEXTS,
+    STATUS_SHORT_TEXTS,
     STATUS_CODES,
     USER_GENDER_MALE,
     USER_GENDER_FEMALE,

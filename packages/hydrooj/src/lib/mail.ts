@@ -33,7 +33,7 @@ export async function sendMail(to: string, subject: string, text: string, html: 
         });
     } catch (e) {
         logger.error(e);
-        throw new SendMailError(to);
+        throw new SendMailError(to, e.message);
     }
     return t;
 }

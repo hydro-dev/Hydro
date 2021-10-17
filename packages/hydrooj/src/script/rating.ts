@@ -8,6 +8,7 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
+import * as system from '../model/system';
 import UserModel from '../model/user';
 import db from '../service/db';
 
@@ -24,10 +25,20 @@ async function runProblem(...arg: any[]) {
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const nPages = Math.floor(
         (await problem.getMultiStatus(
-            pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
+            pdoc.domainId,
+            {
+                docId: pdoc.docId,
+                rid: { $ne: null },
+                uid: {
+                    $nin: [
+                        pdoc.owner,
+                        ...system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i),
+                    ],
+                },
+            },
         ).count() + 99) / 100,
     );
-    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1);
+    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
     for (let page = 1; page <= nPages; page++) {
         const psdocs = await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
@@ -40,6 +51,7 @@ async function runProblem(...arg: any[]) {
             }
         }
     }
+    udict[pdoc.owner] = (udict[pdoc.owner] || 1500) + (pdoc.difficulty || 5);
 }
 
 async function runContest(tdoc: Tdoc<30 | 60>, udict: ND, report: Function): Promise<void>;
@@ -53,10 +65,13 @@ async function runContest(...arg: any[]) {
         : arg[0];
     const udict: ND = (typeof arg[0] === 'string') ? arg[2] : arg[1];
     const report = (typeof arg[0] === 'string') ? arg[3] : arg[2];
-    const cursor = contest.getMultiStatus(tdoc.domainId, tdoc.docId)
-        .sort(contest.RULES[tdoc.rule].statusSort);
+    const cursor = contest.getMultiStatus(tdoc.domainId, {
+        docId: tdoc.docId,
+        journal: { $ne: null },
+        uid: { $nin: system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i) },
+    }).sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
-    const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
+    const [rankedTsdocs] = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
     const users = [];
     for (const result of rankedTsdocs) {
         users.push({ uid: result[1].uid, rank: result[0], old: udict[result[1].uid] || 1500 });
@@ -78,6 +93,7 @@ async function runContest(...arg: any[]) {
 export async function calcLevel(domainId: string, report: Function) {
     const filter = { rp: { $ne: 1500, $exists: true } };
     const ducnt = await domain.getMultiUserInDomain(domainId, filter).count();
+    await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
     if (!ducnt) return;
     let last = { rp: null };
     let rank = 0;
@@ -123,7 +139,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     ], (a, b) => a.uid === b.uid);
     for (const dudoc of dudocs) deltaudict[dudoc.uid] = dudoc.rpdelta;
     // TODO pagination
-    const problems = await problem.getMulti('', { domainId, hidden: false }).toArray();
+    const problems = await problem.getMulti('', { domainId, nSubmit: { $gt: 0 }, hidden: false }).toArray();
     await report({ message: `Found ${problems.length} problems in ${id}` });
     for (const i in problems) {
         const pdoc = problems[i];
@@ -151,7 +167,6 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     async function update(uid: number, rp: number) {
         const udoc = await UserModel.getById(id, +uid);
         const $upd: any = { $set: { rp } };
-        if (isSub) $upd.$push = { ratingHistory: rp };
         if (udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
     }
     for (const uid in udict) tasks.push(update(+uid, udict[uid] + (deltaudict[uid] || 0)));

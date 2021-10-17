@@ -3,14 +3,18 @@ import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoCom
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 
 const page = new NamedPage('record_main', async () => {
-  const { default: SockJs } = await import('../components/socket');
-  const { DiffDOM } = await import('diff-dom');
+  const [{ default: SockJs }, { DiffDOM }] = await Promise.all([
+    import('../components/socket'),
+    import('diff-dom'),
+  ]);
 
   const sock = new SockJs(UiContext.socketUrl);
   const dd = new DiffDOM();
 
+  let firstLoad = true;
   sock.onopen = () => {
-    sock.send(JSON.stringify({ rids: UiContext.rids }));
+    if (firstLoad) sock.send(JSON.stringify({ rids: UiContext.rids }));
+    firstLoad = false;
   };
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);

@@ -527,8 +527,7 @@ export class Handler extends HandlerCommon {
             this.session.scope = PERM.PERM_ALL.toString();
             this.user = await user.getById(domainId, this.session.uid, this.session.scope);
         }
-        if (this.user._id !== 0 && this.session.viewLang) this.user.viewLang = this.session.viewLang;
-        else if (this.user._id === 0) delete this.user.viewLang;
+        if (this.user._id === 0) delete this.user.viewLang;
         this.user.avatarUrl = avatar(this.user.avatar, 128);
         this.csrfToken = this.getCsrfToken(this.session._id || String.random(32));
         this.UiContext.csrfToken = this.csrfToken;
@@ -621,16 +620,18 @@ export class Handler extends HandlerCommon {
     }
 
     async saveCookie() {
+        const ua = this.request.headers['user-agent'] || '';
+        if (!this.session.uid && system.get('server.ignoreUA').split('\n').filter((i) => i && ua.includes(i)).length) return;
         const expireSeconds = this.session.save
             ? system.get('session.saved_expire_seconds')
             : system.get('session.unsaved_expire_seconds');
         const $update = {
             updateIp: this.request.ip,
-            updateUa: this.request.headers['user-agent'] || '',
+            updateUa: ua,
         };
         const $create = {
             createIp: this.request.ip,
-            createUa: this.request.headers['user-agent'] || '',
+            createUa: ua,
             createHost: this.request.host,
         };
         if (this.session._id) {

@@ -551,6 +551,12 @@ const scripts: UpgradeScript[] = [
         await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectID('000000000000000000000000') } });
         return true;
     },
+    async function _49_50() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('user').updateMany({}, { $unset: { ratingHistory: '' } });
+        await db.collection('domain').updateMany({}, { $unset: { pidCounter: '' } });
+        return true;
+    },
 ];
 
 export default scripts;

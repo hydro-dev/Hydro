@@ -15,10 +15,7 @@ export default new NamedPage('training_edit', () => {
     }
     const message = 'Confirm deleting this training? Its status will be deleted as well.';
     return new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n(message)}</p>
-        </div>`,
+      $body: tpl.typoMsg(i18n(message)),
     }).open().then((action) => {
       if (action !== 'yes') return;
       confirmed = true;

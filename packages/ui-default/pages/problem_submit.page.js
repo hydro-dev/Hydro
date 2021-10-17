@@ -8,11 +8,6 @@ function setOptions($el, options) {
 }
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
-  $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
-    $(ev.currentTarget).hide();
-    $('[name="problem-sidebar__categories"]').show();
-  });
-
   const { domainId } = UiContext.pdocConfig;
 
   function onChangeMain(update = true) {

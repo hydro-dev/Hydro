@@ -18,8 +18,8 @@ export async function postInit() {
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
     const socket = new WebSocket(url, { headers });
     socket.on('error', console.error);
-    socket.on('message', async (message, isBinary) => {
-        const payload = JSON.parse(isBinary ? message : message.toString());
+    socket.on('message', async (message) => {
+        const payload = JSON.parse(message.toString());
         if (payload.post_type !== 'message') return;
         if (payload.message.startsWith('login ')) {
             const secret = payload.message.split(' ')[1];

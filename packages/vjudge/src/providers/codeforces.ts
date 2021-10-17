@@ -11,7 +11,7 @@ import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
 proxy(superagent);
-const logger = new Logger('codeforces');
+const logger = new Logger('remote/codeforces');
 
 const VERDICT = {
     RUNTIME_ERROR: STATUS.STATUS_RUNTIME_ERROR,
@@ -100,7 +100,6 @@ export default class CodeforcesProvider implements IBasicProvider {
             password: this.account.password,
             remember: 'on',
         });
-        console.log(res.header);
         const cookie = res.header['set-cookie'];
         if (cookie) {
             await this.save({ cookie });

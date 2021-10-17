@@ -4,6 +4,7 @@ import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
 import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
+import createHint from 'vj/components/hint';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import pjax from 'vj/utils/pjax';
 import substitute from 'vj/utils/substitute';
@@ -221,10 +222,7 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
     ev.preventDefault();
     updateSelection();
   });
-  $('#searchForm').on('submit', () => {
-    updateSelection();
-    return false;
-  });
+  $('#searchForm').on('submit', updateSelection);
   let update;
   $('#searchForm').find('input').on('input', () => {
     if (update) clearTimeout(update);
@@ -232,10 +230,12 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
   });
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
-    pjax.request({ url: $(ev.currentTarget).attr('href') }).then(() => {
-      window.scrollTo(0, 0);
-    });
+    pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
   });
+  $(document).on('vjContentNew', (e) => {
+    createHint('Hint::icon::difficulty', $(e.target).find('th.col--difficulty'));
+  });
+  createHint('Hint::icon::difficulty', $(document).find('th.col--difficulty'));
 });
 
 export default page;

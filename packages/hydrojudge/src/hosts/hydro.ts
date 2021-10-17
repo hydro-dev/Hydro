@@ -39,8 +39,6 @@ class JudgeTask {
     data: any[];
     folder: string;
     config: any;
-    nextId = 1;
-    nextWaiting = [];
     getLang: (name: string) => LangConfig;
 
     constructor(session: Hydro, request, ws: WebSocket) {
@@ -112,7 +110,7 @@ class JudgeTask {
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
-            { ...this.config, detail: this.session.config.detail },
+            { detail: this.session.config.detail, ...this.config },
             { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
@@ -135,30 +133,14 @@ class JudgeTask {
         delete data.judge_text;
         if (data.case) {
             data.case = {
+                id,
                 status: data.case.status,
                 time: data.case.time_ms || data.case.time,
                 memory: data.case.memory_kb || data.case.memory,
                 message: data.case.message || data.case.judgeText || data.case.judge_text || '',
             };
         }
-        if (id) {
-            if (id === this.nextId) {
-                this.ws.send(JSON.stringify(data));
-                this.nextId++;
-                let t = true;
-                while (t) {
-                    t = false;
-                    for (const i in this.nextWaiting) {
-                        if (this.nextId === this.nextWaiting[i].id) {
-                            this.ws.send(JSON.stringify(this.nextWaiting[i].data));
-                            this.nextId++;
-                            this.nextWaiting.splice(+i, 1);
-                            t = true;
-                        }
-                    }
-                }
-            } else this.nextWaiting.push({ data, id });
-        } else this.ws.send(JSON.stringify(data));
+        this.ws.send(JSON.stringify(data));
     }
 
     end(data) {

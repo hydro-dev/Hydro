@@ -107,6 +107,17 @@ const acm: ContestRule = {
                 });
             }
         }
+        const first = {};
+        for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
+        for (const [, tsdoc] of rankedTsdocs) {
+            const tsddict = {};
+            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
+            for (const pid of tdoc.pids) {
+                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
+                    first[pid] = tsddict[pid].rid.generationTime;
+                }
+            }
+        }
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
@@ -141,6 +152,9 @@ const acm: ContestRule = {
                         score: accept ? 100 : 0,
                         value: '{0}\n{1}'.format(colAccepted, colTimeStr),
                         raw: rid,
+                        style: accept && rid.generationTime === first[pid]
+                            ? 'background-color: rgb(217, 240, 199);'
+                            : undefined,
                     });
                 }
             }
@@ -527,7 +541,7 @@ export function isNew(tdoc: Tdoc, days = 1) {
     return (now < readyAt - days * 24 * 3600 * 1000);
 }
 
-export function isUpcoming(tdoc: Tdoc, days = 1) {
+export function isUpcoming(tdoc: Tdoc, days = 7) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
     return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt.getTime());

@@ -1,5 +1,4 @@
 import { ObjectID } from 'mongodb';
-import tx2 from 'tx2';
 import { JudgeResultBody, RecordDoc, TestCase } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
 import { Logger } from '../logger';
@@ -20,11 +19,6 @@ import {
 import { sleep } from '../utils';
 
 const logger = new Logger('judge');
-const judgeCount = tx2.meter({
-    name: 'judge/min',
-    samples: 60,
-    timeframe: 120,
-});
 
 export async function postJudge(rdoc: RecordDoc) {
     if (typeof rdoc.input === 'string') return;
@@ -59,6 +53,7 @@ export async function next(body: JudgeResultBody) {
     const $push: any = {};
     if (body.case) {
         const c: TestCase = {
+            id: body.case.id || 0,
             memory: body.case.memory,
             time: body.case.time,
             message: body.case.message || '',
@@ -85,7 +80,6 @@ export async function next(body: JudgeResultBody) {
 }
 
 export async function end(body: JudgeResultBody) {
-    judgeCount.mark();
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;

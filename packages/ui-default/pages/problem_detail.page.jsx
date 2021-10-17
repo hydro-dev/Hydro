@@ -260,6 +260,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     leaveScratchpadMode();
     ev.preventDefault();
   });
+
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();
     $('span.tags').css('display', 'inline-block');

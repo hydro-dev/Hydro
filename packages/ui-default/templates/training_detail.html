@@ -25,7 +25,7 @@
           <div class="section__header clearfix">
             <div class="float-left">
               <h1 data-heading id="node-{{ node._id }}" class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'].split('\n')[0] }}</h1>
-              {% if node['title'].split('\n')[1] %}<h2 class="section__title">{{ node['title'].split('\n')[1] }}</h2>{% endif %}
+              {% if node['title'].split('\n')[1] %}<h4>{{ node['title'].split('\n')[1] }}</h4>{% endif %}
             </div>
             <div class="float-right">
               <h1 class="section__title training-section-status--text {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}">
@@ -159,7 +159,7 @@
       <div class="section__body">&nbsp;<!-- space placeholder --></div>
     </div>
   </div>
-  <div class="medium-3 columns">
+  <div class="medium-3 columns" data-sticky="large">
     <div class="section side">
       <div>
         <ol class="menu">
@@ -201,7 +201,7 @@
     </div>
     <div class="section side"><div data-sticky="large">
       <ol class="menu">
-        {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list') }}
+        {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list', menu_item='training_detail') }}
       </ol>
     </div></div>
   </div>

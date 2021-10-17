@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { dump } from 'js-yaml';
 import superagent from 'superagent';
+import tx2 from 'tx2';
 import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
+import { Time } from '@hydrooj/utils/lib/utils';
 import { Logger } from '../logger';
 import * as bus from './bus';
 import db from './db';
@@ -96,6 +98,20 @@ if (process.env.NODE_APP_INSTANCE === '0') {
             feedback();
             setInterval(update, 60 * 1000);
         });
+        const taskColl = db.collection('task');
+        let taskCount = await taskColl.find().count();
+        const recordColl = db.collection('record');
+        let recordCount = await recordColl.find({
+            _id: { $gte: Time.getObjectID(new Date(Date.now() - 60 * 1000)) },
+        }).count();
+        tx2.metric('task', () => taskCount);
+        tx2.metric('submission', () => recordCount);
+        setInterval(() => {
+            taskColl.find().count().then((c) => { taskCount = c; });
+            recordColl.find({
+                _id: { $gte: Time.getObjectID(new Date(Date.now() - 60 * 1000)) },
+            }).count().then((c) => { recordCount = c; });
+        }, 1000);
     });
 }
 

@@ -243,6 +243,10 @@ export function getNode(domainId: string, _id: string) {
     return document.get(domainId, document.TYPE_DISCUSSION_NODE, _id);
 }
 
+export function flushNodes(domainId: string) {
+    return document.deleteMulti(domainId, document.TYPE_DISCUSSION_NODE);
+}
+
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
         const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
@@ -360,6 +364,7 @@ global.Hydro.model.discussion = {
     setStatus,
     addNode,
     getNode,
+    flushNodes,
     getNodes,
     getVnode,
     getListVnodes,

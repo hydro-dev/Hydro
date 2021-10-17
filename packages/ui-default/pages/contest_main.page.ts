@@ -1,9 +1,8 @@
 import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('contest_main', () => {
-  // Contest Filter
-  $('[name="filter-form"] [name="rule"]').change(() => {
-    $('[name="filter-form"]').submit();
+  $('[name="filter-form"] [name="rule"]').on('change', () => {
+    $('[name="filter-form"]').trigger('submit');
   });
 });
 

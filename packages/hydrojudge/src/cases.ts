@@ -40,10 +40,10 @@ const RE0: Re0[] = [
 ];
 const RE1: Re1[] = [
     {
-        reg: /^([^\d]*)([0-9]+)-([0-9]+).in$/,
-        output: [(a) => `${a[1] + a[2]}-${a[3]}.out`],
+        reg: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
+        output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
         subtask: (a) => +a[2],
-        id: (a) => +a[3],
+        id: (a) => +a[4],
     },
 ];
 
@@ -218,13 +218,9 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
-    let auto = !result.outputs?.length;
-    if (auto) {
-        if (result.subtasks.length && Math.sum(result.subtasks.map((subtask) => subtask.cases.length))) {
-            auto = false;
-        }
-    }
-    if (auto) {
+    let cases = result.outputs?.length || 0;
+    cases += Math.sum((result.subtasks || []).map((subtask) => subtask.cases.length));
+    if (!cases) {
         const c = await readAutoCases(folder, args, config, result);
         result.subtasks = c.subtasks;
         result.count = c.count;
