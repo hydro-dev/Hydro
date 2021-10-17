@@ -8,7 +8,6 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
-import * as system from '../model/system';
 import UserModel from '../model/user';
 import db from '../service/db';
 
