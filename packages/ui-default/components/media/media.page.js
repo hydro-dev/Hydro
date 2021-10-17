@@ -12,6 +12,7 @@ export default new AutoloadPage('media', async () => {
     };
     users.get().forEach((ele) => resolve(ele, { type: 'user', id: +$(ele).text() }));
     $dom.find('.typo').get().forEach((el) => {
+      if (el.className.includes('no-media')) return;
       $(el).find('a[href]').get().forEach((ele) => {
         if ($(ele).parent().hasClass('user-profile-link')) return;
         let target = $(ele).attr('href');

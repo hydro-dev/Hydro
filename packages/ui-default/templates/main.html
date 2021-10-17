@@ -1,7 +1,7 @@
-{% set no_path_section = true %}
 {% set page_name = "homepage" %}
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
+{% import "components/problem.html" as problem with context %}
 {% block content %}
 <div class="row">
   <div class="large-9 columns">
@@ -49,6 +49,26 @@
       </div>
       <div class="section__body typo" name="hitokoto"></div>
     </div>
+    {% if pdocs.length %}
+      <div class="section side nojs--hide">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Starred Problems') }}</h1>
+        </div>
+        <div class="section__body typo no-media col--problem-name">
+          {%- for pdoc in pdocs -%}
+            <form class="form--inline" action="{{ url('problem_main') }}" method="post">
+              <input type="hidden" name="pid" value="{{ pdoc.docId }}">
+              <input type="hidden" name="operation" value="unstar">
+              <button class="star activated" type="submit">
+                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
+                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+              </button>
+            </form>
+            {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false) }}<br/>
+          {%- endfor -%}
+        </div>
+      </div>
+    {% endif %}
     {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
       {% include 'partials/discussion_nodes_widget.html' %}
     {% endif %}
