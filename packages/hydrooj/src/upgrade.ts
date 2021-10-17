@@ -557,6 +557,11 @@ const scripts: UpgradeScript[] = [
         await db.collection('domain').updateMany({}, { $unset: { pidCounter: '' } });
         return true;
     },
+    async function _50_51() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('domain.user').updateMany({}, { $unset: { ratingHistory: '' } });
+        return true;
+    },
 ];
 
 export default scripts;

@@ -226,6 +226,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
+            psdoc: this.psdoc,
             title: this.pdoc.title,
         };
         this.extraTitleContent = this.pdoc.title;
