@@ -5,7 +5,7 @@ import { ConfirmDialog } from 'vj/components/dialog';
 
 const page = new NamedPage([
   'problem_create', 'problem_edit', 'problem_solution', 'problem_submit',
-  'problem_files', 'discussion_node', 'discussion_detail',
+  'problem_files', 'problem_detail', 'discussion_node', 'discussion_detail',
 ], () => {
   $(document).on('click', '[name="problem-sidebar__show-category"]', (ev) => {
     $(ev.currentTarget).hide();

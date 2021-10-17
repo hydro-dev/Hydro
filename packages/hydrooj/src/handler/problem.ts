@@ -17,6 +17,7 @@ import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
+import * as discussion from '../model/discussion';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -223,11 +224,17 @@ export class ProblemDetailHandler extends ProblemHandler {
             problem.getStatus(domainId, this.pdoc.docId, this.user._id),
             user.getById(domainId, this.pdoc.owner),
         ]);
+        const [scnt, dcnt] = await Promise.all([
+            solution.count(domainId, { parentId: this.pdoc.docId }),
+            discussion.count(domainId, { parentId: this.pdoc.docId }),
+        ]);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
             psdoc: this.psdoc,
             title: this.pdoc.title,
+            solutionCount: scnt,
+            discussionCount: dcnt,
         };
         this.extraTitleContent = this.pdoc.title;
     }

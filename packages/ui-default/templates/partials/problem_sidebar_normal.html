@@ -67,12 +67,12 @@
     {% endif %}
     {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'discussion_node' or page_name == 'discussion_detail' %} active{% endif %}" href="{{ url('discussion_node', type='problem', name=pdoc.docId) }}">
-        <span class="icon icon-comment--text"></span> {{ _('Discussions') }}
+        <span class="icon icon-comment--text"></span> {{ _('Discussions') }}{% if discussionCount !== undefined %} ({{ discussionCount }}){% endif %}
       </a></li>
     {% endif %}
     {% if handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="{{ url('problem_solution', pid=pdoc.pid|default(pdoc.docId)) }}">
-        <span class="icon icon-comment--text"></span> {{ _('Solutions') }}
+        <span class="icon icon-comment--text"></span> {{ _('Solutions') }}{% if solutionCount !== undefined %} ({{ solutionCount }}){% endif %}
       </a></li>
     {% endif %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_files' %} active{% endif %}" href="{{ url('problem_files', pid=pdoc.pid|default(pdoc.docId)) }}">
