@@ -506,7 +506,6 @@ export class Handler extends HandlerCommon {
             blacklist.get(`ip::${this.request.ip}`),
             this.getSession(),
         ]);
-        if (bdoc) throw new BlacklistedError(this.request.ip);
         if (inferDomain && !this.request.path.startsWith('/d/')) {
             this.domainId = inferDomain._id;
             this.args.domainId = inferDomain._id;
@@ -537,6 +536,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.lib[key].icon,
                 text: global.Hydro.lib[key].text,
             }));
+        if (bdoc) throw new BlacklistedError(this.request.ip);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         if (this.request.method === 'post' && this.request.headers.referer) {
             const host = new URL(this.request.headers.referer).host;

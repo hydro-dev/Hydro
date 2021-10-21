@@ -210,7 +210,7 @@ class UserModel {
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
-        if (op.$set?.loginIp) op.$addToSet = { ip: op.$set.loginIp };
+        if (op.$set?.loginip) op.$addToSet = { ip: op.$set.loginip };
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
         deleteUserCache(res.value);
         return res;
