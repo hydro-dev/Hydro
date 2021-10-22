@@ -254,7 +254,7 @@ const oi: ContestRule = {
                     ? `${tsdoc.uid}/${pid.toString().replace(':', '/')}`
                     : `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                const node: ScoreboardNode = isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString()
+                const node: ScoreboardNode = (!isExport && isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString())
                     ? {
                         type: 'records',
                         value: '',
