@@ -1,29 +1,30 @@
 @import './var.inc.styl'
 
 .button
-  font-size: rem($font-size-secondary)
-  line-height: rem($form-control-height - 2)
-  height: rem($form-control-height)
-  padding: rem(0 25px)
-  display: inline-block
-  outline: 0
-  margin: 0 0 1rem
-  cursor: pointer
-  user-select: none
+  &:not(.codicon)
+    font-size: rem($font-size-secondary)
+    line-height: rem($form-control-height - 2)
+    height: rem($form-control-height)
+    padding: rem(0 25px)
+    display: inline-block
+    outline: 0
+    margin: 0 0 1rem
+    cursor: pointer
+    user-select: none
 
-  &:hover, &:focus
-    text-decoration: none
-  &.expanded
-    padding-left: 0
-    padding-right: 0
-    text-align: center
-    width: 100%
+    &:hover, &:focus
+      text-decoration: none
+    &.expanded
+      padding-left: 0
+      padding-right: 0
+      text-align: center
+      width: 100%
 
-  &.compact
-    margin-bottom: 0
-    height: rem($compact-control-height)
-    line-height: rem($compact-control-height - 2)
-    padding: rem(0 15px)
+    &.compact
+      margin-bottom: 0
+      height: rem($compact-control-height)
+      line-height: rem($compact-control-height - 2)
+      padding: rem(0 15px)
 
 .button.inverse
   line-height: rem($form-control-height - 4)
