@@ -130,7 +130,7 @@ function handleDragOver(ev) {
  */
 function handleDrop(ev) {
   ev.preventDefault();
-  if (!$('[name="upload_testdata"]').length) {
+  if (!$('[name="upload_file"]').length) {
     Notification.error(i18n("You don't have permission to upload file."));
     return;
   }
