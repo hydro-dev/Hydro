@@ -29,6 +29,7 @@
                 {{ vndict[ddoc.parentType][ddoc.parentId].title|default(_('(missing)')) }}
               </a>
             </li>
+            <li>{{ _('{0} views').format(ddoc.views) }}</li>
             <li>
               {{ user.render_inline(udict[ddoc.owner], badge=false) }}
               @

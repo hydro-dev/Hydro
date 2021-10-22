@@ -27,7 +27,7 @@
   <div class="medium-4 columns">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Additional Files') }}</h1>
+        <h1 class="section__title">{{ _('Files') }}</h1>
         <div class="section__tools">
           {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="primary rounded button" name="create_file">{{ _('Create File') }}</button>
