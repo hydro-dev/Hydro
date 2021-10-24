@@ -175,7 +175,7 @@ export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHan
     async get(domainId: string, filename: string, noDisposition = false) {
         if (this.pdoc.reference) {
             this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            if (!this.pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError();
         }
         const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
         const file = await storage.getMeta(target);
