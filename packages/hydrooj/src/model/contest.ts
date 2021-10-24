@@ -5,8 +5,8 @@ import {
 } from '../error';
 import {
     ContestRule, ContestRules, ProblemDict,
-    ProblemId, ScoreboardNode, ScoreboardRow,
-    Tdoc, Udict,
+    ScoreboardNode, ScoreboardRow, Tdoc,
+    Udict,
 } from '../interface';
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
@@ -18,7 +18,7 @@ import user from './user';
 
 interface AcmJournal {
     rid: ObjectID;
-    pid: ProblemId;
+    pid: number;
     score: number;
     status: number;
     time: number;
@@ -37,7 +37,7 @@ const acm: ContestRule = {
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat: (tdoc, journal: AcmJournal[]) => {
-        const naccept: Record<ProblemId, number> = {};
+        const naccept: Record<number, number> = {};
         const effective: Record<number, AcmJournal> = {};
         const detail: AcmDetail[] = [];
         let accept = 0;
@@ -222,14 +222,7 @@ const oi: ContestRule = {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
             const psdocs = await Promise.all(
-                tdoc.pids.map((pid) => {
-                    let pdomain = tdoc.domainId;
-                    if (typeof pid === 'string') {
-                        pdomain = pid.split(':')[0];
-                        pid = +pid.split(':')[1];
-                    }
-                    return problem.getMultiStatus(pdomain, { docId: pid, uid: { $in: uids } }).toArray();
-                }),
+                tdoc.pids.map((pid) => problem.getMultiStatus(tdoc.domainId, { docId: pid, uid: { $in: uids } }).toArray()),
             );
             for (const tpsdoc of psdocs) {
                 for (const psdoc of tpsdoc) {
@@ -250,9 +243,7 @@ const oi: ContestRule = {
                 { type: 'string', value: tsdoc.score || 0 },
             );
             for (const pid of tdoc.pids) {
-                const index = pid.toString().includes(':')
-                    ? `${tsdoc.uid}/${pid.toString().replace(':', '/')}`
-                    : `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
+                const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 const node: ScoreboardNode = (!isExport && isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString())
                     ? {
@@ -450,7 +441,7 @@ function _getStatusJournal(tsdoc) {
 
 export async function add(
     domainId: string, title: string, content: string, owner: number,
-    rule: string, beginAt = new Date(), endAt = new Date(), pids: ProblemId[] = [],
+    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
     rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!this.RULES[rule]) throw new ValidationError('rule');
@@ -489,7 +480,7 @@ export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
     return tdoc;
 }
 
-export async function getRelated(domainId: string, pid: ProblemId) {
+export async function getRelated(domainId: string, pid: number) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid }).toArray();
 }
 
@@ -498,7 +489,7 @@ export function getStatus(domainId: string, tid: ObjectID, uid: number) {
 }
 
 export async function updateStatus(
-    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: ProblemId,
+    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0,
 ) {
     const [tdoc, otsdoc] = await Promise.all([

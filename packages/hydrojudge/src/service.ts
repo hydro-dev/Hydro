@@ -73,8 +73,8 @@ async function postInit() {
         }
     }
 
-    async function cacheOpen(domainId: string, pid: string, files: any[]) {
-        const filePath = path.join(getConfig('cache_dir'), domainId, pid);
+    async function cacheOpen(source: string, files: any[]) {
+        const filePath = path.join(getConfig('cache_dir'), source);
         await fs.ensureDir(filePath);
         if (!files?.length) throw new SystemError('Problem data not found.');
         let etags: Record<string, string> = {};
@@ -87,7 +87,7 @@ async function postInit() {
             filenames.add(file.name);
             version[file.name] = file.etag + file.lastModified;
             if (etags[file.name] !== file.etag + file.lastModified) {
-                await storage.get(`problem/${domainId}/${pid}/testdata/${file.name}`, path.join(filePath, file.name));
+                await storage.get(`problem/${source}/testdata/${file.name}`, path.join(filePath, file.name));
             }
         }
         for (const name in etags) {
@@ -142,9 +142,8 @@ async function postInit() {
         stat: any;
         request: any;
         event: string;
-        pid: string;
+        source: string;
         rid: string;
-        domainId: string;
         lang: string;
         code: string;
         data: any[];
@@ -168,12 +167,11 @@ async function postInit() {
         async handle() {
             try {
                 this.stat.handle = new Date();
-                this.pid = (this.request.pid || 'unknown').toString();
                 this.rid = this.request.rid.toString();
-                this.domainId = this.request.pdomain;
                 this.lang = this.request.lang;
                 this.code = this.request.code;
                 this.data = this.request.data;
+                this.source = this.request.source;
                 this.config = this.request.config;
                 this.input = this.request.input;
                 this.next = getNext(this);
@@ -182,7 +180,7 @@ async function postInit() {
                 this.clean = [];
                 fs.ensureDirSync(this.tmpdir);
                 tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
-                logger.info(`Submission: ${this.domainId}/${this.rid}`, { pid: this.pid });
+                logger.info(`Submission: ${this.source}/${this.rid}`);
                 if (typeof this.input === 'string') await this.run();
                 else await this.submission();
             } catch (e) {
@@ -212,12 +210,12 @@ async function postInit() {
 
         async submission() {
             this.stat.cache_start = new Date();
-            this.folder = await cacheOpen(this.domainId, this.pid, this.data);
+            this.folder = await cacheOpen(this.source, this.data);
             this.stat.read_cases = new Date();
             this.config = await readCases(
                 this.folder,
                 this.config,
-                { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
+                { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();
             const type = this.config.type || 'default';

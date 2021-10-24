@@ -6,7 +6,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Testdata') }}</h1>
         <div class="section__tools">
-          {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+          {% if not reference and (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) %}
             <button class="primary rounded button" name="create_testdata">{{ _('Create File') }}</button>
             <button class="primary rounded button" name="upload_testdata">{{ _('Upload File') }}</button>
           {% endif %}
@@ -14,7 +14,7 @@
       </div>
       {{ noscript_note.render() }}
       {% include "partials/problem_files-testdata.html" %}
-      {% if handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) %}
+      {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
           <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
           {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}

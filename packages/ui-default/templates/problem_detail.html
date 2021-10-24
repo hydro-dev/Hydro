@@ -76,7 +76,7 @@
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
         <div class="section__body typo">
-        {% if not pdoc.data.length %}
+        {% if not pdoc.data.length and not pdoc.reference %}
           <blockquote class="warn">
             <p>{{ _('No testdata at current.') }}</p>
           </blockquote>

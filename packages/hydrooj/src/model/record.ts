@@ -8,8 +8,7 @@ import {
 } from 'mongodb';
 import { ProblemNotFoundError } from '../error';
 import {
-    ExternalProblemId, FileInfo, ProblemConfigFile,
-    RecordDoc,
+    FileInfo, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -23,8 +22,8 @@ class RecordModel {
     static coll: Collection<RecordDoc> = db.collection('record');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
-        'uid', 'pid', 'rejudged', 'progress', 'pdomain',
-        'contest', 'judger', 'judgeAt', 'status', 'domainId',
+        'uid', 'pid', 'rejudged', 'progress', 'domainId',
+        'contest', 'judger', 'judgeAt', 'status', 'source',
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {
@@ -65,9 +64,15 @@ class RecordModel {
         const rdoc = await RecordModel.get(domainId, rid);
         if (!rdoc) return null;
         let data: FileInfo[] = [];
+        let source = `${domainId}/${rdoc.pid}`;
         if (rdoc.pid) {
-            const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
-            if (!pdoc) throw new ProblemNotFoundError(rdoc.pdomain, rdoc.pid);
+            let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
+            if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+            if (pdoc.reference) {
+                pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
+                if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+            }
+            source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
             if (pdoc.config.type === 'remote_judge') {
@@ -92,25 +97,20 @@ class RecordModel {
             domainId,
             config,
             data,
+            source,
         });
     }
 
     static async add(
-        domainId: string, pid: ExternalProblemId | number, uid: number,
+        domainId: string, pid: number, uid: number,
         lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean,
     ) {
-        let pdomain = domainId;
-        if (typeof pid === 'string') {
-            pdomain = pid.split(':')[0];
-            pid = +pid.split(':')[1];
-        }
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
             _id: new ObjectID(),
             uid,
             code,
             lang,
-            pdomain,
             pid,
             domainId,
             score: 0,
@@ -214,11 +214,8 @@ class RecordModel {
 }
 
 // Mark problem as deleted
-bus.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ pdomain: domainId, pid: docId }, { $set: { pid: -1 } }));
-bus.on('domain/delete', (domainId) => Promise.all([
-    RecordModel.coll.deleteMany({ domainId }),
-    RecordModel.coll.updateMany({ pdomain: domainId }, { $set: { docId: -1 } }),
-]));
+bus.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ domainId, pid: docId }, { $set: { pid: -1 } }));
+bus.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
 
 bus.once('app/started', () => db.ensureIndexes(
     RecordModel.coll,

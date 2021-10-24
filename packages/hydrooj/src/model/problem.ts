@@ -1,13 +1,12 @@
 import {
-    escapeRegExp, flatten, groupBy, pick,
+    escapeRegExp, pick,
 } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import type { Readable } from 'stream';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, DomainDoc, ProblemDict,
-    ProblemId, ProblemStatusDoc,
+    Document, ProblemDict, ProblemStatusDoc,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
@@ -17,7 +16,6 @@ import {
 import { buildProjection } from '../utils';
 import { STATUS } from './builtin';
 import * as document from './document';
-import domain from './domain';
 import storage from './storage';
 
 export interface ProblemDoc extends Document { }
@@ -33,6 +31,7 @@ export class ProblemModel {
     static PROJECTION_PUBLIC: Field[] = [
         ...ProblemModel.PROJECTION_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
+        'reference',
     ];
 
     static default = {
@@ -112,12 +111,6 @@ export class ProblemModel {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
         }
-        if (typeof pid === 'string') {
-            if (pid.includes(':')) {
-                domainId = pid.split(':')[0];
-                pid = +pid.split(':')[1];
-            }
-        }
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
             : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
@@ -151,6 +144,19 @@ export class ProblemModel {
         return result;
     }
 
+    static async copy(domainId: string, _id: number, target: string, pid?: string) {
+        const original = await ProblemModel.get(domainId, _id);
+        if (!original) throw new ProblemNotFoundError(domainId, _id);
+        if (pid && await ProblemModel.get(target, pid)) pid = '';
+        if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
+        const docId = await ProblemModel.add(
+            target, pid, original.title, original.content,
+            original.owner, original.tag, original.hidden,
+        );
+        await ProblemModel.edit(target, docId, { reference: { domainId, pid: _id } });
+        return docId;
+    }
+
     static push<T extends ArrayKeys<ProblemDoc>>(domainId: string, _id: number, key: ArrayKeys<ProblemDoc>, value: ProblemDoc[T][0]) {
         return document.push(domainId, document.TYPE_PROBLEM, _id, key, value);
     }
@@ -159,12 +165,7 @@ export class ProblemModel {
         return document.deleteSub(domainId, document.TYPE_PROBLEM, pid, key, values);
     }
 
-    static inc(domainId: string, _id: ProblemId, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
-        if (typeof _id === 'string') {
-            if (!_id.includes(':')) throw new Error(`model.problem.inc: invalid _id <${_id}>`);
-            domainId = _id.split(':')[0];
-            _id = +_id.split(':')[1];
-        }
+    static inc(domainId: string, _id: number, field: NumberKeys<ProblemDoc> | string, n: number): Promise<ProblemDoc> {
         return document.inc(domainId, document.TYPE_PROBLEM, _id, field as any, n);
     }
 
@@ -235,42 +236,14 @@ export class ProblemModel {
     }
 
     static async getList(
-        domainId: string, pids: ProblemId[],
+        domainId: string, pids: number[],
         getHidden: number | boolean = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
     ): Promise<ProblemDict> {
-        const parsed = groupBy(
-            Array.from(new Set(pids)).map((i) => ({
-                domainId: (typeof i === 'string' && i.includes(':')) ? i.split(':')[0] : domainId,
-                pid: (typeof i === 'string' && i.includes(':')) ? +i.split(':')[1] : i,
-            })),
-            'domainId',
-        );
-        const r: Record<ProblemId, ProblemDoc> = {};
+        const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
-        const ddocs = await Promise.all(Object.keys(parsed).map((i) => domain.get(i)));
-        const f = ddocs.filter((i) => !(
-            !i || i._id === domainId
-            || i.share === '*'
-            || (`,${(i.share || '').replace(/，/g, ',').split(',').map((q) => q.trim()).join(',')},`).includes(`,${domainId},`)
-        )) as DomainDoc[];
-        if (f.length) {
-            if (doThrow) throw new ProblemNotFoundError(f[0]._id, parsed[f[0]._id][0].pid);
-            else {
-                for (const sf of f) {
-                    for (const pinfo of parsed[sf._id]) {
-                        r[pinfo.pid] = { ...ProblemModel.default, domainId: sf._id, pid: pinfo.pid.toString() };
-                    }
-                    delete parsed[sf._id];
-                }
-            }
-        }
-        const tasks = [];
-        for (const task in parsed) {
-            const range = { $in: parsed[task].map((i) => i.pid) };
-            const q: any = { $or: [{ docId: range }, { pid: range }] };
-            tasks.push(document.getMulti(task, document.TYPE_PROBLEM, q).project(buildProjection(projection)).toArray());
-        }
-        let pdocs = flatten(await Promise.all(tasks));
+        const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
+        let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
+            .project(buildProjection(projection)).toArray();
         if (getHidden !== true) pdocs = pdocs.filter((i) => !i.hidden || i.owner === getHidden);
         for (const pdoc of pdocs) {
             try {
@@ -279,13 +252,8 @@ export class ProblemModel {
             } catch (e) {
                 pdoc.config = `Cannot parse: ${e.message}`;
             }
-            if (pdoc.domainId === domainId) {
-                r[pdoc.docId] = pdoc;
-                if (pdoc.pid) l[pdoc.pid] = pdoc;
-            } else {
-                r[`${pdoc.domainId}:${pdoc.docId}`] = pdoc;
-                if (pdoc.pid) l[`${pdoc.domainId}:${pdoc.pid}`] = pdoc;
-            }
+            r[pdoc.docId] = pdoc;
+            if (pdoc.pid) l[pdoc.pid] = pdoc;
         }
         // TODO enhance
         if (pdocs.length !== pids.length) {

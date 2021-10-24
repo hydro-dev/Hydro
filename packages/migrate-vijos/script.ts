@@ -217,7 +217,7 @@ const tasks = {
             code: doc.code,
             lang: doc.lang,
             uid: doc.uid,
-            pdomain: doc.domain_id,
+            source: `${doc.domainId}/${pid(doc.pid)}`,
             pid: pid(doc.pid),
             domainId: doc.domain_id,
             judger: doc.judge_uid || 1,

@@ -265,6 +265,15 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.back();
     }
 
+    @param('target', Types.String)
+    @param('pid', Types.String, true)
+    async postCopy(domainId: string, target: string, pid: string) {
+        const dudoc = await user.getById(target, this.user._id);
+        dudoc.checkPerm(PERM.PERM_CREATE_PROBLEM);
+        const docId = await problem.copy(domainId, this.user.docId, target, pid);
+        this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
+    }
+
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const tdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
@@ -372,6 +381,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false) {
         this.response.body.testdata = getTestdata ? sortFiles(this.pdoc.data || []) : [];
+        this.response.body.reference = getTestdata ? this.pdoc.reference : '';
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
@@ -407,6 +417,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -463,6 +474,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Array)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
@@ -475,6 +487,11 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+        if (this.pdoc.reference) {
+            if (type === 'testdata') throw new ForbiddenError('Cannot download testdata');
+            this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+        }
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
@@ -644,18 +661,6 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        let cors = false;
-        if (prefix.includes(':')) {
-            const [pdomain, s] = prefix.split(':');
-            const ddoc = await domain.get(pdomain);
-            this.response.body = [];
-            if (!ddoc || ddoc._id === domainId || !ddoc.share || !s.trim()) return;
-            ddoc.share = ddoc.share.replace(/，/g, ',').split(',').map((q) => q.trim()).join(',');
-            if (ddoc.share !== '*' && !`,${ddoc.share},`.includes(`,${domainId},`)) return;
-            domainId = pdomain;
-            prefix = s;
-            cors = true;
-        }
         const pdocs = await problem.getPrefixList(domainId, prefix);
         if (!Number.isNaN(+prefix)) {
             const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
@@ -670,7 +675,6 @@ export class ProblemPrefixListHandler extends Handler {
             }
         }
         this.response.body = pdocs;
-        if (cors) this.response.body.forEach((v) => { v.docId = `${domainId}:${v.docId}`; });
     }
 }
 

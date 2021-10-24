@@ -23,17 +23,16 @@ const logger = new Logger('judge');
 export async function postJudge(rdoc: RecordDoc) {
     if (typeof rdoc.input === 'string') return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    const updated = await problem.updateStatus(rdoc.pdomain, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
+    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
         await contest.updateStatus(
             rdoc.domainId, rdoc.contest, rdoc.uid, rdoc._id,
-            rdoc.domainId === rdoc.pdomain ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`,
-            rdoc.status, rdoc.score,
+            rdoc.pid, rdoc.status, rdoc.score,
         );
     } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
     const pdoc = (accept && updated)
-        ? await problem.inc(rdoc.pdomain, rdoc.pid, 'nAccept', 1)
-        : await problem.get(rdoc.pdomain, rdoc.pid);
+        ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
+        : await problem.get(rdoc.domainId, rdoc.pid);
     if (pdoc) {
         const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
         await Promise.all([

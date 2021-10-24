@@ -10,7 +10,7 @@ import {
     HomeworkNotLiveError, ProblemNotFoundError, ValidationError,
 } from '../error';
 import {
-    DomainDoc, PenaltyRules, ProblemDoc, ProblemId, Tdoc, User,
+    PenaltyRules, ProblemDoc, Tdoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
@@ -114,7 +114,7 @@ class HomeworkDetailHandler extends Handler {
 class HomeworkDetailProblemHandler extends Handler {
     tdoc: Tdoc<30>;
     pdoc: ProblemDoc;
-    pid: ProblemId;
+    pid: number;
     tsdoc: any;
     udoc: User;
     attended: boolean;
@@ -173,8 +173,10 @@ export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHan
     @param('noDisposition', Types.Boolean)
     // @ts-ignore
     async get(domainId: string, filename: string, noDisposition = false) {
-        // @ts-ignore
-        if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
+        if (this.pdoc.reference) {
+            this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+        }
         const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
         const file = await storage.getMeta(target);
         if (!file) {
@@ -199,24 +201,16 @@ export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHan
 }
 
 class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
-    pdomainId: string;
-    ppid: number;
-    pdomain: DomainDoc;
-
     @param('tid', Types.ObjectID)
     async prepare(domainId: string, tid: ObjectID) {
         if (!this.attended) throw new HomeworkNotAttendedError(tid);
         if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        this.pdomainId = typeof this.pid === 'string' ? this.pid.split(':')[0] : domainId;
-        this.ppid = typeof this.pid === 'number' ? this.pid : +this.pid.split(':')[1];
-        this.pdomain = await domain.get(this.pdomainId);
-        if (this.pdomain.langs) {
+        if (this.domain.langs) {
             this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.pdomain.langs.split(','),
-                this.pdomain.langs.split(','),
+                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
+                this.domain.langs.split(','),
             );
         }
-        this.response.body.pdoc.config.domainId = this.pdomainId;
     }
 
     @param('tid', Types.ObjectID)
@@ -247,7 +241,7 @@ class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
         if (!pretest) {
             await Promise.all([
                 (this.tsdoc.journal || []).filter((i) => i.pid === this.pid).length
-                && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
+                && problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id, rid, this.pid, STATUS.STATUS_WAITING),
             ]);
@@ -308,13 +302,7 @@ class HomeworkEditHandler extends Handler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
-            i = i.trim();
-            if ((+i).toString() === i) return +i;
-            if (i.split(':')[0] === domainId) return +i.split(':')[1];
-            if (!i.includes(':')) throw new ValidationError('pids');
-            return i;
-        }).filter((i) => i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);

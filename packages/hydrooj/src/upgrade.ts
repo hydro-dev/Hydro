@@ -562,6 +562,71 @@ const scripts: UpgradeScript[] = [
         await db.collection('domain.user').updateMany({}, { $unset: { ratingHistory: '' } });
         return true;
     },
+    async function _51_52() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const mapping: Record<string, number> = {};
+        const isStringPid = (i: string) => i.toString().includes(':');
+        async function getProblem(domainId: string, target: string) {
+            if (!target.toString().includes(':')) return await problem.get(domainId, target);
+            const l = `${domainId}/${target}`;
+            if (mapping[l]) return await problem.get(domainId, mapping[l]);
+            const [sourceDomain, sourceProblem] = target.split(':');
+            const docId = await problem.copy(sourceDomain, +sourceProblem, domainId);
+            mapping[l] = docId;
+            return await problem.get(domainId, docId);
+        }
+        const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
+        while (await cursor.hasNext()) {
+            const doc = await cursor.next();
+            const pids = [];
+            let mark = false;
+            for (const pid of doc.pids) {
+                if (pid.toString().includes(':')) {
+                    mark = true;
+                    const pdoc = await getProblem(doc.domainId, pid);
+                    if (pdoc) {
+                        pids.push(pdoc.docId);
+                        await RecordModel.updateMulti(
+                            doc.domainId,
+                            { contest: doc.docId },
+                            { pid: pdoc.docId },
+                            {},
+                            { pdomain: '' },
+                        );
+                    }
+                } else pids.push(pid);
+            }
+            if (mark) {
+                const ctdocs = await document.getMultiStatus(
+                    doc.domainId, document.TYPE_CONTEST, { docId: doc.docId },
+                ).toArray();
+                for (const ctdoc of ctdocs) {
+                    const cmark = ctdoc.journal?.filter((i) => isStringPid(i.pid)).length
+                        || ctdoc.detail?.filter((i) => isStringPid(i.pid)).length;
+                    if (!cmark) continue;
+                    const $set: any = {};
+                    if (ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) {
+                        $set.journal = await Promise.all(ctdoc.journal.map(async (i) => {
+                            const pdoc = await getProblem(doc.domainId, i.pid);
+                            if (pdoc) i.pid = pdoc.docId;
+                            return i;
+                        }));
+                    }
+                    if (ctdoc.detail?.filter((i) => isStringPid(i.pid)).length) {
+                        $set.detail = await Promise.all(ctdoc.detail.map(async (i) => {
+                            const pdoc = await getProblem(doc.domainId, i.pid);
+                            if (pdoc) i.pid = pdoc.docId;
+                            return i;
+                        }));
+                    }
+                    await document.setStatus(doc.domainId, doc.docType, doc.docId, ctdoc.uid, $set);
+                }
+                await contest.edit(doc.domainId, doc.docId, { pids });
+            }
+        }
+        await db.collection('record').updateMany({}, { $unset: { pdomain: '' } });
+        return true;
+    },
 ];
 
 export default scripts;

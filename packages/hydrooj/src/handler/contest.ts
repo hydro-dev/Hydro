@@ -10,7 +10,7 @@ import {
     ProblemNotFoundError, RecordNotFoundError, ValidationError,
 } from '../error';
 import {
-    DomainDoc, ProblemDoc, Tdoc, User,
+    ProblemDoc, Tdoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
@@ -153,10 +153,10 @@ export class ContestScoreboardDownloadHandler extends Handler {
         await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
-            html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
+            html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
         const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
-        this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
+        this.binary(await getContent[ext](rows, tdoc), `${tdoc.title}.${ext}`);
     }
 }
 
@@ -217,13 +217,7 @@ export class ContestEditHandler extends Handler {
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false, _code = '',
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
-            i = i.trim();
-            if ((+i).toString() === i) return +i;
-            if (i.split(':')[0] === domainId) return +i.split(':')[1];
-            if (!i.includes(':')) throw new ValidationError('pids');
-            return i;
-        }).filter((i) => i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
@@ -308,8 +302,10 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, filename: string, noDisposition = false) {
-        // @ts-ignore
-        if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
+        if (this.pdoc.reference) {
+            this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+        }
         const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
         const file = await storage.getMeta(target);
         if (!file) {
@@ -334,25 +330,16 @@ export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
 }
 
 export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
-    pdomainId: string;
-    ppid: number;
-    pdomain: DomainDoc;
-
     @param('pid', Types.Name)
-    async prepare(domainId: string, _pid: string) {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
+    async prepare() {
         if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
         if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        this.pdomainId = typeof pid === 'string' ? pid.split(':')[0] : domainId;
-        this.ppid = typeof pid === 'number' ? pid : +pid.split(':')[1];
-        this.pdomain = await domain.get(this.pdomainId);
-        if (this.pdomain.langs) {
+        if (this.domain.langs) {
             this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.pdomain.langs.split(','),
-                this.pdomain.langs.split(','),
+                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
+                this.domain.langs.split(','),
             );
         }
-        this.response.body.pdoc.config.domainId = this.pdomainId;
     }
 
     @param('tid', Types.ObjectID)
@@ -387,7 +374,7 @@ export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
         if (!pretest) {
             await Promise.all([
                 (this.tsdoc.journal || []).filter((i) => i.pid === pid).length
-                && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
+                && problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 contest.updateStatus(domainId, tid, this.user._id, rid, pid),
             ]);

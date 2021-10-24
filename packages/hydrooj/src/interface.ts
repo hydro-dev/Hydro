@@ -226,25 +226,27 @@ export interface Document {
 declare module './model/problem' {
     // eslint-disable-next-line @typescript-eslint/no-shadow
     interface ProblemDoc {
-        docType: document['TYPE_PROBLEM'],
-        docId: number,
-        pid: string,
-        title: string,
-        content: string,
-        nSubmit: number,
-        nAccept: number,
-        tag: string[],
-        data: FileInfo[],
-        additional_file: FileInfo[],
-        hidden: boolean,
-        html?: boolean,
-        stats?: any,
-        difficulty?: number,
-        /** @deprecated */
-        category?: string[],
+        docType: document['TYPE_PROBLEM'];
+        docId: number;
+        pid: string;
+        title: string;
+        content: string;
+        nSubmit: number;
+        nAccept: number;
+        tag: string[];
+        data: FileInfo[];
+        additional_file: FileInfo[];
+        hidden: boolean;
+        html?: boolean;
+        stats?: any;
+        difficulty?: number;
+        reference?: {
+            domainId: string;
+            pid: number;
+        };
 
         /** string (errormsg) */
-        config: string | ProblemConfig,
+        config: string | ProblemConfig;
     }
 }
 export type { ProblemDoc } from './model/problem';
@@ -280,7 +282,6 @@ export interface TestCase {
 export interface RecordDoc {
     _id: ObjectID;
     domainId: string;
-    pdomain: string;
     pid: number;
     uid: number;
     lang: string;
@@ -292,6 +293,7 @@ export interface RecordDoc {
     compilerTexts: string[];
     testCases: TestCase[];
     rejudged: boolean;
+    source?: string;
     /** judge uid */
     judger: number;
     judgeAt: Date;
@@ -321,9 +323,6 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export type ExternalProblemId = string; // ${string}:${number}
-export type ProblemId = ExternalProblemId | number;
-
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
     docId: ObjectID,
     docType: docType & number,
@@ -333,7 +332,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     title: string,
     content: string,
     rule: string,
-    pids: ProblemId[],
+    pids: number[],
     rated?: boolean,
     _code?: string,
 
