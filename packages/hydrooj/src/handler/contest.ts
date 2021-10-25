@@ -262,9 +262,11 @@ export class ContestProblemHandler extends Handler {
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         this.pdoc.pid = _pid;
         this.pdoc.tag.length = 0;
-        // @ts-ignore
-        if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
         this.attended = this.tsdoc && this.tsdoc.attend === 1;
+        if (this.pdoc.reference) {
+            const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            this.pdoc.config = pdoc.config;
+        }
         const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
         if (!showAccept) this.pdoc.nAccept = 0;
         if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);

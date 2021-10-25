@@ -224,6 +224,10 @@ export class ProblemDetailHandler extends ProblemHandler {
             problem.getStatus(domainId, this.pdoc.docId, this.user._id),
             user.getById(domainId, this.pdoc.owner),
         ]);
+        if (this.pdoc.reference) {
+            const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            this.pdoc.config = pdoc.config;
+        }
         const [scnt, dcnt] = await Promise.all([
             solution.count(domainId, { parentId: this.pdoc.docId }),
             discussion.count(domainId, { parentId: this.pdoc.docId }),

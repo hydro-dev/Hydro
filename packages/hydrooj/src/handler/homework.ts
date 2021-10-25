@@ -132,8 +132,10 @@ class HomeworkDetailProblemHandler extends Handler {
             contest.getStatus(domainId, tid, this.user._id),
         ]);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, this.pid);
-        // @ts-ignore
-        if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
+        if (this.pdoc.reference) {
+            const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            this.pdoc.config = pdoc.config;
+        }
         this.pdoc.pid = _pid;
         this.attended = this.tsdoc?.attend === 1;
         this.response.body = {
