@@ -109,7 +109,7 @@ class JudgeTask {
         this.config = await readCases(
             this.folder,
             { detail: this.session.config.detail, ...this.config },
-            { next: this.next, key: md5(`${this.source}${getConfig('secret')}`) },
+            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
         const type = this.config.type || 'default';
