@@ -200,7 +200,7 @@ async function handleOperation(operation) {
   }
   try {
     await request.post('', { operation, pids, ...payload });
-    Notification.success(i18n(`Selected problems have been ${operation}d.`));
+    Notification.success(i18n(`Selected problems have been ${operation === 'copy' ? 'copie' : operation}d.`));
     await delay(2000);
     window.location.reload();
   } catch (error) {
