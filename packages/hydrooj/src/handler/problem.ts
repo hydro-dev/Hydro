@@ -268,11 +268,6 @@ export class ProblemDetailHandler extends ProblemHandler {
             discussionCount: dcnt,
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
-            page_name: this.tdoc
-                ? this.tdoc.rule === 'homework'
-                    ? 'homework_detail_problem'
-                    : 'contest_detail_problem'
-                : 'problem_detail',
         };
         this.response.template = 'problem_detail.html';
         this.extraTitleContent = this.pdoc.title;
@@ -287,6 +282,11 @@ export class ProblemDetailHandler extends ProblemHandler {
                 .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
                 .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
         }
+        this.response.body.page_name = this.tdoc
+            ? this.tdoc.rule === 'homework'
+                ? 'homework_detail_problem'
+                : 'contest_detail_problem'
+            : 'problem_detail';
         if (!this.response.body.tdoc) {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
