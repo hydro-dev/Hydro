@@ -227,7 +227,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
             if (!showAccept) this.pdoc.nAccept = 0;
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
-            if (!contest.isDone(this.tdoc) && !this.tsdoc.attend) throw new ContestNotAttendedError(tid);
+            if (!contest.isDone(this.tdoc) && !this.tsdoc?.attend) throw new ContestNotAttendedError(tid);
         } else if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
