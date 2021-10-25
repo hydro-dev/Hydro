@@ -24,7 +24,7 @@
           {%- for column in rows[0] -%}
             <th class="col--{{ column.type }}">
             {% if column.type == 'problem_detail' %}
-              <a href="{{ url(type + '_detail_problem', tid=tdoc.docId, pid=column.raw) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
+              <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
             {% else %}
               {{ column.value }}
             {% endif %}

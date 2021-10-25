@@ -17,7 +17,7 @@
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-schedule">{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Host') }}: {{ user.render_inline(udict[tdoc.owner], badge=false) }}</span>
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-user--multiple">{{ tdoc['attend']|default(0) }}</span>
-        {% if attended %}
+        {% if tsdoc.attend %}
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
         {% endif %}
       </div>
@@ -37,7 +37,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if attended or model.contest.isDone(tdoc) %}
+    {% if tsdoc.attend or model.contest.isDone(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>

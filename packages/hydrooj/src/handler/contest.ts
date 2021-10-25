@@ -1,28 +1,20 @@
 import AdmZip from 'adm-zip';
-import { intersection } from 'lodash';
-import { lookup } from 'mime-types';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotAttendedError, ContestNotFoundError,
-    ContestNotLiveError, InvalidTokenError, PermissionError,
-    ProblemNotFoundError, RecordNotFoundError, ValidationError,
+    ContestNotFoundError, ContestNotLiveError, InvalidTokenError,
+    PermissionError, ValidationError,
 } from '../error';
-import {
-    ProblemDoc, Tdoc, User,
-} from '../interface';
+import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
-import domain from '../model/domain';
 import message from '../model/message';
 import problem from '../model/problem';
 import record from '../model/record';
-import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
     Handler, param, Route, Types,
 } from '../service/server';
@@ -56,9 +48,7 @@ export class ContestDetailHandler extends Handler {
         ]);
         const psdict = {};
         let rdict = {};
-        let attended: boolean;
         if (tsdoc) {
-            attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
             if (contest.canShowSelfRecord.call(this, tdoc)) {
                 const q = [];
@@ -67,16 +57,10 @@ export class ContestDetailHandler extends Handler {
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
-        } else attended = false;
-        const udict = await user.getList(domainId, [tdoc.owner]);
-        const index = tdoc.pids.map((i) => i.toString());
-        for (const key in pdict) {
-            pdict[key].tag.length = 0;
-            const i = (index.indexOf(key) + 10).toString(36).toUpperCase();
-            if (i !== '9') pdict[key].pid = i;
         }
+        const udict = await user.getList(domainId, [tdoc.owner]);
         this.response.body = {
-            tdoc, tsdoc, attended, udict, pdict, psdict, rdict, page,
+            tdoc, tsdoc, udict, pdict, psdict, rdict, page,
         };
     }
 
@@ -118,7 +102,7 @@ export class ContestBroadcastHandler extends Handler {
     @param('content', Types.Content)
     async post(domainId: string, tid: ObjectID, content: string) {
         const tdoc = await contest.get(domainId, tid);
-        if (!this.user.own(tdoc)) throw new PermissionError('Boardcast Message');
+        if (!this.user.own(tdoc)) throw new PermissionError('Broadcast Message');
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
         const uids: number[] = Array.from(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
         await Promise.all(
@@ -241,157 +225,6 @@ export class ContestEditHandler extends Handler {
     }
 }
 
-export class ContestProblemHandler extends Handler {
-    tdoc: Tdoc<30>;
-    pdoc: ProblemDoc;
-    tsdoc: any;
-    udoc: User;
-    attended: boolean;
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.Name)
-    async _prepare(domainId: string, tid: ObjectID, _pid: string) {
-        this.tdoc = await contest.get(domainId, tid);
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        if (!pid) throw new ProblemNotFoundError(domainId, tid, _pid);
-        [this.pdoc, this.tsdoc, this.udoc] = await Promise.all([
-            problem.get(domainId, pid),
-            contest.getStatus(domainId, tid, this.user._id),
-            user.getById(domainId, this.tdoc.owner),
-        ]);
-        if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
-        this.pdoc.pid = _pid;
-        this.pdoc.tag.length = 0;
-        this.attended = this.tsdoc && this.tsdoc.attend === 1;
-        if (this.pdoc.reference) {
-            const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            this.pdoc.config = pdoc.config;
-        }
-        const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
-        if (!showAccept) this.pdoc.nAccept = 0;
-        if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
-        if (!contest.isDone(this.tdoc) && !this.attended) throw new ContestNotAttendedError(tid);
-        this.response.template = 'problem_detail.html';
-        this.response.body = {
-            showAccept,
-            tdoc: this.tdoc,
-            tsdoc: this.tsdoc,
-            pdoc: this.pdoc,
-            udoc: this.udoc,
-            attended: this.attended,
-            page_name: 'contest_detail_problem',
-        };
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.Name)
-    async get(...args: any[]) {
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            [this.tdoc.title, 'contest_detail', { tid: args[1] }, true],
-            [this.pdoc.title, null, null, true],
-        ];
-        // Navigate to current additional file download
-        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${args[2]}/file/`)
-            .replace(/="file:\/\//g, `="./${args[2]}/file/`);
-    }
-}
-
-export class ContestProblemFileDownloadHandler extends ContestProblemHandler {
-    @param('filename', Types.Name)
-    @param('noDisposition', Types.Boolean)
-    async get(domainId: string, filename: string, noDisposition = false) {
-        if (this.pdoc.reference) {
-            this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            if (!this.pdoc) throw new ProblemNotFoundError();
-        }
-        const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
-        const file = await storage.getMeta(target);
-        if (!file) {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-            return;
-        }
-        const type = lookup(filename).toString();
-        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
-        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
-            this.response.etag = file.etag;
-            this.response.body = await storage.get(target);
-            this.response.type = file['Content-Type'] || type;
-            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
-        } else {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-        }
-    }
-}
-
-export class ContestDetailProblemSubmitHandler extends ContestProblemHandler {
-    @param('pid', Types.Name)
-    async prepare() {
-        if (!this.attended) throw new ContestNotAttendedError(this.tdoc.docId);
-        if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        if (this.domain.langs) {
-            this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
-                this.domain.langs.split(','),
-            );
-        }
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.Name)
-    async get(domainId: string, tid: ObjectID, pid: string) {
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            [this.tdoc.title, 'contest_detail', { tid }, true],
-            [this.pdoc.title, 'contest_detail_problem', { tid, pid }, true],
-            ['contest_detail_problem_submit', null],
-        ];
-        this.response.body.page_name = 'contest_detail_problem_submit';
-        this.response.template = 'problem_submit.html';
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('lang', Types.Name)
-    @param('code', Types.Content)
-    @param('pid', Types.Name)
-    @param('pretest', Types.Boolean)
-    @param('input', Types.String, true)
-    async post(domainId: string, tid: ObjectID, lang: string, code: string, _pid: string, pretest = false, input = '') {
-        const pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        if (!(this.response.body.pdoc.config.langs || [lang]).includes(lang)) {
-            throw new BadRequestError('Language not allowed.');
-        }
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, pid, this.user._id, lang, code, true, pretest ? input : tid, !pretest);
-        const rdoc = await record.get(domainId, rid);
-        if (!rdoc) throw new RecordNotFoundError(domainId, rid);
-        if (!pretest) {
-            await Promise.all([
-                (this.tsdoc.journal || []).filter((i) => i.pid === pid).length
-                && problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
-                domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-                contest.updateStatus(domainId, tid, this.user._id, rid, pid),
-            ]);
-        }
-        bus.broadcast('record/change', rdoc);
-        if (!pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
-            this.response.body = { tid };
-            this.response.redirect = this.url('contest_detail', { tid });
-        } else {
-            this.response.body = { rid };
-            this.response.redirect = this.url('record_detail', { rid });
-        }
-    }
-}
-
 export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
@@ -428,9 +261,6 @@ export async function apply() {
     Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_detail_problem', '/contest/:tid/p/:pid', ContestProblemHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_detail_problem_file_download', '/contest/:tid/p/:pid/file/:filename', ContestProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
-    Route('contest_detail_problem_submit', '/contest/:tid/p/:pid/submit', ContestDetailProblemSubmitHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
 }
 

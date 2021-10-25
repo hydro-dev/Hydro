@@ -65,8 +65,8 @@ class JudgeTask {
         this.clean = [];
         await Lock.aquire(`${this.host}/${this.source}/${this.rid}`);
         fs.ensureDirSync(this.tmpdir);
-        tmpfs.mount(this.tmpdir, '512m');
-        log.info('Submission: %s/%s/%s pid=%s', this.host, this.source, this.rid);
+        tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
+        log.info('Submission: %s/%s/%s', this.host, this.source, this.rid);
         try {
             if (typeof this.input === 'string') await this.run();
             else await this.doSubmission();
@@ -204,7 +204,7 @@ export default class Hydro {
         }
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
-            if (next) next({ judge_text: '正在同步测试数据，请稍候' });
+            if (next) next({ judge_text: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
             const res = await this.axios.post(`/d/${domainId}/judge/files`, {
                 pid: +pid,

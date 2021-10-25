@@ -84,11 +84,18 @@
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
     {% endif %}
-    {% if page_name == 'problem_detail' and (handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA)) %}
+    {% if page_name == 'problem_detail' %}
       <li class="menu__seperator nojs--hide"></li>
-      <li class="menu__item nojs--hide"><a class="menu__link" href="javascript:;" name="problem-sidebar__download">
-        <span class="icon icon-download"></span> {{ _('Download') }}
-      </a></li>
+      {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
+        <li class="menu__item nojs--hide"><a class="menu__link" href="javascript:;" name="problem-sidebar__download">
+          <span class="icon icon-download"></span> {{ _('Download') }}
+        </a></li>
+      {% endif %}
+      {% if handler.user.user.hasPriv(PRIV.PRIV_CREATE_DOMAIN) %}
+        <li class="menu__item nojs--hide"><a class="menu__link" href="javascript:;" name="problem-sidebar__copy">
+          <span class="icon icon-copy"></span> {{ _('Copy') }}
+        </a></li>
+      {% endif %}
     {% endif %}
     </ol>
   </div>
