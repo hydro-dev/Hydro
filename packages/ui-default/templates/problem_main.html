@@ -24,8 +24,8 @@
         </div>
       </div>
     </div>
-    <div class="medium-3 columns">
-      {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+      <div class="medium-3 columns">
         <div class="section side nojs--hide">
           <ol class="menu">
             <a href="javascript:;" class="menu__link edit-mode-hide" name="enter-edit-mode">
@@ -36,7 +36,7 @@
               <span class="icon icon-edit"></span>
               {{ _('Leave Edit Mode') }}
             </a>
-            {% if pdocs.length %}
+            {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
               <a href="javascript:;" class="menu__link display-mode-hide" name="hide_selected_problems">
                 <span class="icon icon-close"></span>
                 {{ _('Hide Selected') }}
@@ -49,11 +49,15 @@
                 <span class="icon icon-download"></span>
                 {{ _('Download Selected') }}
               </a>
-              <a href="javascript:;" class="menu__link display-mode-hide" name="remove_selected_problems">
+              <a href="javascript:;" class="menu__link display-mode-hide" name="delete_selected_problems">
                 <span class="icon icon-delete"></span>
                 {{ _('Remove Selected') }}
               </a>
             {% endif %}
+            <a href="javascript:;" class="menu__link display-mode-hide" name="copy_selected_problems">
+              <span class="icon icon-copy"></span>
+              {{ _('Copy Selected') }}
+            </a>
           </ol>
         </div>
       {% endif %}

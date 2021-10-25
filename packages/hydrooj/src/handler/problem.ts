@@ -156,6 +156,21 @@ export class ProblemMainHandler extends ProblemHandler {
     }
 
     @param('pids', Types.NumericArray)
+    @param('target', Types.String)
+    async postCopy(domainId: string, pids: number[], target: string) {
+        const ddoc = await domain.get(target);
+        if (!ddoc) throw new NotFoundError(target);
+        const dudoc = await user.getById(target, this.user._id);
+        if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        const ids = [];
+        for (const pid of pids) {
+            // eslint-disable-next-line no-await-in-loop
+            ids.push(await problem.copy(domainId, pid, target));
+        }
+        this.response.body = ids;
+    }
+
+    @param('pids', Types.NumericArray)
     async postDelete(domainId: string, pids: number[]) {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
@@ -297,7 +312,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
-        const docId = await problem.copy(domainId, this.user.docId, target, this.pdoc.pid);
+        const docId = await problem.copy(domainId, this.pdoc.docId, target);
         this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
     }
 
