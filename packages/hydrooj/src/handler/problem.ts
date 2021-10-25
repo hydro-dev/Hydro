@@ -5,9 +5,10 @@ import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotAttendedError, ContestNotFoundError, ContestNotLiveError, ForbiddenError, NoProblemError,
-    PermissionError, ProblemNotFoundError, SolutionNotFoundError,
-    ValidationError,
+    BadRequestError, ContestNotAttendedError, ContestNotFoundError,
+    ContestNotLiveError, ForbiddenError, NoProblemError,
+    NotFoundError, PermissionError, ProblemNotFoundError,
+    SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
     ProblemDoc, ProblemStatusDoc, Tdoc, User,
@@ -293,8 +294,10 @@ export class ProblemDetailHandler extends ProblemHandler {
     @param('target', Types.String)
     @param('pid', Types.String, true)
     async postCopy(domainId: string, target: string, pid: string) {
+        const ddoc = await domain.get(target);
+        if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
-        dudoc.checkPerm(PERM.PERM_CREATE_PROBLEM);
+        if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
         const docId = await problem.copy(domainId, this.user.docId, target, pid);
         this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
     }

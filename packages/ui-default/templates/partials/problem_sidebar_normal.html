@@ -91,7 +91,7 @@
           <span class="icon icon-download"></span> {{ _('Download') }}
         </a></li>
       {% endif %}
-      {% if handler.user.user.hasPriv(PRIV.PRIV_CREATE_DOMAIN) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_CREATE_DOMAIN) %}
         <li class="menu__item nojs--hide"><a class="menu__link" href="javascript:;" name="problem-sidebar__copy">
           <span class="icon icon-copy"></span> {{ _('Copy') }}
         </a></li>

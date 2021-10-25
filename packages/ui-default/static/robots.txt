@@ -19,5 +19,3 @@ Disallow: /p/*/edit
 Disallow: /d/*/p/*/edit
 Disallow: /p/*/file/
 Disallow: /d/*/p/*/file/
-Disallow: /contest/*/p/*/submit
-Disallow: /d/*/contest/*/p/*/submit
