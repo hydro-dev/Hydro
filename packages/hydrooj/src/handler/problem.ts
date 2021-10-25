@@ -292,13 +292,12 @@ export class ProblemDetailHandler extends ProblemHandler {
     }
 
     @param('target', Types.String)
-    @param('pid', Types.String, true)
-    async postCopy(domainId: string, target: string, pid: string) {
+    async postCopy(domainId: string, target: string) {
         const ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
-        const docId = await problem.copy(domainId, this.user.docId, target, pid);
+        const docId = await problem.copy(domainId, this.user.docId, target, this.pdoc.pid);
         this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
     }
 

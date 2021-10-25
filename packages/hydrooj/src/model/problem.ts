@@ -147,7 +147,7 @@ export class ProblemModel {
     static async copy(domainId: string, _id: number, target: string, pid?: string) {
         const original = await ProblemModel.get(domainId, _id);
         if (!original) throw new ProblemNotFoundError(domainId, _id);
-        if (pid && await ProblemModel.get(target, pid)) pid = '';
+        if (pid && (/^[0-9]+$/.test(pid) || await ProblemModel.get(target, pid))) pid = '';
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
         const docId = await ProblemModel.add(
             target, pid, original.title, original.content,

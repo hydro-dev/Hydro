@@ -588,7 +588,7 @@ const scripts: UpgradeScript[] = [
                         pids.push(pdoc.docId);
                         await RecordModel.updateMulti(
                             doc.domainId,
-                            { contest: doc.docId },
+                            { contest: doc.docId, pid },
                             { pid: pdoc.docId },
                             {},
                             { pdomain: '' },
@@ -625,6 +625,22 @@ const scripts: UpgradeScript[] = [
             }
         }
         await db.collection('record').updateMany({}, { $unset: { pdomain: '' } });
+        return true;
+    },
+    async function _52_53() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
+        while (await cursor.hasNext()) {
+            const tdoc = await cursor.next();
+            const pdocs = await problem.getMulti(tdoc.domainId, { docId: { $in: tdoc.pids } }).toArray();
+            if (!pdocs.filter((i) => i.reference).length) continue;
+            const tsdocs = await contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
+            for (const tsdoc of tsdocs) {
+                for (const tsrdoc of tsdoc.journal) {
+                    await RecordModel.coll.updateOne({ _id: tsrdoc.rid }, { pid: tsrdoc.pid });
+                }
+            }
+        }
         return true;
     },
 ];
