@@ -444,6 +444,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
+        if (this.pdoc.reference) this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
         const links = {};
         for (const file of files) {
             // eslint-disable-next-line no-await-in-loop
@@ -536,7 +537,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
-        const target = `problem/${domainId}/${this.pdoc.docId}/${type}/${filename}`;
+        const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`;
         const file = await storage.getMeta(target);
         if (!file) {
             this.response.redirect = await storage.signDownloadLink(

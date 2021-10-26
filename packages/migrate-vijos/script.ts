@@ -311,7 +311,6 @@ async function discussionNode(src: Db, report: Function) {
 function addSpace(content: string) {
     const lines = content.split('\r\n');
     for (let i = 0; i < lines.length; i++) {
-        // eslint-disable-next-line no-continue
         if (lines[i].endsWith('|')) continue; // Markdown table;
         if (!lines[i].endsWith('  ')) lines[i] = `${lines[i]}  `;
     }

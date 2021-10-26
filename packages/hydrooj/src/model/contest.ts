@@ -245,7 +245,9 @@ const oi: ContestRule = {
             for (const pid of tdoc.pids) {
                 const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                const node: ScoreboardNode = (!isExport && isDone(tdoc) && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString())
+                const node: ScoreboardNode = (!isExport && isDone(tdoc)
+                    && psdict[index]?.rid
+                    && tsddict[pid]?.rid?.toHexString() !== psdict[index]?.rid?.toHexString())
                     ? {
                         type: 'records',
                         value: '',
