@@ -91,7 +91,6 @@ class WikiHelpHandler extends Handler {
   async get({ domainId }) {
     const LANGS = setting.langs;
     const languages = {};
-    // eslint-disable-next-line guard-for-in
     for (const key in LANGS) {
       if (LANGS[key].domain && !LANGS[key].domain.includes(domainId)) continue;
       languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;

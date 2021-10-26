@@ -47,7 +47,6 @@ async function load() {
     ...buildSequence(includedPages, 'after'),
     ...buildSequence(currentPage, 'after'),
   ];
-  // eslint-disable-next-line no-restricted-syntax
   for (const { page, func, type } of loadSequence) {
     const ts = new Date().getTime();
     try {
@@ -69,13 +68,11 @@ async function load() {
     $element: $(section),
   }));
   console.log('done! %d ms', new Date().getTime() - start.getTime());
-  // eslint-disable-next-line no-restricted-syntax
   for (const { $element, shouldDelay } of sections) {
     $element.addClass('visible');
     if (shouldDelay) await delay(50);
   }
   await delay(500);
-  // eslint-disable-next-line no-restricted-syntax
   for (const { $element } of sections) $element.trigger('vjLayout');
   $(document).trigger('vjPageFullyInitialized');
 }

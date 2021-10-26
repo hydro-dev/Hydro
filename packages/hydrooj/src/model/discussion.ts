@@ -206,7 +206,6 @@ export async function addTailReply(
 export function getTailReply(
     domainId: string, drid: ObjectID, drrid: ObjectID,
 ): Promise<[DiscussionReplyDoc, DiscussionTailReplyDoc] | [null, null]> {
-    // @ts-ignore
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 

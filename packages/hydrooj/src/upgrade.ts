@@ -601,27 +601,18 @@ const scripts: UpgradeScript[] = [
                     doc.domainId, document.TYPE_CONTEST, { docId: doc.docId },
                 ).toArray();
                 for (const ctdoc of ctdocs) {
-                    const cmark = ctdoc.journal?.filter((i) => isStringPid(i.pid)).length
-                        || ctdoc.detail?.filter((i) => isStringPid(i.pid)).length;
-                    if (!cmark) continue;
-                    const $set: any = {};
-                    if (ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) {
-                        $set.journal = await Promise.all(ctdoc.journal.map(async (i) => {
+                    if (!ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) continue;
+                    const $set = {
+                        journal: await Promise.all(ctdoc.journal.map(async (i) => {
                             const pdoc = await getProblem(doc.domainId, i.pid);
                             if (pdoc) i.pid = pdoc.docId;
                             return i;
-                        }));
-                    }
-                    if (ctdoc.detail?.filter((i) => isStringPid(i.pid)).length) {
-                        $set.detail = await Promise.all(ctdoc.detail.map(async (i) => {
-                            const pdoc = await getProblem(doc.domainId, i.pid);
-                            if (pdoc) i.pid = pdoc.docId;
-                            return i;
-                        }));
-                    }
+                        })),
+                    };
                     await document.setStatus(doc.domainId, doc.docType, doc.docId, ctdoc.uid, $set);
                 }
                 await contest.edit(doc.domainId, doc.docId, { pids });
+                await contest.recalcStatus(doc.domainId, doc.docId);
             }
         }
         await db.collection('record').updateMany({}, { $unset: { pdomain: '' } });
