@@ -256,7 +256,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         }
         if (ddoc.langs) {
             (this.pdoc.config as ProblemConfig).langs = intersection(
-                this.response.body.pdoc.config.langs || ddoc.langs.split(','),
+                (this.pdoc.config as ProblemConfig).langs || ddoc.langs.split(','),
                 ddoc.langs.split(','),
             );
         }
