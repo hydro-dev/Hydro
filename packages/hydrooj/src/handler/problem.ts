@@ -480,9 +480,9 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         const links = {};
         const size = Math.sum(
             this.pdoc[type === 'testdata' ? 'data' : 'additional_file']
-                .filter((i) => files.has(i.name))
-                .map((i) => i.size),
-        );
+                ?.filter((i) => files.has(i.name))
+                ?.map((i) => i.size),
+        ) || 0;
         await oplog.add({
             type: 'bulkDownload',
             time: new Date(),
