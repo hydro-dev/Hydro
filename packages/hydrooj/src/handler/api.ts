@@ -1,4 +1,5 @@
-import graphql from 'graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { graphql, GraphQLSchema } from 'graphql';
 import { resolvers, typeDefs } from 'graphql-scalars';
 import * as bus from '../service/bus';
 import { Handler, Route } from '../service/server';
@@ -6,7 +7,9 @@ import { Handler, Route } from '../service/server';
 const types: Record<string, Record<string, string>> = {};
 const unions: Record<string, string> = {};
 const descriptions: Record<string, Record<string, string>> = {};
-const handlers: Record<string, Record<string, any>> = {};
+const handlers: Record<string, Record<string, any>> = {
+    Query: {},
+};
 let root: Record<string, any> = {};
 
 export function registerValue(typeName: string, key: string, value: string, description?: string): void;
@@ -51,30 +54,32 @@ function setDescription(desc: string) {
     return JSON.stringify(desc);
 }
 
-function buildSchemaStr() {
-    let res = `${Object.keys(unions).map((i) => `union ${i} = ${unions[i]}`)}\n${typeDefs.join('\n')}\n`;
-    for (const key in types) {
-        if (descriptions[key]?._description) res += `${setDescription(descriptions[key]._description)}\n`;
-        res += `type ${key}{\n`;
-        for (const k in types[key]) {
-            if (descriptions[key]?.[k]) res += `  ${setDescription(descriptions[key][k])}\n`;
-            res += `  ${k}: ${types[key][k]}\n`;
-        }
-        res += '}\n';
-    }
-    return res;
-}
-
-let schemaStr = buildSchemaStr();
-let schema = graphql.buildSchema(schemaStr);
-root = { ...handlers.Query, ...resolvers };
+let schema: GraphQLSchema;
+let schemaStr = '';
+root = handlers.Query;
 
 export function rebuild() {
     try {
-        const str = buildSchemaStr();
-        schema = graphql.buildSchema(str);
-        schemaStr = str;
-        root = { ...handlers.Query, ...resolvers };
+        const defs = [
+            ...Object.keys(unions).map((i) => `union ${i} = ${unions[i]}`),
+            ...typeDefs,
+            ...Object.keys(types).map((key) => {
+                let def = '';
+                if (descriptions[key]?._description) def += `${setDescription(descriptions[key]._description)}\n`;
+                def += `type ${key}{\n`;
+                for (const k in types[key]) {
+                    if (descriptions[key]?.[k]) def += `  ${setDescription(descriptions[key][k])}\n`;
+                    def += `  ${k}: ${types[key][k]}\n`;
+                }
+                def += '}\n';
+                return def;
+            }),
+        ];
+        schema = makeExecutableSchema({
+            typeDefs: defs,
+            resolvers,
+        });
+        schemaStr = defs.join('\n');
     } catch (e) {
         console.error(e);
     }
@@ -85,6 +90,11 @@ bus.on('app/started', () => {
 });
 
 class ApiHandler extends Handler {
+    async query(q: string, variables: any) {
+        // FIXME validation for fields like ObjectID doesn't work.
+        return graphql(schema, q, root, this, variables);
+    }
+
     async get() {
         const q = decodeURIComponent(this.ctx.request.querystring);
         if (q === 'schema') {
@@ -92,13 +102,8 @@ class ApiHandler extends Handler {
             this.response.body = { schema: schemaStr };
         } else if (q) {
             this.response.type = 'application/json';
-            this.response.body = await graphql.graphql(schema, q, root, this);
+            this.response.body = await this.query(q, {});
         } else this.response.template = 'api.html';
-    }
-
-    async query(q: string, variables: any) {
-        // FIXME validation for fields like ObjectID doesn't work.
-        return graphql.graphql(schema, q, root, this, variables);
     }
 
     async post() {

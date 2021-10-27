@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.1.10",
+    "version": "3.1.11",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -12,6 +12,7 @@
     },
     "preferUnplugged": true,
     "dependencies": {
+        "@graphql-tools/schema": "^8.3.1",
         "@hydrooj/utils": "workspace:*",
         "adm-zip": "0.5.5",
         "ansi_up": "^5.0.1",

@@ -76,7 +76,7 @@ registerResolver(
 );
 registerResolver(
     'Problem', 'manage', 'ProblemManage',
-    async (arg, ctx) => {
+    (arg, ctx) => {
         if (!ctx.user.own(ctx.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) ctx.checkPerm(PERM.PERM_EDIT_PROBLEM);
         return {};
     },
