@@ -94,7 +94,7 @@ langs:
       highlight: javascript
       display: Javascript (JSC)
     go:
-      compile: /usr/bin/go build -o ${name} foo.go
+      compile: /usr/bin/go build -p 1 -o ${name} foo.go
       display: Golang
     rb:
       execute: /usr/bin/ruby foo.rb
