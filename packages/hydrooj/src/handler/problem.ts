@@ -11,6 +11,7 @@ import {
     SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
+    ProblemConfig,
     ProblemDoc, ProblemStatusDoc, Tdoc, User,
 } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
@@ -246,9 +247,18 @@ export class ProblemDetailHandler extends ProblemHandler {
         } else if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
+        let ddoc = this.domain;
         if (this.pdoc.reference) {
+            ddoc = await domain.get(this.pdoc.reference.domainId);
             const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             this.pdoc.config = pdoc.config;
+        }
+        if (ddoc.langs) {
+            (this.pdoc.config as ProblemConfig).langs = intersection(
+                this.response.body.pdoc.config.langs || ddoc.langs.split(','),
+                ddoc.langs.split(','),
+            );
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
@@ -327,6 +337,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
     async get(domainId: string, tid?: ObjectID) {
+        if (tid && !contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         this.response.template = 'problem_submit.html';
         this.response.body = {
             pdoc: this.pdoc,
@@ -338,13 +349,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                     : 'contest_detail_problem_submit'
                 : 'problem_submit',
         };
-        if (tid && !contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        if (this.domain.langs) {
-            this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
-                this.domain.langs.split(','),
-            );
-        }
     }
 
     @param('lang', Types.Name)

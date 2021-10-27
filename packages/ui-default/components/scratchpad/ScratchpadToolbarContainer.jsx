@@ -81,11 +81,11 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   render() {
     const LANGS = {};
     const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+    const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
     for (const key in window.LANGS) {
       if (prefix.has(key)) continue;
       if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
-      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
-      if (UiContext.domain.langs && !`,${UiContext.domain.langs},`.includes(`,${key},`)) continue;
+      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
       LANGS[key] = window.LANGS[key];
     }
     const keys = Object.keys(LANGS);

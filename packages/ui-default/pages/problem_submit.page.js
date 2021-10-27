@@ -8,11 +8,14 @@ function setOptions($el, options) {
 }
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
+  const { config } = UiContext.pdoc;
+  const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
+
   function onChangeMain(update = true) {
     const options = {};
     for (const key in window.LANGS) {
-      if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.includes(key)) continue;
-      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
+      if (config.langs && !config.langs.includes(key)) continue;
+      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     setOptions($('#codelang-sub-select'), options);
@@ -27,8 +30,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   }
   const main = {};
   for (const key in window.LANGS) {
-    if (UiContext.pdocConfig.langs && !UiContext.pdocConfig.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
-    if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(UiContext.domainId)) continue;
+    if (config.langs && !config.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
+    if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
   }
   setOptions($('#codelang-main-select'), main);
