@@ -9,6 +9,7 @@ const argv = require('cac')().parse();
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
+const { xss } = require('./markdown-it-xss');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
 
@@ -86,7 +87,7 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
-      return markdown.render(s);
+      return html ? xss.process(s) : markdown.render(s);
     });
     this.addFilter('log', (self) => {
       console.log(self);

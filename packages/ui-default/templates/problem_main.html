@@ -24,8 +24,8 @@
         </div>
       </div>
     </div>
-    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-      <div class="medium-3 columns">
+    <div class="medium-3 columns">
+      {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <div class="section side nojs--hide">
           <ol class="menu">
             <a href="javascript:;" class="menu__link edit-mode-hide" name="enter-edit-mode">
