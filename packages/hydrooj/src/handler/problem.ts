@@ -60,12 +60,39 @@ registerValue('Problem', [
     ['tag', '[String]'],
     ['hidden', 'Boolean'],
 ]);
-registerResolver('Query', 'problem(id: Int, pid: String)', 'Problem', async (arg, ctx) => {
-    const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
-    if (!pdoc) return null;
-    if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-    return pdoc;
-});
+registerValue('ProblemManage', [
+    ['delete', 'Boolean!'],
+]);
+
+registerResolver(
+    'Query', 'problem(id: Int, pid: String)', 'Problem',
+    async (arg, ctx) => {
+        const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
+        if (!pdoc) return null;
+        if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        ctx.pdoc = pdoc;
+        return pdoc;
+    },
+);
+registerResolver(
+    'Problem', 'manage', 'ProblemManage',
+    async (arg, ctx) => {
+        if (!ctx.user.own(ctx.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) ctx.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        return {};
+    },
+);
+registerResolver(
+    'ProblemManage', 'delete', 'Boolean!',
+    async (arg, ctx) => {
+        const tdocs = await contest.getRelated(ctx.domainId, ctx.pdoc.docId);
+        if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
+        return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
+    },
+);
+registerResolver(
+    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
+    (arg, ctx) => problem.edit(ctx.domainId, ctx.pdoc.docId, arg),
+);
 
 export class ProblemHandler extends Handler {
     async cleanup() {

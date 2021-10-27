@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import {
@@ -47,7 +48,8 @@ export class FilesHandler extends Handler {
             throw new ForbiddenError('File limit exceeded.');
         }
         if (!this.request.files.file) throw new ValidationError('file');
-        const size = Math.sum((this.user._files || []).map((i) => i.size));
+        const f = statSync(this.request.files.file.path);
+        const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.user_files_size')) {
             throw new ForbiddenError('File size limit exceeded.');
         }

@@ -107,8 +107,8 @@ export function deleteOne<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
 ) {
     return Promise.all([
-        collStatus.deleteMany({ domainId, docType, docId }),
         coll.deleteOne({ domainId, docType, docId }),
+        collStatus.deleteMany({ domainId, docType, docId }),
     ]);
 }
 

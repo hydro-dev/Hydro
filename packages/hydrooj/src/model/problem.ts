@@ -182,7 +182,7 @@ export class ProblemModel {
             bus.parallel('problem/delete', domainId, docId),
         ]);
         await bus.emit('problem/del', domainId, docId);
-        return res;
+        return !!res[0][0].deletedCount;
     }
 
     static async addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {

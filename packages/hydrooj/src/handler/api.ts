@@ -24,10 +24,20 @@ export function registerValue(typeName: string, arg1: [string, string, string?][
     bus.emit('api/update');
 }
 
-export function registerResolver(typeName: string, key: string, value: string, func: Function, description?: string) {
+interface Context extends ApiHandler {
+    [key: string]: any;
+}
+
+export function registerResolver(typeName: string, key: string, value: string, func: (args: any, ctx: Context) => any, description?: string) {
     registerValue(typeName, key, value, description);
-    if (handlers[typeName]) handlers[typeName][key.split('(')[0].trim()] = func;
-    else handlers[typeName] = { [key.split('(')[0].trim()]: func };
+    const wrappedFunc = async (arg, ctx) => {
+        const res = await func(arg, ctx);
+        if (typeof res !== 'object') return res;
+        if (handlers[value]) Object.assign(res, handlers[value]);
+        return res;
+    };
+    if (handlers[typeName]) handlers[typeName][key.split('(')[0].trim()] = wrappedFunc;
+    else handlers[typeName] = { [key.split('(')[0].trim()]: wrappedFunc };
     bus.emit('api/update');
 }
 
@@ -86,10 +96,14 @@ class ApiHandler extends Handler {
         } else this.response.template = 'api.html';
     }
 
+    async query(q: string, variables: any) {
+        // FIXME validation for fields like ObjectID doesn't work.
+        return graphql.graphql(schema, q, root, this, variables);
+    }
+
     async post() {
         this.response.type = 'application/json';
-        // FIXME validation for fields like ObjectID doesn't work.
-        this.response.body = await graphql.graphql(schema, this.args.query, root, this, this.args.variables);
+        this.response.body = await this.query(this.args.query, this.args.variables);
     }
 }
 
