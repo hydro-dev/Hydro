@@ -6,6 +6,7 @@ import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
 import { PRIV } from '../model/builtin';
+import * as oplog from '../model/oplog';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -83,6 +84,16 @@ export class FSDownloadHandler extends Handler {
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
+        await oplog.add({
+            type: 'download',
+            time: new Date(),
+            uid: this.user._id,
+            ip: this.request.ip,
+            fileType: 'user',
+            target,
+            referer: this.request.referer,
+            size: file?.size || 0,
+        });
         if (!file) {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',

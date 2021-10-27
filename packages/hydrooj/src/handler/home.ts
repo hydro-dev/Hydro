@@ -153,12 +153,8 @@ class HomeSecurityHandler extends Handler {
                 );
             }
         }
-        const path = [
-            ['Hydro', 'homepage'],
-            ['home_security', null],
-        ];
         this.response.template = 'home_security.html';
-        this.response.body = { sessions, geoipProvider: geoip?.provider, path };
+        this.response.body = { sessions, geoipProvider: geoip?.provider };
         if (useragent) this.response.body.icon = useragent.icon;
     }
 
