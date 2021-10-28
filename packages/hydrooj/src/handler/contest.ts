@@ -18,6 +18,33 @@ import user from '../model/user';
 import {
     Handler, param, Route, Types,
 } from '../service/server';
+import { registerResolver, registerValue } from './api';
+
+registerValue('Contest', [
+    ['_id', 'ObjectID!'],
+    ['domainId', 'String!'],
+    ['docId', 'ObjectID!'],
+    ['owner', 'Int!'],
+    ['beginAt', 'Date!'],
+    ['title', 'String!'],
+    ['content', 'String!'],
+    ['beginAt', 'Date!'],
+    ['endAt', 'Date!'],
+    ['attend', 'Int!'],
+    ['pids', '[Int]!'],
+    ['rated', 'Boolean!'],
+]);
+
+registerResolver(
+    'Query', 'contest(id: ObjectID!)', 'Contest',
+    async (arg, ctx) => {
+        arg.id = new ObjectID(arg.id);
+        ctx.tdoc = await contest.get(ctx.domainId, new ObjectID(arg.id));
+        if (!ctx.tdoc) throw new ContestNotFoundError(ctx.domainId, arg.id);
+        return ctx.tdoc;
+    },
+    'Get a contest by ID',
+);
 
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)

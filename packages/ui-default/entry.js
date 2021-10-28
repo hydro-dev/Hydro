@@ -23,8 +23,8 @@ console.log(
 document.addEventListener('DOMContentLoaded', () => {
   window.UiContext = JSON.parse(window.UiContext);
 
-  // eslint-disable-next-line
-  try { __webpack_public_path__ = UiContext.cdn_prefix } catch (e) { }
+  // eslint-disable-next-line camelcase
+  try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
   // Locale & langs
   const { version, payload } = JSON.parse(localStorage.getItem('hydro-constant') || '{}');

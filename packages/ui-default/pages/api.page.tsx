@@ -26,7 +26,7 @@ const page = new NamedPage('api', async () => {
       defaultQuery={defaultQuery}
       fetcher={async (graphQLParams) => {
         const data = await fetch(
-          '/api',
+          '',
           {
             method: 'POST',
             headers: {

@@ -106,7 +106,7 @@ export class FSDownloadHandler extends Handler {
             this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || type;
-            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
+            if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
         } else {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
