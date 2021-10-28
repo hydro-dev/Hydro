@@ -115,10 +115,19 @@ export class FSDownloadHandler extends Handler {
     }
 }
 
+export class SwitchAccountHandler extends Handler {
+    @param('uid', Types.Int)
+    async get(domainId: string, uid: number) {
+        this.session.uid = uid;
+        this.back();
+    }
+}
+
 export async function apply() {
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     Route('home_files', '/file', FilesHandler, PRIV.PRIV_CREATE_FILE);
     Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
+    Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
 
 global.Hydro.handler.misc = apply;
