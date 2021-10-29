@@ -187,6 +187,8 @@ export class ProblemMainHandler extends ProblemHandler {
     @param('pids', Types.NumericArray)
     @param('target', Types.String)
     async postCopy(domainId: string, pids: number[], target: string) {
+        const t = `,${this.domain.share || ''},`;
+        if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
         const ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
@@ -346,6 +348,8 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     @param('target', Types.String)
     async postCopy(domainId: string, target: string) {
+        const t = `,${this.domain.share || ''},`;
+        if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
         const ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);

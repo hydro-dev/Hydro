@@ -8,10 +8,8 @@
 {% else %}
   <table class="data-table">
     <colgroup>
-    {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <col class="col--checkbox display-mode-hide">
       <col class="col--pid display-mode-hide">
-    {% endif %}
     {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <col class="col--status edit-mode-hide">
     {% endif %}
@@ -22,14 +20,12 @@
     </colgroup>
     <thead>
       <tr>
-        {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
-          <th class="col--checkbox display-mode-hide">
-            <label class="compact checkbox">
-              <input type="checkbox" name="select_all" data-checkbox-toggle="problem">
-            </label>
-          </th>
-          <th class="col--pid display-mode-hide">{{ _('ID') }}</th>
-        {% endif %}
+        <th class="col--checkbox display-mode-hide">
+          <label class="compact checkbox">
+            <input type="checkbox" name="select_all" data-checkbox-toggle="problem">
+          </label>
+        </th>
+        <th class="col--pid display-mode-hide">{{ _('ID') }}</th>
         {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           <th class="col--status record-status--border edit-mode-hide">{{ _('Status') }}</th>
         {% endif %}
@@ -43,14 +39,12 @@
       {%- for pdoc in pdocs -%}
       {% set psdoc = psdict[pdoc['docId']] %}
       <tr data-pid="{{ pdoc.docId }}">
-        {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
-          <td class="col--checkbox display-mode-hide">
-            <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="problem" data-checkbox-range>
-            </label>
-          </td>
-          <td class="col--pid display-mode-hide">{{ pdoc.docId }}</td>
-        {% endif %}
+        <td class="col--checkbox display-mode-hide">
+          <label class="compact checkbox">
+            <input type="checkbox" data-checkbox-group="problem" data-checkbox-range>
+          </label>
+        </td>
+        <td class="col--pid display-mode-hide">{{ pdoc.docId }}</td>
         {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           {% if psdoc['rid'] %}
             {{ record.render_status_td(psdoc, rid_key='rid', class="edit-mode-hide") }}
