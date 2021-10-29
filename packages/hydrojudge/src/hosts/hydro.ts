@@ -207,7 +207,9 @@ export default class Hydro {
             // eslint-disable-next-line no-inner-declarations
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' });
+                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' })
+                    .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
+                if (f instanceof Error) throw f;
                 const w = fs.createWriteStream(path.join(filePath, name));
                 f.data.pipe(w);
                 await new Promise((resolve, reject) => {
