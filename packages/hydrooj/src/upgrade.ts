@@ -602,13 +602,13 @@ const scripts: UpgradeScript[] = [
                 ).toArray();
                 for (const ctdoc of ctdocs) {
                     if (!ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) continue;
-                    const $set = {
-                        journal: await Promise.all(ctdoc.journal.map(async (i) => {
-                            const pdoc = await getProblem(doc.domainId, i.pid);
-                            if (pdoc) i.pid = pdoc.docId;
-                            return i;
-                        })),
-                    };
+                    const journal = [];
+                    for (const i of ctdoc.journal) {
+                        const pdoc = await getProblem(doc.domainId, i.pid);
+                        if (pdoc) i.pid = pdoc.docId;
+                        journal.push(i);
+                    }
+                    const $set = { journal };
                     await document.setStatus(doc.domainId, doc.docType, doc.docId, ctdoc.uid, $set);
                 }
                 await contest.edit(doc.domainId, doc.docId, { pids });
