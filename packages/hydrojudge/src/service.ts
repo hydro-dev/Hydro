@@ -181,8 +181,7 @@ async function postInit() {
                 fs.ensureDirSync(this.tmpdir);
                 tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
                 logger.info(`Submission: ${this.source}/${this.rid}`);
-                if (typeof this.input === 'string') await this.run();
-                else await this.submission();
+                await this.submission();
             } catch (e) {
                 if (e instanceof CompileError) {
                     this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
@@ -218,14 +217,9 @@ async function postInit() {
                 { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();
-            const type = this.config.type || 'default';
+            const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
             if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
             await judge[type].judge(this);
-        }
-
-        async run() {
-            this.stat.judge = new Date();
-            await judge.run.judge(this);
         }
     }
 

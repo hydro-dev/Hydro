@@ -68,8 +68,7 @@ class JudgeTask {
         tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
         log.info('Submission: %s/%s/%s', this.host, this.source, this.rid);
         try {
-            if (typeof this.input === 'string') await this.run();
-            else await this.doSubmission();
+            await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
@@ -97,11 +96,6 @@ class JudgeTask {
         }
     }
 
-    async run() {
-        this.stat.judge = new Date();
-        await judge.run.judge(this);
-    }
-
     async doSubmission() {
         this.stat.cache_start = new Date();
         this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
@@ -112,7 +106,7 @@ class JudgeTask {
             { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
-        const type = this.config.type || 'default';
+        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
     }
