@@ -212,7 +212,7 @@ export default class Hydro {
                 f.data.pipe(w);
                 await new Promise((resolve, reject) => {
                     w.on('finish', resolve);
-                    w.on('error', reject);
+                    w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
                 });
             }
             const tasks = [];
