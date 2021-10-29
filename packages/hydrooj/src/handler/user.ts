@@ -153,6 +153,8 @@ export class UserRegisterHandler extends Handler {
 }
 
 class UserRegisterWithCodeHandler extends Handler {
+    noCheckPermView = true;
+
     @param('code', Types.String)
     async get(domainId: string, code: string) {
         this.response.template = 'user_register_with_code.html';
@@ -188,6 +190,8 @@ class UserRegisterWithCodeHandler extends Handler {
 }
 
 class UserLostPassHandler extends Handler {
+    noCheckPermView = true;
+
     async get() {
         this.response.template = 'user_lostpass.html';
     }
@@ -215,6 +219,8 @@ class UserLostPassHandler extends Handler {
 }
 
 class UserLostPassWithCodeHandler extends Handler {
+    noCheckPermView = true;
+
     async get({ domainId, code }) {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_LOSTPASS, code);
@@ -273,6 +279,8 @@ class UserDeleteHandler extends Handler {
 }
 
 class OauthHandler extends Handler {
+    noCheckPermView = true;
+
     @param('type', Types.String)
     async get(domainId: string, type: string) {
         if (global.Hydro.lib[`oauth_${type}`]) await global.Hydro.lib[`oauth_${type}`].get.call(this);
@@ -280,6 +288,8 @@ class OauthHandler extends Handler {
 }
 
 class OauthCallbackHandler extends Handler {
+    noCheckPermView = true;
+
     async get(args: any) {
         let r;
         if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args);
