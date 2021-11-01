@@ -313,14 +313,27 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.extraTitleContent = this.pdoc.title;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async get(..._args: any[]) {
+    @query('tid', Types.ObjectID, true)
+    async get(...args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json) {
-            this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
-                .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
+            if (args[1]) {
+                console.log(this.response.body.pdoc.content);
+                this.response.body.pdoc.content = this.response.body.pdoc.content
+                    .replace(/\(file:\/\/(.+?)\)/g, (str) => {
+                        const info = str.match(/\(file:\/\/(.+?)\)/);
+                        return `(./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]})`;
+                    })
+                    .replace(/="file:\/\//g, (str) => {
+                        const info = str.match(/="file:\/\/(.+?)"/);
+                        return `="./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
+                    });
+            } else {
+                this.response.body.pdoc.content = this.response.body.pdoc.content
+                    .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
+                    .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
+            }
         }
         this.response.body.page_name = this.tdoc
             ? this.tdoc.rule === 'homework'
