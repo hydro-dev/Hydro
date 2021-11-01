@@ -192,7 +192,7 @@ SystemSetting(
     Setting('setting_server', 'server.message', true, 'boolean', 'server.message', 'Allow users send messages'),
     Setting('setting_server', 'server.ignoreUA', ignoreUA, 'textarea', 'server.ignoreUA', 'ignoredUA'),
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
-    Setting('setting_limits', 'limit.problem_files_size_max', 128 * 1024 * 1024, 'number', 'limit.problem_files_size_max', 'Max files size per problem'),
+    Setting('setting_limits', 'limit.problem_files_max_size', 256 * 1024 * 1024, 'number', 'limit.problem_files_max_size', 'Max files size per problem'),
     Setting('setting_limits', 'limit.user_files', 100, 'number', 'limit.user_files', 'Max files for user'),
     Setting('setting_limits', 'limit.user_files_size', 128 * 1024 * 1024, 'number', 'limit.user_files_size', 'Max total file size for user'),
     Setting('setting_limits', 'limit.submission', 30, 'number', 'limit.submission', 'Max submission count per minute'),
