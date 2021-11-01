@@ -319,7 +319,6 @@ export class ProblemDetailHandler extends ProblemHandler {
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json) {
             if (args[1]) {
-                console.log(this.response.body.pdoc.content);
                 this.response.body.pdoc.content = this.response.body.pdoc.content
                     .replace(/\(file:\/\/(.+?)\)/g, (str) => {
                         const info = str.match(/\(file:\/\/(.+?)\)/);
