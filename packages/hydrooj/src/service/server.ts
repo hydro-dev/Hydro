@@ -725,6 +725,8 @@ async function handle(ctx, HandlerClass, checker) {
         await bail('handler/finish', h);
     } catch (e) {
         try {
+            await bail(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h);
+            await bail('handler/error', h);
             await h.onerror(e);
         } catch (err) {
             h.response.code = 500;

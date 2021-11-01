@@ -76,14 +76,16 @@ async function constant(args: ConstantArgs) {
   return version;
 }
 
-bus.on('handler/after', async (that) => {
-  if (that.response.template) {
+const versionHandler = async (that) => {
+  if (that.response.template && !that.UiContext.constantVersion) {
     that.UiContext.constantVersion = await constant({
       domainId: that.domainId,
       lang: that.session.viewLang || that.user.viewLang,
     });
   }
-});
+};
+bus.on('handler/after', versionHandler);
+bus.on('handler/error', versionHandler);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
