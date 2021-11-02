@@ -106,7 +106,23 @@ class WikiAboutHandler extends Handler {
   noCheckPermView = true;
 
   async get() {
+    let raw = system.get('ui-default.about') || '';
+    // TODO template engine
+    raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || system.get('server.name')).trim();
+    const lines = raw.split('\n');
+    const sections = [];
+    for (const line of lines) {
+      if (line.startsWith('# ')) {
+        const id = line.split(' ')[1];
+        sections.push({
+          id,
+          title: line.split(id)[1].trim(),
+          content: '',
+        });
+      } else sections[sections.length - 1].content += `${line}\n`;
+    }
     this.response.template = 'about.html';
+    this.response.body = { sections };
   }
 }
 

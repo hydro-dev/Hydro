@@ -140,7 +140,9 @@ class JudgeTask {
         data.key = 'end';
         data.rid = new ObjectID(this.request.rid);
         data.time = data.time_ms ?? data.time;
+        delete data.time_ms;
         data.memory = data.memory_kb ?? data.memory;
+        delete data.memory_kb;
         this.ws.send(JSON.stringify(data));
     }
 }

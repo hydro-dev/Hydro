@@ -11,7 +11,7 @@
         "superagent": "^6.1.0"
     },
     "devDependencies": {
-        "@types/js-yaml": "^4.0.3"
+        "@types/js-yaml": "^4.0.4"
     },
     "peerDependencies": {
         "hydrooj": "*"
