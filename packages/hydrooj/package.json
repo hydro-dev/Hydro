@@ -22,7 +22,7 @@
         "esbuild": "^0.13.12",
         "fs-extra": "^10.0.0",
         "graphql": "^15.7.2",
-        "graphql-scalars": "^1.12.0",
+        "graphql-scalars": "1.12.0",
         "js-yaml": "^4.1.0",
         "koa": "^2.13.4",
         "koa-body": "^4.2.0",

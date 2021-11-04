@@ -30,8 +30,8 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/node": "^16.11.6",
         "@types/semver": "^7.3.9",
-        "@typescript-eslint/eslint-plugin": "^5.2.0",
-        "@typescript-eslint/parser": "^5.2.0",
+        "@typescript-eslint/eslint-plugin": "^5.3.0",
+        "@typescript-eslint/parser": "^5.3.0",
         "cac": "^6.7.11",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
@@ -49,6 +49,6 @@
         "ora": "5.4.1",
         "semver": "^7.3.5",
         "typedoc": "^0.22.7",
-        "typescript": "4.4.2"
+        "typescript": "4.4.4"
     }
 }
