@@ -51,3 +51,4 @@ __*
 !__mocks__
 !.gitkeep
 *.local
+.idea

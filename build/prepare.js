@@ -13,6 +13,7 @@ const compilerOptionsBase = {
     experimentalDecorators: true,
     emitDecoratorMetadata: true,
     noEmit: true,
+    skipLibCheck: true,
 };
 const config = {
     compilerOptions: compilerOptionsBase,
