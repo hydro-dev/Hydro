@@ -220,7 +220,7 @@ export class ContestEditHandler extends Handler {
     @param('duration', Types.Float)
     @param('title', Types.Title)
     @param('content', Types.Content)
-    @param('rule', Types.Range(Object.assign(contest.RULES).filter((i) => i !== 'homework')))
+    @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
