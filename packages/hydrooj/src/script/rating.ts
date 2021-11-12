@@ -160,7 +160,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     async function update(uid: number, rp: number) {
         const udoc = await UserModel.getById(id, +uid);
         const $upd: any = { $set: { rp: Math.max(0, rp) } };
-        if (udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
+        if (udoc?.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
     }
     for (const uid in udict) tasks.push(update(+uid, udict[uid] + (deltaudict[uid] || 0)));
     await Promise.all(tasks);
