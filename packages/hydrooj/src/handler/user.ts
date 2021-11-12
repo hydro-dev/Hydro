@@ -1,4 +1,6 @@
 import moment from 'moment-timezone';
+import notp from 'notp';
+import b32 from 'thirty-two';
 import {
     BlacklistedError, InvalidTokenError, LoginError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -20,6 +22,12 @@ import {
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
+function verifyToken(secret: string, code?: string) {
+    if (!code || !code.length) return null;
+    const bin = b32.decode(secret);
+    return notp.totp.verify(code.replace(/\W+/g, ''), bin);
+}
+
 registerValue('User', [
     ['_id', 'Int!'],
     ['uname', 'String!'],
@@ -31,7 +39,34 @@ registerValue('User', [
     ['regat', 'Date!'],
     ['priv', 'Int!', 'User Privilege'],
     ['avatarUrl', 'String'],
+    ['tfa', 'Boolean!'],
 ]);
+
+registerResolver(
+    'User', 'TFA', 'TFAContext', () => ({}),
+    'Two Factor Authentication Config',
+);
+registerResolver(
+    'TFAContext', 'enable(secret: String!, code: String!)', 'Boolean!',
+    async (arg, ctx) => {
+        if (ctx.user._tfa) throw new Error('2FA is already enabled');
+        if (!verifyToken(arg.secret, arg.code)) throw new Error('Invalid 2FA code');
+        await user.setById(ctx.user._id, { tfa: arg.secret });
+        // TODO: return backup codes
+        return true;
+    },
+    'Enable Two Factor Authentication for current user',
+);
+registerResolver(
+    'TFAContext', 'disable(code: String!)', 'Boolean!',
+    async (arg, ctx) => {
+        if (!ctx.user._tfa) throw new Error('2FA is already disabled');
+        if (!verifyToken(ctx.user._tfa, arg.code)) throw new Error('Invalid 2FA code');
+        await user.setById(ctx.user._id, undefined, { tfa: '' });
+        return true;
+    },
+    'Disable Two Factor Authentication for current user',
+);
 
 registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
     if (arg.id) return user.getById(ctx.domainId, arg.id);
@@ -75,11 +110,14 @@ class UserLoginHandler extends Handler {
     @param('password', Types.String)
     @param('rememberme', Types.Boolean)
     @param('redirect', Types.String, true)
-    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '') {
+    @param('tfa', Types.String, true)
+    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '', tfa = '') {
         if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         let udoc = await user.getByEmail(domainId, uname);
         if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
+        await this.limitRate('user_login', 60, 5);
+        if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname);

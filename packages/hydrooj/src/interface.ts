@@ -98,6 +98,7 @@ export interface User extends Record<string, any> {
     _hash: string,
     _regip: string,
     _loginip: string,
+    _tfa: string,
 
     mail: string,
     uname: string,
@@ -108,6 +109,7 @@ export interface User extends Record<string, any> {
     perm: bigint,
     scope: bigint,
     role: string,
+    tfa: boolean,
     own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean
     own<T extends ownerInfo>(doc: T, exact: boolean): boolean
     own<T extends ownerInfo>(doc: T): boolean

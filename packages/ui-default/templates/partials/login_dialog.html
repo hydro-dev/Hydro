@@ -27,6 +27,12 @@
             <input name="password" type="password">
           </label>
         </div></div>
+        <div class="row" style="display: none" id="tfa_div"><div class="columns">
+          <label class="material textbox">
+            {{ _('Two Factor Authentication Code') }}
+            <input name="tfa" type="number">
+          </label>
+        </div></div>
         <div class="row"><div class="columns">
           <label class="checkbox">
             <input type="checkbox" name="rememberme">{{ _('Remember me') }}

@@ -31,10 +31,14 @@ interface Context extends ApiHandler {
     [key: string]: any;
 }
 
-export function registerResolver(typeName: string, key: string, value: string, func: (args: any, ctx: Context) => any, description?: string) {
+export function registerResolver(
+    typeName: string, key: string, value: string,
+    func: (args: any, ctx: Context, info: any) => any,
+    description?: string,
+) {
     registerValue(typeName, key, value, description);
-    const wrappedFunc = async (arg, ctx) => {
-        const res = await func(arg, ctx);
+    const wrappedFunc = async (arg, ctx, info) => {
+        const res = await func(arg, ctx, info);
         if (typeof res !== 'object') return res;
         if (handlers[value]) Object.assign(res, handlers[value]);
         return res;
