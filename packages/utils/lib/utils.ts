@@ -263,14 +263,13 @@ export namespace Time {
         return `${ms}ms`;
     }
 
-    export function getObjectID(timestamp: string | Date | Moment) {
+    export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
         let _timestamp: number;
         if (typeof timestamp === 'string') _timestamp = new Date(timestamp).getTime();
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
-        const constructedObjectId = new ObjectID(`${hexSeconds}0000000000000000`);
-        return constructedObjectId;
+        return new ObjectID(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectID().toHexString().substr(8, 12)}`);
     }
 }
 

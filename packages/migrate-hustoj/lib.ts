@@ -1,11 +1,18 @@
 import { md5, sha1 } from 'hydrooj/src/lib/crypto';
 
-const RE_MD5 = /^[\da-fA-F]{32}$/;
+const RE_MD5 = /^[\da-f]{32}$/;
 
-function hash(password: string, stored: string) {
-    if (RE_MD5.test(stored)) return md5(password) === stored;
-    const salt = Buffer.from(stored, 'base64').toString().substr(0, 20);
-    return Buffer.from(sha1(password + salt).substr(0, 20) + salt).toString('base64') === stored;
+function hash($password: string, $saved: string) {
+    $password = md5($password);
+    if (RE_MD5.test($saved)) return $password === $saved;
+    const $svd = Buffer.from($saved, 'base64').toString();
+    const $salt = $svd.substr(20);
+    const $hash = Buffer.concat([
+        Buffer.from(sha1($password + $salt), 'hex'),
+        Buffer.from($salt),
+    ]).toString('base64');
+    if ($hash.trim() === $saved.trim()) return true;
+    return false;
 }
 
 global.Hydro.lib['hash.hust'] = hash;

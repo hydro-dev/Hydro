@@ -129,7 +129,8 @@ class User implements _User {
     checkPassword(password: string) {
         const h = global.Hydro.lib[`hash.${this.hashType}`];
         if (!h) throw new Error('Unknown hash method');
-        if (h(password, this._salt, this) !== this._hash) {
+        const result = h(password, this._salt, this);
+        if (result !== true && result !== this._hash) {
             throw new LoginError(this.uname);
         } else if (this.hashType !== 'hydro') {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
