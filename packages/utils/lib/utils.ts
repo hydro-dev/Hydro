@@ -269,7 +269,7 @@ export namespace Time {
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
-        return new ObjectID(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectID().toHexString().substr(8, 12)}`);
+        return new ObjectID(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectID().toHexString().substr(8)}`);
     }
 }
 
