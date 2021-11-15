@@ -124,7 +124,6 @@ env.addGlobal('Date', Date);
 env.addGlobal('process', process);
 env.addGlobal('global', global);
 env.addGlobal('typeof', (o) => typeof o);
-env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
 env.addGlobal('utils', { status });
@@ -159,6 +158,7 @@ async function render(name, state) {
         if (typeof text === 'string') return text;
         return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
       }).join('\n'),
+      datetimeSpan: (arg0, arg1, arg2) => misc.datetimeSpan(arg0, arg1, arg2, state.handler.user?.timeZone),
       perm: global.Hydro.model.builtin.PERM,
       PRIV: global.Hydro.model.builtin.PRIV,
       STATUS: global.Hydro.model.builtin.STATUS,
