@@ -269,6 +269,7 @@ export async function run({
     for (const file of files) {
         if (!file.isDirectory()) continue;
         if (!pidMap[file.name]) continue;
+        report({ message: `Syncing testdata for ${file.name}` });
         const datas = await fs.readdir(`${dataDir}/${file.name}`);
         for (const data of datas) {
             const filename = nameMap[data] || data;
