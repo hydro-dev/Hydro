@@ -452,14 +452,16 @@ const cf: ContestRule = {
                     naccept[j.pid] = (naccept[j.pid] || 0) + 1;
             }
         }
+        let count = 1;
         for (const key in effective) {
             const j = effective[key];
-            if (j.score == 100) j.score = j.pid * 250;
+            if (j.score == 100) j.score = count * 500;
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 50 * ((naccept[j.pid] - 1) || 0);
             detail.push({
                 ...j, naccept: naccept[j.pid] || 0, time: real, real, penalty: penalty + Math.floor(real / 60) * Math.floor(j.score / 250),
             });
+            count++;
         }
         for (const d of detail) {
             if (d.status === STATUS.STATUS_ACCEPTED) {
@@ -522,13 +524,13 @@ const cf: ContestRule = {
                 const colTimeStr = accept ? misc.formatSeconds(doc.time) : '-';
                 if (isExport) {
                     row.push(
-                        { type: 'string', value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : (-doc.naccept).toString() },
+                        { type: 'string', value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-' },
                     );
                 } else {
                     row.push({
                         type: 'record',
                         score: accept ? Math.floor(100 * Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score) : 0,
-                        value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : (-doc.naccept).toString(),
+                        value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
                         raw: rid,
                         style: accept && rid.generationTime === first[pid]
                             ? 'background-color: rgb(217, 240, 199);'
