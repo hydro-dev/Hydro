@@ -93,7 +93,7 @@ function judgeCase(c, sid: string) {
         }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
-        if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
+        if (ctxSubtask.score === 0) ctx.failed[sid] = true;
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({

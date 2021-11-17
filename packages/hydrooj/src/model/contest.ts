@@ -454,6 +454,7 @@ const cf: ContestRule = {
         }
         for (const key in effective) {
             const j = effective[key];
+            if (j.score == 100) j.score = j.pid * 250;
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 50 * ((naccept[j.pid] - 1) || 0);
             detail.push({
