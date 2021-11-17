@@ -448,20 +448,20 @@ const cf: ContestRule = {
             if (tdoc.pids.includes(j.pid)
                 && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
                 effective[j.pid] = j;
-                if (STATUS.STATUS_COMPILE_ERROR !== j.status && j.score > 0)
-                    naccept[j.pid] = (naccept[j.pid] || 0) + 1;
+                if (j.score > 0) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
             }
         }
-        let count = 1;
+        for (let i = 1; i <= tdoc.pids.length; i++) {
+            const j = effective[tdoc.pids[i - 1]];
+            if (j && j.score === 100) j.score = 500 * i;
+        }
         for (const key in effective) {
             const j = effective[key];
-            if (j.score == 100) j.score = count * 500;
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 50 * ((naccept[j.pid] - 1) || 0);
             detail.push({
                 ...j, naccept: naccept[j.pid] || 0, time: real, real, penalty: penalty + Math.floor(real / 60) * Math.floor(j.score / 250),
             });
-            count++;
         }
         for (const d of detail) {
             if (d.status === STATUS.STATUS_ACCEPTED) {
