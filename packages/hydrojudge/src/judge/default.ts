@@ -151,7 +151,7 @@ export const judge = async (ctx) => {
             return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
         })(),
         (() => {
-            if (!ctx.config.checker_type || ctx.config.checker_type === 'default') {
+            if (!ctx.config.checker_type || ['default', 'strict'].includes(ctx.config.checker_type)) {
                 return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
             const copyIn = {};

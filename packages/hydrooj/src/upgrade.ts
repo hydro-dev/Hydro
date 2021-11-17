@@ -634,6 +634,20 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _53_54() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        let ddocs = await db.collection('document').find({ docType: 21, parentType: 10 })
+            .project({ _id: 1, parentId: 1 }).toArray();
+        ddocs = ddocs.filter((i) => Number.isSafeInteger(+i.parentId));
+        if (ddocs.length) {
+            const bulk = db.collection('document').initializeUnorderedBulkOp();
+            for (const ddoc of ddocs) {
+                bulk.find({ _id: ddoc._id }).updateOne({ $set: { parentId: +ddoc.parentId } });
+            }
+            await bulk.execute();
+        }
+        return true;
+    },
 ];
 
 export default scripts;

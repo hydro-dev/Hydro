@@ -250,7 +250,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
     if (type === document.TYPE_PROBLEM) {
         const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
-        return { ...pdoc, type, id };
+        return { ...pdoc, type, id: pdoc.docId };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
