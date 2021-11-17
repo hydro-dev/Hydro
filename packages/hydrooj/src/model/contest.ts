@@ -432,9 +432,120 @@ const homework: ContestRule = {
         return await ranked.all(cursor, (a, b) => a.score === b.score);
     },
 };
-
+const cf: ContestRule = {
+    TEXT: 'Codeforces',
+    check: () => { },
+    statusSort: { score: -1 },
+    showScoreboard: () => true,
+    showSelfRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    stat: (tdoc, journal: AcmJournal[]) => {
+        const naccept: Record<number, number> = {};
+        const effective: Record<number, AcmJournal> = {};
+        const detail: AcmDetail[] = [];
+        let score = 0;
+        for (const j of journal) {
+            if (tdoc.pids.includes(j.pid)
+                && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
+                effective[j.pid] = j;
+                if (STATUS.STATUS_COMPILE_ERROR !== j.status && j.score > 0)
+                    naccept[j.pid] = (naccept[j.pid] || 0) + 1;
+            }
+        }
+        for (const key in effective) {
+            const j = effective[key];
+            const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
+            const penalty = 50 * ((naccept[j.pid] - 1) || 0);
+            detail.push({
+                ...j, naccept: naccept[j.pid] || 0, time: real, real, penalty: penalty + Math.floor(real / 60) * Math.floor(j.score / 250),
+            });
+        }
+        for (const d of detail) {
+            if (d.status === STATUS.STATUS_ACCEPTED) {
+                score += Math.max(Math.floor(d.score * 0.3), d.score - d.penalty);
+            }
+        }
+        return { score, detail };
+    },
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
+        const columns: ScoreboardRow = [
+            { type: 'rank', value: _('Rank') },
+            { type: 'user', value: _('User') },
+            { type: 'total_score', value: _('Total Score') },
+        ];
+        for (let i = 1; i <= tdoc.pids.length; i++) {
+            const pid = tdoc.pids[i - 1];
+            if (isExport) {
+                columns.push(
+                    {
+                        type: 'problem_flag',
+                        value: '{0} {1}'.format(String.fromCharCode(64 + i), pdict[pid].title),
+                    },
+                );
+            } else {
+                columns.push({
+                    type: 'problem_detail',
+                    value: String.fromCharCode(64 + i),
+                    raw: pid,
+                });
+            }
+        }
+        const first = {};
+        for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
+        for (const [, tsdoc] of rankedTsdocs) {
+            const tsddict = {};
+            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
+            for (const pid of tdoc.pids) {
+                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
+                    first[pid] = tsddict[pid].rid.generationTime;
+                }
+            }
+        }
+        const rows: ScoreboardRow[] = [columns];
+        for (const [rank, tsdoc] of rankedTsdocs) {
+            const tsddict = {};
+            for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
+            const row: ScoreboardRow = [
+                { type: 'string', value: rank.toString() },
+                { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
+                { type: 'string', value: tsdoc.score || 0 },
+            ];
+            for (const pid of tdoc.pids) {
+                const doc = tsddict[pid] || {};
+                const accept = doc.status === STATUS.STATUS_ACCEPTED;
+                const rid = accept ? doc.rid : null;
+                const colScore = `${accept ? `${Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty)} ` : ''}`;
+                const colTimeStr = accept ? misc.formatSeconds(doc.time) : '-';
+                if (isExport) {
+                    row.push(
+                        { type: 'string', value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : (-doc.naccept).toString() },
+                    );
+                } else {
+                    row.push({
+                        type: 'record',
+                        score: accept ? Math.floor(100 * Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score) : 0,
+                        value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : (-doc.naccept).toString(),
+                        raw: rid,
+                        style: accept && rid.generationTime === first[pid]
+                            ? 'background-color: rgb(217, 240, 199);'
+                            : undefined,
+                    });
+                }
+            }
+            row.raw = tsdoc;
+            rows.push(row);
+        }
+        return [rows, udict, nPages];
+    },
+    async ranked(tdoc, cursor) {
+        return await ranked.all(cursor, (a, b) => a.score === b.score);
+    },
+};
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi,
+    acm, oi, homework, ioi, cf
 };
 
 function _getStatusJournal(tsdoc) {

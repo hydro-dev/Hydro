@@ -18,9 +18,9 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
             if ($output.length) {
               const $c = $(document.createElement('div')).addClass('row');
               $root.after($c);
-              $root.prepend($(tpl`<h2>${i18n('Sample Input')} ${id}</h2>`))
+              $root.prepend($(tpl`<h2>${i18n('Sample')} ${id} ${i18n('Input')}</h2>`))
                 .addClass('medium-6 columns sample').appendTo($c);
-              $output.parent().prepend($(tpl`<h2>${i18n('Sample Output')} ${id}</h2>`))
+              $output.parent().prepend($(tpl`<h2>${i18n('Sample')} ${id} ${i18n('Output')}</h2>`))
                 .addClass('medium-6 columns sample').appendTo($c);
             }
           }

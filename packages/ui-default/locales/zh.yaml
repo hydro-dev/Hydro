@@ -650,6 +650,9 @@ Run Pretest: 运行自测
 Run: 运行
 Sample Input: 输入数据
 Sample Output: 输出数据
+Sample: 样例
+Input: 输入
+Output: 输出
 Save All Changes: 保存所有修改
 Saved session: 已保存的会话
 Saving file...: 正在保存文件...
