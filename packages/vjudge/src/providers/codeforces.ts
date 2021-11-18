@@ -250,8 +250,10 @@ export default class CodeforcesProvider implements IBasicProvider {
             }
             const time = Math.sum(Object.keys(body).filter((k) => k.startsWith('timeConsumed#')).map((k) => +body[k]));
             const memory = Math.max(...Object.keys(body).filter((k) => k.startsWith('memoryConsumed#')).map((k) => +body[k])) / 1024;
+            let flag = false;
             for (; i <= +body.testCount; i++) {
                 const status = VERDICT[body[`verdict#${i}`]] || STATUS.STATUS_WRONG_ANSWER;
+                if (status === STATUS.STATUS_ACCEPTED) flag = true;
                 await next({
                     status: STATUS.STATUS_JUDGING,
                     case: {
@@ -266,7 +268,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             const status = VERDICT[Object.keys(VERDICT).filter((k) => body.verdict.includes(k))[0]];
             return await end({
                 status,
-                score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
+                score: status === STATUS.STATUS_ACCEPTED ? 100 : flag ? 1 : 0,
                 time,
                 memory,
             });
