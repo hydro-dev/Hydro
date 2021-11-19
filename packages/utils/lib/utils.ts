@@ -130,12 +130,9 @@ Set.union = function Union<T>(setA: Set<T>, setB: Set<T>) {
     return union;
 };
 
-Set.intersection = function Intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
-    const intersection = new Set();
-    for (const elem of setB) {
-        if (setA.has(elem)) intersection.add(elem);
-    }
-    // @ts-ignore
+Set.intersection = function Intersection<T>(setA: Set<T>, setB: Set<T>) {
+    const intersection = new Set<T>();
+    for (const elem of setB) if (setA.has(elem)) intersection.add(elem);
     return intersection;
 };
 
@@ -266,14 +263,13 @@ export namespace Time {
         return `${ms}ms`;
     }
 
-    export function getObjectID(timestamp: string | Date | Moment) {
+    export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
         let _timestamp: number;
         if (typeof timestamp === 'string') _timestamp = new Date(timestamp).getTime();
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
-        const constructedObjectId = new ObjectID(`${hexSeconds}0000000000000000`);
-        return constructedObjectId;
+        return new ObjectID(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectID().toHexString().substr(8)}`);
     }
 }
 

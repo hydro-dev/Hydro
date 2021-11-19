@@ -67,23 +67,21 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async getCsrfToken(url: string) {
-        const { text: html, header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
+        const { text: html } = await this.get(url);
+        const { window: { document } } = new JSDOM(html);
+        if (document.body.children.length < 2 && html.length < 512) {
+            throw new Error(document.body.textContent);
         }
-        const $dom = new JSDOM(html);
-        if ($dom.window.document.body.children.length < 2 && html.length < 512) {
-            throw new Error($dom.window.document.body.textContent);
-        }
-        return $dom.window.document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
+        return (
+            document.querySelector('meta[name="X-Csrf-Token"]')
+            || document.querySelector('input[name="csrf_token"]')
+        )?.getAttribute('content');
     }
 
     get loggedIn() {
-        return this.get('/').then(({ text: html }) => {
-            const $dom = new JSDOM(html);
-            if (!$dom.window.document.querySelectorAll('a[href="/enter?back=%2F"]').length) return true;
-            return false;
+        return this.get('/enter').then(({ text: html }) => {
+            if (html.includes('Login into Codeforces')) return false;
+            return true;
         });
     }
 
@@ -101,7 +99,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             remember: 'on',
         });
         const cookie = res.header['set-cookie'];
-        if (cookie) {
+        if (cookie && !this.account.frozen) {
             await this.save({ cookie });
             this.cookie = cookie;
         }
@@ -203,7 +201,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async submitProblem(id: string, lang: string, code: string, info) {
-        const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '42';
+        const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
         const comment = setting.langs[lang].comment;
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
@@ -226,7 +224,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             sourceFile: '',
             ftaa: '',
             bfaa: 'f1b3f18c715565b589b7823cda7448ce',
-            _tta: 594,
+            _tta: 140,
             sourceCodeConfirmed: true,
         });
         const { text: status } = await this.get('/problemset/status?my=on');

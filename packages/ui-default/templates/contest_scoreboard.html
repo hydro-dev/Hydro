@@ -24,7 +24,7 @@
           {%- for column in rows[0] -%}
             <th class="col--{{ column.type }}">
             {% if column.type == 'problem_detail' %}
-              <a href="{{ url(type + '_detail_problem', tid=tdoc.docId, pid=column.raw) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
+              <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
             {% else %}
               {{ column.value }}
             {% endif %}
@@ -33,21 +33,23 @@
           </tr>
         </thead>
         <tbody>
+        {% set canViewAll = handler.user.own(tdoc) or model.contest.canShowRecord.call(handler, tdoc) %}
         {%- for row in rows -%}{% if loop.index0 > 0 %}
           <tr>
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
               {% if column.type == 'user' %}
+                {% set canView = canViewAll or handler.user._id == column.raw %}
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
-                <a href="{{ url('record_detail', rid=column.raw) }}">
+                <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}">
                   <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|replaceBr|safe }}</span>
                 </a>
               {% elif column.type == 'records' %}
                 {%- for record in column.raw -%}
                   {% if loop.index0 %}/{% endif %}
                   {% if record.raw %}
-                    <a href="{{ url('record_detail', rid=record.raw) }}">
+                    <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
                       <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|replaceBr|safe }}</span>
                     </a>
                   {% else %}

@@ -23,6 +23,7 @@ Sandbox Host: 沙箱地址
 Standard answer longer than user output.: 标准输出比选手输出长。
 Stdout/Stderr size: 标准输出/错误流输出大小限制
 Strict Memory Mode: 严格内存限制
+Syncing testdata, please wait...: 正在同步测试数据，请稍候...
 Temp directory: 临时目录
 Testdata cache directory: 测试数据缓存目录
 Testdata configuration incorrect.: 题目配置错误。

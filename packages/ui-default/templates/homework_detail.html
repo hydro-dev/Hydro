@@ -18,8 +18,7 @@
       </div>
     {% if model.contest.isNotStarted(tdoc) %}
       {{ nothing.render('This homework is not open and you cannot view problems.') }}
-    {% else %}
-    {% if attended or model.contest.isDone(tdoc) %}
+    {% elif tsdoc.attend or model.contest.isDone(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
@@ -65,8 +64,7 @@
       </div>
     {% else %}
       {{ nothing.render('Please claim the assignment to see the problems.') }}
-    {% endif %}{# attended or handler.is_done(tdoc) #}
-    {% endif %}{# handler.is_not_started(tdoc) #}
+    {% endif %}
     </div>
   </div>
   <div class="medium-3 columns">

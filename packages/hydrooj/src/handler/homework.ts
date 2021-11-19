@@ -1,28 +1,20 @@
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
-import { intersection } from 'lodash';
-import { lookup } from 'mime-types';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotFoundError, HomeworkNotAttendedError,
-    HomeworkNotLiveError, ProblemNotFoundError, ValidationError,
+    ContestNotFoundError, HomeworkNotLiveError, ValidationError,
 } from '../error';
-import {
-    DomainDoc, PenaltyRules, ProblemDoc, ProblemId, Tdoc, User,
-} from '../interface';
+import { PenaltyRules } from '../interface';
 import paginate from '../lib/paginate';
-import { PERM, PRIV, STATUS } from '../model/builtin';
+import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
-import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
     Handler, param, Route, Types,
 } from '../service/server';
@@ -59,9 +51,7 @@ class HomeworkDetailHandler extends Handler {
         ]);
         const psdict = {};
         let rdict = {};
-        let attended = false;
         if (tsdoc) {
-            attended = tsdoc.attend === 1;
             for (const pdetail of tsdoc.journal || []) {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
@@ -82,14 +72,9 @@ class HomeworkDetailHandler extends Handler {
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(tdoc.owner);
         const udict = await user.getList(domainId, uids);
-        const index = tdoc.pids.map((i) => i.toString());
-        for (const key in pdict) {
-            const i = (index.indexOf(key) + 10).toString(36).toUpperCase();
-            if (i !== '9') pdict[key].pid = i;
-        }
         this.response.template = 'homework_detail.html';
         this.response.body = {
-            tdoc, tsdoc, attended, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount,
+            tdoc, tsdoc, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount,
         };
     }
 
@@ -108,155 +93,6 @@ class HomeworkDetailHandler extends Handler {
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         await contest.del(domainId, tid);
         this.response.redirect = this.url('homework_main');
-    }
-}
-
-class HomeworkDetailProblemHandler extends Handler {
-    tdoc: Tdoc<30>;
-    pdoc: ProblemDoc;
-    pid: ProblemId;
-    tsdoc: any;
-    udoc: User;
-    attended: boolean;
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.String)
-    async _prepare(domainId: string, tid: ObjectID, _pid: string) {
-        this.tdoc = await contest.get(domainId, tid);
-        if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        this.pid = this.tdoc.pids[parseInt(_pid, 36) - 10];
-        if (!this.pid) throw new ProblemNotFoundError(domainId, tid, _pid);
-        [this.udoc, this.pdoc, this.tsdoc] = await Promise.all([
-            user.getById(domainId, this.tdoc.owner),
-            problem.get(domainId, this.pid),
-            contest.getStatus(domainId, tid, this.user._id),
-        ]);
-        if (!this.pdoc) throw new ProblemNotFoundError(domainId, this.pid);
-        // @ts-ignore
-        if (this.pdoc.domainId !== domainId) this.pdoc.docId = `${this.pdoc.domainId}:${this.pdoc.docId}`;
-        this.pdoc.pid = _pid;
-        this.attended = this.tsdoc?.attend === 1;
-        this.response.body = {
-            tdoc: this.tdoc,
-            pdoc: this.pdoc,
-            tsdoc: this.tsdoc,
-            udoc: this.udoc,
-            attended: this.attended,
-        };
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.Name)
-    async get(domainId: string, tid: ObjectID, pid: string) {
-        if (!contest.isDone(this.tdoc)) {
-            if (!this.attended) throw new HomeworkNotAttendedError(tid);
-            if (contest.isNotStarted(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        }
-        this.response.template = 'problem_detail.html';
-        this.response.body.page_name = 'homework_detail_problem';
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            [this.tdoc.title, 'homework_detail', { tid }, true],
-            [this.pdoc.title, null, null, true],
-        ];
-        // Navigate to current additional file download
-        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        this.response.body.pdoc.content = this.response.body.pdoc.content
-            .replace(/\(file:\/\//g, `(./${pid}/file/`)
-            .replace(/="file:\/\//g, `="./${pid}/file/`);
-    }
-}
-
-export class HomeworkProblemFileDownloadHandler extends HomeworkDetailProblemHandler {
-    @param('filename', Types.Name)
-    @param('noDisposition', Types.Boolean)
-    // @ts-ignore
-    async get(domainId: string, filename: string, noDisposition = false) {
-        // @ts-ignore
-        if (typeof this.pdoc.docId === 'string') this.pdoc.docId = this.pdoc.docId.split(':')[1];
-        const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/additional_file/${filename}`;
-        const file = await storage.getMeta(target);
-        if (!file) {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-            return;
-        }
-        const type = lookup(filename).toString();
-        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
-        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
-            this.response.etag = file.etag;
-            this.response.body = await storage.get(target);
-            this.response.type = file['Content-Type'] || type;
-            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
-        } else {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-        }
-    }
-}
-
-class HomeworkDetailProblemSubmitHandler extends HomeworkDetailProblemHandler {
-    pdomainId: string;
-    ppid: number;
-    pdomain: DomainDoc;
-
-    @param('tid', Types.ObjectID)
-    async prepare(domainId: string, tid: ObjectID) {
-        if (!this.attended) throw new HomeworkNotAttendedError(tid);
-        if (!contest.isOngoing(this.tdoc)) throw new HomeworkNotLiveError(tid);
-        this.pdomainId = typeof this.pid === 'string' ? this.pid.split(':')[0] : domainId;
-        this.ppid = typeof this.pid === 'number' ? this.pid : +this.pid.split(':')[1];
-        this.pdomain = await domain.get(this.pdomainId);
-        if (this.pdomain.langs) {
-            this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.pdomain.langs.split(','),
-                this.pdomain.langs.split(','),
-            );
-        }
-        this.response.body.pdoc.config.domainId = this.pdomainId;
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('pid', Types.String)
-    async get(domainId: string, tid: ObjectID, pid: string) {
-        this.response.body.path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            [this.tdoc.title, 'homework_detail', { tid }, true],
-            [this.pdoc.title, 'homework_detail_problem', { tid, pid }, true],
-            ['homework_detail_problem_submit', null],
-        ];
-        this.response.template = 'problem_submit.html';
-    }
-
-    @param('tid', Types.ObjectID)
-    @param('code', Types.Content)
-    @param('lang', Types.Name)
-    @param('pretest', Types.Boolean)
-    @param('input', Types.String, true)
-    async post(domainId: string, tid: ObjectID, code: string, lang: string, pretest = false, input = '') {
-        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
-            throw new BadRequestError('Language not allowed.');
-        }
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, this.pid, this.user._id, lang, code, true, pretest ? input : tid);
-        const rdoc = await record.get(domainId, rid);
-        if (!pretest) {
-            await Promise.all([
-                (this.tsdoc.journal || []).filter((i) => i.pid === this.pid).length
-                && problem.inc(this.pdomainId, this.ppid, 'nSubmit', 1),
-                domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-                contest.updateStatus(domainId, tid, this.user._id, rid, this.pid, STATUS.STATUS_WAITING),
-            ]);
-        }
-        bus.broadcast('record/change', rdoc);
-        this.response.body.tid = tid;
-        this.response.body.rid = rid;
-        if (pretest || contest.canShowSelfRecord.call(this, this.tdoc)) this.response.redirect = this.url('record_detail', { rid });
-        else this.response.redirect = this.url('homework_detail', { tid });
     }
 }
 
@@ -308,13 +144,7 @@ class HomeworkEditHandler extends Handler {
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => {
-            i = i.trim();
-            if ((+i).toString() === i) return +i;
-            if (i.split(':')[0] === domainId) return +i.split(':')[1];
-            if (!i.includes(':')) throw new ValidationError('pids');
-            return i;
-        }).filter((i) => i);
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
@@ -416,12 +246,6 @@ export async function apply() {
         'homework_scoreboard_download', '/homework/:tid/scoreboard/download/:ext',
         HomeworkScoreboardDownloadHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
     );
-    Route('homework_detail_problem', '/homework/:tid/p/:pid', HomeworkDetailProblemHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route(
-        'homework_detail_problem_file_download', '/homework/:tid/p/:pid/file/:filename',
-        HomeworkProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM,
-    );
-    Route('homework_detail_problem_submit', '/homework/:tid/p/:pid/submit', HomeworkDetailProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('homework_code', '/homework/:tid/code', HomeworkCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }

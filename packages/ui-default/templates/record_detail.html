@@ -45,32 +45,26 @@
         </ol>
       </div>
     {% endif %}
-      <div class="section__body typo">
+      <div class="section__body typo no-media">
         <dl class="large horizontal">
           <dt>{{ _('Submit By') }}</dt>
           <dd>{{ user.render_inline(udoc, modbadge=false) }}</dd>
           {% if pdoc %}
             <dt>{{ _('Problem') }}</dt>
             <dd>
-              {{ problem.render_problem_title(pdoc, tdoc, show_tags=false, show_invisible_flag=false, rp=none) }}
+              {{ problem.render_problem_title(pdoc, tdoc, show_tags=false, show_invisible_flag=false) }}
             </dd>
           {% endif %}
           {% if tdoc %}
-            <dt>{{ _('Contest') if tdoc.docType == model.document.TYPE_CONTEST else _('Homework') }}</dt>
+            <dt>{{ _('Homework') if tdoc.rule == 'homework' else _('Contest') }}</dt>
             <dd>
-              <a href="{{ url('contest_detail' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a>
+              <a href="{{ url('homework_detail' if tdoc.rule == 'homework' else 'contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a>
             </dd>
           {% endif %}
           <dt>{{ _('Language') }}</dt>
-          <dd>
-            {{ model.setting.langs[rdoc.lang].display }}
-          </dd>
-          <dt>
-            {{ _('Submit At') }}
-          </dt>
-          <dd>
-            {{ datetimeSpan(rdoc._id)|safe }}
-          </dd>
+          <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
+          <dt>{{ _('Submit At') }}</dt>
+          <dd>{{ datetimeSpan(rdoc._id)|safe }}</dd>
           {% if rdoc.judgeAt %}
             <dt>{{ _('Judged At') }}</dt>
             <dd>{{ datetimeSpan(rdoc.judgeAt)|safe }}</dd>

@@ -5,19 +5,23 @@ import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ForbiddenError, NoProblemError,
-    PermissionError, ProblemNotFoundError, SolutionNotFoundError,
-    ValidationError,
+    BadRequestError, ContestNotAttendedError, ContestNotFoundError,
+    ContestNotLiveError, ForbiddenError, NoProblemError,
+    NotFoundError, PermissionError, ProblemNotFoundError,
+    SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemStatusDoc, User,
+    ProblemConfig,
+    ProblemDoc, ProblemStatusDoc, Tdoc, User,
 } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
+import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
 import solution from '../model/solution';
@@ -57,12 +61,39 @@ registerValue('Problem', [
     ['tag', '[String]'],
     ['hidden', 'Boolean'],
 ]);
-registerResolver('Query', 'problem(id: Int, pid: String)', 'Problem', async (arg, ctx) => {
-    const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
-    if (!pdoc) return null;
-    if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-    return pdoc;
-});
+registerValue('ProblemManage', [
+    ['delete', 'Boolean!'],
+]);
+
+registerResolver(
+    'Query', 'problem(id: Int, pid: String)', 'Problem',
+    async (arg, ctx) => {
+        const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
+        if (!pdoc) return null;
+        if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        ctx.pdoc = pdoc;
+        return pdoc;
+    },
+);
+registerResolver(
+    'Problem', 'manage', 'ProblemManage',
+    (arg, ctx) => {
+        if (!ctx.user.own(ctx.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) ctx.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        return {};
+    },
+);
+registerResolver(
+    'ProblemManage', 'delete', 'Boolean!',
+    async (arg, ctx) => {
+        const tdocs = await contest.getRelated(ctx.domainId, ctx.pdoc.docId);
+        if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
+        return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
+    },
+);
+registerResolver(
+    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
+    (arg, ctx) => problem.edit(ctx.domainId, ctx.pdoc.docId, arg),
+);
 
 export class ProblemHandler extends Handler {
     async cleanup() {
@@ -154,6 +185,23 @@ export class ProblemMainHandler extends ProblemHandler {
     }
 
     @param('pids', Types.NumericArray)
+    @param('target', Types.String)
+    async postCopy(domainId: string, pids: number[], target: string) {
+        const t = `,${this.domain.share || ''},`;
+        if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
+        const ddoc = await domain.get(target);
+        if (!ddoc) throw new NotFoundError(target);
+        const dudoc = await user.getById(target, this.user._id);
+        if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        const ids = [];
+        for (const pid of pids) {
+            // eslint-disable-next-line no-await-in-loop
+            ids.push(await problem.copy(domainId, pid, target));
+        }
+        this.response.body = ids;
+    }
+
+    @param('pids', Types.NumericArray)
     async postDelete(domainId: string, pids: number[]) {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
@@ -207,43 +255,96 @@ export class ProblemRandomHandler extends ProblemHandler {
 
 export class ProblemDetailHandler extends ProblemHandler {
     pdoc: ProblemDoc;
+    tdoc?: Tdoc<30>;
+    tsdoc?: any;
     udoc: User;
     psdoc: ProblemStatusDoc;
 
     @route('pid', Types.Name, true, null, parsePid)
-    async _prepare(domainId: string, pid: number | string) {
-        this.response.template = 'problem_detail.html';
+    @query('tid', Types.ObjectID, true)
+    async _prepare(domainId: string, pid: number | string, tid?: ObjectID) {
         this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
-        if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
+        if (tid) {
+            this.tdoc = await contest.get(domainId, tid);
+            if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
+            this.tsdoc = await contest.getStatus(domainId, tid, this.user._id);
+            this.pdoc.tag.length = 0;
+            const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
+            if (!showAccept) this.pdoc.nAccept = 0;
+            if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
+            if (!contest.isDone(this.tdoc) && !this.tsdoc?.attend) throw new ContestNotAttendedError(tid);
+        } else if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        }
+        let ddoc = this.domain;
+        if (this.pdoc.reference) {
+            ddoc = await domain.get(this.pdoc.reference.domainId);
+            const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            this.pdoc.config = pdoc.config;
+        }
+        if (ddoc.langs) {
+            (this.pdoc.config as ProblemConfig).langs = intersection(
+                (this.pdoc.config as ProblemConfig).langs || ddoc.langs.split(','),
+                ddoc.langs.split(','),
+            );
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
             problem.getStatus(domainId, this.pdoc.docId, this.user._id),
             user.getById(domainId, this.pdoc.owner),
         ]);
+        const [scnt, dcnt] = await Promise.all([
+            solution.count(domainId, { parentId: this.pdoc.docId }),
+            discussion.count(domainId, { parentId: this.pdoc.docId }),
+        ]);
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
+            psdoc: this.psdoc,
             title: this.pdoc.title,
+            solutionCount: scnt,
+            discussionCount: dcnt,
+            tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
         };
+        this.response.template = 'problem_detail.html';
         this.extraTitleContent = this.pdoc.title;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async get(..._args: any[]) {
+    @query('tid', Types.ObjectID, true)
+    async get(...args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json) {
-            this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
-                .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
+            if (args[1]) {
+                this.response.body.pdoc.content = this.response.body.pdoc.content
+                    .replace(/\(file:\/\/(.+?)\)/g, (str) => {
+                        const info = str.match(/\(file:\/\/(.+?)\)/);
+                        return `(./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]})`;
+                    })
+                    .replace(/="file:\/\/(.+?)"/g, (str) => {
+                        const info = str.match(/="file:\/\/(.+?)"/);
+                        return `="./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
+                    });
+            } else {
+                this.response.body.pdoc.content = this.response.body.pdoc.content
+                    .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
+                    .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`);
+            }
         }
-        if (this.psdoc) {
-            this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
+        this.response.body.page_name = this.tdoc
+            ? this.tdoc.rule === 'homework'
+                ? 'homework_detail_problem'
+                : 'contest_detail_problem'
+            : 'problem_detail';
+        if (!this.response.body.tdoc) {
+            if (this.psdoc?.rid) {
+                this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
+            }
+            this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
         }
-        this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
     }
 
     @param('pid', Types.UnsignedInt)
@@ -257,6 +358,18 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.back();
     }
 
+    @param('target', Types.String)
+    async postCopy(domainId: string, target: string) {
+        const t = `,${this.domain.share || ''},`;
+        if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
+        const ddoc = await domain.get(target);
+        if (!ddoc) throw new NotFoundError(target);
+        const dudoc = await user.getById(target, this.user._id);
+        if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        const docId = await problem.copy(domainId, this.pdoc.docId, target);
+        this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
+    }
+
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const tdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
@@ -267,60 +380,53 @@ export class ProblemDetailHandler extends ProblemHandler {
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
-    async get() {
+    async get(domainId: string, tid?: ObjectID) {
+        if (tid && !contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         this.response.template = 'problem_submit.html';
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
             title: this.pdoc.title,
+            page_name: this.tdoc
+                ? this.tdoc.rule === 'homework'
+                    ? 'homework_detail_problem_submit'
+                    : 'contest_detail_problem_submit'
+                : 'problem_submit',
         };
-        if (this.domain.langs) {
-            this.response.body.pdoc.config.langs = intersection(
-                this.response.body.pdoc.config.langs || this.domain.langs.split(','),
-                this.domain.langs.split(','),
-            );
-        }
-        this.response.body.pdoc.config.domainId = this.domainId;
     }
 
     @param('lang', Types.Name)
     @param('code', Types.Content)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
-    async post(domainId: string, lang: string, code: string, pretest = false, input = '') {
+    @param('tid', Types.ObjectID, true)
+    async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectID) {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
-        if (pretest && this.response.body.pdoc.config?.type !== 'default') throw new BadRequestError('unable to run pretest');
+        if (pretest && !['default', 'fileio'].includes(this.response.body.pdoc.config?.type)) throw new BadRequestError('unable to run pretest');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : undefined);
+        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, !pretest);
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                this.psdoc?.rid ? Promise.resolve() : problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
+                (this.tdoc
+                    ? (this.tsdoc.journal || []).filter((i) => i.pid === this.pdoc.docId).length
+                    : this.psdoc?.rid ? Promise.resolve() : problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1)
+                ) && problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
                 problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
+                tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),
             ]);
         }
         bus.broadcast('record/change', rdoc);
-        this.response.body = { rid };
-        this.response.redirect = this.url('record_detail', { rid });
-    }
-}
-
-export class ProblemPretestHandler extends ProblemDetailHandler {
-    @param('lang', Types.Name)
-    @param('code', Types.Content)
-    @param('input', Types.Content, true)
-    async post(domainId: string, lang: string, code: string, input = '') {
-        await this.limitRate('do_pretest', 60, system.get('limit.pretest'));
-        const rid = await record.add(
-            domainId, this.pdoc.docId, this.user._id,
-            lang, code, true, input,
-        );
-        const rdoc = await record.get(domainId, rid);
-        bus.broadcast('record/change', rdoc);
-        this.response.body = { rid };
+        if (tid && !pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
+            this.response.body = { tid };
+            this.response.redirect = this.url(this.tdoc.rule === 'homework' ? 'homework_detail' : 'contest_detail', { tid });
+        } else {
+            this.response.body = { rid };
+            this.response.redirect = this.url('record_detail', { rid });
+        }
     }
 }
 
@@ -364,6 +470,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false) {
         this.response.body.testdata = getTestdata ? sortFiles(this.pdoc.data || []) : [];
+        this.response.body.reference = getTestdata ? this.pdoc.reference : '';
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
@@ -385,7 +492,23 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
+        if (this.pdoc.reference) this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
         const links = {};
+        const size = Math.sum(
+            this.pdoc[type === 'testdata' ? 'data' : 'additional_file']
+                ?.filter((i) => files.has(i.name))
+                ?.map((i) => i.size),
+        ) || 0;
+        await oplog.add({
+            type: 'bulkDownload',
+            time: new Date(),
+            uid: this.user._id,
+            ip: this.request.ip,
+            fileType: 'problem',
+            target: Array.from(files).map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`),
+            referer: this.request.referer,
+            size,
+        });
         for (const file of files) {
             // eslint-disable-next-line no-await-in-loop
             links[file] = await storage.signDownloadLink(
@@ -399,6 +522,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -455,6 +579,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Array)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
@@ -467,11 +592,26 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+        if (this.pdoc.reference) {
+            if (type === 'testdata') throw new ForbiddenError('Cannot download testdata');
+            this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError();
+        }
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
         }
-        const target = `problem/${domainId}/${this.pdoc.docId}/${type}/${filename}`;
+        const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`;
         const file = await storage.getMeta(target);
+        await oplog.add({
+            type: 'download',
+            time: new Date(),
+            uid: this.user._id,
+            ip: this.request.ip,
+            fileType: 'problem',
+            target,
+            referer: this.request.referer,
+            size: file?.size || 0,
+        });
         if (!file) {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
@@ -495,7 +635,9 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
 
 export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, page = 1) {
+    @param('tid', Types.ObjectID, true)
+    async get(domainId: string, page = 1, tid?: ObjectID) {
+        if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.response.template = 'problem_solution.html';
         this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         const [psdocs, pcount, pscount] = await paginate(
@@ -598,7 +740,9 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
 export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     @param('psid', Types.ObjectID)
     @route('psrid', Types.ObjectID, true)
-    async get(domainId: string, psid: ObjectID, psrid?: ObjectID) {
+    @param('tid', Types.ObjectID, true)
+    async get(domainId: string, psid: ObjectID, psrid?: ObjectID, tid?: ObjectID) {
+        if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         if (psrid) {
             const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
@@ -636,18 +780,6 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        let cors = false;
-        if (prefix.includes(':')) {
-            const [pdomain, s] = prefix.split(':');
-            const ddoc = await domain.get(pdomain);
-            this.response.body = [];
-            if (!ddoc || ddoc._id === domainId || !ddoc.share || !s.trim()) return;
-            ddoc.share = ddoc.share.replace(/，/g, ',').split(',').map((q) => q.trim()).join(',');
-            if (ddoc.share !== '*' && !`,${ddoc.share},`.includes(`,${domainId},`)) return;
-            domainId = pdomain;
-            prefix = s;
-            cors = true;
-        }
         const pdocs = await problem.getPrefixList(domainId, prefix);
         if (!Number.isNaN(+prefix)) {
             const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
@@ -662,7 +794,6 @@ export class ProblemPrefixListHandler extends Handler {
             }
         }
         this.response.body = pdocs;
-        if (cors) this.response.body.forEach((v) => { v.docId = `${domainId}:${v.docId}`; });
     }
 }
 

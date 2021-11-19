@@ -28,8 +28,7 @@ class JudgeTask {
     host: string;
     request: any;
     ws: WebSocket;
-    domainId: string;
-    pid: string;
+    source: string;
     rid: string;
     lang: string;
     code: string;
@@ -55,23 +54,21 @@ class JudgeTask {
         this.next = this.next.bind(this);
         this.end = this.end.bind(this);
         this.stat.handle = new Date();
-        this.domainId = this.request.pdomain;
-        this.pid = this.request.pid.toString();
         this.rid = this.request.rid;
         this.lang = this.request.lang;
         this.code = this.request.code;
         this.config = this.request.config;
         this.input = this.request.input;
         this.data = this.request.data;
+        this.source = this.request.source;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
-        await Lock.aquire(`${this.host}/${this.domainId}/${this.rid}`);
+        await Lock.aquire(`${this.host}/${this.source}/${this.rid}`);
         fs.ensureDirSync(this.tmpdir);
-        tmpfs.mount(this.tmpdir, '512m');
-        log.info('Submission: %s/%s/%s pid=%s', this.host, this.domainId, this.rid, this.pid);
+        tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
+        log.info('Submission: %s/%s/%s', this.host, this.source, this.rid);
         try {
-            if (typeof this.input === 'string') await this.run();
-            else await this.doSubmission();
+            await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
@@ -92,29 +89,24 @@ class JudgeTask {
                 });
             }
         } finally {
-            Lock.release(`${this.host}/${this.domainId}/${this.rid}`);
+            Lock.release(`${this.host}/${this.source}/${this.rid}`);
             for (const clean of this.clean) await clean().catch(noop);
             tmpfs.umount(this.tmpdir);
             fs.removeSync(this.tmpdir);
         }
     }
 
-    async run() {
-        this.stat.judge = new Date();
-        await judge.run.judge(this);
-    }
-
     async doSubmission() {
         this.stat.cache_start = new Date();
-        this.folder = await this.session.cacheOpen(this.domainId, this.pid, this.data, this.next);
+        this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
             { detail: this.session.config.detail, ...this.config },
-            { next: this.next, key: md5(`${this.domainId}${this.pid}${getConfig('secret')}`) },
+            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
-        const type = this.config.type || 'default';
+        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
     }
@@ -148,7 +140,9 @@ class JudgeTask {
         data.key = 'end';
         data.rid = new ObjectID(this.request.rid);
         data.time = data.time_ms ?? data.time;
+        delete data.time_ms;
         data.memory = data.memory_kb ?? data.memory;
+        delete data.memory_kb;
         this.ws.send(JSON.stringify(data));
     }
 }
@@ -175,18 +169,18 @@ export default class Hydro {
         setInterval(() => { this.axios.get('judge/noop'); }, 30000000);
     }
 
-    async cacheOpen(domainId: string, pid: string, files: any[], next?) {
-        await Lock.aquire(`${this.config.host}/${domainId}/${pid}`);
+    async cacheOpen(source: string, files: any[], next?) {
+        await Lock.aquire(`${this.config.host}/${source}`);
         try {
-            return this._cacheOpen(domainId, pid, files, next);
+            return this._cacheOpen(source, files, next);
         } finally {
-            Lock.release(`${this.config.host}/${domainId}/${pid}`);
+            Lock.release(`${this.config.host}/${source}`);
         }
     }
 
-    async _cacheOpen(domainId: string, pid: string, files: any[], next?) {
-        const domainDir = path.join(getConfig('cache_dir'), this.config.host, domainId);
-        const filePath = path.join(domainDir, pid);
+    async _cacheOpen(source: string, files: any[], next?) {
+        const [domainId, pid] = source.split('/');
+        const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
         if (!files?.length) throw new SystemError('Problem data not found.');
         let etags: Record<string, string> = {};
@@ -205,22 +199,24 @@ export default class Hydro {
             if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.rm(path.join(filePath, name));
         }
         if (filenames.length) {
-            log.info(`Getting problem data: ${this.config.host}/${domainId}/${pid}`);
-            if (next) next({ judge_text: '正在同步测试数据，请稍候' });
+            log.info(`Getting problem data: ${this.config.host}/${source}`);
+            if (next) next({ judge_text: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
             const res = await this.axios.post(`/d/${domainId}/judge/files`, {
-                pid,
+                pid: +pid,
                 files: filenames,
             });
             // eslint-disable-next-line no-inner-declarations
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' });
+                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' })
+                    .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
+                if (f instanceof Error) throw f;
                 const w = fs.createWriteStream(path.join(filePath, name));
                 f.data.pipe(w);
                 await new Promise((resolve, reject) => {
                     w.on('finish', resolve);
-                    w.on('error', reject);
+                    w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
                 });
             }
             const tasks = [];

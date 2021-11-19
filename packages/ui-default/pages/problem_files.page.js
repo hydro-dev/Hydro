@@ -219,7 +219,10 @@ const page = new NamedPage('problem_files', () => {
     if (ev) {
       const link = $(ev.currentTarget).find('a').attr('href');
       if (!link) return;
-      if (filesize > 8 * 1024 * 1024) Notification.error(i18n('file too large'));
+      if (filesize > 8 * 1024 * 1024) {
+        Notification.error(i18n('file too large'));
+        return;
+      }
       Notification.info(i18n('Loading file...'));
       const res = await request.get(link);
       content = await request.get(res.url, undefined, { dataType: 'text' });

@@ -9,6 +9,7 @@ const argv = require('cac')().parse();
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
+const { xss } = require('./markdown-it-xss');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
 
@@ -86,7 +87,7 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
-      return markdown.render(s);
+      return html ? xss.process(s) : markdown.render(s);
     });
     this.addFilter('log', (self) => {
       console.log(self);
@@ -123,7 +124,6 @@ env.addGlobal('Date', Date);
 env.addGlobal('process', process);
 env.addGlobal('global', global);
 env.addGlobal('typeof', (o) => typeof o);
-env.addGlobal('datetimeSpan', misc.datetimeSpan);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
 env.addGlobal('utils', { status });
@@ -158,6 +158,7 @@ async function render(name, state) {
         if (typeof text === 'string') return text;
         return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
       }).join('\n'),
+      datetimeSpan: (arg0, arg1, arg2) => misc.datetimeSpan(arg0, arg1, arg2, state.handler.user?.timeZone),
       perm: global.Hydro.model.builtin.PERM,
       PRIV: global.Hydro.model.builtin.PRIV,
       STATUS: global.Hydro.model.builtin.STATUS,

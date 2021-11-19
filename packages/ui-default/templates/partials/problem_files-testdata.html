@@ -1,6 +1,10 @@
 {% import "components/nothing.html" as nothing with context %}
 <div class="section__body no-padding problem-files-testdata" data-fragment-id="problem-files-testdata">
-  {% if testdata.length %}
+  {% if reference %}
+    <blockquote class="note">
+      <p>{{ _('This is a copy of another problem.') }}</p>
+    </blockquote>
+  {% elif testdata.length %}
     <table class="data-table">
       <colgroup>
         <col class="col--checkbox">

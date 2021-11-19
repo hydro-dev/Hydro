@@ -87,6 +87,23 @@
     </div>
   </div>
 </div>
+<div class="row nojs--hide">
+  <div class="columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="tfa" data-heading>{{ _('Two Factor Authentication') }}</h1>
+        <div class="section__tools">
+          {% if handler.user.tfa %}
+            <button class="primary rounded button" name="tfa_enabled"><span class="icon icon-check"></span> {{ _('Enabled') }}</button>
+          {% else %}
+            <button class="primary rounded button" name="tfa_enable"><span class="icon icon-wrench"></span> {{ _('Enable') }}</button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="section__body"></div>
+    </div>
+  </div>
+</div>
 <div class="row">
   <div class="columns">
     <div class="section">

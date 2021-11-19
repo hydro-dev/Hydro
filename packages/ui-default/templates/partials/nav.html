@@ -79,6 +79,13 @@
             </li>
           {% endif %}
           <li class="menu__seperator"></li>
+          {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) %}
+            <li class="menu__item nojs--hide">
+              <a class="menu__link" name="nav_switch_account">
+                <span class="icon icon-user"></span> {{ _('Switch account') }}
+              </a>
+            </li>
+          {% endif %}
           <li class="menu__item">
             <a href="{{ url('user_logout') }}" class="menu__link" name="nav_logout">
               <span class="icon icon-logout"></span> {{ _('Logout') }}

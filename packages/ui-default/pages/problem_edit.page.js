@@ -123,7 +123,7 @@ function buildCategoryFilter() {
       // de-select children
       _.forEach(treeItem.children, (treeSubItem, subcategory) => {
         if (treeSubItem.select) {
-          treeSubItem.select = false; // eslint-disable-line no-param-reassign
+          treeSubItem.select = false;
           dirtyCategories.push({ type: 'subcategory', subcategory, category });
         }
       });

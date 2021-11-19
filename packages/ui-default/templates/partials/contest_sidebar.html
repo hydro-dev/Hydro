@@ -6,7 +6,7 @@
     <div class="section__body">
       <h1>{{ tdoc.title }}</h1>
       <div class="contest-sidebar__status">
-      {% if attended or tdoc.attend %}
+      {% if tsdoc.attend %}
         <span class="icon icon-check"></span> {{ _('Attended') }}
       {% else %}
         <span class="icon icon-schedule"></span> {{ _('Not Attended') }}
@@ -38,7 +38,7 @@
         <span class="icon icon-award"></span> {{ _('View Contest') }}
       </a></li>
     {% endif %}
-    {% if not (attended or tdoc.attended) and not model.contest.isDone(tdoc) %}
+    {% if not (tsdoc.attend) and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
@@ -99,7 +99,7 @@
       <dt>{{ _('Status') }}</dt>
       <dd>
         {{ _(model.contest.statusText(tdoc)) }}
-        {% if attended %}
+        {% if tsdoc.attend %}
           ({{ _('Attended') }})
         {% endif %}
       </dd>

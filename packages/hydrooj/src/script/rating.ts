@@ -8,7 +8,6 @@ import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
-import * as system from '../model/system';
 import UserModel from '../model/user';
 import db from '../service/db';
 
@@ -29,12 +28,7 @@ async function runProblem(...arg: any[]) {
             {
                 docId: pdoc.docId,
                 rid: { $ne: null },
-                uid: {
-                    $nin: [
-                        pdoc.owner,
-                        ...system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i),
-                    ],
-                },
+                uid: { $ne: pdoc.owner },
             },
         ).count() + 99) / 100,
     );
@@ -68,7 +62,6 @@ async function runContest(...arg: any[]) {
     const cursor = contest.getMultiStatus(tdoc.domainId, {
         docId: tdoc.docId,
         journal: { $ne: null },
-        uid: { $nin: system.get('rank.uidIgnore').split(',').map((i) => +i).filter((i) => i) },
     }).sort(contest.RULES[tdoc.rule].statusSort);
     if (!await cursor.count()) return;
     const [rankedTsdocs] = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
@@ -166,8 +159,8 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     const tasks = [];
     async function update(uid: number, rp: number) {
         const udoc = await UserModel.getById(id, +uid);
-        const $upd: any = { $set: { rp } };
-        if (udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
+        const $upd: any = { $set: { rp: Math.max(0, rp) } };
+        if (udoc?.hasPriv(PRIV.PRIV_USER_PROFILE)) await domain.updateUserInDomain(id, +uid, $upd);
     }
     for (const uid in udict) tasks.push(update(+uid, udict[uid] + (deltaudict[uid] || 0)));
     await Promise.all(tasks);

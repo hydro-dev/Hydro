@@ -37,6 +37,10 @@ export class HydroError extends Error {
     msg() {
         return 'HydroError';
     }
+
+    get message() {
+        return this.msg();
+    }
 }
 
 export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);

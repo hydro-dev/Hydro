@@ -557,6 +557,97 @@ const scripts: UpgradeScript[] = [
         await db.collection('domain').updateMany({}, { $unset: { pidCounter: '' } });
         return true;
     },
+    async function _50_51() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('domain.user').updateMany({}, { $unset: { ratingHistory: '' } });
+        return true;
+    },
+    async function _51_52() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const mapping: Record<string, number> = {};
+        const isStringPid = (i: string) => i.toString().includes(':');
+        async function getProblem(domainId: string, target: string) {
+            if (!target.toString().includes(':')) return await problem.get(domainId, target);
+            const l = `${domainId}/${target}`;
+            if (mapping[l]) return await problem.get(domainId, mapping[l]);
+            const [sourceDomain, sourceProblem] = target.split(':');
+            const docId = await problem.copy(sourceDomain, +sourceProblem, domainId);
+            mapping[l] = docId;
+            return await problem.get(domainId, docId);
+        }
+        const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
+        while (await cursor.hasNext()) {
+            const doc = await cursor.next();
+            const pids = [];
+            let mark = false;
+            for (const pid of doc.pids) {
+                if (pid.toString().includes(':')) {
+                    mark = true;
+                    const pdoc = await getProblem(doc.domainId, pid);
+                    if (pdoc) {
+                        pids.push(pdoc.docId);
+                        await RecordModel.updateMulti(
+                            doc.domainId,
+                            { contest: doc.docId, pid },
+                            { pid: pdoc.docId },
+                            {},
+                            { pdomain: '' },
+                        );
+                    }
+                } else pids.push(pid);
+            }
+            if (mark) {
+                const ctdocs = await document.getMultiStatus(
+                    doc.domainId, document.TYPE_CONTEST, { docId: doc.docId },
+                ).toArray();
+                for (const ctdoc of ctdocs) {
+                    if (!ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) continue;
+                    const journal = [];
+                    for (const i of ctdoc.journal) {
+                        const pdoc = await getProblem(doc.domainId, i.pid);
+                        if (pdoc) i.pid = pdoc.docId;
+                        journal.push(i);
+                    }
+                    const $set = { journal };
+                    await document.setStatus(doc.domainId, doc.docType, doc.docId, ctdoc.uid, $set);
+                }
+                await contest.edit(doc.domainId, doc.docId, { pids });
+                await contest.recalcStatus(doc.domainId, doc.docId);
+            }
+        }
+        await db.collection('record').updateMany({}, { $unset: { pdomain: '' } });
+        return true;
+    },
+    async function _52_53() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
+        while (await cursor.hasNext()) {
+            const tdoc = await cursor.next();
+            const pdocs = await problem.getMulti(tdoc.domainId, { docId: { $in: tdoc.pids } }).toArray();
+            if (!pdocs.filter((i) => i.reference).length) continue;
+            const tsdocs = await contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
+            for (const tsdoc of tsdocs) {
+                for (const tsrdoc of tsdoc.journal) {
+                    await RecordModel.coll.updateOne({ _id: tsrdoc.rid }, { pid: tsrdoc.pid });
+                }
+            }
+        }
+        return true;
+    },
+    async function _53_54() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        let ddocs = await db.collection('document').find({ docType: 21, parentType: 10 })
+            .project({ _id: 1, parentId: 1 }).toArray();
+        ddocs = ddocs.filter((i) => Number.isSafeInteger(+i.parentId));
+        if (ddocs.length) {
+            const bulk = db.collection('document').initializeUnorderedBulkOp();
+            for (const ddoc of ddocs) {
+                bulk.find({ _id: ddoc._id }).updateOne({ $set: { parentId: +ddoc.parentId } });
+            }
+            await bulk.execute();
+        }
+        return true;
+    },
 ];
 
 export default scripts;

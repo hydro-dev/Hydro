@@ -2,7 +2,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
@@ -123,7 +123,7 @@ function buildCategoryFilter() {
       // de-select children
       _.forEach(treeItem.children, (treeSubItem, subcategory) => {
         if (treeSubItem.select) {
-          treeSubItem.select = false; // eslint-disable-line no-param-reassign
+          treeSubItem.select = false;
           dirtyCategories.push({ type: 'subcategory', subcategory, category });
         }
       });
@@ -174,18 +174,33 @@ function ensureAndGetSelectedPids() {
 async function handleOperation(operation) {
   const pids = ensureAndGetSelectedPids();
   if (pids === null) return;
+  const payload = {};
   if (operation === 'delete') {
     const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm to delete the selected problems?')}</p>
-        </div>`,
+      $body: tpl.typoMsg(i18n('Confirm to delete the selected problems?')),
     }).open();
     if (action !== 'yes') return;
+  } else if (operation === 'copy') {
+    const action = await new ActionDialog({
+      $body: tpl`
+        <div class="typo">
+          <label>
+            ${i18n('Target')}
+            <div class="textbox-container">
+              <input name="target" type="text" class="textbox" data-autofocus>
+            </div>
+          </label>
+        </div>
+      `,
+    }).open();
+    if (action !== 'ok') return;
+    const target = $('[name="target"]').val();
+    if (!target) return;
+    payload.target = target;
   }
   try {
-    await request.post('', { operation, pids });
-    Notification.success(i18n(`Selected problems have been ${operation}d.`));
+    await request.post('', { operation, pids, ...payload });
+    Notification.success(i18n(`Selected problems have been ${operation === 'copy' ? 'copie' : operation}d.`));
     await delay(2000);
     window.location.reload();
   } catch (error) {
@@ -213,9 +228,9 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
   $('[name="enter-edit-mode"]').on('click', () => {
     doc.className = doc.className.replace(' display-mode', ' edit-mode');
   });
-  $('[name="remove_selected_problems"]').on('click', () => handleOperation('delete'));
-  $('[name="hide_selected_problems"]').on('click', () => handleOperation('hide'));
-  $('[name="unhide_selected_problems"]').on('click', () => handleOperation('unhide'));
+  ['delete', 'hide', 'unhide', 'copy'].forEach((op) => {
+    $(`[name="${op}_selected_problems"]`).on('click', () => handleOperation(op));
+  });
   $('[name="download_selected_problems"]').on('click', handleDownload);
   $('#hideTags').on('click', () => $('.problem__tags').hide());
   $('#search').on('click', (ev) => {

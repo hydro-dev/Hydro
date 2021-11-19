@@ -76,9 +76,7 @@ class RecordListHandler extends Handler {
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
                 canViewProblem
-                    ? problem.getList(domainId, rdocs.map(
-                        (rdoc) => (rdoc.domainId === domainId ? rdoc.pid : `${rdoc.pdomain}:${rdoc.pid}`),
-                    ), canViewProblemHidden || this.user._id, false)
+                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden || this.user._id, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {
@@ -125,7 +123,7 @@ class RecordDetailHandler extends Handler {
         }
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
-            problem.get(rdoc.pdomain, rdoc.pid),
+            problem.get(rdoc.domainId, rdoc.pid),
             user.getById(domainId, rdoc.uid),
         ]);
         if (
@@ -181,7 +179,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     all = false;
     tid: string;
     uid: number;
-    pdomain: string;
     pid: number;
     status: number;
     pretest = false;
@@ -216,13 +213,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             }
         }
         if (pid) {
-            const pdomain = pid.includes(':') ? pid.split(':')[0] : domainId;
-            const ppid = pid.includes(':') ? +pid.split(':')[1] : pid;
-            const pdoc = await problem.get(pdomain, ppid);
-            if (pdoc) {
-                this.pdomain = pdoc.domainId;
-                this.pid = pdoc.docId;
-            } else throw new ProblemNotFoundError(domainId, pid);
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) this.pid = pdoc.docId;
+            else throw new ProblemNotFoundError(domainId, pid);
         }
         if (status) this.status = status;
         if (all) {
@@ -251,7 +244,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
             user.getById(this.domainId, rdoc.uid),
-            problem.get(rdoc.pdomain, rdoc.pid),
+            problem.get(rdoc.domainId, rdoc.pid),
         ]);
         const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
@@ -290,7 +283,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
                 rdoc.compilerTexts = [];
             }
         }
-        const pdoc = await problem.get(rdoc.pdomain, rdoc.pid);
+        const pdoc = await problem.get(rdoc.domainId, rdoc.pid);
         let canView = pdoc && this.user.own(pdoc);
         canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         canView ||= this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);

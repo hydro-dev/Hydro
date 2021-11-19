@@ -522,6 +522,69 @@ interface HttpModule {
    * @return 存储的文件名
    */
   download(url: string, filename?: string): string;
+
+  /**
+   * 发送HTTP GET请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @return 响应结果
+   */
+  get(url: String, headers?: Record<string, string>): HttpResponse;
+
+  /**
+   * 发送HTTP HEAD请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @return 响应结果
+   */
+  head(url: String, headers?: Record<string, string>): HttpResponse;
+
+  /**
+   * 发送HTTP OPTIONS请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @return 响应结果
+   */
+  options(url: String, headers?: Record<string, string>): HttpResponse;
+
+  /**
+   * 发送HTTP POST请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @param body 请求体
+   * @return 响应结果
+   */
+  post(
+    url: String,
+    headers?: Record<string, string>,
+    body?: string
+  ): HttpResponse;
+
+  /**
+   * 发送HTTP PUT请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @param body 请求体
+   * @return 响应结果
+   */
+  put(
+    url: String,
+    headers?: Record<string, string>,
+    body?: string
+  ): HttpResponse;
+
+  /**
+   * 发送HTTP DELETE请求
+   * @param url 请求URL
+   * @param headers 请求头
+   * @param body 请求体
+   * @return 响应结果
+   */
+  delete(
+    url: String,
+    headers?: Record<string, string>,
+    body?: string
+  ): HttpResponse;
 }
 
 interface HttpResponse {

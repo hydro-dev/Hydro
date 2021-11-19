@@ -121,7 +121,7 @@ class SystemScriptHandler extends SystemHandler {
                     domainId,
                     rid,
                     status: STATUS.STATUS_SYSTEM_ERROR,
-                    message: `${err.message} \n${err.stack} `,
+                    message: `${err.message} \n${(err as any).params || []} \n${err.stack} `,
                     judger: 1,
                     time,
                     memory: 0,

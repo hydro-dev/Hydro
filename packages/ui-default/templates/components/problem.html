@@ -2,10 +2,7 @@
 {%- if not invalid %}
   <a
   {% if tdoc -%}
-    href="{{ url(
-      'contest_detail_problem' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem',
-      tid=tdoc.docId, pid=parseContestProblemId(pdoc, tdoc)
-    ) }}"
+    href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId), query={tid:tdoc.docId}) }}"
   {%- else -%}
     href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}"
   {%- endif %}

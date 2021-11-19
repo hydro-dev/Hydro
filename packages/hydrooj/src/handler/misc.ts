@@ -1,10 +1,12 @@
 /* eslint-disable camelcase */
+import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
 import { PRIV } from '../model/builtin';
+import * as oplog from '../model/oplog';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -47,7 +49,8 @@ export class FilesHandler extends Handler {
             throw new ForbiddenError('File limit exceeded.');
         }
         if (!this.request.files.file) throw new ValidationError('file');
-        const size = Math.sum((this.user._files || []).map((i) => i.size));
+        const f = statSync(this.request.files.file.path);
+        const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.user_files_size')) {
             throw new ForbiddenError('File size limit exceeded.');
         }
@@ -81,6 +84,16 @@ export class FSDownloadHandler extends Handler {
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
+        await oplog.add({
+            type: 'download',
+            time: new Date(),
+            uid: this.user._id,
+            ip: this.request.ip,
+            fileType: 'user',
+            target,
+            referer: this.request.referer,
+            size: file?.size || 0,
+        });
         if (!file) {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
@@ -93,7 +106,7 @@ export class FSDownloadHandler extends Handler {
             this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || type;
-            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
+            if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
         } else {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
@@ -102,10 +115,19 @@ export class FSDownloadHandler extends Handler {
     }
 }
 
+export class SwitchAccountHandler extends Handler {
+    @param('uid', Types.Int)
+    async get(domainId: string, uid: number) {
+        this.session.uid = uid;
+        this.back();
+    }
+}
+
 export async function apply() {
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     Route('home_files', '/file', FilesHandler, PRIV.PRIV_CREATE_FILE);
     Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
+    Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
 
 global.Hydro.handler.misc = apply;

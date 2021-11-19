@@ -76,14 +76,16 @@ async function constant(args: ConstantArgs) {
   return version;
 }
 
-bus.on('handler/after', async (that) => {
-  if (that.response.template) {
+const versionHandler = async (that) => {
+  if (that.response.template && !that.UiContext.constantVersion) {
     that.UiContext.constantVersion = await constant({
       domainId: that.domainId,
       lang: that.session.viewLang || that.user.viewLang,
     });
   }
-});
+};
+bus.on('handler/after', versionHandler);
+bus.on('handler/error', versionHandler);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -91,7 +93,6 @@ class WikiHelpHandler extends Handler {
   async get({ domainId }) {
     const LANGS = setting.langs;
     const languages = {};
-    // eslint-disable-next-line guard-for-in
     for (const key in LANGS) {
       if (LANGS[key].domain && !LANGS[key].domain.includes(domainId)) continue;
       languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;
@@ -105,7 +106,23 @@ class WikiAboutHandler extends Handler {
   noCheckPermView = true;
 
   async get() {
+    let raw = system.get('ui-default.about') || '';
+    // TODO template engine
+    raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || system.get('server.name')).trim();
+    const lines = raw.split('\n');
+    const sections = [];
+    for (const line of lines) {
+      if (line.startsWith('# ')) {
+        const id = line.split(' ')[1];
+        sections.push({
+          id,
+          title: line.split(id)[1].trim(),
+          content: '',
+        });
+      } else sections[sections.length - 1].content += `${line}\n`;
+    }
     this.response.template = 'about.html';
+    this.response.body = { sections };
   }
 }
 

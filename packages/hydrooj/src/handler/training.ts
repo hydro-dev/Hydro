@@ -38,7 +38,6 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
                     node.pids[i] = pdoc.docId;
                 }));
             }
-            // FIXME no-await-in-loop
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(tasks);
             const newNode = {

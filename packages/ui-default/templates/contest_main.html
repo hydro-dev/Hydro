@@ -84,8 +84,8 @@
             <div class="media">
               <div class="media__left medium">
                 <div class="contest__date numbox">
-                  <div class="numbox__num large">{{ datetimeSpan(tdoc['beginAt'], false, '%d')|safe }}</div>
-                  <div class="numbox__text">{{ datetimeSpan(tdoc['beginAt'], false, '%Y-%m')|safe }}</div>
+                  <div class="numbox__num large">{{ datetimeSpan(tdoc['beginAt'], false, 'D')|safe }}</div>
+                  <div class="numbox__text">{{ datetimeSpan(tdoc['beginAt'], false, 'YYYY-M')|safe }}</div>
                 </div>
               </div>
               <div class="media__body medium">

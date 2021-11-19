@@ -85,11 +85,9 @@ async function syzojSync(info) {
             filenameList: body.testData.map((node) => node.filename),
         });
     if (r.body.error) throw new Error(r.body.error.message || r.body.error);
-    const urls = {};
-    for (const t of r.body.downloadInfo) urls[t.filename] = t.downloadUrl;
-    for (const f of body.testData) {
+    for (const f of r.body.downloadInfo) {
         const p = new PassThrough();
-        superagent.get(urls[f.filename]).pipe(p);
+        superagent.get(f.downloadUrl).pipe(p);
         // eslint-disable-next-line no-await-in-loop
         await problem.addTestdata(domainId, docId, rename[f.filename] || f.filename, p);
     }
@@ -99,12 +97,10 @@ async function syzojSync(info) {
             type: 'AdditionalFile',
             filenameList: body.additionalFiles.map((node) => node.filename),
         });
-    const aurls = {};
     if (a.body.error) throw new Error(a.body.error.message || a.body.error);
-    for (const t of a.body.downloadInfo) aurls[t.filename] = t.downloadUrl;
-    for (const f of body.additionalFiles) {
+    for (const f of a.body.downloadInfo) {
         const p = new PassThrough();
-        superagent.get(aurls[f.filename]).pipe(p);
+        superagent.get(f.downloadUrl).pipe(p);
         // eslint-disable-next-line no-await-in-loop
         await problem.addAdditionalFile(domainId, docId, f.filename, p);
     }

@@ -1,4 +1,3 @@
-{% set no_path_section = true %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <script>
@@ -11,8 +10,8 @@
 }) }}
 {% if tdoc %}
   {{ set(UiContext, 'canViewRecord', model.contest.canShowSelfRecord.call(handler, tdoc)) }}
-  {{ set(UiContext, 'postSubmitUrl', url('contest_detail_problem_submit' if tdoc.docType == model.document.TYPE_CONTEST else 'homework_detail_problem_submit', pid=pdoc.pid, tid=tdoc.docId)) }}
-  {{ set(UiContext, 'getSubmissionsUrl', url('record_main', query={fullStatus:'true', pid:pdoc.pid, tid:tdoc.docId})) }}
+  {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId, query={tid:tdoc.docId})) }}
+  {{ set(UiContext, 'getSubmissionsUrl', url('record_main', query={fullStatus:'true', pid:pdoc.docId, tid:tdoc.docId})) }}
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}', query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'pretestConnUrl', "/record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.domainId + "&tid=" + tdoc.docId) }}
   {{ set(UiContext, 'tdoc', tdoc) }}
@@ -34,6 +33,16 @@
               <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
               <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">{{ rdoc.score }}</span>
             </a>
+          {% endif %}
+          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) and not tdoc %}
+            <form class="form--inline" action="{{ url('problem_main') }}" method="post">
+              <input type="hidden" name="pid" value="{{ pdoc.docId }}">
+              <input type="hidden" name="operation" value="{{ "star" if not psdoc.star else "unstar" }}">
+              <button class="star{% if psdoc.star %} activated{% endif %}" type="submit">
+                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
+                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+              </button>
+            </form>
           {% endif %}
           #{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
         </h1>
@@ -67,7 +76,7 @@
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
         <div class="section__body typo">
-        {% if not pdoc.data.length %}
+        {% if not pdoc.data.length and not pdoc.reference %}
           <blockquote class="warn">
             <p>{{ _('No testdata at current.') }}</p>
           </blockquote>
