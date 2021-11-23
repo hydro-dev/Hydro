@@ -141,6 +141,7 @@ global.Hydro.error = {
     ProblemNotFoundError,
     TrainingNotFoundError,
     ContestNotFoundError,
+    ContestNotEndedError,
     RecordNotFoundError,
     SolutionNotFoundError,
     AlreadyVotedError,
