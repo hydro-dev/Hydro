@@ -67,13 +67,25 @@
               row:false
             }) }}
           </div>
+          <div class="row">
           {{ form.form_text({
-            columns:null,
+            columns:9,
             label:'Problems',
             name:'pids',
             value:pids,
-            placeholder:_("Seperated with ','")
+            placeholder:_("Seperated with ','"),
+            row:false
           }) }}
+          {{ form.form_checkbox({
+            columns:3,
+            label:'Auto hide-and show',
+            name:'autoHide',
+            placeholder:'',
+            value:handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) and (tdoc.autoHide|default(true)),
+            disabled:not handler.user.hasPerm(perm.PERM_EDIT_PROBLEM),
+            row:false
+          }) }}
+          </div>
           {{ form.form_textarea({
             columns:null,
             label:'Content',
