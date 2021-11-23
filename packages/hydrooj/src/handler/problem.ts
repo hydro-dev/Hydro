@@ -5,10 +5,10 @@ import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotAttendedError, ContestNotFoundError,
-    ContestNotLiveError, ForbiddenError, NoProblemError,
-    NotFoundError, PermissionError, ProblemNotFoundError,
-    SolutionNotFoundError, ValidationError,
+    BadRequestError, ContestNotAttendedError, ContestNotEndedError,
+    ContestNotFoundError, ContestNotLiveError,
+    ForbiddenError, NoProblemError, NotFoundError,
+    PermissionError, ProblemNotFoundError, SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
     ProblemConfig,
@@ -491,6 +491,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+            if (this.tdoc && !contest.isDone(this.tdoc)) throw new ContestNotEndedError(this.tdoc.domainId, this.tdoc.docId);
         }
         if (this.pdoc.reference) this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
         const links = {};
@@ -599,6 +600,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         }
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
+            if (this.tdoc && !contest.isDone(this.tdoc)) throw new ContestNotEndedError(this.tdoc.domainId, this.tdoc.docId);
         }
         const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`;
         const file = await storage.getMeta(target);
