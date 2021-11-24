@@ -145,9 +145,9 @@ const steps = [
             : [
                 // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
                 ['apt-get upgrade openssl -y', { retry: true }],
-                ['wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -', { retry: true }],
-                [`echo "deb [ arch=amd64 ] ${getMirror('mongodb')} ${values.ubuntu_codename}\
-/mongodb-org/4.4 multiverse" >/etc/apt/sources.list.d/mongodb-org-4.4.list && \
+                ['wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -', { retry: true }],
+                [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
+/mongodb-org/5.0 multiverse" >/etc/apt/sources.list.d/mongodb-org-5.0.list && \
 apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             ],
     },

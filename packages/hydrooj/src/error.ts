@@ -86,6 +86,7 @@ export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenE
 export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');
 export const ContestAlreadyAttendedError = Err('ContestAlreadyAttendedError', ForbiddenError, "You've already attended this contest.");
 export const ContestNotLiveError = Err('ContestNotLiveError', ForbiddenError, 'This contest is not live.');
+export const ContestNotEndedError = Err('ContestNotEndedError', ForbiddenError, 'This contest is not ended.');
 export const ContestScoreboardHiddenError = Err('ContestScoreboardHiddenError', ForbiddenError, 'Contest scoreboard is not visible.');
 export const TrainingAlreadyEnrollError = Err('TrainingAlreadyEnrollError', ForbiddenError, "You've already enrolled this training.");
 export const HomeworkNotLiveError = Err('HomeworkNotLiveError', ForbiddenError, 'This homework is not open.');
@@ -140,6 +141,7 @@ global.Hydro.error = {
     ProblemNotFoundError,
     TrainingNotFoundError,
     ContestNotFoundError,
+    ContestNotEndedError,
     RecordNotFoundError,
     SolutionNotFoundError,
     AlreadyVotedError,

@@ -107,6 +107,7 @@ export class ProblemModel {
     static async get(
         domainId: string, pid: string | number,
         projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
+        rawConfig = false,
     ): Promise<ProblemDoc | null> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
@@ -116,7 +117,7 @@ export class ProblemModel {
             : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
         if (!res) return null;
         try {
-            res.config = await parseConfig(res.config);
+            if (!rawConfig) res.config = await parseConfig(res.config);
         } catch (e) {
             res.config = `Cannot parse: ${e.message}`;
         }

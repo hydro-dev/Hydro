@@ -49,6 +49,7 @@ class ProblemPageExtender {
     $('.main > .row').hide();
     $('.footer').hide();
     $(window).scrollTop(0);
+    window.document.body.style.overflow = 'hidden';
 
     this.inProgress = false;
     this.isExtended = true;
@@ -83,6 +84,7 @@ class ProblemPageExtender {
 
     this.$scratchpadContainer.hide();
     this.$content.transition({ opacity: 1 }, { duration: 100 });
+    window.document.body.style.overflow = 'scroll';
 
     this.inProgress = false;
     this.isExtended = false;

@@ -1,3 +1,5 @@
+import './utils';
+
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
@@ -5,7 +7,6 @@ import { getConfig } from './config';
 import { Logger } from './log';
 
 const argv = cac().parse();
-
 const logger = new Logger('cache');
 
 export = function main() {

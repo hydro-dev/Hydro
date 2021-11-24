@@ -268,13 +268,15 @@ export async function run({
     const files = await fs.readdir(dataDir, { withFileTypes: true });
     for (const file of files) {
         if (!file.isDirectory()) continue;
-        if (!pidMap[file.name]) continue;
-        report({ message: `Syncing testdata for ${file.name}` });
         const datas = await fs.readdir(`${dataDir}/${file.name}`);
+        const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
+        if (!pdoc) continue;
+        report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             const filename = nameMap[data] || data;
-            await problem.addTestdata(domainId, pidMap[file.name], filename, `${dataDir}/${file.name}/${data}`);
+            await problem.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data}`);
         }
+        await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
     }
     return true;
 }
