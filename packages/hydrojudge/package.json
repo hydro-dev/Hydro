@@ -8,22 +8,22 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "axios": "^0.21.4",
-        "cac": "^6.7.11",
-        "esbuild": "^0.13.12",
+        "cac": "^6.7.12",
+        "esbuild": "^0.13.15",
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "mongodb": "^3.7.3",
         "p-queue": "^7.1.0",
         "shell-quote": "^1.7.3",
-        "ws": "^8.2.3"
+        "ws": "^8.3.0"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
-        "@types/js-yaml": "^4.0.4",
-        "@types/lodash": "^4.14.176",
+        "@types/js-yaml": "^4.0.5",
+        "@types/lodash": "^4.14.177",
         "@types/shell-quote": "^1.7.1",
         "@types/ws": "^7.4.7"
     },

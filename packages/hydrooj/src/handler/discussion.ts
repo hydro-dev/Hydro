@@ -77,10 +77,6 @@ class DiscussionMainHandler extends Handler {
             system.get('pagination.discussion'),
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
-        const path = [
-            ['Hydro', 'homepage'],
-            ['discussion_main', null],
-        ];
         const [vndict, vnodes] = await Promise.all([
             discussion.getListVnodes(
                 domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
