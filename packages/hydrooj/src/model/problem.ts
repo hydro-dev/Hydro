@@ -21,6 +21,10 @@ import storage from './storage';
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
+function sortable(source: string) {
+    return source.replace(/(\d+)/g, (str) => '0'.repeat(6 - str.length) + str);
+}
+
 export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
@@ -92,7 +96,7 @@ export class ProblemModel {
         content: string, owner: number, tag: string[] = [], hidden = false,
     ) {
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden, nSubmit: 0, nAccept: 0,
+            title, tag, hidden, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         await bus.serial('problem/before-add', domainId, content, owner, docId, args);
@@ -125,7 +129,7 @@ export class ProblemModel {
     }
 
     static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
-        return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection);
+        return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
     }
 
     static getStatus(domainId: string, docId: number, uid: number) {
@@ -138,7 +142,12 @@ export class ProblemModel {
 
     static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
-        if (delpid) delete $set.pid;
+        if (delpid) {
+            delete $set.pid;
+            $set.sort = sortable(`P${_id}`);
+        } else if ($set.pid) {
+            $set.sort = sortable($set.pid);
+        }
         await bus.serial('problem/before-edit', $set);
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
         await bus.emit('problem/edit', result);
