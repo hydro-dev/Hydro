@@ -648,6 +648,18 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _54_55() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const bulk = db.collection('document').initializeUnorderedBulkOp();
+        function sortable(source: string) {
+            return source.replace(/(\d+)/g, (str) => '0'.repeat(6 - str.length) + str);
+        }
+        await iterateAllProblem(['pid', '_id'], async (pdoc) => {
+            bulk.find({ _id: pdoc._id }).updateOne({ $set: { sort: sortable(pdoc.pid || `P${pdoc.docId}`) } });
+        });
+        if (bulk.length) await bulk.execute();
+        return true;
+    },
 ];
 
 export default scripts;

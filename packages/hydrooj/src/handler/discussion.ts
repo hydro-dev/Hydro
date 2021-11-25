@@ -77,10 +77,6 @@ class DiscussionMainHandler extends Handler {
             system.get('pagination.discussion'),
         );
         const udict = await user.getList(domainId, ddocs.map((ddoc) => ddoc.owner));
-        const path = [
-            ['Hydro', 'homepage'],
-            ['discussion_main', null],
-        ];
         const [vndict, vnodes] = await Promise.all([
             discussion.getListVnodes(
                 domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
@@ -89,7 +85,7 @@ class DiscussionMainHandler extends Handler {
         ]);
         this.response.template = 'discussion_main_or_node.html';
         this.response.body = {
-            ddocs, dpcount, udict, page, page_name: 'discussion_main', vndict, vnode: {}, path, vnodes,
+            ddocs, dpcount, udict, page, page_name: 'discussion_main', vndict, vnode: {}, vnodes,
         };
     }
 }

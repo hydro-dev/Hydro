@@ -16,6 +16,6 @@
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
-        "moment-timezone": "^0.5.33"
+        "moment-timezone": "^0.5.34"
     }
 }

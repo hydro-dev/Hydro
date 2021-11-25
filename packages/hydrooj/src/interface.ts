@@ -242,6 +242,7 @@ declare module './model/problem' {
         html?: boolean;
         stats?: any;
         difficulty?: number;
+        sort?: string;
         reference?: {
             domainId: string;
             pid: number;
