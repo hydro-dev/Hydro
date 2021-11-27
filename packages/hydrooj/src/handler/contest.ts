@@ -116,6 +116,9 @@ export class ContestDetailHandler extends Handler {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
+        await TaskModel.deleteMany({
+            type: 'schedule', subType: 'contest.problemHide', domainId, tid,
+        });
         this.response.redirect = this.url('contest_main');
     }
 }

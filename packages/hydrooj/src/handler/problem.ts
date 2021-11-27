@@ -380,8 +380,12 @@ export class ProblemDetailHandler extends ProblemHandler {
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
-    async get(domainId: string, tid?: ObjectID) {
+    @param('tid', Types.ObjectID, true)
+    async prepare(domainId: string, tid?: ObjectID) {
         if (tid && !contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+    }
+
+    async get() {
         this.response.template = 'problem_submit.html';
         this.response.body = {
             pdoc: this.pdoc,
