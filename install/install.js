@@ -114,6 +114,7 @@ for (const line of lines) {
 }
 if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
 const Arch = values.id === 'arch';
+let migration;
 
 const steps = [
     {
@@ -127,6 +128,20 @@ const steps = [
                 if (locale === 'zh' && !Arch) {
                     log.info('扫码加入QQ群：');
                     exec('echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8', {}, 0);
+                }
+            },
+            () => {
+                if (fs.exist('/home/judge/src')) {
+                    const res = cli.prompt('migrate.hustojFound');
+                    if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
+                }
+
+                const docker = !exec1('docker -v').code;
+                if (!docker) return;
+                // TODO check more places
+                if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
+                    const res = cli.prompt('migrate.qduojFound');
+                    if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
                 }
             },
         ],
@@ -156,7 +171,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         skip: () => {
             const nvm = fs.exist('/root/.nvm');
             const node = !exec('node -v').code;
-            if (node && !nvm) log.fatal('error.nodeWithoutNVMDetected');
+            if (node && !nvm) log.warn('error.nodeWithoutNVMDetected');
             return nvm;
         },
         operations: [
@@ -275,6 +290,28 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         ],
     },
     {
+        init: 'install.migrateHustoj',
+        skip: () => migration === 'hustoj',
+        silent: true,
+        operations: [
+            ['yarn global add @hydrooj/migrate-hustoj', { retry: true }],
+            'hydrooj addon add @hydrooj/migrate-hustoj',
+            () => {
+                const config = {
+                    host: 'localhost',
+                    port: 3306,
+                    name: 'jol',
+                    dataDir: '/home/judge/data',
+                    // TODO: auto-read uname&passwd&contestType
+                    username: 'debian-sys-maint',
+                    password: '',
+                    contestType: 'acm',
+                };
+                exec2(`hydrooj cli script migrateHustoj ${JSON.stringify(config)}`);
+            },
+        ],
+    },
+    {
         init: 'install.done',
         operations: [
             () => {
@@ -291,7 +328,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
 
 for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
-    log.info(step.init);
+    if (!step.silent) log.info(step.init);
     if (!(step.skip && step.skip())) {
         for (let op of step.operations) {
             if (!(op instanceof Array)) op = [op, {}];
@@ -317,7 +354,7 @@ for (let i = 0; i < steps.length; i++) {
                 }
             }
         }
-    } else log.info('info.skip');
+    } else if (!step.silent) log.info('info.skip');
 }
 
 exit(0);
