@@ -81,6 +81,41 @@ if (argv.args[0] === 'db') {
     return child.spawn('mongo', [url], { stdio: 'inherit' });
 }
 
+if (argv.args[0] === 'backup') {
+    const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
+    const url = buildUrl(JSON.parse(dbConfig));
+    const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
+    child.spawnSync('mongodump', [url, `--out=${dir}`], { stdio: 'inherit' });
+    const env = `${os.homedir()}/.hydro/env`;
+    if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
+    const target = `backup-${new Date().toISOString()}.zip`;
+    const args = ['-r', target, dir];
+    if (!argv.options.dbOnly) {
+        args.push(argv.options.dir || '/data/file');
+    }
+    child.spawnSync('zip', args, { stdio: 'inherit' });
+    child.spawnSync('rm', ['-rf', dir]);
+    console.log(`Database backup saved at ${target}`);
+    return;
+}
+
+if (argv.args[0] === 'restore') {
+    const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
+    const url = buildUrl(JSON.parse(dbConfig));
+    const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
+    if (!fs.existsSync(argv.args[1])) {
+        console.error('Cannot find file');
+        return;
+    }
+    child.spawnSync('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
+    child.spawnSync('mongorestore', [url, dir, '--drop'], { stdio: 'inherit' });
+    if (fs.existsSync(`${dir}/file`)) {
+        child.spawnSync('mv', ['-f', `${dir}/file/**`, '/data/file'], { stdio: 'inherit' });
+    }
+    fs.removeSync(dir);
+    return;
+}
+
 if (!addons.includes('@hydrooj/ui-default')) {
     try {
         const ui = argv.options.ui || '@hydrooj/ui-default';
