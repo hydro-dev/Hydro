@@ -1,11 +1,23 @@
 .pager
-  margin-bottom: rem(10px)
-  border-top: 2px solid $pager-border-color
   text-align: center
   font-size: rem($font-size-small)
 
   &:empty
     display: none
+  
+  &.pager-bottom
+    margin-bottom: rem(10px)
+    border-top: 2px solid $pager-border-color
+
+    .pager__item
+      border-top: 2px solid $pager-border-color
+
+  &.pager-top
+    margin-top: rem(10px)
+    border-bottom: 2px solid $pager-border-color
+
+    .pager__item
+      border-bottom: 2px solid $pager-border-color
 
   li
     margin: 0
@@ -17,7 +29,6 @@
   padding: rem(10px)
   text-decoration: none
   border: 0
-  border-top: 2px solid $pager-border-color
   transition: border-top .2s linear, color .2s linear
   color: #a7a7a7
 
@@ -32,8 +43,8 @@
         color: #666
 
   &.current
-    color: $secondary-color
-    border-color: $secondary-color
+    color: $secondary-color !important
+    border-color: $secondary-color !important
 
 +mobile()
   .pager__item

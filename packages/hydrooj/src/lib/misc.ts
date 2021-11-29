@@ -24,7 +24,7 @@ export function datetimeSpan(dt: Date | ObjectID, relative = true, format = 'YYY
 }
 
 export function* paginate(page: number, numPages: number) {
-    const radius = 2;
+    const radius = 5;
     let first: number;
     let last: number;
     if (page > 1) {

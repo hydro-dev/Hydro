@@ -1,6 +1,6 @@
-{% macro render(page, num_pages, add_qs='') %}
+{% macro render(page, num_pages, add_qs='', position='bottom') %}
 {% if num_pages > 0 %}
-  <ul class="pager">
+  <ul class="pager pager-{{ position }}">
   {%- for type, page0 in paginate(page, num_pages) -%}
     <li>
     {% if type == 'first' %}
