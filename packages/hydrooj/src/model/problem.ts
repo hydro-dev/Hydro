@@ -22,7 +22,7 @@ export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
 function sortable(source: string) {
-    return source.replace(/(\d+)/g, (str) => '0'.repeat(6 - str.length) + str);
+    return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
 }
 
 export class ProblemModel {
