@@ -367,6 +367,7 @@ export interface DomainDoc extends Record<string, any> {
 export interface DomainUnion {
     _id: string;
     union: string[];
+    problem: boolean;
 }
 
 // Message

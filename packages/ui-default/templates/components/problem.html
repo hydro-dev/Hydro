@@ -1,23 +1,28 @@
 {% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false, inline=false) %}
-{%- if not invalid %}
-  <a
-  {% if tdoc -%}
-    href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId), query={tid:tdoc.docId}) }}"
-  {%- else -%}
-    href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}"
-  {%- endif %}
-  >
-{%- endif %}
-{{ pdoc.pid if pdoc.pid else 'P'+pdoc.docId }}. {{ pdoc.title }}
-{%- if not invalid %}
+{%- if not invalid -%}
+  {% set _linkArgs = { pid:pdoc.pid|default(pdoc.docId) } %}
+  {% if tdoc %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
+  {% if pdoc.domainId !== handler.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
+  <a href="{{ url('problem_detail', _linkArgs) }}">
+{%- endif -%}
+{%- if pdoc.domainId !== handler.domainId -%}
+  {{ pdoc.domainId }}#
+{%- endif -%}
+{%- if pdoc.pid -%}
+  {{ pdoc.pid }}
+{%- else -%}
+  {{ 'P'+pdoc.docId if pdoc.domainId === handler.domainId else pdoc.docId }}
+{%- endif -%}
+. {{ pdoc.title }}
+{%- if not invalid -%}
   </a>
-{%- endif %}
-{%- if pdoc.hidden and show_invisible_flag %}
+{%- endif -%}
+{%- if pdoc.hidden and show_invisible_flag -%}
   <span class="text-orange">({{ _('Hidden') }})</span>
-{%- endif %}
-{%- if show_tags %}
+{%- endif -%}
+{%- if show_tags -%}
   {{ render_problem_tags(pdoc, inline=inline) }}
-{%- endif %}
+{%- endif -%}
 {% endmacro %}
 
 {% macro render_problem_tags(pdoc, show_none_label=false, inline=false) %}

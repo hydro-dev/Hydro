@@ -16,6 +16,7 @@ import {
 import { buildProjection } from '../utils';
 import { STATUS } from './builtin';
 import * as document from './document';
+import DomainModel from './domain';
 import storage from './storage';
 
 export interface ProblemDoc extends Document { }
@@ -130,6 +131,30 @@ export class ProblemModel {
 
     static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
+    }
+
+    static async list(
+        domainId: string, query: FilterQuery<ProblemDoc>,
+        projection = ProblemModel.PROJECTION_LIST, page: number, pageSize: number,
+    ): Promise<[ProblemDoc[], number, number]> {
+        const union = await DomainModel.getUnion(domainId);
+        const domainIds = [domainId];
+        if (union?.problem) domainIds.push(...union.union);
+        let count = 0;
+        const pdocs = [];
+        for (const id of domainIds) {
+            // TODO enhance performance
+            // eslint-disable-next-line no-await-in-loop
+            const ccount = await document.getMulti(id, document.TYPE_PROBLEM, query).count();
+            if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
+                // eslint-disable-next-line no-await-in-loop
+                pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
+                    .sort({ sort: 1, docId: 1 })
+                    .skip(Math.max((page - 1) * pageSize - count, 0)).limit(pageSize - pdocs.length).toArray());
+            }
+            count += ccount;
+        }
+        return [pdocs, Math.ceil(count / pageSize), count];
     }
 
     static getStatus(domainId: string, docId: number, uid: number) {

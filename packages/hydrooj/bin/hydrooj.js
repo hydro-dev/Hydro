@@ -116,6 +116,7 @@ if (argv.args[0] === 'restore') {
         fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
     }
     fs.removeSync(dir);
+    console.log('Successfully restored.');
     return;
 }
 
