@@ -85,7 +85,7 @@ if (argv.args[0] === 'backup') {
     const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
     const url = buildUrl(JSON.parse(dbConfig));
     const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
-    child.spawnSync('mongodump', [url, `--out=${dir}`], { stdio: 'inherit' });
+    child.spawnSync('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
     const env = `${os.homedir()}/.hydro/env`;
     if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
     const target = `${process.cwd()}/backup-${new Date().toISOString()}.zip`;
@@ -111,6 +111,9 @@ if (argv.args[0] === 'restore') {
     if (fs.existsSync(`${dir}/file`)) {
         child.spawnSync('rm', ['-rf', '/data/file/**'], { stdio: 'inherit' });
         child.spawnSync('mv', ['-f', `${dir}/file/**`, '/data/file'], { stdio: 'inherit' });
+    }
+    if (fs.existsSync(`${dir}/env`)) {
+        fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
     }
     fs.removeSync(dir);
     return;
