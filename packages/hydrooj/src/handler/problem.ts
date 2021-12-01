@@ -161,6 +161,12 @@ export class ProblemMainHandler extends ProblemHandler {
                 pdocs.unshift(pdoc);
                 pcount = pcount - count + pdocs.length;
             }
+            const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!canViewHidden) {
+                const unshift = [];
+                for (const doc of pdocs) if (doc.hidden && !this.user.own(doc)) unshift.push(doc);
+                for (const task of unshift) pdocs.unshift(task);
+            }
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             psdict = await problem.getListStatus(
