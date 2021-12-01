@@ -88,12 +88,11 @@ if (argv.args[0] === 'backup') {
     child.spawnSync('mongodump', [url, `--out=${dir}`], { stdio: 'inherit' });
     const env = `${os.homedir()}/.hydro/env`;
     if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
-    const target = `backup-${new Date().toISOString()}.zip`;
-    const args = ['-r', target, dir];
+    const target = `${process.cwd()}/backup-${new Date().toISOString()}.zip`;
+    child.spawnSync('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
     if (!argv.options.dbOnly) {
-        args.push(argv.options.dir || '/data/file');
+        child.spawnSync('zip', ['-r', target, 'file'], { cwd: '/data', stdio: 'inherit' });
     }
-    child.spawnSync('zip', args, { stdio: 'inherit' });
     child.spawnSync('rm', ['-rf', dir]);
     console.log(`Database backup saved at ${target}`);
     return;
@@ -108,8 +107,9 @@ if (argv.args[0] === 'restore') {
         return;
     }
     child.spawnSync('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
-    child.spawnSync('mongorestore', [url, dir, '--drop'], { stdio: 'inherit' });
+    child.spawnSync('mongorestore', [url, `${dir}/dump`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
+        child.spawnSync('rm', ['-rf', '/data/file/**'], { stdio: 'inherit' });
         child.spawnSync('mv', ['-f', `${dir}/file/**`, '/data/file'], { stdio: 'inherit' });
     }
     fs.removeSync(dir);
@@ -157,7 +157,9 @@ if (argv.args[0] && argv.args[0] !== 'cli') {
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
+        return;
     }
+    console.error('Unknown command: ', argv.args[0]);
 } else {
     const hydro = require('../src/loader');
     addons = Array.from(new Set(addons));
