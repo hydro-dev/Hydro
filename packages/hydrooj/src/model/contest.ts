@@ -78,6 +78,7 @@ const acm: ContestRule = {
         ];
         if (isExport) {
             columns.push(
+                { type: 'total_time', value: _('Penalty') },
                 { type: 'total_time', value: _('Total Time (Seconds)') },
                 { type: 'total_time_str', value: _('Total Time') },
             );
@@ -128,7 +129,9 @@ const acm: ContestRule = {
                 { type: 'string', value: tsdoc.accept || 0 },
             ];
             if (isExport) {
+                const penalty = Math.sum(tdoc.pids.map((i) => (tsddict[i]?.naccept || 0))) * 20 * 60;
                 row.push(
+                    { type: 'string', value: penalty.toString() },
                     { type: 'string', value: tsdoc.time || 0.0 },
                     { type: 'string', value: tsdoc.time || 0.0 },
                 );
