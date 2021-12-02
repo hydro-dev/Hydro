@@ -103,7 +103,7 @@ class RecordModel {
 
     static async add(
         domainId: string, pid: number, uid: number,
-        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean,
+        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest = false,
     ) {
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
