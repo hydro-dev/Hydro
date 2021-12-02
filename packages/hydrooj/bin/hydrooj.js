@@ -24,8 +24,10 @@ const child = require('child_process');
 const esbuild = require('esbuild');
 
 const exec = (...args) => {
+    console.log('Executing: ', args[0], args[1].join(' '));
     const res = child.spawnSync(...args);
     if (res.error) throw res.error;
+    if (res.status) throw new Error(`Error: Exited with code ${res.status}`);
     return res;
 };
 
@@ -116,7 +118,7 @@ if (argv.args[0] === 'restore') {
     exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).db}`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
         exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
-        exec('mv', ['-f', `${dir}/file/*`, '/data/file'], { stdio: 'inherit' });
+        exec('mv', [`${dir}/file/*`, '/data/file'], { stdio: 'inherit' });
     }
     if (fs.existsSync(`${dir}/env`)) {
         fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
