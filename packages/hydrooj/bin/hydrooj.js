@@ -118,7 +118,7 @@ if (argv.args[0] === 'restore') {
     exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).name}`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
         exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
-        exec('mv', [`${dir}/file/*`, '/data/file'], { stdio: 'inherit' });
+        exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });
     }
     if (fs.existsSync(`${dir}/env`)) {
         fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
