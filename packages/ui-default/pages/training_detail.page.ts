@@ -11,7 +11,7 @@ async function handleSection(ev, type: string) {
   } else {
     await slideUp($detail, 300, { opacity: 1 }, { opacity: 0 });
   }
-  $section.addClass(`${type}d`);
+  $section.addClass(type === 'expand' ? 'expanded' : 'collapsed');
   $section.removeClass(type === 'expand' ? 'collapsed' : 'expanded');
   $section.removeClass('animating');
 }

@@ -275,6 +275,11 @@ class DomainModel {
     static async getUnion(domainId: string) {
         return await collUnion.findOne({ _id: domainId });
     }
+
+    @ArgMethod
+    static async searchUnion(query) {
+        return await collUnion.find(query).toArray();
+    }
 }
 
 bus.once('app/started', async () => {

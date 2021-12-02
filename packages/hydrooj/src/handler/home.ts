@@ -102,7 +102,8 @@ class HomeHandler extends Handler {
             const psdict = {};
             for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
             const pdict = await ProblemModel.getList(
-                domainId, psdocs.map((pdoc) => pdoc.docId), false,
+                domainId, psdocs.map((pdoc) => pdoc.docId),
+                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
             );
             const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
             return ['problem', pdocs, psdict];

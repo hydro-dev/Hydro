@@ -23,6 +23,12 @@ const argv = require('cac')().parse();
 const child = require('child_process');
 const esbuild = require('esbuild');
 
+const exec = (...args) => {
+    const res = child.spawnSync(...args);
+    if (res.error) throw res.error;
+    return res;
+};
+
 if (!process.env.NODE_APP_INSTANCE) process.env.NODE_APP_INSTANCE = '0';
 const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
@@ -64,7 +70,7 @@ require.extensions['.ts'] = require.extensions['.tsx'] = function loader(module,
 function buildUrl(opts) {
     let mongourl = `${opts.protocol || 'mongodb'}://`;
     if (opts.username) mongourl += `${opts.username}:${opts.password}@`;
-    mongourl += `${opts.host}:${opts.port}/${opts.name}`;
+    mongourl += `${opts.host}:${opts.port}/${opts.db}`;
     if (opts.url) mongourl = opts.url;
     return mongourl;
 }
@@ -85,16 +91,15 @@ if (argv.args[0] === 'backup') {
     const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
     const url = buildUrl(JSON.parse(dbConfig));
     const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
-    child.spawnSync('mongodump', [url, `--out=${dir}`], { stdio: 'inherit' });
+    exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
     const env = `${os.homedir()}/.hydro/env`;
     if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
-    const target = `backup-${new Date().toISOString()}.zip`;
-    const args = ['-r', target, dir];
+    const target = `${process.cwd()}/backup-${new Date().toISOString()}.zip`;
+    exec('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
     if (!argv.options.dbOnly) {
-        args.push(argv.options.dir || '/data/file');
+        exec('zip', ['-r', target, 'file'], { cwd: '/data', stdio: 'inherit' });
     }
-    child.spawnSync('zip', args, { stdio: 'inherit' });
-    child.spawnSync('rm', ['-rf', dir]);
+    exec('rm', ['-rf', dir]);
     console.log(`Database backup saved at ${target}`);
     return;
 }
@@ -107,12 +112,17 @@ if (argv.args[0] === 'restore') {
         console.error('Cannot find file');
         return;
     }
-    child.spawnSync('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
-    child.spawnSync('mongorestore', [url, dir, '--drop'], { stdio: 'inherit' });
+    exec('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
+    exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).db}`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
-        child.spawnSync('mv', ['-f', `${dir}/file/**`, '/data/file'], { stdio: 'inherit' });
+        exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
+        exec('mv', ['-f', `${dir}/file/*`, '/data/file'], { stdio: 'inherit' });
+    }
+    if (fs.existsSync(`${dir}/env`)) {
+        fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
     }
     fs.removeSync(dir);
+    console.log('Successfully restored.');
     return;
 }
 
@@ -157,7 +167,9 @@ if (argv.args[0] && argv.args[0] !== 'cli') {
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
+        return;
     }
+    console.error('Unknown command: ', argv.args[0]);
 } else {
     const hydro = require('../src/loader');
     addons = Array.from(new Set(addons));

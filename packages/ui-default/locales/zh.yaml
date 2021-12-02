@@ -347,7 +347,7 @@ Hint::page::main: 欢迎来到 Hydro！ 您可在右上角注册或登录。此�
 Hint::page::problem_detail: 这是题目详情页面。您可点击右侧“进入在线编程模式"开始编写您的代码。
 Hint::page::problem_files: 您可以将文件或压缩包拖拽至对应区域来上传文件。点击文件名在线编辑或按住 Ctrl 后点击文件名下载单个文件。
 Hint::page::problem_main: 这是题目列表页面。您可在页面右侧进行筛选或搜索。
-Hitokoto: 一言（ヒトコト）
+Hitokoto: 一言
 home_account: 账户设置
 home_domain_account: 当前域的设置
 home_domain_create: 创建域

@@ -128,17 +128,22 @@ export class ProblemMainHandler extends ProblemHandler {
         const query: FilterQuery<ProblemDoc> = {};
         let psdict = {};
         const search = global.Hydro.lib.problemSearch;
-        let sort: number[];
-        if (category.length) {
-            query.$and = [];
-            for (const tag of category) query.$and.push({ tag });
-        }
+        let sort: string[];
+        let fail = false;
+        if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (q) category.push(q);
         if (category.length) this.extraTitleContent = category.join(',');
         if (q) {
             if (search) {
                 const result = await search(domainId, q);
-                query.docId = { $in: result };
+                if (!result.length) fail = true;
+                if (!query.$and) query.$and = [];
+                query.$and.push({
+                    $or: result.map((i) => {
+                        const [did, docId] = i.split('/');
+                        return { domainId: did, docId: +docId };
+                    }),
+                });
                 sort = result;
             } else query.$text = { $search: q };
         }
@@ -147,15 +152,16 @@ export class ProblemMainHandler extends ProblemHandler {
         }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
-        let [pdocs, ppcount, pcount] = await paginate(
-            problem.getMulti(domainId, query).sort({ sort: 1, docId: 1 }),
-            page,
-            system.get('pagination.problem'),
-        );
-        if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(a.docId) - sort.indexOf(b.docId));
+        let [pdocs, ppcount, pcount] = fail
+            ? [[], 0, 0]
+            : await problem.list(
+                domainId, query, undefined,
+                page, system.get('pagination.problem'),
+            );
+        if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
-            if (pdoc) {
+            if (pdoc && (!pdoc.hidden || this.user.own(pdoc) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) {
                 const count = pdocs.length;
                 pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
                 pdocs.unshift(pdoc);
