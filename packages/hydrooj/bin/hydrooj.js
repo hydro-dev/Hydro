@@ -72,7 +72,7 @@ require.extensions['.ts'] = require.extensions['.tsx'] = function loader(module,
 function buildUrl(opts) {
     let mongourl = `${opts.protocol || 'mongodb'}://`;
     if (opts.username) mongourl += `${opts.username}:${opts.password}@`;
-    mongourl += `${opts.host}:${opts.port}/${opts.db}`;
+    mongourl += `${opts.host}:${opts.port}/${opts.name}`;
     if (opts.url) mongourl = opts.url;
     return mongourl;
 }
@@ -115,7 +115,7 @@ if (argv.args[0] === 'restore') {
         return;
     }
     exec('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
-    exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).db}`, '--drop'], { stdio: 'inherit' });
+    exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).name}`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
         exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
         exec('mv', [`${dir}/file/*`, '/data/file'], { stdio: 'inherit' });
