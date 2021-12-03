@@ -74,7 +74,7 @@ const acm: ContestRule = {
         const columns: ScoreboardRow = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
-            { type: 'solved_problems', value: _('Solved Problems') },
+            { type: 'solved_problems', value: _('Solved') },
         ];
         if (isExport) {
             columns.push(
@@ -140,7 +140,7 @@ const acm: ContestRule = {
                 const doc = tsddict[pid] || {};
                 const accept = doc.status === STATUS.STATUS_ACCEPTED;
                 const rid = accept ? doc.rid : null;
-                const colAccepted = `${accept ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
+                const colAccepted = `${(accept && isExport) ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
                 const colTime = accept ? doc.time : '-';
                 const colTimeStr = accept ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {
