@@ -130,7 +130,7 @@ class RecordModel {
         } else data.contest = tidOrInput;
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, isContest ? 50 : 0);
+            const priority = await RecordModel.submissionPriority(uid, typeof tidOrInput === 'string' ? -20 : (isContest ? 50 : 0));
             await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {});
         }
         return res.insertedId;
