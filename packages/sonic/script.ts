@@ -13,7 +13,7 @@ export async function run({ domainId }, report) {
         if (!(i % 1000)) report({ message: `${i} problems indexed` });
         const union = await DomainModel.searchUnion({ union: pdoc.domainId, problem: true });
         const tasks = [];
-        for (const did of [domainId, ...union.map((j) => j._id)]) {
+        for (const did of [pdoc.domainId, ...union.map((j) => j._id)]) {
             tasks.push(
                 pdoc.title && sonic.push('problem', `${did}@title`, `${pdoc.domainId}/${pdoc.docId}`, pdoc.title),
                 pdoc.content.toString() && sonic.push('problem', `${did}@content`, `${pdoc.domainId}/${pdoc.docId}`, pdoc.content.toString()),
