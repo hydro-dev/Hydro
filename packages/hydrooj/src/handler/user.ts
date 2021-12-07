@@ -218,9 +218,9 @@ class UserRegisterWithCodeHandler extends Handler {
         if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
-        const [id, domain] = tdoc.mail.split('@');
+        const [id, mailDomain] = tdoc.mail.split('@');
         const $set: any = {};
-        if (domain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
+        if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         this.session.viewLang = '';
