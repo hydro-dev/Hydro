@@ -105,6 +105,7 @@ export class ProblemModel {
         args.content = content;
         args.owner = owner;
         args.docType = document.TYPE_PROBLEM;
+        args.domainId = domainId;
         await bus.emit('problem/add', args, result);
         return result;
     }
