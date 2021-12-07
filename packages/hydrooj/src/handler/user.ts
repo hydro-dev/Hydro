@@ -11,8 +11,10 @@ import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
+import domain from '../model/domain';
 import oauth from '../model/oauth';
+import problem, { ProblemDoc } from '../model/problem';
 import * as system from '../model/system';
 import task from '../model/task';
 import token from '../model/token';
@@ -286,11 +288,26 @@ class UserDetailHandler extends Handler {
     async get(domainId: string, uid: number) {
         if (uid === 0) throw new UserNotFoundError(0);
         const isSelfProfile = this.user._id === uid;
-        const [udoc, sdoc] = await Promise.all([
+        const [udoc, sdoc, union] = await Promise.all([
             user.getById(domainId, uid),
             token.getMostRecentSessionByUid(uid),
+            domain.getUnion(domainId),
         ]);
         if (!udoc) throw new UserNotFoundError(uid);
+        const pdocs: ProblemDoc[] = [];
+        const acInfo: Record<string, number> = {};
+        const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
+        await Promise.all([domainId, ...union.union].map(async (did) => {
+            const psdocs = await problem.getMultiStatus(did, { uid, status: STATUS.STATUS_ACCEPTED }).toArray();
+            pdocs.push(...Object.values(await problem.getList(did, psdocs.map((i) => i.docId), canViewHidden, false, undefined, true)));
+        }));
+        for (const pdoc of pdocs) {
+            for (const tag of pdoc.tag) {
+                if (acInfo[tag]) acInfo[tag]++;
+                else acInfo[tag] = 1;
+            }
+        }
+        const tags = Object.entries(acInfo).sort((a, b) => b[1] - a[1]).slice(0, 20);
         // Remove sensitive data
         if (!isSelfProfile && sdoc) {
             sdoc.createIp = '';
@@ -298,7 +315,9 @@ class UserDetailHandler extends Handler {
             sdoc._id = '';
         }
         this.response.template = 'user_detail.html';
-        this.response.body = { isSelfProfile, udoc, sdoc };
+        this.response.body = {
+            isSelfProfile, udoc, sdoc, pdocs, tags,
+        };
         this.extraTitleContent = udoc.uname;
     }
 }
