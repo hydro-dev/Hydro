@@ -105,6 +105,7 @@ export class ProblemModel {
         args.content = content;
         args.owner = owner;
         args.docType = document.TYPE_PROBLEM;
+        args.domainId = domainId;
         await bus.emit('problem/add', args, result);
         return result;
     }
@@ -273,6 +274,7 @@ export class ProblemModel {
     static async getList(
         domainId: string, pids: number[],
         getHidden: number | boolean = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
+        indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
@@ -299,7 +301,7 @@ export class ProblemModel {
                 }
             }
         }
-        return Object.assign(r, l);
+        return indexByDocIdOnly ? r : Object.assign(r, l);
     }
 
     static async getPrefixList(domainId: string, prefix: string) {
