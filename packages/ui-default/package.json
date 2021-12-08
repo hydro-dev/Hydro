@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.27.2",
+  "version": "4.27.3",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -66,6 +66,7 @@
     "prismjs": "^1.25.0",
     "prop-types": "^15.7.2",
     "qrcode": "^1.5.0",
+    "raw-loader": "^4.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6",
