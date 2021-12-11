@@ -2,6 +2,7 @@
 import { NumericDictionary, unionWith } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { ProblemDoc, Tdoc, Udoc } from '../interface';
+import difficultyAlgorithm from '../lib/difficulty';
 import rating from '../lib/rating';
 import { PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -32,7 +33,8 @@ async function runProblem(...arg: any[]) {
             },
         ).count() + 99) / 100,
     );
-    const p = (pdoc.difficulty || 5) / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
+    pdoc.difficulty = pdoc.difficulty || difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept) || 5;
+    const p = pdoc.difficulty / (Math.sqrt(Math.sqrt(pdoc.nAccept)) + 1) / 10;
     for (let page = 1; page <= nPages; page++) {
         const psdocs = await problem.getMultiStatus(
             pdoc.domainId, { docId: pdoc.docId, rid: { $ne: null } },
@@ -45,7 +47,7 @@ async function runProblem(...arg: any[]) {
             }
         }
     }
-    udict[pdoc.owner] = (udict[pdoc.owner] || 1500) + (pdoc.difficulty || 5);
+    udict[pdoc.owner] = (udict[pdoc.owner] || 1500) + pdoc.difficulty;
 }
 
 async function runContest(tdoc: Tdoc<30 | 60>, udict: ND, report: Function): Promise<void>;

@@ -660,6 +660,11 @@ const scripts: UpgradeScript[] = [
         if (bulk.length) await bulk.execute();
         return true;
     },
+    async function _55_56() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('document').updateMany({ docType: document.TYPE_PROBLEM }, { $unset: { difficulty: '' } });
+        return true;
+    },
 ];
 
 export default scripts;

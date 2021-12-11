@@ -30,13 +30,24 @@
               </label>
             </div>
           </div>
+          <div class="row">
           {{ form.form_text({
-               columns:12,
+               row:false,
+               columns:8,
                label:'Tags',
                help_text:'Split by \', \'.',
                name:'tag',
                value:pdoc['tag']|default([])|join(', ')
              }) }}
+          {{ form.form_text({
+               row:false,
+               columns:4,
+               label:'Difficulty',
+               help_text:'From 1-10',
+               name:'difficulty',
+               value:pdoc['difficulty']
+             }) }}
+          </div>
           <div class="section__tab-container nojs--hide">
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header">

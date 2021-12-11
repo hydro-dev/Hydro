@@ -129,6 +129,7 @@ env.addGlobal('size', misc.size);
 env.addGlobal('utils', { status });
 env.addGlobal('avatarUrl', avatar);
 env.addGlobal('formatSeconds', misc.formatSeconds);
+env.addGlobal('lib', global.Hydro.lib);
 env.addGlobal('model', global.Hydro.model);
 env.addGlobal('ui', global.Hydro.ui);
 env.addGlobal('isIE', (str) => (str ? (str.includes('MSIE') || str.includes('rv:11.0')) : false));

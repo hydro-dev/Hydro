@@ -8,6 +8,7 @@ import { ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc,
 } from '../interface';
+import difficultyAlgorithm from '../lib/difficulty';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
 import {
