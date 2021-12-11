@@ -222,7 +222,7 @@ export class ContestEditHandler extends Handler {
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             path,
             pids: tid ? this.tdoc.pids.join(',') : '',
-            fullScore: tid ? this.tdoc.fullScore.join(',') : '',
+            fullScore: tid ? this.tdoc.fullScore ? this.tdoc.fullScore.join(',') : '' : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
             page_name: tid ? 'contest_edit' : 'contest_create',
@@ -237,13 +237,13 @@ export class ContestEditHandler extends Handler {
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
     @param('pids', Types.Content)
-    @param('fullScore', Types.Content)
+    @param('fullScore', Types.Content, true)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, _fullScore: string, rated = false, _code = '', autoHide = false,
+        title: string, content: string, rule: string, _pids: string, _fullScore = '100', rated = false, _code = '', autoHide = false,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
