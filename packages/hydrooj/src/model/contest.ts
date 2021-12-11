@@ -456,7 +456,7 @@ const cf: ContestRule = {
         }
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const j = effective[tdoc.pids[i - 1]];
-            if (j && j.score === 100) j.score = 500 * i;
+            if (j) j.score = tdoc.fullScore[i - 1];
         }
         for (const key in effective) {
             const j = effective[key];
@@ -494,7 +494,7 @@ const cf: ContestRule = {
             } else {
                 columns.push({
                     type: 'problem_detail',
-                    value: String.fromCharCode(64 + i),
+                    value: '{0}\n{1}'.format(pdict[pid].pid, tdoc.fullScore[i - 1]),
                     raw: pid,
                 });
             }
@@ -560,18 +560,18 @@ function _getStatusJournal(tsdoc) {
 
 export async function add(
     domainId: string, title: string, content: string, owner: number,
-    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
+    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [], fullScore: number[] = [],
     rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!this.RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, fullScore, attend: 0,
     });
     this.RULES[rule].check(data);
     await bus.serial('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
+        ...data, title, rule, beginAt, endAt, pids, fullScore, attend: 0, rated,
     });
     await bus.serial('contest/add', data, res);
     return res;

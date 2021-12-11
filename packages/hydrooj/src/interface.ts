@@ -336,6 +336,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     content: string,
     rule: string,
     pids: number[],
+    fullScore: number[],
     rated?: boolean,
     _code?: string,
 

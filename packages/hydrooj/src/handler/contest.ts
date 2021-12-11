@@ -33,6 +33,7 @@ registerValue('Contest', [
     ['endAt', 'Date!'],
     ['attend', 'Int!'],
     ['pids', '[Int]!'],
+    ['fullScore', '[Int]!'],
     ['rated', 'Boolean!'],
 ]);
 
@@ -221,6 +222,7 @@ export class ContestEditHandler extends Handler {
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             path,
             pids: tid ? this.tdoc.pids.join(',') : '',
+            fullScore: tid ? this.tdoc.fullScore.join(',') : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
             page_name: tid ? 'contest_edit' : 'contest_create',
@@ -235,15 +237,18 @@ export class ContestEditHandler extends Handler {
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
     @param('pids', Types.Content)
+    @param('fullScore', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false, _code = '', autoHide = false,
+        title: string, content: string, rule: string, _pids: string, _fullScore: string, rated = false, _code = '', autoHide = false,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
+        const fullScore = _fullScore.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
+        if (rule === 'Codeforces' && fullScore.length !== 1 && fullScore.length !== pids.length) throw new ValidationError('fullScore');
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
@@ -252,14 +257,15 @@ export class ContestEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated,
+                title, content, rule, beginAt, endAt, pids, fullScore, rated,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
-                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
+                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule ||
+                Array.isDiff(this.tdoc.fullScore, fullScore)) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, fullScore, rated);
         }
         const task = {
             type: 'schedule', subType: 'contest.problemHide', domainId, tid,
