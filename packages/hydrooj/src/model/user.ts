@@ -92,11 +92,11 @@ class User implements _User {
         this.tfa = !!udoc.tfa;
 
         for (const key in setting.SETTINGS_BY_KEY) {
-            this[key] = udoc[key] ?? setting.SETTINGS_BY_KEY[key].value;
+            this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
         }
 
         for (const key in setting.DOMAIN_USER_SETTINGS_BY_KEY) {
-            this[key] = dudoc[key] ?? setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value;
+            this[key] = dudoc[key] ?? (setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
         }
     }
 

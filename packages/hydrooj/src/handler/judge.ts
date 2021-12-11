@@ -1,6 +1,5 @@
 import { ObjectID } from 'mongodb';
 import { JudgeResultBody, RecordDoc, TestCase } from '../interface';
-import difficultyAlgorithm from '../lib/difficulty';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
 import * as contest from '../model/contest';
@@ -34,9 +33,7 @@ export async function postJudge(rdoc: RecordDoc) {
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid);
     if (pdoc) {
-        const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
         await Promise.all([
-            problem.edit(pdoc.domainId, pdoc.docId, { difficulty }),
             problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
             problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
         ]);

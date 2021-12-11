@@ -58,7 +58,7 @@
           {% if not tdoc %}
             <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
             <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
-            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or _('(None)') }}</span>
+            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
           {% endif %}
           <span class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% if pdoc.tag.length %}

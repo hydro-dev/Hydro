@@ -14,7 +14,6 @@ import {
     ProblemConfig,
     ProblemDoc, ProblemStatusDoc, Tdoc, User,
 } from '../interface';
-import difficultyAlgorithm from '../lib/difficulty';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
@@ -457,16 +456,16 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('pid', Types.Name, isPid, convertPid, true)
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
+    @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
-        newPid: string = '', hidden = false, tag: string[] = [],
+        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<ProblemDoc> = {
-            title, content, pid: newPid, hidden, tag: tag ?? [],
+            title, content, pid: newPid, hidden, tag: tag ?? [], difficulty,
         };
         let pdoc = await problem.get(domainId, pid);
-        $update.difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
     }
@@ -780,10 +779,12 @@ export class ProblemCreateHandler extends Handler {
     @post('content', Types.Content)
     @post('pid', Types.Name, true, isPid, convertPid)
     @post('hidden', Types.Boolean)
+    @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    async post(domainId: string, title: string, content: string, pid: string, hidden = false, tag: string[] = []) {
+    async post(domainId: string, title: string, content: string, pid: string, hidden = false, difficulty = 0, tag: string[] = []) {
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
+        if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }

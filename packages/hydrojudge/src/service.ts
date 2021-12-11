@@ -76,7 +76,7 @@ async function postInit() {
     async function cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
         await fs.ensureDir(filePath);
-        if (!files?.length) throw new SystemError('Problem data not found.');
+        if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());

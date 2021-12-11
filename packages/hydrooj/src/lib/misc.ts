@@ -7,8 +7,9 @@ export { size, formatSeconds } from '@hydrooj/utils/lib/utils';
 
 const AU = new AnsiUp();
 
-export function ansiToHtml(str: string) {
-    return AU.ansi_to_html(str);
+export function ansiToHtml(str: string, whiteToBlack = true) {
+    const res = AU.ansi_to_html(str);
+    return whiteToBlack ? res.replace(/style="color:rgb\(255,255,255\)"/g, 'style="color:black"') : res;
 }
 
 export function datetimeSpan(dt: Date | ObjectID, relative = true, format = 'YYYY-M-D H:mm:ss', tz = 'Asia/Shanghai') {

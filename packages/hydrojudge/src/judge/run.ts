@@ -95,7 +95,7 @@ export const judge = async (ctx) => {
             status,
             time_ms: time_usage_ms,
             memory_kb: memory_usage_kb,
-            message: message.join('\n').substr(0, 1024000),
+            message: message.join('\n').substr(0, 102400),
         },
     });
     ctx.stat.done = new Date();
