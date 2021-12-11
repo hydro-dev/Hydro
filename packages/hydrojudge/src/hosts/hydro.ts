@@ -182,7 +182,7 @@ export default class Hydro {
         const [domainId, pid] = source.split('/');
         const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
-        if (!files?.length) throw new SystemError('Problem data not found.');
+        if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
