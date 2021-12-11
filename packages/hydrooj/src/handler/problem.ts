@@ -14,7 +14,6 @@ import {
     ProblemConfig,
     ProblemDoc, ProblemStatusDoc, Tdoc, User,
 } from '../interface';
-import difficultyAlgorithm from '../lib/difficulty';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';

@@ -9,7 +9,6 @@ import { GridFSBucket, ObjectID } from 'mongodb';
 import Queue from 'p-queue';
 import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { buildContent } from './lib/content';
-import difficultyAlgorithm from './lib/difficulty';
 import { size } from './lib/misc';
 import { Logger } from './logger';
 import { PRIV, STATUS } from './model/builtin';
@@ -199,11 +198,6 @@ const scripts: UpgradeScript[] = [
     },
     // Update problem difficulty
     async function _12_13() {
-        const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(['nSubmit', 'nAccept'], async (pdoc) => {
-            const difficulty = difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept);
-            await problem.edit(pdoc.domainId, pdoc.docId, { difficulty });
-        });
         return true;
     },
     // Set domain owner perm
