@@ -115,11 +115,15 @@ class RecordDetailHandler extends Handler {
             canView ||= contest.canShowSelfRecord.call(this, tdoc, true) && rdoc.uid === this.user._id;
             if (!canView) throw new PermissionError(rid);
         }
-        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
-                rdoc.code = '';
-                rdoc.compilerTexts = [];
-            }
+        let canViewCode = rdoc.uid === this.user._id;
+        canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
+        if (!canViewCode && this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT)) {
+            const self = await problem.getStatus(domainId, rdoc.pid, this.user._id);
+            canViewCode ||= self.status === STATUS.STATUS_ACCEPTED;
+        }
+        if (!canViewCode) {
+            rdoc.code = '';
+            rdoc.compilerTexts = [];
         }
         // eslint-disable-next-line prefer-const
         let [pdoc, udoc] = await Promise.all([
@@ -277,11 +281,15 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);
             if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
-        if (rdoc.uid !== this.user._id && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            if (!this.user.hasPerm(PERM.PERM_READ_RECORD_CODE)) {
-                rdoc.code = '';
-                rdoc.compilerTexts = [];
-            }
+        let canViewCode = rdoc.uid === this.user._id;
+        canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
+        if (!canViewCode && this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT)) {
+            const self = await problem.getStatus(domainId, rdoc.pid, this.user._id);
+            canViewCode ||= self.status === STATUS.STATUS_ACCEPTED;
+        }
+        if (!canViewCode) {
+            rdoc.code = '';
+            rdoc.compilerTexts = [];
         }
         const pdoc = await problem.get(rdoc.domainId, rdoc.pid);
         let canView = pdoc && this.user.own(pdoc);

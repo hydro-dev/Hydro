@@ -121,6 +121,7 @@ env.addGlobal('static_url', (assetName) => {
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
+env.addGlobal('Math', Math);
 env.addGlobal('process', process);
 env.addGlobal('global', global);
 env.addGlobal('typeof', (o) => typeof o);
@@ -140,13 +141,6 @@ env.addGlobal('set', (obj, key, val) => {
 });
 env.addGlobal('findSubModule', (prefix) => {
   filter(Object.keys(global.Hydro.ui.template), (n) => n.startsWith(prefix));
-});
-env.addGlobal('parseContestProblemId', (pdoc, tdoc) => {
-  if (tdoc.pids[parseInt(pdoc.pid, 36) - 10]) return pdoc.pid;
-  let cur = tdoc.pids.indexOf(pdoc.docId);
-  if (cur !== -1) return (cur + 10).toString(36).toUpperCase();
-  cur = tdoc.pids.indexOf(`${pdoc.domainId}:${pdoc.docId}`);
-  return (cur + 10).toString(36).toUpperCase();
 });
 
 async function render(name, state) {
