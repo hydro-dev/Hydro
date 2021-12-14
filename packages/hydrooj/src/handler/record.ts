@@ -1,4 +1,3 @@
-import { pick } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, PermissionError,
@@ -106,42 +105,40 @@ class RecordDetailHandler extends Handler {
         this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(rid);
+        let tdoc;
         if (rdoc.contest?.toHexString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
-            const tdoc = await contest.get(domainId, rdoc.contest);
+            tdoc = await contest.get(domainId, rdoc.contest);
             let canView = this.user.own(tdoc);
             canView ||= contest.canShowRecord.call(this, tdoc);
             canView ||= contest.canShowSelfRecord.call(this, tdoc, true) && rdoc.uid === this.user._id;
             if (!canView) throw new PermissionError(rid);
         }
+
+        // eslint-disable-next-line prefer-const
+        let [pdoc, self, udoc] = await Promise.all([
+            problem.get(rdoc.domainId, rdoc.pid),
+            problem.getStatus(domainId, rdoc.pid, this.user._id),
+            user.getById(domainId, rdoc.uid),
+        ]);
+
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
-        if (!canViewCode && this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT)) {
-            const self = await problem.getStatus(domainId, rdoc.pid, this.user._id);
-            canViewCode ||= self.status === STATUS.STATUS_ACCEPTED;
-        }
+        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.compilerTexts = [];
         }
-        // eslint-disable-next-line prefer-const
-        let [pdoc, udoc] = await Promise.all([
-            problem.get(rdoc.domainId, rdoc.pid),
-            user.getById(domainId, rdoc.uid),
-        ]);
-        if (
-            !pdoc
-            || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
-            || (!rdoc.contest && pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))
-        ) {
-            if (this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
-            else pdoc = { ...problem.default, ...pdoc ? pick(pdoc, ['domainId', 'docId', 'pid']) : {} };
-        }
-        this.response.body = { udoc, rdoc, pdoc };
-        if (rdoc.contest && rdoc.contest.toHexString() !== '000000000000000000000000') {
-            this.response.body.tdoc = await contest.get(domainId, rdoc.contest);
-        }
+
+        let canView = pdoc && this.user.own(pdoc);
+        canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
+        canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
+        if (!canView) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+
+        this.response.body = {
+            udoc, rdoc, pdoc, tdoc,
+        };
     }
 
     @param('rid', Types.ObjectID)
@@ -281,22 +278,25 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);
             if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
+        const [pdoc, self] = await Promise.all([
+            problem.get(rdoc.domainId, rdoc.pid),
+            problem.getStatus(domainId, rdoc.pid, this.user._id),
+        ]);
+
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
-        if (!canViewCode && this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT)) {
-            const self = await problem.getStatus(domainId, rdoc.pid, this.user._id);
-            canViewCode ||= self.status === STATUS.STATUS_ACCEPTED;
-        }
+        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.compilerTexts = [];
         }
-        const pdoc = await problem.get(rdoc.domainId, rdoc.pid);
+
         let canView = pdoc && this.user.own(pdoc);
         canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         canView ||= this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
         if (!canView) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
