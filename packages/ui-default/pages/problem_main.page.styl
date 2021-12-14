@@ -104,11 +104,17 @@
     margin-top: rem(floor($menu-drop-triangle-size * -1.414))
 
 
-.display-mode .display-mode-hide
+.display-mode .display-mode-hide,
+.edit-mode .edit-mode-hide,
+.hide-problem-tag .notag--hide,
+.tag--hide
   display: none
 
-.edit-mode .edit-mode-hide
-  display: none
+.hide-problem-tag .tag--hide
+  display: block
+
+.toggle-tag
+  float: right
 
 .data-table > tbody > tr
   height: 40.15px
