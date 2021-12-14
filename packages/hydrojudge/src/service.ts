@@ -18,16 +18,17 @@ import { compilerText, md5 } from './utils';
 
 declare module 'hydrooj/src/interface' {
     interface SystemKeys {
-        'hydrojudge.cache_dir': string,
-        'hydrojudge.tmp_dir': string,
-        'hydrojudge.tmpfs_size': string,
-        'hydrojudge.retry_delay_sec': number,
-        'hydrojudge.sandbox_host': string,
-        'hydrojudge.memoryMax': string,
-        'hydrojudge.testcases_max': number,
-        'hydrojudge.total_time_limit': number,
-        'hydrojudge.parallelism': number,
-        'hydrojudge.disable': boolean,
+        'hydrojudge.cache_dir': string;
+        'hydrojudge.tmp_dir': string;
+        'hydrojudge.tmpfs_size': string;
+        'hydrojudge.retry_delay_sec': number;
+        'hydrojudge.sandbox_host': string;
+        'hydrojudge.memoryMax': string;
+        'hydrojudge.testcases_max': number;
+        'hydrojudge.total_time_limit': number;
+        'hydrojudge.parallelism': number;
+        'hydrojudge.disable': boolean;
+        'hydrojudge.detail': boolean;
     }
 }
 
@@ -213,7 +214,7 @@ async function postInit() {
             this.stat.read_cases = new Date();
             this.config = await readCases(
                 this.folder,
-                this.config,
+                { detail: system.get('hydrojudge.detail'), ...this.config },
                 { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();
