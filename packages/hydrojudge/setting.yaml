@@ -84,3 +84,8 @@ secret:
   name: secret
   desc: Judge Token Secret
   default: Hydro-Judge-Secret
+detail:
+  type: boolean
+  name: detail
+  desc: Show diff detail
+  default: true

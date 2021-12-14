@@ -14,7 +14,7 @@ export const PERM = {
     PERM_EDIT_DOMAIN: 1n << 1n,
     PERM_MOD_BADGE: 1n << 2n,
 
-    // Problem and Record
+    // Problem
     PERM_CREATE_PROBLEM: 1n << 4n,
     PERM_EDIT_PROBLEM: 1n << 5n,
     PERM_EDIT_PROBLEM_SELF: 1n << 6n,
@@ -22,12 +22,16 @@ export const PERM = {
     PERM_VIEW_PROBLEM_HIDDEN: 1n << 8n,
     PERM_SUBMIT_PROBLEM: 1n << 9n,
     PERM_READ_PROBLEM_DATA: 1n << 10n,
+
+    // Record
     PERM_READ_RECORD_CODE: 1n << 12n,
+    PERM_READ_RECORD_CODE_ACCEPT: 1n << 64n,
     PERM_REJUDGE_PROBLEM: 1n << 13n,
     PERM_REJUDGE: 1n << 14n,
 
     // Problem Solution
     PERM_VIEW_PROBLEM_SOLUTION: 1n << 15n,
+    PERM_VIEW_PROBLEM_SOLUTION_ACCEPT: 1n << 65n,
     PERM_CREATE_PROBLEM_SOLUTION: 1n << 16n,
     PERM_VOTE_PROBLEM_SOLUTION: 1n << 17n,
     PERM_EDIT_PROBLEM_SOLUTION: 1n << 18n,
@@ -106,9 +110,11 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read record codes'),
+    Permission('perm_record', PERM.PERM_READ_RECORD_CODE_ACCEPT, 'Read record codes after accept'),
     Permission('perm_record', PERM.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
     Permission('perm_record', PERM.PERM_REJUDGE, 'Rejudge records'),
     Permission('perm_problem_solution', PERM.PERM_VIEW_PROBLEM_SOLUTION, 'View problem solutions'),
+    Permission('perm_problem_solution', PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT, 'View problem solutions after accept'),
     Permission('perm_problem_solution', PERM.PERM_CREATE_PROBLEM_SOLUTION, 'Create problem solutions'),
     Permission('perm_problem_solution', PERM.PERM_VOTE_PROBLEM_SOLUTION, 'Vote problem solutions'),
     Permission('perm_problem_solution', PERM.PERM_EDIT_PROBLEM_SOLUTION, 'Edit problem solutions'),
@@ -164,6 +170,7 @@ for (const p of PERMS) {
 PERM.PERM_BASIC = PERM.PERM_VIEW
     | PERM.PERM_VIEW_PROBLEM
     | PERM.PERM_VIEW_PROBLEM_SOLUTION
+    | PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT
     | PERM.PERM_VIEW_DISCUSSION
     | PERM.PERM_VIEW_CONTEST
     | PERM.PERM_VIEW_CONTEST_SCOREBOARD
@@ -177,6 +184,7 @@ PERM.PERM_DEFAULT = PERM.PERM_VIEW
     | PERM.PERM_EDIT_PROBLEM_SELF
     | PERM.PERM_SUBMIT_PROBLEM
     | PERM.PERM_VIEW_PROBLEM_SOLUTION
+    | PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT
     | PERM.PERM_CREATE_PROBLEM_SOLUTION
     | PERM.PERM_VOTE_PROBLEM_SOLUTION
     | PERM.PERM_EDIT_PROBLEM_SOLUTION_SELF

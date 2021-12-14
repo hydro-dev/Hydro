@@ -16,7 +16,7 @@ import {
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
@@ -650,7 +650,10 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async get(domainId: string, page = 1, tid?: ObjectID) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.response.template = 'problem_solution.html';
-        this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
+        const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
+        if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
+            this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
+        }
         const [psdocs, pcount, pscount] = await paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
@@ -754,7 +757,10 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async get(domainId: string, psid: ObjectID, psrid?: ObjectID, tid?: ObjectID) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
-        this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
+        const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
+        if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
+            this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
+        }
         if (psrid) {
             const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
             if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(psid, psrid);

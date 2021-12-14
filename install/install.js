@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 /* eslint-disable consistent-return */
 /* eslint-disable no-undef */
 /// <reference types="./jssh" />
@@ -123,7 +124,7 @@ const steps = [
             () => log.info('info.mirror', preferredMirror),
             'mkdir -p /data/db /data/file ~/.hydro',
             Arch ? 'pacman --needed --quiet --noconfirm -Sy' : 'apt-get -qq update',
-            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl' : 'apt-get install -qy curl wget gnupg qrencode',
+            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl' : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
             () => {
                 if (locale === 'zh' && !Arch) {
                     log.info('扫码加入QQ群：');
@@ -131,6 +132,7 @@ const steps = [
                 }
             },
             () => {
+                return; // Not implemented yet
                 if (fs.exist('/home/judge/src')) {
                     const res = cli.prompt('migrate.hustojFound');
                     if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
@@ -159,7 +161,7 @@ const steps = [
             ]
             : [
                 // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
-                ['apt-get upgrade openssl -y', { retry: true }],
+                ['apt-get upgrade openssl ca-certificates -y', { retry: true }],
                 ['wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -', { retry: true }],
                 [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
 /mongodb-org/5.0 multiverse" >/etc/apt/sources.list.d/mongodb-org-5.0.list && \
@@ -309,6 +311,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                 };
                 exec2(`hydrooj cli script migrateHustoj ${JSON.stringify(config)}`);
             },
+            'pm2 restart hydrooj',
         ],
     },
     {

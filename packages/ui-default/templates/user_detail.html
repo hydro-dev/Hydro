@@ -108,11 +108,11 @@
         <h2 class="section__title">{{ _('Accepted Problems') }}</h2>
       </div>
       <div class="typo section__body no-media">
-        {% set _mark = (pdocs.length/4)|int %}
+        {% set _mark = Math.ceil(pdocs.length/4) %}
         {% set _one = pdocs.slice(0, _mark) %}
         {% set _two = pdocs.slice(_mark, _mark*2) %}
         {% set _three = pdocs.slice(_mark*2, _mark*3) %}
-        {% set _four = pdocs.slice(_mark*3, pdocs.length) %}
+        {% set _four = pdocs.slice(_mark*3, pdocs.length - 1) %}
         <div class="row">
           <div class="medium-3 columns">
             <ul>
