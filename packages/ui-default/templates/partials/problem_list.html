@@ -7,7 +7,7 @@
   {{ nothing.render('Sorry, there is no problem in the problem set') }}
 {% else %}
   {{ paginator.render(page, ppcount, position='top') }}
-  <table class="data-table">
+  <table class="data-table hide-problem-tag">
     <colgroup>
       <col class="col--checkbox display-mode-hide">
       <col class="col--pid display-mode-hide">
@@ -30,7 +30,10 @@
         {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           <th class="col--status record-status--border edit-mode-hide">{{ _('Status') }}</th>
         {% endif %}
-        <th class="col--name">{{ _('Problem') }}<span style="float:right" id="hideTags">{{ _('Hide tags') }}</span></th>
+        <th class="col--name">{{ _('Problem') }}
+          <span class="nojs--hide toggle-tag tag--hide">{{ _('Show tags') }}</span>
+          <span class="nojs--hide toggle-tag notag--hide">{{ _('Hide tags') }}</span>
+        </th>
         <th class="col--tried">{{ _('Tried') }}</th>
         <th class="col--ac">{{ _('AC') }}</th>
         <th class="col--difficulty">{{ _('Difficulty') }}</th>

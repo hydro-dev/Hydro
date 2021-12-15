@@ -102,7 +102,6 @@ class DomainModel {
     @ArgMethod
     static async getList(domainIds: string[]) {
         const r: Record<string, DomainDoc | null> = {};
-        // eslint-disable-next-line no-await-in-loop
         const tasks = [];
         for (const domainId of domainIds) tasks.push(DomainModel.get(domainId).then((ddoc) => { r[domainId] = ddoc; }));
         await Promise.all(tasks);
@@ -146,12 +145,11 @@ class DomainModel {
             }
         }
         if (count) {
-            for (const role of roles) {
-                if (!['default', 'guest'].includes(role._id)) {
-                    // eslint-disable-next-line no-await-in-loop
-                    role.count = await DomainModel.countUser(ddoc._id, role._id);
-                }
-            }
+            await Promise.all(roles.map(async (role) => {
+                if (['default', 'guest'].includes(role._id)) return role;
+                role.count = await DomainModel.countUser(ddoc._id, role._id);
+                return role;
+            }));
         }
         return roles;
     }
