@@ -94,9 +94,14 @@ bus.on('app/started', () => {
 });
 
 class ApiHandler extends Handler {
-    async query(q: string, variables: any) {
-        // FIXME validation for fields like ObjectID doesn't work.
-        return graphql(schema, q, root, this, variables);
+    query(q: string, variables: any) {
+        return graphql({
+            schema,
+            source: q,
+            rootValue: root,
+            contextValue: this,
+            variableValues: variables,
+        });
     }
 
     async get() {

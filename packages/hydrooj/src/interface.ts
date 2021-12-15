@@ -1,5 +1,4 @@
 import type fs from 'fs';
-import type * as Koa from 'koa';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
@@ -681,11 +680,4 @@ declare global {
     }
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line
-}
-
-declare module 'koa' {
-    interface Request extends Koa.BaseRequest {
-        body?: any;
-        files?: import('formidable').Files;
-    }
 }

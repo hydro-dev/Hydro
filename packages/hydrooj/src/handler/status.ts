@@ -24,16 +24,12 @@ async function getStatus() {
 
 class StatusHandler extends Handler {
     async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['status', null],
-        ];
         const stats = await getStatus();
         for (const stat of stats) {
             if (!stat.battery.hasBattery) stat.battery = 'No battery';
             else stat.battery = `${stat.battery.type} ${stat.battery.model} ${stat.battery.percent}%${stat.battery.isCharging ? ' Charging' : ''}`;
         }
-        this.response.body = { stats, path };
+        this.response.body = { stats };
         this.response.template = 'status.html';
     }
 }

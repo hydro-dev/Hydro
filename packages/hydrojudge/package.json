@@ -1,15 +1,15 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "2.12.10",
+    "version": "2.12.11",
     "main": "package.json",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
-        "axios": "^0.21.4",
+        "axios": "^0.24.0",
         "cac": "^6.7.12",
-        "esbuild": "^0.13.15",
+        "esbuild": "0.14.3",
         "fs-extra": "^10.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
@@ -23,9 +23,9 @@
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/js-yaml": "^4.0.5",
-        "@types/lodash": "^4.14.177",
+        "@types/lodash": "^4.14.178",
         "@types/shell-quote": "^1.7.1",
-        "@types/ws": "^7.4.7"
+        "@types/ws": "^8.2.2"
     },
     "peerDependencies": {
         "hydrooj": "*"

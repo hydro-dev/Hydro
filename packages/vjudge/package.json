@@ -9,14 +9,14 @@
     "preferUnplugged": true,
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
-        "jsdom": "^16.7.0",
+        "jsdom": "^19.0.0",
         "lodash": "^4.17.21",
         "superagent": "^6.1.0",
         "superagent-proxy": "^2.1.0"
     },
     "devDependencies": {
         "@types/jsdom": "^16.2.13",
-        "@types/lodash": "^4.14.177",
+        "@types/lodash": "^4.14.178",
         "@types/superagent": "^4.1.13",
         "@types/superagent-proxy": "^2.0.1"
     }

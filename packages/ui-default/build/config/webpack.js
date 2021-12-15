@@ -220,7 +220,9 @@ export default function (env = {}) {
           customInterpolateName: beautifyOutputUrl,
         },
       }),
+      new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({
+        filename: '[name].[hash:10].worker.js',
         customLanguages: [{
           label: 'yaml',
           entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/monaco.contribution'),

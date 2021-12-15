@@ -250,8 +250,8 @@ export default class Hydro {
                 : '{"key":"ping"}';
             setInterval(() => this.ws.send(content), 30000);
         });
-        this.ws.on('message', (data, isBinary) => {
-            const request = JSON.parse(isBinary ? data : data.toString());
+        this.ws.on('message', (data) => {
+            const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
         });

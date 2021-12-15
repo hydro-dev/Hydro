@@ -105,14 +105,9 @@ class DomainUserHandler extends ManageHandler {
             rudocs[ud.role || 'default'].push(ud);
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_user', null],
-        ];
         this.response.template = 'domain_user.html';
         this.response.body = {
-            roles, rolesSelect, rudocs, udict, path, domain: this.domain,
+            roles, rolesSelect, rudocs, udict, domain: this.domain,
         };
     }
 
@@ -134,14 +129,9 @@ class DomainUserHandler extends ManageHandler {
 class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await domain.getRoles(domainId);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_permission', null],
-        ];
         this.response.template = 'domain_permission.html';
         this.response.body = {
-            roles, PERMS_BY_FAMILY, domain: this.domain, path, log2,
+            roles, PERMS_BY_FAMILY, domain: this.domain, log2,
         };
     }
 
@@ -179,10 +169,8 @@ class DomainRoleHandler extends ManageHandler {
 
     @param('roles', Types.Array)
     async postDelete(domainId: string, roles: string[]) {
-        for (const role of roles) {
-            if (['root', 'default', 'guest'].includes(role)) {
-                throw new ValidationError('role');
-            }
+        if (Set.intersection(new Set(roles), new Set(['root', 'default', 'guest'])).size > 0) {
+            throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await domain.deleteRoles(domainId, roles);
         this.back();
