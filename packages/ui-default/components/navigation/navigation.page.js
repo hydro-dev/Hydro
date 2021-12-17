@@ -81,6 +81,23 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
   slideout.on('beforeclose', () => $slideoutOverlay.hide());
 
   $('.header__hamburger').click(() => slideout.toggle());
+}, () => {
+  if ($(document).width() > 600 && $('#menu').children('div').height() > 45) {
+    let menu = '</ol>';
+    $('.nav_more').show();
+    const navItems = $('.nav__list--main > .nav__list-item');
+    let navItem = navItems.length - 2;
+    while ($('#menu').children('div').height() > 45) {
+      if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
+        $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
+        $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
+        menu = navItems[navItem].outerHTML + menu;
+        $(navItems[navItem]).remove();
+      }
+      navItem--;
+    }
+    $(navItems[navItems.length - 1]).append(`<ol class="dropdown-target menu menu_more" id="menu-nav-more">${ menu}`);
+  }
 });
 
 export default navigationPage;

@@ -13,6 +13,11 @@
       {%- for item in ui.nodes.nav -%}{% if item.checker(handler) %}
         {{ nav_item(item.name, item.args(handler), item.prefix) }}
       {% endif %}{%- endfor -%}
+      <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more" data-dropdown-trigger-desktop-only style="display: none;">
+        <a href="javascript:;" class="nav__item">
+          More <span class="icon icon-expand_more"></span>
+        </a>
+      </li>
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">
     {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
