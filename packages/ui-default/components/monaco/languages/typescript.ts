@@ -28,4 +28,3 @@ for (const key of types.keys()) {
   monaco.languages.typescript.javascriptDefaults.addExtraLib(val, uri);
   monaco.editor.createModel(val, 'typescript', monaco.Uri.parse(uri));
 }
-console.log(types);

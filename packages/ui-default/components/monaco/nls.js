@@ -22,7 +22,7 @@ let CURRENT_LOCALE_DATA = {};
 
 function find(path, message) {
   for (const key of Object.keys(CURRENT_LOCALE_DATA)) {
-    if (!CURRENT_LOCALE_DATA[key]) continue;
+    if (!CURRENT_LOCALE_DATA[key] || !en_GB[key]) continue;
     if (CURRENT_LOCALE_DATA[key][path] && en_GB[key][path] === message) {
       return CURRENT_LOCALE_DATA[key][path];
     }
