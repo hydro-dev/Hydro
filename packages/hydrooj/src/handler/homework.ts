@@ -206,7 +206,7 @@ class HomeworkScoreboardDownloadHandler extends Handler {
             csv: (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
         };
-        if (!getContent[ext]) throw new ValidationError('ext');
+        if (!getContent[ext]) throw new ValidationError('ext', null, 'Unknown file extension');
         const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
         this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
     }

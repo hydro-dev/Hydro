@@ -264,8 +264,8 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
         return { ...tdoc, type, id: _id };
     }
     return {
-        ...await getNode(domainId, id),
         title: id,
+        ...await getNode(domainId, id),
         type,
         id,
     };

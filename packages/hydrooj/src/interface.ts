@@ -436,6 +436,20 @@ export interface DiscussionTailReplyDoc {
     history: HistoryDoc[],
 }
 
+export interface BlogDoc {
+    docType: document['TYPE_BLOG'];
+    docId: ObjectID;
+    owner: number;
+    title: string;
+    content: string;
+    ip: string;
+    updateAt: Date;
+    nReply: number;
+    views: number;
+    reply: any[];
+    react: Record<string, number>;
+}
+
 export interface TokenDoc {
     _id: string,
     tokenType: number,
@@ -587,6 +601,7 @@ export interface Collections {
 
 export interface Model {
     blacklist: typeof import('./model/blacklist').default,
+    blog: typeof import('./model/blog'),
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     discussion: typeof import('./model/discussion'),
