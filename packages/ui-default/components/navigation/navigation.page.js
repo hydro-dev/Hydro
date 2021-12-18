@@ -15,6 +15,7 @@ function handleNavLogoutClick(ev) {
     .then(() => window.location.reload());
   ev.preventDefault();
 }
+
 function handlerSwitchAccount(ev) {
   let userSelector;
   const promise = new ActionDialog({
@@ -58,6 +59,62 @@ function handlerSwitchAccount(ev) {
   ev.preventDefault();
 }
 
+let trigger;
+let menu;
+
+function handleNavbar() {
+  let fromHide = false;
+  if ($(document).width() <= 600) {
+    for (const ele of menu.children()) {
+      ele.insertBefore(trigger);
+    }
+    trigger.hide();
+    return;
+  }
+  trigger.show();
+
+  let navItems = $('.nav__list--main > .nav__list-item');
+  let navItem = navItems.length - 2;
+  while (navItem && $('#menu').children('div').height() > 45) {
+    if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
+      $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
+      $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
+      console.log('hide', navItems[navItem]);
+      $(menu).prepend($(navItems[navItem]));
+    }
+    navItem--;
+    fromHide = true;
+  }
+
+  if (!fromHide && menu.children().length) {
+    while ($('#menu').children('div').height() <= 45 && menu.children().length) {
+      const ele = menu.children(0);
+      $(ele).addClass('nav__list-item').removeClass('menu__item');
+      $(ele).children('a').addClass('nav__item').removeClass('menu__link');
+      console.log('show', ele);
+      ele.insertBefore(trigger);
+    }
+  }
+
+  navItems = $('.nav__list--main > .nav__list-item');
+  navItem = navItems.length - 2;
+  if ($('#menu').children('div').height() > 45) {
+    while (navItem && $('#menu').children('div').height() > 45) {
+      if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
+        $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
+        $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
+        console.log('hide', navItems[navItem]);
+        $(menu).prepend($(navItems[navItem]));
+        break;
+      }
+      navItem--;
+    }
+  }
+
+  console.log('children', menu.children());
+  if (!menu.children().length) trigger.hide();
+}
+
 const navigationPage = new AutoloadPage('navigationPage', () => {
   if (!document.getElementById('panel') || !document.getElementById('menu')) return;
 
@@ -81,23 +138,19 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
   slideout.on('beforeclose', () => $slideoutOverlay.hide());
 
   $('.header__hamburger').click(() => slideout.toggle());
+  $(window).on('resize', handleNavbar);
 }, () => {
-  if ($(document).width() > 600 && $('#menu').children('div').height() > 45) {
-    let menu = '</ol>';
-    $('.nav_more').show();
-    const navItems = $('.nav__list--main > .nav__list-item');
-    let navItem = navItems.length - 2;
-    while ($('#menu').children('div').height() > 45) {
-      if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
-        $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
-        $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
-        menu = navItems[navItem].outerHTML + menu;
-        $(navItems[navItem]).remove();
-      }
-      navItem--;
-    }
-    $(navItems[navItems.length - 1]).append(`<ol class="dropdown-target menu menu_more" id="menu-nav-more">${ menu}`);
-  }
+  trigger = $(tpl`
+    <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more">
+      <a href="javascript:;" class="nav__item">
+        ${i18n('More')} <span class="icon icon-expand_more"></span>
+      </a>
+    </li>
+  `);
+  menu = $('<ol class="dropdown-target menu menu_more" id="menu-nav-more">');
+  trigger.append(menu);
+  $('.nav__list--main').append(trigger);
+  handleNavbar();
 });
 
 export default navigationPage;
