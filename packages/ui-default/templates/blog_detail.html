@@ -13,7 +13,7 @@
           </li>
           <li><h2>{{ ddoc.title }}</h2></li>
           <li>
-            {{ user.render_inline(udict[ddoc.owner]) }}
+            {{ user.render_inline(udoc) }}
             @
             {{ datetimeSpan(ddoc._id)|safe }}
           </li>
@@ -23,7 +23,7 @@
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
-      {% if handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) or (handler.user.own(ddoc) and handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION_SELF)) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) or handler.user.own(ddoc) %}
         <li><a href="{{ url('blog_edit', uid=udoc._id, did=ddoc.docId) }}">
           <span class="icon icon-edit"></span> {{ _('Edit') }}
         </a></li>
@@ -34,8 +34,8 @@
           <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <button class="star{% if dsdoc['star'] %} activated{% endif %}" type="submit">
-            <span class="starred--hide"><span class="icon icon-star--outline"></span> {{ _('Star Topic') }}</span>
-            <span class="starred--show"><span class="icon icon-star"></span> {{ _('Unstar Topic') }}</span>
+            <span class="starred--hide"><span class="icon icon-star--outline"></span> {{ _('Star') }}</span>
+            <span class="starred--show"><span class="icon icon-star"></span> {{ _('Unstar') }}</span>
           </button>
         </form></li>
       {% endif %}

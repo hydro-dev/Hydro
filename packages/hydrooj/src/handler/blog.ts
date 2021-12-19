@@ -1,11 +1,11 @@
 import { ObjectID } from 'mongodb';
-import { DiscussionNotFoundError } from '../error';
+import { DiscussionNotFoundError, ForbiddenError } from '../error';
 import { BlogDoc } from '../interface';
 import paginate from '../lib/paginate';
 import * as blog from '../model/blog';
-import { PERM, PRIV } from '../model/builtin';
-import * as discussion from '../model/discussion';
+import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
+import * as system from '../model/system';
 import user from '../model/user';
 import {
     Handler, param, Route, Types,
@@ -16,7 +16,7 @@ class BlogHandler extends Handler {
 
     @param('did', Types.ObjectID, true)
     async _prepare(domainId: string, did: ObjectID) {
-        this.checkPerm(PERM.PERM_VIEW_DISCUSSION);
+        if (!system.get('server.blog')) throw new ForbiddenError('Blog is disabled');
         if (did) {
             this.ddoc = await blog.get(did);
             if (!this.ddoc) throw new DiscussionNotFoundError(domainId, did);
@@ -89,7 +89,6 @@ class BlogEditHandler extends BlogHandler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     async postCreate(domainId: string, title: string, content: string) {
-        this.checkPerm(PERM.PERM_CREATE_DISCUSSION);
         await this.limitRate('add_blog', 3600, 60);
         const did = await blog.add(this.user._id, title, content, this.request.ip);
         this.response.body = { did };
@@ -100,8 +99,7 @@ class BlogEditHandler extends BlogHandler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     async postUpdate(domainId: string, did: ObjectID, title: string, content: string) {
-        if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
-        else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
+        if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await blog.edit(did, title, content);
         await oplog.add({
             ...this.ddoc, operator: this.user._id, type: 'edit',
@@ -112,9 +110,8 @@ class BlogEditHandler extends BlogHandler {
 
     @param('did', Types.ObjectID)
     async postDelete(domainId: string, did: ObjectID) {
-        if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
-        else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
-        await discussion.del(domainId, did);
+        if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await blog.del(did);
         await oplog.add({
             ...this.ddoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
         });
