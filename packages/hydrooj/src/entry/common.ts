@@ -20,13 +20,13 @@ export const builtinModel = [
     'builtin', 'document', 'domain', 'blacklist', 'opcount',
     'setting', 'token', 'user', 'storage', 'problem',
     'record', 'contest', 'message', 'solution', 'training',
-    'discussion', 'system', 'oplog',
+    'discussion', 'system', 'oplog', 'blog',
 ];
 
 export const builtinHandler = [
     'home', 'problem', 'record', 'judge', 'user',
     'contest', 'training', 'discussion', 'manage', 'import',
-    'misc', 'homework', 'domain', 'status', 'api',
+    'misc', 'homework', 'domain', 'status', 'api', 'blog',
 ];
 
 export const builtinScript = [

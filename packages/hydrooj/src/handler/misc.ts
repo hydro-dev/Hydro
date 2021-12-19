@@ -66,6 +66,13 @@ export class FilesHandler extends Handler {
         this.back();
     }
 
+    @post('from', Types.String)
+    @post('to', Types.String)
+    async postRename(domainId: string, from: string, to: string) {
+        await storage.rename(`user/${this.user._id}/${from}`, `user/${this.user._id}/${to}`);
+        this.back();
+    }
+
     @post('files', Types.Array)
     async postDeleteFiles(domainId: string, files: string[]) {
         await Promise.all([
