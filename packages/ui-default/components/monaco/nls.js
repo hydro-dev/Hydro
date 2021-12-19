@@ -1,9 +1,5 @@
 /* eslint-disable camelcase */
 import en_GB from 'monaco-editor-nls/locale/en-gb.json';
-import zh_CN from 'monaco-editor-nls/locale/zh-hans.json';
-import zh_TW from 'monaco-editor-nls/locale/zh-hant.json';
-import ko from 'monaco-editor-nls/locale/ko.json';
-import i18n from 'vj/utils/i18n';
 
 function _format(message, args) {
   let result;
@@ -51,10 +47,3 @@ export function loadMessageBundle(file) {
 export function config(opt) {
   return loadMessageBundle;
 }
-
-const languages = {
-  zh_CN,
-  zh_TW,
-  ko,
-};
-if (languages[i18n('timeago_locale')]) setLocaleData(languages[i18n('timeago_locale')]);

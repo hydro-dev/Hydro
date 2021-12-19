@@ -5,7 +5,6 @@ import 'pickadate/lib/themes/classic.date.css';
 import 'pickadate/lib/themes/classic.time.css';
 import 'katex/dist/katex.min.css';
 import '@blueprintjs/core/lib/css/blueprint.css';
-import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 
 import 'vj/misc/float.styl';
 import 'vj/misc/typography.styl';
