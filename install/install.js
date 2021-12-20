@@ -115,6 +115,7 @@ for (const line of lines) {
 }
 if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
 const Arch = values.id === 'arch';
+const mongodbVersion = __env.MONGODB_VERSION || '5.0';
 let migration;
 
 const steps = [
@@ -162,9 +163,9 @@ const steps = [
             : [
                 // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
                 ['apt-get upgrade openssl ca-certificates -y', { retry: true }],
-                ['wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -', { retry: true }],
+                [`wget -qO - https://www.mongodb.org/static/pgp/server-${mongodbVersion}.asc | apt-key add -`, { retry: true }],
                 [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
-/mongodb-org/5.0 multiverse" >/etc/apt/sources.list.d/mongodb-org-5.0.list && \
+/mongodb-org/${mongodbVersion} multiverse" >/etc/apt/sources.list.d/mongodb-org-${mongodbVersion}.list && \
 apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             ],
     },
