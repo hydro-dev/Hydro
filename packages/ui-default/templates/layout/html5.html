@@ -44,6 +44,9 @@
   {% endif %}
 </head>
 <body>
+  <div class="page-loader nojs--hide">
+    <div class="loader"></div>
+  </div>
   {% block body %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
