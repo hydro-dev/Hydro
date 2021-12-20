@@ -121,9 +121,9 @@ class BlogEditHandler extends BlogHandler {
 
 export async function apply() {
     Route('blog_main', '/blog/:uid', BlogUserHandler);
-    Route('blog_create', '/blog/:uid/create', BlogEditHandler);
+    Route('blog_create', '/blog/:uid/create', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
     Route('blog_detail', '/blog/:uid/:did', BlogDetailHandler);
-    Route('blog_edit', '/blog/:uid/:did/edit', BlogEditHandler);
+    Route('blog_edit', '/blog/:uid/:did/edit', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
 }
 
 global.Hydro.handler.blog = apply;
