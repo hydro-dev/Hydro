@@ -12,7 +12,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     config.checker_type = cfg.checker_type || 'default';
     if (cfg.checker) {
         if (!cfg.checker.includes('.')) {
-            config.checker = findFileSync(`@hydrooj/hydrojudgejudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
+            config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
         }
         if (!config.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
     }
