@@ -5,7 +5,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
-import { Icon } from '@blueprintjs/core';
+import Icon from 'vj/components/react/IconComponent';
 
 // eslint-disable-next-line prefer-arrow-callback
 const AutoComplete = forwardRef(function AutoComplete(props, ref) {
@@ -199,7 +199,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         {multi && selected.map((item, idx) => (
           <div className="autocomplete-tag" key={selectedKeys[idx]}>
             <div>{itemText(item)}</div>
-            <Icon icon="cross" onClick={() => toggleItem(item)} />
+            <Icon name="close" onClick={() => toggleItem(item)} />
           </div>
         ))}
         <input
@@ -231,7 +231,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
               data-focus={idx === currentItem}
             >
               <div>{renderItem(item)}</div>
-              <Icon icon="tick" />
+              <Icon name="check" />
             </li>
           ))}
         </ul>

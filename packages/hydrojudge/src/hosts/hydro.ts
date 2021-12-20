@@ -235,6 +235,7 @@ export default class Hydro {
 
     getLang(name: string) {
         if (this.language[name]) return this.language[name];
+        if (name === 'cpp' && this.language.cc) return this.language.cc;
         throw new SystemError('Unsupported language {0}', [name]);
     }
 

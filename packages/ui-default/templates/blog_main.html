@@ -41,8 +41,8 @@
         <h1 class="section__title">{{ _("{0}'s blog").format(udoc.uname) }}</h1>
       </div>
       <div class="section__body">
-        {% if handler.user.hasPerm(perm.PERM_CREATE_DISCUSSION) and handler.user._id == udoc._id %}
-            <p><a href="{{ url('blog_create', uid=udoc._id) }}" class="expanded primary button">{{ _('Create a Post') }}</a></p>
+        {% if handler.user._id == udoc._id %}
+          <p><a href="{{ url('blog_create', uid=udoc._id) }}" class="expanded primary button">{{ _('Create a Post') }}</a></p>
         {% endif %}
       </div>
     </div>

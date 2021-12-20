@@ -32,7 +32,7 @@
               <button name="operation" value="{{ 'update' if ddoc else 'create' }}" type="submit" class="rounded primary button">
                 {{ _('Update') if ddoc else _('Create') }} (Ctrl+Enter)
               </button>
-            {% if ddoc and (handler.user.own(ddoc) or handler.user.hasPerm(perm.PERM_DELETE_DISCUSSION)) %}
+            {% if ddoc and (handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) or handler.user.own(ddoc)) %}
               <button name="operation" value="delete" type="submit" class="rounded button">
                 {{ _('Delete') }}
               </button>

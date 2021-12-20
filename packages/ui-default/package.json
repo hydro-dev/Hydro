@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.27.10",
+  "version": "4.27.12",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -11,8 +11,8 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "^3.52.0",
-    "@blueprintjs/icons": "^3.31.0",
     "@hydrooj/utils": "workspace:*",
+    "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.10",
     "@types/json-schema": "^7.0.9",
     "@types/katex": "^0.11.1",

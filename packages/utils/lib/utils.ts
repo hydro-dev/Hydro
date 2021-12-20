@@ -344,7 +344,7 @@ export async function findFile(pathname: string, doThrow = true) {
     return null;
 }
 
-export function findFileSync(pathname: string, doThrow = true) {
+export function findFileSync(pathname: string, doThrow: boolean | Error = true) {
     if (fs.pathExistsSync(path.resolve(pathname))) return path.resolve(pathname);
     if (fs.pathExistsSync(path.resolve(process.cwd(), pathname))) return path.resolve(process.cwd(), pathname);
     if (fs.pathExistsSync(path.resolve(__dirname, pathname))) return path.resolve(__dirname, pathname);
@@ -364,7 +364,7 @@ export function findFileSync(pathname: string, doThrow = true) {
     if (fs.pathExistsSync(path.resolve(os.homedir(), pathname))) return path.resolve(os.homedir(), pathname);
     if (fs.pathExistsSync(path.resolve(os.homedir(), '.hydro', pathname))) return path.resolve(os.homedir(), '.hydro', pathname);
     if (fs.pathExistsSync(path.resolve(os.homedir(), '.config', 'hydro', pathname))) return path.resolve(os.homedir(), '.config', 'hydro', pathname);
-    if (doThrow) throw new Error(`File ${pathname} not found`);
+    if (doThrow) throw (typeof doThrow !== 'boolean' ? doThrow : new Error(`File ${pathname} not found`));
     return null;
 }
 

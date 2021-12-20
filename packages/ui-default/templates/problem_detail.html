@@ -50,10 +50,10 @@
       <div class="section__body">
         <ul class="problem__tags">
           <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
-          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
+          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
           {% if pdoc.config.type != 'objective' and pdoc.config.type != 'submit_answer' %}
-            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
-            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item bp3-icon-standard bp3-icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+            <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
           {% if not tdoc %}
             <a class="bp3-tag bp3-large bp3-minimal bp3-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
