@@ -23,6 +23,9 @@ console.log(
 document.addEventListener('DOMContentLoaded', async () => {
   window.UiContext = JSON.parse(window.UiContext);
 
+  const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
+  $('body').prepend(PageLoader);
+  $('.page-loader').fadeIn(500);
   // eslint-disable-next-line camelcase
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 

@@ -44,11 +44,9 @@
   {% endif %}
 </head>
 <body>
-  <div class="page-loader nojs--hide" style="opacity: 0;"><div class="loader"></div></div>
   {% block body %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
   <script>
-    document.querySelector(".page-loader").style.opacity=1;
     UiContext = '{{ UiContext|json|jsesc|safe }}';
     UserContext = '{{ UserContext|json|jsesc|safe }}';
   </script>
