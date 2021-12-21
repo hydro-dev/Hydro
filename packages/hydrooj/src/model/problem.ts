@@ -316,7 +316,10 @@ export class ProblemModel {
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
         ).toArray();
         const r: Record<string, ProblemStatusDoc> = {};
-        for (const psdoc of psdocs) r[psdoc.docId] = psdoc;
+        for (const psdoc of psdocs) {
+            r[psdoc.docId] = psdoc;
+            r[`${psdoc.domainId}#${psdoc.docId}`] = psdoc;
+        }
         return r;
     }
 

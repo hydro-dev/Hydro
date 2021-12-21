@@ -125,7 +125,7 @@ export class ProblemMainHandler extends ProblemHandler {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: FilterQuery<ProblemDoc> = {};
-        let psdict = {};
+        const psdict = {};
         const search = global.Hydro.lib.problemSearch;
         let sort: string[];
         let fail = false;
@@ -168,8 +168,13 @@ export class ProblemMainHandler extends ProblemHandler {
             }
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            psdict = await problem.getListStatus(
-                domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
+            const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
+            await Promise.all(
+                domainIds.map((did) =>
+                    problem.getListStatus(
+                        did, this.user._id,
+                        pdocs.filter((i) => i.domainId === did).map((i) => i.docId),
+                    ).then((res) => Object.assign(psdict, res))),
             );
         }
         this.response.body = {
