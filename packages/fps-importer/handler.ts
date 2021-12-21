@@ -123,7 +123,7 @@ class FpsProblemImportHandler extends Handler {
                 } catch { }
             }
         }
-        if (!tasks.length) throw new ValidationError('file');
+        if (!tasks.length) throw new ValidationError('file', null, 'No valid fps format file found');
         for (const task of tasks) await this.run(domainId, task);
         this.response.redirect = this.url('problem_main');
     }

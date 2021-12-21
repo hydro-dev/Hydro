@@ -71,7 +71,7 @@ export interface EventMap extends Record<string, any> {
     'handler/after': (thisArg: Handler) => VoidReturn
     'handler/finish/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
     'handler/finish': (thisArg: Handler) => VoidReturn
-    'handler/error': (thisArg: Handler) => VoidReturn
+    'handler/error': (thisArg: Handler, e: Error) => VoidReturn
     'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
     'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn
