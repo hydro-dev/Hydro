@@ -1,6 +1,7 @@
 import { ObjectID } from 'mongodb';
 import { OplogDoc } from '../interface';
 import db from '../service/db';
+import type { Handler } from '../service/server';
 
 export const coll = db.collection('oplog');
 
@@ -14,8 +15,26 @@ export async function add(data: Partial<OplogDoc> & { type: string }): Promise<O
     return res.insertedId;
 }
 
+export async function log<T extends Handler>(handler: T, type: string, data: any) {
+    const res = await coll.insertOne({
+        ...data,
+        _id: new ObjectID(),
+        type,
+        time: new Date(),
+        domainId: handler.domainId,
+        ua: handler.request.headers?.['user-agent'],
+        referer: handler.request.headers?.referer,
+        args: handler.args,
+        operator: handler.user?.id,
+        operateIp: handler.request.ip,
+    });
+    return res.insertedId;
+}
+
 export async function get(id: ObjectID): Promise<OplogDoc | null> {
     return await coll.findOne({ _id: id });
 }
 
-global.Hydro.model.oplog = { coll, add, get };
+global.Hydro.model.oplog = {
+    coll, add, get, log,
+};

@@ -11,6 +11,7 @@ import paginate from '../lib/paginate';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import * as oplog from '../model/oplog';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -114,14 +115,20 @@ class DomainUserHandler extends ManageHandler {
     @post('uid', Types.Int)
     @post('role', Types.Name)
     async postSetUser(domainId: string, uid: number, role: string) {
-        await domain.setUserRole(domainId, uid, role);
+        await Promise.all([
+            domain.setUserRole(domainId, uid, role),
+            oplog.log(this, 'domain.setRole', { uid, role }),
+        ]);
         this.back();
     }
 
     @param('uid', Types.NumericArray)
     @param('role', Types.Name)
     async postSetUsers(domainId: string, uid: number[], role: string) {
-        await domain.setUserRole(domainId, uid, role);
+        await Promise.all([
+            domain.setUserRole(domainId, uid, role),
+            oplog.log(this, 'domain.setRole', { uid, role }),
+        ]);
         this.back();
     }
 }
@@ -242,7 +249,10 @@ class DomainJoinHandler extends Handler {
                 throw new InvalidJoinInvitationCodeError(this.domain._id);
             }
         }
-        await domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role);
+        await Promise.all([
+            domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role),
+            oplog.log(this, 'domain.join', {}),
+        ]);
         this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
     }
 }
