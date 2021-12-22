@@ -2,7 +2,7 @@
 /* eslint-disable prefer-destructuring */
 
 const { randomUUID } = require('crypto');
-const { escapeHtml } = require('vj/../../node_modules/markdown-it/lib/common/utils');
+const { escapeHtml } = require('markdown-it/lib/common/utils');
 
 /* eslint-disable no-restricted-properties */
 const ytRegex = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -120,7 +120,7 @@ module.exports = function videoPlugin(md) {
         + '    }); </script>';
     }
     if (service === 'pdf') {
-      if (videoID.startsWith('file://')) videoID += '?noDisposition=1';
+      if (videoID.startsWith('file://')) videoID += videoID.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
       return `\
         <object classid="clsid:${randomUUID().toUpperCase()}">
           <param name="SRC" value="${videoID}" >
