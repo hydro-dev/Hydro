@@ -154,8 +154,9 @@ export class ProblemMainHandler extends ProblemHandler {
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
             : await problem.list(
-                domainId, query, undefined,
+                domainId, query,
                 page, system.get('pagination.problem'),
+                undefined, this.user._id,
             );
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q) {

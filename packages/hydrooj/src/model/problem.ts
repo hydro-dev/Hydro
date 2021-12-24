@@ -14,10 +14,11 @@ import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
 import { buildProjection } from '../utils';
-import { STATUS } from './builtin';
+import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import DomainModel from './domain';
 import storage from './storage';
+import user from './user';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
@@ -136,7 +137,8 @@ export class ProblemModel {
 
     static async list(
         domainId: string, query: FilterQuery<ProblemDoc>,
-        projection = ProblemModel.PROJECTION_LIST, page: number, pageSize: number,
+        page: number, pageSize: number,
+        projection = ProblemModel.PROJECTION_LIST, uid?: number,
     ): Promise<[ProblemDoc[], number, number]> {
         const union = await DomainModel.getUnion(domainId);
         const domainIds = [domainId];
@@ -145,6 +147,11 @@ export class ProblemModel {
         const pdocs = [];
         for (const id of domainIds) {
             // TODO enhance performance
+            if (uid) {
+                // eslint-disable-next-line no-await-in-loop
+                const udoc = await user.getById(id, uid);
+                if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
+            }
             // eslint-disable-next-line no-await-in-loop
             const ccount = await document.getMulti(id, document.TYPE_PROBLEM, query).count();
             if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
