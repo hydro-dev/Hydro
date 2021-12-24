@@ -125,7 +125,7 @@ export class ProblemMainHandler extends ProblemHandler {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query: FilterQuery<ProblemDoc> = {};
-        let psdict = {};
+        const psdict = {};
         const search = global.Hydro.lib.problemSearch;
         let sort: string[];
         let fail = false;
@@ -154,8 +154,9 @@ export class ProblemMainHandler extends ProblemHandler {
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
             : await problem.list(
-                domainId, query, undefined,
+                domainId, query,
                 page, system.get('pagination.problem'),
+                undefined, this.user._id,
             );
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q) {
@@ -168,8 +169,13 @@ export class ProblemMainHandler extends ProblemHandler {
             }
         }
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            psdict = await problem.getListStatus(
-                domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId),
+            const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
+            await Promise.all(
+                domainIds.map((did) =>
+                    problem.getListStatus(
+                        did, this.user._id,
+                        pdocs.filter((i) => i.domainId === did).map((i) => i.docId),
+                    ).then((res) => Object.assign(psdict, res))),
             );
         }
         this.response.body = {
@@ -509,14 +515,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 ?.filter((i) => files.has(i.name))
                 ?.map((i) => i.size),
         ) || 0;
-        await oplog.add({
-            type: 'bulkDownload',
-            time: new Date(),
-            uid: this.user._id,
-            ip: this.request.ip,
-            fileType: 'problem',
+        await oplog.log(this, 'download.problem.bulk', {
             target: Array.from(files).map((file) => `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${file}`),
-            referer: this.request.referer,
             size,
         });
         for (const file of files) {
@@ -613,14 +613,8 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         }
         const target = `problem/${this.pdoc.domainId}/${this.pdoc.docId}/${type}/${filename}`;
         const file = await storage.getMeta(target);
-        await oplog.add({
-            type: 'download',
-            time: new Date(),
-            uid: this.user._id,
-            ip: this.request.ip,
-            fileType: 'problem',
+        await oplog.log(this, 'download.problem.single', {
             target,
-            referer: this.request.referer,
             size: file?.size || 0,
         });
         if (!file) {
@@ -635,7 +629,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
             this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || fileType;
-            this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
+            if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
         } else {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',

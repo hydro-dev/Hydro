@@ -66,7 +66,6 @@ const mirrors = {
         official: 'https://repo.mongodb.org/apt/ubuntu',
     },
     minio: {
-        china: 'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio',
         undefined: 'https://s3.undefined.moe/public/minio',
         official: 'https://dl.min.io/server/minio/release/linux-amd64/minio',
     },
@@ -245,7 +244,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     },
     {
         init: 'install.minio',
-        skip: () => fs.exist('/root/.hydro/env'),
+        skip: () => __env.SKIP_MINIO || fs.exist('/root/.hydro/env'),
         operations: [
             [`curl -fSL ${getMirror('minio')} -o /usr/bin/minio`, { retry: true }],
             'chmod +x /usr/bin/minio',

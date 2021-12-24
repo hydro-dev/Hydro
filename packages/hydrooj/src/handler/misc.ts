@@ -91,14 +91,8 @@ export class FSDownloadHandler extends Handler {
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
-        await oplog.add({
-            type: 'download',
-            time: new Date(),
-            uid: this.user._id,
-            ip: this.request.ip,
-            fileType: 'user',
+        await oplog.log(this, 'download.file.user', {
             target,
-            referer: this.request.referer,
             size: file?.size || 0,
         });
         if (!file) {

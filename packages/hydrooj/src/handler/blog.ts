@@ -100,10 +100,10 @@ class BlogEditHandler extends BlogHandler {
     @param('content', Types.Content)
     async postUpdate(domainId: string, did: ObjectID, title: string, content: string) {
         if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
-        await blog.edit(did, title, content);
-        await oplog.add({
-            ...this.ddoc, operator: this.user._id, type: 'edit',
-        });
+        await Promise.all([
+            blog.edit(did, title, content),
+            oplog.log(this, 'blog.edit', this.ddoc),
+        ]);
         this.response.body = { did };
         this.response.redirect = this.url('blog_detail', { uid: this.user._id, did });
     }
@@ -111,10 +111,10 @@ class BlogEditHandler extends BlogHandler {
     @param('did', Types.ObjectID)
     async postDelete(domainId: string, did: ObjectID) {
         if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
-        await blog.del(did);
-        await oplog.add({
-            ...this.ddoc, operator: this.user._id, operateIp: this.request.ip, type: 'delete',
-        });
+        await Promise.all([
+            blog.del(did),
+            oplog.log(this, 'blog.delete', this.ddoc),
+        ]);
         this.response.redirect = this.url('blog_main', { uid: this.ddoc.owner });
     }
 }

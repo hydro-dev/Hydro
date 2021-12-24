@@ -14,6 +14,7 @@ import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
 import oauth from '../model/oauth';
+import * as oplog from '../model/oplog';
 import problem, { ProblemDoc } from '../model/problem';
 import * as system from '../model/system';
 import task from '../model/task';
@@ -118,7 +119,10 @@ class UserLoginHandler extends Handler {
         let udoc = await user.getByEmail(domainId, uname);
         if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
-        await this.limitRate('user_login', 60, 5);
+        await Promise.all([
+            this.limitRate('user_login', 60, 5),
+            oplog.log(this, 'user.login', { redirect }),
+        ]);
         if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
