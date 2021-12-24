@@ -69,6 +69,7 @@ async function load() {
     shouldDelay: idx < 5, // only animate first 5 sections
     $element: $(section),
   }));
+  $('.page-loader').hide();
   console.log('done! %d ms', new Date().getTime() - start.getTime());
   for (const { $element, shouldDelay } of sections) {
     $element.addClass('visible');
