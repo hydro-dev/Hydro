@@ -304,7 +304,7 @@ export class ProblemModel {
             for (const pid of pids) {
                 if (!(r[pid] || l[pid])) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-                    else r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
+                    if (!indexByDocIdOnly) r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
                 }
             }
         }
