@@ -629,6 +629,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
             this.response.etag = file.etag;
             this.response.body = await storage.get(target);
             this.response.type = file['Content-Type'] || fileType;
+            if (file['Content-Encoding']) this.response.addHeader('Content-Encoding', file['Content-Encoding']);
             if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
         } else {
             this.response.redirect = await storage.signDownloadLink(
