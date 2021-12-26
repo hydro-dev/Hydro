@@ -20,9 +20,12 @@ console.log(
 `,
 );
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   window.UiContext = JSON.parse(window.UiContext);
 
+  const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
+  $('body').prepend(PageLoader);
+  $('.page-loader').fadeIn(500);
   // eslint-disable-next-line camelcase
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
@@ -32,16 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     eval(payload[0]); // eslint-disable-line no-eval
     payload.shift();
     window.Hydro.preload = payload;
-    import('./hydro');
   } else {
-    fetch(`/constant?version=${UiContext.constantVersion}`)
-      .then((res) => res.json())
-      .then((data) => {
-        eval(data.payload[0]); // eslint-disable-line no-eval
-        localStorage.setItem('hydro-constant', JSON.stringify(data));
-        data.payload.shift();
-        window.Hydro.preload = data.payload;
-        import('./hydro');
-      });
+    const res = await fetch(`/constant?version=${UiContext.constantVersion}`);
+    const data = await res.json();
+    eval(data.payload[0]); // eslint-disable-line no-eval
+    localStorage.setItem('hydro-constant', JSON.stringify(data));
+    data.payload.shift();
+    window.Hydro.preload = data.payload;
   }
+
+  import('./hydro');
 }, false);

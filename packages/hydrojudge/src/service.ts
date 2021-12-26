@@ -18,16 +18,17 @@ import { compilerText, md5 } from './utils';
 
 declare module 'hydrooj/src/interface' {
     interface SystemKeys {
-        'hydrojudge.cache_dir': string,
-        'hydrojudge.tmp_dir': string,
-        'hydrojudge.tmpfs_size': string,
-        'hydrojudge.retry_delay_sec': number,
-        'hydrojudge.sandbox_host': string,
-        'hydrojudge.memoryMax': string,
-        'hydrojudge.testcases_max': number,
-        'hydrojudge.total_time_limit': number,
-        'hydrojudge.parallelism': number,
-        'hydrojudge.disable': boolean,
+        'hydrojudge.cache_dir': string;
+        'hydrojudge.tmp_dir': string;
+        'hydrojudge.tmpfs_size': string;
+        'hydrojudge.retry_delay_sec': number;
+        'hydrojudge.sandbox_host': string;
+        'hydrojudge.memoryMax': string;
+        'hydrojudge.testcases_max': number;
+        'hydrojudge.total_time_limit': number;
+        'hydrojudge.parallelism': number;
+        'hydrojudge.disable': boolean;
+        'hydrojudge.detail': boolean;
     }
 }
 
@@ -76,7 +77,7 @@ async function postInit() {
     async function cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
         await fs.ensureDir(filePath);
-        if (!files?.length) throw new SystemError('Problem data not found.');
+        if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
@@ -135,6 +136,7 @@ async function postInit() {
 
     function getLang(lang: string) {
         if (setting.langs[lang]) return setting.langs[lang];
+        if (lang === 'cpp' && setting.langs['cc']) return setting.langs['cc'];
         throw new SystemError('Unsupported language {0}.', [lang]);
     }
 
@@ -213,7 +215,7 @@ async function postInit() {
             this.stat.read_cases = new Date();
             this.config = await readCases(
                 this.folder,
-                this.config,
+                { detail: system.get('hydrojudge.detail'), ...this.config },
                 { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
             );
             this.stat.judge = new Date();

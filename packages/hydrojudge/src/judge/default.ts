@@ -5,7 +5,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
 import compile from '../compile';
 import { getConfig } from '../config';
-import { CompileError, SystemError } from '../error';
+import { CompileError, FormatError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
 import { parseFilename } from '../utils';
@@ -134,7 +134,7 @@ function judgeSubtask(subtask, sid: string) {
 }
 
 export const judge = async (ctx) => {
-    if (!ctx.config.subtasks.length) throw new SystemError('Problem data not found.');
+    if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
     ctx.next({ status: STATUS.STATUS_COMPILING });
     if (ctx.config.template) {
         if (ctx.config.template[ctx.lang]) {

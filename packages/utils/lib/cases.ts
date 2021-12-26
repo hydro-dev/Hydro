@@ -1,4 +1,4 @@
-import { parseMemoryMB, parseTimeMS } from './utils';
+import { findFileSync, parseMemoryMB, parseTimeMS } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default async function readYamlCases(cfg: Record<string, any> = {}, checkFile = (s: string, errMsg: string) => s) {
@@ -10,7 +10,12 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         user_extra_files: [],
     };
     config.checker_type = cfg.checker_type || 'default';
-    if (cfg.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
+    if (cfg.checker) {
+        if (!cfg.checker.includes('.')) {
+            config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
+        }
+        if (!config.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
+    }
     if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
     if (cfg.judge_extra_files) {
         if (typeof cfg.judge_extra_files === 'string') {

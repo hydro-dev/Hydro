@@ -1,4 +1,5 @@
 {% import "components/home.html" as home with context %}
+{% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
 {{ set(UiContext, 'udoc', udoc) }}
@@ -102,6 +103,48 @@
         </div>
       </div>
     </div>
+    <div class="section">
+      <div class="section__header">
+        <h2 class="section__title">{{ _('Accepted Problems') }}</h2>
+      </div>
+      <div class="typo section__body no-media">
+        {% set _mark = Math.ceil(pdocs.length/4) %}
+        {% set _one = pdocs.slice(0, _mark) %}
+        {% set _two = pdocs.slice(_mark, _mark*2) %}
+        {% set _three = pdocs.slice(_mark*2, _mark*3) %}
+        {% set _four = pdocs.slice(_mark*3, pdocs.length - 1) %}
+        <div class="row">
+          <div class="medium-3 columns">
+            <ul>
+              {% for pdoc in _one %}
+                <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="medium-3 columns">
+            <ul>
+              {% for pdoc in _two %}
+                <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="medium-3 columns">
+            <ul>
+              {% for pdoc in _three %}
+                <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="medium-3 columns">
+            <ul>
+              {% for pdoc in _four %}
+                <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="medium-3 columns">
   {% if isSelfProfile %}
@@ -129,6 +172,19 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="section side">
+      <div class="section__header">
+        <h2 class="section__title">{{ _('Problem Tags') }}</h2>
+      </div>
+      <div class="typo section__body no-media">
+        <dl class="exlarge horizontal">
+          {% for tag in tags %}
+            <dt>{{ tag[0] }}</dt>
+            <dd>{{ tag[1] }}</dd>
+          {% endfor %}
+        </dl>
       </div>
     </div>
   </div>

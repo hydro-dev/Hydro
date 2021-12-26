@@ -182,7 +182,7 @@ export default class Hydro {
         const [domainId, pid] = source.split('/');
         const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
-        if (!files?.length) throw new SystemError('Problem data not found.');
+        if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
             etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
@@ -235,6 +235,7 @@ export default class Hydro {
 
     getLang(name: string) {
         if (this.language[name]) return this.language[name];
+        if (name === 'cpp' && this.language.cc) return this.language.cc;
         throw new SystemError('Unsupported language {0}', [name]);
     }
 
@@ -250,8 +251,8 @@ export default class Hydro {
                 : '{"key":"ping"}';
             setInterval(() => this.ws.send(content), 30000);
         });
-        this.ws.on('message', (data, isBinary) => {
-            const request = JSON.parse(isBinary ? data : data.toString());
+        this.ws.on('message', (data) => {
+            const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
         });

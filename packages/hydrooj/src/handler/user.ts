@@ -11,8 +11,11 @@ import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
+import domain from '../model/domain';
 import oauth from '../model/oauth';
+import * as oplog from '../model/oplog';
+import problem, { ProblemDoc } from '../model/problem';
 import * as system from '../model/system';
 import task from '../model/task';
 import token from '../model/token';
@@ -116,7 +119,10 @@ class UserLoginHandler extends Handler {
         let udoc = await user.getByEmail(domainId, uname);
         if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
-        await this.limitRate('user_login', 60, 5);
+        await Promise.all([
+            this.limitRate('user_login', 60, 5),
+            oplog.log(this, 'user.login', { redirect }),
+        ]);
         if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
@@ -125,9 +131,10 @@ class UserLoginHandler extends Handler {
         this.session.uid = udoc._id;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = redirect || (this.request.referer || '/login').endsWith('/login')
-            ? this.url('homepage')
-            : this.request.referer;
+        this.response.redirect = (redirect ? decodeURIComponent(redirect) : '')
+            || ((this.request.referer || '/login').endsWith('/login')
+                ? this.url('homepage')
+                : this.request.referer);
     }
 }
 
@@ -162,7 +169,7 @@ export class UserRegisterHandler extends Handler {
             const t = await token.add(
                 token.TYPE_REGISTRATION,
                 system.get('session.unsaved_expire_seconds'),
-                { mail },
+                { mail, redirect: this.domain.registerRedirect },
             );
             if (system.get('smtp.verify') && system.get('smtp.user')) {
                 const m = await this.renderHTML('user_register_mail.html', {
@@ -203,7 +210,7 @@ class UserRegisterWithCodeHandler extends Handler {
 
     @param('password', Types.String, isPassword)
     @param('verifyPassword', Types.String)
-    @param('uname', Types.String, isUname)
+    @param('uname', Types.Name, isUname)
     @param('code', Types.String)
     async post(
         domainId: string, password: string, verify: string,
@@ -215,15 +222,15 @@ class UserRegisterWithCodeHandler extends Handler {
         if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
-        const [id, domain] = tdoc.mail.split('@');
+        const [id, mailDomain] = tdoc.mail.split('@');
         const $set: any = {};
-        if (domain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
+        if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.scpoe = PERM.PERM_ALL.toString();
-        this.response.redirect = this.url('home_settings', { category: 'preference' });
+        this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
 
@@ -285,11 +292,26 @@ class UserDetailHandler extends Handler {
     async get(domainId: string, uid: number) {
         if (uid === 0) throw new UserNotFoundError(0);
         const isSelfProfile = this.user._id === uid;
-        const [udoc, sdoc] = await Promise.all([
+        const [udoc, sdoc, union] = await Promise.all([
             user.getById(domainId, uid),
             token.getMostRecentSessionByUid(uid),
+            domain.getUnion(domainId),
         ]);
         if (!udoc) throw new UserNotFoundError(uid);
+        const pdocs: ProblemDoc[] = [];
+        const acInfo: Record<string, number> = {};
+        const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
+        await Promise.all([domainId, ...(union?.union || [])].map(async (did) => {
+            const psdocs = await problem.getMultiStatus(did, { uid, status: STATUS.STATUS_ACCEPTED }).toArray();
+            pdocs.push(...Object.values(await problem.getList(did, psdocs.map((i) => i.docId), canViewHidden, false, undefined, true)));
+        }));
+        for (const pdoc of pdocs) {
+            for (const tag of pdoc.tag) {
+                if (acInfo[tag]) acInfo[tag]++;
+                else acInfo[tag] = 1;
+            }
+        }
+        const tags = Object.entries(acInfo).sort((a, b) => b[1] - a[1]).slice(0, 20);
         // Remove sensitive data
         if (!isSelfProfile && sdoc) {
             sdoc.createIp = '';
@@ -297,7 +319,9 @@ class UserDetailHandler extends Handler {
             sdoc._id = '';
         }
         this.response.template = 'user_detail.html';
-        this.response.body = { isSelfProfile, udoc, sdoc };
+        this.response.body = {
+            isSelfProfile, udoc, sdoc, pdocs, tags,
+        };
         this.extraTitleContent = udoc.uname;
     }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 /* eslint-disable consistent-return */
 /* eslint-disable no-undef */
 /// <reference types="./jssh" />
@@ -65,7 +66,6 @@ const mirrors = {
         official: 'https://repo.mongodb.org/apt/ubuntu',
     },
     minio: {
-        china: 'http://dl.minio.org.cn/server/minio/release/linux-amd64/minio',
         undefined: 'https://s3.undefined.moe/public/minio',
         official: 'https://dl.min.io/server/minio/release/linux-amd64/minio',
     },
@@ -114,6 +114,8 @@ for (const line of lines) {
 }
 if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
 const Arch = values.id === 'arch';
+const mongodbVersion = __env.MONGODB_VERSION || '5.0';
+let migration;
 
 const steps = [
     {
@@ -122,11 +124,26 @@ const steps = [
             () => log.info('info.mirror', preferredMirror),
             'mkdir -p /data/db /data/file ~/.hydro',
             Arch ? 'pacman --needed --quiet --noconfirm -Sy' : 'apt-get -qq update',
-            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl' : 'apt-get install -qy curl wget gnupg qrencode',
+            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl' : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
             () => {
                 if (locale === 'zh' && !Arch) {
                     log.info('扫码加入QQ群：');
                     exec('echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8', {}, 0);
+                }
+            },
+            () => {
+                return; // Not implemented yet
+                if (fs.exist('/home/judge/src')) {
+                    const res = cli.prompt('migrate.hustojFound');
+                    if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
+                }
+
+                const docker = !exec1('docker -v').code;
+                if (!docker) return;
+                // TODO check more places
+                if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
+                    const res = cli.prompt('migrate.qduojFound');
+                    if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
                 }
             },
         ],
@@ -144,10 +161,10 @@ const steps = [
             ]
             : [
                 // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
-                ['apt-get upgrade openssl -y', { retry: true }],
-                ['wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -', { retry: true }],
-                [`echo "deb [ arch=amd64 ] ${getMirror('mongodb')} ${values.ubuntu_codename}\
-/mongodb-org/4.4 multiverse" >/etc/apt/sources.list.d/mongodb-org-4.4.list && \
+                ['apt-get upgrade openssl ca-certificates -y', { retry: true }],
+                [`wget -qO - https://www.mongodb.org/static/pgp/server-${mongodbVersion}.asc | apt-key add -`, { retry: true }],
+                [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
+/mongodb-org/${mongodbVersion} multiverse" >/etc/apt/sources.list.d/mongodb-org-${mongodbVersion}.list && \
 apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             ],
     },
@@ -156,7 +173,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         skip: () => {
             const nvm = fs.exist('/root/.nvm');
             const node = !exec('node -v').code;
-            if (node && !nvm) log.fatal('error.nodeWithoutNVMDetected');
+            if (node && !nvm) log.warn('error.nodeWithoutNVMDetected');
             return nvm;
         },
         operations: [
@@ -227,7 +244,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     },
     {
         init: 'install.minio',
-        skip: () => fs.exist('/root/.hydro/env'),
+        skip: () => __env.SKIP_MINIO || fs.exist('/root/.hydro/env'),
         operations: [
             [`curl -fSL ${getMirror('minio')} -o /usr/bin/minio`, { retry: true }],
             'chmod +x /usr/bin/minio',
@@ -275,6 +292,29 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         ],
     },
     {
+        init: 'install.migrateHustoj',
+        skip: () => migration === 'hustoj',
+        silent: true,
+        operations: [
+            ['yarn global add @hydrooj/migrate-hustoj', { retry: true }],
+            'hydrooj addon add @hydrooj/migrate-hustoj',
+            () => {
+                const config = {
+                    host: 'localhost',
+                    port: 3306,
+                    name: 'jol',
+                    dataDir: '/home/judge/data',
+                    // TODO: auto-read uname&passwd&contestType
+                    username: 'debian-sys-maint',
+                    password: '',
+                    contestType: 'acm',
+                };
+                exec2(`hydrooj cli script migrateHustoj ${JSON.stringify(config)}`);
+            },
+            'pm2 restart hydrooj',
+        ],
+    },
+    {
         init: 'install.done',
         operations: [
             () => {
@@ -291,7 +331,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
 
 for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
-    log.info(step.init);
+    if (!step.silent) log.info(step.init);
     if (!(step.skip && step.skip())) {
         for (let op of step.operations) {
             if (!(op instanceof Array)) op = [op, {}];
@@ -317,7 +357,7 @@ for (let i = 0; i < steps.length; i++) {
                 }
             }
         }
-    } else log.info('info.skip');
+    } else if (!step.silent) log.info('info.skip');
 }
 
 exit(0);

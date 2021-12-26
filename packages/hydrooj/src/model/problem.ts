@@ -14,12 +14,18 @@ import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
 import { buildProjection } from '../utils';
-import { STATUS } from './builtin';
+import { PERM, STATUS } from './builtin';
 import * as document from './document';
+import DomainModel from './domain';
 import storage from './storage';
+import user from './user';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
+
+function sortable(source: string) {
+    return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
+}
 
 export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
@@ -92,7 +98,7 @@ export class ProblemModel {
         content: string, owner: number, tag: string[] = [], hidden = false,
     ) {
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden, nSubmit: 0, nAccept: 0,
+            title, tag, hidden, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         await bus.serial('problem/before-add', domainId, content, owner, docId, args);
@@ -100,6 +106,7 @@ export class ProblemModel {
         args.content = content;
         args.owner = owner;
         args.docType = document.TYPE_PROBLEM;
+        args.domainId = domainId;
         await bus.emit('problem/add', args, result);
         return result;
     }
@@ -107,6 +114,7 @@ export class ProblemModel {
     static async get(
         domainId: string, pid: string | number,
         projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
+        rawConfig = false,
     ): Promise<ProblemDoc | null> {
         if (typeof pid !== 'number') {
             if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
@@ -116,7 +124,7 @@ export class ProblemModel {
             : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
         if (!res) return null;
         try {
-            res.config = await parseConfig(res.config);
+            if (!rawConfig) res.config = await parseConfig(res.config);
         } catch (e) {
             res.config = `Cannot parse: ${e.message}`;
         }
@@ -124,7 +132,37 @@ export class ProblemModel {
     }
 
     static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
-        return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection);
+        return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
+    }
+
+    static async list(
+        domainId: string, query: FilterQuery<ProblemDoc>,
+        page: number, pageSize: number,
+        projection = ProblemModel.PROJECTION_LIST, uid?: number,
+    ): Promise<[ProblemDoc[], number, number]> {
+        const union = await DomainModel.getUnion(domainId);
+        const domainIds = [domainId];
+        if (union?.problem) domainIds.push(...union.union);
+        let count = 0;
+        const pdocs = [];
+        for (const id of domainIds) {
+            // TODO enhance performance
+            if (uid) {
+                // eslint-disable-next-line no-await-in-loop
+                const udoc = await user.getById(id, uid);
+                if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const ccount = await document.getMulti(id, document.TYPE_PROBLEM, query).count();
+            if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
+                // eslint-disable-next-line no-await-in-loop
+                pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
+                    .sort({ sort: 1, docId: 1 })
+                    .skip(Math.max((page - 1) * pageSize - count, 0)).limit(pageSize - pdocs.length).toArray());
+            }
+            count += ccount;
+        }
+        return [pdocs, Math.ceil(count / pageSize), count];
     }
 
     static getStatus(domainId: string, docId: number, uid: number) {
@@ -137,7 +175,12 @@ export class ProblemModel {
 
     static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
-        if (delpid) delete $set.pid;
+        if (delpid) {
+            delete $set.pid;
+            $set.sort = sortable(`P${_id}`);
+        } else if ($set.pid) {
+            $set.sort = sortable($set.pid);
+        }
         await bus.serial('problem/before-edit', $set);
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
         await bus.emit('problem/edit', result);
@@ -238,6 +281,7 @@ export class ProblemModel {
     static async getList(
         domainId: string, pids: number[],
         getHidden: number | boolean = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
+        indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
@@ -260,11 +304,11 @@ export class ProblemModel {
             for (const pid of pids) {
                 if (!(r[pid] || l[pid])) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
-                    else r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
+                    if (!indexByDocIdOnly) r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
                 }
             }
         }
-        return Object.assign(r, l);
+        return indexByDocIdOnly ? r : Object.assign(r, l);
     }
 
     static async getPrefixList(domainId: string, prefix: string) {
@@ -279,7 +323,10 @@ export class ProblemModel {
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
         ).toArray();
         const r: Record<string, ProblemStatusDoc> = {};
-        for (const psdoc of psdocs) r[psdoc.docId] = psdoc;
+        for (const psdoc of psdocs) {
+            r[psdoc.docId] = psdoc;
+            r[`${psdoc.domainId}#${psdoc.docId}`] = psdoc;
+        }
         return r;
     }
 

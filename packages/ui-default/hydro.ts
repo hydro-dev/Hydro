@@ -4,6 +4,7 @@ import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';
 import delay from 'vj/utils/delay';
+import i18n from './i18n';
 
 declare global {
   interface Window {
@@ -36,6 +37,7 @@ function buildSequence(pages, type) {
 async function load() {
   for (const page of window.Hydro.preload) await eval(page); // eslint-disable-line no-eval
 
+  await i18n();
   const pageLoader = new PageLoader();
 
   const currentPageName = document.documentElement.getAttribute('data-page');
@@ -67,6 +69,7 @@ async function load() {
     shouldDelay: idx < 5, // only animate first 5 sections
     $element: $(section),
   }));
+  $('.page-loader').hide();
   console.log('done! %d ms', new Date().getTime() - start.getTime());
   for (const { $element, shouldDelay } of sections) {
     $element.addClass('visible');

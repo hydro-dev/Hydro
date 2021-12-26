@@ -1,5 +1,4 @@
 import type fs from 'fs';
-import type * as Koa from 'koa';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
@@ -242,6 +241,7 @@ declare module './model/problem' {
         html?: boolean;
         stats?: any;
         difficulty?: number;
+        sort?: string;
         reference?: {
             domainId: string;
             pid: number;
@@ -366,6 +366,7 @@ export interface DomainDoc extends Record<string, any> {
 export interface DomainUnion {
     _id: string;
     union: string[];
+    problem: boolean;
 }
 
 // Message
@@ -433,6 +434,20 @@ export interface DiscussionTailReplyDoc {
     content: string,
     ip: string,
     history: HistoryDoc[],
+}
+
+export interface BlogDoc {
+    docType: document['TYPE_BLOG'];
+    docId: ObjectID;
+    owner: number;
+    title: string;
+    content: string;
+    ip: string;
+    updateAt: Date;
+    nReply: number;
+    views: number;
+    reply: any[];
+    react: Record<string, number>;
 }
 
 export interface TokenDoc {
@@ -586,6 +601,7 @@ export interface Collections {
 
 export interface Model {
     blacklist: typeof import('./model/blacklist').default,
+    blog: typeof import('./model/blog'),
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     discussion: typeof import('./model/discussion'),
@@ -679,11 +695,4 @@ declare global {
     }
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line
-}
-
-declare module 'koa' {
-    interface Request extends Koa.BaseRequest {
-        body?: any;
-        files?: import('formidable').Files;
-    }
 }

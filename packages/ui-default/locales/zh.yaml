@@ -295,7 +295,6 @@ Enabled: 开启
 End at: 结束于
 End Date: 结束日期
 End Time: 结束时间
-English: 英文
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
@@ -347,7 +346,7 @@ Hint::page::main: 欢迎来到 Hydro！ 您可在右上角注册或登录。此�
 Hint::page::problem_detail: 这是题目详情页面。您可点击右侧“进入在线编程模式"开始编写您的代码。
 Hint::page::problem_files: 您可以将文件或压缩包拖拽至对应区域来上传文件。点击文件名在线编辑或按住 Ctrl 后点击文件名下载单个文件。
 Hint::page::problem_main: 这是题目列表页面。您可在页面右侧进行筛选或搜索。
-Hitokoto: 一言（ヒトコト）
+Hitokoto: 一言
 home_account: 账户设置
 home_domain_account: 当前域的设置
 home_domain_create: 创建域
@@ -455,6 +454,7 @@ Method: 方法
 Moderator: 管理员
 Month: 月
 Monthly Popular: 月度最受欢迎
+More: 更多
 Most Upvoted Solutions: 最被赞同的题解
 My Domains: 我的域
 My Files: 我的文件
@@ -692,6 +692,7 @@ Share: 分享
 She: 她
 Show all tags: 显示所有标签
 Show MOD badge: 展示 MOD 徽章
+Show tags: 显示标签
 Show: 显示
 Sign In: 登录
 SIGN IN: 登录
@@ -702,7 +703,7 @@ Size: 大小
 Solutions Liked: 题解被赞
 Solutions: 题解
 Solve: 解决
-Solved Problems: 解决题目
+Solved: 解决
 Sorry, there is no problem in the problem set: 题库中没有题目
 Sorry, there is no training plan.: 目前没有训练计划。
 Sorry, there is no user in this domain.: 对不起，此域中没有用户。

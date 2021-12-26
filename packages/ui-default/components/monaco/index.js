@@ -23,7 +23,7 @@ export function registerAction(editor, model, element) {
   if (element) {
     editor.addAction({
       id: 'submit-form',
-      label: 'Use light',
+      label: 'Submit',
       keybindings: [
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
         monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter,
@@ -31,7 +31,7 @@ export function registerAction(editor, model, element) {
       run: () => $(element).closest('form').submit(),
     });
   }
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_P, () => {
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
     editor.getAction('editor.action.quickCommand').run();
   });
   loadFormatter().then(([loaded, format]) => {
@@ -41,7 +41,7 @@ export function registerAction(editor, model, element) {
       label: 'Format Code',
       contextMenuOrder: 0,
       contextMenuGroupId: 'operation',
-      keybindings: [monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F],
+      keybindings: [monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KeyF],
       run: () => {
         if (!['cpp', 'c'].includes(model._languageIdentifier.language)) return;
         const [success, result] = format(editor.getValue(), `${UserContext.astyleOptions.trim()} mode=c`);
@@ -49,7 +49,7 @@ export function registerAction(editor, model, element) {
         else Notification.warn(result);
       },
     });
-    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, () => {
+    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
       editor.getAction('hydro.format').run();
     });
   });

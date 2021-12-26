@@ -14,6 +14,7 @@ import message from '../model/message';
 import problem from '../model/problem';
 import record from '../model/record';
 import * as system from '../model/system';
+import TaskModel from '../model/task';
 import user from '../model/user';
 import {
     Handler, param, Route, Types,
@@ -45,6 +46,15 @@ registerResolver(
     },
     'Get a contest by ID',
 );
+
+TaskModel.Worker.addHandler('contest.problemHide', async (doc) => {
+    const tdoc = await contest.get(doc.domainId, doc.tid);
+    if (!tdoc) return;
+    for (const pid of tdoc.pids) {
+        // eslint-disable-next-line no-await-in-loop
+        await problem.edit(doc.domainId, pid, { hidden: false });
+    }
+});
 
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
@@ -106,6 +116,9 @@ export class ContestDetailHandler extends Handler {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
+        await TaskModel.deleteMany({
+            type: 'schedule', subType: 'contest.problemHide', domainId, tid,
+        });
         this.response.redirect = this.url('contest_main');
     }
 }
@@ -224,10 +237,12 @@ export class ContestEditHandler extends Handler {
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
+    @param('autoHide', Types.String, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false, _code = '',
+        title: string, content: string, rule: string, _pids: string, rated = false, _code = '', autoHide = false,
     ) {
+        if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
@@ -246,7 +261,19 @@ export class ContestEditHandler extends Handler {
         } else {
             tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
         }
-        await contest.edit(domainId, tid, { _code });
+        const task = {
+            type: 'schedule', subType: 'contest.problemHide', domainId, tid,
+        };
+        await TaskModel.deleteMany(task);
+        if (Date.now() <= endAt.getTime() && autoHide) {
+            // eslint-disable-next-line no-await-in-loop
+            for (const pid of pids) await problem.edit(domainId, pid, { hidden: true });
+            await TaskModel.add({
+                ...task,
+                executeAfter: endAt,
+            });
+        }
+        await contest.edit(domainId, tid, { _code, autoHide });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
     }

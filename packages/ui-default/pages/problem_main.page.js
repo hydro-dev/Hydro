@@ -16,6 +16,7 @@ import i18n from 'vj/utils/i18n';
 const categories = {};
 const dirtyCategories = [];
 const selections = [];
+const list = [];
 
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
@@ -111,6 +112,8 @@ function buildCategoryFilter() {
       });
     }
   });
+  list.push(...Object.keys(categories));
+  list.push(..._.flatMap(Object.values(categories), (c) => Object.keys(c.children)));
   $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const category = $(ev.currentTarget).text();
@@ -208,12 +211,23 @@ async function handleOperation(operation) {
   }
 }
 
+function hideTags(target) {
+  $(target).find('.problem__tag').get()
+    .filter((i) => list.includes(i.children[0].innerHTML))
+    .forEach((i) => $(i).addClass('notag--hide'));
+}
+
 async function handleDownload(ev) {
   let name = 'Export';
   // eslint-disable-next-line no-alert
   if (ev.shiftKey) name = prompt('Filename:', name);
   const pids = ensureAndGetSelectedPids();
   if (pids) await downloadProblemSet(pids, name);
+}
+
+function processElement(ele) {
+  hideTags(ele);
+  createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
 const page = new NamedPage(['problem_main', 'problem_category'], () => {
@@ -232,7 +246,10 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
     $(`[name="${op}_selected_problems"]`).on('click', () => handleOperation(op));
   });
   $('[name="download_selected_problems"]').on('click', handleDownload);
-  $('#hideTags').on('click', () => $('.problem__tags').hide());
+
+  $(document).on('click', '.toggle-tag', () => {
+    $('.section__table-container').children(1).toggleClass('hide-problem-tag');
+  });
   $('#search').on('click', (ev) => {
     ev.preventDefault();
     updateSelection();
@@ -247,10 +264,8 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
   });
-  $(document).on('vjContentNew', (e) => {
-    createHint('Hint::icon::difficulty', $(e.target).find('th.col--difficulty'));
-  });
-  createHint('Hint::icon::difficulty', $(document).find('th.col--difficulty'));
+  $(document).on('vjContentNew', (e) => processElement(e.target));
+  processElement(document);
 });
 
 export default page;

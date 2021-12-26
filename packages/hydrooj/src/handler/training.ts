@@ -189,7 +189,7 @@ class TrainingCreateHandler extends Handler {
         if (pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
-        assert(pids.length, new ValidationError('dag'));
+        assert(pids.length, new ValidationError('dag', null, 'Please specify at least one problem'));
         const pdocs = await problem.getMulti(domainId, { docId: { $in: pids } }).sort('_id', 1).toArray();
         for (const pdoc of pdocs) {
             if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);

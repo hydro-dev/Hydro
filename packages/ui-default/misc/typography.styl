@@ -31,11 +31,10 @@ dd
   margin-bottom: rem(10px)
 
 +above(rupture.desktop-cutoff)
-  dl.large.horizontal
+  dl.horizontal
     overflow: hidden
     dt
       float: left
-      width: 37%
       overflow: hidden
       clear: left
       text-align: left
@@ -45,11 +44,25 @@ dd
       padding-right: rem(10px)
     dd
       float: left
-      width: 62%
 
     dt, dd
       line-height: 1.2rem
       margin: rem(5px 0)
+
+    &.large
+      dt
+        width: 37%
+
+      dd
+        width: 62%
+
+    &.exlarge
+      dt
+        width: 62%
+
+      dd
+        width: 37%
+     
 
 article, aside, details, figcaption, figure, footer, header, menu, nav, section
   display: block

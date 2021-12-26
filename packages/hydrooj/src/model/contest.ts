@@ -74,10 +74,11 @@ const acm: ContestRule = {
         const columns: ScoreboardRow = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
-            { type: 'solved_problems', value: _('Solved Problems') },
+            { type: 'solved_problems', value: _('Solved') },
         ];
         if (isExport) {
             columns.push(
+                { type: 'total_time', value: _('Penalty') },
                 { type: 'total_time', value: _('Total Time (Seconds)') },
                 { type: 'total_time_str', value: _('Total Time') },
             );
@@ -128,7 +129,9 @@ const acm: ContestRule = {
                 { type: 'string', value: tsdoc.accept || 0 },
             ];
             if (isExport) {
+                const penalty = Math.sum(tdoc.pids.map((i) => (tsddict[i]?.naccept || 0))) * 20 * 60;
                 row.push(
+                    { type: 'string', value: penalty.toString() },
                     { type: 'string', value: tsdoc.time || 0.0 },
                     { type: 'string', value: tsdoc.time || 0.0 },
                 );
@@ -137,7 +140,7 @@ const acm: ContestRule = {
                 const doc = tsddict[pid] || {};
                 const accept = doc.status === STATUS.STATUS_ACCEPTED;
                 const rid = accept ? doc.rid : null;
-                const colAccepted = `${accept ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
+                const colAccepted = `${(accept && isExport) ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
                 const colTime = accept ? doc.time : '-';
                 const colTimeStr = accept ? misc.formatSeconds(colTime) : '-';
                 if (isExport) {

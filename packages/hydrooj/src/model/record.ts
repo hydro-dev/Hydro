@@ -30,7 +30,7 @@ class RecordModel {
         const pending = await task.count({ uid });
         const timeRecent = await RecordModel.coll
             .find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, uid }).project({ time: 1 }).toArray();
-        return base - ((pending + 0.5) * (sum(timeRecent.map((i) => i.time || 0)) / 10000));
+        return base - ((pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000));
     }
 
     static async get(_id: ObjectID): Promise<RecordDoc | null>
@@ -103,7 +103,7 @@ class RecordModel {
 
     static async add(
         domainId: string, pid: number, uid: number,
-        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest?: boolean,
+        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest = false,
     ) {
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
@@ -130,7 +130,7 @@ class RecordModel {
         } else data.contest = tidOrInput;
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, isContest ? 50 : 0);
+            const priority = await RecordModel.submissionPriority(uid, typeof tidOrInput === 'string' ? -20 : (isContest ? 50 : 0));
             await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {});
         }
         return res.insertedId;

@@ -130,30 +130,21 @@ export default function (env = {}) {
         maxInitialRequests: 3,
         automaticNameDelimiter: '-',
         cacheGroups: {
-          monaco: {
-            test: /[\\/]monaco-editor[\\/]/,
-            priority: 9,
-            name: 'monaco',
-          },
-          vditor: {
-            test: /[\\/]vditor[\\/]/,
-            priority: 8,
-            name: 'vditor',
-          },
-          echarts: {
-            test: /[\\/]echarts[\\/]/,
-            priority: 7,
-            name: 'echarts',
-          },
-          graphql: {
-            test: /[\\/](graphiql|codemirror)[\\/]/,
-            priority: 6,
-            name: 'gql-cm',
+          style: {
+            test: /\.(css|styl|less|sass|scss)$/,
+            priority: 99,
+            name: 'style',
           },
           vendors: {
             test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
             priority: -10,
-            name: 'vendors',
+            name(module) {
+              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+              if (packageName === 'monaco-editor-nls') {
+                return `i.monaco.${module.userRequest.split('/').pop().split('.')[0]}`;
+              }
+              return `n.${packageName.replace('@', '')}`;
+            },
             reuseExistingChunk: true,
           },
           default: {
@@ -220,7 +211,9 @@ export default function (env = {}) {
           customInterpolateName: beautifyOutputUrl,
         },
       }),
+      new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({
+        filename: '[name].[hash:10].worker.js',
         customLanguages: [{
           label: 'yaml',
           entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/monaco.contribution'),

@@ -113,20 +113,21 @@ async function read1(folder: string, files: string[], checkFile, cfg, rst) {
         for (const REG of RE1) {
             if (REG.reg.test(file)) {
                 const data = REG.reg.exec(file);
+                const sid = REG.subtask(data);
                 const c = { input: file, output: '', id: REG.id(data) };
                 for (const func of REG.output) {
                     if (cfg.noOutputFile) c.output = '/dev/null';
                     else c.output = func(data);
                     if (c.output === '/dev/null' || fs.existsSync(path.resolve(folder, c.output))) {
-                        if (!subtask[REG.subtask(data)]) {
-                            subtask[REG.subtask(data)] = [{
+                        if (!subtask[sid]) {
+                            subtask[sid] = {
                                 time: parseTimeMS(cfg.time || '1s'),
                                 memory: parseMemoryMB(cfg.memory || '256m'),
                                 type: 'min',
                                 cases: [c],
-                            }];
-                        } else if (!subtask[REG.subtask(data)].cases) subtask[REG.subtask(data)].cases = [c];
-                        else subtask[REG.subtask(data)].cases.push(c);
+                            };
+                        } else if (!subtask[sid].cases) subtask[sid].cases = [c];
+                        else subtask[sid].cases.push(c);
                         break;
                     }
                 }

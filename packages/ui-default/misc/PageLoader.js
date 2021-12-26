@@ -16,8 +16,9 @@ export default class PageLoader {
         return page;
       }),
     ];
-    if (window.Hydro.extraPages) this.pageInstances.push(...window.Hydro.extraPages);
+    if (window.Hydro.extraPages) this.pageInstances.push(...window.Hydro.extraPages.filter((i) => i instanceof Page));
     window.Hydro.pageInstances = this.pageInstances;
+    window.Hydro.extraPages.filter((i) => !(i instanceof Page)).forEach((i) => i());
   }
 
   getAutoloadPages() {

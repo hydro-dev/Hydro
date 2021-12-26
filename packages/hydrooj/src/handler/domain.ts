@@ -11,6 +11,7 @@ import paginate from '../lib/paginate';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import * as oplog from '../model/oplog';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -105,28 +106,29 @@ class DomainUserHandler extends ManageHandler {
             rudocs[ud.role || 'default'].push(ud);
         }
         const rolesSelect = roles.map((role) => [role._id, role._id]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_user', null],
-        ];
         this.response.template = 'domain_user.html';
         this.response.body = {
-            roles, rolesSelect, rudocs, udict, path, domain: this.domain,
+            roles, rolesSelect, rudocs, udict, domain: this.domain,
         };
     }
 
     @post('uid', Types.Int)
     @post('role', Types.Name)
     async postSetUser(domainId: string, uid: number, role: string) {
-        await domain.setUserRole(domainId, uid, role);
+        await Promise.all([
+            domain.setUserRole(domainId, uid, role),
+            oplog.log(this, 'domain.setRole', { uid, role }),
+        ]);
         this.back();
     }
 
     @param('uid', Types.NumericArray)
     @param('role', Types.Name)
     async postSetUsers(domainId: string, uid: number[], role: string) {
-        await domain.setUserRole(domainId, uid, role);
+        await Promise.all([
+            domain.setUserRole(domainId, uid, role),
+            oplog.log(this, 'domain.setRole', { uid, role }),
+        ]);
         this.back();
     }
 }
@@ -134,14 +136,9 @@ class DomainUserHandler extends ManageHandler {
 class DomainPermissionHandler extends ManageHandler {
     async get({ domainId }) {
         const roles = await domain.getRoles(domainId);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['domain', null],
-            ['domain_permission', null],
-        ];
         this.response.template = 'domain_permission.html';
         this.response.body = {
-            roles, PERMS_BY_FAMILY, domain: this.domain, path, log2,
+            roles, PERMS_BY_FAMILY, domain: this.domain, log2,
         };
     }
 
@@ -179,10 +176,8 @@ class DomainRoleHandler extends ManageHandler {
 
     @param('roles', Types.Array)
     async postDelete(domainId: string, roles: string[]) {
-        for (const role of roles) {
-            if (['root', 'default', 'guest'].includes(role)) {
-                throw new ValidationError('role');
-            }
+        if (Set.intersection(new Set(roles), new Set(['root', 'default', 'guest'])).size > 0) {
+            throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await domain.deleteRoles(domainId, roles);
         this.back();
@@ -254,7 +249,10 @@ class DomainJoinHandler extends Handler {
                 throw new InvalidJoinInvitationCodeError(this.domain._id);
             }
         }
-        await domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role);
+        await Promise.all([
+            domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role),
+            oplog.log(this, 'domain.join', {}),
+        ]);
         this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
     }
 }

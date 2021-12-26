@@ -4,7 +4,9 @@ import {
     Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, UpdateQuery,
 } from 'mongodb';
 import {
-    Content, DiscussionDoc, DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc, Tdoc, TrainingDoc,
+    BlogDoc, Content, DiscussionDoc,
+    DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
+    Tdoc, TrainingDoc,
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -25,16 +27,18 @@ export const TYPE_DISCUSSION_REPLY: 22 = 22;
 export const TYPE_CONTEST: 30 = 30;
 export const TYPE_TRAINING: 40 = 40;
 export const TYPE_HOMEWORK: 60 = 60;
+export const TYPE_BLOG: 70 = 70;
 
 export interface DocType {
-    [TYPE_PROBLEM]: ProblemDoc,
-    [TYPE_PROBLEM_SOLUTION]: any,
-    [TYPE_PROBLEM_LIST]: any,
-    [TYPE_DISCUSSION_NODE]: any,
-    [TYPE_DISCUSSION]: DiscussionDoc,
-    [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc,
-    [TYPE_CONTEST]: Tdoc,
-    [TYPE_TRAINING]: TrainingDoc,
+    [TYPE_PROBLEM]: ProblemDoc;
+    [TYPE_PROBLEM_SOLUTION]: any;
+    [TYPE_PROBLEM_LIST]: any;
+    [TYPE_DISCUSSION_NODE]: any;
+    [TYPE_DISCUSSION]: DiscussionDoc;
+    [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc;
+    [TYPE_CONTEST]: Tdoc;
+    [TYPE_TRAINING]: TrainingDoc;
+    [TYPE_BLOG]: BlogDoc;
 }
 
 export interface DocStatusType {
@@ -407,8 +411,9 @@ bus.once('app/started', async () => {
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },
         // For problem
         { key: { domainId: 1, docType: 1, search: 'text', title: 'text' }, name: 'search', sparse: true },
-        { key: { domainId: 1, docType: 1, tag: 1, docId: 1 }, name: 'tag', sparse: true },
-        { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, docId: 1 }, name: 'hidden', sparse: true },
+        { key: { domainId: 1, docType: 1, sort: 1 }, name: 'sort', sparse: true },
+        { key: { domainId: 1, docType: 1, tag: 1, sort: 1 }, name: 'tag', sparse: true },
+        { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, sort: 1 }, name: 'hidden', sparse: true },
         // For problem solution
         { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
         // For discussion
@@ -478,4 +483,5 @@ global.Hydro.model.document = {
     TYPE_PROBLEM_LIST,
     TYPE_PROBLEM_SOLUTION,
     TYPE_TRAINING,
+    TYPE_BLOG,
 };
