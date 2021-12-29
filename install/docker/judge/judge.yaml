@@ -1,7 +1,7 @@
 hosts:
   localhost:
-    type: hydro # vj4 用户请在此处填写 vj4
-    server_url: http://oj-backend:8888/ # Hydro 运行的网址
-    uname: root # 评测账号用户名
-    password: rootroot # 评测账号密码
-    detail: true # 默认为 true
+    type: hydro
+    server_url: http://oj-backend:8888/
+    uname: root
+    password: rootroot
+    detail: true
