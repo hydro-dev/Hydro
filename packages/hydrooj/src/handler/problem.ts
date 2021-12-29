@@ -617,25 +617,9 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
             target,
             size: file?.size || 0,
         });
-        if (!file) {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-            return;
-        }
-        const fileType = lookup(filename).toString();
-        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => fileType.includes(i)).length;
-        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
-            this.response.etag = file.etag;
-            this.response.body = await storage.get(target);
-            this.response.type = file['Content-Type'] || fileType;
-            if (file['Content-Encoding']) this.response.addHeader('Content-Encoding', file['Content-Encoding']);
-            if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
-        } else {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-        }
+        this.response.redirect = await storage.signDownloadLink(
+            target, noDisposition ? undefined : filename, false, 'user',
+        );
     }
 }
 
