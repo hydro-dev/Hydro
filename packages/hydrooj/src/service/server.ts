@@ -698,7 +698,7 @@ async function handle(ctx, HandlerClass, checker) {
             } else if (typeof h.post !== 'function') {
                 throw new MethodNotAllowedError(method);
             }
-        } else if (typeof h[method] !== 'function') {
+        } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
             throw new MethodNotAllowedError(method);
         }
 
@@ -712,6 +712,7 @@ async function handle(ctx, HandlerClass, checker) {
         await bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before', h);
         h.args.__method = Date.now();
+        if (h.all) await h.all(args);
         if (h[method]) await h[method](args);
         h.args.__methodDone = Date.now();
         await bail(`handler/before-operation/${HandlerClass.name.replace(/Handler$/, '')}`, h);

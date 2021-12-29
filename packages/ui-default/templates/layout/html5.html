@@ -26,6 +26,7 @@
   {% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}?version={{ global.Hydro.version.ui }}"></script>
+    <script type="text/javascript" src="{{ static_url('l/'+handler.user.viewLang) }}"></script>
     {% if process.env.DEV %}
       <script type="text/javascript" src="{{ static_url('hydro.js') }}?version={{ global.Hydro.version.ui }}"></script>
     {% else %}
