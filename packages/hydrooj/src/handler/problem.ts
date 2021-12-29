@@ -1,7 +1,6 @@
 import AdmZip from 'adm-zip';
 import { statSync } from 'fs-extra';
 import { flatten, intersection, isSafeInteger } from 'lodash';
-import { lookup } from 'mime-types';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
