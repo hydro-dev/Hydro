@@ -3,7 +3,6 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
 import paginate from '../lib/paginate';
-import { isContent, isDescription } from '../lib/validator';
 import { PERM, PRIV } from '../model/builtin';
 import * as builtin from '../model/builtin';
 import problem from '../model/problem';
@@ -21,13 +20,14 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
         const dag = JSON.parse(_dag);
         assert(dag instanceof Array, 'dag must be an array');
         const ids = new Set(dag.map((s) => s._id));
+        assert(dag.length, 'must have at least one node');
         assert(dag.length === ids.size, '_id must be unique');
         for (const node of dag) {
             assert(node._id, 'each node should have a _id');
             assert(node.title, 'each node shoule have a title');
             assert(node.requireNids instanceof Array);
             assert(node.pids instanceof Array);
-            assert(node.pids.length);
+            assert(node.pids.length, 'each node must contain at lease one problem');
             for (const nid of node.requireNids) {
                 assert(ids.has(nid), `required nid ${nid} not found`);
             }
@@ -41,7 +41,7 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(tasks);
             const newNode = {
-                _id: parseInt(node._id, 10),
+                _id: +node._id,
                 title: node.title,
                 requireNids: Array.from(new Set(node.requireNids)),
                 pids: Array.from(new Set(node.pids)),
@@ -84,13 +84,9 @@ class TrainingMainHandler extends Handler {
             }
         }
         for (const tdoc of tdocs) tdict[tdoc.docId.toHexString()] = tdoc;
-        const path = [
-            ['Hydro', 'homepage'],
-            ['training_main', null],
-        ];
         this.response.template = 'training_main.html';
         this.response.body = {
-            tdocs, page, tpcount, tsdict, tdict, path,
+            tdocs, page, tpcount, tsdict, tdict,
         };
     }
 }
@@ -109,6 +105,7 @@ class TrainingDetailHandler extends Handler {
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
+            if (!+pid) continue;
             const psdoc = psdict[pid];
             if (psdoc.status) {
                 if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) {
@@ -138,14 +135,9 @@ class TrainingDetailHandler extends Handler {
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
         });
-        const path = [
-            ['Hydro', 'homepage'],
-            ['training_main', 'training_main'],
-            [tdoc.title, null, null, true],
-        ];
         this.response.template = 'training_detail.html';
         this.response.body = {
-            path, tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, owner,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, owner,
         };
     }
 
@@ -166,103 +158,50 @@ class TrainingDetailHandler extends Handler {
     }
 }
 
-class TrainingCreateHandler extends Handler {
-    async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['training_main', 'training_main'],
-            ['training_create', null],
-        ];
-        this.response.template = 'training_edit.html';
-        this.response.body = { page_name: 'training_create', path };
-    }
-
-    @param('title', Types.Title)
-    @param('content', Types.Content)
-    @param('dag', Types.String, isContent)
-    @param('pin', Types.Boolean)
-    @param('description', Types.String, isDescription)
-    async post(
-        domainId: string, title: string, content: string,
-        _dag: string, pin = false, description: string,
-    ) {
-        if (pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
-        const dag = await _parseDagJson(domainId, _dag);
-        const pids = training.getPids(dag);
-        assert(pids.length, new ValidationError('dag', null, 'Please specify at least one problem'));
-        const pdocs = await problem.getMulti(domainId, { docId: { $in: pids } }).sort('_id', 1).toArray();
-        for (const pdoc of pdocs) {
-            if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        }
-        const tid = await training.add(domainId, title, content, this.user._id, dag, description);
-        if (pin) await training.edit(domainId, tid, { pin });
-        this.response.body = { tid };
-        this.response.redirect = this.url('training_detail', { tid });
-    }
-}
-
 class TrainingEditHandler extends Handler {
     tdoc: TrainingDoc;
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid: ObjectID) {
-        this.tdoc = await training.get(domainId, tid);
-        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
+        if (tid) {
+            this.tdoc = await training.get(domainId, tid);
+            if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+            else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
+        } else this.checkPerm(PERM.PERM_CREATE_TRAINING);
     }
 
-    async get({ tid }) {
-        const dag = JSON.stringify(this.tdoc.dag, null, 2);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['training_main', 'training_main'],
-            [this.tdoc.title, 'training_detail', { tid }, true],
-            ['training_edit', null],
-        ];
+    async get() {
         this.response.template = 'training_edit.html';
-        this.response.body = {
-            tdoc: this.tdoc, dag, path, page_name: 'training_edit',
-        };
+        this.response.body = { page_name: this.tdoc ? 'training_edit' : 'training_create' };
+        if (this.tdoc) {
+            this.response.body.tdoc = this.tdoc;
+            this.response.body.tag = JSON.stringify(this.tdoc.dag, null, 2);
+        }
     }
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.Content)
     @param('pin', Types.Boolean)
-    @param('description', Types.String, isDescription)
+    @param('description', Types.Content)
     async post(
         domainId: string, tid: ObjectID,
         title: string, content: string,
         _dag: string, pin = false, description: string,
     ) {
-        if ((!!this.tdoc.pin) !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
+        if ((!!this.tdoc?.pin) !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
-        assert(pids.length, new ValidationError('dag'));
-        const pdocs = await problem.getMulti(domainId, {
-            $or: [
-                { docId: { $in: pids } },
-                // TODO
-                // @ts-ignore
-                { pid: { $in: pids } },
-            ],
-        }).sort('_id', 1).toArray();
-        const existPids = pdocs.map((pdoc) => pdoc.docId);
-        if (pids.length !== existPids.length) {
-            for (const pid in pids) {
-                assert(
-                    existPids.includes(parseInt(pid, 10)),
-                    new ProblemNotFoundError(pid),
-                );
-            }
+        assert(pids.length, new ValidationError('dag', null, 'Please specify at least one problem'));
+        if (!tid) {
+            tid = await training.add(domainId, title, content, this.user._id, dag, description);
+            if (pin) await training.edit(domainId, tid, { pin });
+        } else {
+            await training.edit(domainId, tid, {
+                title, content, dag, description, pin,
+            });
         }
-        for (const pdoc of pdocs) {
-            if (pdoc.hidden) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        }
-        await training.edit(domainId, tid, {
-            title, content, dag, description, pin,
-        });
         this.response.body = { tid };
         this.response.redirect = this.url('training_detail', { tid });
     }
@@ -270,7 +209,7 @@ class TrainingEditHandler extends Handler {
 
 export async function apply() {
     Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
-    Route('training_create', '/training/create', TrainingCreateHandler, PERM.PERM_CREATE_TRAINING);
+    Route('training_create', '/training/create', TrainingEditHandler);
     Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
     Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
 }
