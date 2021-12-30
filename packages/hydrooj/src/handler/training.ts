@@ -175,7 +175,7 @@ class TrainingEditHandler extends Handler {
         this.response.body = { page_name: this.tdoc ? 'training_edit' : 'training_create' };
         if (this.tdoc) {
             this.response.body.tdoc = this.tdoc;
-            this.response.body.tag = JSON.stringify(this.tdoc.dag, null, 2);
+            this.response.body.dag = JSON.stringify(this.tdoc.dag, null, 2);
         }
     }
 
