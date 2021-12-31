@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.2.40",
+    "version": "3.2.41",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -41,6 +41,7 @@
         "notp": "^2.0.3",
         "p-queue": "^7.1.0",
         "reflect-metadata": "^0.1.13",
+        "require-resolve-hook": "^1.1.0",
         "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.24",
         "source-map-support": "^0.5.21",
