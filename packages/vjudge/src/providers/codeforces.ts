@@ -9,24 +9,10 @@ import { buildContent } from 'hydrooj/src/lib/content';
 import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
+import { VERDICT } from '../verdict';
 
 proxy(superagent);
 const logger = new Logger('remote/codeforces');
-
-const VERDICT = {
-    RUNTIME_ERROR: STATUS.STATUS_RUNTIME_ERROR,
-    WRONG_ANSWER: STATUS.STATUS_WRONG_ANSWER,
-    OK: STATUS.STATUS_ACCEPTED,
-    TIME_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    MEMORY_LIMIT_EXCEEDED: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    IDLENESS_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    Accepted: STATUS.STATUS_ACCEPTED,
-    'Wrong answer': STATUS.STATUS_WRONG_ANSWER,
-    'Runtime error': STATUS.STATUS_RUNTIME_ERROR,
-    'Time limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    'Memory limit exceeded': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    'Idleness limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-};
 
 export default class CodeforcesProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {

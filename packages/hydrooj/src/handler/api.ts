@@ -41,6 +41,7 @@ export function registerResolver(
         const res = await func(arg, ctx, info);
         if (typeof res !== 'object') return res;
         if (handlers[value]) Object.assign(res, handlers[value]);
+        ctx.parent = res;
         return res;
     };
     if (handlers[typeName]) handlers[typeName][key.split('(')[0].trim()] = wrappedFunc;

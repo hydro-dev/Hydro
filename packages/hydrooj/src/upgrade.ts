@@ -659,6 +659,11 @@ const scripts: UpgradeScript[] = [
         await db.collection('document').updateMany({ docType: document.TYPE_PROBLEM }, { $unset: { difficulty: '' } });
         return true;
     },
+    async function _56_57() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('oplog').deleteMany({ type: 'user.login' });
+        return true;
+    },
 ];
 
 export default scripts;

@@ -30,7 +30,10 @@ const STATUS_MAP = [
     STATUS.STATUS_WRONG_ANSWER,
 ];
 
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36';
+const UA = [
+    `Hydro/${require('hydrooj/package.json').version}`,
+    `Vjudge/${require('@hydrooj/vjudge/package.json').version}`,
+].join(' ');
 
 export default class LuoguProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {

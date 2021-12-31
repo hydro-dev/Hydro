@@ -3,4 +3,24 @@
 <div class="section">
   {% include "partials/setting.html" %}
 </div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title" data-heading>{{ _('Delete Domain') }}</h1>
+  </div>
+  <div class="section__body">
+    <form method="POST">
+      {{ form.form_text({
+          type:'password',
+          label:'Password',
+          columns:10,
+          name:'password',
+          required:true
+        }) }}
+      <div>
+        <input type="hidden" name="operation" value="delete">
+        <input type="submit" value="{{ _('Delete Domain') }}" class="rounded primary button">
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

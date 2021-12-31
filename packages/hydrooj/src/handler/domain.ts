@@ -2,8 +2,8 @@ import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, InvalidJoinInvitationCodeError,
-    RoleAlreadyExistError, ValidationError,
+    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
+    InvalidJoinInvitationCodeError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
@@ -56,12 +56,20 @@ class DomainEditHandler extends ManageHandler {
     }
 
     async post(args) {
+        if (args.operation) return;
         const $set = {};
         for (const key in args) {
             if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
         }
         await domain.edit(args.domainId, $set);
         this.response.redirect = this.url('domain_dashboard');
+    }
+
+    async postDelete({ password }) {
+        this.user.checkPassword(password);
+        if (this.domain.owner === this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
+        await domain.del(this.domainId);
+        this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
 

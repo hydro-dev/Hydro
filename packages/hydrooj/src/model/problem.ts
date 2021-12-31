@@ -147,7 +147,7 @@ export class ProblemModel {
         const pdocs = [];
         for (const id of domainIds) {
             // TODO enhance performance
-            if (uid) {
+            if (typeof uid === 'number') {
                 // eslint-disable-next-line no-await-in-loop
                 const udoc = await user.getById(id, uid);
                 if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;

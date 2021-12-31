@@ -81,8 +81,6 @@ export const isPid = (s) => RE_PID.test(s.toString());
 export const checkPid = (s) => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };
 export const isIntro = () => true;
 export const checkIntro = (s) => { if (!isIntro()) throw new ValidationError('intro'); else return s; };
-export const isDescription = (s: any) => s && s.length < 65536;
-export const checkDescription = (s) => { if (!(s && s.length < 65536)) throw new ValidationError('description'); else return s; };
 
 export const parsePid = (s) => (Number.isNaN(+s) ? s : `P${s}`);
 
@@ -110,8 +108,6 @@ global.Hydro.lib.validator = {
     checkPid,
     isIntro,
     checkIntro,
-    isDescription,
-    checkDescription,
 
     parsePid,
 };
