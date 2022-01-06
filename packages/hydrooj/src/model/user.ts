@@ -139,6 +139,16 @@ class User implements _User {
     }
 }
 
+function handleMailLower(mail: string) {
+    let data = mail.trim().toLowerCase();
+    if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
+    if (data.endsWith('@gmail.com')) {
+        const [prev] = data.split('@');
+        data = `${prev.replace(/\.\+/g, '')}@gmail.com`;
+    }
+    return data;
+}
+
 class UserModel {
     static User = User;
     static defaultUser: Udoc = {
@@ -191,13 +201,13 @@ class UserModel {
         const res = await new UserModel.User(udoc, dudoc).init();
         cache.set(`id/${res._id}/${domainId}`, res);
         cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
         return res;
     }
 
     @ArgMethod
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
-        const mailLower = mail.trim().toLowerCase();
+        const mailLower = handleMailLower(mail);
         if (cache.has(`mail/${mailLower}/${domainId}`)) return cache.get(`mail/${mailLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
@@ -205,7 +215,7 @@ class UserModel {
         const res = await new UserModel.User(udoc, dudoc).init();
         cache.set(`id/${res._id}/${domainId}`, res);
         cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
         return res;
     }
 
@@ -228,7 +238,7 @@ class UserModel {
 
     @ArgMethod
     static setEmail(uid: number, mail: string) {
-        return UserModel.setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
+        return UserModel.setById(uid, { mail, mailLower: handleMailLower(mail) });
     }
 
     @ArgMethod
@@ -268,7 +278,7 @@ class UserModel {
             await coll.insertOne({
                 _id: uid,
                 mail,
-                mailLower: mail.trim().toLowerCase(),
+                mailLower: handleMailLower(mail),
                 uname,
                 unameLower: uname.trim().toLowerCase(),
                 hash: pwhash(password.toString(), salt),
