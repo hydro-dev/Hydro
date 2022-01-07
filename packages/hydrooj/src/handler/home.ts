@@ -75,9 +75,7 @@ class HomeHandler extends Handler {
     async getDiscussion(domainId: string, limit = 20) {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti(domainId).limit(limit).toArray();
-            const vndict = await discussion.getListVnodes(
-                domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
-            );
+            const vndict = await discussion.getListVnodes(domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), this.user.group);
             this.collectUser(ddocs.map((ddoc) => ddoc.owner));
             return ['discussion', ddocs, vndict];
         }
@@ -103,7 +101,7 @@ class HomeHandler extends Handler {
             for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
             const pdict = await ProblemModel.getList(
                 domainId, psdocs.map((pdoc) => pdoc.docId),
-                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
+                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, false,
             );
             const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
             return ['problem', pdocs, psdict];

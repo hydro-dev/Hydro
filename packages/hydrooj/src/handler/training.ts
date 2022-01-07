@@ -97,9 +97,10 @@ class TrainingDetailHandler extends Handler {
         const tdoc = await training.get(domainId, tid);
         await bus.serial('training/get', tdoc, this);
         const pids = training.getPids(tdoc.dag);
+        const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [owner, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true),
+            problem.getList(domainId, pids, canViewHidden, this.user.group, true),
         ]);
         const psdict = await problem.getListStatus(domainId, this.user._id, pids);
         const donePids = new Set<number>();
@@ -119,7 +120,7 @@ class TrainingDetailHandler extends Handler {
         for (const node of tdoc.dag) {
             ndict[node._id] = node;
             const totalCount = node.pids.length;
-            const doneCount = Set.intersection(new Set(node.pids), donePids).size;
+            const doneCount = Set.intersection(node.pids, donePids).size;
             const nsdoc = {
                 progress: totalCount ? Math.floor(100 * (doneCount / totalCount)) : 100,
                 isDone: training.isDone(node, doneNids, donePids),

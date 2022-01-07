@@ -303,7 +303,12 @@ class UserDetailHandler extends Handler {
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         await Promise.all([domainId, ...(union?.union || [])].map(async (did) => {
             const psdocs = await problem.getMultiStatus(did, { uid, status: STATUS.STATUS_ACCEPTED }).toArray();
-            pdocs.push(...Object.values(await problem.getList(did, psdocs.map((i) => i.docId), canViewHidden, false, undefined, true)));
+            pdocs.push(...Object.values(
+                await problem.getList(
+                    did, psdocs.map((i) => i.docId), canViewHidden,
+                    this.user.group, false, undefined, true,
+                ),
+            ));
         }));
         for (const pdoc of pdocs) {
             for (const tag of pdoc.tag) {

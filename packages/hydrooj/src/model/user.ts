@@ -67,6 +67,7 @@ class User implements _User {
     scope: bigint;
     _files: FileInfo[];
     tfa: boolean;
+    group?: string[];
     [key: string]: any;
 
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
@@ -91,6 +92,7 @@ class User implements _User {
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
         this.tfa = !!udoc.tfa;
+        if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
 
         for (const key in setting.SETTINGS_BY_KEY) {
             this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
@@ -175,6 +177,8 @@ class UserModel {
         const udoc = await (_id < -999 ? collV : coll).findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
+        const groups = await UserModel.listGroup(domainId, _id);
+        dudoc.group = groups.map((i) => i.name);
         if (typeof scope === 'string') scope = BigInt(scope);
         const res = await new User(udoc, dudoc, scope).init();
         cache.set(`id/${res._id}/${domainId}`, res);
@@ -371,10 +375,6 @@ class UserModel {
             UserModel.setPriv(uid, PRIV.PRIV_NONE),
             token.delByUid(uid),
         ]);
-    }
-
-    static createGroup(domainId: string, name: string, uids: number[]) {
-        return collGroup.insertOne({ domainId, name, uids });
     }
 
     static async listGroup(domainId: string, uid?: number) {

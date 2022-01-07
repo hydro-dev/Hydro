@@ -158,7 +158,7 @@ bus.once('app/started', async () => {
         while (true) {
             // eslint-disable-next-line no-await-in-loop
             const res = await collEvent.findOneAndUpdate(
-                { ack: { $not: { $elemMatch: { $eq: id } } } },
+                { ack: { $nin: [id] } },
                 { $push: { ack: id } },
             );
             // eslint-disable-next-line no-await-in-loop

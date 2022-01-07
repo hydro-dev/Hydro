@@ -97,32 +97,33 @@ export interface GDoc {
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export interface User extends Record<string, any> {
-    _id: number,
-    _udoc: Udoc,
-    _dudoc: any,
-    _salt: string,
-    _hash: string,
-    _regip: string,
-    _loginip: string,
-    _tfa: string,
+    _id: number;
+    _udoc: Udoc;
+    _dudoc: any;
+    _salt: string;
+    _hash: string;
+    _regip: string;
+    _loginip: string;
+    _tfa: string;
 
-    mail: string,
-    uname: string,
-    hashType: string,
-    priv: number,
-    regat: Date,
-    loginat: Date,
-    perm: bigint,
-    scope: bigint,
-    role: string,
-    tfa: boolean,
+    mail: string;
+    uname: string;
+    hashType: string;
+    priv: number;
+    regat: Date;
+    loginat: Date;
+    perm: bigint;
+    scope: bigint;
+    role: string;
+    group?: string[];
+    tfa: boolean;
     own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean
     own<T extends ownerInfo>(doc: T, exact: boolean): boolean
     own<T extends ownerInfo>(doc: T): boolean
     own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
-    hasPerm: (...perm: bigint[]) => boolean,
-    hasPriv: (...priv: number[]) => boolean,
-    checkPassword: (password: string) => void,
+    hasPerm: (...perm: bigint[]) => boolean;
+    hasPriv: (...priv: number[]) => boolean;
+    checkPassword: (password: string) => void;
 }
 
 export type Udict = NumericDictionary<User>;
@@ -244,7 +245,8 @@ declare module './model/problem' {
         tag: string[];
         data: FileInfo[];
         additional_file: FileInfo[];
-        hidden: boolean;
+        hidden?: boolean;
+        assign: string[];
         html?: boolean;
         stats?: any;
         difficulty?: number;

@@ -6,7 +6,7 @@ import type { Readable } from 'stream';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, ProblemDict, ProblemStatusDoc,
+    Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
@@ -31,7 +31,7 @@ export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
         'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
-        'tag', 'hidden', 'stats',
+        'tag', 'assign', 'stats',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
@@ -57,6 +57,7 @@ export class ProblemModel {
         additional_file: [],
         stats: {},
         hidden: true,
+        assign: [],
         config: '',
         difficulty: 0,
     };
@@ -78,27 +79,31 @@ export class ProblemModel {
         additional_file: [],
         stats: {},
         hidden: true,
+        assign: [],
         config: '',
         difficulty: 0,
     };
 
     static async add(
         domainId: string, pid: string = '', title: string, content: string, owner: number,
-        tag: string[] = [], hidden = false,
+        tag: string[] = [], hidden = false, assign: string[] = [],
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
-        const result = await ProblemModel.addWithId(domainId, (doc?.docId || 0) + 1, pid, title, content, owner, tag, hidden);
+        const result = await ProblemModel.addWithId(
+            domainId, (doc?.docId || 0) + 1, pid,
+            title, content, owner, tag, hidden, assign,
+        );
         return result;
     }
 
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
-        content: string, owner: number, tag: string[] = [], hidden = false,
+        content: string, owner: number, tag: string[] = [], hidden = false, assign: string[] = [],
     ) {
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
+            title, tag, hidden, assign, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         await bus.serial('problem/before-add', domainId, content, owner, docId, args);
@@ -279,8 +284,8 @@ export class ProblemModel {
     }
 
     static async getList(
-        domainId: string, pids: number[],
-        getHidden: number | boolean = false, doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
+        domainId: string, pids: number[], canViewHidden: number | boolean = false,
+        group: string[] = [], doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
         indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
         const r: Record<number, ProblemDoc> = {};
@@ -288,7 +293,12 @@ export class ProblemModel {
         const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
             .project(buildProjection(projection)).toArray();
-        if (getHidden !== true) pdocs = pdocs.filter((i) => !i.hidden || i.owner === getHidden);
+        if (group.length > 0) {
+            pdocs = pdocs.filter((i) => !i.assign?.length || Set.intersection(group, i.assign).size);
+        }
+        if (canViewHidden !== true) {
+            pdocs = pdocs.filter((i) => i.owner === canViewHidden || !i.hidden);
+        }
         for (const pdoc of pdocs) {
             try {
                 // eslint-disable-next-line no-await-in-loop
@@ -351,6 +361,14 @@ export class ProblemModel {
 
     static setStar(domainId: string, pid: number, uid: number, star: boolean) {
         return document.setStatus(domainId, document.TYPE_PROBLEM, pid, uid, { star });
+    }
+
+    static canViewBy(pdoc: ProblemDoc, udoc: User) {
+        if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) return false;
+        if (udoc.own(pdoc)) return true;
+        if (pdoc.hidden && !udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return false;
+        if (!pdoc.assign.length) return true;
+        return !!Set.intersection(pdoc.assign, udoc.group).size;
     }
 }
 

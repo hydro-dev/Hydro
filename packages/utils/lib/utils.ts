@@ -27,7 +27,7 @@ declare global {
     }
     interface SetConstructor {
         isSuperset: (set: Set<any>, subset: Set<any>) => boolean;
-        intersection: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
+        intersection: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
         union: <T>(setA: Set<T>, setB: Set<T>) => Set<T>;
     }
 }
@@ -130,9 +130,11 @@ Set.union = function Union<T>(setA: Set<T>, setB: Set<T>) {
     return union;
 };
 
-Set.intersection = function Intersection<T>(setA: Set<T>, setB: Set<T>) {
+Set.intersection = function Intersection<T>(A: Set<T> | Array<T> = [], B: Set<T> | Array<T> = []) {
     const intersection = new Set<T>();
-    for (const elem of setB) if (setA.has(elem)) intersection.add(elem);
+    if (A instanceof Array) A = new Set(A);
+    if (B instanceof Array) B = new Set(B);
+    for (const elem of B) if (A.has(elem)) intersection.add(elem);
     return intersection;
 };
 

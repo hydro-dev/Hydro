@@ -84,6 +84,7 @@ export interface Types {
     Range: (range: Array<string | number> | Dictionary<any>) => Type,
     Array: Type,
     NumericArray: Type,
+    CommaSeperatedArray: Type,
     Set: Type,
 }
 
@@ -163,6 +164,10 @@ export const Types: Types = {
         if (v instanceof Array) return !v.map(Number).includes(NaN);
         return !Number.isNaN(+v);
     }],
+    CommaSeperatedArray: [
+        (v) => v.toString().replace(/，/g, ',').split(',').map((e) => e.trim()).filter((i) => i),
+        (v) => v.toString(),
+    ],
     Set: [(v) => {
         if (v instanceof Array) return new Set(v);
         return v ? new Set([v]) : new Set();

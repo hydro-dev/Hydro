@@ -3,7 +3,7 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotFoundError, ContestNotLiveError, InvalidTokenError,
+    ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
     PermissionError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
@@ -74,6 +74,18 @@ export class ContestListHandler extends Handler {
 }
 
 export class ContestDetailHandler extends Handler {
+    @param('tid', Types.ObjectID)
+    @param('page', Types.PositiveInt, true)
+    async prepare(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.assign) {
+            const groups = await user.listGroup(domainId, this.user._id);
+            if (!Set.intersection(tdoc.assign, groups.map((i) => i.name)).size) {
+                throw new ForbiddenError('You are not assigned.');
+            }
+        }
+    }
+
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -238,9 +250,11 @@ export class ContestEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
+    @param('assign', Types.Array, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false, _code = '', autoHide = false,
+        title: string, content: string, rule: string, _pids: string, rated = false,
+        _code = '', autoHide = false, assign: string[] = null,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -249,7 +263,7 @@ export class ContestEditHandler extends Handler {
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
                 title, content, rule, beginAt, endAt, pids, rated,
@@ -267,13 +281,13 @@ export class ContestEditHandler extends Handler {
         await TaskModel.deleteMany(task);
         if (Date.now() <= endAt.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
-            for (const pid of pids) await problem.edit(domainId, pid, { hidden: true });
+            await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
             await TaskModel.add({
                 ...task,
                 executeAfter: endAt,
             });
         }
-        await contest.edit(domainId, tid, { _code, autoHide });
+        await contest.edit(domainId, tid, { assign, _code, autoHide });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
     }
