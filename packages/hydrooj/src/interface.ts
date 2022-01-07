@@ -87,6 +87,13 @@ export interface VUdoc {
     loginip: '127.0.0.1';
 }
 
+export interface GDoc {
+    _id: ObjectID;
+    domainId: string;
+    name: string;
+    uids: number[];
+}
+
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export interface User extends Record<string, any> {
@@ -326,25 +333,26 @@ export interface TrainingNode {
 }
 
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
-    docId: ObjectID,
-    docType: docType & number,
-    beginAt: Date,
-    endAt: Date,
-    attend: number,
-    title: string,
-    content: string,
-    rule: string,
-    pids: number[],
-    rated?: boolean,
-    _code?: string,
+    docId: ObjectID;
+    docType: docType & number;
+    beginAt: Date;
+    endAt: Date;
+    attend: number;
+    title: string;
+    content: string;
+    rule: string;
+    pids: number[];
+    rated?: boolean;
+    _code?: string;
+    assign?: string[];
 
     // For homework
-    penaltySince?: Date,
-    penaltyRules?: PenaltyRules,
+    penaltySince?: Date;
+    penaltyRules?: PenaltyRules;
 
     // For training
-    description?: string,
-    dag?: TrainingNode[],
+    description?: string;
+    dag?: TrainingNode[];
 }
 
 export interface TrainingDoc extends Tdoc {
@@ -583,6 +591,7 @@ export interface Collections {
     'problem': ProblemDoc;
     'user': Udoc;
     'vuser': VUdoc;
+    'user.group': GDoc;
     'check': any;
     'message': MessageDoc;
     'token': TokenDoc;

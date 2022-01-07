@@ -1,10 +1,10 @@
 import { escapeRegExp, pick } from 'lodash';
 import LRU from 'lru-cache';
-import { Collection } from 'mongodb';
+import { Collection, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    FileInfo, Udict, Udoc,
-    User as _User, VUdoc,
+    FileInfo, GDoc, Udict,
+    Udoc, User as _User, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import { Logger } from '../logger';
@@ -21,6 +21,7 @@ import token from './token';
 const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 const collV: Collection<VUdoc> = db.collection('vuser');
+const collGroup: Collection<GDoc> = db.collection('user.group');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
@@ -144,7 +145,7 @@ function handleMailLower(mail: string) {
     if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
     if (data.endsWith('@gmail.com')) {
         const [prev] = data.split('@');
-        data = `${prev.replace(/\.\+/g, '')}@gmail.com`;
+        data = `${prev.replace(/[.+]/g, '')}@gmail.com`;
     }
     return data;
 }
@@ -371,12 +372,46 @@ class UserModel {
             token.delByUid(uid),
         ]);
     }
+
+    static createGroup(domainId: string, name: string, uids: number[]) {
+        return collGroup.insertOne({ domainId, name, uids });
+    }
+
+    static async listGroup(domainId: string, uid?: number) {
+        const groups = await collGroup.find(uid ? { domainId, uids: uid } : { domainId }).toArray();
+        if (uid) {
+            groups.push({
+                _id: new ObjectID(), domainId, uids: [uid], name: uid.toString(),
+            });
+        }
+        return groups;
+    }
+
+    static delGroup(domainId: string, name: string) {
+        return collGroup.deleteOne({ domainId, name });
+    }
+
+    static updateGroup(domainId: string, name: string, uids: number[]) {
+        return collGroup.updateOne({ domainId, name }, { $set: { uids } });
+    }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
-    coll,
-    { key: { unameLower: 1 }, name: 'uname', unique: true },
-    { key: { mailLower: 1 }, name: 'mail', unique: true },
-));
+bus.once('app/started', () => Promise.all([
+    db.ensureIndexes(
+        coll,
+        { key: { unameLower: 1 }, name: 'uname', unique: true },
+        { key: { mailLower: 1 }, name: 'mail', unique: true },
+    ),
+    db.ensureIndexes(
+        collV,
+        { key: { unameLower: 1 }, name: 'uname', unique: true },
+        { key: { mailLower: 1 }, name: 'mail', unique: true },
+    ),
+    db.ensureIndexes(
+        collGroup,
+        { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
+        { key: { domainId: 1, uids: 1 }, name: 'uid' },
+    ),
+]));
 export default UserModel;
 global.Hydro.model.user = UserModel;
