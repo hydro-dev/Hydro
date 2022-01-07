@@ -485,7 +485,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
-    @post('assign', Types.CommaSeperatedArray)
+    @post('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
         newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0, assign: string[] = [],
@@ -789,7 +789,7 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    @post('assign', Types.CommaSeperatedArray)
+    @post('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, title: string, content: string, pid: string,
         hidden = false, difficulty = 0, tag: string[] = [], assign: string[] = [],

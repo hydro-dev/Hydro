@@ -11,7 +11,7 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/mysql": "^2.15.19"
+        "@types/mysql": "^2.15.20"
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
