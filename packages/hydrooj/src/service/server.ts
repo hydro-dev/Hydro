@@ -521,6 +521,7 @@ export class Handler extends HandlerCommon {
             this.args.domainId = 'system';
             this.user = await user.getById('system', this.session.uid);
             if (!this.user) this.user = await user.getById('system', 0);
+            this.domain = inferDomain || await domain.get('system');
             throw new NotFoundError(domainId);
         }
         this.UiContext.domainId = this.domainId;
