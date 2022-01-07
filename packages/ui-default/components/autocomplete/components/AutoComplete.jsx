@@ -13,6 +13,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   // if you need fix height, set to at least "30px"
   // for Hydro, no less then "34px" can be better
   const height = props.height ?? 'auto';
+  const disabled = props.disabled ?? false;
   const listStyle = props.listStyle ?? {};
   const itemsFn = props.itemsFn ?? (async () => []);
   const renderItem = props.renderItem ?? ((item) => item);
@@ -22,7 +23,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? [];
   const defaultItems = typeof rawDefaultItems === 'string'
-    ? props.defaultItems.split(',').map((i) => i.trim()).filter((i) => i.length > 0) : rawDefaultItems;
+    ? rawDefaultItems.split(',').map((i) => i.trim()).filter((i) => i.length > 0) : rawDefaultItems;
   const allowEmptyQuery = props.allowEmptyQuery ?? false;
   const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
@@ -204,6 +205,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         ))}
         <input
           ref={inputRef}
+          disabled={disabled}
+          placeholder={disabled ? 'Loading...' : ''}
           autoComplete="off"
           onChange={(e) => {
             dispatchChange();
@@ -243,6 +246,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 AutoComplete.propTypes = {
   width: PropTypes.string,
   height: PropTypes.string,
+  disabled: PropTypes.bool,
   listStyle: PropTypes.object,
   itemsFn: PropTypes.func.isRequired,
   itemKey: PropTypes.func,
@@ -259,6 +263,7 @@ AutoComplete.propTypes = {
 AutoComplete.defaultProps = {
   width: '100%',
   height: 'auto',
+  disabled: false,
   listStyle: {},
   renderItem: (item) => item,
   itemText: (item) => item,

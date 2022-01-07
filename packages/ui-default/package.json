@@ -115,6 +115,7 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
+    "react-query": "^3.34.7",
     "streamsaver": "^2.0.5",
     "xss": "^1.0.10"
   }

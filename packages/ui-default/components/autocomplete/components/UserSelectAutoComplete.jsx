@@ -1,10 +1,29 @@
 import React, { forwardRef } from 'react';
+import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
 import api, { gql } from 'vj/utils/api';
 import AutoComplete from './AutoComplete';
 
 // eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props, ref) {
+  const rawDefaultItems = props.defaultItems ?? '';
+  const defaultItems = rawDefaultItems
+    .split(',')
+    .map((i) => i.trim())
+    .filter((i) => i.length > 0)
+    .map((i) => +i);
+
+  const { isLoading } = useQuery(['default_user', defaultItems], async () => {
+    if (defaultItems.length === 0) return;
+    const items = await api(gql`
+      users(id: ${defaultItems}) {
+        _id
+        uname
+      }
+    `, ['data', 'users']);
+    ref.setSelectedItems(items);
+  });
+
   const itemsFn = (query) => api(gql`
     users(search: ${query}) {
       _id
@@ -30,9 +49,11 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
   return (
     <AutoComplete
       ref={ref}
+      disabled={isLoading}
       itemsFn={itemsFn}
       itemText={itemText}
       renderItem={renderItem}
+      defaultItems={[]}
       {...props}
     />
   );
@@ -44,7 +65,7 @@ UserSelectAutoComplete.propTypes = {
   listStyle: PropTypes.object,
   onChange: PropTypes.func.isRequired,
   multi: PropTypes.bool,
-  defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
+  defaultItems: PropTypes.string,
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,

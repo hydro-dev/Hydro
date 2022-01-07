@@ -15,6 +15,11 @@ export default class UserSelectAutoComplete extends AutoComplete {
     });
   }
 
+  value() {
+    if (this.options.multi) return this.ref?.getSelectedItems().map((item) => item._id) ?? this.$dom.val();
+    return this.ref?.getSelectedItems()[0] ?? null;
+  }
+
   attach() {
     const value = this.$dom.val();
     ReactDOM.render(
