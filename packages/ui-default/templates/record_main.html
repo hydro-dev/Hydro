@@ -9,6 +9,11 @@
   + ("&allDomain=1" if all else "")
 ) }}
 {{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
+{{ set(UiContext, 'query_string', 
+  (("&tid=" + filterTid) if filterTid else "")
+  + (("&uidOrName=" + filterUidOrName) if filterUidOrName else "")
+  + (("&pid=" + filterPid) if filterPid else "")
+  + ("&allDomain=1" if all else "")) }}
 <div class="row">
   <div class="medium-12 columns">
     <form method="get">
@@ -100,7 +105,7 @@
         {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) %}
         <ul class="pager">
           <li>
-            <a class="pager__item next link" href="?page={{ page + 1 }}&{{ query_string }}">{{ _('pager_next') }}</a>
+            <a class="pager__item next link" href="?page={{ page + 1 }}{{ UiContext.query_string }}">{{ _('pager_next') }}</a>
           </li>
         </ul>
         {% endif %}
