@@ -504,6 +504,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init({ domainId }) {
+        let error;
         if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 10, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
@@ -522,7 +523,7 @@ export class Handler extends HandlerCommon {
             this.user = await user.getById('system', this.session.uid);
             if (!this.user) this.user = await user.getById('system', 0);
             this.domain = inferDomain || await domain.get('system');
-            throw new NotFoundError(domainId);
+            error = new NotFoundError(domainId);
         }
         this.UiContext.domainId = this.domainId;
         this.UiContext.domain = this.domain;
@@ -542,6 +543,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.lib[key].icon,
                 text: global.Hydro.lib[key].text,
             }));
+        if (error) throw error;
         if (bdoc) throw new BlacklistedError(this.request.ip);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         if (this.request.method === 'post' && this.request.headers.referer) {
