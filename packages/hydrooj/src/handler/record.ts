@@ -249,7 +249,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         ]);
         const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
-            if (problem.canViewBy(pdoc, this.user)) pdoc = null;
+            if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.pretest) this.send({ rdoc });
