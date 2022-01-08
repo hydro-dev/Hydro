@@ -868,13 +868,15 @@ export function Connection(
             const args = { domainId: 'system', ...h.request.params };
             h.args = args;
             h.domainId = args.domainId;
-            const cookie = await new Promise((r) => {
-                conn.once('data', r);
-            });
-            args.cookie = cookie;
-            await h.init(args);
-            conn.write(JSON.stringify({ event: 'auth' }));
-            checker.call(h);
+            if (!h.noAuth) {
+                const cookie = await new Promise((r) => {
+                    conn.once('data', r);
+                });
+                args.cookie = cookie;
+                await h.init(args);
+                conn.write(JSON.stringify({ event: 'auth' }));
+                checker.call(h);
+            }
 
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
