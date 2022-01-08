@@ -79,7 +79,6 @@ function handleNavbar() {
     if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
       $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
       $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
-      console.log('hide', navItems[navItem]);
       $(menu).prepend($(navItems[navItem]));
     }
     navItem--;
@@ -91,7 +90,6 @@ function handleNavbar() {
       const ele = menu.children(0);
       $(ele).addClass('nav__list-item').removeClass('menu__item');
       $(ele).children('a').addClass('nav__item').removeClass('menu__link');
-      console.log('show', ele);
       ele.insertBefore(trigger);
     }
   }
@@ -103,7 +101,6 @@ function handleNavbar() {
       if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
         $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
         $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
-        console.log('hide', navItems[navItem]);
         $(menu).prepend($(navItems[navItem]));
         break;
       }
@@ -111,7 +108,6 @@ function handleNavbar() {
     }
   }
 
-  console.log('children', menu.children());
   if (!menu.children().length) trigger.hide();
 }
 

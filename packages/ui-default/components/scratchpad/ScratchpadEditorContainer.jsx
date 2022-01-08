@@ -25,9 +25,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     const value = this.props.value || '';
     const { language, theme } = this.props;
     const { load } = await import('vj/components/monaco/loader');
-    console.log(load);
     const { monaco, registerAction } = await load([language]);
-    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse('file://model'));
+    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(`file:///${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`));
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
       const config = {
@@ -108,7 +107,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           width: '100%',
         }}
         className="ScratchpadMonacoEditor"
-      />
+      >
+        <div className="loader-container"><div className="loader"></div></div>
+      </div>
     );
   }
 });

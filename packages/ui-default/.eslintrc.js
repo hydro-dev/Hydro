@@ -42,6 +42,7 @@ module.exports = {
     __webpack_require__: true,
     UiContext: true,
     UserContext: true,
+    externalModules: true,
     LOCALES: true,
     window: true,
     JQuery: true,
