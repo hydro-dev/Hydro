@@ -14,6 +14,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   // for Hydro, no less then "34px" can be better
   const height = props.height ?? 'auto';
   const disabled = props.disabled ?? false;
+  const disabledHint = props.disabledHint ?? '';
   const listStyle = props.listStyle ?? {};
   const itemsFn = props.itemsFn ?? (async () => []);
   const renderItem = props.renderItem ?? ((item) => item);
@@ -189,7 +190,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       setFocused(true);
       inputRef.current?.focus();
     },
-  }));
+  }), [selected, selectedKeys, inputRef, multi]);
 
   return (
     <div style={{ display: 'inline-block', width: '100%' }}>
@@ -203,25 +204,31 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
             <Icon name="close" onClick={() => toggleItem(item)} />
           </div>
         ))}
-        <input
-          ref={inputRef}
-          disabled={disabled}
-          placeholder={disabled ? 'Loading...' : ''}
-          autoComplete="off"
-          onChange={(e) => {
-            dispatchChange();
-            handleInputChange(e);
-          }}
-          onFocus={() => {
-            setFocused(true);
-            if (allowEmptyQuery) {
-              handleInputChange();
-            }
-          }}
-          onBlur={() => setFocused(false)}
-          onKeyDown={handleInputKeyDown}
-          defaultValue={multi ? '' : defaultItems.join(',')}
-        />
+        {disabled ? (
+          <input
+            disabled
+            autoComplete="off"
+            value={disabledHint}
+          />
+        ) : (
+          <input
+            ref={inputRef}
+            autoComplete="off"
+            onChange={(e) => {
+              dispatchChange();
+              handleInputChange(e);
+            }}
+            onFocus={() => {
+              setFocused(true);
+              if (allowEmptyQuery) {
+                handleInputChange();
+              }
+            }}
+            onBlur={() => setFocused(false)}
+            onKeyDown={handleInputKeyDown}
+            defaultValue={multi ? '' : defaultItems.join(',')}
+          />
+        )}
       </div>
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
@@ -247,6 +254,7 @@ AutoComplete.propTypes = {
   width: PropTypes.string,
   height: PropTypes.string,
   disabled: PropTypes.bool,
+  disabledHint: PropTypes.string,
   listStyle: PropTypes.object,
   itemsFn: PropTypes.func.isRequired,
   itemKey: PropTypes.func,
@@ -264,6 +272,7 @@ AutoComplete.defaultProps = {
   width: '100%',
   height: 'auto',
   disabled: false,
+  disabledHint: '',
   listStyle: {},
   renderItem: (item) => item,
   itemText: (item) => item,

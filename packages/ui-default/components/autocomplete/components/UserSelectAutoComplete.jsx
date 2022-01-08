@@ -13,16 +13,14 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
     .filter((i) => i.length > 0)
     .map((i) => +i);
 
-  const { isLoading } = useQuery(['default_user', defaultItems], async () => {
-    if (defaultItems.length === 0) return;
-    const items = await api(gql`
+  const { isLoading, data } = useQuery(['default_user', defaultItems], () => (
+    (defaultItems.length === 0) ? [] : api(gql`
       users(ids: ${defaultItems}) {
         _id
         uname
       }
-    `, ['data', 'users']);
-    ref.setSelectedItems(items);
-  });
+    `, ['data', 'users'])
+  ));
 
   const itemsFn = (query) => api(gql`
     users(search: ${query}) {
@@ -50,10 +48,11 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
     <AutoComplete
       ref={ref}
       disabled={isLoading}
+      disabledHint="Loading..."
       itemsFn={itemsFn}
       itemText={itemText}
       renderItem={renderItem}
-      defaultItems={[]}
+      defaultItems={data}
       {...props}
     />
   );
