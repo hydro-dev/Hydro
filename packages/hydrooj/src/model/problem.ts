@@ -31,7 +31,7 @@ export class ProblemModel {
     static PROJECTION_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
         'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
-        'tag', 'assign', 'stats',
+        'tag', 'hidden', 'assign', 'stats',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
