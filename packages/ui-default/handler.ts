@@ -123,8 +123,7 @@ class UiConstantsHandler extends ResourceHandler {
 }
 
 class LanguageHandler extends ResourceHandler {
-  async all() {
-    let lang = this.session.viewLang || this.user.viewLang;
+  async all({ lang }) {
     if (!global.Hydro.locales[lang]) lang = system.get('server.language');
     this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang])};`;
     this.response.type = 'application/javascript';

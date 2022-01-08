@@ -69,13 +69,13 @@ class RecordListHandler extends Handler {
         const rdocs = invalid
             ? [] as RecordDoc[]
             : await cursor.skip((page - 1) * limit).limit(limit).toArray();
-        const canViewProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
-        const canViewProblemHidden = (!!tid) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        const canViewProblem = tid || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
+        const canViewHiddenProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udict, pdict] = full ? [{}, {}]
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
                 canViewProblem
-                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewProblemHidden || this.user._id, false)
+                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, this.user.group, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {
@@ -132,10 +132,9 @@ class RecordDetailHandler extends Handler {
             rdoc.compilerTexts = [];
         }
 
-        let canView = pdoc && this.user.own(pdoc);
-        canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
-        canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
-        if (!canView) this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
+            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        }
 
         this.response.body = {
             udoc, rdoc, pdoc, tdoc,
@@ -250,7 +249,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         ]);
         const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
-            if (pdoc.hidden && !this.user.own(pdoc) && !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = null;
+            if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.pretest) this.send({ rdoc });
@@ -293,11 +292,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             rdoc.compilerTexts = [];
         }
 
-        let canView = pdoc && this.user.own(pdoc);
-        canView ||= !pdoc?.hidden && this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
-        canView ||= this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        canView ||= !!rdoc.contest || this.user._id === rdoc.uid;
-        if (!canView) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+        if (!(rdoc.contest && this.user._id === rdoc.uid)) {
+            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        }
 
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));

@@ -22,6 +22,8 @@ const fs = require('fs-extra');
 const argv = require('cac')().parse();
 const child = require('child_process');
 const esbuild = require('esbuild');
+const { default: hook } = require('require-resolve-hook');
+const { bypass } = hook(/^hydrooj/, (id) => bypass(() => require.resolve(id)));
 
 const exec = (...args) => {
     console.log('Executing: ', args[0], args[1].join(' '));

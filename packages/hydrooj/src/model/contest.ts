@@ -456,7 +456,7 @@ const cf: ContestRule = {
         }
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const j = effective[tdoc.pids[i - 1]];
-            if (j) j.score = tdoc.fullScore[i - 1];
+            if (j && j.status === STATUS.STATUS_ACCEPTED) j.score = tdoc.fullScore[i - 1];
         }
         for (const key in effective) {
             const j = effective[key];
@@ -535,9 +535,6 @@ const cf: ContestRule = {
                         score: accept ? Math.floor(100 * Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score) : 0,
                         value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
                         raw: rid,
-                        style: accept && rid.generationTime === first[pid]
-                            ? 'background-color: rgb(217, 240, 199);'
-                            : undefined,
                     });
                 }
             }

@@ -58,10 +58,10 @@ langs:
       highlight: pascal
       display: Pascal
     java:
-      compile: /usr/bin/javac -d ${dir} -encoding utf8 ./Main.java
+      compile: /usr/bin/bash -c "javac -d ${dir} -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
       code_file: Main.java
-      target: Main.class
-      execute: /usr/bin/java Main
+      target: Main.jar
+      execute: /usr/bin/java -cp Main.jar Main
       time_limit_rate: 2
       highlight: java astyle-java
       monaco: java

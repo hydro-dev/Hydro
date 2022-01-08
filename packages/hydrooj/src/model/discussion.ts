@@ -275,17 +275,16 @@ export function getNodes(domainId: string) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION_NODE).toArray();
 }
 
-export async function getListVnodes(domainId: string, ddocs: any, getHidden: boolean) {
-    const tasks = [];
+export async function getListVnodes(domainId: string, ddocs: any, getHidden = false, assign: string[] = []) {
     const res = {};
     async function task(ddoc: DiscussionDoc) {
         const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId.toString());
         if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
-        if (vnode.hidden && !getHidden) return;
+        if (!getHidden && vnode.hidden) return;
+        if (vnode.assign?.length && Set.intersection(vnode.assign, assign).size) return;
         res[ddoc.parentType][ddoc.parentId] = vnode;
     }
-    for (const ddoc of ddocs) tasks.push(task(ddoc));
-    await Promise.all(tasks);
+    await Promise.all(ddocs.map((ddoc) => task(ddoc)));
     return res;
 }
 

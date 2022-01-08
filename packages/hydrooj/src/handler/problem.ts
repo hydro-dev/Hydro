@@ -1,17 +1,18 @@
 import AdmZip from 'adm-zip';
 import { statSync } from 'fs-extra';
-import { flatten, intersection, isSafeInteger } from 'lodash';
+import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
     ContestNotFoundError, ContestNotLiveError,
     ForbiddenError, NoProblemError, NotFoundError,
-    PermissionError, ProblemNotFoundError, SolutionNotFoundError, ValidationError,
+    PermissionError, ProblemNotFoundError, SolutionNotFoundError,
+    ValidationError,
 } from '../error';
 import {
-    ProblemConfig,
-    ProblemDoc, ProblemStatusDoc, Tdoc, User,
+    ProblemConfig, ProblemDoc, ProblemStatusDoc,
+    Tdoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -32,7 +33,7 @@ import {
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
-export const parseCategory = (value: string) => flatten(value.replace(/，/g, ',').split(',')).map((e) => e.trim());
+export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
 
 registerValue('FileInfo', [
@@ -58,9 +59,7 @@ registerValue('Problem', [
     ['difficulty', 'Int'],
     ['tag', '[String]'],
     ['hidden', 'Boolean'],
-]);
-registerValue('ProblemManage', [
-    ['delete', 'Boolean!'],
+    ['assign', '[String]'],
 ]);
 
 registerResolver(
@@ -68,7 +67,12 @@ registerResolver(
     async (arg, ctx) => {
         const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
         if (!pdoc) return null;
-        if (pdoc.hidden && !ctx.user.own(pdoc)) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        if (pdoc.assign.length && !ctx.user.own(pdoc)) {
+            if (!Set.intersection(new Set(pdoc.assign), new Set(ctx.user.group)).size) {
+                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            }
+        }
         ctx.pdoc = pdoc;
         return pdoc;
     },
@@ -89,9 +93,21 @@ registerResolver(
     },
 );
 registerResolver(
-    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
+    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean, assign: [String])', 'Problem!',
     (arg, ctx) => problem.edit(ctx.domainId, ctx.pdoc.docId, arg),
 );
+
+function buildQuery(udoc: User) {
+    const q: FilterQuery<ProblemDoc> = {};
+    if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
+        q.$or = [
+            { hidden: false },
+            { owner: udoc._id },
+            { maintainer: udoc._id },
+        ];
+    }
+    return q;
+}
 
 export class ProblemHandler extends Handler {
     async cleanup() {
@@ -123,7 +139,7 @@ export class ProblemMainHandler extends ProblemHandler {
     async get(domainId: string, page = 1, q = '', category = []) {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const query: FilterQuery<ProblemDoc> = {};
+        const query = buildQuery(this.user);
         const psdict = {};
         const search = global.Hydro.lib.problemSearch;
         let sort: string[];
@@ -145,9 +161,6 @@ export class ProblemMainHandler extends ProblemHandler {
                 sort = result;
             } else query.$text = { $search: q };
         }
-        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
-            query.$or = [{ hidden: false }, { owner: this.user._id }, { maintainer: this.user._id }];
-        }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = fail
@@ -160,7 +173,7 @@ export class ProblemMainHandler extends ProblemHandler {
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
-            if (pdoc && (!pdoc.hidden || this.user.own(pdoc) || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) {
+            if (pdoc && problem.canViewBy(pdoc, this.user)) {
                 const count = pdocs.length;
                 pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
                 pdocs.unshift(pdoc);
@@ -252,9 +265,8 @@ export class ProblemMainHandler extends ProblemHandler {
 export class ProblemRandomHandler extends ProblemHandler {
     @param('category', Types.Name, true, null, parseCategory)
     async get(domainId: string, category: string[] = []) {
-        const q: FilterQuery<ProblemDoc> = category.length ? { $and: [] } : {};
-        for (const tag of category) q.$and.push({ tag });
-        if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) q.hidden = false;
+        const q = buildQuery(this.user);
+        if (category.length) q.$and = category.map((tag) => ({ tag }));
         await bus.serial('problem/list', q, this);
         const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
@@ -284,8 +296,8 @@ export class ProblemDetailHandler extends ProblemHandler {
             if (!showAccept) this.pdoc.nAccept = 0;
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc) && !this.tsdoc?.attend) throw new ContestNotAttendedError(tid);
-        } else if (this.pdoc.hidden && !this.user.own(this.pdoc)) {
-            this.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        } else if (!problem.canViewBy(this.pdoc, this.user)) {
+            throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         let ddoc = this.domain;
         if (this.pdoc.reference) {
@@ -462,13 +474,14 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
+    @post('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
-        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0,
+        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0, assign: string[] = [],
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<ProblemDoc> = {
-            title, content, pid: newPid, hidden, tag: tag ?? [], difficulty,
+            title, content, pid: newPid, hidden, assign, tag: tag ?? [], difficulty,
         };
         let pdoc = await problem.get(domainId, pid);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
@@ -765,9 +778,13 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    async post(domainId: string, title: string, content: string, pid: string, hidden = false, difficulty = 0, tag: string[] = []) {
+    @post('assign', Types.CommaSeperatedArray, true)
+    async post(
+        domainId: string, title: string, content: string, pid: string,
+        hidden = false, difficulty = 0, tag: string[] = [], assign: string[] = [],
+    ) {
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden, assign);
         if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
