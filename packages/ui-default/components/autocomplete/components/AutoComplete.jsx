@@ -204,31 +204,31 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
             <Icon name="close" onClick={() => toggleItem(item)} />
           </div>
         ))}
-        {disabled ? (
+        {disabled && (
           <input
             disabled
             autoComplete="off"
             value={disabledHint}
           />
-        ) : (
-          <input
-            ref={inputRef}
-            autoComplete="off"
-            onChange={(e) => {
-              dispatchChange();
-              handleInputChange(e);
-            }}
-            onFocus={() => {
-              setFocused(true);
-              if (allowEmptyQuery) {
-                handleInputChange();
-              }
-            }}
-            onBlur={() => setFocused(false)}
-            onKeyDown={handleInputKeyDown}
-            defaultValue={multi ? '' : defaultItems.join(',')}
-          />
         )}
+        <input
+          ref={inputRef}
+          autoComplete="off"
+          hidden={disabled}
+          onChange={(e) => {
+            dispatchChange();
+            handleInputChange(e);
+          }}
+          onFocus={() => {
+            setFocused(true);
+            if (allowEmptyQuery) {
+              handleInputChange();
+            }
+          }}
+          onBlur={() => setFocused(false)}
+          onKeyDown={handleInputKeyDown}
+          defaultValue={multi ? '' : defaultItems.join(',')}
+        />
       </div>
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
