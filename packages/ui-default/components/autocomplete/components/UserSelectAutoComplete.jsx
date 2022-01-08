@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, createRef, useImperativeHandle } from 'react';
 import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
 import api, { gql } from 'vj/utils/api';
@@ -13,14 +13,21 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
     .filter((i) => i.length > 0)
     .map((i) => +i);
 
-  const { isLoading, data } = useQuery(['default_user', defaultItems], () => (
-    (defaultItems.length === 0) ? [] : api(gql`
+  const comRef = createRef();
+  const { isLoading } = useQuery(['default_user', defaultItems], async () => {
+    if (defaultItems.length === 0) return;
+    const items = await api(gql`
       users(ids: ${defaultItems}) {
         _id
         uname
       }
-    `, ['data', 'users'])
-  ));
+    `, ['data', 'users']);
+    comRef.current.setSelectedItems(items);
+  });
+
+  useImperativeHandle(ref, () => ({
+    ...comRef.current,
+  }));
 
   const itemsFn = (query) => api(gql`
     users(search: ${query}) {
@@ -46,13 +53,13 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
 
   return (
     <AutoComplete
-      ref={ref}
+      ref={comRef}
       disabled={isLoading}
       disabledHint="Loading..."
       itemsFn={itemsFn}
       itemText={itemText}
       renderItem={renderItem}
-      defaultItems={data}
+      defaultItems={[]}
       {...props}
     />
   );
