@@ -98,24 +98,13 @@ registerResolver(
 );
 
 function buildQuery(udoc: User) {
-    const q: FilterQuery<ProblemDoc> = {
-        $or: [
-            {
-                $and: [
-                    {
-                        $or: [
-                            { assign: { $size: 0 } },
-                            { assign: { $in: udoc.group } },
-                        ],
-                    },
-                ],
-            },
+    const q: FilterQuery<ProblemDoc> = {};
+    if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
+        q.$or = [
+            { hidden: false },
             { owner: udoc._id },
             { maintainer: udoc._id },
-        ],
-    };
-    if (udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
-        q.$or[0].$and.push({ hidden: false });
+        ];
     }
     return q;
 }
