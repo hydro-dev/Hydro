@@ -14,7 +14,17 @@ export default class UserSelectAutoComplete extends AutoComplete {
       classes: 'user-select',
       ...options,
     });
-    this.client = new QueryClient();
+    this.client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          refetchOnMount: false,
+          refetchOnReconnect: false,
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
   }
 
   value() {
