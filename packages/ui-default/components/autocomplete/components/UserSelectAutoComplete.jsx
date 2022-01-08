@@ -95,7 +95,7 @@ UserSelectAutoComplete.defaultProps = {
   height: 'auto',
   listStyle: {},
   multi: false,
-  defaultItems: [],
+  defaultItems: '',
   allowEmptyQuery: false,
   freeSolo: false,
   freeSoloConverter: (input) => input,
