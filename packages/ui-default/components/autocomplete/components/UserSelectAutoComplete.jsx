@@ -16,7 +16,7 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
   const { isLoading } = useQuery(['default_user', defaultItems], async () => {
     if (defaultItems.length === 0) return;
     const items = await api(gql`
-      users(id: ${defaultItems}) {
+      users(ids: ${defaultItems}) {
         _id
         uname
       }
