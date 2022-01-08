@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.29.1",
+  "version": "4.29.2",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -92,7 +92,6 @@
     "timeago.js": "^4.0.2",
     "vditor": "^3.8.10",
     "vinyl-buffer": "^1.0.1",
-    "wastyle": "^0.0.5",
     "web-streams-polyfill": "^3.2.0",
     "webpack": "^4.46.0",
     "webpack-bundle-analyzer": "^4.5.0",

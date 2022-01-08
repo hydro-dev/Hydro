@@ -1,14 +1,12 @@
 import { NamedPage } from 'vj/misc/Page';
-import load from 'vj/components/wastyle/index';
 import code from 'vj/components/highlighter/code-example';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
 
 const page = new NamedPage('home_preference', async () => {
   async function mountComponent() {
-    const [{ default: prismjs }, [success, format], React, { render }] = await Promise.all([
+    const [{ default: prismjs }, React, { render }] = await Promise.all([
       import('vj/components/highlighter/prismjs'),
-      load(),
       import('react'),
       import('react-dom'),
     ]);
@@ -16,9 +14,7 @@ const page = new NamedPage('home_preference', async () => {
     class AstylePreview extends React.PureComponent {
       constructor(props) {
         super(props);
-        this.state = { value: UserContext.astyleOptions };
-        [this.success, this.preview] = format(code, `${this.state.value.trim()} mode=c`);
-        this.state.highlight = prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
+        this.state = { highlight: prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++') };
       }
 
       render() {
@@ -36,8 +32,7 @@ const page = new NamedPage('home_preference', async () => {
                     style={{ height: '400px' }}
                     onChange={(ev) => {
                       ev.stopPropagation();
-                      [this.success, this.preview] = format(code, `${ev.target.value.trim()} mode=c`);
-                      const highlight = prismjs.highlight(this.preview, prismjs.Prism.languages.cpp, 'C++');
+                      const highlight = prismjs.highlight(code, prismjs.Prism.languages.cpp, 'C++');
                       this.setState({ value: ev.target.value, highlight });
                     }}
                     className="textbox"
@@ -121,12 +116,10 @@ const page = new NamedPage('home_preference', async () => {
       $('[name="codeLang"]').val(this.value);
     });
 
-    if (success) {
-      render(
-        <AstylePreview></AstylePreview>,
-        $('[name="form_item_astyleOptions"]').get(0).parentNode.parentNode.parentNode,
-      );
-    }
+    render(
+      <AstylePreview></AstylePreview>,
+      $('[name="form_item_astyleOptions"]').get(0).parentNode.parentNode.parentNode,
+    );
   }
 
   mountComponent();
