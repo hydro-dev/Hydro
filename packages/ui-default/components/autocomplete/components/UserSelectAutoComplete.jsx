@@ -49,6 +49,8 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
 
   const itemText = (user) => user.uname || user;
 
+  const itemKey = (user) => user._id;
+
   const renderItem = (user) => (
     <div className="media">
       <div className="media__left medium">
@@ -69,6 +71,7 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
       disabledHint="Loading..."
       itemsFn={itemsFn}
       itemText={itemText}
+      itemKey={multi ? itemKey : itemText}
       renderItem={renderItem}
       defaultItems={multi ? [] : rawDefaultItems}
     />
