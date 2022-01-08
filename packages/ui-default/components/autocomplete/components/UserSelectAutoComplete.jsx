@@ -1,4 +1,6 @@
-import React, { forwardRef, createRef, useImperativeHandle } from 'react';
+import React, {
+  forwardRef, createRef, useImperativeHandle, useRef, useEffect,
+} from 'react';
 import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
 import api, { gql } from 'vj/utils/api';
@@ -6,24 +8,32 @@ import AutoComplete from './AutoComplete';
 
 // eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props, ref) {
+  const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? '';
-  const defaultItems = rawDefaultItems
+  const defaultItems = multi ? rawDefaultItems
     .split(',')
     .map((i) => i.trim())
     .filter((i) => i.length > 0)
-    .map((i) => +i);
+    .map((i) => +i) : rawDefaultItems;
 
   const comRef = createRef();
+  const itemsBox = useRef([]);
   const { isLoading } = useQuery(['default_user', defaultItems], async () => {
-    if (defaultItems.length === 0) return;
+    if (!multi || defaultItems.length === 0) return;
     const items = await api(gql`
       users(ids: ${defaultItems}) {
         _id
         uname
       }
     `, ['data', 'users']);
-    comRef.current.setSelectedItems(items);
+    itemsBox.current = items;
   });
+
+  useEffect(() => {
+    if (multi && defaultItems.length > 0) {
+      comRef.current.setSelectedItems(itemsBox.current);
+    }
+  }, [itemsBox.current]);
 
   useImperativeHandle(ref, () => ({
     ...comRef.current,
@@ -54,13 +64,13 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
   return (
     <AutoComplete
       ref={comRef}
+      {...props}
       disabled={isLoading}
       disabledHint="Loading..."
       itemsFn={itemsFn}
       itemText={itemText}
       renderItem={renderItem}
-      defaultItems={[]}
-      {...props}
+      defaultItems={multi ? [] : rawDefaultItems}
     />
   );
 });
