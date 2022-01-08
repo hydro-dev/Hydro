@@ -1,9 +1,6 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import loadFormatter from 'vj/components/wastyle/index';
 import Notification from 'vj/components/notification';
-import './languages/markdown';
-import './languages/typescript';
-import './languages/yaml';
 import './monaco.css';
 
 export default monaco;

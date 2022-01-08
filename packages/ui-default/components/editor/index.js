@@ -36,7 +36,8 @@ export default class Editor extends DOMAttachedObject {
   }
 
   async initMonaco() {
-    const { default: monaco, registerAction } = await import('vj/components/monaco/index');
+    const { load } = await import('vj/components/monaco/loader');
+    const { monaco, registerAction } = await load(['markdown']);
     const {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
