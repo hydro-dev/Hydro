@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.28.1",
+  "version": "4.29.2",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -92,7 +92,6 @@
     "timeago.js": "^4.0.2",
     "vditor": "^3.8.10",
     "vinyl-buffer": "^1.0.1",
-    "wastyle": "^0.0.5",
     "web-streams-polyfill": "^3.2.0",
     "webpack": "^4.46.0",
     "webpack-bundle-analyzer": "^4.5.0",
@@ -115,6 +114,7 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
+    "react-query": "^3.34.7",
     "streamsaver": "^2.0.5",
     "xss": "^1.0.10"
   }

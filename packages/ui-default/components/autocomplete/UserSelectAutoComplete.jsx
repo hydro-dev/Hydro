@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
@@ -13,19 +14,37 @@ export default class UserSelectAutoComplete extends AutoComplete {
       classes: 'user-select',
       ...options,
     });
+    this.client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          refetchOnMount: false,
+          refetchOnReconnect: false,
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+  }
+
+  value() {
+    if (this.options.multi) return this.ref?.getSelectedItems().map((item) => item._id) ?? this.$dom.val();
+    return this.ref?.getSelectedItems()[0] ?? null;
   }
 
   attach() {
     const value = this.$dom.val();
     ReactDOM.render(
-      <UserSelectAutoCompleteFC
-        ref={(ref) => { this.ref = ref; }}
-        height="34px"
-        defaultItems={value}
-        onChange={this.onChange}
-        multi={this.options.multi}
-        freeSolo={this.options.multi}
-      />,
+      <QueryClientProvider client={this.client}>
+        <UserSelectAutoCompleteFC
+          ref={(ref) => { this.ref = ref; }}
+          height="34px"
+          defaultItems={value}
+          onChange={this.onChange}
+          multi={this.options.multi}
+          freeSolo={this.options.multi}
+        />
+      </QueryClientProvider>,
       this.container,
     );
   }

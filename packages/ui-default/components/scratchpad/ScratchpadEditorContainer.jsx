@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import monaco, { registerAction } from 'vj/components/monaco/index';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
@@ -22,10 +21,12 @@ const mapDispatchToProps = (dispatch) => ({
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
   disposable = [];
 
-  componentDidMount() {
+  async componentDidMount() {
     const value = this.props.value || '';
     const { language, theme } = this.props;
-    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse('file://model'));
+    const { load } = await import('vj/components/monaco/loader');
+    const { monaco, registerAction } = await load([language]);
+    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(`file:///${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`));
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
       const config = {
@@ -53,7 +54,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     }
   }
 
-  componentDidUpdate(prevProps) {
+  async componentDidUpdate(prevProps) {
     const {
       value, language, theme, mainSize, recordSize, pretestSize,
     } = this.props;
@@ -73,6 +74,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;
     }
+    const { load } = await import('vj/components/monaco/loader');
+    const { monaco } = await load([language]);
     if (prevProps.language !== language) {
       monaco.editor.setModelLanguage(model, language);
       editor.updateOptions({ mode: language });
@@ -104,7 +107,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           width: '100%',
         }}
         className="ScratchpadMonacoEditor"
-      />
+      >
+        <div className="loader-container"><div className="loader"></div></div>
+      </div>
     );
   }
 });

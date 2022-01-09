@@ -5,6 +5,7 @@ window.Hydro = {
   utils: {},
   node_modules: {},
 };
+window.externalModules = {};
 
 console.log(
   '%c%s%c%s',
