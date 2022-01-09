@@ -335,20 +335,6 @@ export interface TrainingNode {
 }
 
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
-<<<<<<< HEAD
-    docId: ObjectID,
-    docType: docType & number,
-    beginAt: Date,
-    endAt: Date,
-    attend: number,
-    title: string,
-    content: string,
-    rule: string,
-    pids: number[],
-    fullScore: number[],
-    rated?: boolean,
-    _code?: string,
-=======
     docId: ObjectID;
     docType: docType & number;
     beginAt: Date;
@@ -359,9 +345,9 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     rule: string;
     pids: number[];
     rated?: boolean;
+    fullScore: number[];
     _code?: string;
     assign?: string[];
->>>>>>> upstream/master
 
     // For homework
     penaltySince?: Date;

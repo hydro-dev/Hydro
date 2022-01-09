@@ -256,12 +256,8 @@ export class ContestEditHandler extends Handler {
     @param('assign', Types.Array, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-<<<<<<< HEAD
-        title: string, content: string, rule: string, _pids: string, _fullScore = '100', rated = false, _code = '', autoHide = false,
-=======
-        title: string, content: string, rule: string, _pids: string, rated = false,
+        title: string, content: string, rule: string, _pids: string, rated = false, _fullScore: string,
         _code = '', autoHide = false, assign: string[] = null,
->>>>>>> upstream/master
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
