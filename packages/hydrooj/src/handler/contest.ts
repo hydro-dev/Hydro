@@ -256,7 +256,7 @@ export class ContestEditHandler extends Handler {
     @param('assign', Types.Array, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false, _fullScore: string,
+        title: string, content: string, rule: string, _pids: string, _fullScore: string = '100', rated = false,
         _code = '', autoHide = false, assign: string[] = null,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
