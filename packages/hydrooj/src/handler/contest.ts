@@ -249,7 +249,7 @@ export class ContestEditHandler extends Handler {
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
     @param('pids', Types.Content)
-    @param('fullScore', Types.Content, true)
+    @param('fullScore', Types.String, true)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
