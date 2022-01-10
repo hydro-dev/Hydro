@@ -174,11 +174,12 @@ button
   outline: 0
 
 label
-  display: block
-  margin: 0
-  font-size: rem($font-size-secondary)
-  line-height: 1.8
-  color: $label-color
+  &:not(.quick-input-list-label)
+    display: block
+    margin: 0
+    font-size: rem($font-size-secondary)
+    line-height: 1.8
+    color: $label-color
 
   input, textarea, select
     display: block
