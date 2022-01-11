@@ -1,5 +1,5 @@
 import React, {
-  forwardRef, createRef, useImperativeHandle, useRef, useEffect,
+  forwardRef, useImperativeHandle, useRef, useEffect,
 } from 'react';
 import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
@@ -20,7 +20,7 @@ interface UserSelectAutoCompleteProps {
 
 // eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(
-  props: UserSelectAutoCompleteProps, ref: React.Ref<AutoComplete>,
+  props: UserSelectAutoCompleteProps, ref: React.ForwardedRef<AutoComplete>,
 ) {
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? '';
@@ -30,7 +30,7 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(
     .filter((i) => i.length)
     .map((i) => +i) : rawDefaultItems;
 
-  const comRef = createRef<AutoComplete>();
+  const comRef = useRef<AutoComplete>();
   const itemsBox = useRef([]);
   const { isLoading } = useQuery(['default_user', defaultItems], async () => {
     if (!multi || defaultItems.length === 0) return;
