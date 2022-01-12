@@ -3,31 +3,31 @@ import ReactDOM from 'react-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import AutoComplete from '.';
+import AutoComplete, { AutoCompleteOptions } from '.';
 import UserSelectAutoCompleteFC from './components/UserSelectAutoComplete';
 
-export default class UserSelectAutoComplete extends AutoComplete {
+export default class UserSelectAutoComplete<Multi extends boolean> extends AutoComplete {
   static DOMAttachKey = 'ucwUserSelectAutoCompleteInstance';
+  client = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        retry: false,
+        staleTime: Infinity,
+      },
+    },
+  });
 
-  constructor($dom, options) {
+  constructor($dom, options: AutoCompleteOptions<Multi>) {
     super($dom, {
       classes: 'user-select',
       ...options,
     });
-    this.client = new QueryClient({
-      defaultOptions: {
-        queries: {
-          refetchOnWindowFocus: false,
-          refetchOnMount: false,
-          refetchOnReconnect: false,
-          retry: false,
-          staleTime: Infinity,
-        },
-      },
-    });
   }
 
-  value() {
+  value(): Multi extends true ? number[] : string {
     if (this.options.multi) return this.ref?.getSelectedItems().map((item) => item._id) ?? this.$dom.val();
     return this.ref?.getSelectedItems()[0] ?? null;
   }

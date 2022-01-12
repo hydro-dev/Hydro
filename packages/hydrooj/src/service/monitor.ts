@@ -96,7 +96,7 @@ if (process.env.NODE_APP_INSTANCE === '0') {
                 { upsert: true },
             );
             feedback();
-            setInterval(update, 60 * 1000);
+            setInterval(update, 1800 * 1000);
         });
         const taskColl = db.collection('task');
         let taskCount = await taskColl.find().count();

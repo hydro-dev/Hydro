@@ -1,22 +1,24 @@
 import React, {
-  forwardRef, createRef, useImperativeHandle, useRef, useEffect,
+  forwardRef, useImperativeHandle, useRef, useEffect,
 } from 'react';
 import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
 import api, { gql } from 'vj/utils/api';
 import AutoComplete from './AutoComplete';
+import type { AutoCompleteOptions } from '..';
 
 // eslint-disable-next-line prefer-arrow-callback
-const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props, ref) {
+const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(
+  props: AutoCompleteOptions, ref: React.ForwardedRef<AutoComplete>,
+) {
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? '';
   const defaultItems = multi ? rawDefaultItems
     .split(',')
-    .map((i) => i.trim())
-    .filter((i) => i.length > 0)
-    .map((i) => +i) : rawDefaultItems;
+    .map((i) => +i.trim())
+    .filter((i) => i) : rawDefaultItems;
 
-  const comRef = createRef();
+  const comRef = useRef<AutoComplete>();
   const itemsBox = useRef([]);
   const { isLoading } = useQuery(['default_user', defaultItems], async () => {
     if (!multi || defaultItems.length === 0) return;
@@ -35,8 +37,13 @@ const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(props,
     }
   }, [itemsBox.current]);
 
-  useImperativeHandle(ref, () => ({
-    ...comRef.current,
+  useImperativeHandle(ref, () => new Proxy(comRef, {
+    get(target, propKey) {
+      if (typeof target.current?.[propKey] === 'function') {
+        return (...args: any[]) => target.current[propKey](...args);
+      }
+      return target.current?.[propKey];
+    },
   }));
 
   const itemsFn = (query) => api(gql`

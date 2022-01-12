@@ -27,9 +27,9 @@ registerValue('GroupInfo', [
 ]);
 
 registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
-    const ddoc = await domain.get(args.id);
+    const ddoc = args.id ? await domain.get(args.id) : ctx.domain;
     if (!ddoc) return null;
-    const udoc = await user.getById(args.id, ctx.user._id);
+    const udoc = await user.getById(ddoc._id, ctx.user._id);
     if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
     ctx.udoc = udoc;
     return ddoc;
@@ -37,7 +37,7 @@ registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
 
 registerResolver('Domain', 'manage', 'DomainManage', async (args, ctx) => {
     if (!ctx.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
-    return {};
+    return ctx.parent;
 });
 
 registerResolver('DomainManage', 'group', 'DomainGroup', (args, ctx) => ctx.parent);
@@ -99,10 +99,11 @@ class DomainEditHandler extends ManageHandler {
         this.response.redirect = this.url('domain_dashboard');
     }
 
-    async postDelete({ password }) {
+    async postDelete({ domainId, password }) {
         this.user.checkPassword(password);
-        if (this.domain.owner === this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
-        await domain.del(this.domainId);
+        if (domainId === 'system') throw new ForbiddenError('You are not allowed to delete system domain');
+        if (this.domain.owner !== this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
+        await domain.del(domainId);
         this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
@@ -266,8 +267,12 @@ class DomainJoinApplicationsHandler extends ManageHandler {
 }
 
 class DomainUserGroupHandler extends ManageHandler {
-    async get() {
-        this.response.body = 'domain_group.html';
+    async get({ domainId }) {
+        this.response.template = 'domain_group.html';
+        this.response.body = {
+            domain: this.domain,
+            groups: await user.listGroup(domainId),
+        };
     }
 
     @param('name', Types.Name)

@@ -80,7 +80,7 @@ export default class LuoguProvider implements IBasicProvider {
 
     async ensureLogin() {
         if (await this.loggedIn) {
-            this.getCsrfToken('/');
+            await this.getCsrfToken('/');
             return true;
         }
         logger.info('retry login');

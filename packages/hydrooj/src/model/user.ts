@@ -392,7 +392,7 @@ class UserModel {
     }
 
     static updateGroup(domainId: string, name: string, uids: number[]) {
-        return collGroup.updateOne({ domainId, name }, { $set: { uids } });
+        return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });
     }
 }
 

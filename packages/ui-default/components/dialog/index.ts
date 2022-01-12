@@ -83,6 +83,11 @@ export class ActionDialog extends Dialog {
       ...options,
     });
   }
+
+  clear() {
+    this.$dom.find('input').val('');
+    return this;
+  }
 }
 
 export class ConfirmDialog extends Dialog {

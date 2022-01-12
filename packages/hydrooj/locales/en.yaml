@@ -2,8 +2,8 @@ __id: en
 __langname: English
 Can be Extended For: Extension
 contest_create: Contest Create
-contest_detail_problem: Problem Detail
 contest_detail_problem_submit: Submit Contest Problem
+contest_detail_problem: Problem Detail
 contest_detail: Contest Detail
 contest_edit: Contest Edit
 contest_main: Contest
@@ -17,6 +17,7 @@ display_name: Display Name
 domain_dashboard: Dashboard
 domain_discussion: Discussion Nodes
 domain_edit: Edit Info
+domain_group: Manage Groups
 domain_join_applications: Join Applications
 domain_main: Main
 domain_permission: System Permission

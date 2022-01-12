@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React, {
-  forwardRef, useState, useRef, useImperativeHandle, createRef, useEffect,
+  forwardRef, useState, useRef, useImperativeHandle, useEffect,
 } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
@@ -35,8 +35,8 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
 
-  const inputRef = createRef();
-  const listRef = createRef();
+  const inputRef = useRef();
+  const listRef = useRef();
 
   const cache = useRef({});
 
