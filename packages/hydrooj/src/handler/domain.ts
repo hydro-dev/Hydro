@@ -99,10 +99,11 @@ class DomainEditHandler extends ManageHandler {
         this.response.redirect = this.url('domain_dashboard');
     }
 
-    async postDelete({ password }) {
+    async postDelete({ domainId, password }) {
         this.user.checkPassword(password);
-        if (this.domain.owner === this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
-        await domain.del(this.domainId);
+        if (domainId === 'system') throw new ForbiddenError('You are not allowed to delete system domain');
+        if (this.domain.owner !== this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
+        await domain.del(domainId);
         this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
