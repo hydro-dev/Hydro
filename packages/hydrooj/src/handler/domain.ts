@@ -27,9 +27,9 @@ registerValue('GroupInfo', [
 ]);
 
 registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
-    const ddoc = await domain.get(args.id);
+    const ddoc = args.id ? await domain.get(args.id) : ctx.domain;
     if (!ddoc) return null;
-    const udoc = await user.getById(args.id, ctx.user._id);
+    const udoc = await user.getById(ddoc._id, ctx.user._id);
     if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
     ctx.udoc = udoc;
     return ddoc;
@@ -37,7 +37,7 @@ registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
 
 registerResolver('Domain', 'manage', 'DomainManage', async (args, ctx) => {
     if (!ctx.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
-    return {};
+    return ctx.parent;
 });
 
 registerResolver('DomainManage', 'group', 'DomainGroup', (args, ctx) => ctx.parent);
@@ -267,8 +267,12 @@ class DomainJoinApplicationsHandler extends ManageHandler {
 }
 
 class DomainUserGroupHandler extends ManageHandler {
-    async get() {
-        this.response.body = 'domain_group.html';
+    async get({ domainId }) {
+        this.response.template = 'domain_group.html';
+        this.response.body = {
+            domain: this.domain,
+            groups: await user.listGroup(domainId),
+        };
     }
 
     @param('name', Types.Name)

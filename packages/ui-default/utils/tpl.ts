@@ -1,10 +1,12 @@
 import _ from 'lodash';
 
-export default function tpl(pieces, ...substitutions) {
+type Substitution = string | { templateRaw: true, html: string };
+
+export default function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]) {
   let result = pieces[0];
   for (let i = 0; i < substitutions.length; ++i) {
     const subst = substitutions[i];
-    let substHtml;
+    let substHtml: string;
     if (typeof subst === 'object' && subst.templateRaw) {
       substHtml = subst.html;
     } else substHtml = _.escape(String(subst));
@@ -13,7 +15,7 @@ export default function tpl(pieces, ...substitutions) {
   return result;
 }
 
-tpl.typoMsg = function (msg, raw = false) {
+tpl.typoMsg = function (msg: string, raw = false) {
   return tpl`
     <div class="typo">
       <p>${raw ? { html: msg, templateRaw: true } : msg}</p>
@@ -21,7 +23,7 @@ tpl.typoMsg = function (msg, raw = false) {
   `;
 };
 
-export function rawHtml(html) {
+export function rawHtml(html: string) {
   return {
     templateRaw: true,
     html,

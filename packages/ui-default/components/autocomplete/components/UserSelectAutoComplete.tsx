@@ -5,30 +5,18 @@ import { useQuery } from 'react-query';
 import PropTypes from 'prop-types';
 import api, { gql } from 'vj/utils/api';
 import AutoComplete from './AutoComplete';
-
-interface UserSelectAutoCompleteProps {
-  multi?: boolean;
-  defaultItems?: string;
-  width: string,
-  height: string,
-  listStyle: any,
-  onChange: (value) => any,
-  allowEmptyQuery: boolean,
-  freeSolo: boolean,
-  freeSoloConverter: any,
-}
+import type { AutoCompleteOptions } from '..';
 
 // eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef(function UserSelectAutoComplete(
-  props: UserSelectAutoCompleteProps, ref: React.ForwardedRef<AutoComplete>,
+  props: AutoCompleteOptions, ref: React.ForwardedRef<AutoComplete>,
 ) {
   const multi = props.multi ?? false;
   const rawDefaultItems = props.defaultItems ?? '';
   const defaultItems = multi ? rawDefaultItems
     .split(',')
-    .map((i) => i.trim())
-    .filter((i) => i.length)
-    .map((i) => +i) : rawDefaultItems;
+    .map((i) => +i.trim())
+    .filter((i) => i) : rawDefaultItems;
 
   const comRef = useRef<AutoComplete>();
   const itemsBox = useRef([]);
