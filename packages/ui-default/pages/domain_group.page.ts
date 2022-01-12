@@ -48,14 +48,14 @@ const page = new NamedPage('domain_group', () => {
   createGroupDialogContent.appendTo(document.body);
   const userSelect = UserSelectAutoComplete.getOrConstruct<UserSelectAutoComplete<true>>(
     createGroupDialogContent.find('[name="create_group_users"]'),
-    { multi: true },
+    { multi: true, height: 'auto' },
   );
   $('input[data-gid]').get().forEach((ele) => {
-    const input = UserSelectAutoComplete.getOrConstruct<UserSelectAutoComplete<true>>($(ele), { multi: true });
+    const input = UserSelectAutoComplete.getOrConstruct<UserSelectAutoComplete<true>>($(ele), { multi: true, height: 'auto' });
     const gid = ele.getAttribute('data-gid');
     let loaded = false;
     input.onChange(() => {
-      if (input.value.length) {
+      if (input.value().length && !loaded) {
         loaded = true;
         return;
       }
@@ -110,11 +110,7 @@ const page = new NamedPage('domain_group', () => {
     const selectedGroups = ensureAndGetSelectedGroups();
     if (selectedGroups === null) return;
     const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm deleting the selected groups?')}</p>
-          <p>${i18n('Users with those roles will be removed from the domain.')}</p>
-        </div>`,
+      $body: tpl.typoMsg(i18n('Confirm deleting the selected groups?')),
     }).open();
     if (action !== 'yes') return;
     try {

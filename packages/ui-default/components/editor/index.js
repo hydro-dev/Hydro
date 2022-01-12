@@ -78,7 +78,8 @@ export default class Editor extends DOMAttachedObject {
       if (!editorElement) return;
       const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
       const lineCount = this.editor.getModel()?.getLineCount() || 1;
-      const height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
+      let height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
+      if (window.innerHeight < height) height = window.innerHeight;
       if (prevHeight !== height) {
         prevHeight = height;
         editorElement.style.height = `${height}px`;
