@@ -12,7 +12,6 @@ import markdown from './backendlib/markdown';
 const {
   system, user, setting, problem, contest,
 } = global.Hydro.model;
-global.Hydro.version.ui = require('./package.json').version;
 
 const pages = Object.keys(global.Hydro.ui.manifest)
   .filter((file) => file.endsWith('.page.js'))

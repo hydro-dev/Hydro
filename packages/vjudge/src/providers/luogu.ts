@@ -31,8 +31,8 @@ const STATUS_MAP = [
 ];
 
 const UA = [
-    `Hydro/${require('hydrooj/package.json').version}`,
-    `Vjudge/${require('@hydrooj/vjudge/package.json').version}`,
+    `Hydro/${global.Hydro.version.hydrooj}`,
+    `Vjudge/${global.Hydro.version.vjudge}`,
 ].join(' ');
 
 export default class LuoguProvider implements IBasicProvider {
