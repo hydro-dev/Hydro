@@ -3,6 +3,7 @@ import { MessageDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
+import { PRIV } from './builtin';
 import user from './user';
 
 const coll = db.collection('message');
@@ -63,6 +64,11 @@ class MessageModel {
 
     static getMulti(uid: number) {
         return coll.find({ $or: [{ from: uid }, { to: uid }] });
+    }
+
+    static async sendNotification(message: string) {
+        const targets = await user.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } }).project({ _id: 1 }).toArray();
+        return Promise.all(targets.map(({ _id }) => MessageModel.send(1, _id, message)));
     }
 }
 
