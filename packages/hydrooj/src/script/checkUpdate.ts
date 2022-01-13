@@ -1,9 +1,8 @@
 /* eslint-disable no-await-in-loop */
+import * as SemVer from 'semver';
 import superagent from 'superagent';
-import { PRIV } from '../model/builtin';
 import MessageModel from '../model/message';
 import * as SystemModel from '../model/system';
-import UserModel from '../model/user';
 
 export const description = 'Get System Packages Latest Version From Yarn Registry';
 
@@ -16,44 +15,23 @@ async function getpackNetVersion(packName:string) {
     }
 }
 
-function beyondVersion(versionA:string, versionB:string) {
-    const versionAarray = versionA.split('.');
-    const versionBarray = versionB.split('.');
-    const maxL = Math.max(versionAarray.length, versionBarray.length);
-    let result = 0;
-    for (let i = 0; i < maxL; i++) {
-        const verAValue = versionAarray.length > i ? parseInt(versionAarray[i], 10) : 0;
-        const verBValue = versionBarray.length > i ? parseInt(versionBarray[i], 10) : 0;
-        if (verAValue < verBValue) {
-            result = 1;
-            break;
-        } else if (verAValue > verBValue) {
-            result = -1;
-            break;
-        }
-    }
-    return result;
-}
-
 export async function run() {
     const packNowVersion = global.Hydro.version;
-    const admins = await UserModel.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } }).toArray();
+    let verInfo = '';
     for (const name in packNowVersion) {
         if (name === 'node') continue;
         const packNewVersion = await getpackNetVersion(name);
-        if (packNewVersion === null) continue;
+        if (!packNewVersion) continue;
         const packDBVersion = SystemModel.get(`checkVersion.${name}`);
-        if (beyondVersion(packDBVersion, packNewVersion) === 1) {
+        if (SemVer.lt(packDBVersion, packNewVersion)) {
             SystemModel.set(`checkVersion.${name}`, packNewVersion);
-            if (beyondVersion(packNowVersion[name], packNewVersion) === 1) {
-                await Promise.all(
-                    admins.map((udoc) =>
-                        MessageModel.send(1, udoc._id,
-                            `Package ${name}(v${packNowVersion[name]}) has a new version ${packNewVersion}, `
-                            + 'you should upgrade it for better experience.', 0)),
-                );
+            if (SemVer.lt(packNowVersion[name], packNewVersion)) {
+                verInfo = `Package ${name}(v${packNowVersion[name]}) has a new version ${packNewVersion}, `;
             }
         }
+    }
+    if (!verInfo) {
+        MessageModel.sendNotification(`${verInfo}you should upgrade it for better experience.`);
     }
     return true;
 }
