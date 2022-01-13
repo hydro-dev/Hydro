@@ -30,7 +30,7 @@ declare global {
 }
 if (!global.onDestory) global.onDestory = [];
 if (!global.hosts) global.hosts = [];
-let SI = false;
+let exit = false;
 
 const terminate = async () => {
     log.info('正在保存数据');
@@ -38,11 +38,11 @@ const terminate = async () => {
         await Promise.all(global.onDestory.map((f) => f()));
         process.exit(1);
     } catch (e) {
-        if (SI) process.exit(1);
+        if (exit) process.exit(1);
         log.error(e.stack);
         log.error('发生了错误。');
         log.error('再次按下 Ctrl-C 可强制退出。');
-        SI = true;
+        exit = true;
     }
 };
 process.on('SIGINT', terminate);
@@ -60,7 +60,7 @@ async function worker(queue: Queue<any>) {
 
 async function daemon() {
     const _hosts = getConfig('hosts');
-    const retry_delay_sec = getConfig('retry_delay_sec');
+    const delay = getConfig('retry_delay_sec');
     const hosts = {};
     const queue = new Queue<any>();
     for (const i in _hosts) {
@@ -77,8 +77,8 @@ async function daemon() {
                 break;
             } catch (e) {
                 log.error(e, e.stack);
-                log.info(`在 ${retry_delay_sec} 秒后重试`);
-                await sleep(retry_delay_sec * 1000);
+                log.info(`在 ${delay} 秒后重试`);
+                await sleep(delay * 1000);
             }
         }
     }

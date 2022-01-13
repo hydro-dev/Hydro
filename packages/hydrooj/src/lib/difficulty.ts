@@ -1,44 +1,44 @@
 const _CACHE_INFO = {
-    last_s: 0.0,
-    last_y: 0,
+    s: 0.0,
+    y: 0,
     values: [0.0],
 };
 
 function _LOGP(x: number) {
-    const sqrt_2_pi = 2.506628274631000502415765284811; // Sqrt[Pi]
-    return (2 * Math.exp(-1.0 * (Math.log(x) ** 2) * 2)) / x / sqrt_2_pi;
+    const sqrtPi = 2.506628274631000502415765284811; // Sqrt[Pi]
+    return (2 * Math.exp(-1.0 * (Math.log(x) ** 2) * 2)) / x / sqrtPi;
 }
 
-function _integrate_ensure_cache(y: number) {
-    let last_y = _CACHE_INFO.last_y;
-    if (y <= last_y) return _CACHE_INFO;
-    let s = _CACHE_INFO.last_s;
+function _intergrateEnsureCache(y: number) {
+    let lastY = _CACHE_INFO.y;
+    if (y <= lastY) return _CACHE_INFO;
+    let s = _CACHE_INFO.s;
     const dx = 0.1;
     const dT = 2;
-    let x0 = (last_y / dT) * dx;
-    while (y > last_y) {
+    let x0 = (lastY / dT) * dx;
+    while (y > lastY) {
         x0 += dx;
         s += _LOGP(x0) * dx;
         for (let i = 1; i <= dT; i++) _CACHE_INFO.values.push(s);
-        last_y += dT;
+        lastY += dT;
     }
-    _CACHE_INFO.last_y = last_y;
-    _CACHE_INFO.last_s = s;
+    _CACHE_INFO.y = lastY;
+    _CACHE_INFO.s = s;
     return _CACHE_INFO;
 }
 
-_integrate_ensure_cache(1000000);
+_intergrateEnsureCache(1000000);
 
 function _integrate(y: number) {
-    _integrate_ensure_cache(y);
+    _intergrateEnsureCache(y);
     return _CACHE_INFO.values[y];
 }
 
 function difficultyAlgorithm(nSubmit: number, nAccept: number) {
     if (!nSubmit) return null;
     const s = _integrate(nSubmit);
-    const ac_rate = nAccept / nSubmit;
-    const ans = Math.round(10.0 - 1.30 * s * 10.0 * ac_rate);
+    const acRate = nAccept / nSubmit;
+    const ans = Math.round(10.0 - 1.30 * s * 10.0 * acRate);
     return Math.max(ans, 1);
 }
 

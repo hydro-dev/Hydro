@@ -27,7 +27,7 @@ function proc({
     execute = '',
     time = 16000,
     memory = parseMemoryMB(getConfig('memoryMax')),
-    process_limit = getConfig('processLimit'),
+    processLimit = getConfig('processLimit'),
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
 } = {}) {
     if (!supportOptional) {
@@ -48,7 +48,7 @@ function proc({
         memoryLimit: Math.floor(memory * 1024 * 1024),
         strictMemoryLimit: getConfig('strict_memory'),
         // stackLimit: memory * 1024 * 1024,
-        procLimit: process_limit,
+        procLimit: processLimit,
         copyIn,
         copyOut,
         copyOutCached,

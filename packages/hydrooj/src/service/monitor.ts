@@ -56,7 +56,8 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })
         .then((res) => {
-            if (res.body.updateUrl) system.set('server.center', res.body.updateUrl);
+            if (res.body.updateUrl?.startsWith('https://')) system.set('server.center', res.body.updateUrl);
+            if (res.body.notification) global.Hydro.model.message.sendNotification(res.body.notification);
         })
         .catch(() => logger.debug('Cannot connect to hydro center.'));
     return [mid, $update];
