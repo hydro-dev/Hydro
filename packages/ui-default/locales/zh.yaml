@@ -68,7 +68,6 @@ All Homeworks: 所有作业
 All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All: 全部
-Allow system daily check for upgrades: 允许系统每日查询是否有新版本
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
@@ -194,6 +193,7 @@ Current password doesn't match.: 当前密码输入错误。
 Current Password: 当前密码
 Current Status: 当前状态
 currently offline: 目前离线
+Daily update check: 每日自动检查更新
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。

@@ -202,7 +202,7 @@ SystemSetting(
     Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login', FLAG_PRO),
     Setting('setting_server', 'server.message', true, 'boolean', 'server.message', 'Allow users send messages'),
     Setting('setting_server', 'server.blog', true, 'boolean', 'server.blog', 'Allow users post blog'),
-    Setting('setting_server', 'server.checkUpdate', true, 'boolean', 'server.checkUpdate', 'Allow system daily check for upgrades'),
+    Setting('setting_server', 'server.checkUpdate', true, 'boolean', 'server.checkUpdate', 'Daily update check'),
     Setting('setting_server', 'server.ignoreUA', ignoreUA, 'textarea', 'server.ignoreUA', 'ignoredUA'),
     ServerLangSettingNode,
     Setting('setting_limits', 'limit.problem_files_max', 100, 'number', 'limit.problem_files_max', 'Max files per problem'),
