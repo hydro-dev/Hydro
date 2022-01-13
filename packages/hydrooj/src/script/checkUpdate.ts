@@ -17,7 +17,7 @@ async function getpackNetVersion(packName: string) {
 
 export async function run() {
     const packNowVersion = global.Hydro.version;
-    const message = [];
+    const message = [''];
     for (const name in packNowVersion) {
         if (name === 'node') continue;
         const packNewVersion = await getpackNetVersion(name);
@@ -30,8 +30,8 @@ export async function run() {
             }
         }
     }
-    if (message.length) {
-        MessageModel.sendNotification('Packages have new version: \n{0}', message.join('\n'));
+    if (message.length > 1) {
+        MessageModel.sendNotification('Packages have new version: {0}', message.join('\n'));
     }
     return true;
 }

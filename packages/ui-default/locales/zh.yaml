@@ -38,7 +38,7 @@ __langname: 简体中文
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
-'Packages have new version: \n{0}': '以下组件有新版本： \n{0}。'
+'Packages have new version: {0}': '以下组件有新版本： {0}'
 "Split by ', '.": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
