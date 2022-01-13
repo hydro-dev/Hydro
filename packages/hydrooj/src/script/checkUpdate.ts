@@ -4,9 +4,9 @@ import superagent from 'superagent';
 import MessageModel from '../model/message';
 import * as SystemModel from '../model/system';
 
-export const description = 'Get System Packages Latest Version From Yarn Registry';
+export const description = 'Daily update check';
 
-async function getpackNetVersion(packName:string) {
+async function getpackNetVersion(packName: string) {
     try {
         const packInfoRes = await superagent.get(`https://registry.yarnpkg.com/${(packName !== 'hydrooj') ? `@hydrooj/${packName}` : packName}`);
         return packInfoRes.body['dist-tags']['latest'];
@@ -26,11 +26,11 @@ export async function run() {
         if (semVer.lt(packDBVersion, packNewVersion)) {
             SystemModel.set(`checkVersion.${name}`, packNewVersion);
             if (semVer.lt(packNowVersion[name], packNewVersion)) {
-                message.push(`${(name !== 'hydrooj') ? `@hydrooj/${name}` : name} v${packNowVersion[name]} -> ${packNewVersion}`);
+                message.push(`${(name !== 'hydrooj') ? `@hydrooj/${name}` : name} ${packNowVersion[name]} -> ${packNewVersion}`);
             }
         }
     }
-    if (message.length > 1) {
+    if (message.length) {
         MessageModel.sendNotification('Packages have new version: \n{0}', message.join('\n'));
     }
     return true;
