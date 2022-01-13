@@ -4,6 +4,7 @@ import * as bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 import { PRIV } from './builtin';
+import * as system from './system';
 import user from './user';
 
 const coll = db.collection('message');
@@ -66,9 +67,13 @@ class MessageModel {
         return coll.find({ $or: [{ from: uid }, { to: uid }] });
     }
 
-    static async sendNotification(message: string) {
-        const targets = await user.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } }).project({ _id: 1 }).toArray();
-        return Promise.all(targets.map(({ _id }) => MessageModel.send(1, _id, message)));
+    static async sendNotification(message: string, ...args: any[]) {
+        const targets = await user.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } })
+            .project({ _id: 1, viewLang: 1 }).toArray();
+        return Promise.all(targets.map(({ _id, viewLang }) => {
+            const msg = message.translate(viewLang || system.get('server.language')).format(...args);
+            return MessageModel.send(1, _id, msg, MessageModel.FLAG_RICHTEXT);
+        }));
     }
 }
 
