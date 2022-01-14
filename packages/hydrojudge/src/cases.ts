@@ -189,8 +189,8 @@ function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
-    const total_time = sum(config.subtasks.map((subtask) => subtask.time * subtask.cases.length));
-    if (total_time > (getConfig('total_time_limit') || 60) * 1000) {
+    const time = sum(config.subtasks.map((subtask) => subtask.time * subtask.cases.length));
+    if (time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
     const memMax = max(config.subtasks.map((subtask) => subtask.memory));

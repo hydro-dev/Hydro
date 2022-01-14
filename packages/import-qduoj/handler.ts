@@ -15,7 +15,7 @@ import { Handler, Route } from 'hydrooj/src/service/server';
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
 class ImportQduojHandler extends Handler {
-    async ImportFromFile(domainId: string, zipfile: string) {
+    async fromFile(domainId: string, zipfile: string) {
         const zip = new AdmZip(zipfile);
         const tmp = path.resolve(os.tmpdir(), 'hydro', 'import-qduoj', String.random(32));
         await new Promise((resolve, reject) => {
@@ -121,7 +121,7 @@ class ImportQduojHandler extends Handler {
         if (!this.request.files.file) throw new ValidationError('file');
         const stat = await fs.stat(this.request.files.file.path);
         if (stat.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
-        await this.ImportFromFile(domainId, this.request.files.file.path);
+        await this.fromFile(domainId, this.request.files.file.path);
         this.response.redirect = this.url('problem_main');
     }
 }

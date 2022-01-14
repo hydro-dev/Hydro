@@ -8,7 +8,7 @@ console.log('Process', process.pid, 'running as', process.env.NODE_APP_INSTANCE 
 if (!global.Hydro) {
     global.Hydro = {
         version: {
-            node: process.version,
+            node: process.version.split('v')[1],
             hydrooj: require('hydrooj/package.json').version,
         },
         handler: {},

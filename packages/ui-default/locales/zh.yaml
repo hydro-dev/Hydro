@@ -174,6 +174,7 @@ Create Discussion: 创建讨论
 Create discussions: 创建讨论
 Create Domain: 创建域
 Create File: 创建文件
+Create Group: 创建小组
 Create homework: 创建作业
 Create Homework: 创建作业
 Create Link: 创建链接
@@ -329,6 +330,7 @@ fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
 Gravatar URL Prefix: Gravatar地址前缀
+Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
@@ -625,6 +627,7 @@ Rejudge: 重测
 Related Discussions: 相关讨论
 Related: 相关
 Remember me: 记住我
+Remove Selected Group: 移除所选小组
 Remove Selected User: 将所选用户移出
 Remove Selected: 移除选中
 Remove this data: 移除这组数据

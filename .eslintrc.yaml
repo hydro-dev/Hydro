@@ -11,6 +11,9 @@ parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
   - simple-import-sort
+ignorePatterns:
+  - public/
+  - '*.spec.ts'
 rules:
   '@typescript-eslint/dot-notation': 0
   '@typescript-eslint/no-implied-eval': 0
@@ -24,7 +27,42 @@ rules:
     - error
     - always
     - exceptAfterSingleLine: true
-  '@typescript-eslint/naming-convention': 0
+  '@typescript-eslint/naming-convention':
+    - warn
+    - selector: default
+      format: [camelCase]
+      leadingUnderscore: allowSingleOrDouble
+    - selector: default
+      filter:
+        regex: '^([A-Z]|_+id|__call__)$'
+        match: true
+      format: null
+    - selector: variable
+      modifiers: [destructured]
+      filter:
+        regex: '^_id$'
+        match: false
+      format: [camelCase, PascalCase, UPPER_CASE, snake_case]
+    - selector: variable
+      format: [camelCase, PascalCase, UPPER_CASE]
+      modifiers: [const]
+      leadingUnderscore: allowSingleOrDouble
+    - selector: property
+      format: [camelCase, PascalCase, UPPER_CASE, snake_case]
+      leadingUnderscore: allowSingleOrDouble
+    - selector: [function, parameter, parameterProperty, objectLiteralMethod]
+      filter:
+        regex: __call__
+        match: false
+      format: [camelCase, PascalCase]
+      leadingUnderscore: allowSingleOrDouble
+    - selector: enum
+      format: [PascalCase]
+    - selector: [class, interface, typeAlias, enumMember]
+      format: [PascalCase, camelCase]
+    - selector: typeParameter
+      format: [camelCase, PascalCase, UPPER_CASE]
+
   '@typescript-eslint/no-redeclare': 0
 
   class-methods-use-this: 0
@@ -77,3 +115,7 @@ settings:
   import/resolver:
     typescript:
       alwaysTryTypes: true
+# parserOptions:
+#   project:
+#     - './tsconfig.json'
+#     - './packages/**/tsconfig.json'
