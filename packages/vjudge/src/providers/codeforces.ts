@@ -74,9 +74,8 @@ export default class CodeforcesProvider implements IBasicProvider {
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry login');
-        const csrf_token = await this.getCsrfToken('/enter');
         const res = await this.post('/enter').send({
-            csrf_token,
+            csrf_token: await this.getCsrfToken('/enter'),
             action: 'enter',
             ftaa: '',
             bfaa: '',
@@ -197,10 +196,10 @@ export default class CodeforcesProvider implements IBasicProvider {
         const [, contestId, submittedProblemIndex] = id.startsWith('P921')
             ? ['', '921', id.split('P921')[1]]
             : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
-        const csrf_token = await this.getCsrfToken('/problemset/submit');
+        const csrf = await this.getCsrfToken('/problemset/submit');
         // TODO check submit time to ensure submission
-        await this.post(`/problemset/submit?csrf_token=${csrf_token}`).send({
-            csrf_token,
+        await this.post(`/problemset/submit?csrf_token=${csrf}`).send({
+            csrf_token: csrf,
             contestId,
             action: 'submitSolutionFormSubmitted',
             programTypeId,

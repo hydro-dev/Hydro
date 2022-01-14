@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 
 const argv = cac().parse();
+// eslint-disable-next-line @typescript-eslint/naming-convention
 let CONFIG_FILE = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
 
 let config = {

@@ -103,16 +103,16 @@ interface RatingOutputUser {
 }
 
 function calculate(users: RatingInputUser[]): RatingOutputUser[] {
-    let last_idx = 0;
-    let last_rank = 1;
+    let lastIdx = 0;
+    let lastRank = 1;
     for (let i = 1; i < users.length; i++) {
-        if (users[i].rank > last_rank) {
-            for (let j = last_idx; j < i; j++) users[j].rank = i;
-            last_idx = i;
-            last_rank = users[i].rank;
+        if (users[i].rank > lastRank) {
+            for (let j = lastIdx; j < i; j++) users[j].rank = i;
+            lastIdx = i;
+            lastRank = users[i].rank;
         }
     }
-    for (let i = last_idx; i < users.length; i++) {
+    for (let i = lastIdx; i < users.length; i++) {
         users[i].rank = users.length;
     }
     const calculator = new RatingCalculator(users);
