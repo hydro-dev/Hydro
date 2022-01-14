@@ -140,6 +140,9 @@ Worker.addHandler('task.daily', async () => {
     await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
     await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
+    if (global.Hydro.model.system.get('server.checkUpdate')) {
+        await global.Hydro.script.checkVersion?.run({}, new Logger('task/checkUpdate').debug);
+    }
 });
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
 bus.once('app/started', async () => {

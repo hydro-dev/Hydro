@@ -38,6 +38,7 @@ __langname: 简体中文
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
+'Packages have new version: {0}': '以下组件有新版本： {0}'
 "Split by ', '.": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
@@ -193,6 +194,7 @@ Current password doesn't match.: 当前密码输入错误。
 Current Password: 当前密码
 Current Status: 当前状态
 currently offline: 目前离线
+Daily update check: 每日自动检查更新
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。
