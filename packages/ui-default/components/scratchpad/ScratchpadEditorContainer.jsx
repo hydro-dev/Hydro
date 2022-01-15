@@ -50,7 +50,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
 
   async componentDidUpdate(prevProps) {
     const {
-      value, language, theme, mainSize, recordSize, pretestSize,
+      value, language, mainSize, recordSize, pretestSize,
     } = this.props;
     const { editor, model } = this;
     if (this.props.value != null && this.props.value !== model.getValue()) {
