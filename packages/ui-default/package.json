@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.29.9",
+  "version": "4.30.0",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -57,6 +57,7 @@
     "monaco-editor": "^0.31.1",
     "monaco-editor-nls": "^2.0.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
+    "monaco-themes": "^0.4.0",
     "nanoid": "^3.1.30",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",

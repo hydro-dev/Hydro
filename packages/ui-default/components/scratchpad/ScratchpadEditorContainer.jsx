@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 const mapStateToProps = (state) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
-  theme: 'vs-light',
   mainSize: state.ui.main.size,
   pretestSize: state.ui.pretest.size,
   recordSize: state.ui.records.size,
@@ -23,21 +22,20 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
 
   async componentDidMount() {
     const value = this.props.value || '';
-    const { language, theme } = this.props;
+    const { language } = this.props;
     const { load } = await import('vj/components/monaco/loader');
-    const { monaco, registerAction } = await load([language]);
+    const { monaco, registerAction, customOptions } = await load([language]);
     this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(`file:///${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`));
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
       const config = {
-        theme,
+        theme: 'vs-light',
+        ...customOptions,
         lineNumbers: true,
         glyphMargin: true,
         lightbulb: { enabled: true },
         model: this.model,
       };
-      const fontSize = localStorage.getItem('scratchpad.editor.fontSize');
-      if (fontSize && !Number.isNaN(+fontSize)) config.fontSize = +fontSize;
       this.editor = monaco.editor.create(this.containerElement, config);
       registerAction(this.editor, this.model);
       this.disposable.push(
@@ -45,10 +43,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           if (!this.__prevent_trigger_change_event) {
             this.props.handleUpdateCode(this.editor.getValue(), event);
           }
-        }),
-        this.editor.onDidChangeConfiguration(() => {
-          const current = this.editor.getOptions()._values[40].fontSize;
-          localStorage.setItem('scratchpad.editor.fontSize', current);
         }),
       );
     }
@@ -80,7 +74,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       monaco.editor.setModelLanguage(model, language);
       editor.updateOptions({ mode: language });
     }
-    if (prevProps.theme !== theme) monaco.editor.setTheme(theme);
     if (editor) {
       if (prevProps.mainSize !== mainSize
         || prevProps.recordSize !== recordSize

@@ -64,9 +64,6 @@ const mapDispatchToProps = (dispatch) => ({
       payload: request.get(UiContext.getSubmissionsUrl),
     });
   },
-  handleClickRefresh() {
-    if (this.props.recordsVisible) this.loadSubmissions();
-  },
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadToolbarContainer extends React.PureComponent {
@@ -120,18 +117,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           {i18n('Submit Solution')}
           {' '}
           (F10)
-        </ToolbarButton>
-        <ToolbarButton
-          data-tooltip={i18n('Refresh Records')}
-          className="scratchpad__toolbar__refresh"
-          data-global-hotkey="alt+f"
-          onClick={() => this.props.handleClickRefresh()}
-        >
-          <Icon name="refresh" />
-          {' '}
-          {i18n('Refresh')}
-          {' '}
-          (Alt+F)
         </ToolbarButton>
         <ToolbarButton
           data-global-hotkey="alt+q"

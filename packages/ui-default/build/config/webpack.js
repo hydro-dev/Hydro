@@ -198,6 +198,7 @@ export default function (env = {}) {
         patterns: [
           { from: root('static') },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}`), to: 'vditor/' },
+          { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
       }),
       new webpack.DefinePlugin({

@@ -49,6 +49,7 @@ export async function load(features = ['markdown']) {
     console.log('Loaded monaco feature:', feat, 'in', Date.now() - s, 'ms');
     loaded.push(feat);
   }
+  await res.loadThemePromise;
   return { monaco: res.default, registerAction: res.registerAction };
 }
 export default load;
