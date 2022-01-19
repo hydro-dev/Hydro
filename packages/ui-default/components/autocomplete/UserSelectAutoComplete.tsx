@@ -38,7 +38,7 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
       <QueryClientProvider client={this.client}>
         <UserSelectAutoCompleteFC
           ref={(ref) => { this.ref = ref; }}
-          height={this.options.height || "34px"}
+          height={this.options.height || '34px'}
           defaultItems={value}
           onChange={this.onChange}
           multi={this.options.multi}
