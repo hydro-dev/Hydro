@@ -24,12 +24,29 @@ export const config = {
   },
 };
 
+interface MonacoOptions {
+  language?: string;
+  onChange?: (val: string) => any;
+  theme?: string;
+  model?: string;
+  autoResize?: boolean;
+  autoLayout?: boolean;
+  value?: string;
+}
+interface VditorOptions {
+  theme?: 'classic' | 'dark'
+}
+type Options = MonacoOptions & VditorOptions;
+
 export default class Editor extends DOMAttachedObject {
   static DOMAttachKey = 'vjEditorInstance';
+  model: import('../monaco').default.editor.IModel;
+  editor: import('../monaco').default.editor.IStandaloneCodeEditor;
+  vditor: import('vditor').default;
+  isValid: boolean;
 
-  constructor($dom, options = {}) {
+  constructor($dom, public options: Options = {}) {
     super($dom);
-    this.options = options;
     if (UserContext.preferredEditorType === 'monaco') this.initMonaco();
     else if (options.language && options.language !== 'markdown') this.initMonaco();
     else this.initVditor();
@@ -59,10 +76,9 @@ export default class Editor extends DOMAttachedObject {
       || monaco.editor.createModel(value, language, monaco.Uri.parse(model))
       : model;
     this.model.setValue(value);
-    this.model.updateOptions({ language });
-    const cfg = {
+    const cfg: import('../monaco').default.editor.IStandaloneEditorConstructionOptions = {
       theme,
-      lineNumbers: true,
+      lineNumbers: 'on',
       glyphMargin: true,
       lightbulb: { enabled: true },
       model: this.model,
@@ -79,19 +95,31 @@ export default class Editor extends DOMAttachedObject {
       const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
       const lineCount = this.editor.getModel()?.getLineCount() || 1;
       let height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
-      if (window.innerHeight < height) height = window.innerHeight;
       if (prevHeight !== height) {
+        if (window.innerHeight * 1.5 < height) {
+          height = window.innerHeight;
+          this.editor.updateOptions({
+            scrollbar: {
+              vertical: 'auto',
+              horizontal: 'auto',
+              handleMouseWheel: true,
+            },
+          });
+        } else {
+          this.editor.updateOptions({
+            scrollbar: {
+              vertical: 'hidden',
+              horizontal: 'hidden',
+              handleMouseWheel: false,
+            },
+          });
+        }
         prevHeight = height;
         editorElement.style.height = `${height}px`;
         this.editor.layout();
       }
     };
     if (autoResize) {
-      cfg.scrollbar = {
-        vertical: 'hidden',
-        horizontal: 'hidden',
-        handleMouseWheel: false,
-      };
       cfg.wordWrap = 'bounded';
       cfg.scrollBeyondLastLine = false;
     }
@@ -103,7 +131,7 @@ export default class Editor extends DOMAttachedObject {
         requestAnimationFrame(updateEditorHeight); // folding
       });
     }
-    this._subscription = this.editor.onDidChangeModelContent(() => {
+    this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue();
       $dom.val(val);
       $dom.text(val);
@@ -112,7 +140,9 @@ export default class Editor extends DOMAttachedObject {
     this.isValid = true;
     if (hasFocus) this.focus();
     if (autoResize) updateEditorHeight();
+    // @ts-ignore
     window.model = this.model;
+    // @ts-ignore
     window.editor = this.editor;
   }
 
@@ -125,10 +155,10 @@ export default class Editor extends DOMAttachedObject {
     const value = $dom.val();
     const { onChange } = this.options;
     await new Promise((resolve) => {
-      this.editor = new Vditor(ele, {
+      this.vditor = new Vditor(ele, {
         ...config,
         ...this.options,
-        after: resolve,
+        after: () => resolve(null),
         input(v) {
           $dom.val(v);
           $dom.text(v);
@@ -147,7 +177,7 @@ export default class Editor extends DOMAttachedObject {
 
   destory() {
     this.detach();
-    if (this.editor?.destory) this.editor.destory();
+    if (this.vditor?.destroy) this.vditor.destroy();
     else if (this.editor?.dispose) this.editor.dispose();
   }
 

@@ -50,9 +50,11 @@ const page = new NamedPage('domain_group', () => {
     createGroupDialogContent.find('[name="create_group_users"]'),
     { multi: true, height: 'auto' },
   );
+  const targets = {};
   $('input[data-gid]').get().forEach((ele) => {
     const input = UserSelectAutoComplete.getOrConstruct<UserSelectAutoComplete<true>>($(ele), { multi: true, height: 'auto' });
     const gid = ele.getAttribute('data-gid');
+    targets[gid] = input;
     let loaded = false;
     input.onChange(() => {
       if (input.value().length && !loaded) {
@@ -123,8 +125,21 @@ const page = new NamedPage('domain_group', () => {
     }
   }
 
+  async function handleClickSaveAll() {
+    for (const gid of Object.keys(targets)) {
+      const uids = targets[gid].value();
+      try {
+        await update(gid, uids);
+      } catch (error) {
+        Notification.error(error.message);
+      }
+    }
+    Notification.success(i18n('Saved.'));
+  }
+
   $('[name="create_group"]').click(() => handleClickCreateGroup());
   $('[name="delete_selected"]').click(() => handleClickDeleteSelected());
+  $('[name="save_all"]').on('click', () => handleClickSaveAll());
 });
 
 export default page;
