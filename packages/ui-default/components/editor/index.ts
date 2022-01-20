@@ -191,8 +191,8 @@ export default class Editor extends DOMAttachedObject {
    */
   value(val) {
     this.ensureValid();
-    if (typeof val === 'string') return this.editor.setValue(val);
-    return this.editor.getValue();
+    if (typeof val === 'string') return (this.editor || this.vditor).setValue(val);
+    return (this.editor || this.vditor).getValue();
   }
 
   focus() {
