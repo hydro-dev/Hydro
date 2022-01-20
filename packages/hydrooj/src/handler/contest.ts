@@ -78,7 +78,7 @@ export class ContestDetailHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async prepare(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
-        if (tdoc.assign) {
+        if (tdoc.assign?.length) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(tdoc.assign, groups.map((i) => i.name)).size) {
                 throw new ForbiddenError('You are not assigned.');
@@ -214,16 +214,6 @@ export class ContestEditHandler extends Handler {
         this.response.template = 'contest_edit.html';
         const rules = {};
         for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
-        const path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            ...tid
-                ? [
-                    [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
-                    ['contest_edit', null],
-                ]
-                : [['contest_create', null]],
-        ];
         let ts = new Date().getTime();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const dt = this.tdoc?.beginAt || new Date(ts);
@@ -231,7 +221,6 @@ export class ContestEditHandler extends Handler {
             rules,
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
-            path,
             pids: tid ? this.tdoc.pids.join(',') : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
@@ -250,7 +239,7 @@ export class ContestEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
-    @param('assign', Types.Array, true)
+    @param('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,

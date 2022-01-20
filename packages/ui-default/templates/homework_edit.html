@@ -54,16 +54,25 @@
                 row:false
             }) }}
           </div>
-          {{ form.form_text({
-              columns:4,
-              label:'Extension (days)',
-              name:'extensionDays',
-              value:extension_days
-          }) }}
+          <div class="row">
+            {{ form.form_text({
+                row:false,
+                columns:4,
+                label:'Extension (days)',
+                name:'extensionDays',
+                value:extension_days
+            }) }}
+            {{ form.form_text({
+                columns:4,
+                label:'Assign',
+                name:'assign',
+                value:tdoc.assign|default('')
+            }) }}
+          </div>
           <div class="row"><div class="columns">
             <label>
               {{ _('Extension Score Penalty') }}
-              <textarea name="penaltyRules" class="monospace textbox">{% if tdoc %}{{ penaltyRules }}{% else %}{% include 'partials/homework_default_penalty_rules.yaml' %}{% endif %}</textarea>
+              <textarea name="penaltyRules" class="monospace textbox" data-yaml>{% if tdoc %}{{ penaltyRules }}{% else %}{% include 'partials/homework_default_penalty_rules.yaml' %}{% endif %}</textarea>
             </label>
           </div></div>
           {{ form.form_text({

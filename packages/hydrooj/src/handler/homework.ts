@@ -45,7 +45,7 @@ class HomeworkDetailHandler extends Handler {
     async prepare(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        if (tdoc.assign) {
+        if (tdoc.assign?.length) {
             if (!Set.intersection(tdoc.assign, this.user.group).size) {
                 throw new ForbiddenError('You are not assigned.');
             }
@@ -151,10 +151,12 @@ class HomeworkEditHandler extends Handler {
     @param('content', Types.Content)
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
+    @param('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
+        assign: string[] = [],
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
@@ -172,10 +174,18 @@ class HomeworkEditHandler extends Handler {
         if (!tid) {
             tid = await contest.add(domainId, title, content, this.user._id,
                 'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-                { penaltySince: penaltySince.toDate(), penaltyRules });
+                { penaltySince: penaltySince.toDate(), penaltyRules, assign });
         } else {
             await contest.edit(domainId, tid, {
-                title, content, beginAt: beginAt.toDate(), endAt: endAt.toDate(), pids, penaltySince: penaltySince.toDate(), penaltyRules, rated,
+                title,
+                content,
+                beginAt: beginAt.toDate(),
+                endAt: endAt.toDate(),
+                pids,
+                penaltySince: penaltySince.toDate(),
+                penaltyRules,
+                rated,
+                assign,
             });
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()

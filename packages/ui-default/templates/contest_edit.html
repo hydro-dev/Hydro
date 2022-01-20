@@ -42,7 +42,7 @@
           </div>
           <div class="row">
             {{ form.form_text({
-              columns:4,
+              columns:3,
               label:'Begin Date',
               name:'beginAtDate',
               placeholder:'YYYY-mm-dd',
@@ -51,7 +51,7 @@
               row:false
             }) }}
             {{ form.form_text({
-              columns:4,
+              columns:3,
               label:'Begin Time',
               name:'beginAtTime',
               placeholder:'HH:MM',
@@ -60,10 +60,17 @@
               row:false
             }) }}
             {{ form.form_text({
-              columns:4,
+              columns:2,
               label:'Duration (hours)',
               name:'duration',
               value:duration|default('3'),
+              row:false
+            }) }}
+            {{ form.form_text({
+              columns:4,
+              label:'Assign',
+              name:'assign',
+              value:tdoc.assign|default(''),
               row:false
             }) }}
           </div>
