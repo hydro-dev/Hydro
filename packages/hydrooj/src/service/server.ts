@@ -314,8 +314,9 @@ export class HandlerCommon {
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
         if (ignoredLimit.includes(op)) return;
-        // TODO: support limit override
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
+        const overrideLimit = system.get(`limit.${op}`);
+        if (overrideLimit) maxOperations = overrideLimit;
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 
