@@ -532,7 +532,7 @@ const cf: ContestRule = {
                 } else {
                     row.push({
                         type: 'record',
-                        score: accept ? Math.floor(100 * Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score) : 0,
+                        score: accept ? Math.floor(100 * (Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score)) : 0,
                         value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
                         raw: rid,
                     });
@@ -548,7 +548,7 @@ const cf: ContestRule = {
     },
 };
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi, cf
+    acm, oi, homework, ioi, cf,
 };
 
 function _getStatusJournal(tsdoc) {

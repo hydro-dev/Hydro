@@ -263,8 +263,8 @@ export class ContestEditHandler extends Handler {
                 title, content, rule, beginAt, endAt, pids, fullScore, rated,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
-                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule ||
-                Array.isDiff(this.tdoc.fullScore, fullScore)) {
+                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
+                || Array.isDiff(this.tdoc.fullScore, fullScore)) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
