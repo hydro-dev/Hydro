@@ -302,6 +302,8 @@ function serializer(k: string, v: any) {
     return v;
 }
 
+const ignoredLimit = `,${argv.options.ignoredLimit},`;
+
 export class HandlerCommon {
     domainId: string;
     domain: DomainDoc;
@@ -311,7 +313,10 @@ export class HandlerCommon {
     extraTitleContent?: string;
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {
+        if (ignoredLimit.includes(op)) return;
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
+        const overrideLimit = system.get(`limit.${op}`);
+        if (overrideLimit) maxOperations = overrideLimit;
         await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
     }
 

@@ -7,6 +7,7 @@ const locales = {
     zh: {
         'install.start': '开始运行 Hydro 安装工具',
         'info.mirror': '将首选 %s 镜像。可以使用 MIRROR=tsinghua|tencent|official 更改。',
+        'warn.avx2': '检测到您的 CPU 不支持 avx2 指令集，将使用 mongodb@v4.4',
         'error.rootRequired': '请使用 root 用户运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
         'error.osreleaseNotFound': '无法获取系统版本信息（/etc/os-release 文件未找到），请尝试手动安装。',
@@ -31,6 +32,7 @@ const locales = {
     en: {
         'install.start': 'Starting Hydro installation tool',
         'info.mirror': 'Using preferred %s mirror. You can use MIRROR=tsinghua|tencent|official to change.',
+        'warn.avx2': 'Your CPU does not support avx2, will use mongodb@v4.4',
         'error.rootRequired': 'Please run this tool as root user.',
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
         'error.osreleaseNotFound': 'Unable to get system version information (/etc/os-release file not found), please try to install manually.',
@@ -114,7 +116,12 @@ for (const line of lines) {
 }
 if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
 const Arch = values.id === 'arch';
-const mongodbVersion = __env.MONGODB_VERSION || '5.0';
+const cpuInfoFile = fs.readfile('/proc/cpuinfo');
+let mongodbVersion = __env.MONGODB_VERSION || '5.0';
+if (!cpuInfoFile.includes('avx2')) {
+    log.warn('warn.avx2');
+    mongodbVersion = '4.4';
+}
 let migration;
 
 const steps = [
@@ -198,7 +205,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                 try {
                     ver = res.output.split('Now using node v')[1].split(' ')[0];
                 } catch (e) {
-                    log.error('error.nodeVersionPraseFail');
+                    log.error('error.nodeVersionParseFail');
                     return 'retry';
                 }
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);

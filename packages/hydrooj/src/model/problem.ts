@@ -366,7 +366,8 @@ export class ProblemModel {
     static canViewBy(pdoc: ProblemDoc, udoc: User) {
         if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) return false;
         if (udoc.own(pdoc)) return true;
-        if (pdoc.hidden && !udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return false;
+        if (udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return true;
+        if (pdoc.hidden) return false;
         if (!pdoc.assign.length) return true;
         return !!Set.intersection(pdoc.assign, udoc.group).size;
     }
