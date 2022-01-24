@@ -173,7 +173,7 @@ class HomeworkEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (!tid) {
             tid = await contest.add(domainId, title, content, this.user._id,
-                'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
+                'homework', beginAt.toDate(), endAt.toDate(), pids, [100], rated,
                 { penaltySince: penaltySince.toDate(), penaltyRules, assign });
         } else {
             await contest.edit(domainId, tid, {
