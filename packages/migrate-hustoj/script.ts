@@ -197,7 +197,7 @@ export async function run({
         const pids = pdocs.map((i) => pidMap[i.problem_id]);
         const tid = await contest.add(
             domainId, tdoc.title, tdoc.description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, true,
+            adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, [100], true,
             { _code: password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
