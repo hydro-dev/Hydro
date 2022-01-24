@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { Range } from 'monaco-editor';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 
 export const config = {
@@ -32,6 +33,7 @@ interface MonacoOptions {
   autoResize?: boolean;
   autoLayout?: boolean;
   value?: string;
+  hide?: string[];
 }
 interface VditorOptions {
   theme?: 'classic' | 'dark'
@@ -54,13 +56,14 @@ export default class Editor extends DOMAttachedObject {
 
   async initMonaco() {
     const { load } = await import('vj/components/monaco/loader');
-    const { monaco, registerAction } = await load(['markdown']);
     const {
       onChange, language = 'markdown',
       theme = UserContext.monacoTheme || 'vs-light',
       model = `file://model-${Math.random().toString(16)}`,
       autoResize = true, autoLayout = true,
+      hide = [],
     } = this.options;
+    const { monaco, registerAction } = await load([language]);
     const { $dom } = this;
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
@@ -124,6 +127,14 @@ export default class Editor extends DOMAttachedObject {
       cfg.scrollBeyondLastLine = false;
     }
     this.editor = monaco.editor.create(ele, cfg);
+    if (hide.length) {
+      const ranges = [];
+      for (const text of hide) {
+        const found = this.model.findMatches(text, true, false, true, '', true);
+        ranges.push(...found.map((i) => i.range));
+      }
+      this.editor.deltaDecorations([], ranges.map((range) => ({ range, options: { inlineClassName: 'decoration-hide' } })));
+    }
     registerAction(this.editor, this.model, this.$dom);
     if (autoResize) {
       this.editor.onDidChangeModelDecorations(() => {

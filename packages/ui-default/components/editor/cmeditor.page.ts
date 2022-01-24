@@ -5,7 +5,10 @@ import CmEditor from '.';
 function runSubstitute($container: JQuery<Document | HTMLElement>) {
   for (const language of ['markdown', 'yaml', 'json', 'plain']) {
     $container.find(`textarea[data-${language}]`).get().forEach((element) => {
-      CmEditor.getOrConstruct($(element), { language });
+      const config: any = { language };
+      if ($(element).data('model')) config.model = $(element).data('model');
+      if ($(element).data('hide')) config.hide = $(element).data('hide');
+      CmEditor.getOrConstruct($(element), config);
     });
   }
 }

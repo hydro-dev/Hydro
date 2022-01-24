@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.3.15",
+    "version": "3.3.16",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -15,6 +15,7 @@
         "@graphql-tools/schema": "^8.3.1",
         "@hydrooj/utils": "workspace:*",
         "adm-zip": "0.5.5",
+        "ajv": "^8.9.0",
         "ansi_up": "^5.1.0",
         "cac": "^6.7.12",
         "cookies": "^0.8.0",
