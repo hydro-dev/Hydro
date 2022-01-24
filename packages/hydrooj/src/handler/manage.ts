@@ -148,7 +148,7 @@ class SystemSettingHandler extends SystemHandler {
         const raw = system.get('_') || '';
         let config = yaml.load(raw);
         const valid = validator(config);
-        if (!(raw?.trim() && valid)) {
+        if (!(raw.trim() && valid)) {
             const data = {};
             for (const key in schema.properties) {
                 data[key] = {};

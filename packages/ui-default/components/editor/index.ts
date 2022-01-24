@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import { Range } from 'monaco-editor';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 
 export const config = {
