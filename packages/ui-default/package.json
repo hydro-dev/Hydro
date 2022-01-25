@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.30.6",
+  "version": "4.30.7",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -19,7 +19,7 @@
     "@types/qrcode": "^1.4.2",
     "@types/redux-logger": "^3.0.9",
     "@types/sockjs-client": "^1.5.1",
-    "@undefined-moe/monaco-yaml": "^2.5.0",
+    "@undefined-moe/monaco-yaml": "^2.5.1",
     "ansi_up": "^5.1.0",
     "autoprefixer": "^9.8.8",
     "chalk": "^4.1.2",
