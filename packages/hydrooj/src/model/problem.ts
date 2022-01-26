@@ -121,12 +121,10 @@ export class ProblemModel {
         projection: Projection<ProblemDoc> = ProblemModel.PROJECTION_PUBLIC,
         rawConfig = false,
     ): Promise<ProblemDoc | null> {
-        if (typeof pid !== 'number') {
-            if (Number.isSafeInteger(parseInt(pid, 10))) pid = parseInt(pid, 10);
-        }
+        if (Number.isSafeInteger(+pid)) pid = +pid;
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
-            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { pid }).toArray())[0];
+            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid }).toArray())[0];
         if (!res) return null;
         try {
             if (!rawConfig) res.config = await parseConfig(res.config);
@@ -290,7 +288,7 @@ export class ProblemModel {
     ): Promise<ProblemDict> {
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
-        const q: any = { $or: [{ docId: { $in: pids } }, { pid: { $in: pids } }] };
+        const q: any = { docId: { $in: pids } };
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
             .project(buildProjection(projection)).toArray();
         if (group.length > 0) {
