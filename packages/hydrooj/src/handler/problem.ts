@@ -306,9 +306,9 @@ export class ProblemDetailHandler extends ProblemHandler {
             if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             this.pdoc.config = pdoc.config;
         }
-        if (ddoc.langs) {
-            (this.pdoc.config as ProblemConfig).langs = intersection(
-                (this.pdoc.config as ProblemConfig).langs || ddoc.langs.split(','),
+        if (ddoc.langs && typeof this.pdoc.config !== 'string') {
+            this.pdoc.config.langs = intersection(
+                this.pdoc.config.langs || ddoc.langs.split(','),
                 ddoc.langs.split(','),
             );
         }
