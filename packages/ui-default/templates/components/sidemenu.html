@@ -1,15 +1,11 @@
-{% macro render_item(icon_name, page_name, args={}, label=none, menu_item) %}
+{% macro render_item(icon_name, page_name, args={}, label=none, menu_item=none) %}
 {% set target_url = url(page_name, args) if page_name else '#' %}
-<li class="menu__item" id="menu-item-{{ menu_item|default(page_name) }}">
+<li class="menu__item" id="menu-item-{{ menu_item or page_name }}">
   <a href="{{ target_url }}" class="menu__link{% if handler.request.path == target_url %} active{% endif %}">
   {% if icon_name %}
     <span class="icon icon-{{ icon_name }}"></span>
   {% endif %}
-  {% if label %}
-    {{ _(label) }}
-  {% else %}
-    {{ _(page_name) }}
-  {% endif %}
+  {{ _(label|default(pagename)) }}
   </a>
 </li>
 {% endmacro %}

@@ -27,7 +27,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
         ua: handler.request.headers?.['user-agent'],
         referer: handler.request.headers?.referer,
         args,
-        operator: handler.user?.id,
+        operator: handler.user?._id,
         operateIp: handler.request.ip,
     });
     return res.insertedId;
