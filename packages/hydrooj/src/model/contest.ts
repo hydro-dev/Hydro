@@ -212,9 +212,11 @@ const oi: ContestRule = {
         const first = {};
         for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
         for (const [, tsdoc] of rankedTsdocs) {
-            for (const item of tsdoc.journal || []) {
-                if (item.status === STATUS.STATUS_ACCEPTED && item.rid.generationTime < first[item.pid]) {
-                    first[item.pid] = item.rid.generationTime;
+            const tsddict = {};
+            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
+            for (const pid of tdoc.pids) {
+                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
+                    first[pid] = tsddict[pid].rid.generationTime;
                 }
             }
         }
