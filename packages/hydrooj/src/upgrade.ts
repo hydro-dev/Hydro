@@ -680,6 +680,7 @@ const scripts: UpgradeScript[] = [
         for (const task of tasks) {
             await TaskModel.add({ ...task, subType: 'contest', operation: ['unhide'] });
         }
+        await TaskModel.deleteMany({ type: 'schedule', subType: 'contest.problemHide' });
         return true;
     },
 ];
