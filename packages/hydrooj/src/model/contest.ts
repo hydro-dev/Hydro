@@ -136,7 +136,7 @@ const acm = buildContestRule({
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict: Record<number, AcmDetail> = {};
-            for (const item of tsdoc.detail) tsddict[item.pid] = item;
+            for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
             const row: ScoreboardRow = [
                 { type: 'string', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
@@ -146,6 +146,7 @@ const acm = buildContestRule({
                 const penalty = Math.sum(tdoc.pids.map((i) => tsddict[i]?.naccept || 0)) * 20 * 60;
                 row.push(
                     { type: 'string', value: penalty.toString() },
+                    { type: 'string', value: tsdoc.time || 0.0 },
                     { type: 'string', value: tsdoc.time || 0.0 },
                 );
             }
