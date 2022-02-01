@@ -33,6 +33,7 @@ __langname: 简体中文
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
+'Packages have new version: {0}': '以下组件有新版本： {0}'
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
@@ -109,6 +110,7 @@ Categories: 分类
 Category: 分类
 Change Email: 修改电子邮件
 Change Password: 修改密码
+Change Theme: 切换主题
 Check In: 签到
 Chinese: 中文
 Choose the background image in your profile page.: 选择您资料页面的背景图片。
@@ -173,6 +175,7 @@ Create Discussion: 创建讨论
 Create discussions: 创建讨论
 Create Domain: 创建域
 Create File: 创建文件
+Create Group: 创建小组
 Create homework: 创建作业
 Create Homework: 创建作业
 Create Link: 创建链接
@@ -192,6 +195,7 @@ Current password doesn't match.: 当前密码输入错误。
 Current Password: 当前密码
 Current Status: 当前状态
 currently offline: 目前离线
+Daily update check: 每日自动检查更新
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。
@@ -327,6 +331,8 @@ Formula blocks: 公式区块
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
+Gravatar URL Prefix: Gravatar地址前缀
+Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
@@ -623,6 +629,7 @@ Rejudge: 重测
 Related Discussions: 相关讨论
 Related: 相关
 Remember me: 记住我
+Remove Selected Group: 移除所选小组
 Remove Selected User: 将所选用户移出
 Remove Selected: 移除选中
 Remove this data: 移除这组数据
@@ -656,6 +663,7 @@ Saving file...: 正在保存文件...
 score canceled: 成绩取消
 Score: 分数
 Scoreboard (Hidden): 成绩表 (隐藏)
+Scoreboard locked at {0}: 比赛已于 {0} 封榜。
 Scoreboard: 成绩表
 Scripts: 脚本
 Search: 搜索

@@ -12,6 +12,8 @@ services:
       - MINIO_ACCESS_KEY=CHANGE_THIS
       - MINIO_SECRET_KEY=CHANGE_THIS
     
+  # Warning: mongodb here is not password-protected.
+  # DO NOT EXPOSE THIS SERVICE TO THE PUBLIC.
   oj-mongo:
     image: mongo
     container_name: oj-mongo
@@ -27,12 +29,12 @@ services:
       - oj-minio
       - oj-mongo
     volumes:
-      - ./data/backend/config:/root/.hydro
+      - ./data/backend:/root/.hydro
     environment:
-      - ACCESS_KEY=CHANGE_THIS
-      - SECRET_KEY=CHANGE_THIS
+      - MINIO_ACCESS_KEY=CHANGE_THIS
+      - MINIO_SECRET_KEY=CHANGE_THIS
     ports:
-      - "0.0.0.0:80:8888"
+      - "0.0.0.0:80:8888" # In docker mode, change THIS port instead of port in system settings!
 
   oj-judge:
     build: ./judge
@@ -42,4 +44,4 @@ services:
     depends_on:
       - oj-backend
     volumes:
-      - ./data/judge/config:/root/.config/hydro
+      - ./data/judge:/root/.config/hydro

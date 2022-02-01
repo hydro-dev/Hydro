@@ -23,16 +23,24 @@ function monitorResource(resource) {
 
 export default class DOMAttachedObject {
   static uniqueIdCounter = 0;
+  static DOMAttachKey: string;
+  static DOMAttachSelector: string;
+  static DOMDetachSelector: string;
+  // FIXME should be JQuery<HTMLElement>, but typings for $.transition() wasn't found
+  $dom: any;
+  id: number;
+  detached: boolean;
+  eventNS: string;
 
   static get($obj) {
     const key = this.DOMAttachKey;
     return $obj.data(key);
   }
 
-  static getOrConstruct($obj, ...args) {
+  static getOrConstruct<T = DOMAttachedObject>($obj, ...args): T {
     const $singleObj = $obj.eq(0);
     const key = this.DOMAttachKey;
-    const Protoclass = this;
+    const Protoclass = this as any;
     const instance = this.get($singleObj);
     if (instance !== undefined) return instance;
     const newInstance = new Protoclass($singleObj, ...args);
@@ -43,7 +51,7 @@ export default class DOMAttachedObject {
     return newInstance;
   }
 
-  static attachAll(container = document.body, ...args) {
+  static attachAll(container: Document | HTMLElement = document.body, ...args) {
     if (process.env.NODE_ENV !== 'production') {
       if (!this.DOMAttachSelector) {
         // eslint-disable-next-line quotes
@@ -63,7 +71,7 @@ export default class DOMAttachedObject {
     }
   }
 
-  static detachAll(container = document.body) {
+  static detachAll(container: Document | HTMLElement = document.body) {
     const selector = this.DOMDetachSelector || this.DOMAttachSelector;
     if (process.env.NODE_ENV !== 'production') {
       if (!selector) {
@@ -104,13 +112,13 @@ export default class DOMAttachedObject {
   }
 
   detach() {
-    if (this.constructor.DOMAttachKey) {
-      this.$dom.removeData(this.constructor.DOMAttachKey);
+    if ((this.constructor as any).DOMAttachKey) {
+      this.$dom.removeData((this.constructor as any).DOMAttachKey);
     }
     this.detached = true;
   }
 
-  constructor($dom, monitorDetach = false) {
+  constructor($dom: JQuery<HTMLElement>, monitorDetach = false) {
     if ($dom == null) return null;
     this.$dom = $dom;
     this.id = ++DOMAttachedObject.uniqueIdCounter;

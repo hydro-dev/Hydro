@@ -4,7 +4,7 @@ import zIndexManager from 'vj/utils/zIndexManager';
 
 export interface DialogOptions {
   classes: string;
-  $body: HTMLElement;
+  $body: HTMLElement | JQuery<HTMLElement> | string;
   $action: any;
   width?: string;
   height?: string;

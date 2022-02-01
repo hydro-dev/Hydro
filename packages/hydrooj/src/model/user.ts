@@ -1,10 +1,10 @@
 import { escapeRegExp, pick } from 'lodash';
 import LRU from 'lru-cache';
-import { Collection } from 'mongodb';
+import { Collection, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    FileInfo, Udict, Udoc,
-    User as _User, VUdoc,
+    FileInfo, GDoc, Udict,
+    Udoc, User as _User, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import { Logger } from '../logger';
@@ -21,6 +21,7 @@ import token from './token';
 const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 const collV: Collection<VUdoc> = db.collection('vuser');
+const collGroup: Collection<GDoc> = db.collection('user.group');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
@@ -66,6 +67,7 @@ class User implements _User {
     scope: bigint;
     _files: FileInfo[];
     tfa: boolean;
+    group?: string[];
     [key: string]: any;
 
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
@@ -90,6 +92,7 @@ class User implements _User {
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
         this.tfa = !!udoc.tfa;
+        if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
 
         for (const key in setting.SETTINGS_BY_KEY) {
             this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
@@ -139,6 +142,16 @@ class User implements _User {
     }
 }
 
+function handleMailLower(mail: string) {
+    let data = mail.trim().toLowerCase();
+    if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
+    if (data.endsWith('@gmail.com')) {
+        const [prev] = data.split('@');
+        data = `${prev.replace(/[.+]/g, '')}@gmail.com`;
+    }
+    return data;
+}
+
 class UserModel {
     static User = User;
     static defaultUser: Udoc = {
@@ -164,6 +177,8 @@ class UserModel {
         const udoc = await (_id < -999 ? collV : coll).findOne({ _id });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
+        const groups = await UserModel.listGroup(domainId, _id);
+        dudoc.group = groups.map((i) => i.name);
         if (typeof scope === 'string') scope = BigInt(scope);
         const res = await new User(udoc, dudoc, scope).init();
         cache.set(`id/${res._id}/${domainId}`, res);
@@ -191,13 +206,13 @@ class UserModel {
         const res = await new UserModel.User(udoc, dudoc).init();
         cache.set(`id/${res._id}/${domainId}`, res);
         cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
         return res;
     }
 
     @ArgMethod
     static async getByEmail(domainId: string, mail: string): Promise<User | null> {
-        const mailLower = mail.trim().toLowerCase();
+        const mailLower = handleMailLower(mail);
         if (cache.has(`mail/${mailLower}/${domainId}`)) return cache.get(`mail/${mailLower}/${domainId}`) || null;
         const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
@@ -205,7 +220,7 @@ class UserModel {
         const res = await new UserModel.User(udoc, dudoc).init();
         cache.set(`id/${res._id}/${domainId}`, res);
         cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
+        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
         return res;
     }
 
@@ -228,7 +243,7 @@ class UserModel {
 
     @ArgMethod
     static setEmail(uid: number, mail: string) {
-        return UserModel.setById(uid, { mail, mailLower: mail.trim().toLowerCase() });
+        return UserModel.setById(uid, { mail, mailLower: handleMailLower(mail) });
     }
 
     @ArgMethod
@@ -268,7 +283,7 @@ class UserModel {
             await coll.insertOne({
                 _id: uid,
                 mail,
-                mailLower: mail.trim().toLowerCase(),
+                mailLower: handleMailLower(mail),
                 uname,
                 unameLower: uname.trim().toLowerCase(),
                 hash: pwhash(password.toString(), salt),
@@ -361,12 +376,42 @@ class UserModel {
             token.delByUid(uid),
         ]);
     }
+
+    static async listGroup(domainId: string, uid?: number) {
+        const groups = await collGroup.find(uid ? { domainId, uids: uid } : { domainId }).toArray();
+        if (uid) {
+            groups.push({
+                _id: new ObjectID(), domainId, uids: [uid], name: uid.toString(),
+            });
+        }
+        return groups;
+    }
+
+    static delGroup(domainId: string, name: string) {
+        return collGroup.deleteOne({ domainId, name });
+    }
+
+    static updateGroup(domainId: string, name: string, uids: number[]) {
+        return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });
+    }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
-    coll,
-    { key: { unameLower: 1 }, name: 'uname', unique: true },
-    { key: { mailLower: 1 }, name: 'mail', unique: true },
-));
+bus.once('app/started', () => Promise.all([
+    db.ensureIndexes(
+        coll,
+        { key: { unameLower: 1 }, name: 'uname', unique: true },
+        { key: { mailLower: 1 }, name: 'mail', unique: true },
+    ),
+    db.ensureIndexes(
+        collV,
+        { key: { unameLower: 1 }, name: 'uname', unique: true },
+        { key: { mailLower: 1 }, name: 'mail', unique: true },
+    ),
+    db.ensureIndexes(
+        collGroup,
+        { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
+        { key: { domainId: 1, uids: 1 }, name: 'uid' },
+    ),
+]));
 export default UserModel;
 global.Hydro.model.user = UserModel;

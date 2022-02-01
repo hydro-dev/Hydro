@@ -9,17 +9,19 @@
         {{ tdoc['content'] }}
       </div>
       <div class="section__body typo">
+        {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+          <blockquote class="typo note">
+            <p>{{ _('Login to join training plan') }}</p>
+          </blockquote>
+        {% elif not tsdoc.enroll %}
+          <blockquote class="typo note">
+            <p>{{ _('page.training_detail.invalid_when_not_enrolled') }}</p>
+          </blockquote>
+        {% endif %}
         {{ tdoc.description|default('')|markdown|safe }}
       </div>
     </div>
     <div class="section">
-      {% if not tsdoc.enroll %}
-        <div class="section__body">
-          <blockquote class="typo warn">
-            <p>{{ _('page.training_detail.invalid_when_not_enrolled') }}</p>
-          </blockquote>
-        </div>
-      {% endif %}
       {%- for node in tdoc['dag'] -%}
         <div data-heading-extract-to="#menu-item-training_detail" class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}  {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
           <div class="section__header clearfix">
@@ -42,7 +44,6 @@
               </h1>
             </div>
           </div>
-          {% if tsdoc.enroll %}
           <div class="section__body">
             <ul class="supplementary dot list">
               <li>
@@ -153,7 +154,6 @@
               </table>
             </div>
           </div>
-          {% endif %}
         </div>
       {%- endfor -%}
       <div class="section__body">&nbsp;<!-- space placeholder --></div>

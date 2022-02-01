@@ -259,6 +259,7 @@ domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料
 domain_file: 我的文件
+domain_group: 管理小组
 domain_join_applications: 加域申请
 domain_join: 加入域
 domain_main: 首页
@@ -439,6 +440,7 @@ Location: 位置
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
+Login to join training plan: 登录以参加训练计划
 Login to Submit: 登录后递交
 Login: 登录
 Logout All Sessions: 注销所有会话

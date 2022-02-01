@@ -4,8 +4,29 @@ import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoCompleteFC from './components/AutoComplete';
 
+export interface AutoCompleteOptions<Multi extends boolean = boolean> {
+  multi?: Multi;
+  defaultItems?: string;
+  width?: string;
+  height?: string;
+  listStyle?: any;
+  allowEmptyQuery?: boolean;
+  freeSolo?: boolean;
+  freeSoloConverter?: any;
+  onChange?: (value) => any;
+  items?: () => Promise<any[]>;
+  render?: () => string;
+  text?: () => string;
+}
+
 export default class AutoComplete extends DOMAttachedObject {
   static DOMAttachKey = 'ucwAutoCompleteInstance';
+  ref = null;
+  container = document.createElement('div');
+  options: AutoCompleteOptions;
+  changeListener = [
+    (val) => this.$dom.val(val),
+  ];
 
   constructor($dom, options = {}) {
     super($dom);
@@ -16,7 +37,6 @@ export default class AutoComplete extends DOMAttachedObject {
       multi: false,
       ...options,
     };
-    this.ref = null;
     this.clear = this.clear.bind(this);
     this.onChange = this.onChange.bind(this);
     this.attach = this.attach.bind(this);
@@ -25,7 +45,6 @@ export default class AutoComplete extends DOMAttachedObject {
     this.value = this.value.bind(this);
     this.detach = this.detach.bind(this);
     this.focus = this.focus.bind(this);
-    this.container = document.createElement('div');
     this.$dom.addClass('autocomplete-dummy').after(this.container);
     // Note: use `setTimeout(fn, 0)` to ensure that code is executed after browser autofill
     // also see https://stackoverflow.com/a/779785/13553984
@@ -38,8 +57,9 @@ export default class AutoComplete extends DOMAttachedObject {
     else this.ref.closeList();
   }
 
-  onChange(val) {
-    this.$dom.val(val);
+  onChange(val: string | ((v: string) => any)) {
+    if (typeof val === 'string') this.changeListener.forEach((f) => f(val));
+    else this.changeListener.push(val);
   }
 
   attach() {
@@ -70,7 +90,7 @@ export default class AutoComplete extends DOMAttachedObject {
     this.ref.closeList();
   }
 
-  value() {
+  value(): any {
     if (this.options.multi) return this.$dom.val();
     return this.ref?.getSelectedItems()[0] ?? null;
   }

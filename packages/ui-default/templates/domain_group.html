@@ -1,0 +1,49 @@
+{% extends "domain_base.html" %}
+{% block domain_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('{0}: Groups').format(domain.name) }}</h1>
+    <div class="section__tools">
+      <button class="primary rounded button" name="create_group">{{ _('Create Group') }}</button>
+    </div>
+  </div>
+  {{ noscript_note.render() }}
+  <div class="section__body no-padding domain-group">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--checkbox">
+        <col class="col--group">
+        <col class="col--user">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" name="select_all" data-checkbox-toggle="group">
+            </label>
+          </th>
+          <th class="col--group">{{ _('Group Name') }}</th>
+          <th class="col--user">{{ _('Users') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for gdoc in groups -%}
+        <tr data-gid="{{ gdoc.name }}">
+          <td class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" data-checkbox-group="group" data-checkbox-range>
+            </label>
+          </td>
+          <td class="col--group">{{ gdoc.name }}</td>
+          <td class="col--user"><input type="text" value="{{ gdoc.uids.join(',') }}" data-gid="{{ gdoc.name }}"></input></td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+  <div class="section__body">
+    <button class="rounded button" name="remove_selected">{{ _('Remove Selected Group') }}</button>
+    <button class="rounded button" name="save_all">{{ _('Save All Changes') }}</button>
+  </div>
+</div>
+{% endblock %}

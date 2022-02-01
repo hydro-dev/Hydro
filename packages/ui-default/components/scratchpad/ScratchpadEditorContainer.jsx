@@ -1,11 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import monaco, { registerAction } from 'vj/components/monaco/index';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
-  theme: 'vs-light',
   mainSize: state.ui.main.size,
   pretestSize: state.ui.pretest.size,
   recordSize: state.ui.records.size,
@@ -22,21 +20,22 @@ const mapDispatchToProps = (dispatch) => ({
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
   disposable = [];
 
-  componentDidMount() {
+  async componentDidMount() {
     const value = this.props.value || '';
-    const { language, theme } = this.props;
-    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse('file://model'));
+    const { language } = this.props;
+    const { load } = await import('vj/components/monaco/loader');
+    const { monaco, registerAction, customOptions } = await load([language]);
+    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(`file:///${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`));
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
       const config = {
-        theme,
+        theme: 'vs-light',
+        ...customOptions,
         lineNumbers: true,
         glyphMargin: true,
         lightbulb: { enabled: true },
         model: this.model,
       };
-      const fontSize = localStorage.getItem('scratchpad.editor.fontSize');
-      if (fontSize && !Number.isNaN(+fontSize)) config.fontSize = +fontSize;
       this.editor = monaco.editor.create(this.containerElement, config);
       registerAction(this.editor, this.model);
       this.disposable.push(
@@ -45,17 +44,13 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
             this.props.handleUpdateCode(this.editor.getValue(), event);
           }
         }),
-        this.editor.onDidChangeConfiguration(() => {
-          const current = this.editor.getOptions()._values[40].fontSize;
-          localStorage.setItem('scratchpad.editor.fontSize', current);
-        }),
       );
     }
   }
 
-  componentDidUpdate(prevProps) {
+  async componentDidUpdate(prevProps) {
     const {
-      value, language, theme, mainSize, recordSize, pretestSize,
+      value, language, mainSize, recordSize, pretestSize,
     } = this.props;
     const { editor, model } = this;
     if (this.props.value != null && this.props.value !== model.getValue()) {
@@ -73,11 +68,12 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;
     }
+    const { load } = await import('vj/components/monaco/loader');
+    const { monaco } = await load([language]);
     if (prevProps.language !== language) {
       monaco.editor.setModelLanguage(model, language);
       editor.updateOptions({ mode: language });
     }
-    if (prevProps.theme !== theme) monaco.editor.setTheme(theme);
     if (editor) {
       if (prevProps.mainSize !== mainSize
         || prevProps.recordSize !== recordSize
@@ -104,7 +100,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           width: '100%',
         }}
         className="ScratchpadMonacoEditor"
-      />
+      >
+        <div className="loader-container"><div className="loader"></div></div>
+      </div>
     );
   }
 });

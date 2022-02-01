@@ -225,12 +225,8 @@ class DomainModel {
     @ArgMethod
     static async getDictUserByDomainId(uid: number) {
         const dudocs = await collUser.find({ uid }).toArray();
-        const dudict = {};
-        for (const dudoc of dudocs) {
-            // eslint-disable-next-line no-await-in-loop
-            dudict[dudoc.domainId] = await DomainModel.get(dudoc.domainId);
-            dudict[dudoc.domainId].role = dudoc.role;
-        }
+        const dudict: Record<string, any> = {};
+        for (const dudoc of dudocs) dudict[dudoc.domainId] = dudoc;
         return dudict;
     }
 

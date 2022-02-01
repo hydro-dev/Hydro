@@ -6,86 +6,44 @@ import { join } from 'path';
 import { ObjectID } from 'mongodb';
 import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
-import * as db from 'hydrooj/src/service/db';
 import { PERM } from 'hydrooj/src/model/builtin';
 import markdown from './backendlib/markdown';
 
 const {
-  system, domain, user, setting, problem, contest,
+  system, user, setting, problem, contest,
 } = global.Hydro.model;
-global.Hydro.version.ui = require('./package.json').version;
 
-interface ConstantArgs {
-  lang: string;
-  domainId: string;
-}
-
-declare module 'hydrooj/src/interface' {
-  interface Collections {
-    cache: {
-      _id: string;
-      value: any;
-    }
-  }
-}
-
-const cache = {};
-const coll = db.collection('cache');
 const pages = Object.keys(global.Hydro.ui.manifest)
   .filter((file) => file.endsWith('.page.js'))
   .map((i) => readFileSync(join(global.Hydro.ui.manifest[i], i), 'utf-8'));
 
-async function constant(args: ConstantArgs) {
-  // CompileLangs
-  const payload = [`window.LANGS=${JSON.stringify(setting.langs)};`];
+let constant = '';
+let hash = '';
 
-  // Locale
-  let { lang } = args;
-  if (!global.Hydro.locales[lang]) lang = system.get('server.language');
-  payload[0] += `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang])};`;
-
-  // Extra style
-  let [nav_logo_dark, nav_logo_dark_2x] = system.getMany([
+function run() {
+  const payload = [...pages];
+  const [logo, logo2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
-  const ddoc = await domain.get(args.domainId);
-  nav_logo_dark = ddoc.ui?.nav_logo_dark || nav_logo_dark;
-  nav_logo_dark_2x = ddoc.ui?.nav_logo_dark_2x || nav_logo_dark_2x;
-  payload[0] += `\
-    const e = document.createElement('style');
-    e.innerHTML = \`\
-      ${nav_logo_dark ? `.nav__logo { background-image: url(${nav_logo_dark}) !important }` : ''}
-      ${nav_logo_dark_2x ? `\
-      @media
-        only screen and (-webkit-min-device-pixel-ratio: 1.5), 
-        only screen and (min-resolution: 1.5dppx),
-        only screen and (min-resolution: 144dpi) {
-        .nav__logo, .header--mobile__domain {
-          background-image: url(${nav_logo_dark_2x}) !important
-        }
-    }` : ''}\`;
-    document.body.appendChild(e);`;
-
-  payload.push(...pages);
+  const res = [];
+  res.push(`window.LANGS=${JSON.stringify(setting.langs)};`);
+  if (logo) res.push(`UiContext.nav_logo_dark="${logo}";`);
+  if (logo2x) res.push(`UiContext.nav_logo_dark_2x="${logo2x}";`);
+  payload.unshift(res.join('\n'));
 
   const c = crypto.createHash('sha1');
   c.update(JSON.stringify(payload));
   const version = c.digest('hex');
-  cache[version] = { version, payload };
-  await coll.updateOne({ _id: version }, { $set: { value: { version, payload } } }, { upsert: true });
-  return version;
+  constant = JSON.stringify(payload);
+  hash = version;
 }
-
-const versionHandler = async (that) => {
-  if (that.response.template && !that.UiContext.constantVersion) {
-    that.UiContext.constantVersion = await constant({
-      domainId: that.domainId,
-      lang: that.session.viewLang || that.user.viewLang,
-    });
-  }
+const versionHandler = (that) => {
+  that.UiContext.constantVersion = hash;
 };
 bus.on('handler/after', versionHandler);
 bus.on('handler/error', versionHandler);
+bus.on('app/started', run);
+bus.on('system/setting', run);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -147,12 +105,27 @@ class MarkdownHandler extends Handler {
   }
 }
 
-class UiConstantsHandler extends Handler {
+class ResourceHandler extends Handler {
   noCheckPermView = true;
 
-  async get({ version }) {
-    this.response.body = cache[version]
-      || (await coll.findOne({ _id: version }))?.value;
+  async prepare() {
+    this.response.addHeader('Cache-Control', 'public, max-age=86400');
+  }
+}
+
+class UiConstantsHandler extends ResourceHandler {
+  async all() {
+    this.response.addHeader('ETag', hash);
+    this.response.body = constant;
+    this.response.type = 'application/json';
+  }
+}
+
+class LanguageHandler extends ResourceHandler {
+  async all({ lang }) {
+    if (!global.Hydro.locales[lang]) lang = system.get('server.language');
+    this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang])};`;
+    this.response.type = 'application/javascript';
   }
 }
 
@@ -202,5 +175,6 @@ global.Hydro.handler.ui = async () => {
   Route('set_theme', '/set_theme/:id', SetThemeHandler);
   Route('constant', '/constant', UiConstantsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
+  Route('lang', '/l/:lang', LanguageHandler);
   Route('media', '/media', RichMediaHandler);
 };

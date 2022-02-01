@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import { statSync } from 'fs';
 import { pick } from 'lodash';
-import { lookup } from 'mime-types';
 import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
@@ -29,6 +28,7 @@ class SwitchLanguageHandler extends Handler {
 export class FilesHandler extends Handler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, pjax = false) {
+        if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
         const files = sortFiles(this.user._files);
         if (pjax) {
             this.response.body = {
@@ -45,6 +45,7 @@ export class FilesHandler extends Handler {
 
     @post('filename', Types.Name, true)
     async postUploadFile(domainId: string, filename: string) {
+        this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
             throw new ForbiddenError('File limit exceeded.');
         }
@@ -88,6 +89,8 @@ export class FSDownloadHandler extends Handler {
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
+        const targetUser = await user.getById('system', uid);
+        if (!targetUser.hasPriv(PRIV.PRIV_CREATE_FILE)) throw new ForbiddenError('Access denied');
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
@@ -95,25 +98,9 @@ export class FSDownloadHandler extends Handler {
             target,
             size: file?.size || 0,
         });
-        if (!file) {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-            return;
-        }
-        const type = lookup(filename).toString();
-        const shouldProxy = ['image', 'video', 'audio', 'pdf', 'vnd'].filter((i) => type.includes(i)).length;
-        if (shouldProxy && file.size! < 32 * 1024 * 1024) {
-            this.response.etag = file.etag;
-            this.response.body = await storage.get(target);
-            this.response.type = file['Content-Type'] || type;
-            if (file['Content-Encoding']) this.response.addHeader('Content-Encoding', file['Content-Encoding']);
-            if (!noDisposition) this.response.disposition = `attachment; filename=${encodeURIComponent(filename)}`;
-        } else {
-            this.response.redirect = await storage.signDownloadLink(
-                target, noDisposition ? undefined : filename, false, 'user',
-            );
-        }
+        this.response.redirect = await storage.signDownloadLink(
+            target, noDisposition ? undefined : filename, false, 'user',
+        );
     }
 }
 
@@ -127,7 +114,7 @@ export class SwitchAccountHandler extends Handler {
 
 export async function apply() {
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('home_files', '/file', FilesHandler, PRIV.PRIV_CREATE_FILE);
+    Route('home_files', '/file', FilesHandler);
     Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
     Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }

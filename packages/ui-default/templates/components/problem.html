@@ -3,7 +3,7 @@
   {% set _linkArgs = { pid:pdoc.pid|default(pdoc.docId) } %}
   {% if tdoc %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
   {% if pdoc.domainId !== handler.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
-  <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %}data-tooltip="{{ pdoc.title }}"{% endif %}>
+  <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
 {%- if pdoc.domainId !== handler.domainId -%}
   {{ pdoc.domainId }}#

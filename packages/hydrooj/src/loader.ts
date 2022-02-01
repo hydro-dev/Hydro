@@ -29,6 +29,10 @@ export function addon(addonPath: string, prepend = false) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${addonPath}/package.json`);
+            // eslint-disable-next-line import/no-dynamic-require
+            const payload = require(packagejson);
+            const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
+            global.Hydro.version[name] = payload.version;
             const modulePath = path.dirname(packagejson);
             const publicPath = path.resolve(modulePath, 'public');
             if (fs.existsSync(publicPath)) {

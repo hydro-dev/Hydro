@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/migrate-hustoj",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
@@ -11,7 +11,7 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/mysql": "^2.15.19"
+        "@types/mysql": "^2.15.20"
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:*",

@@ -9,24 +9,10 @@ import { buildContent } from 'hydrooj/src/lib/content';
 import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import { IBasicProvider, RemoteAccount } from '../interface';
+import { VERDICT } from '../verdict';
 
 proxy(superagent);
 const logger = new Logger('remote/codeforces');
-
-const VERDICT = {
-    RUNTIME_ERROR: STATUS.STATUS_RUNTIME_ERROR,
-    WRONG_ANSWER: STATUS.STATUS_WRONG_ANSWER,
-    OK: STATUS.STATUS_ACCEPTED,
-    TIME_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    MEMORY_LIMIT_EXCEEDED: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    IDLENESS_LIMIT_EXCEEDED: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    Accepted: STATUS.STATUS_ACCEPTED,
-    'Wrong answer': STATUS.STATUS_WRONG_ANSWER,
-    'Runtime error': STATUS.STATUS_RUNTIME_ERROR,
-    'Time limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    'Memory limit exceeded': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    'Idleness limit exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-};
 
 export default class CodeforcesProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
@@ -34,8 +20,6 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     cookie: string[] = [];
-    // @ts-ignore
-    ftaa = String.random(18, 'abcdef1234567890');
     csrf: string;
 
     get(url: string) {
@@ -52,6 +36,10 @@ export default class CodeforcesProvider implements IBasicProvider {
         const req = superagent.post(url).type('form').set('Cookie', this.cookie);
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
+    }
+
+    getCookie(target: string) {
+        return this.cookie.find((i) => i.startsWith(`${target}=`))?.split('=')[1]?.split(';')[0];
     }
 
     tta(_39ce7: string) {
@@ -72,10 +60,15 @@ export default class CodeforcesProvider implements IBasicProvider {
         if (document.body.children.length < 2 && html.length < 512) {
             throw new Error(document.body.textContent);
         }
-        return (
-            document.querySelector('meta[name="X-Csrf-Token"]')
-            || document.querySelector('input[name="csrf_token"]')
-        )?.getAttribute('content');
+        const ftaa = this.getCookie('70a7c28f3de');
+        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa');
+        return [
+            (
+                document.querySelector('meta[name="X-Csrf-Token"]')
+                || document.querySelector('input[name="csrf_token"]')
+            )?.getAttribute('content'),
+            ftaa, bfaa,
+        ];
     }
 
     get loggedIn() {
@@ -88,12 +81,12 @@ export default class CodeforcesProvider implements IBasicProvider {
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry login');
-        const csrf_token = await this.getCsrfToken('/enter');
+        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
         const res = await this.post('/enter').send({
-            csrf_token,
+            csrf_token: csrf,
             action: 'enter',
-            ftaa: '',
-            bfaa: '',
+            ftaa,
+            bfaa,
             handleOrEmail: this.account.handle,
             password: this.account.password,
             remember: 'on',
@@ -208,23 +201,19 @@ export default class CodeforcesProvider implements IBasicProvider {
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
-        const [, contestId, submittedProblemIndex] = id.startsWith('P921')
-            ? ['', '921', id.split('P921')[1]]
-            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
-        const csrf_token = await this.getCsrfToken('/problemset/submit');
+        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/problemset/submit');
         // TODO check submit time to ensure submission
-        await this.post(`/problemset/submit?csrf_token=${csrf_token}`).send({
-            csrf_token,
-            contestId,
+        await this.post(`/problemset/submit?csrf_token=${csrf}`).send({
+            csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
-            submittedProblemIndex,
+            submittedProblemCode: id.split('P')[1],
             source: code,
             tabsize: 4,
             sourceFile: '',
-            ftaa: '',
-            bfaa: 'f1b3f18c715565b589b7823cda7448ce',
-            _tta: 140,
+            ftaa,
+            bfaa,
+            _tta: this.tta(this.getCookie('39ce7')),
             sourceCodeConfirmed: true,
         });
         const { text: status } = await this.get('/problemset/status?my=on');

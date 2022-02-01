@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/naming-convention */
 import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
@@ -20,6 +21,7 @@ import problem from './model/problem';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import * as system from './model/system';
+import TaskModel from './model/task';
 import user from './model/user';
 import {
     iterateAllDomain, iterateAllProblem, iterateAllPsdoc, iterateAllUser,
@@ -657,6 +659,28 @@ const scripts: UpgradeScript[] = [
     async function _55_56() {
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('document').updateMany({ docType: document.TYPE_PROBLEM }, { $unset: { difficulty: '' } });
+        return true;
+    },
+    async function _56_57() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('oplog').deleteMany({ type: 'user.login' });
+        return true;
+    },
+    async function _57_58() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('document').updateMany(
+            { docType: document.TYPE_PROBLEM, assign: null },
+            { $set: { assign: [] } },
+        );
+        return true;
+    },
+    async function _58_59() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const tasks = await db.collection('task').find({ type: 'schedule', subType: 'contest.problemHide' }).toArray();
+        for (const task of tasks) {
+            await TaskModel.add({ ...task, subType: 'contest', operation: ['unhide'] });
+        }
+        await TaskModel.deleteMany({ type: 'schedule', subType: 'contest.problemHide' });
         return true;
     },
 ];

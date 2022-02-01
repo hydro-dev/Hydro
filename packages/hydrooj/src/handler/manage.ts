@@ -1,4 +1,5 @@
 import { inspect } from 'util';
+import Ajv from 'ajv';
 import * as yaml from 'js-yaml';
 import * as check from '../check';
 import { ValidationError } from '../error';
@@ -17,9 +18,12 @@ import {
     Connection, ConnectionHandler, Handler,
     param, Route, Types,
 } from '../service/server';
+import { schema } from '../settings';
 import * as judge from './judge';
 
 const logger = new Logger('manage');
+const ajv = new Ajv({ useDefaults: true });
+const validator = ajv.compile<any>(schema);
 
 function set(key: string, value: any) {
     if (setting.SYSTEM_SETTINGS_BY_KEY[key]) {
@@ -140,12 +144,55 @@ class SystemSettingHandler extends SystemHandler {
         for (const s of this.response.body.settings) {
             this.response.body.current[s.key] = system.get(s.key);
         }
+        const hide = [];
+        const raw = system.get('_') || '';
+        let config = yaml.load(raw);
+        const valid = validator(config);
+        if (!(raw.trim() && valid)) {
+            const data = {};
+            for (const key in schema.properties) {
+                data[key] = {};
+                for (const subkey in (schema.definitions[key] as any).properties || {}) {
+                    if (system.get(`${key}.${subkey}`)) {
+                        data[key][subkey] = system.get(`${key}.${subkey}`);
+                        if ((schema.definitions[key] as any).properties[subkey]?.writeOnly) {
+                            if (data[key][subkey] instanceof Array) {
+                                hide.push(...data[key][subkey]);
+                            } else hide.push(data[key][subkey]);
+                        }
+                    }
+                }
+            }
+            validator(data);
+            config = yaml.dump(data);
+        } else config = yaml.dump(config);
+        this.response.body.hide = hide;
+        this.response.body.config = config;
     }
 
     async post(args: any) {
         const tasks = [];
         const booleanKeys = args.booleanKeys || {};
         delete args.booleanKeys;
+        if (args._) {
+            if (typeof args._ !== 'string') throw new ValidationError('config');
+            try {
+                const payload = yaml.load(args._);
+                const valid = validator(payload);
+                if (!valid) {
+                    throw new ValidationError('config', null, validator.errors[0]);
+                }
+                for (const key in payload) {
+                    for (const subkey in payload[key]) {
+                        tasks.push(system.set(`${key}.${subkey}`, payload[key][subkey]));
+                    }
+                }
+            } catch (e) {
+                throw new ValidationError('config', null, e.message);
+            }
+            await system.set('_', args._);
+            delete args._;
+        }
         for (const key in args) {
             if (typeof args[key] === 'object') {
                 for (const subkey in args[key]) {
@@ -166,6 +213,13 @@ class SystemSettingHandler extends SystemHandler {
         tasks.push(bus.parallel('system/setting', args));
         await Promise.all(tasks);
         this.back();
+    }
+}
+
+class SystemSettingSchemaHandler extends SystemHandler {
+    async get() {
+        this.response.body = JSON.stringify(schema);
+        this.response.type = 'application/json';
     }
 }
 
@@ -228,6 +282,7 @@ async function apply() {
     Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
     Route('manage_script', '/manage/script', SystemScriptHandler);
     Route('manage_setting', '/manage/setting', SystemSettingHandler);
+    Route('manage_setting_schema', '/manage/setting/schema.json', SystemSettingSchemaHandler);
     Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }

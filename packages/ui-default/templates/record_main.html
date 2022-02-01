@@ -44,7 +44,7 @@
               <label>
                 {{ _('By Status') }}
               </label>
-              <select class="inline compact select" name="status">
+              <select class="compact select" name="status">
                   <option value="">{{ _('All Submissions') }}</option>
                   <option value="1">Accepted</option>
                   <option value="2">Wrong Answer</option>
@@ -100,7 +100,7 @@
         {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) %}
         <ul class="pager">
           <li>
-            <a class="pager__item next link" href="?page={{ page + 1 }}&{{ query_string }}">{{ _('pager_next') }}</a>
+            <a class="pager__item next link" href="?page={{ page + 1 }}{{ (('&tid=' + filterTid) if filterTid else '') + (('&uidOrName=' + filterUidOrName) if filterUidOrName else '') + (('&pid=' + filterPid) if filterPid else '') + ('&allDomain=1' if all else '') }}">{{ _('pager_next') }}</a>
           </li>
         </ul>
         {% endif %}

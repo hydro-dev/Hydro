@@ -4,7 +4,8 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotFoundError, HomeworkNotLiveError, ValidationError,
+    ContestNotFoundError, ForbiddenError, HomeworkNotLiveError,
+    ValidationError,
 } from '../error';
 import { PenaltyRules } from '../interface';
 import paginate from '../lib/paginate';
@@ -40,6 +41,17 @@ class HomeworkMainHandler extends Handler {
 }
 
 class HomeworkDetailHandler extends Handler {
+    @param('tid', Types.ObjectID)
+    async prepare(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
+        if (tdoc.assign?.length) {
+            if (!Set.intersection(tdoc.assign, this.user.group).size) {
+                throw new ForbiddenError('You are not assigned.');
+            }
+        }
+    }
+
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -139,10 +151,12 @@ class HomeworkEditHandler extends Handler {
     @param('content', Types.Content)
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
+    @param('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
+        assign: string[] = [],
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
@@ -156,14 +170,22 @@ class HomeworkEditHandler extends Handler {
         const endAt = penaltySince.clone().add(extensionDays, 'days');
         if (beginAt.isSameOrAfter(penaltySince)) throw new ValidationError('endAtDate', 'endAtTime');
         if (penaltySince.isAfter(endAt)) throw new ValidationError('extensionDays');
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (!tid) {
             tid = await contest.add(domainId, title, content, this.user._id,
                 'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-                { penaltySince: penaltySince.toDate(), penaltyRules });
+                { penaltySince: penaltySince.toDate(), penaltyRules, assign });
         } else {
             await contest.edit(domainId, tid, {
-                title, content, beginAt: beginAt.toDate(), endAt: endAt.toDate(), pids, penaltySince: penaltySince.toDate(), penaltyRules, rated,
+                title,
+                content,
+                beginAt: beginAt.toDate(),
+                endAt: endAt.toDate(),
+                pids,
+                penaltySince: penaltySince.toDate(),
+                penaltyRules,
+                rated,
+                assign,
             });
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()

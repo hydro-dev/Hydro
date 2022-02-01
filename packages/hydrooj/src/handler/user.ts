@@ -301,10 +301,17 @@ class UserDetailHandler extends Handler {
         const pdocs: ProblemDoc[] = [];
         const acInfo: Record<string, number> = {};
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        await Promise.all([domainId, ...(union?.union || [])].map(async (did) => {
-            const psdocs = await problem.getMultiStatus(did, { uid, status: STATUS.STATUS_ACCEPTED }).toArray();
-            pdocs.push(...Object.values(await problem.getList(did, psdocs.map((i) => i.docId), canViewHidden, false, undefined, true)));
-        }));
+        if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
+            await Promise.all([domainId, ...(union?.union || [])].map(async (did) => {
+                const psdocs = await problem.getMultiStatus(did, { uid, status: STATUS.STATUS_ACCEPTED }).toArray();
+                pdocs.push(...Object.values(
+                    await problem.getList(
+                        did, psdocs.map((i) => i.docId), canViewHidden,
+                        this.user.group, false, problem.PROJECTION_LIST, true,
+                    ),
+                ));
+            }));
+        }
         for (const pdoc of pdocs) {
             for (const tag of pdoc.tag) {
                 if (acInfo[tag]) acInfo[tag]++;

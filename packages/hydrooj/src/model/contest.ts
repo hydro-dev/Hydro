@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { Counter } from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
@@ -11,6 +12,7 @@ import {
 import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
+import type { Handler } from '../service/server';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
@@ -29,41 +31,51 @@ interface AcmDetail extends AcmJournal {
     real: number;
 }
 
-const acm: ContestRule = {
+function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
+    def._originalRule = { scoreboard: def.scoreboard, stat: def.stat };
+    def.scoreboard = (def._originalRule?.scoreboard || def.scoreboard).bind(def);
+    def.stat = (def._originalRule?.stat || def.stat).bind(def);
+    return def;
+}
+
+function filterEffective<T extends AcmJournal>(tdoc: Tdoc, journal: T[], ignoreLock = false): T[] {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    if (isLocked(tdoc) && !ignoreLock) journal = journal.filter((i) => i.rid.generationTime * 1000 < tdoc.lockAt.getTime());
+    return journal.filter((i) => tdoc.pids.includes(i.pid));
+}
+
+const acm = buildContestRule({
     TEXT: 'ACM/ICPC',
     check: () => { },
     statusSort: { accept: -1, time: 1 },
+    submitAfterAccept: false,
     showScoreboard: () => true,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat: (tdoc, journal: AcmJournal[]) => {
-        const naccept: Record<number, number> = {};
+    stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
+        const naccept = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: AcmDetail[] = [];
         let accept = 0;
         let time = 0;
-        for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)
-                && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
-                effective[j.pid] = j;
-                if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
-                    naccept[j.pid] = (naccept[j.pid] || 0) + 1;
-                }
+        for (const j of filterEffective(tdoc, journal, ignoreLock)) {
+            if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            effective[j.pid] = j;
+            if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
+                naccept[j.pid]++;
             }
         }
-        for (const key in effective) {
-            const j = effective[key];
+        for (const pid in effective) {
+            const j = effective[pid];
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
-            const penalty = 20 * 60 * (naccept[j.pid] || 0);
+            const penalty = 20 * 60 * naccept[j.pid];
             detail.push({
-                ...j, naccept: naccept[j.pid] || 0, time: real + penalty, real, penalty,
+                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
             });
         }
-        for (const d of detail) {
-            if (d.status === STATUS.STATUS_ACCEPTED) {
-                accept += 1;
-                time += d.time;
-            }
+        for (const d of detail.filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
+            accept++;
+            time += d.time;
         }
         return { accept, time, detail };
     },
@@ -80,7 +92,6 @@ const acm: ContestRule = {
             columns.push(
                 { type: 'total_time', value: _('Penalty') },
                 { type: 'total_time', value: _('Total Time (Seconds)') },
-                { type: 'total_time_str', value: _('Total Time') },
             );
         }
         for (let i = 1; i <= tdoc.pids.length; i++) {
@@ -108,20 +119,23 @@ const acm: ContestRule = {
                 });
             }
         }
+
+        // Find first accept
         const first = {};
         for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
         for (const [, tsdoc] of rankedTsdocs) {
             const tsddict = {};
-            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
+            for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
             for (const pid of tdoc.pids) {
                 if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
                     first[pid] = tsddict[pid].rid.generationTime;
                 }
             }
         }
+
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
-            const tsddict = {};
+            const tsddict: Record<number, AcmDetail> = {};
             for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
             const row: ScoreboardRow = [
                 { type: 'string', value: rank.toString() },
@@ -129,7 +143,7 @@ const acm: ContestRule = {
                 { type: 'string', value: tsdoc.accept || 0 },
             ];
             if (isExport) {
-                const penalty = Math.sum(tdoc.pids.map((i) => (tsddict[i]?.naccept || 0))) * 20 * 60;
+                const penalty = Math.sum(tdoc.pids.map((i) => tsddict[i]?.naccept || 0)) * 20 * 60;
                 row.push(
                     { type: 'string', value: penalty.toString() },
                     { type: 'string', value: tsdoc.time || 0.0 },
@@ -137,12 +151,12 @@ const acm: ContestRule = {
                 );
             }
             for (const pid of tdoc.pids) {
-                const doc = tsddict[pid] || {};
+                const doc = tsddict[pid] || {} as Partial<AcmDetail>;
                 const accept = doc.status === STATUS.STATUS_ACCEPTED;
                 const rid = accept ? doc.rid : null;
                 const colAccepted = `${(accept && isExport) ? `${_('Accepted')} ` : ''}${doc.naccept ? ` (-${doc.naccept})` : ''}`;
-                const colTime = accept ? doc.time : '-';
-                const colTimeStr = accept ? misc.formatSeconds(colTime) : '-';
+                const colTime = accept ? doc.time.toString() : '-';
+                const colTimeStr = accept ? misc.formatSeconds(doc.time) : '-';
                 if (isExport) {
                     row.push(
                         { type: 'string', value: colAccepted },
@@ -161,7 +175,6 @@ const acm: ContestRule = {
                     });
                 }
             }
-            row.raw = tsdoc;
             rows.push(row);
         }
         return [rows, udict, nPages];
@@ -169,17 +182,18 @@ const acm: ContestRule = {
     async ranked(tdoc, cursor) {
         return await ranked.all(cursor, (a, b) => a.score === b.score);
     },
-};
+});
 
-const oi: ContestRule = {
+const oi = buildContestRule({
     TEXT: 'OI',
     check: () => { },
+    submitAfterAccept: true,
     statusSort: { score: -1 },
-    stat: (tdoc, journal) => {
+    stat(tdoc, journal) {
         const detail = {};
         let score = 0;
-        for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)) detail[j.pid] = j;
+        for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            if (detail[j.pid]?.status === STATUS.STATUS_ACCEPTED && !this.submitAfterAccept) detail[j.pid] = j;
         }
         for (const i in detail) score += detail[i].score;
         return { score, detail };
@@ -278,19 +292,21 @@ const oi: ContestRule = {
     async ranked(tdoc, cursor) {
         return await ranked.all(cursor, (a, b) => a.score === b.score);
     },
-};
+});
 
-const ioi: ContestRule = {
+const ioi = buildContestRule({
     ...oi,
     TEXT: 'IOI',
+    submitAfterAccept: false,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: () => true,
     showScoreboard: () => true,
-};
+});
 
-const homework: ContestRule = {
+const homework = buildContestRule({
     TEXT: 'Assignment',
     check: () => { },
+    submitAfterAccept: false,
     statusSort: { penaltyScore: -1, time: 1 },
     stat: (tdoc, journal) => {
         const effective = {};
@@ -434,7 +450,7 @@ const homework: ContestRule = {
     async ranked(tdoc, cursor) {
         return await ranked.all(cursor, (a, b) => a.score === b.score);
     },
-};
+});
 
 export const RULES: ContestRules = {
     acm, oi, homework, ioi,
@@ -449,12 +465,12 @@ export async function add(
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
     rated = false, data: Partial<Tdoc> = {},
 ) {
-    if (!this.RULES[rule]) throw new ValidationError('rule');
+    if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
-    this.RULES[rule].check(data);
+    RULES[rule].check(data);
     await bus.serial('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
@@ -464,10 +480,10 @@ export async function add(
 }
 
 export async function edit(domainId: string, tid: ObjectID, $set: any) {
-    if ($set.rule && !this.RULES[$set.rule]) throw new ValidationError('rule');
+    if ($set.rule && !RULES[$set.rule]) throw new ValidationError('rule');
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
-    this.RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
+    RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
     return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
 }
 
@@ -489,8 +505,14 @@ export async function getRelated(domainId: string, pid: number) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid }).toArray();
 }
 
-export function getStatus(domainId: string, tid: ObjectID, uid: number) {
-    return document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
+export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
+    const [tdoc, status] = await Promise.all([
+        get(domainId, tid),
+        document.getStatus(domainId, document.TYPE_CONTEST, tid, uid),
+    ]);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    if (isLocked(tdoc)) Object.assign(status, RULES[tdoc.rule].stat(tdoc, status.journal || [], true));
+    return status;
 }
 
 export async function updateStatus(
@@ -554,6 +576,12 @@ export function isOngoing(tdoc: Tdoc) {
 
 export function isDone(tdoc: Tdoc) {
     return tdoc.endAt <= new Date();
+}
+
+export function isLocked(tdoc: Tdoc) {
+    if (!tdoc.lockAt) return false;
+    const now = new Date();
+    return (tdoc.lockAt < now && now < tdoc.endAt);
 }
 
 export function isExtended(tdoc: Tdoc) {
@@ -627,11 +655,12 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 }
 
 export async function getScoreboard(
-    domainId: string, tid: ObjectID,
-    isExport = false, page: number,
+    this: Handler, domainId: string, tid: ObjectID,
+    isExport = false, page: number, ignoreLock = false,
 ): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict, number]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
+    if (ignoreLock) delete tdoc.lockAt;
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
     const [rows, udict, nPages] = await RULES[tdoc.rule].scoreboard(
@@ -684,6 +713,7 @@ global.Hydro.model.contest = {
     isNotStarted,
     isOngoing,
     isDone,
+    isLocked,
     isExtended,
     statusText,
     getStatusText,

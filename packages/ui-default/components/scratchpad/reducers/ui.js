@@ -13,7 +13,7 @@ export default function reducer(state = {
   },
   records: {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
-    size: 200,
+    size: 100,
     isLoading: false,
   },
   isPosting: false,

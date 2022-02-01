@@ -24,7 +24,7 @@ import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param, Route, Types,
+    Connection, ConnectionHandler, Handler, param, query, Route, Types,
 } from '../service/server';
 
 const { geoip, useragent } = global.Hydro.lib;
@@ -75,9 +75,7 @@ class HomeHandler extends Handler {
     async getDiscussion(domainId: string, limit = 20) {
         if (this.user.hasPerm(PERM.PERM_VIEW_DISCUSSION)) {
             const ddocs = await discussion.getMulti(domainId).limit(limit).toArray();
-            const vndict = await discussion.getListVnodes(
-                domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN),
-            );
+            const vndict = await discussion.getListVnodes(domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), this.user.group);
             this.collectUser(ddocs.map((ddoc) => ddoc.owner));
             return ['discussion', ddocs, vndict];
         }
@@ -103,7 +101,7 @@ class HomeHandler extends Handler {
             for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
             const pdict = await ProblemModel.getList(
                 domainId, psdocs.map((pdoc) => pdoc.docId),
-                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
+                this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, false,
             );
             const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
             return ['problem', pdocs, psdict];
@@ -291,28 +289,32 @@ class UserChangemailWithCodeHandler extends Handler {
 }
 
 class HomeDomainHandler extends Handler {
-    async get() {
-        let ddocs: DomainDoc[] = [];
-        let dudict: Record<string, DomainDoc> = {};
-        if (!this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) {
+    @query('all', Types.Boolean)
+    async get(domainId: string, all: boolean) {
+        let res: DomainDoc[] = [];
+        let dudict: Record<string, any> = {};
+        if (!all) {
             dudict = await domain.getDictUserByDomainId(this.user._id);
             const dids = Object.keys(dudict);
-            ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
+            res = await domain.getMulti({ _id: { $in: dids } }).toArray();
         } else {
-            const _ddocs = await domain.getMulti().toArray();
-            for (const ddoc of _ddocs) {
-                // eslint-disable-next-line no-await-in-loop
-                const pcount = await ProblemModel.count(ddoc._id, {});
-                if (pcount >= 3 || ddoc.owner === this.user._id) {
-                    dudict[ddoc._id] = ddoc;
-                    ddocs.push(ddoc);
-                }
-            }
+            this.checkPriv(PRIV.PRIV_VIEW_ALL_DOMAIN);
+            res = await domain.getMulti().toArray();
+            await Promise.all(res.map(async (ddoc) => {
+                dudict[ddoc._id] = await user.getById(domainId, this.user._id);
+            }));
         }
         const canManage = {};
-        for (const ddoc of ddocs) {
+        const ddocs = [];
+        for (const ddoc of res) {
             // eslint-disable-next-line no-await-in-loop
             const udoc = (await user.getById(ddoc._id, this.user._id))!;
+            const dudoc = dudict[ddoc._id];
+            if (['default', 'guest'].includes(dudoc.role)) {
+                delete dudict[ddoc._id];
+                continue;
+            }
+            ddocs.push(ddoc);
             canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)
                 || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
         }

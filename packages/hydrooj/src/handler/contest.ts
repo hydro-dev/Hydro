@@ -3,7 +3,7 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotFoundError, ContestNotLiveError, InvalidTokenError,
+    ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
     PermissionError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
@@ -47,13 +47,18 @@ registerResolver(
     'Get a contest by ID',
 );
 
-TaskModel.Worker.addHandler('contest.problemHide', async (doc) => {
+TaskModel.Worker.addHandler('contest', async (doc) => {
     const tdoc = await contest.get(doc.domainId, doc.tid);
     if (!tdoc) return;
-    for (const pid of tdoc.pids) {
-        // eslint-disable-next-line no-await-in-loop
-        await problem.edit(doc.domainId, pid, { hidden: false });
+    const tasks = [];
+    for (const op of doc.operation) {
+        if (op === 'unhide') {
+            for (const pid of tdoc.pids) {
+                tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
+            }
+        } else if (op === 'unlock') tasks.push(contest.recalcStatus(doc.domainId, doc.tid));
     }
+    await Promise.all(tasks);
 });
 
 export class ContestListHandler extends Handler {
@@ -74,6 +79,18 @@ export class ContestListHandler extends Handler {
 }
 
 export class ContestDetailHandler extends Handler {
+    @param('tid', Types.ObjectID)
+    @param('page', Types.PositiveInt, true)
+    async prepare(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (tdoc.assign?.length) {
+            const groups = await user.listGroup(domainId, this.user._id);
+            if (!Set.intersection(tdoc.assign, groups.map((i) => i.name)).size) {
+                throw new ForbiddenError('You are not assigned.');
+            }
+        }
+    }
+
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
@@ -117,7 +134,7 @@ export class ContestDetailHandler extends Handler {
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
         await TaskModel.deleteMany({
-            type: 'schedule', subType: 'contest.problemHide', domainId, tid,
+            type: 'schedule', subType: 'contest', domainId, tid,
         });
         this.response.redirect = this.url('contest_main');
     }
@@ -155,8 +172,13 @@ export class ContestBroadcastHandler extends Handler {
 export class ContestScoreboardHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, page = 1) {
-        const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(this, domainId, tid, false, page);
+    @param('ignoreLock', Types.Boolean, true)
+    async get(domainId: string, tid: ObjectID, page = 1, ignoreLock = false) {
+        const tdoc = await contest.get(domainId, tid);
+        if (ignoreLock && !this.user.own(tdoc)) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
+        const [, rows, udict, , nPages] = await contest.getScoreboard.call(this, domainId, tid, false, page, ignoreLock);
         const path = [
             ['Hydro', 'homepage'],
             ['contest_main', 'contest_main'],
@@ -173,13 +195,18 @@ export class ContestScoreboardHandler extends Handler {
 export class ContestScoreboardDownloadHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html']))
-    async get(domainId: string, tid: ObjectID, ext: string) {
+    @param('ignoreLock', Types.Boolean, true)
+    async get(domainId: string, tid: ObjectID, ext: string, ignoreLock = false) {
         await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
-        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
+        const tdoc = await contest.get(domainId, tid);
+        if (ignoreLock && !this.user.own(tdoc)) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
+        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0, ignoreLock);
         this.binary(await getContent[ext](rows, tdoc), `${tdoc.title}.${ext}`);
     }
 }
@@ -202,16 +229,6 @@ export class ContestEditHandler extends Handler {
         this.response.template = 'contest_edit.html';
         const rules = {};
         for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
-        const path = [
-            ['Hydro', 'homepage'],
-            ['contest_main', 'contest_main'],
-            ...tid
-                ? [
-                    [this.tdoc.title, 'contest_detail', { tid: this.tdoc.docId }, true],
-                    ['contest_edit', null],
-                ]
-                : [['contest_create', null]],
-        ];
         let ts = new Date().getTime();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const dt = this.tdoc?.beginAt || new Date(ts);
@@ -219,7 +236,6 @@ export class ContestEditHandler extends Handler {
             rules,
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
-            path,
             pids: tid ? this.tdoc.pids.join(',') : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
@@ -238,9 +254,12 @@ export class ContestEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.String, true)
+    @param('assign', Types.CommaSeperatedArray, true)
+    @param('lock', Types.UnsignedInt, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false, _code = '', autoHide = false,
+        title: string, content: string, rule: string, _pids: string, rated = false,
+        _code = '', autoHide = false, assign: string[] = null, lock: number = null,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -249,31 +268,43 @@ export class ContestEditHandler extends Handler {
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
+        const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
                 title, content, rule, beginAt, endAt, pids, rated,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
-                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule) {
+                || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
+                || lockAt !== this.tdoc.lockAt) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
             tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
         }
         const task = {
-            type: 'schedule', subType: 'contest.problemHide', domainId, tid,
+            type: 'schedule', subType: 'contest', domainId, tid,
         };
         await TaskModel.deleteMany(task);
         if (Date.now() <= endAt.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
-            for (const pid of pids) await problem.edit(domainId, pid, { hidden: true });
+            await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
             await TaskModel.add({
                 ...task,
+                operation: ['unhide'],
                 executeAfter: endAt,
             });
         }
-        await contest.edit(domainId, tid, { _code, autoHide });
+        if (lock && lockAt <= endAt) {
+            await TaskModel.add({
+                ...task,
+                operation: ['unlock'],
+                executeAfter: endAt,
+            });
+        }
+        await contest.edit(domainId, tid, {
+            assign, _code, autoHide, lockAt,
+        });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
     }

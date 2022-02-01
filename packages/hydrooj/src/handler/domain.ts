@@ -2,8 +2,8 @@ import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, InvalidJoinInvitationCodeError,
-    RoleAlreadyExistError, ValidationError,
+    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
+    InvalidJoinInvitationCodeError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
@@ -19,6 +19,40 @@ import {
     Handler, param, post, query, Route, Types,
 } from '../service/server';
 import { log2 } from '../utils';
+import { registerResolver, registerValue } from './api';
+
+registerValue('GroupInfo', [
+    ['name', 'String!'],
+    ['uids', '[Int]!'],
+]);
+
+registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
+    const ddoc = args.id ? await domain.get(args.id) : ctx.domain;
+    if (!ddoc) return null;
+    const udoc = await user.getById(ddoc._id, ctx.user._id);
+    if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
+    ctx.udoc = udoc;
+    return ddoc;
+});
+
+registerResolver('Domain', 'manage', 'DomainManage', async (args, ctx) => {
+    if (!ctx.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
+    return ctx.parent;
+});
+
+registerResolver('DomainManage', 'group', 'DomainGroup', (args, ctx) => ctx.parent);
+registerResolver(
+    'DomainGroup', 'list(uid: Int)', '[GroupInfo]',
+    (args, ctx) => user.listGroup(ctx.parent._id, args.uid),
+);
+registerResolver(
+    'DomainGroup', 'update(name: String!, uids: [Int]!)', 'Boolean',
+    async (args, ctx) => !!(await user.updateGroup(ctx.parent._id, args.name, args.uids)).upsertedCount,
+);
+registerResolver(
+    'DomainGroup', 'del(name: String!)', 'Boolean',
+    async (args, ctx) => !!(await user.delGroup(ctx.parent._id, args.name)).deletedCount,
+);
 
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
@@ -56,12 +90,21 @@ class DomainEditHandler extends ManageHandler {
     }
 
     async post(args) {
+        if (args.operation) return;
         const $set = {};
         for (const key in args) {
             if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
         }
         await domain.edit(args.domainId, $set);
         this.response.redirect = this.url('domain_dashboard');
+    }
+
+    async postDelete({ domainId, password }) {
+        this.user.checkPassword(password);
+        if (domainId === 'system') throw new ForbiddenError('You are not allowed to delete system domain');
+        if (this.domain.owner !== this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
+        await domain.del(domainId);
+        this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
 
@@ -176,7 +219,7 @@ class DomainRoleHandler extends ManageHandler {
 
     @param('roles', Types.Array)
     async postDelete(domainId: string, roles: string[]) {
-        if (Set.intersection(new Set(roles), new Set(['root', 'default', 'guest'])).size > 0) {
+        if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await domain.deleteRoles(domainId, roles);
@@ -219,6 +262,29 @@ class DomainJoinApplicationsHandler extends ManageHandler {
             if (method === domain.JOIN_METHOD_CODE) joinSettings.code = invitationCode;
         }
         await domain.edit(domainId, { _join: joinSettings });
+        this.back();
+    }
+}
+
+class DomainUserGroupHandler extends ManageHandler {
+    async get({ domainId }) {
+        this.response.template = 'domain_group.html';
+        this.response.body = {
+            domain: this.domain,
+            groups: await user.listGroup(domainId),
+        };
+    }
+
+    @param('name', Types.Name)
+    async postDel(domainId: string, name: string) {
+        await user.delGroup(domainId, name);
+        this.back();
+    }
+
+    @param('name', Types.Name)
+    @param('uids', Types.NumericArray)
+    async postUpdate(domainId: string, name: string, uids: number[]) {
+        await user.updateGroup(domainId, name, uids);
         this.back();
     }
 }
@@ -275,6 +341,7 @@ export async function apply() {
     Route('domain_user', '/domain/user', DomainUserHandler);
     Route('domain_permission', '/domain/permission', DomainPermissionHandler);
     Route('domain_role', '/domain/role', DomainRoleHandler);
+    Route('domain_group', '/domain/group', DomainUserGroupHandler);
     Route('domain_join_applications', '/domain/join_applications', DomainJoinApplicationsHandler);
     Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
     Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);

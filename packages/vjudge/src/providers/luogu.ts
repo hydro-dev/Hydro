@@ -30,7 +30,10 @@ const STATUS_MAP = [
     STATUS.STATUS_WRONG_ANSWER,
 ];
 
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36';
+const UA = [
+    `Hydro/${global.Hydro.version.hydrooj}`,
+    `Vjudge/${global.Hydro.version.vjudge}`,
+].join(' ');
 
 export default class LuoguProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
@@ -77,7 +80,7 @@ export default class LuoguProvider implements IBasicProvider {
 
     async ensureLogin() {
         if (await this.loggedIn) {
-            this.getCsrfToken('/');
+            await this.getCsrfToken('/');
             return true;
         }
         logger.info('retry login');

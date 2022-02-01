@@ -49,13 +49,13 @@ async function syzojSync(info) {
             memory: `${judge.memoryLimit}m`,
         };
         if (judge.extraSourceFiles) {
-            const user_extra_files = [];
+            const files = [];
             for (const key in judge.extraSourceFiles) {
                 for (const file in judge.extraSourceFiles[key]) {
-                    user_extra_files.push(file);
+                    files.push(file);
                 }
             }
-            config.user_extra_files = user_extra_files;
+            config.user_extra_files = files;
         }
         if (judge.checker?.type === 'custom') {
             config.checker_type = judge.checker.interface;

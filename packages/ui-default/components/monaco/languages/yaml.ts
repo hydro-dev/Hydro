@@ -88,5 +88,9 @@ monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
       fileMatch: ['hydro://problem/file/config.yaml'],
       schema: problemConfigSchema,
     },
+    {
+      uri: `${UiContext.cdn_prefix}manage/setting/schema.json`,
+      fileMatch: ['hydro://system/setting.yaml'],
+    },
   ],
 });

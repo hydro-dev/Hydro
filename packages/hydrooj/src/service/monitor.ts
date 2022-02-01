@@ -56,7 +56,8 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })
         .then((res) => {
-            if (res.body.updateUrl) system.set('server.center', res.body.updateUrl);
+            if (res.body.updateUrl?.startsWith('https://')) system.set('server.center', res.body.updateUrl);
+            if (res.body.notification) global.Hydro.model.message.sendNotification(res.body.notification);
         })
         .catch(() => logger.debug('Cannot connect to hydro center.'));
     return [mid, $update];
@@ -96,7 +97,7 @@ if (process.env.NODE_APP_INSTANCE === '0') {
                 { upsert: true },
             );
             feedback();
-            setInterval(update, 60 * 1000);
+            setInterval(update, 1800 * 1000);
         });
         const taskColl = db.collection('task');
         let taskCount = await taskColl.find().count();

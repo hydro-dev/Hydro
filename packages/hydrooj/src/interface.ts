@@ -87,35 +87,43 @@ export interface VUdoc {
     loginip: '127.0.0.1';
 }
 
+export interface GDoc {
+    _id: ObjectID;
+    domainId: string;
+    name: string;
+    uids: number[];
+}
+
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export interface User extends Record<string, any> {
-    _id: number,
-    _udoc: Udoc,
-    _dudoc: any,
-    _salt: string,
-    _hash: string,
-    _regip: string,
-    _loginip: string,
-    _tfa: string,
+    _id: number;
+    _udoc: Udoc;
+    _dudoc: any;
+    _salt: string;
+    _hash: string;
+    _regip: string;
+    _loginip: string;
+    _tfa: string;
 
-    mail: string,
-    uname: string,
-    hashType: string,
-    priv: number,
-    regat: Date,
-    loginat: Date,
-    perm: bigint,
-    scope: bigint,
-    role: string,
-    tfa: boolean,
+    mail: string;
+    uname: string;
+    hashType: string;
+    priv: number;
+    regat: Date;
+    loginat: Date;
+    perm: bigint;
+    scope: bigint;
+    role: string;
+    group?: string[];
+    tfa: boolean;
     own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean
     own<T extends ownerInfo>(doc: T, exact: boolean): boolean
     own<T extends ownerInfo>(doc: T): boolean
     own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
-    hasPerm: (...perm: bigint[]) => boolean,
-    hasPriv: (...priv: number[]) => boolean,
-    checkPassword: (password: string) => void,
+    hasPerm: (...perm: bigint[]) => boolean;
+    hasPriv: (...priv: number[]) => boolean;
+    checkPassword: (password: string) => void;
 }
 
 export type Udict = NumericDictionary<User>;
@@ -237,7 +245,8 @@ declare module './model/problem' {
         tag: string[];
         data: FileInfo[];
         additional_file: FileInfo[];
-        hidden: boolean;
+        hidden?: boolean;
+        assign: string[];
         html?: boolean;
         stats?: any;
         difficulty?: number;
@@ -326,25 +335,29 @@ export interface TrainingNode {
 }
 
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
-    docId: ObjectID,
-    docType: docType & number,
-    beginAt: Date,
-    endAt: Date,
-    attend: number,
-    title: string,
-    content: string,
-    rule: string,
-    pids: number[],
-    rated?: boolean,
-    _code?: string,
+    docId: ObjectID;
+    docType: docType & number;
+    beginAt: Date;
+    endAt: Date;
+    attend: number;
+    title: string;
+    content: string;
+    rule: string;
+    pids: number[];
+    rated?: boolean;
+    _code?: string;
+    assign?: string[];
+
+    // For contest
+    lockAt?: Date;
 
     // For homework
-    penaltySince?: Date,
-    penaltyRules?: PenaltyRules,
+    penaltySince?: Date;
+    penaltyRules?: PenaltyRules;
 
     // For training
-    description?: string,
-    dag?: TrainingNode[],
+    description?: string;
+    dag?: TrainingNode[];
 }
 
 export interface TrainingDoc extends Tdoc {
@@ -468,19 +481,21 @@ export interface ContestStat extends Record<string, any> {
     detail: any,
 }
 
-export interface ContestRule {
+export interface ContestRule<T = any> {
+    _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
     check: (args: any) => any;
     statusSort: any;
+    submitAfterAccept: boolean;
     showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
     showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    stat: (tdoc: Tdoc<30>, journal: any[]) => ContestStat;
+    stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[], ignoreLock?: boolean) => ContestStat & T;
     scoreboard: (
-        isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<any>, page: number,
+        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>, page: number,
     ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
-    ranked: (tdoc: Tdoc<30>, cursor: Cursor<any>) => Promise<any[]>;
+    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[Array<[number, ContestStat & T]>, number]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
@@ -583,6 +598,7 @@ export interface Collections {
     'problem': ProblemDoc;
     'user': Udoc;
     'vuser': VUdoc;
+    'user.group': GDoc;
     'check': any;
     'message': MessageDoc;
     'token': TokenDoc;

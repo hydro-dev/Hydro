@@ -33,7 +33,7 @@
           <div class="row">
           {{ form.form_text({
                row:false,
-               columns:8,
+               columns:6,
                label:'Tags',
                help_text:'Split by \', \'.',
                name:'tag',
@@ -41,7 +41,15 @@
              }) }}
           {{ form.form_text({
                row:false,
-               columns:4,
+               columns:3,
+               label:'Assign',
+               help_text:'Assigned groups',
+               name:'assign',
+               value:pdoc.assign|default([])|join(', ')
+             }) }}
+          {{ form.form_text({
+               row:false,
+               columns:3,
                label:'Difficulty',
                help_text:'From 1-10',
                name:'difficulty',
