@@ -40,16 +40,6 @@ formatCode:
   desc: Auto format code
   category: preference
   value: true
-astyleOptions:
-  type: text
-  family: highlight
-  desc: astyle formatting options
-  category: preference
-  value: >
-    style=java attach-namespaces attach-classes attach-inlines attach-extern-c attach-closing-while 
-    indent-col1-comments break-blocks pad-oper pad-comma pad-header unpad-paren align-pointer=name 
-    break-one-line-headers attach-return-type attach-return-type-decl convert-tabs close-templates 
-    max-code-length=110 break-after-logical
 about:
   type: markdown
   name: about

@@ -70,7 +70,10 @@ class WorkerService implements BaseService {
             try {
                 logger.debug('Worker task: %o', doc);
                 const start = Date.now();
-                await this.handlers[doc.subType](doc);
+                await Promise.race([
+                    this.handlers[doc.subType](doc),
+                    new Promise((resolve) => setTimeout(resolve, 300000)),
+                ]);
                 const spent = Date.now() - start;
                 if (spent > 500) logger.warn('Slow worker task (%d ms): %s', spent, doc);
             } catch (e) {

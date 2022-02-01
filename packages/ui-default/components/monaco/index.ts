@@ -27,7 +27,7 @@ class ChangeThemeAction extends EditorAction {
     super({
       id: 'hydro.changeEditorTheme',
       label: i18n('Change Theme'),
-      alias: i18n('Change Theme'),
+      alias: [i18n('Change Theme'), 'Change Theme'],
     });
   }
 

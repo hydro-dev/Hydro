@@ -286,6 +286,7 @@ export class ProblemModel {
         group: string[] = [], doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
         indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
+        if (!pids?.length) return [];
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
         const q: any = { docId: { $in: pids } };

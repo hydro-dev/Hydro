@@ -12,6 +12,13 @@
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
     </div>
+    {% if model.contest.isLocked(tdoc) %}
+      <div class="section__body no-padding">
+        <blockquote class="note">
+          {{ _('Scoreboard locked at {0}').format(datetimeSpan(tdoc.lockAt))|safe }}
+        </blockquote>
+      </div>
+    {% endif %}
     <div class="section__body no-padding overflow-hidden-horizontal">
       <table class="data-table">
         <colgroup>

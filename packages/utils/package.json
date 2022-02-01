@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.1.11",
+    "version": "1.1.13",
     "description": "hydrooj utils",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -12,7 +12,7 @@
         "js-yaml": "^4.1.0",
         "moment": "^2.29.1",
         "mongodb": "^3.7.3",
-        "systeminformation": "^5.9.17"
+        "systeminformation": "^5.11.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

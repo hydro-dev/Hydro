@@ -92,6 +92,9 @@
             disabled:not handler.user.hasPerm(perm.PERM_EDIT_PROBLEM),
             row:false
           }) }}
+          {% if tdoc.lockAt %}
+            <input type="hidden" name="lock" value="{{ ((tdoc.endAt - tdoc.lockAt)/60000)|int }}">
+          {% endif %}
           </div>
           {{ form.form_textarea({
             columns:null,
