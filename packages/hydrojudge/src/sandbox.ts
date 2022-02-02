@@ -5,10 +5,10 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
-import { SandboxClient } from './sandbox_client';
+import { SandboxClient } from './sandbox/client';
 import {
     Cmd, CopyInFile, SandboxResult, SandboxStatus,
-} from './sandbox_interface';
+} from './sandbox/interface';
 import { cmd, parseMemoryMB } from './utils';
 
 const argv = cac().parse();

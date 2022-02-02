@@ -4,7 +4,7 @@ import checkers from './checkers';
 import compile from './compile';
 import { SystemError } from './error';
 import { Execute } from './interface';
-import { CopyInFile } from './sandbox_interface';
+import { CopyInFile } from './sandbox/interface';
 import { parseFilename } from './utils';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');

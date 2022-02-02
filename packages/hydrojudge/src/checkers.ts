@@ -2,7 +2,7 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
 import { run } from './sandbox';
-import { CopyInFile } from './sandbox_interface';
+import { CopyInFile } from './sandbox/interface';
 import { parse } from './testlib';
 
 interface CheckConfig {

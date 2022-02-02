@@ -1,11 +1,8 @@
-import { CopyInFile } from './sandbox_interface';
-
-export type SFile = CopyInFile;
-
+import { CopyInFile } from './sandbox/interface';
 export interface Execute {
     execute: string,
     clean: Function,
-    copyIn: Record<string, SFile>,
+    copyIn: Record<string, CopyInFile>,
     time?: number,
 }
 export interface CompileErrorInfo {
