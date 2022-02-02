@@ -2,7 +2,18 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
 import { run } from './sandbox';
+import { CopyInFile } from './sandbox/interface';
 import { parse } from './testlib';
+
+interface CheckConfig {
+    input: string,
+    output: string,
+    user_stdout: string,
+    user_stderr: string,
+    score: number,
+    copyIn: Record<string, CopyInFile>,
+    detail: boolean,
+}
 
 interface CheckResult {
     status: number,
@@ -11,7 +22,7 @@ interface CheckResult {
     code?: number,
 }
 
-type Checker = (config: any) => Promise<CheckResult>;
+type Checker = (config: CheckConfig) => Promise<CheckResult>;
 
 const checkers: Record<string, Checker> = {
     async default(config) {
@@ -22,7 +33,7 @@ const checkers: Record<string, Checker> = {
                 ...config.copyIn,
             },
         });
-        let status;
+        let status: number;
         let message: any = '';
         if (stdout) {
             status = STATUS.STATUS_WRONG_ANSWER;

@@ -6,8 +6,9 @@ import { CompileError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
+import { Context } from './interface';
 
-export const judge = async (ctx) => {
+export const judge = async (ctx: Context) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     try {

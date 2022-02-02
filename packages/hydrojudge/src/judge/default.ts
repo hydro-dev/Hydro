@@ -9,6 +9,9 @@ import { CompileError, FormatError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
 import { parseFilename } from '../utils';
+import {
+    Case, Context, ContextSubTask, SubTask,
+} from './interface';
 
 const Score = {
     sum: (a: number, b: number) => (a + b),
@@ -16,8 +19,8 @@ const Score = {
     min: Math.min,
 };
 
-function judgeCase(c, sid: string) {
-    return async (ctx, ctxSubtask, runner?: Function) => {
+function judgeCase(c: Case, sid: string) {
+    return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
@@ -72,7 +75,6 @@ function judgeCase(c, sid: string) {
                     stdout: c.output,
                     user_stdout: stdout,
                     user_stderr: stderr,
-                    checker: ctx.config.checker,
                     checker_type: ctx.config.checker_type,
                     score: ctxSubtask.subtask.score,
                     detail: ctx.config.detail ?? true,
@@ -109,8 +111,8 @@ function judgeCase(c, sid: string) {
     };
 }
 
-function judgeSubtask(subtask, sid: string) {
-    return async (ctx) => {
+function judgeSubtask(subtask: SubTask, sid: string) {
+    return async (ctx: Context) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -133,7 +135,7 @@ function judgeSubtask(subtask, sid: string) {
     };
 }
 
-export const judge = async (ctx) => {
+export const judge = async (ctx: Context) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
     ctx.next({ status: STATUS.STATUS_COMPILING });
     if (ctx.config.template) {

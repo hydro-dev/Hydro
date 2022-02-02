@@ -23,19 +23,19 @@ import { Queue, sleep } from './utils';
 declare global {
     namespace NodeJS {
         interface Global {
-            onDestory: Function[]
+            onDestroy: Function[]
             hosts: any
         }
     }
 }
-if (!global.onDestory) global.onDestory = [];
+if (!global.onDestroy) global.onDestroy = [];
 if (!global.hosts) global.hosts = [];
 let exit = false;
 
 const terminate = async () => {
     log.info('正在保存数据');
     try {
-        await Promise.all(global.onDestory.map((f) => f()));
+        await Promise.all(global.onDestroy.map((f: Function) => f()));
         process.exit(1);
     } catch (e) {
         if (exit) process.exit(1);
