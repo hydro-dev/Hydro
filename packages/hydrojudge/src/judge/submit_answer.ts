@@ -1,8 +1,9 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
+import { Context } from './interface';
 
 export async function judge({
     next, end, config, code,
-}) {
+}: Context) {
     next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     code = code.replace(/\r/g, '');
     const outputs = code.split('\n');

@@ -91,7 +91,7 @@ export class Logger {
     private createMethod(name: LogType, prefix: string, minLevel: number) {
         this[name] = (...args: [any, ...any[]]) => {
             if (this.level < minLevel) return;
-            this.stream.write(`${prefix + this.displayName + this.format(...args)}\n`);
+            this.stream.write(`${prefix} ${this.displayName} ${this.format(...args)}\n`);
         };
     }
 

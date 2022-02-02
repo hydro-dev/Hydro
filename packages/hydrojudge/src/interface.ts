@@ -1,8 +1,7 @@
-export interface SFile {
-    src?: string,
-    content?: string,
-    fileId?: string,
-}
+import { CopyInFile } from './sandbox_interface';
+
+export type SFile = CopyInFile;
+
 export interface Execute {
     execute: string,
     clean: Function,

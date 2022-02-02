@@ -63,7 +63,7 @@ class JudgeTask {
         this.source = this.request.source;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
-        await Lock.aquire(`${this.host}/${this.source}/${this.rid}`);
+        await Lock.acquire(`${this.host}/${this.source}/${this.rid}`);
         fs.ensureDirSync(this.tmpdir);
         tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
         log.info('Submission: %s/%s/%s', this.host, this.source, this.rid);
@@ -170,7 +170,7 @@ export default class Hydro {
     }
 
     async cacheOpen(source: string, files: any[], next?) {
-        await Lock.aquire(`${this.config.host}/${source}`);
+        await Lock.acquire(`${this.config.host}/${source}`);
         try {
             return this._cacheOpen(source, files, next);
         } finally {
@@ -245,7 +245,7 @@ export default class Hydro {
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn/websocket?t=${res.data.entropy}`);
         this.ws.on('open', () => {
             this.ws.send(this.config.cookie);
-            global.onDestory.push(() => this.ws.close());
+            global.onDestroy.push(() => this.ws.close());
             const content = this.config.minPriority !== undefined
                 ? `{"key":"prio","prio":${this.config.minPriority}}`
                 : '{"key":"ping"}';

@@ -3,11 +3,24 @@ import { findFileSync } from '@hydrooj/utils/lib/utils';
 import checkers from './checkers';
 import compile from './compile';
 import { SystemError } from './error';
+import { Execute } from './interface';
+import { CopyInFile } from './sandbox_interface';
 import { parseFilename } from './utils';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 
-export async function check(config): Promise<[number, number, string]> {
+interface CheckConfig {
+    checker_type: string;
+    stdin: string,
+    stdout: string,
+    user_stdout: string,
+    user_stderr: string,
+    score: number,
+    copyIn?: Record<string, CopyInFile>,
+    detail: boolean,
+}
+
+export async function check(config: CheckConfig): Promise<[number, number, string]> {
     if (!checkers[config.checker_type]) throw new SystemError('Unknown checker type {0}', [config.checker_type]);
     const {
         code, status, score, message,
@@ -24,7 +37,7 @@ export async function check(config): Promise<[number, number, string]> {
     return [status, score, message];
 }
 
-export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any) {
+export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
     if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
     const file = await fs.readFile(checker);
