@@ -3,7 +3,7 @@ import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import list from 'monaco-themes/themes/themelist.json';
 import i18n from 'vj/utils/i18n';
-import './monaco.css';
+import './monaco.styl';
 
 export default monaco;
 export const customOptions: monaco.editor.IStandaloneDiffEditorConstructionOptions = JSON.parse(localStorage.getItem('editor.config') || '{}');
@@ -89,4 +89,8 @@ export function registerAction(
     customOptions.fontSize = current;
     localStorage.setItem('editor.config', JSON.stringify(customOptions));
   });
+  if (model.getLanguageId() === 'markdown') {
+    const suggestWidget = (editor.getContribution('editor.contrib.suggestController') as any).widget?.value;
+    if (suggestWidget?._setDetailsVisible) suggestWidget._setDetailsVisible(true);
+  }
 }
