@@ -16,9 +16,7 @@
             <div class="media__body medium">
               <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
               <ul class="supplementary list">
-                <li>
-                  {{ _('Status') }}: <span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span>
-                </li>
+                <li>{{ _('Status') }}: {{ _(model.contest.statusText(tdoc)) }}</li>
                 <li>{{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}</li>
                 <li>
                   {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
