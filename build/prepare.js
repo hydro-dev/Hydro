@@ -53,10 +53,7 @@ fs.writeFileSync(path.resolve(process.cwd(), 'packages', 'ui-default', 'tsconfig
         jsx: 'react',
         module: 'es2020',
         allowSyntheticDefaultImports: true,
-        target: 'ES2020',
-        lib: [
-            'ES2020',
-        ],
+        target: 'es2020',
         baseUrl: '.',
         moduleResolution: 'node',
         paths: {

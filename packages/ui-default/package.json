@@ -18,7 +18,6 @@
     "@types/katex": "^0.11.1",
     "@types/qrcode": "^1.4.2",
     "@types/redux-logger": "^3.0.9",
-    "@types/sharedworker": "^0.0.64",
     "@types/sockjs-client": "^1.5.1",
     "@undefined-moe/monaco-yaml": "^2.5.1",
     "ansi_up": "^5.1.0",

@@ -45,8 +45,8 @@ function initSharedConn(path: string, port: MessagePort, cookie: any) {
   sharedConnections[path][1].push(port);
 }
 
-// eslint-disable-next-line no-undef
-onconnect = function (e) {
+// @ts-ignore
+onconnect = function (e) { // eslint-disable-line no-undef
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {
