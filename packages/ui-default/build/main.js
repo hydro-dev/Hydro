@@ -2,6 +2,7 @@
 import cac from 'cac';
 import fs from 'fs-extra';
 import webpack from 'webpack';
+import esbuild from 'esbuild';
 import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
 import log from 'fancy-log';
@@ -13,9 +14,18 @@ import webpackConfig from './config/webpack';
 
 const argv = cac().parse();
 
-function runWebpack({
+async function runWebpack({
   watch, production, measure, dev,
 }) {
+  const result = esbuild.build({
+    bundle: true,
+    format: 'iife',
+    entryPoints: [root('sharedworker.ts')],
+    outfile: root('.build/sharedworker.js'),
+    watch: dev || watch,
+    minify: production,
+  });
+  if (!dev && !watch) await result;
   const compiler = webpack(webpackConfig({ watch, production, measure }));
   if (dev) {
     const server = new WebpackDevServer(compiler, {
@@ -23,9 +33,9 @@ function runWebpack({
       hot: true,
       disableHostCheck: true,
       stats: 'none',
-      index: '',
+      index: root('public'),
       proxy: {
-        context: () => true,
+        context: (path) => !path.includes('sharedworker.js'),
         target: 'http://localhost:2333',
         ws: true,
       },

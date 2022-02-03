@@ -199,6 +199,7 @@ export default function (env = {}) {
           { from: root('static') },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}`), to: 'vditor/' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
+          { from: root('.build/sharedworker.js'), to: 'sharedworker.js' },
         ],
       }),
       new webpack.DefinePlugin({
