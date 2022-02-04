@@ -143,8 +143,8 @@ async function read1(folder: string, files: string[], checkFile, cfg, rst) {
     const config = { count: 0, subtasks };
     const keys = Object.keys(subtask);
     for (let i = 0; i < keys.length; i++) {
-        if (extra < i) subtask[keys[i]].score = base;
-        else subtask[keys[i]].score = base + 1;
+        if (i >= extra) subtask[keys[i]].score = base + 1;
+        else subtask[keys[i]].score = base;
         for (const j of subtask[keys[i]].cases) {
             config.count++;
             j.input = checkFile(j.input);
