@@ -11,12 +11,12 @@ const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 
 interface CheckConfig {
     checker_type: string;
-    stdin: string,
-    stdout: string,
-    user_stdout: string,
-    user_stderr: string,
-    score: number,
+    stdin: CopyInFile,
+    stdout: CopyInFile,
+    user_stdout: CopyInFile,
+    user_stderr: CopyInFile,
     copyIn?: Record<string, CopyInFile>,
+    score: number,
     detail: boolean,
 }
 

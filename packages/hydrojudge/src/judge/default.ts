@@ -1,12 +1,10 @@
-import path from 'path';
-import fs from 'fs-extra';
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
 import compile from '../compile';
 import { getConfig } from '../config';
 import { CompileError, FormatError } from '../error';
-import { run } from '../sandbox';
+import { del, run } from '../sandbox';
 import signals from '../signals';
 import { parseFilename } from '../utils';
 import {
@@ -40,26 +38,25 @@ function judgeCase(c: Case, sid: string) {
         const { filename } = ctx.config;
         const copyIn = { ...ctx.execute.copyIn };
         if (filename) copyIn[`${filename}.in`] = c.input ? { src: c.input } : { content: '' };
-        const copyOut = filename ? [`${filename}.out?`] : [];
+        const copyOutCached = filename ? [`${filename}.out?`] : [];
         const stdin = filename ? null : c.input;
-        const stdout = path.resolve(ctx.tmpdir, `${c.id}.out`);
-        const stderr = path.resolve(ctx.tmpdir, `${c.id}.err`);
         const res = await run(
             ctx.execute.execute.replace(/\$\{name\}/g, 'code'),
             {
                 stdin,
-                stdout: filename ? null : stdout,
-                stderr,
                 copyIn,
-                copyOut,
+                copyOutCached,
                 time: ctxSubtask.subtask.time * ctx.execute.time,
                 memory: ctxSubtask.subtask.memory,
+                cacheStdoutAndStderr: true,
             },
         );
         const { code, time_usage_ms, memory_usage_kb } = res;
         let { status } = res;
-        if (res.files[`${filename}.out`] || !fs.existsSync(stdout)) {
-            fs.writeFileSync(stdout, res.files[`${filename}.out`] || '');
+        let stdout = { fileId: res.fileIds['stdout'] };
+        const stderr = { fileId: res.fileIds['stderr'] };
+        if (res.fileIds[`${filename}.out`]) {
+            stdout = { fileId: res.fileIds[`${filename}.out`] };
         }
         let message: any = '';
         let score = 0;
@@ -71,8 +68,8 @@ function judgeCase(c: Case, sid: string) {
             } else {
                 [status, score, message] = await check({
                     copyIn: ctx.checker.copyIn,
-                    stdin: c.input,
-                    stdout: c.output,
+                    stdin: { src: c.input },
+                    stdout: { src: c.output },
                     user_stdout: stdout,
                     user_stderr: stderr,
                     checker_type: ctx.config.checker_type,
@@ -84,10 +81,9 @@ function judgeCase(c: Case, sid: string) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
-        await Promise.all([
-            fs.remove(stdout),
-            fs.remove(stderr),
-        ]).catch(() => { /* Ignore file doesn't exist */ });
+        await Promise.all(
+            Object.values(res.fileIds).map((id) => del(id)),
+        ).catch(() => { /* Ignore file doesn't exist */ });
         if (runner && ctx.rerun && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             await runner(ctx, ctxSubtask);

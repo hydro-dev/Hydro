@@ -97,10 +97,10 @@ export const judge = async (ctx: Context) => {
         } else {
             [status, , message] = await check({
                 copyIn: copyInDir(path.resolve(ctx.tmpdir, 'checker')),
-                stdin: input,
-                stdout,
-                user_stdout: stdout,
-                user_stderr: stderr,
+                stdin: { src: input },
+                stdout: { src: stdout },
+                user_stdout: { src: stdout },
+                user_stderr: { src: stderr },
                 checker_type: ctx.config.checker_type,
                 score: 100,
                 detail: ctx.config.detail,

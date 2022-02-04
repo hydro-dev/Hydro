@@ -3,7 +3,7 @@ import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { getConfig } from '../config';
-import { run } from '../sandbox';
+import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
@@ -22,20 +22,21 @@ function judgeCase(c: Case) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await run([
+        const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await runPiped(
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
                 copyIn: ctx.executeUser.copyIn,
                 time: ctxSubtask.subtask.time * ctx.executeUser.time,
                 memory: ctxSubtask.subtask.memory,
-            }, {
+            },
+            {
                 execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
                 memory: ctxSubtask.subtask.memory * 2,
                 copyOut: ['/w/tout?'],
             },
-        ]);
+        );
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;

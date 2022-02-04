@@ -38,6 +38,19 @@ interface Parameter {
     copyIn?: Record<string, CopyInFile>;
     copyOut?: string[];
     copyOutCached?: string[];
+    cacheStdoutAndStderr?: boolean;
+}
+
+interface SandboxAdaptedResult {
+    status: number;
+    code: number;
+    time_usage_ms: number;
+    memory_usage_kb?: number;
+    files: Record<string, string>;
+    fileIds?: Record<string, string>;
+    stdout?: string;
+    stderr?: string;
+    error?: string;
 }
 
 function checkStringArray(args: ParseEntry[]): args is string[] {
@@ -58,12 +71,17 @@ function proc({
     memory = parseMemoryMB(getConfig('memoryMax')),
     processLimit = getConfig('processLimit'),
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
+    cacheStdoutAndStderr = false,
 }: Parameter = {}): Cmd {
     if (!supportOptional) {
         copyOut = (copyOut as string[]).map((i) => (i.endsWith('?') ? i.substr(0, i.length - 1) : i));
     }
     const size = parseMemoryMB(getConfig('stdio_size'));
     const rate = getConfig('rate');
+    const copyOutCachedCopy = [...copyOutCached];
+    if (cacheStdoutAndStderr) {
+        copyOutCachedCopy.push('stdout', 'stderr');
+    }
     return {
         args: parseArgs(execute),
         env: getConfig('env').split('\n'),
@@ -80,14 +98,14 @@ function proc({
         procLimit: processLimit,
         copyIn,
         copyOut,
-        copyOutCached,
+        copyOutCached: copyOutCachedCopy,
     };
 }
 
-async function adaptResult(result: SandboxResult, params: Parameter) {
-    const rate = getConfig('rate');
+async function adaptResult(result: SandboxResult, params: Parameter): Promise<SandboxAdaptedResult> {
+    const rate = getConfig('rate') as number;
     // FIXME: Signalled?
-    const ret: any = {
+    const ret: SandboxAdaptedResult = {
         status: statusMap.get(result.status) || STATUS.STATUS_ACCEPTED,
         time_usage_ms: result.time / 1000000 / rate,
         memory_usage_kb: result.memory / 1024,
@@ -107,14 +125,14 @@ async function adaptResult(result: SandboxResult, params: Parameter) {
     return ret;
 }
 
-export async function runMultiple(execute: Parameter[]) {
+export async function runPiped(execute0: Parameter, execute1: Parameter): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
         const body = {
             cmd: [
-                proc(execute[0]),
-                proc(execute[1]),
+                proc(execute0),
+                proc(execute1),
             ],
             pipeMapping: [{
                 in: { index: 0, fd: 1 },
@@ -142,16 +160,15 @@ export async function runMultiple(execute: Parameter[]) {
         if (e instanceof FormatError) throw e;
         throw new SystemError('Sandbox Error', [e]);
     }
-    return await Promise.all(res.map((r) => adaptResult(r, {})));
+    return await Promise.all(res.map((r) => adaptResult(r, {}))) as [SandboxAdaptedResult, SandboxAdaptedResult];
 }
 
 export async function del(fileId: string) {
     await new SandboxClient(getConfig('sandbox_host')).deleteFile(fileId);
 }
 
-export async function run(execute: string | Parameter[], params?: Parameter) {
+export async function run(execute: string, params?: Parameter): Promise<SandboxAdaptedResult> {
     let result: SandboxResult;
-    if (typeof execute === 'object') return await runMultiple(execute);
     try {
         const client = new SandboxClient(getConfig('sandbox_host'));
         if (!supportOptional) {
