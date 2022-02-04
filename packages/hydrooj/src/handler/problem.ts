@@ -436,10 +436,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                (this.tdoc
-                    ? (this.tsdoc.journal || []).filter((i) => i.pid === this.pdoc.docId).length
-                    : this.psdoc?.rid ? Promise.resolve() : problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1)
-                ) && problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
+                problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
                 problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),
