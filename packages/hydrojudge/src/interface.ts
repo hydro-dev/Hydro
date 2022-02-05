@@ -8,5 +8,5 @@ export interface Execute {
 export interface CompileErrorInfo {
     stdout?: string,
     stderr?: string,
-    status?: string
+    status?: number
 }
