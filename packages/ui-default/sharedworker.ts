@@ -18,6 +18,10 @@ type RequestPayload = RequestInitSharedConnPayload | RequestSendMessagePayload;
 function broadcastMsg(ports: MessagePort[], message: any) {
   for (const p of ports) p.postMessage(message);
 }
+function closeSharedConn(path: string) {
+  sharedConnections[path][0].close();
+  delete sharedConnections[path];
+}
 function initSharedConn(path: string, port: MessagePort, cookie: any) {
   if (!sharedConnections[path]) {
     console.log('Init connection for', path);
@@ -32,6 +36,7 @@ function initSharedConn(path: string, port: MessagePort, cookie: any) {
       if (payload.event === 'auth') {
         if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
           broadcastMsg(ports, { type: 'close', path, error: payload.error });
+          closeSharedConn(path);
         } else {
           console.log('Connected to', path);
           broadcastMsg(ports, { type: 'open', path });
@@ -47,7 +52,7 @@ function initSharedConn(path: string, port: MessagePort, cookie: any) {
 
 // @ts-ignore
 onconnect = function (e) { // eslint-disable-line no-undef
-  const port = e.ports[0];
+  const port: MessagePort = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {
     if (msg.data.type === 'sharedConn') initSharedConn(msg.data.path, port, msg.data.cookie);
