@@ -371,7 +371,7 @@ export class HandlerCommon {
         }
         for (const key in kwargs.query || {}) {
             if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = kwargs.query[key].toString().replace(/\//g, '%2F');
+            else query[key] = encodeURIComponent(kwargs.query[key].toString());
         }
         try {
             const { anchor } = args;
