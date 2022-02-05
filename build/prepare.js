@@ -44,6 +44,26 @@ const configFlat = {
     exclude: [],
 };
 
+fs.writeFileSync(path.resolve(process.cwd(), 'packages', 'ui-default', 'tsconfig.json'), JSON.stringify({
+    exclude: [
+        './public',
+    ],
+    compilerOptions: {
+        resolveJsonModule: true,
+        jsx: 'react',
+        module: 'es2020',
+        allowSyntheticDefaultImports: true,
+        target: 'es2020',
+        baseUrl: '.',
+        moduleResolution: 'node',
+        paths: {
+            'vj/*': [
+                './*',
+            ],
+        },
+    },
+}));
+
 const packages = fs.readdirSync(path.resolve(process.cwd(), 'packages'));
 for (const package of packages) {
     if (package === 'ui-default') continue;

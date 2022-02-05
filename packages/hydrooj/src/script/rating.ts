@@ -135,7 +135,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     for (const dudoc of dudocs) deltaudict[dudoc.uid] = dudoc.rpdelta;
     // TODO pagination
     const problems = await problem.getMulti('', { domainId, nSubmit: { $gt: 0 }, hidden: false }).toArray();
-    await report({ message: `Found ${problems.length} problems in ${id}` });
+    if (problems.length) await report({ message: `Found ${problems.length} problems in ${id}` });
     for (const i in problems) {
         const pdoc = problems[i];
         await runProblem(pdoc, udict);
@@ -147,7 +147,7 @@ async function runInDomain(id: string, isSub: boolean, report: Function) {
     }
     const contests: Tdoc<30 | 60>[] = await contest.getMulti('', { domainId, rated: true })
         .toArray() as any;
-    await report({ message: `Found ${contests.length} contests in ${id}` });
+    if (contests.length) await report({ message: `Found ${contests.length} contests in ${id}` });
     for (const i in contests) {
         const tdoc = contests[i];
         await runContest(tdoc, udict, report);

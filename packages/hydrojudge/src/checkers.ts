@@ -2,7 +2,18 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
 import { run } from './sandbox';
+import { CopyInFile } from './sandbox/interface';
 import { parse } from './testlib';
+
+interface CheckConfig {
+    input: CopyInFile,
+    output: CopyInFile,
+    user_stdout: CopyInFile,
+    user_stderr: CopyInFile,
+    copyIn: Record<string, CopyInFile>,
+    score: number,
+    detail: boolean,
+}
 
 interface CheckResult {
     status: number,
@@ -11,18 +22,18 @@ interface CheckResult {
     code?: number,
 }
 
-type Checker = (config: any) => Promise<CheckResult>;
+type Checker = (config: CheckConfig) => Promise<CheckResult>;
 
 const checkers: Record<string, Checker> = {
     async default(config) {
         const { stdout } = await run('/usr/bin/diff -BZ usrout answer', {
             copyIn: {
-                usrout: { src: config.user_stdout },
-                answer: { src: config.output },
+                usrout: config.user_stdout,
+                answer: config.output,
                 ...config.copyIn,
             },
         });
-        let status;
+        let status: number;
         let message: any = '';
         if (stdout) {
             status = STATUS.STATUS_WRONG_ANSWER;
@@ -30,22 +41,24 @@ const checkers: Record<string, Checker> = {
                 try {
                     const pt = stdout.split('---');
                     const u = pt[0].split('\n')[1];
-                    let usr = u.substr(2, u.length - 2).trim().split(' ');
+                    const usr = u.substring(2).trim().split(' ');
                     const t = pt[1].split('\n')[1];
-                    let std = t.substr(2, t.length - 2).trim().split(' ');
+                    const std = t.substring(2).trim().split(' ');
                     if (usr.length < std.length) message = 'Standard answer longer than user output.';
                     else if (usr.length > std.length) message = 'User output longer than standard answer.';
                     else {
+                        let usrString = usr[0];
+                        let stdString = std[0];
                         for (const i in usr) {
                             if (usr[i] !== std[i]) {
-                                usr = usr[i];
-                                std = std[i];
+                                usrString = usr[i];
+                                stdString = std[i];
                                 break;
                             }
                         }
-                        if (usr.length > 20) usr = `${usr.substring(0, 16)}...`;
-                        if (std.length > 20) std = `${std.substring(0, 16)}...`;
-                        message = { message: 'Read {0}, expect {1}.', params: [usr, std] };
+                        if (usr.length > 20) usrString = `${usrString.substring(0, 16)}...`;
+                        if (std.length > 20) stdString = `${stdString.substring(0, 16)}...`;
+                        message = { message: 'Read {0}, expect {1}.', params: [usrString, stdString] };
                     }
                 } catch (e) {
                     message = stdout.substring(0, stdout.length - 1 <= 30 ? stdout.length - 1 : 30);
@@ -63,8 +76,8 @@ const checkers: Record<string, Checker> = {
     async strict(config) {
         const { stdout } = await run('/usr/bin/diff usrout answer', {
             copyIn: {
-                usrout: { src: config.user_stdout },
-                answer: { src: config.output },
+                usrout: config.user_stdout,
+                answer: config.output,
                 ...config.copyIn,
             },
         });
@@ -85,9 +98,9 @@ const checkers: Record<string, Checker> = {
     async hustoj(config) {
         const { code, stdout } = await run('${dir}/checker input answer usrout', {
             copyIn: {
-                usrout: { src: config.user_stdout },
-                answer: { src: config.output },
-                input: { src: config.input },
+                usrout: config.user_stdout,
+                answer: config.output,
+                input: config.input,
                 ...config.copyIn,
             },
         });
@@ -110,9 +123,9 @@ const checkers: Record<string, Checker> = {
     async lemon(config) {
         const { files } = await run(`\${dir}/checker input usrout answer ${config.score} score message`, {
             copyIn: {
-                usrout: { src: config.user_stdout },
-                answer: { src: config.output },
-                input: { src: config.input },
+                usrout: config.user_stdout,
+                answer: config.output,
+                input: config.input,
                 ...config.copyIn,
             },
             copyOut: ['score', 'message'],
@@ -136,8 +149,8 @@ const checkers: Record<string, Checker> = {
     async qduoj(config) {
         const { status, stdout } = await run('${dir}/checker input usrout', {
             copyIn: {
-                usrout: { src: config.user_stdout },
-                input: { src: config.input },
+                usrout: config.user_stdout,
+                input: config.input,
                 ...config.copyIn,
             },
         });
@@ -162,9 +175,9 @@ const checkers: Record<string, Checker> = {
         // eslint-disable-next-line prefer-const
         let { status, stdout, stderr } = await run('${dir}/checker', {
             copyIn: {
-                input: { src: config.input },
-                user_out: { src: config.user_stdout },
-                answer: { src: config.output },
+                input: config.input,
+                user_out: config.user_stdout,
+                answer: config.output,
                 code: { content: '' },
                 ...config.copyIn,
             },
@@ -178,9 +191,9 @@ const checkers: Record<string, Checker> = {
     async testlib(config) {
         const { stderr, status } = await run('${dir}/checker ${dir}/in ${dir}/user_out ${dir}/answer', {
             copyIn: {
-                in: { src: config.input },
-                user_out: { src: config.user_stdout },
-                answer: { src: config.output },
+                in: config.input,
+                user_out: config.user_stdout,
+                answer: config.output,
                 ...config.copyIn,
             },
         });

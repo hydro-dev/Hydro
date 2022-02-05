@@ -5,7 +5,7 @@
   {% if icon_name %}
     <span class="icon icon-{{ icon_name }}"></span>
   {% endif %}
-  {{ _(label|default(pagename)) }}
+  {{ _(label or page_name) }}
   </a>
 </li>
 {% endmacro %}

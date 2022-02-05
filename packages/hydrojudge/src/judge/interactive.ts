@@ -3,38 +3,42 @@ import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { getConfig } from '../config';
-import { run } from '../sandbox';
+import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
 import { findFileSync, parseFilename } from '../utils';
+import {
+    Case, Context, ContextSubTask, SubTask,
+} from './interface';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {
-    sum: (a, b) => (a + b),
+    sum: (a: number, b: number) => (a + b),
     max: Math.max,
     min: Math.min,
 };
 
-function judgeCase(c) {
-    return async (ctx, ctxSubtask) => {
+function judgeCase(c: Case) {
+    return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await run([
+        const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await runPiped(
             {
                 execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
                 copyIn: ctx.executeUser.copyIn,
                 time: ctxSubtask.subtask.time * ctx.executeUser.time,
                 memory: ctxSubtask.subtask.memory,
-            }, {
+            },
+            {
                 execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
                 memory: ctxSubtask.subtask.memory * 2,
                 copyOut: ['/w/tout?'],
             },
-        ]);
+        );
         // TODO handle tout (maybe pass to checker?)
-        let status;
+        let status: number;
         let score = 0;
         let message: any = '';
         if (time_usage_ms > ctxSubtask.subtask.time * ctx.executeUser.time) {
@@ -70,8 +74,8 @@ function judgeCase(c) {
     };
 }
 
-function judgeSubtask(subtask) {
-    return async (ctx) => {
+function judgeSubtask(subtask: SubTask) {
+    return async (ctx: Context) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
             subtask,
@@ -90,7 +94,7 @@ function judgeSubtask(subtask) {
     };
 }
 
-export const judge = async (ctx) => {
+export const judge = async (ctx: Context) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (() => {

@@ -1,0 +1,30 @@
+[data-mode-id="markdown"] > .monaco-editor
+  [widgetid="editor.widget.suggestWidget"]
+    width: 250px !important;
+
+  [widgetid="suggest.details"], .suggest-details.no-type
+    width: 64px !important;
+    height: 64px !important;
+    .codicon-close, .scrollbar
+      display: none;
+    .docs.markdown-docs > div
+      padding: 0 !important;
+    img
+      z-index: 100;
+      width: 64px;
+      height: 64px;
+      position: absolute;
+    a[title="#loader"]
+      text-indent: -9999em
+      z-index: 99;
+      border: rem(5px) solid rgba($primary-color, .2)
+      border-left: rem(5px) solid $primary-color
+      animation: load8 1.1s infinite linear
+      border-radius: 50%
+      width: rem(50px)
+      height: rem(50px)
+      margin-left: rem(-25px)
+      margin-top: rem(-25px)
+      left: 50%
+      top: 50%
+      position: absolute

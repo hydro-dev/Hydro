@@ -20,11 +20,13 @@ function remove() {
 }
 
 export default class Sock {
-  constructor(url, showNotification = true) {
+  constructor(url, showNotification = true, useShared = false) {
     this.url = url;
+    this.shared = false;
     this.isreconnect = false;
     this.retryCount = 0;
-    this.init();
+    if (useShared && window.SharedWorker) this.initShared();
+    else this.init();
     this.showNotification = showNotification;
   }
 
@@ -60,12 +62,25 @@ export default class Sock {
     };
   }
 
+  initShared() {
+    this.shared = true;
+    const worker = new SharedWorker('/sharedworker.js', { name: 'Hydro Shared Connections Worker' });
+    worker.port.start();
+    const path = `${new URL(this.url, window.location.href).href.replace('http', 'ws')}/websocket`;
+    worker.port.postMessage({ type: 'sharedConn', path, cookie: document.cookie });
+    worker.port.onmessage = (e) => {
+      if (e.data.type === 'message') this.onmessage({ data: e.data.payload });
+    };
+    this.worker = worker;
+  }
+
   send(data) {
-    this.sock.send(data);
+    if (this.shared) this.worker.port.postMessage({ type: 'message', path: this.url, payload: data });
+    else this.sock.send(data);
   }
 
   close() {
     this.closed = true;
-    this.sock.close();
+    if (!this.shared) this.sock.close();
   }
 }

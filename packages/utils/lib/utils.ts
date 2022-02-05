@@ -305,7 +305,7 @@ function _digit2(number: number) {
     return number < 10 ? `0${number}` : number.toString();
 }
 
-export function formatSeconds(_seconds = '0') {
+export function formatSeconds(_seconds: string | number = '0') {
     const seconds = +_seconds;
     return '{0}:{1}:{2}'.format(
         _digit2(Math.floor(seconds / 3600)),
@@ -431,11 +431,20 @@ export function sortFiles(files: { _id: string }[] | string[]) {
     return isString ? result.map((x) => x.name) : result;
 }
 
-export const htmlEncode = (str) => str.replace(/[&<>'"]/g,
-    (tag) => ({
+export const htmlEncode = (str: string) => str.replace(/[&<>'"]/g,
+    (tag: string) => ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
         "'": '&#39;',
         '"': '&quot;',
     }[tag]));
+
+export function Counter<T extends (string | number) = string>() {
+    return new Proxy({}, {
+        get: (target, prop) => {
+            if (target[prop] === undefined) return 0;
+            return target[prop];
+        },
+    }) as Record<T, number>;
+}

@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { get as _get } from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
+import { Context } from './judge/interface';
 import { judge } from './judge/run';
 import * as tmpfs from './tmpfs';
 
@@ -11,7 +12,7 @@ export { update } from '@hydrooj/utils/lib/sysinfo';
 async function stackSize() {
     let output = '';
     try {
-        const context: any = {
+        const context: Context = {
             lang: 'cc',
             code: `#include <iostream>
 using namespace std;
@@ -33,8 +34,19 @@ int main(){
                 if (data.case) output = data.case.message;
             },
             end: () => { },
+            getLang: () => ({
+                compile: '/usr/bin/g++ -Wall -std=c++14 -o foo.cc foo.cc -lm',
+                execute: 'foo',
+                code_file: 'foo.cc',
+                highlight: 'cpp astyle-c',
+                monaco: 'cpp',
+                display: 'C++',
+                time_limit_rate: 1,
+                domain: [],
+                key: '',
+            }),
+            tmpdir: path.resolve(getConfig('tmp_dir'), 'sysinfo'),
         };
-        context.tmpdir = path.resolve(getConfig('tmp_dir'), 'sysinfo');
         fs.ensureDirSync(context.tmpdir);
         tmpfs.mount(context.tmpdir, '32m');
         await judge(context).catch((e) => console.error(e));

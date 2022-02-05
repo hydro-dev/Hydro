@@ -8,8 +8,9 @@ import { CompileError } from '../error';
 import { run } from '../sandbox';
 import signals from '../signals';
 import { copyInDir, parseFilename } from '../utils';
+import { Context } from './interface';
 
-export const judge = async (ctx) => {
+export const judge = async (ctx: Context) => {
     if (ctx.config.template) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];
@@ -96,11 +97,10 @@ export const judge = async (ctx) => {
         } else {
             [status, , message] = await check({
                 copyIn: copyInDir(path.resolve(ctx.tmpdir, 'checker')),
-                stdin: input,
-                stdout,
-                user_stdout: stdout,
-                user_stderr: stderr,
-                checker: ctx.config.checker,
+                stdin: { src: input },
+                stdout: { src: stdout },
+                user_stdout: { src: stdout },
+                user_stderr: { src: stderr },
                 checker_type: ctx.config.checker_type,
                 score: 100,
                 detail: ctx.config.detail,

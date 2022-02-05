@@ -21,6 +21,7 @@ import problem from './model/problem';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
 import * as system from './model/system';
+import TaskModel from './model/task';
 import user from './model/user';
 import {
     iterateAllDomain, iterateAllProblem, iterateAllPsdoc, iterateAllUser,
@@ -671,6 +672,15 @@ const scripts: UpgradeScript[] = [
             { docType: document.TYPE_PROBLEM, assign: null },
             { $set: { assign: [] } },
         );
+        return true;
+    },
+    async function _58_59() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const tasks = await db.collection('task').find({ type: 'schedule', subType: 'contest.problemHide' }).toArray();
+        for (const task of tasks) {
+            await TaskModel.add({ ...task, subType: 'contest', operation: ['unhide'] });
+        }
+        await TaskModel.deleteMany({ type: 'schedule', subType: 'contest.problemHide' });
         return true;
     },
 ];

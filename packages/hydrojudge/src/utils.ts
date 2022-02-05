@@ -16,7 +16,7 @@ export function parseFilename(filePath: string) {
     return t[t.length - 1];
 }
 
-const encrypt = (algorithm, content) => {
+const encrypt = (algorithm: string, content: crypto.BinaryLike) => {
     const hash = crypto.createHash(algorithm);
     hash.update(content);
     return hash.digest('hex');
@@ -56,7 +56,7 @@ export class Queue<T> extends EventEmitter {
 export namespace Lock {
     const data = {};
 
-    export async function aquire(key: string) {
+    export async function acquire(key: string) {
         // eslint-disable-next-line no-await-in-loop
         while (data[key]) await sleep(100);
         data[key] = true;

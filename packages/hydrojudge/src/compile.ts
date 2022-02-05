@@ -3,10 +3,11 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import { CompileError } from './error';
 import { Execute } from './interface';
 import { del, run } from './sandbox';
+import { CopyInFile } from './sandbox/interface';
 import { compilerText } from './utils';
 
 export = async function compile(
-    lang: LangConfig, code: string, target: string, copyIn: any = {}, next?: Function,
+    lang: LangConfig, code: string, target: string, copyIn: Record<string, CopyInFile> = {}, next?: Function,
 ): Promise<Execute> {
     target = lang.target || target;
     copyIn[lang.code_file] = { content: code };

@@ -75,7 +75,7 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-      <dt>{{ _('Status') }}</dt><dd><span class="homework-status--text {{ model.contest.getStatus(tdoc) }}">{{ _(model.contest.statusText(tdoc)) }}</span></dd>
+      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.statusText(tdoc)) }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
       <dt>{{ _('Open Since') }}</dt><dd>{{ homework.render_time(tdoc['beginAt']) }}</dd>
       <dt>{{ _('Deadline') }}</dt><dd>{{ homework.render_time(tdoc['penaltySince']) }}</dd>

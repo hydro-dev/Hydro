@@ -26,7 +26,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
 
     const { default: SockJs } = await import('../socket');
 
-    const sock = new SockJs('/home/messages-conn');
+    const sock = new SockJs('/home/messages-conn', true, true);
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       console.log('Received message', msg);
