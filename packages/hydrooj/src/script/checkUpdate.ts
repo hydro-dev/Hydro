@@ -32,7 +32,7 @@ export async function run(_: {}, report: Function) {
         }
     }
     if (message.length > 1) {
-        report({ message: `Total ${message.length - 1} packages have new version` });
+        report({ message: `Found ${message.length - 1} package${message.length > 2 ? 's have' : ' has'} new version` });
         MessageModel.sendNotification('Packages have new version: {0}', message.join('\n'));
     }
     return true;
