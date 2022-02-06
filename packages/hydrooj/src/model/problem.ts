@@ -292,7 +292,7 @@ export class ProblemModel {
         const q: any = { docId: { $in: pids } };
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
             .project(buildProjection(projection)).toArray();
-        if (group.length > 0) {
+        if (group.length > 0 && canViewHidden !== true) {
             pdocs = pdocs.filter((i) => !i.assign?.length || Set.intersection(group, i.assign).size);
         }
         if (canViewHidden !== true) {

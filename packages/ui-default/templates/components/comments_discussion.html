@@ -1,5 +1,14 @@
 {% import "components/user.html" as user with context %}
 
+{% macro action(tooltip, operation, type, data, icon) %}
+<a href="javascript:;"
+{% if tooltip %} data-tooltip="{{ tooltip }}"{% endif %}
+ data-op="{{ operation }}" data-type="{{ type }}"
+{% if data %} data-form="{{ data|json }}"{% endif %}>
+  <span class="icon icon-{{ icon }}"></span>
+</a>
+{% endmacro %}
+
 {% macro render(
   view, docs, udict,
   comment_ref,
@@ -24,7 +33,8 @@
   reply_edit_op = 'edit_tail_reply',
   reply_edit_text = 'Update',
   comment_delete_op = 'delete_reply',
-  reply_delete_op = 'delete_tail_reply'
+  reply_delete_op = 'delete_tail_reply',
+  reactions = {}
 ) %}
 <ul class="dczcomments__list view--discussion">
 {% if handler.user.hasPerm(comment_post_perm) %}
@@ -82,30 +92,34 @@
         </div>
         <div class="dczcomments__operations nojs--hide">
         {% if handler.user.hasPerm(reply_post_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
-            data-form="{{ {operation: reply_post_op, drid: doc._id}|json }}"
-          ><span class="icon icon-reply"></span></a>
+          {{ action(_('Reply'), 'reply', 'comment', {operation: reply_post_op, drid: doc._id}, 'reply') }}
         {% endif %}
         {% if (handler.user.hasPerm(comment_edit_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_edit_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
-            data-form="{{ {operation: comment_edit_op, drid: doc._id}|json }}"
-          ><span class="icon icon-edit"></span></a>
+          {{ action(_('Edit'), 'edit', 'comment', {operation: comment_edit_op, drid: doc._id}, 'edit') }}
         {% endif %}
         {% if (handler.user.hasPerm(comment_delete_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_delete_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
-            data-form="{{ {operation: comment_delete_op, drid: doc._id}|json }}"
-          ><span class="icon icon-delete"></span></a>
+          {{ action(_('Delete'), 'delete', 'comment', {operation: comment_delete_op, drid: doc._id}, 'delete') }}
+        {% endif %}
+        {% if (handler.user.hasPerm(perm.PERM_ADD_REACTION)) %}
+          {{ action('', 'react', 'comment', {operation: 'reaction', type:'drid', id: doc._id}, 'emoji') }}
         {% endif %}
         </div>
       </div>
-      <div class="typo" data-emoji-enabled data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}">
+      <div class="typo" data-emoji-enabled data-drid="{{ doc.docId }}" data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
+        <div class="reactions row">
+          {% for key in Object.keys(doc.react or {}) %}
+            {% if doc.react[key] %}
+              <div class="reaction{% if reactions[doc.docId][key] %} active{% endif %}"><p>{{ key }} {{ doc.react[key] }}</p></div>
+            {% endif %}
+          {% endfor %}
+        </div>
       </div>
       <div class="commentbox-edit-target"></div>
       <ul class="dczcomments__replies commentbox-reply-target">
       {%- for rdoc in doc['reply'] -%}
         {% set udoc = udict[rdoc.owner] %}
-        <li class="dczcomments__reply{% if mode_create %} commentbox-container{% endif %}">
+        <li class="dczcomments__reply">
           <div class="media">
             <div class="media__left top">
               <img src="{{ avatarUrl(udoc.avatar, 50) }}" width="50" height="50" class="medium user-profile-avatar">
@@ -118,17 +132,13 @@
                 </div>
                 <div class="dczcomments__operations nojs--hide">
                 {% if handler.user.hasPerm(reply_post_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-reply"><span class="icon icon-reply"></span></a>
+                  {{ action(_('Reply'), 'reply', 'reply', {}, 'reply') }}
                 {% endif %}
                 {% if handler.user.own(doc) or handler.user.hasPerm(reply_edit_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-reply"
-                    data-form="{{ {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}|json }}"
-                  ><span class="icon icon-edit"></span></a>
+                  {{ action(_('Edit'), 'edit', 'reply', {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}, 'edit') }}
                 {% endif %}
                 {% if handler.user.own(doc) or handler.user.hasPerm(reply_delete_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-reply"
-                    data-form="{{ {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}|json }}"
-                  ><span class="icon icon-delete"></span></a>
+                  {{ action(_('Delete'), 'delete', 'reply', {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}, 'delete') }}
                 {% endif %}
                 </div>
               </div>

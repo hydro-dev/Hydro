@@ -27,6 +27,37 @@ $downvote-color = red
 
   &:first-child
     border-top: 0
+  
+  .reactions
+    display: flex
+    flex-direction: row
+    width: 100%
+    flex-wrap: wrap
+    margin-top: 0.25rem
+    overflow: visible
+    .reaction
+      display: flex
+      flex-direction: row
+      height: 1.75rem
+      white-space: nowrap
+      width: auto
+      margin: 0.125rem
+      padding: 0 0.5rem
+      border: 2px solid transparent
+      border-radius: 1.75rem
+      font-weight: 500
+      overflow: visible
+      border-color: lighten(blue, 75%)
+      &.active
+        background-color: lighten(blue, 60%)
+      &:hover
+        background-color: lighten(blue, 75%) !important
+      p
+        padding-top: 0px
+        margin-top: 0px
+        padding-left: 0px
+        margin-right: 2px
+        line-height: 1.5
 
 .dczcomments__reply
   >.media

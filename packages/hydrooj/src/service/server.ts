@@ -4,6 +4,7 @@ import http from 'http';
 import { PassThrough } from 'stream';
 import cac from 'cac';
 import Cookies from 'cookies';
+import emojiRegex from 'emoji-regex';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
@@ -86,6 +87,7 @@ export interface Types {
     NumericArray: Type,
     CommaSeperatedArray: Type,
     Set: Type,
+    Emoji: Type,
 }
 
 export const Types: Types = {
@@ -172,6 +174,10 @@ export const Types: Types = {
         if (v instanceof Array) return new Set(v);
         return v ? new Set([v]) : new Set();
     }, null],
+    Emoji: [
+        (v: string) => v.matchAll(emojiRegex()).next().value[0],
+        (v) => emojiRegex().test(v),
+    ],
 };
 
 function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type | boolean | Validator | Converter>) {

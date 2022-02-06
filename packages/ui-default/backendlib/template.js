@@ -121,6 +121,7 @@ env.addGlobal('static_url', (assetName) => {
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
+env.addGlobal('Object', Object);
 env.addGlobal('Math', Math);
 env.addGlobal('process', process);
 env.addGlobal('global', global);

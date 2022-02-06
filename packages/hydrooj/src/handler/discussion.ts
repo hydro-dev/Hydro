@@ -179,6 +179,11 @@ class DiscussionDetailHandler extends DiscussionHandler {
         for (const drdoc of drdocs) {
             if (drdoc.reply) uids.push(...drdoc.reply.map((drrdoc) => drrdoc.owner));
         }
+        const reactions = { [did.toHexString()]: dsdoc?.react || {} };
+        await Promise.all(drdocs.map((drdoc) =>
+            discussion.getReaction(domainId, document.TYPE_DISCUSSION_REPLY, drdoc._id, this.user._id).then((reaction) => {
+                reactions[drdoc._id.toHexString()] = reaction;
+            })));
         const udict = await user.getList(domainId, uids);
         if (!dsdoc?.view) {
             await Promise.all([
@@ -194,7 +199,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         ];
         this.response.template = 'discussion_detail.html';
         this.response.body = {
-            path, ddoc: this.ddoc, dsdoc, drdocs, page, pcount, drcount, udict, vnode: this.vnode,
+            path, ddoc: this.ddoc, dsdoc, drdocs, page, pcount, drcount, udict, vnode: this.vnode, reactions,
         };
     }
 
@@ -203,12 +208,14 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     @param('type', Types.Range(['did', 'drid']))
-    @param('did', Types.ObjectID)
-    @param('id', Types.Name)
+    @param('id', Types.ObjectID)
+    @param('emoji', Types.Emoji)
     @param('reverse', Types.Boolean)
     async postReaction(domainId: string, type: string, did: ObjectID, id: string, reverse = false) {
         this.checkPerm(PERM.PERM_ADD_REACTION);
-        await discussion.react(domainId, type === 'did' ? document.TYPE_DISCUSSION : document.TYPE_DISCUSSION_REPLY, did, id, this.user._id, reverse);
+        const docType = type === 'did' ? document.TYPE_DISCUSSION : document.TYPE_DISCUSSION_REPLY;
+        const [doc, sdoc] = await discussion.react(domainId, docType, did, id, this.user._id, reverse);
+        this.response.body = { doc, sdoc };
         this.back();
     }
 
