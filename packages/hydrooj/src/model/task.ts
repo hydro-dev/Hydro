@@ -144,7 +144,7 @@ Worker.addHandler('task.daily', async () => {
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
     await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
     if (global.Hydro.model.system.get('server.checkUpdate')) {
-        await global.Hydro.script.checkVersion?.run({}, new Logger('task/checkUpdate').debug);
+        await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
     }
 });
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
