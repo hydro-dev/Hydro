@@ -1,6 +1,11 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
+import findChrome from 'chrome-finder';
 import { JSDOM } from 'jsdom';
+import type { Browser, Page } from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import PortalPlugin from 'puppeteer-extra-plugin-portal';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { STATUS } from '@hydrooj/utils/lib/status';
@@ -13,18 +18,62 @@ import { VERDICT } from '../verdict';
 
 proxy(superagent);
 const logger = new Logger('remote/codeforces');
+puppeteer.use(StealthPlugin()).use(PortalPlugin({
+    webPortalConfig: {
+        listenOpts: {
+            port: 3000,
+        },
+        baseUrl: 'http://localhost:3000',
+    },
+}));
 
 export default class CodeforcesProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
+        this.account.endpoint ||= 'https://codeforces.com';
     }
 
     cookie: string[] = [];
     csrf: string;
+    puppeteer: Browser;
+
+    async ensureBrowser() {
+        if (this.puppeteer) return true;
+        try {
+            const executablePath = findChrome();
+            logger.debug(`Using chrome found at ${executablePath}`);
+            const args = ['--disable-gpu', '--disable-setuid-sandbox'];
+            if (this.account.proxy?.startsWith('http://')) args.push(`--proxy-server=${this.account.proxy.split('//')[1]}`);
+            if (process.platform === 'linux' && process.getuid() === 0) args.push('--no-sandbox');
+            this.puppeteer = await puppeteer.launch({ headless: true, executablePath, args });
+            logger.success('Successfully launched browser');
+        } catch (e) {
+            logger.error(e);
+            logger.error('Failed to launch browser, using fallback mode');
+            return false;
+        }
+        return true;
+    }
+
+    async getPage() {
+        const page = await this.puppeteer.newPage();
+        for (const str of this.cookie) {
+            const [name, value] = str.split(';')[0].split('=');
+            await page.setCookie({ name, value, domain: 'codeforces.com' });
+        }
+        return page;
+    }
+
+    async clearPage(page: Page) {
+        const cookies = await page.cookies();
+        this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
+        await this.save({ cookie: this.cookie });
+        await page.close();
+    }
 
     get(url: string) {
         logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://codeforces.com'}${url}`;
+        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
         const req = superagent.get(url).set('Cookie', this.cookie);
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
@@ -32,7 +81,7 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     post(url: string) {
         logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://codeforces.com'}${url}`;
+        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
         const req = superagent.post(url).type('form').set('Cookie', this.cookie);
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
@@ -54,6 +103,20 @@ export default class CodeforcesProvider implements IBasicProvider {
         return _tta;
     }
 
+    async checkLogin() {
+        await this.ensureBrowser();
+        const page = await this.getPage();
+        await page.goto(`${this.account.endpoint}/enter`);
+        const html = await page.content();
+        const cookies = await page.cookies();
+        this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
+        await this.save({ cookie: this.cookie });
+        const ftaa = cookies.find((i) => i.name === '70a7c28f3de')?.value;
+        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1];
+        await page.close();
+        return [ftaa, bfaa, !html.includes('Login into Codeforces')];
+    }
+
     async getCsrfToken(url: string) {
         const { text: html } = await this.get(url);
         const { window: { document } } = new JSDOM(html);
@@ -72,15 +135,15 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     get loggedIn() {
-        return this.get('/enter').then(({ text: html }) => {
-            if (html.includes('Login into Codeforces')) return false;
-            return true;
-        });
+        return this.puppeteer
+            ? this.checkLogin().then(([, , loggedIn]) => loggedIn)
+            : this.get('/enter').then(({ text: html }) => {
+                if (html.includes('Login into Codeforces')) return false;
+                return true;
+            });
     }
 
-    async ensureLogin() {
-        if (await this.loggedIn) return true;
-        logger.info('retry login');
+    async normalLogin() {
         const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
         const res = await this.post('/enter').send({
             csrf_token: csrf,
@@ -92,10 +155,37 @@ export default class CodeforcesProvider implements IBasicProvider {
             remember: 'on',
         });
         const cookie = res.header['set-cookie'];
-        if (cookie && !this.account.frozen) {
+        if (cookie) {
             await this.save({ cookie });
             this.cookie = cookie;
         }
+    }
+
+    async puppeteerLogin() {
+        if (!this.puppeteer) return false;
+        const page = await this.puppeteer.newPage();
+        await page.goto(`${this.account.endpoint}/enter`);
+        const url = await page.openPortal();
+        logger.info(`Login portal opened: ${url}`);
+        await page.waitForRequest((req) => {
+            if (req.method() !== 'POST') return false;
+            if (!req.url().endsWith('/enter')) return false;
+            console.log(req);
+            return true;
+        }, { timeout: 24 * 3600 * 1000 });
+        await page.waitForTimeout(10 * 1000);
+        await this.clearPage(page);
+        return true;
+    }
+
+    async ensureLogin() {
+        await this.ensureBrowser();
+        if (await this.loggedIn) return true;
+        logger.info('retry normal login');
+        await this.normalLogin();
+        if (await this.loggedIn) return true;
+        logger.info('starting puppeteer login');
+        await this.puppeteerLogin();
         if (await this.loggedIn) return true;
         return false;
     }

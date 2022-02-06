@@ -73,7 +73,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
         let meta;
         try {
             meta = require(`../${name}/package.json`);
-            if (!meta.private) {
+            if (!meta.private && /^[0-9.]+$/.test(meta.version)) {
                 try {
                     const version = await latest(meta.name, { version: tag });
                     if (gt(meta.version, version)) bumpMap[name] = meta.version;
