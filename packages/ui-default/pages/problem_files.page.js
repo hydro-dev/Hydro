@@ -115,10 +115,7 @@ const page = new NamedPage('problem_files', () => {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (selectedFiles === null) return;
     const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm to delete the selected files?')}</p>
-        </div>`,
+      $body: tpl.typoMsg(i18n('Confirm to delete the selected files?')),
     }).open();
     if (action !== 'yes') return;
     try {
@@ -181,12 +178,13 @@ const page = new NamedPage('problem_files', () => {
       height: `${window.innerHeight - 100}px`,
       cancelByEsc: false,
     }).open();
-    const language = {
-      yaml: 'yaml',
-      yml: 'yaml',
-      cc: 'cpp',
-      json: 'json',
-    }[filename.split('.').pop()] || 'plain';
+    const languages = [
+      ['yaml', ['yaml', 'yml']],
+      ['cpp', ['c', 'cc', 'cpp', 'h', 'hpp']],
+      ['json', ['json']],
+      ['plain', ['in', 'out', 'ans']],
+    ];
+    const language = languages.filter((i) => i[1].includes(filename.split('.').pop()))[0]?.[0] || 'auto';
     const editor = new Editor($('[name="fileContent"]'), {
       value,
       autoResize: false,
@@ -224,8 +222,13 @@ const page = new NamedPage('problem_files', () => {
         return;
       }
       Notification.info(i18n('Loading file...'));
-      const res = await request.get(link);
-      content = await request.get(res.url, undefined, { dataType: 'text' });
+      try {
+        const res = await request.get(link);
+        content = await request.get(res.url, undefined, { dataType: 'text' });
+      } catch (e) {
+        Notification.error(i18n('Failed to load file: {0}', e.message));
+        throw e;
+      }
     } else Notification.info(i18n('Loading editor...'));
     const val = await startEdit(filename, content);
     if (typeof val !== 'string') return;
