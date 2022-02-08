@@ -150,6 +150,7 @@ async function postInit() {
         code: string;
         data: any[];
         config: any;
+        env: any;
         input?: string;
         next: (data: any, id?: number) => void;
         end: (data: any) => void;
@@ -176,6 +177,13 @@ async function postInit() {
                 this.source = this.request.source;
                 this.config = this.request.config;
                 this.input = this.request.input;
+                this.env = {
+                    HYDRO_DOMAIN: this.request.domainId.toString(),
+                    HYDRO_RECORD: this.rid,
+                    HYDRO_LANG: this.lang,
+                    HYDRO_USER: this.request.uid.toString(),
+                    HYDRO_CONTEST: this.request.tid?.toString() || '',
+                };
                 this.next = getNext(this);
                 this.end = getEnd(this.rid);
                 this.tmpdir = path.resolve(getConfig('tmp_dir'), this.rid);

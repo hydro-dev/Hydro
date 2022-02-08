@@ -67,14 +67,15 @@ function judgeCase(c: Case, sid: string) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 [status, score, message] = await check({
-                    copyIn: ctx.checker.copyIn,
-                    stdin: { src: c.input },
-                    stdout: { src: c.output },
+                    copyIn: ctx.checker.copyIn || {},
+                    input: { src: c.input },
+                    output: { src: c.output },
                     user_stdout: stdout,
                     user_stderr: stderr,
                     checker_type: ctx.config.checker_type,
                     score: ctxSubtask.subtask.score,
                     detail: ctx.config.detail ?? true,
+                    env: ctx.env,
                 });
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {

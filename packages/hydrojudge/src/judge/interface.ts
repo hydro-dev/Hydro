@@ -32,6 +32,7 @@ export interface JudgeTaskInterface {
     input?: string;
     clean: Function[];
     config: Config;
+    env?: Record<string, string>;
 }
 
 export interface RuntimeContext {

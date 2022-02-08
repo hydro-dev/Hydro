@@ -35,6 +35,7 @@ function judgeCase(c: Case) {
                 time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
                 memory: ctxSubtask.subtask.memory * 2,
                 copyOut: ['/w/tout?'],
+                env: ctx.env,
             },
         );
         // TODO handle tout (maybe pass to checker?)
