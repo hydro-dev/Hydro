@@ -1,7 +1,9 @@
 import _ from 'lodash';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog, ActionDialog, Dialog } from 'vj/components/dialog/index';
+import {
+  ConfirmDialog, ActionDialog, InfoDialog, Dialog,
+} from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
 import createHint from 'vj/components/hint';
 import request from 'vj/utils/request';
@@ -217,8 +219,18 @@ const page = new NamedPage('problem_files', () => {
     if (ev) {
       const link = $(ev.currentTarget).find('a').attr('href');
       if (!link) return;
-      if (filesize > 8 * 1024 * 1024) {
-        Notification.error(i18n('file too large'));
+      const ext = filename.split('.').pop();
+      if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
+        await new InfoDialog({
+          $body: tpl`<div class="typo"><img src="${link}"></img></div>`,
+        }).open();
+        return;
+      }
+      if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
+        const action = await new ActionDialog({
+          $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
+        }).open();
+        if (action === 'ok') window.open(link);
         return;
       }
       Notification.info(i18n('Loading file...'));
