@@ -63,8 +63,8 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
     this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
-    this.addFilter('markdown', (self, html = false) => markdown.render(self, html));
-    this.addFilter('markdownInline', (self, html = false) => markdown.renderInline(self, html));
+    this.addFilter('markdown', (self, html = false) => xss.process(markdown.render(self, html), true));
+    this.addFilter('markdownInline', (self, html = false) => xss.process(markdown.renderInline(self, html), true));
     this.addFilter('ansi', (self) => misc.ansiToHtml(self));
     this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
@@ -87,7 +87,7 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
-      return html ? xss.process(s) : markdown.render(s);
+      return xss.process(html ? s : markdown.render(s), true);
     });
     this.addFilter('log', (self) => {
       console.log(self);

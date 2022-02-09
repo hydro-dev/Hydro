@@ -1,4 +1,7 @@
-const Xss = require('xss');
+import * as Xss from 'xss';
+
+const stack = [];
+let isFull = false;
 
 const xss = new Xss.FilterXSS({
   whiteList: {
@@ -73,7 +76,34 @@ const xss = new Xss.FilterXSS({
     if (name === 'class') return value.replace(/badge/g, 'xss-badge');
     return value;
   },
+  onTag(tag, html, options) {
+    if (!options.isWhite || !isFull) return null;
+    if (!options.isClosing) {
+      stack.push(tag);
+      return null;
+    }
+    if (stack.length === 0) return `&lt;/${tag}&gt;`; // 没有标签可供闭合
+    if (stack[stack.length - 1] === tag) {
+      stack.pop(); // 正常关闭
+      return null;
+    }
+    if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
+      // 可能丢失了一个结束标签
+      stack.pop();
+      stack.pop();
+      return null;
+    }
+    return `&lt;/${tag}&gt;`; // 可能多出了一个结束标签
+  },
 });
+
+xss.process = ((original) => (html: string, full: boolean = false) => {
+  stack.length = 0;
+  isFull = full;
+  const res = original(html);
+  if (!full) return res;
+  return res + stack.map((i) => `</${i}>`).join('');
+})(xss.process.bind(xss));
 
 function xssProtector(md) {
   function protector(state) {
