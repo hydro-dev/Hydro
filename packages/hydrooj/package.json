@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.4.10",
+    "version": "3.4.11",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -34,7 +34,7 @@
         "koa-router": "^10.1.1",
         "koa-static-cache": "^5.1.4",
         "lodash": "^4.17.21",
-        "lru-cache": "^7.3.0",
+        "lru-cache": "6.0.0",
         "mime-types": "^2.1.34",
         "minio": "7.0.25",
         "moment-timezone": "^0.5.34",
