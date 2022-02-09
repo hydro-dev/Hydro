@@ -8,3 +8,8 @@ secret:
     category: system
     desc: Github OAuth Secret
     name: secret
+endpoint:
+    type: text
+    category: system
+    desc: Github Api Endpoint
+    name: endpoint

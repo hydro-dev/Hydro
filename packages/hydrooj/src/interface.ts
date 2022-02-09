@@ -55,6 +55,15 @@ export interface Setting {
     flag: number,
 }
 
+export interface OAuthUserResponse {
+    _id: string;
+    avatar?: string;
+    email?: string;
+    bio?: string;
+    uname?: string[];
+    viewLang?: string;
+}
+
 export interface Udoc extends Dictionary<any> {
     _id: number;
     mail: string;
