@@ -1,7 +1,35 @@
 import * as Xss from 'xss';
 
 const stack = [];
-let isFull = false;
+
+const tagCheck = new Xss.FilterXSS({
+  css: false,
+  whiteList: {},
+  onIgnoreTag(tag, html, options) {
+    if (html.endsWith('/>')) return html;
+    if (!options.isClosing) {
+      stack.push(tag);
+      return html;
+    }
+    if (stack.length === 0) {
+      return html.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // 没有标签可供闭合
+    }
+    if (stack[stack.length - 1] === tag) {
+      stack.pop(); // 正常关闭
+      return html;
+    }
+    if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
+      // 可能丢失了一个结束标签
+      stack.pop();
+      stack.pop();
+      return html;
+    }
+    return html.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // 可能多出了一个结束标签
+  },
+  onIgnoreTagAttr(tag, name, value) {
+    return value;
+  },
+});
 
 const xss = new Xss.FilterXSS({
   whiteList: {
@@ -76,34 +104,13 @@ const xss = new Xss.FilterXSS({
     if (name === 'class') return value.replace(/badge/g, 'xss-badge');
     return value;
   },
-  onTag(tag, html, options) {
-    if (!options.isWhite || !isFull) return null;
-    if (!options.isClosing) {
-      stack.push(tag);
-      return null;
-    }
-    if (stack.length === 0) return `&lt;/${tag}&gt;`; // 没有标签可供闭合
-    if (stack[stack.length - 1] === tag) {
-      stack.pop(); // 正常关闭
-      return null;
-    }
-    if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
-      // 可能丢失了一个结束标签
-      stack.pop();
-      stack.pop();
-      return null;
-    }
-    return `&lt;/${tag}&gt;`; // 可能多出了一个结束标签
-  },
 });
 
-xss.process = ((original) => (html: string, full: boolean = false) => {
+function ensureTag(html: string) {
   stack.length = 0;
-  isFull = full;
-  const res = original(html);
-  if (!full) return res;
+  const res = tagCheck.process(html);
   return res + stack.map((i) => `</${i}>`).join('');
-})(xss.process.bind(xss));
+}
 
 function xssProtector(md) {
   function protector(state) {
@@ -126,4 +133,4 @@ function xssProtector(md) {
   md.core.ruler.after('linkify', 'xss', protector);
 }
 
-module.exports = { xss, xssProtector };
+module.exports = { xss, ensureTag, xssProtector };
