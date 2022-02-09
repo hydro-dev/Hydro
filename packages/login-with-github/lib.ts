@@ -15,11 +15,11 @@ declare module 'hydrooj' {
 
 async function get() {
     const { system, token } = global.Hydro.model;
-    const [[appid, endpoint = 'https://github.com'], [state]] = await Promise.all([
-        system.getMany(['login-with-github.id', 'login-with-github.endpoint']),
+    const [appid, [state]] = await Promise.all([
+        system.get('login-with-github.id'),
         token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
-    this.response.redirect = `${endpoint}/login/oauth/authorize?client_id=${appid}&state=${state}`;
+    this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
 }
 
 async function callback({ state, code }) {
@@ -49,8 +49,9 @@ async function callback({ state, code }) {
         );
     }
     const t = res.body.access_token;
-    const userInfo = await superagent.get(`${endpoint || 'https://api.github.com'}/user`)
+    const userInfo = await superagent.get(`${`${endpoint}/api` || 'https://api.github.com'}/user`)
         .set('User-Agent', 'Hydro-OAuth')
+        .set('Accept', 'application/vnd.github.v3+json')
         .set('Authorization', `token ${t}`);
     const ret = {
         _id: `${userInfo.body.id}@github.local`,

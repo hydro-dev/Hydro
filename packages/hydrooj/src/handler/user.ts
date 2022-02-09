@@ -352,7 +352,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.String)
     async get(domainId: string, type: string) {
-        if (global.Hydro.lib[`oauth_${type}`]) await global.Hydro.lib[`oauth_${type}`].get.call(this);
+        await global.Hydro.lib[`oauth_${type}`]?.get?.call(this);
     }
 }
 
