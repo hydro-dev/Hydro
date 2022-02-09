@@ -111,6 +111,7 @@ async function onCommentClickReplyComment(ev, options: any = {}) {
 }
 
 async function onCommentClickReplyReply(ev) {
+  console.log(ev);
   const $evTarget = $(ev.currentTarget);
   const $mediaBody = $evTarget.closest('.media__body');
   const uid = $mediaBody
@@ -119,7 +120,7 @@ async function onCommentClickReplyReply(ev) {
 
   $evTarget
     .closest('.dczcomments__item')
-    .find('[name="dczcomments__op-reply-comment"]').eq(0)
+    .find('[data-op="reply"][data-type="comment"]').eq(0)
     .trigger('click', { initialText: `@[](/user/${uid.trim()}) ` });
 }
 

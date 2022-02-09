@@ -24,13 +24,13 @@ const xss = new Xss.FilterXSS({
     dd: [],
     del: ['datetime'],
     details: ['open'],
-    div: ['id','class'],
+    div: ['id', 'class'],
     dl: [],
     dt: [],
     em: [],
     font: ['color', 'size', 'face'],
     h1: ['id'],
-    h2: ['id','class'],
+    h2: ['id', 'class'],
     h3: ['id'],
     h4: ['id'],
     h5: ['id'],
@@ -66,8 +66,11 @@ const xss = new Xss.FilterXSS({
     var: [],
     video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
   },
+  allowCommentTag: false,
+  stripIgnoreTagBody: ['script'],
   safeAttrValue(tag, name, value) {
     if (name === 'id') return `xss-id-${value}`;
+    if (name === 'class') return value.replace(/badge/g, 'xss-badge');
     return value;
   },
 });
