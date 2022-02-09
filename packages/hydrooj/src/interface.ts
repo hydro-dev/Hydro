@@ -57,8 +57,8 @@ export interface Setting {
 
 export interface OAuthUserResponse {
     _id: string;
+    email: string;
     avatar?: string;
-    email?: string;
     bio?: string;
     uname?: string[];
     viewLang?: string;

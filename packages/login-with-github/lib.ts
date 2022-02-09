@@ -1,6 +1,7 @@
 import 'hydrooj';
 
 import superagent from 'superagent';
+import { ForbiddenError } from 'hydrooj/src/error';
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -19,7 +20,7 @@ async function get() {
         system.get('login-with-github.id'),
         token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
-    this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}`;
+    this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}&scope=read:user,user:email`;
 }
 
 async function callback({ state, code }) {
@@ -60,8 +61,18 @@ async function callback({ state, code }) {
         uname: [userInfo.body.name, userInfo.body.login],
         avatar: `github:${userInfo.body.login}`,
     };
-    this.response.redirect = s.redirect;
+    if (!ret.email) {
+        const emailInfo = await superagent.get(`${endpoint ? `${endpoint}/api` : 'https://api.github.com'}/user/emails`)
+            .set('User-Agent', 'Hydro-OAuth')
+            .set('Accept', 'application/vnd.github.v3+json')
+            .set('Authorization', `token ${t}`);
+        if (emailInfo.body.length) {
+            ret.email = emailInfo.body.find((e) => e.primary && e.verified).email;
+        }
+    }
     await token.del(s._id, token.TYPE_OAUTH);
+    if (!ret.email) throw new ForbiddenError("You don't have a verified email.");
+    this.response.redirect = (s.redirect || '').endsWith('/login') ? '/' : s.redirect;
     return ret;
 }
 

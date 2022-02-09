@@ -381,6 +381,8 @@ class OauthCallbackHandler extends Handler {
             let username = '';
             r.uname = r.uname || [];
             r.uname.push(String.random(16));
+            const mailDomain = r.email.split('@')[1];
+            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             for (const uname of r.uname) {
                 // eslint-disable-next-line no-await-in-loop
                 const nudoc = await user.getByUname('system', uname);
