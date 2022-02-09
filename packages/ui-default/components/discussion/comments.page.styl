@@ -29,35 +29,28 @@ $downvote-color = red
     border-top: 0
   
   .reactions
-    display: flex
-    flex-direction: row
-    width: 100%
-    flex-wrap: wrap
-    margin-top: 0.25rem
-    overflow: visible
     .reaction
-      display: flex
-      flex-direction: row
-      height: 1.75rem
       white-space: nowrap
       width: auto
-      margin: 0.125rem
-      padding: 0 0.5rem
-      border: 2px solid transparent
       border-radius: 1.75rem
-      font-weight: 500
       overflow: visible
-      border-color: lighten(blue, 75%)
+      font-size: rem($font-size-small)
+      display: inline-block
+      line-height: rem(22px)
+      padding: rem(0 10px)
+      vertical-align: middle
+      border-radius: rem(12px)
+      border: 1px solid $supplementary-border-color
+      &.active, &:hover
+        text-decoration: none
+        border-color: $primary-color
+        color: #FFF !important
       &.active
-        background-color: lighten(blue, 60%)
+        background-color: lighten($primary-color, 10%) !important
       &:hover
-        background-color: lighten(blue, 75%) !important
-      p
-        padding-top: 0px
-        margin-top: 0px
-        padding-left: 0px
-        margin-right: 2px
-        line-height: 1.5
+        background-color: lighten($primary-color, 30%) !important
+      .emoji
+        margin-right: rem(5px)
 
 .dczcomments__reply
   >.media

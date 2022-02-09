@@ -107,10 +107,10 @@
       </div>
       <div class="typo" data-emoji-enabled data-drid="{{ doc.docId }}" data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
-        <div class="reactions row">
+        <div class="reactions list">
           {% for key in Object.keys(doc.react or {}) %}
             {% if doc.react[key] %}
-              <div class="reaction{% if reactions[doc.docId][key] %} active{% endif %}"><p>{{ key }} {{ doc.react[key] }}</p></div>
+              <div class="reaction{% if reactions[doc.docId][key] %} active{% endif %}"><span class="emoji">{{ key }}</span> {{ doc.react[key] }}</div>
             {% endif %}
           {% endfor %}
         </div>

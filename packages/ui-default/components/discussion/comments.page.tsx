@@ -193,7 +193,7 @@ function renderReactions(reactions, self, rootEle) {
   let html = '';
   for (const key in reactions) {
     if (!reactions[key]) continue;
-    html += `<div class="reaction${self[key] ? ' active' : ''}"><p>${key} ${reactions[key]}</p></div>`;
+    html += `<div class="reaction${self[key] ? ' active' : ''}"><span class="emoji">${key}</span> ${reactions[key]}</div>\n`;
   }
   rootEle.html(html);
 }
@@ -227,7 +227,7 @@ function Reaction({ payload, ele }) {
             {line.map((emoji) => (
               <div
                 key={emoji}
-                className={`medium-${12 / elesPerRow} columns`}
+                className={`medium-${12 / elesPerRow} small-${12 / elesPerRow} columns`}
                 onClick={() => handleEmojiClick(payload, emoji, ele).then(() => updateFinish(true))}
               >
                 {emoji}
