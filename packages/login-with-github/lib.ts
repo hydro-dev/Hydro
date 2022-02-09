@@ -49,7 +49,7 @@ async function callback({ state, code }) {
         );
     }
     const t = res.body.access_token;
-    const userInfo = await superagent.get(`${`${endpoint}/api` || 'https://api.github.com'}/user`)
+    const userInfo = await superagent.get(`${endpoint ? `${endpoint}/api` : 'https://api.github.com'}/user`)
         .set('User-Agent', 'Hydro-OAuth')
         .set('Accept', 'application/vnd.github.v3+json')
         .set('Authorization', `token ${t}`);
