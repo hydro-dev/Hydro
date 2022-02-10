@@ -94,12 +94,17 @@ export class ContestDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
-        const tdoc = await contest.get(domainId, tid);
-        this.response.template = 'contest_detail.html';
-        const [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(domainId, tdoc.docId, this.user._id),
-            problem.getList(domainId, tdoc.pids, true),
+        const [tdoc, tsdoc] = await Promise.all([
+            contest.get(domainId, tid),
+            contest.getStatus(domainId, tid, this.user._id),
         ]);
+        this.response.template = 'contest_detail.html';
+        const udict = await user.getList(domainId, [tdoc.owner]);
+        this.response.body = {
+            tdoc, tsdoc, udict, page,
+        };
+        if (contest.isNotStarted(tdoc)) return;
+        const pdict = await problem.getList(domainId, tdoc.pids, true);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
@@ -112,10 +117,9 @@ export class ContestDetailHandler extends Handler {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         }
-        const udict = await user.getList(domainId, [tdoc.owner]);
-        this.response.body = {
-            tdoc, tsdoc, udict, pdict, psdict, rdict, page,
-        };
+        this.response.body.pdict = pdict;
+        this.response.body.psdict = psdict;
+        this.response.body.rdict = rdict;
     }
 
     @param('tid', Types.ObjectID)
