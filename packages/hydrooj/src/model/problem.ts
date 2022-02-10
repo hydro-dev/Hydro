@@ -28,10 +28,21 @@ function sortable(source: string) {
 }
 
 export class ProblemModel {
-    static PROJECTION_LIST: Field[] = [
+    static PROJECTION_CONTEST_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
-        'owner', 'title', 'nSubmit', 'nAccept', 'difficulty',
-        'tag', 'hidden', 'assign', 'stats',
+        'owner', 'title', 'assign',
+    ];
+
+    static PROJECTION_LIST: Field[] = [
+        ...ProblemModel.PROJECTION_CONTEST_LIST,
+        'nSubmit', 'nAccept', 'difficulty', 'tag', 'hidden',
+        'stats',
+    ];
+
+    static PROJECTION_CONTEST_DETAIL: Field[] = [
+        ...ProblemModel.PROJECTION_CONTEST_LIST,
+        'content', 'html', 'data', 'config', 'additional_file',
+        'reference',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [

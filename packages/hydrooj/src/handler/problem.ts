@@ -297,6 +297,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             if (!contest.canShowScoreboard(this.tdoc) || !contest.isLocked(this.tdoc)) {
                 delete this.pdoc.nAccept;
                 delete this.pdoc.nSubmit;
+                delete this.pdoc.difficulty;
                 delete this.pdoc.stats;
             }
         } else if (!problem.canViewBy(this.pdoc, this.user)) {

@@ -74,7 +74,7 @@ class HomeworkDetailHandler extends Handler {
             tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
         if (contest.isNotStarted(tdoc)) return;
-        const pdict = await problem.getList(domainId, tdoc.pids, true);
+        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {

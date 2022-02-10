@@ -104,7 +104,7 @@ export class ContestDetailHandler extends Handler {
             tdoc, tsdoc, udict, page,
         };
         if (contest.isNotStarted(tdoc)) return;
-        const pdict = await problem.getList(domainId, tdoc.pids, true);
+        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
