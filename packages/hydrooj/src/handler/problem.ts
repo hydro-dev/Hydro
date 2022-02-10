@@ -310,10 +310,12 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.pdoc.config = pdoc.config;
         }
         if (ddoc.langs && typeof this.pdoc.config !== 'string') {
-            this.pdoc.config.langs = intersection(
-                this.pdoc.config.langs || ddoc.langs.split(','),
-                ddoc.langs.split(','),
-            );
+            const dl = ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i);
+            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
+        }
+        if (this.domain.langs && typeof this.pdoc.config !== 'string') {
+            const dl = this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i);
+            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
