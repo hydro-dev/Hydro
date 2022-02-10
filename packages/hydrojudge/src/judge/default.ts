@@ -75,7 +75,7 @@ function judgeCase(c: Case, sid: string) {
                     checker_type: ctx.config.checker_type,
                     score: ctxSubtask.subtask.score,
                     detail: ctx.config.detail ?? true,
-                    env: ctx.env,
+                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
                 });
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {

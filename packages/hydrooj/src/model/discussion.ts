@@ -256,8 +256,9 @@ export function flushNodes(domainId: string) {
 
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
-        const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
+        let pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
+        if (pdoc.hidden) pdoc = problem.default;
         return { ...pdoc, type, id: pdoc.docId };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
