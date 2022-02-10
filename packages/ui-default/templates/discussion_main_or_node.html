@@ -15,23 +15,23 @@
     {% set tdoc = vnode %}
     {% set owner_udoc = udict[vnode.owner] %}
     {% include "partials/contest_sidebar.html" %}
-  {% elif vnode.type == model.document.TYPE_DISCUSSION_NODE %}
+  {% else %}
     <div class="section side">
       {% if vnode.pic %}<div class="discussion-node__bg {{ vnode.pic }}"></div>{% endif %}
       <div class="section__header">
         <h1 class="section__title">{{ vnode['title'] or _('Create Discussion') }}</h1>
       </div>
       <div class="section__body">
-      {% if vnode %}
-      {% if handler.user.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
-        <p><a href="{{ url('discussion_create', type=model.discussion.typeDisplay[vnode.type], name=vnode.id) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
-      {% else %}
-        {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-          <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>
+      {% if vnode._id %}
+        {% if handler.user.hasPerm(perm.PERM_CREATE_DISCUSSION) %}
+          <p><a href="{{ url('discussion_create', type=model.discussion.typeDisplay[vnode.type], name=vnode.id) }}" class="expanded primary button">{{ _('Create a Discussion') }}</a></p>
         {% else %}
-          <p><a href="javascript:;" class="disabled expanded primary button">{{ _('No Permission to Create a Discussion') }}</a></p>
+          {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+            <p><a href="javascript:showSignInDialog();" class="expanded primary button">{{ _('Login to Create a Discussion') }}</a></p>
+          {% else %}
+            <p><a href="javascript:;" class="disabled expanded primary button">{{ _('No Permission to Create a Discussion') }}</a></p>
+          {% endif %}
         {% endif %}
-      {% endif %}
       {% else %}
         <p>{{ _('Select a node to create discussion.') }}</p>
       {% endif %}
