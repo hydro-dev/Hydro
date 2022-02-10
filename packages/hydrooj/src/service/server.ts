@@ -822,7 +822,8 @@ export class ConnectionHandler extends HandlerCommon {
 
     onerror(err: HydroError) {
         if (err instanceof UserFacingError) err.stack = this.conn.pathname;
-        if (!(err instanceof NotFoundError)) {
+        if (!(err instanceof NotFoundError)
+            && !((err instanceof PrivilegeError || err instanceof PermissionError) && this.user._id === 0)) {
             logger.error(`Path:${this.conn.pathname}, User:${this.user._id}(${this.user.uname})`);
             logger.error(err);
         }
@@ -903,7 +904,6 @@ export function Connection(
                 connCount.dec();
             });
         } catch (e) {
-            logger.warn('%o', e);
             await h.onerror(e);
         }
     });
