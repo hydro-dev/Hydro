@@ -12,7 +12,7 @@
         "js-yaml": "^4.1.0",
         "moment": "^2.29.1",
         "mongodb": "^3.7.3",
-        "systeminformation": "^5.11.0"
+        "systeminformation": "^5.11.2"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

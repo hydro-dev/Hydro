@@ -521,6 +521,7 @@ export interface JudgeResultBody {
     rid: ObjectID;
     judger?: number;
     progress?: number;
+    addProgress?: number;
     case?: {
         id?: number;
         status: number;

@@ -9,6 +9,7 @@ export interface JudgeTaskInterface {
         status?: number;
         message?: string;
         progress?: number;
+        addProgress?: number;
         case?: {
             status: number;
             score?: number;

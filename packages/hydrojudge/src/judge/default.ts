@@ -31,7 +31,7 @@ function judgeCase(c: Case, sid: string) {
                     memory_kb: 0,
                     message: '',
                 },
-                progress: Math.floor((c.id * 100) / ctx.config.count),
+                addProgress: 100 / ctx.config.count,
             }, c.id);
             return;
         }
@@ -103,7 +103,7 @@ function judgeCase(c: Case, sid: string) {
                 memory_kb: memory_usage_kb,
                 message,
             },
-            progress: Math.floor((c.id * 100) / ctx.config.count),
+            addProgress: 100 / ctx.config.count,
         }, c.id);
     };
 }
