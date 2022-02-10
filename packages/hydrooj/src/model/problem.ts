@@ -307,7 +307,7 @@ export class ProblemModel {
             pdocs = pdocs.filter((i) => !i.assign?.length || Set.intersection(group, i.assign).size);
         }
         if (canViewHidden !== true) {
-            pdocs = pdocs.filter((i) => i.owner === canViewHidden || !i.hidden);
+            pdocs = pdocs.filter((i) => i.owner === canViewHidden || i.maintainer?.includes(canViewHidden as any) || !i.hidden);
         }
         for (const pdoc of pdocs) {
             try {
