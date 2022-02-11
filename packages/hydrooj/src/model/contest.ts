@@ -509,7 +509,7 @@ export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
         document.getStatus(domainId, document.TYPE_CONTEST, tid, uid),
     ]);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (isLocked(tdoc)) Object.assign(status, RULES[tdoc.rule].stat(tdoc, status.journal || [], true));
+    if (status && isLocked(tdoc)) Object.assign(status, RULES[tdoc.rule].stat(tdoc, status.journal || [], true));
     return status;
 }
 
