@@ -510,7 +510,7 @@ const cf = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem_detail',
-                    value: '{0}\n{1}'.format(pdict[pid].pid, tdoc.fullScore[i - 1]),
+                    value: '{0} ({1})'.format(pdict[pid].pid, tdoc.fullScore[i - 1]),
                     raw: pid,
                 });
             }
@@ -554,7 +554,6 @@ const cf = buildContestRule({
                     });
                 }
             }
-            row.raw = tsdoc;
             rows.push(row);
         }
         return [rows, udict, nPages];
