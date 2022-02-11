@@ -109,22 +109,21 @@
     <div class="media__body top">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
-          {{ user.render_inline(udoc) }}
-          @ {{ datetimeSpan(doc._id)|safe }}
+          {{ user.render_inline(udoc) }} @ {{ datetimeSpan(doc._id)|safe }}
         </div>
         <div class="dczcomments__operations nojs--hide">
         {% if handler.user.hasPerm(reply_post_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-comment" 
+          <a href="javascript:;" data-tooltip="{{ _('Reply') }}" data-op="reply" data-type="comment" 
             data-form="{{ {operation: reply_post_op, psid: doc._id}|json }}"
           ><span class="icon icon-reply"></span></a>
         {% endif %}
         {% if (handler.user.hasPerm(comment_edit_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_edit_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-comment"
+          <a href="javascript:;" data-tooltip="{{ _('Edit') }}" data-op="edit" data-type="comment"
             data-form="{{ {operation: comment_edit_op, psid: doc._id}|json }}"
           ><span class="icon icon-edit"></span></a>
         {% endif %}
         {% if (handler.user.hasPerm(comment_delete_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_delete_perm) %}
-          <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-comment"
+          <a href="javascript:;" data-tooltip="{{ _('Delete') }}" data-op="delete" data-type="comment"
             data-form="{{ {operation: comment_delete_op, psid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>
         {% endif %}
@@ -146,15 +145,15 @@
                 </div>
                 <div class="dczcomments__operations nojs--hide">
                 {% if handler.user.hasPerm(reply_post_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Reply') }}" name="dczcomments__op-reply-reply"><span class="icon icon-reply"></span></a>
+                  <a href="javascript:;" data-tooltip="{{ _('Reply') }}" data-op="reply" data-type="reply"><span class="icon icon-reply"></span></a>
                 {% endif %}
                 {% if (handler.user.hasPerm(reply_edit_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(reply_edit_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Edit') }}" name="dczcomments__op-edit-reply"
+                  <a href="javascript:;" data-tooltip="{{ _('Edit') }}" data-op="edit" data-type="reply"
                     data-form="{{ {operation: reply_edit_op, psid: doc._id, psrid: rdoc._id}|json }}"
                   ><span class="icon icon-edit"></span></a>
                 {% endif %}
                 {% if (handler.user.hasPerm(reply_delete_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(reply_delete_perm) %}
-                  <a href="javascript:;" data-tooltip="{{ _('Delete') }}" name="dczcomments__op-delete-reply"
+                  <a href="javascript:;" data-tooltip="{{ _('Delete') }}" data-op="delete" data-type="reply"
                     data-form="{{ {operation: reply_delete_op, psid: doc._id, psrid: rdoc._id}|json }}"
                   ><span class="icon icon-delete"></span></a>
                 {% endif %}

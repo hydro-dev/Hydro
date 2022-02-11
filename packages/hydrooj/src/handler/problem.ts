@@ -291,11 +291,15 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.tdoc = await contest.get(domainId, tid);
             if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
             this.tsdoc = await contest.getStatus(domainId, tid, this.user._id);
-            this.pdoc.tag.length = 0;
-            const showAccept = contest.canShowScoreboard.call(this, this.tdoc, true);
-            if (!showAccept) this.pdoc.nAccept = 0;
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc) && !this.tsdoc?.attend) throw new ContestNotAttendedError(tid);
+            this.pdoc.tag.length = 0;
+            if (!contest.canShowScoreboard(this.tdoc) || !contest.isLocked(this.tdoc)) {
+                delete this.pdoc.nAccept;
+                delete this.pdoc.nSubmit;
+                delete this.pdoc.difficulty;
+                delete this.pdoc.stats;
+            }
         } else if (!problem.canViewBy(this.pdoc, this.user)) {
             throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -307,10 +311,12 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.pdoc.config = pdoc.config;
         }
         if (ddoc.langs && typeof this.pdoc.config !== 'string') {
-            this.pdoc.config.langs = intersection(
-                this.pdoc.config.langs || ddoc.langs.split(','),
-                ddoc.langs.split(','),
-            );
+            const dl = ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i);
+            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
+        }
+        if (this.domain.langs && typeof this.pdoc.config !== 'string') {
+            const dl = this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i);
+            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([

@@ -7,7 +7,7 @@
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "devDependencies": {
-        "@types/superagent": "^4.1.14"
+        "@types/superagent": "^4.1.15"
     },
     "peerDependencies": {
         "hydrooj": "*"

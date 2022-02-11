@@ -75,7 +75,7 @@ export default class Editor extends DOMAttachedObject {
     // eslint-disable-next-line no-nested-ternary
     this.model = typeof model === 'string'
       ? monaco.editor.getModel(monaco.Uri.parse(model))
-      || monaco.editor.createModel(value, language, monaco.Uri.parse(model))
+      || monaco.editor.createModel(value, language === 'auto' ? undefined : language, monaco.Uri.parse(model))
       : model;
     this.model.setValue(value);
     const cfg: import('../monaco').default.editor.IStandaloneEditorConstructionOptions = {
@@ -195,11 +195,7 @@ export default class Editor extends DOMAttachedObject {
     if (!this.isValid) throw new Error('Editor is not loaded');
   }
 
-  /**
-   * @param {string?} val
-   * @returns {string}
-   */
-  value(val) {
+  value(val?: string) {
     this.ensureValid();
     if (typeof val === 'string') return (this.editor || this.vditor).setValue(val);
     return (this.editor || this.vditor).getValue();

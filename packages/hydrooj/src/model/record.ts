@@ -12,7 +12,7 @@ import {
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import { MaybeArray } from '../typeutils';
+import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
 import problem from './problem';
@@ -146,11 +146,13 @@ class RecordModel {
         $set?: MatchKeysAndValues<RecordDoc>,
         $push?: PushOperator<RecordDoc>,
         $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
+        $inc?: Partial<Record<NumberKeys<RecordDoc>, number>>,
     ): Promise<RecordDoc | null> {
         const $update: UpdateQuery<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
+        if ($inc && Object.keys($inc).length) $update.$inc = $inc;
         if (_id instanceof Array) {
             await RecordModel.coll.updateMany({ _id: { $in: _id }, domainId }, $update);
             return null;

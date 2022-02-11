@@ -193,7 +193,7 @@ const oi = buildContestRule({
         const detail = {};
         let score = 0;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            if (detail[j.pid]?.status === STATUS.STATUS_ACCEPTED && !this.submitAfterAccept) detail[j.pid] = j;
+            if (detail[j.pid]?.status !== STATUS.STATUS_ACCEPTED || !this.submitAfterAccept) detail[j.pid] = j;
         }
         for (const i in detail) score += detail[i].score;
         return { score, detail };
@@ -311,9 +311,7 @@ const homework = buildContestRule({
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)) {
-                effective[j.pid] = j;
-            }
+            if (tdoc.pids.includes(j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
             const real = jdoc.rid.generationTime - tdoc.beginAt.getTime() / 1000;

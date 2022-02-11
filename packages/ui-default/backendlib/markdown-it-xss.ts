@@ -1,4 +1,35 @@
-const Xss = require('xss');
+import * as Xss from 'xss';
+
+const stack = [];
+
+const tagCheck = new Xss.FilterXSS({
+  css: false,
+  whiteList: {},
+  onIgnoreTag(tag, html, options) {
+    if (html.endsWith('/>')) return html;
+    if (!options.isClosing) {
+      stack.push(tag);
+      return html;
+    }
+    if (stack.length === 0) {
+      return html.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // 没有标签可供闭合
+    }
+    if (stack[stack.length - 1] === tag) {
+      stack.pop(); // 正常关闭
+      return html;
+    }
+    if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
+      // 可能丢失了一个结束标签
+      stack.pop();
+      stack.pop();
+      return html;
+    }
+    return html.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // 可能多出了一个结束标签
+  },
+  onIgnoreTagAttr(tag, name, value) {
+    return value;
+  },
+});
 
 const xss = new Xss.FilterXSS({
   whiteList: {
@@ -24,13 +55,13 @@ const xss = new Xss.FilterXSS({
     dd: [],
     del: ['datetime'],
     details: ['open'],
-    div: ['id','class'],
+    div: ['id', 'class'],
     dl: [],
     dt: [],
     em: [],
     font: ['color', 'size', 'face'],
     h1: ['id'],
-    h2: ['id','class'],
+    h2: ['id', 'class'],
     h3: ['id'],
     h4: ['id'],
     h5: ['id'],
@@ -66,11 +97,20 @@ const xss = new Xss.FilterXSS({
     var: [],
     video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
   },
+  allowCommentTag: false,
+  stripIgnoreTagBody: ['script'],
   safeAttrValue(tag, name, value) {
     if (name === 'id') return `xss-id-${value}`;
+    if (name === 'class') return value.replace(/badge/g, 'xss-badge');
     return value;
   },
 });
+
+function ensureTag(html: string) {
+  stack.length = 0;
+  const res = tagCheck.process(html);
+  return res + stack.map((i) => `</${i}>`).join('');
+}
 
 function xssProtector(md) {
   function protector(state) {
@@ -93,4 +133,4 @@ function xssProtector(md) {
   md.core.ruler.after('linkify', 'xss', protector);
 }
 
-module.exports = { xss, xssProtector };
+module.exports = { xss, ensureTag, xssProtector };

@@ -195,6 +195,9 @@ function isValidConfig(config) {
     }
     const memMax = max(config.subtasks.map((subtask) => subtask.memory));
     if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
+    if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
+        throw new FormatError('You did not specify a checker.');
+    }
 }
 
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {

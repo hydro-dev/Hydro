@@ -39,6 +39,7 @@ interface Parameter {
     copyOut?: string[];
     copyOutCached?: string[];
     cacheStdoutAndStderr?: boolean;
+    env?: Record<string, string>;
 }
 
 interface SandboxAdaptedResult {
@@ -72,6 +73,7 @@ function proc({
     processLimit = getConfig('processLimit'),
     stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
     cacheStdoutAndStderr = false,
+    env = {},
 }: Parameter = {}): Cmd {
     if (!supportOptional) {
         copyOut = (copyOut as string[]).map((i) => (i.endsWith('?') ? i.substr(0, i.length - 1) : i));
@@ -84,7 +86,7 @@ function proc({
     }
     return {
         args: parseArgs(execute),
-        env: getConfig('env').split('\n'),
+        env: [...getConfig('env').split('\n'), ...Object.keys(env).map((i) => `${i}=${env[i].replace(/=/g, '\\=')}`)],
         files: [
             stdin ? { src: stdin } : { content: '' },
             { name: 'stdout', max: Math.floor(1024 * 1024 * size) },

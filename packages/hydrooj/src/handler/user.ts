@@ -6,7 +6,7 @@ import {
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { User } from '../interface';
+import { OAuthUserResponse, Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword, isUname } from '../lib/validator';
@@ -352,7 +352,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.String)
     async get(domainId: string, type: string) {
-        if (global.Hydro.lib[`oauth_${type}`]) await global.Hydro.lib[`oauth_${type}`].get.call(this);
+        await global.Hydro.lib[`oauth_${type}`]?.get?.call(this);
     }
 }
 
@@ -360,18 +360,29 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        let r;
-        if (global.Hydro.lib[`oauth_${args.type}`]) r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args);
-        else throw new UserFacingError('Oauth type');
+        if (!global.Hydro.lib[`oauth_${args.type}`]) throw new UserFacingError('Oauth type');
+        const r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args) as OAuthUserResponse;
         const uid = await oauth.get(r._id);
         if (uid) {
+            await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });
             this.session.uid = uid;
             this.session.scope = PERM.PERM_ALL.toString();
         } else {
+            if (r.email) {
+                const udoc = await user.getByEmail('system', r.email);
+                if (udoc) {
+                    await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
+                    this.session.uid = udoc._id;
+                    this.session.scpoe = PERM.PERM_ALL.toString();
+                    return;
+                }
+            }
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
             r.uname = r.uname || [];
             r.uname.push(String.random(16));
+            const mailDomain = r.email.split('@')[1];
+            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             for (const uname of r.uname) {
                 // eslint-disable-next-line no-await-in-loop
                 const nudoc = await user.getByUname('system', uname);
@@ -384,11 +395,14 @@ class OauthCallbackHandler extends Handler {
                 r.email, username, String.random(32),
                 undefined, this.request.ip,
             );
-            const $set: any = {
+            const $set: Partial<Udoc> = {
                 oauth: args.type,
+                loginat: new Date(),
+                loginip: this.request.ip,
             };
             if (r.bio) $set.bio = r.bio;
             if (r.viewLang) $set.viewLang = r.viewLang;
+            if (r.avatar) $set.avatar = r.avatar;
             await Promise.all([
                 user.setById(_id, $set),
                 oauth.set(r.email, _id),

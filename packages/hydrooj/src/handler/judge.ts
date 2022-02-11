@@ -71,7 +71,7 @@ export async function next(body: JudgeResultBody) {
     if (body.time !== undefined) $set.time = body.time;
     if (body.memory !== undefined) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push);
+    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
     bus.broadcast('record/change', rdoc!, $set, $push);
 }
 

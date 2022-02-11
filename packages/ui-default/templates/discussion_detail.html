@@ -77,7 +77,8 @@
           reply_edit_perm = perm.PERM_NEVER,
           reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
-          reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF
+          reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
+          reactions = reactions
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}

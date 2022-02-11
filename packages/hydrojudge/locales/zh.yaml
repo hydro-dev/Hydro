@@ -36,4 +36,5 @@ Unknown checker type {0}.: 未知的比较器类型 {0}。
 Unknown language type.: 未知的语言类型。
 Unsupported language {0}.: 不支持的语言 {0}。
 User output longer than standard answer.: 选手输出比标准输出长。
+You did not specify a checker.: 你没有指定比较器文件。
 Your program returned {0}.: 您的程序返回了{0}。

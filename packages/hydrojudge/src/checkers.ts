@@ -1,26 +1,9 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
+import { CheckConfig, CheckResult } from './interface';
 import { run } from './sandbox';
-import { CopyInFile } from './sandbox/interface';
 import { parse } from './testlib';
-
-interface CheckConfig {
-    input: CopyInFile,
-    output: CopyInFile,
-    user_stdout: CopyInFile,
-    user_stderr: CopyInFile,
-    copyIn: Record<string, CopyInFile>,
-    score: number,
-    detail: boolean,
-}
-
-interface CheckResult {
-    status: number,
-    score: number,
-    message: string,
-    code?: number,
-}
 
 type Checker = (config: CheckConfig) => Promise<CheckResult>;
 
@@ -129,6 +112,7 @@ const checkers: Record<string, Checker> = {
                 ...config.copyIn,
             },
             copyOut: ['score', 'message'],
+            env: config.env,
         });
         const { message } = files;
         const score = parseInt(files.score, 10);
@@ -196,6 +180,7 @@ const checkers: Record<string, Checker> = {
                 answer: config.output,
                 ...config.copyIn,
             },
+            env: config.env,
         });
         if (status === STATUS.STATUS_SYSTEM_ERROR) {
             return {

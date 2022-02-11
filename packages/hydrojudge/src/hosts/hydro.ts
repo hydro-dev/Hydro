@@ -38,6 +38,7 @@ class JudgeTask {
     data: any[];
     folder: string;
     config: any;
+    env: Record<string, string>;
     getLang: (name: string) => LangConfig;
 
     constructor(session: Hydro, request, ws: WebSocket) {
@@ -63,6 +64,15 @@ class JudgeTask {
         this.source = this.request.source;
         this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
         this.clean = [];
+        let tid = this.request.contest?.toString() || '';
+        if (tid === '000000000000000000000000') tid = '';
+        this.env = {
+            HYDRO_DOMAIN: this.request.domainId.toString(),
+            HYDRO_RECORD: this.rid,
+            HYDRO_LANG: this.lang,
+            HYDRO_USER: this.request.uid.toString(),
+            HYDRO_CONTEST: tid,
+        };
         await Lock.acquire(`${this.host}/${this.source}/${this.rid}`);
         fs.ensureDirSync(this.tmpdir);
         tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));

@@ -9,6 +9,7 @@ export interface JudgeTaskInterface {
         status?: number;
         message?: string;
         progress?: number;
+        addProgress?: number;
         case?: {
             status: number;
             score?: number;
@@ -32,6 +33,7 @@ export interface JudgeTaskInterface {
     input?: string;
     clean: Function[];
     config: Config;
+    env?: Record<string, string>;
 }
 
 export interface RuntimeContext {

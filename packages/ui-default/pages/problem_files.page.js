@@ -1,7 +1,9 @@
 import _ from 'lodash';
 import { NamedPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog, ActionDialog, Dialog } from 'vj/components/dialog/index';
+import {
+  ConfirmDialog, ActionDialog, InfoDialog, Dialog,
+} from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
 import createHint from 'vj/components/hint';
 import request from 'vj/utils/request';
@@ -115,10 +117,7 @@ const page = new NamedPage('problem_files', () => {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (selectedFiles === null) return;
     const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm to delete the selected files?')}</p>
-        </div>`,
+      $body: tpl.typoMsg(i18n('Confirm to delete the selected files?')),
     }).open();
     if (action !== 'yes') return;
     try {
@@ -181,12 +180,13 @@ const page = new NamedPage('problem_files', () => {
       height: `${window.innerHeight - 100}px`,
       cancelByEsc: false,
     }).open();
-    const language = {
-      yaml: 'yaml',
-      yml: 'yaml',
-      cc: 'cpp',
-      json: 'json',
-    }[filename.split('.').pop()] || 'plain';
+    const languages = [
+      ['yaml', ['yaml', 'yml']],
+      ['cpp', ['c', 'cc', 'cpp', 'h', 'hpp']],
+      ['json', ['json']],
+      ['plain', ['in', 'out', 'ans']],
+    ];
+    const language = languages.filter((i) => i[1].includes(filename.split('.').pop()))[0]?.[0] || 'auto';
     const editor = new Editor($('[name="fileContent"]'), {
       value,
       autoResize: false,
@@ -219,13 +219,28 @@ const page = new NamedPage('problem_files', () => {
     if (ev) {
       const link = $(ev.currentTarget).find('a').attr('href');
       if (!link) return;
-      if (filesize > 8 * 1024 * 1024) {
-        Notification.error(i18n('file too large'));
+      const ext = filename.split('.').pop();
+      if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
+        await new InfoDialog({
+          $body: tpl`<div class="typo"><img src="${link}"></img></div>`,
+        }).open();
+        return;
+      }
+      if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
+        const action = await new ActionDialog({
+          $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
+        }).open();
+        if (action === 'ok') window.open(link);
         return;
       }
       Notification.info(i18n('Loading file...'));
-      const res = await request.get(link);
-      content = await request.get(res.url, undefined, { dataType: 'text' });
+      try {
+        const res = await request.get(link);
+        content = await request.get(res.url, undefined, { dataType: 'text' });
+      } catch (e) {
+        Notification.error(i18n('Failed to load file: {0}', e.message));
+        throw e;
+      }
     } else Notification.info(i18n('Loading editor...'));
     const val = await startEdit(filename, content);
     if (typeof val !== 'string') return;

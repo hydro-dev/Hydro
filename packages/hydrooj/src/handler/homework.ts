@@ -55,12 +55,26 @@ class HomeworkDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, page = 1) {
-        const tdoc = await contest.get(domainId, tid);
-        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        const [tsdoc, pdict] = await Promise.all([
-            contest.getStatus(domainId, tdoc.docId, this.user._id),
-            problem.getList(domainId, tdoc.pids, true),
+        const [tdoc, tsdoc] = await Promise.all([
+            contest.get(domainId, tid),
+            contest.getStatus(domainId, tid, this.user._id),
         ]);
+        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
+        // discussion
+        const [ddocs, dpcount, dcount] = await paginate(
+            discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
+            page,
+            system.get('pagination.discussion'),
+        );
+        const uids = ddocs.map((ddoc) => ddoc.owner);
+        uids.push(tdoc.owner);
+        const udict = await user.getList(domainId, uids);
+        this.response.template = 'homework_detail.html';
+        this.response.body = {
+            tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
+        };
+        if (contest.isNotStarted(tdoc)) return;
+        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
@@ -75,19 +89,9 @@ class HomeworkDetailHandler extends Handler {
                 );
             }
         }
-        // discussion
-        const [ddocs, dpcount, dcount] = await paginate(
-            discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
-            page,
-            system.get('pagination.discussion'),
-        );
-        const uids = ddocs.map((ddoc) => ddoc.owner);
-        uids.push(tdoc.owner);
-        const udict = await user.getList(domainId, uids);
-        this.response.template = 'homework_detail.html';
-        this.response.body = {
-            tdoc, tsdoc, udict, pdict, psdict, rdict, ddocs, page, dpcount, dcount,
-        };
+        this.response.body.pdict = pdict;
+        this.response.body.psdict = psdict;
+        this.response.body.rdict = rdict;
     }
 
     @param('tid', Types.ObjectID)

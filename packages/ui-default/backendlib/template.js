@@ -9,7 +9,7 @@ const argv = require('cac')().parse();
 const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
-const { xss } = require('./markdown-it-xss');
+const { xss, ensureTag } = require('./markdown-it-xss');
 
 const { misc, buildContent, avatar } = global.Hydro.lib;
 
@@ -63,8 +63,8 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
     this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
-    this.addFilter('markdown', (self, html = false) => markdown.render(self, html));
-    this.addFilter('markdownInline', (self, html = false) => markdown.renderInline(self, html));
+    this.addFilter('markdown', (self, html = false) => ensureTag(markdown.render(self, html)));
+    this.addFilter('markdownInline', (self, html = false) => ensureTag(markdown.renderInline(self, html)));
     this.addFilter('ansi', (self) => misc.ansiToHtml(self));
     this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
@@ -87,7 +87,7 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
-      return html ? xss.process(s) : markdown.render(s);
+      return ensureTag(html ? xss.process(s) : markdown.render(s));
     });
     this.addFilter('log', (self) => {
       console.log(self);
@@ -121,6 +121,7 @@ env.addGlobal('static_url', (assetName) => {
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
+env.addGlobal('Object', Object);
 env.addGlobal('Math', Math);
 env.addGlobal('process', process);
 env.addGlobal('global', global);

@@ -20,13 +20,13 @@ body > .marker
     transform: none
     pointer-events: auto
 
-  &__toolbar
+  .marker__toolbar
     padding: 1px
     background: $toolbar-bg
     white-space: nowrap
     font-size: 0
 
-  &__action
+  .marker__action
     display: inline-block
     text-align: center
     font-size: rem($font-size-icon)
@@ -40,7 +40,7 @@ body > .marker
       background: $toolbar-bg-hover
       color: $toolbar-fore-hover
 
-  &__icon
+  .marker__icon
     display: block
     margin: rem(2px)
     width: rem(12px)
@@ -52,3 +52,6 @@ body > .marker
 
     &.icon-green
       background: #54d651
+
+    &.icon-red
+      background: #ff3b30

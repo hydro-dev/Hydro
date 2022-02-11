@@ -56,7 +56,7 @@ export const PROJECTION_LIST: DiscussionDoc.Field[] = [
     'parentId', 'parentType', 'title',
 ];
 export const PROJECTION_PUBLIC: DiscussionDoc.Field[] = [
-    ...PROJECTION_LIST, 'content', 'history',
+    ...PROJECTION_LIST, 'content', 'history', 'react', 'maintainer',
 ];
 
 export const typeDisplay = {
@@ -184,8 +184,16 @@ export function getListReply(domainId: string, did: ObjectID): Promise<Discussio
 }
 
 export async function react(domainId: string, docType: keyof document.DocType, did: ObjectID, id: string, uid: number, reverse = false) {
-    const updated = await document.setIfNotStatus(domainId, docType, did, uid, `react.${id}`, reverse ? 0 : 1, reverse ? 0 : 1, {});
-    if (updated) await document.inc(domainId, docType, did, `react.${id}`, reverse ? -1 : 1);
+    let doc;
+    const sdoc = await document.setIfNotStatus(domainId, docType, did, uid, `react.${id}`, reverse ? 0 : 1, reverse ? 0 : 1, {});
+    if (sdoc) doc = await document.inc(domainId, docType, did, `react.${id}`, reverse ? -1 : 1);
+    else doc = await document.get(domainId, docType, did, ['react']);
+    return [doc, sdoc];
+}
+
+export async function getReaction(domainId: string, docType: keyof document.DocType, did: ObjectID, uid: number) {
+    const doc = await document.getStatus(domainId, docType, did, uid);
+    return doc?.react || {};
 }
 
 export async function addTailReply(
@@ -248,8 +256,9 @@ export function flushNodes(domainId: string) {
 
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
-        const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id);
+        let pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
+        if (pdoc.hidden) pdoc = problem.default;
         return { ...pdoc, type, id: pdoc.docId };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
@@ -357,6 +366,7 @@ global.Hydro.model.discussion = {
     editTailReply,
     delTailReply,
     react,
+    getReaction,
     setStar,
     getStatus,
     setStatus,
