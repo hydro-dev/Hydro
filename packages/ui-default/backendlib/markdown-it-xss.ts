@@ -1,12 +1,13 @@
 import * as Xss from 'xss';
 
 const stack = [];
+const voidTags = ['br', 'hr', 'input', 'img', 'link', 'source', 'col', 'area', 'base', 'meta', 'embed', 'param', 'track', 'wbr'];
 
 const tagCheck = new Xss.FilterXSS({
   css: false,
   whiteList: {},
   onIgnoreTag(tag, html, options) {
-    if (html.endsWith('/>')) return html;
+    if (html.endsWith('/>') || voidTags.includes(tag)) return html;
     if (!options.isClosing) {
       stack.push(tag);
       return html;
