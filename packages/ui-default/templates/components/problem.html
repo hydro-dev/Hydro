@@ -5,24 +5,16 @@
   {% if pdoc.domainId !== handler.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
-{%- if pdoc.domainId !== handler.domainId -%}
-  {{ pdoc.domainId }}#
-{%- endif -%}
-{%- if pdoc.pid -%}
-  {{ pdoc.pid }}
-{%- else -%}
-  {{ 'P'+pdoc.docId if pdoc.domainId === handler.domainId else pdoc.docId }}
-{%- endif -%}
-{%- if not small -%}. {{ pdoc.title }}{%- endif -%}
+{%- if pdoc.domainId !== handler.domainId -%}{{ pdoc.domainId }}#{%- endif -%}
+<b>{{ pdoc.pid or 'P'+pdoc.docId if pdoc.domainId === handler.domainId else pdoc.docId }}</b>
+{%- if not small -%}&nbsp;&nbsp;{{ pdoc.title }}{%- endif -%}
 {%- if not invalid -%}
   </a>
 {%- endif -%}
 {%- if pdoc.hidden and show_invisible_flag -%}
   <span class="text-orange">({{ _('Hidden') }})</span>
 {%- endif -%}
-{%- if show_tags -%}
-  {{ render_problem_tags(pdoc, inline=inline) }}
-{%- endif -%}
+{%- if show_tags -%}{{ render_problem_tags(pdoc, inline=inline) }}{%- endif -%}
 {% endmacro %}
 
 {% macro render_problem_tags(pdoc, show_none_label=false, inline=false) %}
@@ -30,11 +22,9 @@
   {%- if not inline %}<ul class="problem__tags">{% endif -%}
   {%- for tag in pdoc['tag'] %}
     <li class="problem__tag"><a class="problem__tag-link" href="{{ url('problem_category', category=tag) }}">{{ tag }}</a></li>
-  {%- endfor %}
+  {%- endfor -%}
   {%- if not inline %}</ul>{% endif -%}
-{%- else %}
-  {%- if show_none_label %}
-    {{ _('(None)') }}
-  {%- endif %}
-{%- endif %}
+{%- else -%}
+  {%- if show_none_label -%}{{ _('(None)') }}{%- endif -%}
+{%- endif -%}
 {% endmacro %}
