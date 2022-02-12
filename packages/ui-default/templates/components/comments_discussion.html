@@ -34,7 +34,8 @@
   reply_edit_text = 'Update',
   comment_delete_op = 'delete_reply',
   reply_delete_op = 'delete_tail_reply',
-  reactions = {}
+  reactions = {},
+  ddoc = {}
 ) %}
 <ul class="dczcomments__list view--discussion">
 {% if handler.user.hasPerm(comment_post_perm) %}
@@ -44,6 +45,9 @@
       <img src="{{ avatarUrl(handler.user.avatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
     <div class="media__body top">
+      {% if ddoc.lock %}
+        <textarea class="textbox" name="dczcomments__dummy-box" readonly placeholder="{{ _('The discussion is locked, you can not reply anymore.') }}"></textarea>
+      {% else %}
       <div class="hasjs--hide">
         <form method="post" class="dczcomments__box" name="dczcomments__box__form" data-hotkey="ctrl+enter:submit,esc:vjCommentBoxCancel">
           <div>
@@ -73,6 +77,7 @@
           </div>
         </li>
       </ul>
+      {% endif %}
     </div>
   </div>
 </li>

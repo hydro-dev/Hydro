@@ -1,6 +1,9 @@
 import { isSafeInteger } from 'lodash';
 import { ObjectID } from 'mongodb';
-import { DiscussionNotFoundError, DocumentNotFoundError, PermissionError } from '../error';
+import {
+    DiscussionLockedError, DiscussionNotFoundError, DocumentNotFoundError,
+    PermissionError,
+} from '../error';
 import { DiscussionDoc, DiscussionReplyDoc, DiscussionTailReplyDoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
@@ -207,6 +210,14 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
     }
 
+    @param('did', Types.ObjectID)
+    @param('lock', Types.Boolean)
+    async postSetLock(domainId: string, did: ObjectID, lock: boolean) {
+        if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_LOCK_DISCUSSION);
+        await discussion.edit(domainId, did, { lock });
+        this.back();
+    }
+
     @param('type', Types.Range(['did', 'drid']))
     @param('id', Types.ObjectID)
     @param('emoji', Types.Emoji)
@@ -223,6 +234,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.Content)
     async postReply(domainId: string, did: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
+        if (this.ddoc.lock) throw new DiscussionLockedError(domainId, did);
         await this.limitRate('add_discussion', 3600, 60);
         const targets = new Set(Array.from(content.matchAll(/@\[\]\(\/user\/(\d+)\)/g)).map((i) => +i[1]));
         const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
@@ -241,6 +253,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('content', Types.Content)
     async postTailReply(domainId: string, drid: ObjectID, content: string) {
         this.checkPerm(PERM.PERM_REPLY_DISCUSSION);
+        if (this.ddoc.lock) throw new DiscussionLockedError(domainId, this.ddoc.docId);
         await this.limitRate('add_discussion', 3600, 60);
         const targets = new Set(Array.from(content.matchAll(/@\[\]\(\/user\/(\d+)\)/g)).map((i) => +i[1]));
         const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
@@ -355,7 +368,9 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
         await Promise.all([
-            discussion.edit(domainId, did, title, content, highlight, pin),
+            discussion.edit(domainId, did, {
+                title, content, highlight, pin,
+            }),
             oplog.log(this, 'discussion.edit', this.ddoc),
         ]);
         this.response.body = { did };

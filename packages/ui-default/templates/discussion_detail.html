@@ -46,6 +46,16 @@
           </button>
         </form></li>
       {% endif %}
+      {% if handler.user.own(ddoc) or handler.user.hasPerm(perm.PERM_LOCK_DISCUSSION) %}
+        <li><form class="form--inline" method="post">
+          <input type="hidden" name="operation" value="set_lock">
+          {% if not ddoc.lock %}<input type="hidden" name="lock" value="1">{% endif %}
+          <button class="star{% if ddoc.lock %} activated{% endif %}" type="submit">
+            <span class="starred--hide">{{ _('Lock Topic') }}</span>
+            <span class="starred--show">{{ _('Unlock Topic') }}</span>
+          </button>
+        </form></li>
+      {% endif %}
         <li><a href="{{ url('wiki_help', anchor='contact') }}">
           <span class="icon icon-warning"></span> {{ _('Report') }}
         </a></li>
@@ -78,7 +88,8 @@
           reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
           reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
-          reactions = reactions
+          reactions = reactions,
+          ddoc = ddoc
         ) }}
         {{ paginator.render(page, pcount) }}
       {% if drcount == 0 %}
@@ -97,9 +108,7 @@
             <img src="{{ avatarUrl(udoc.avatar, 80) }}" width="80" height="80" class="medium user-profile-avatar">
           </div>
           <div class="media__body">
-            <p>
-              {{ user.render_inline(udoc, avatar=false, modbadge=false) }}
-            </p>
+            <p>{{ user.render_inline(udoc, avatar=false, modbadge=false) }}</p>
           </div>
         </div>
       </div>

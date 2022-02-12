@@ -58,6 +58,7 @@ export const PERM = {
     PERM_DELETE_DISCUSSION_REPLY: 1n << 38n,
     PERM_DELETE_DISCUSSION_REPLY_SELF: 1n << 39n,
     PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION: 1n << 40n,
+    PERM_LOCK_DISCUSSION: 64n,
 
     // Contest
     PERM_VIEW_CONTEST: 1n << 41n,
@@ -131,6 +132,7 @@ export const PERMS = [
     Permission('perm_discussion', PERM.PERM_PIN_DISCUSSION, 'Pin discussions'),
     Permission('perm_discussion', PERM.PERM_EDIT_DISCUSSION, 'Edit discussions'),
     Permission('perm_discussion', PERM.PERM_EDIT_DISCUSSION_SELF, 'Edit own discussions'),
+    Permission('perm_discussion', PERM.PERM_LOCK_DISCUSSION, 'Lock discussions'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION, 'Delete discussions'),
     Permission('perm_discussion', PERM.PERM_DELETE_DISCUSSION_SELF, 'Delete own discussions'),
     Permission('perm_discussion', PERM.PERM_REPLY_DISCUSSION, 'Reply discussions'),
