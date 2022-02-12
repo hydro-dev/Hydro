@@ -167,6 +167,7 @@ global.Hydro.error = {
     MessageNotFoundError,
     FileTooLargeError,
     CurrentPasswordError,
+    DiscussionLockedError,
 };
 
 /*
