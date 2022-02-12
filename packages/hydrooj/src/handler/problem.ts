@@ -294,7 +294,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc) && !this.tsdoc?.attend) throw new ContestNotAttendedError(tid);
             this.pdoc.tag.length = 0;
-            if (!contest.canShowScoreboard(this.tdoc) || !contest.isLocked(this.tdoc)) {
+            if (!contest.canShowScoreboard.call(this, this.tdoc) || !contest.isLocked(this.tdoc)) {
                 delete this.pdoc.nAccept;
                 delete this.pdoc.nSubmit;
                 delete this.pdoc.difficulty;
