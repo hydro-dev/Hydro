@@ -75,18 +75,20 @@ class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-            if (pdoc.config.type === 'remote_judge' && rdoc.contest.toHexString() !== '0'.repeat(24)) {
-                return await task.add({
-                    ...omit(rdoc, ['_id']),
-                    priority,
-                    type: 'remotejudge',
-                    subType: pdoc.config.subType,
-                    target: pdoc.config.target,
-                    rid,
-                    domainId,
-                    config,
-                    data,
-                });
+            if (pdoc.config.type === 'remote_judge') {
+                if (rdoc.contest?.toHexString() !== '0'.repeat(24)) {
+                    return await task.add({
+                        ...omit(rdoc, ['_id']),
+                        priority,
+                        type: 'remotejudge',
+                        subType: pdoc.config.subType,
+                        target: pdoc.config.target,
+                        rid,
+                        domainId,
+                        config,
+                        data,
+                    });
+                }
             }
         }
         return await task.add({
