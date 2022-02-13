@@ -39,8 +39,8 @@ const checkers: Record<string, Checker> = {
                                 break;
                             }
                         }
-                        if (usr.length > 20) usrString = `${usrString.substring(0, 16)}...`;
-                        if (std.length > 20) stdString = `${stdString.substring(0, 16)}...`;
+                        if (usrString.length > 20) usrString = `${usrString.substring(0, 16)}...`;
+                        if (stdString.length > 20) stdString = `${stdString.substring(0, 16)}...`;
                         message = { message: 'Read {0}, expect {1}.', params: [usrString, stdString] };
                     }
                 } catch (e) {

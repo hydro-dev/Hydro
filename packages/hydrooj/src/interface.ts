@@ -436,6 +436,7 @@ declare module './model/discussion' {
         react: Record<string, number>;
         sort: number;
         lastRCount: number;
+        lock?: boolean;
     }
 }
 

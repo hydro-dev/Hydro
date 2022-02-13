@@ -15,8 +15,7 @@
       <col class="col--status edit-mode-hide">
     {% endif %}
       <col class="col--name">
-      <col class="col--tried">
-      <col class="col--ac">
+      <col class="col--ac-tried">
       <col class="col--difficulty">
     </colgroup>
     <thead>
@@ -34,8 +33,7 @@
           <span class="nojs--hide toggle-tag tag--hide">{{ _('Show tags') }}</span>
           <span class="nojs--hide toggle-tag notag--hide">{{ _('Hide tags') }}</span>
         </th>
-        <th class="col--tried">{{ _('Tried') }}</th>
-        <th class="col--ac">{{ _('AC') }}</th>
+        <th class="col--ac-tried">{{ _('AC') }} / {{ _('Tried') }}</th>
         <th class="col--difficulty">{{ _('Difficulty') }}</th>
       </tr>
     </thead>
@@ -69,8 +67,7 @@
           {% endif %}
           {{ problem.render_problem_title(pdoc) }}
         </td>
-        <td class="col--tried">{{ pdoc.nSubmit }}</td>
-        <td class="col--ac">{{ pdoc.nAccept }}</td>
+        <td class="col--ac-tried">{{ pdoc.nAccept }} / {{ pdoc.nSubmit }}</td>
         <td class="col--difficulty">{{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</td>
       </tr>
     {%- endfor -%}

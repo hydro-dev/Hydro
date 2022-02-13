@@ -57,6 +57,7 @@ export const PROJECTION_LIST: DiscussionDoc.Field[] = [
 ];
 export const PROJECTION_PUBLIC: DiscussionDoc.Field[] = [
     ...PROJECTION_LIST, 'content', 'history', 'react', 'maintainer',
+    'lock',
 ];
 
 export const typeDisplay = {
@@ -103,14 +104,8 @@ export async function get<T extends DiscussionDoc.Field>(
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
-export function edit(
-    domainId: string, did: ObjectID,
-    title: string, content: string, highlight: boolean, pin: boolean,
-): Promise<DiscussionDoc | null> {
-    const payload = {
-        title, content, highlight, pin,
-    };
-    return document.set(domainId, document.TYPE_DISCUSSION, did, payload);
+export function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
+    return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
 }
 
 export function inc(

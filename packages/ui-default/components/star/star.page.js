@@ -14,7 +14,9 @@ const starPage = new AutoloadPage('starPage', () => {
     const $button = $(ev.currentTarget);
     const currentState = $button.hasClass('activated');
     const $form = $button.closest('form');
-    $form.find('[name="operation"]').val(currentState ? 'unstar' : 'star');
+    const $op = $form.find('[name="operation"]');
+    if (!['star', 'unstar'].includes($op.val())) return;
+    $op.val(currentState ? 'unstar' : 'star');
     setStarButtonState($button, !currentState);
     request
       .post($form.attr('action'), $form)
@@ -25,7 +27,6 @@ const starPage = new AutoloadPage('starPage', () => {
         // TODO: notify failure
         setStarButtonState($button, currentState);
       });
-    return false;
   });
 });
 

@@ -437,6 +437,7 @@ List View: 列表视图
 Live: 正在进行
 Live...: 正在进行…
 Location: 位置
+Lock Topic: 锁定主题
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -750,6 +751,7 @@ Terms of Service: 服务条款
 Test data comes from: 测试数据来自
 Testdata Config: 测试数据配置
 Text: 文本
+The discussion is locked, you can not reply anymore.: 此讨论已经锁定，您不能再回复。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
 The invitation code you provided is invalid.: 您提供的邀请码无效。
@@ -800,6 +802,7 @@ Unhide Selected: 取消隐藏选中
 Unique: 唯一
 Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
+Unlock Topic: 解锁主题
 Unordered List: 无序列表
 Unsaved session expire seconds: 未保存的会话的过期秒数
 Unstar Topic: 取消收藏

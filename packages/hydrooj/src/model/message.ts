@@ -26,7 +26,7 @@ class MessageModel {
             from, to, content, _id: res.insertedId, flag,
         };
         if (from !== to) bus.broadcast('user/message', to, mdoc);
-        await user.inc(to, 'unreadMsg', 1);
+        if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }
 
