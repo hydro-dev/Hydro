@@ -23,6 +23,7 @@ import domain from '../model/domain';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
+import * as setting from '../model/setting';
 import solution from '../model/solution';
 import storage from '../model/storage';
 import * as system from '../model/system';
@@ -436,7 +437,10 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
-        if (pretest && !['default', 'fileio'].includes(this.response.body.pdoc.config?.type)) throw new BadRequestError('unable to run pretest');
+        if (pretest && setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
+        if (pretest && !['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+            throw new BadRequestError('unable to run pretest');
+        }
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);
         const rdoc = await record.get(domainId, rid);

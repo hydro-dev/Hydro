@@ -87,7 +87,10 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     }
     const keys = Object.keys(LANGS);
     if (!keys.includes(this.props.editorLang)) this.props.setEditorLanguage(keys[0]);
-    const canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
+    let canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
+    if (UiContext.pdoc.config?.type === 'remote_judge') {
+      if (window.LANGS[this.props.editorLang].pretest) canUsePretest = true;
+    }
     return (
       <Toolbar>
         {canUsePretest && (
