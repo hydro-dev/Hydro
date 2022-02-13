@@ -12,11 +12,13 @@ padding: 8px 0px; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px;" id="disconnect_no
 
 const $el = $(notification);
 $el.appendTo('body');
+$el.hide();
 function create() {
+  $el.show();
   $el.animate({ bottom: 0 }, 100);
 }
 function remove() {
-  $el.animate({ bottom: -100 }, 100);
+  $el.animate({ bottom: -100 }, 100, () => $el.remove());
 }
 
 export default class Sock {

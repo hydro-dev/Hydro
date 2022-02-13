@@ -25,7 +25,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     const { language } = this.props;
     const { load } = await import('vj/components/monaco/loader');
     const { monaco, registerAction, customOptions } = await load([language]);
-    this.model = monaco.editor.createModel(value, language, monaco.Uri.parse(`file:///${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`));
+    const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+    this.model = monaco.editor.createModel(value, language, uri);
     if (this.containerElement) {
       /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
       const config = {
