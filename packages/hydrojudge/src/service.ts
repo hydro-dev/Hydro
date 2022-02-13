@@ -92,7 +92,7 @@ async function postInit() {
             }
         }
         for (const name in etags) {
-            if (!filenames.has(name)) await fs.rm(path.join(filePath, name));
+            if (!filenames.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
         }
         fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
         fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
