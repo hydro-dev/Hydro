@@ -28,7 +28,7 @@
             document: {
                 fileType: t[t.length - 1],
                 key: Math.random().toString(16),
-                title: n[n.length - 1],
+                title: decodeURIComponent(n[n.length - 1]),
                 url: new URL(url, window.location.href),
                 permissions: {
                     comment: false,
@@ -51,6 +51,13 @@
                     id: UserContext._id.toString(),
                     name: UserContext.uname,
                 },
+                customization: {
+                    chat: false,
+                    comments: false,
+                    help: false,
+                    hideRulers: true,
+                    plugins: false,
+                }
             },
             documentType: mode,
             height: mode === 'slide' ? '560px' : '900px',
