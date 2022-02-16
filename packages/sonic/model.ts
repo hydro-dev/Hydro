@@ -8,7 +8,7 @@ bus.on('problem/add', async (doc, docId) => {
     const tasks = [];
     for (const domainId of [doc.domainId, ...union.map((i) => i._id)]) {
         tasks.push(
-            sonic.push('problem', `${domainId}@title`, `${doc.domainId}/${docId}`, doc.title),
+            sonic.push('problem', `${domainId}@title`, `${doc.domainId}/${docId}`, `${doc.pid || ''} ${doc.title}`),
             sonic.push('problem', `${domainId}@content`, `${doc.domainId}/${docId}`, doc.content.toString()),
         );
     }
@@ -22,7 +22,7 @@ bus.on('problem/edit', async (pdoc) => {
     for (const domainId of [pdoc.domainId, ...union.map((i) => i._id)]) {
         tasks.push(
             sonic.flusho('problem', `${domainId}@title`, id)
-                .then(() => sonic.push('problem', `${domainId}@title`, id, pdoc.title)),
+                .then(() => sonic.push('problem', `${domainId}@title`, id, `${pdoc.pid || ''} ${pdoc.title}`)),
             sonic.flusho('problem', `${domainId}@content`, id)
                 .then(() => sonic.push('problem', `${domainId}@content`, id, pdoc.content.toString())),
         );
