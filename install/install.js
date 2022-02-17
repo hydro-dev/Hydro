@@ -300,7 +300,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     },
     {
         init: 'install.migrateHustoj',
-        skip: () => migration === 'hustoj',
+        skip: () => migration !== 'hustoj',
         silent: true,
         operations: [
             ['yarn global add @hydrooj/migrate-hustoj', { retry: true }],
