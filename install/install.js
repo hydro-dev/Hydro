@@ -131,9 +131,9 @@ const steps = [
             () => log.info('info.mirror', preferredMirror),
             'mkdir -p /data/db /data/file ~/.hydro',
             Arch ? 'pacman --needed --quiet --noconfirm -Sy' : 'apt-get -qq update',
-            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl' : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
+            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl qrencode' : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
             () => {
-                if (locale === 'zh' && !Arch) {
+                if (locale === 'zh') {
                     log.info('扫码加入QQ群：');
                     exec('echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8', {}, 0);
                 }
