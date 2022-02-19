@@ -15,7 +15,7 @@ export async function run({ domainId }, report) {
         const tasks = [];
         for (const did of [pdoc.domainId, ...union.map((j) => j._id)]) {
             tasks.push(
-                pdoc.title && sonic.push('problem', `${did}@title`, `${pdoc.domainId}/${pdoc.docId}`, pdoc.title),
+                pdoc.title && sonic.push('problem', `${did}@title`, `${pdoc.domainId}/${pdoc.docId}`, `${pdoc.pid || ''} ${pdoc.title}`),
                 pdoc.content.toString() && sonic.push('problem', `${did}@content`, `${pdoc.domainId}/${pdoc.docId}`, pdoc.content.toString()),
             );
         }

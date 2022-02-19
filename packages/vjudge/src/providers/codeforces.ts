@@ -57,6 +57,8 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     async getPage() {
         const page = await this.puppeteer.newPage();
+        const url = await page.openPortal();
+        logger.info('portal=', url);
         for (const str of this.cookie) {
             const [name, value] = str.split(';')[0].split('=');
             await page.setCookie({ name, value, domain: 'codeforces.com' });
@@ -65,7 +67,11 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async clearPage(page: Page) {
-        const cookies = await page.cookies();
+        let cookies = await page.cookies();
+        while (!cookies.find((i) => i.name === 'evercookie_etag').value) {
+            await sleep(1000);
+            cookies = await page.cookies();
+        }
         this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
         await this.save({ cookie: this.cookie });
         await page.close();
@@ -106,11 +112,19 @@ export default class CodeforcesProvider implements IBasicProvider {
     async checkLogin() {
         await this.ensureBrowser();
         const page = await this.getPage();
-        await page.goto(`${this.account.endpoint}/enter`);
+        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2' });
         const html = await page.content();
-        const cookies = await page.cookies();
-        this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
-        await this.save({ cookie: this.cookie });
+        let cookies = await page.cookies();
+        let c = 0;
+        while (!cookies.find((i) => i.name === 'evercookie_etag').value && c <= 60) {
+            await sleep(1000);
+            cookies = await page.cookies();
+            c++;
+        }
+        if (c < 60) {
+            this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
+            await this.save({ cookie: this.cookie });
+        }
         const ftaa = cookies.find((i) => i.name === '70a7c28f3de')?.value;
         const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1];
         await page.close();
@@ -164,7 +178,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     async puppeteerLogin() {
         if (!this.puppeteer) return false;
         const page = await this.puppeteer.newPage();
-        await page.goto(`${this.account.endpoint}/enter`);
+        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2' });
         const url = await page.openPortal();
         logger.info(`Login portal opened: ${url}`);
         await page.waitForRequest((req) => {
@@ -184,6 +198,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         logger.info('retry normal login');
         await this.normalLogin();
         if (await this.loggedIn) return true;
+        if (!this.puppeteer) return false;
         logger.info('starting puppeteer login');
         await this.puppeteerLogin();
         if (await this.loggedIn) return true;

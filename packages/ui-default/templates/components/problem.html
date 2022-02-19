@@ -5,7 +5,7 @@
   {% if pdoc.domainId !== handler.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
-{%- if pdoc.domainId !== handler.domainId -%}{{ pdoc.domainId }}#{%- endif -%}
+{%- if pdoc.domainId !== handler.domainId -%}<b>{{ pdoc.domainId }}#</b>{%- endif -%}
 <b>{{ pdoc.pid or 'P'+pdoc.docId if pdoc.domainId === handler.domainId else pdoc.docId }}</b>
 {%- if not small -%}&nbsp;&nbsp;{{ pdoc.title }}{%- endif -%}
 {%- if not invalid -%}

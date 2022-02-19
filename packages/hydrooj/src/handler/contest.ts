@@ -334,7 +334,9 @@ export class ContestCodeHandler extends Handler {
         const rnames = {};
         for (const tsdoc of tsdocs) {
             for (const pid in tsdoc.detail || {}) {
-                rnames[tsdoc.detail[pid].rid] = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
+                let name = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
+                if (typeof tsdoc.detail[pid].score === 'number') name += `_S${tsdoc.detail[pid].status}@${tsdoc.detail[pid].score}`;
+                rnames[tsdoc.detail[pid].rid] = name;
             }
         }
         const zip = new AdmZip();

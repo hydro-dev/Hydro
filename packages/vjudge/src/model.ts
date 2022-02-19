@@ -23,7 +23,7 @@ class Service {
         this.api = new Provider(account, async (data) => {
             await coll.updateOne({ _id: account._id }, { $set: data });
         });
-        this.main();
+        this.main().catch((e) => logger.error(`Error occured in ${account.type}/${account.handle}`, e));
     }
 
     async judge(task) {
@@ -36,6 +36,7 @@ class Service {
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
             await this.api.waitForSubmission(rid, next, end);
         } catch (e) {
+            if (process.env.DEV) logger.error(e);
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: e.message });
         }
     }

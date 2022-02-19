@@ -15,7 +15,6 @@ import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import root from '../utils/root';
 
 const beautifyOutputUrl = mapWebpackUrlPrefix([
-  { prefix: 'node_modules/katex/dist/', replace: './katex/' },
   { prefix: 'misc/.iconfont', replace: './ui/iconfont' },
 ]);
 const smp = new SpeedMeasurePlugin();
@@ -53,8 +52,11 @@ export default function (env = {}) {
         name(resourcePath) {
           if (resourcePath.includes('node_modules')) {
             const extra = resourcePath.split('node_modules')[1];
+            const moduleName = extra.split('/')[0];
+            if (['katex', 'monaco-editor'].includes(moduleName)) return `modules/${moduleName}/[name].[ext]?[contenthash]`;
             return `modules/${extra.substr(1, extra.length - 1).replace(/\\/g, '/')}?[contenthash]`;
           }
+          if (resourcePath.includes('misc/.iconfont')) return 'modules/icon/[name].[ext]?[contenthash]';
           return '[path][name].[ext]?[contenthash]';
         },
       },
@@ -197,7 +199,7 @@ export default function (env = {}) {
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
-          { from: root(`${dirname(require.resolve('vditor/package.json'))}`), to: 'vditor/' },
+          { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
           { from: root('.build/sharedworker.js'), to: 'sharedworker.js' },
         ],

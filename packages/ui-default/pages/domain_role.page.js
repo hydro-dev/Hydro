@@ -78,7 +78,7 @@ const page = new NamedPage('domain_role', () => {
   }
 
   $('[name="create_role"]').click(() => handleClickCreateRole());
-  $('[name="delete_selected"]').click(() => handleClickDeleteSelected());
+  $('[name="remove_selected"]').click(() => handleClickDeleteSelected());
 });
 
 export default page;

@@ -206,7 +206,7 @@ export default class Hydro {
             if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
         }
         for (const name in etags) {
-            if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.rm(path.join(filePath, name));
+            if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
         }
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
