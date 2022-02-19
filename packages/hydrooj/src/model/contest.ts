@@ -464,8 +464,7 @@ const cf = buildContestRule({
         const detail: AcmDetail[] = [];
         let score = 0;
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)
-                && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
+            if (tdoc.pids.includes(j.pid) && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
                 effective[j.pid] = j;
                 if (j.score > 0) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
             }
@@ -548,8 +547,8 @@ const cf = buildContestRule({
                 } else {
                     row.push({
                         type: 'record',
-                        score: accept ? Math.floor(100 * (Math.max(Math.floor(doc.score * 0.3), doc.score - doc.penalty) / doc.score)) : 0,
-                        value: accept ? '{0}\n{1}'.format(colScore, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
+                        score: accept ? 100 : 0,
+                        value: accept ? doc.naccept <= 1 ? '{0}\n{1}'.format(colScore, colTimeStr) : '{0}({1})\n{2}'.format(colScore, -doc.naccept + 1, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
                         raw: rid,
                     });
                 }
