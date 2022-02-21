@@ -6,6 +6,15 @@ import 'pickadate/lib/themes/classic.time.css';
 import 'katex/dist/katex.min.css';
 import '@blueprintjs/core/lib/css/blueprint.css';
 
+import '@fontsource/fira-code';
+import '@fontsource/source-code-pro';
+import '@fontsource/roboto-mono';
+import '@fontsource/inconsolata';
+import '@fontsource/ubuntu-mono';
+import '@fontsource/pt-mono';
+import '@fontsource/dm-mono';
+import '@fontsource/jetbrains-mono';
+
 import 'vj/misc/float.styl';
 import 'vj/misc/typography.styl';
 import 'vj/misc/textalign.styl';

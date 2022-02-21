@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.32.3",
+  "version": "4.32.4",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -11,6 +11,14 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "^3.53.0",
+    "@fontsource/dm-mono": "^4.5.3",
+    "@fontsource/fira-code": "^4.5.5",
+    "@fontsource/inconsolata": "^4.5.2",
+    "@fontsource/jetbrains-mono": "^4.5.3",
+    "@fontsource/pt-mono": "^4.5.2",
+    "@fontsource/roboto-mono": "^4.5.3",
+    "@fontsource/source-code-pro": "^4.5.4",
+    "@fontsource/ubuntu-mono": "^4.5.3",
     "@hydrooj/utils": "workspace:*",
     "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.13",

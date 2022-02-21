@@ -19,8 +19,15 @@ codeFontFamily:
     Source Code Pro: Source Code Pro
     Consolas: Consolas
     Lucida Console: Lucida Console
-    monospace: monospace
     Fira Code: Fira Code
+    Roboto Mono: Roboto Mono
+    Inconsolata: Inconsolata
+    Hack: Hack
+    Jetbrains Mono: Jetbrains Mono
+    DM Mono: DM Mono
+    Ubuntu Mono: Ubuntu Mono
+    PT Mono: PT Mono
+    SF Mono: SF Mono
   family: setting_display
   category: preference
   value: Source Code Pro
