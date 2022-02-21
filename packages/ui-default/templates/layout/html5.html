@@ -34,7 +34,7 @@
   {% if process.env.DEV %}
     <link rel="stylesheet" media="all" href="/default.theme.css">
   {% else %}
-    <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme-' + global.Hydro.version['ui-default'] +'.css') }}">
+    <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '-' + global.Hydro.version['ui-default'] +'.theme.css') }}">
   {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script>
