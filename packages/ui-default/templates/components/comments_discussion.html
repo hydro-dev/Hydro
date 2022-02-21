@@ -89,7 +89,7 @@
     <div class="media__left top">
       <img src="{{ avatarUrl(udoc.avatar, 60) }}" width="60" height="60" class="medium user-profile-avatar">
     </div>
-    <div class="media__body top">
+    <div class="media__body top" id="comment-{{ doc.docId }}">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
           {{ user.render_inline(udoc, avatar=false) }}

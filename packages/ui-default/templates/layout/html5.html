@@ -24,13 +24,23 @@
   <meta property="og:url" content="{{ model.system.get('server.url') }}{{ handler.ctx.request.path.slice(1) }}" />
   <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
   {% endblock %}
-  <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.css') }}?version={{ global.Hydro.version['ui-default'] }}">
   <title>{{ handler.renderTitle(page_name) }}</title>
+  <style>
+    body {
+      --font-family: "{{ UserContext.fontFamily }}", "Open Sans", "Seravek", "Segoe UI", "Verdana", "PingFang SC", "Hiragino Sans GB", "Lantinghei SC", "Microsoft Yahei", "WenQuanYi Micro Hei", "sans";
+      --code-font-family: "{{ UserContext.codeFontFamily }}", "monaco", "Source Code Pro", "Consolas", "Lucida Console", "monospace";
+    }
+  </style>
+  {% if process.env.DEV %}
+    <link rel="stylesheet" media="all" href="/default.theme.css">
+  {% else %}
+    <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '.theme-' + global.Hydro.version['ui-default'] +'.css') }}">
+  {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) %}
-  <script>
-    var _htmlNode = document.documentElement;
-    _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
-  </script>
+    <script>
+      var _htmlNode = document.documentElement;
+      _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
+    </script>
   {% endif %}
 </head>
 <body>
@@ -40,12 +50,24 @@
       var UiContext = '{{ UiContext|json|jsesc|safe }}';
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
-    <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
     <script type="text/javascript" src="{{ static_url('l/'+_('__id')) }}"></script>
-    {% if process.env.DEV %}
-      <script type="text/javascript" src="{{ static_url('hydro.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
+    {% if process.env.DEV and vite %}
+      <script type="module">
+        import RefreshRuntime from 'http://localhost:3000/@react-refresh'
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => {}
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+      </script>
+      <script type="module" src="http://localhost:3000/@vite/client"></script>
+      <script type="module" src="http://localhost:3000/entry.js"></script>
     {% else %}
-      <script type="text/javascript" src="{{ static_url('hydro-'+global.Hydro.version['ui-default']+'.js') }}"></script>
+      <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
+      {% if process.env.DEV %}
+        <script type="text/javascript" src="/hydro.js"></script>
+      {% else %}
+        <script type="text/javascript" src="{{ static_url('hydro-'+global.Hydro.version['ui-default']+'.js') }}"></script>
+      {% endif %}
     {% endif %}
   {% endif %}
 </body>

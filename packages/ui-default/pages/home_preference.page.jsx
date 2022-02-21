@@ -2,7 +2,7 @@ import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
 
-const page = new NamedPage('home_preference', () => {
+function initCodeLangHelper() {
   function setOptions($el, options) {
     $el.empty();
     $.each(options, (key, value) => {
@@ -65,6 +65,14 @@ const page = new NamedPage('home_preference', () => {
   $('#codelang-main-select').on('change', onChangeMain);
   $('#codelang-sub-select').on('change', function () {
     $('[name="codeLang"]').val(this.value);
+  });
+}
+
+const page = new NamedPage('home_preference', () => {
+  initCodeLangHelper();
+  $('[name="fontFamily"] option, [name="codeFontFamily"] option').each(function () {
+    this.style.fontFamily = this.getAttribute('value');
+    this.textContent = i18n(this.textContent.trim());
   });
 });
 

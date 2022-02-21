@@ -323,6 +323,7 @@ File: 文件
 Filename: 文件名
 Files: 文件
 Filter: 过滤
+fontFamily: 字体
 Footer: 页脚
 Footnote: 脚注
 Forgot Password and/or Username: 忘记密码和/或用户名
@@ -458,6 +459,7 @@ Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
+Microsoft Yahei: 微软雅黑
 Moderator: 管理员
 Month: 月
 Monthly Popular: 月度最受欢迎
@@ -549,6 +551,7 @@ Permission: 权限
 Permissions: 权限
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
 Pin: 置顶
+PingFang SC: 苹方简体
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
@@ -863,6 +866,7 @@ We will check code similarity after this contest.: 我们会在赛后检查代�
 WeChat Visibility: 微信可见性
 WeChat: 微信
 Week: 周
+WenQuanYi Micro Hei: 文泉驿
 What is domain?: 什么是域?
 What is this?: 这是什么？
 What's domain?: 什么是域？

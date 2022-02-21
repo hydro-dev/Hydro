@@ -231,8 +231,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             { value: UiContext.pdoc.stats.WA, name: 'WA' },
             { value: UiContext.pdoc.stats.RE, name: 'RE' },
             { value: UiContext.pdoc.stats.CE, name: 'CE' },
-            { value: UiContext.pdoc.stats.SE, name: 'SE' },
-            { value: UiContext.pdoc.stats.IGN, name: 'IGN' },
           ],
         },
       ],

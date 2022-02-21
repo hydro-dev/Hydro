@@ -1,3 +1,29 @@
+fontFamily:
+  type:
+    Open Sans: Open Sans
+    Seravek: Seravek
+    Segoe UI: Segoe UI
+    Verdana: Verdana
+    PingFang SC: PingFang SC
+    Hiragino Sans GB: Hiragino Sans GB
+    Microsoft Yahei: Microsoft Yahei
+    WenQuanYi Micro Hei: WenQuanYi Micro Hei
+    sans: sans
+    XiaoLai SC: 小赖 SC
+  family: setting_display
+  category: preference
+  value: Open Sans
+codeFontFamily:
+  type:
+    monaco: Monaco
+    Source Code Pro: Source Code Pro
+    Consolas: Consolas
+    Lucida Console: Lucida Console
+    monospace: monospace
+    Fira Code: Fira Code
+  family: setting_display
+  category: preference
+  value: Source Code Pro
 footer_extra_html:
   type: textarea
   name: footer_extra_html

@@ -34,7 +34,6 @@ jobs:
       run: |
         yarn build
         yarn build:ui:production
-        ./packages/geoip/download.sh
     - name: Lint
       run: yarn lint:ci
     - name: Publish
