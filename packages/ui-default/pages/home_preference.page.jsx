@@ -74,6 +74,10 @@ const page = new NamedPage('home_preference', () => {
     this.style.fontFamily = this.getAttribute('value');
     this.textContent = i18n(this.textContent.trim());
   });
+  function updateFont() {
+    this.style.fontFamily = $(this).val();
+  }
+  $('[name="fontFamily"], [name="codeFontFamily"]').on('change', updateFont).each(updateFont);
 });
 
 export default page;
