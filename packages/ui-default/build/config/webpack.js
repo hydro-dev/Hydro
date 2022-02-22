@@ -53,8 +53,11 @@ export default function (env = {}) {
           if (resourcePath.includes('node_modules')) {
             const extra = resourcePath.split('node_modules')[1];
             const moduleName = extra.split('/')[0];
+            if (extra.includes('@fontsource')) {
+              return `fonts/${extra.substr(2).replace(/\\/g, '/')}?[contenthash]`;
+            }
             if (['katex', 'monaco-editor'].includes(moduleName)) return `modules/${moduleName}/[name].[ext]?[contenthash]`;
-            return `modules/${extra.substr(1, extra.length - 1).replace(/\\/g, '/')}?[contenthash]`;
+            return `modules/${extra.substr(1).replace(/\\/g, '/')}?[contenthash]`;
           }
           if (resourcePath.includes('misc/.iconfont')) return 'modules/icon/[name].[ext]?[contenthash]';
           return '[path][name].[ext]?[contenthash]';

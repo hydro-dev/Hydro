@@ -15,9 +15,7 @@ interface MongoConfig {
 
 class MongoService implements BaseService {
     public client: MongoClient;
-    public client2: MongoClient;
     public db: Db;
-    public db2: Db;
     public started = false;
     private opts: MongoConfig;
 
@@ -25,8 +23,6 @@ class MongoService implements BaseService {
         this.opts = opts;
         this.client = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true, useUnifiedTopology: true });
         this.db = this.client.db(global.__MONGO_DB_NAME_);
-        this.client2 = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true, useUnifiedTopology: true });
-        this.db2 = this.client2.db(global.__MONGO_DB_NAME_);
         await bus.parallel('database/connect', this.db);
         this.started = true;
     }

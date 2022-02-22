@@ -322,7 +322,8 @@ export class ContestEditHandler extends Handler {
 
 export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
+    @param('all', Types.Boolean)
+    async get(domainId: string, tid: ObjectID, all: boolean) {
         await this.limitRate('contest_code', 3600, 60);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
@@ -333,10 +334,18 @@ export class ContestCodeHandler extends Handler {
         }
         const rnames = {};
         for (const tsdoc of tsdocs) {
-            for (const pid in tsdoc.detail || {}) {
-                let name = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
-                if (typeof tsdoc.detail[pid].score === 'number') name += `_S${tsdoc.detail[pid].status}@${tsdoc.detail[pid].score}`;
-                rnames[tsdoc.detail[pid].rid] = name;
+            if (all) {
+                for (const j of tsdoc.journal || []) {
+                    let name = `U${tsdoc.uid}_P${j.pid}_R${j.rid}`;
+                    if (typeof j.score === 'number') name += `_S${j.status || 0}@${j.score}`;
+                    rnames[j.rid] = name;
+                }
+            } else {
+                for (const pid in tsdoc.detail || {}) {
+                    let name = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
+                    if (typeof tsdoc.detail[pid].score === 'number') name += `_S${tsdoc.detail[pid].status || 0}@${tsdoc.detail[pid].score}`;
+                    rnames[tsdoc.detail[pid].rid] = name;
+                }
             }
         }
         const zip = new AdmZip();

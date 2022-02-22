@@ -80,7 +80,7 @@ const scripts: UpgradeScript[] = [
         else savedProgress = { pdocs: [] };
         const ddocs = await domain.getMulti().project({ _id: 1 }).toArray();
         logger.info('Found %d domains.', ddocs.length);
-        const gridfs = new GridFSBucket(db.db2);
+        const gridfs = new GridFSBucket(db.db);
         for (let i = 0; i < ddocs.length; i++) {
             const ddoc = ddocs[i];
             logger.info('Domain %s (%d/%d)', ddoc._id, i + 1, ddocs.length);

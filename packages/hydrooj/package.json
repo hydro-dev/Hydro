@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.4.29",
+    "version": "3.4.30",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -39,7 +39,7 @@
         "minio": "7.0.25",
         "moment-timezone": "^0.5.34",
         "mongodb": "^3.7.3",
-        "nanoid": "^3.2.0",
+        "nanoid": "^3.3.0",
         "nodemailer": "^6.7.2",
         "notp": "^2.0.3",
         "p-queue": "^7.2.0",

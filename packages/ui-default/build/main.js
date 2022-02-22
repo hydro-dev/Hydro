@@ -90,6 +90,9 @@ async function main() {
   if (fs.existsSync('public/hydro.js')) {
     fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
   }
+  if (fs.existsSync('public/default.theme.css')) {
+    fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
+  }
   if (argv.options.production) {
     fs.removeSync('public/vditor/dist/js/mathjax');
     fs.removeSync('public/vditor/dist/js/echarts');

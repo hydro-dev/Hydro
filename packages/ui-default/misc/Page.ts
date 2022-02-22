@@ -24,13 +24,13 @@ export class Page {
 }
 
 export class NamedPage extends Page {
-  constructor(name: string | string[], afterLoading = null, beforeLoading = null) {
+  constructor(name: string | string[], afterLoading: (pagename: string) => any = null, beforeLoading = null) {
     super(name, false, afterLoading, beforeLoading);
   }
 }
 
 export class AutoloadPage extends Page {
-  constructor(name: string | string[], afterLoading = null, beforeLoading = null) {
+  constructor(name: string | string[], afterLoading: (pagename: string) => any = null, beforeLoading = null) {
     super(name, true, afterLoading, beforeLoading);
   }
 }

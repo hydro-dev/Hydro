@@ -472,8 +472,13 @@ h1, h2, h3, h4, h5, h6
     color: darken(black, 40%)
 
 textarea
-  font-family: "monaco", "Consolas", "Source Code Pro", "Lucida Console", "monospace" !important
+  font-family: $code-font-family !important
 
 :focus
   outline: 0px;
   outline-offset: 2px;
+
+@font-face
+  font-family: "XiaoLai SC";
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/lxgw/kose-font/master/TTF%20(Simplified%20Chinese)/XiaolaiSC-Regular.ttf') format('truetype');
