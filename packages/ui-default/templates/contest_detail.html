@@ -58,10 +58,10 @@
               <th class="col--status record-status--border">{{ _('Status') }}</th>
               <th class="col--submit-at">{{ _('Last Submit At') }}</th>
               {% endif %}
-              <th class="col--problem">{{ _('Problem') }}</th>
-              {% if model.contest.RULES[tdoc.rule].TEXT == 'Codeforces' and model.contest.isOngoing(tdoc) %}
+              {% if model.contest.RULES[tdoc.rule].TEXT === 'Codeforces' and model.contest.isOngoing(tdoc) %}
               <th class="col--score">{{ _('Score') }}</th>
               {% endif %}
+              <th class="col--problem">{{ _('Problem') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -82,12 +82,12 @@
               <td class="col--submit-at">-</td>
               {% endif %}
               {% endif %}
+              {% if model.contest.RULES[tdoc.rule].TEXT === 'Codeforces' and model.contest.isOngoing(tdoc) %}
+              <td class="col--score">{{ model.contest.getScore(tdoc, pid) }}</td>
+              {% endif %}
               <td class="col--problem col--problem-name">
                 {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
               </td>
-              {% if model.contest.RULES[tdoc.rule].TEXT == 'Codeforces' and model.contest.isOngoing(tdoc) %}
-              <td class="col--score">{{ model.contest.getScore(tdoc, pid) }}</td>
-              {% endif %}
             </tr>
             {%- endfor -%}
           </tbody>
