@@ -12,84 +12,96 @@
       </div>
       <div class="section__body">
         <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _(model.contest.statusText(tdoc)) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-award">{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Start at') }}: {{ contest.render_time(tdoc.beginAt) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-schedule">{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Host') }}: {{ user.render_inline(udict[tdoc.owner], badge=false) }}</span>
-        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-user--multiple">{{ tdoc['attend']|default(0) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-award">{{
+          _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Start at') }}: {{
+          contest.render_time(tdoc.beginAt) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-schedule">{{
+          contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item">{{ _('Host') }}: {{
+          user.render_inline(udict[tdoc.owner], badge=false) }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-user--multiple">{{
+          tdoc['attend']|default(0) }}</span>
         {% if tsdoc.attend %}
-          <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
+        <span class="bp3-tag bp3-large bp3-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
         {% endif %}
       </div>
     </div>
     <div class="section">
       <div class="section__body typo">
         {{ tdoc['content']|markdown|safe }}
-      {% if model.contest.isOngoing(tdoc) %}
+        {% if model.contest.isOngoing(tdoc) %}
         <blockquote class="warn">
           <p>{{ _('We will check code similarity after this contest.') }}</p>
         </blockquote>
-      {% endif %}
+        {% endif %}
       </div>
     </div>
-  {% if model.contest.isOngoing(tdoc) or model.contest.isDone(tdoc) %}
+    {% if model.contest.isOngoing(tdoc) or model.contest.isDone(tdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if tsdoc.attend or model.contest.isDone(tdoc) %}
+      {% if tsdoc.attend or model.contest.isDone(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
-          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
             <col class="col--status">
             <col class="col--submit-at">
-          {% endif %}
+            {% endif %}
             <col class="col--problem">
           </colgroup>
           <thead>
             <tr>
-            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+              {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
               <th class="col--submit-at">{{ _('Last Submit At') }}</th>
-            {% endif %}
+              {% endif %}
               <th class="col--problem">{{ _('Problem') }}</th>
+              {% if model.contest.RULES[tdoc.rule].TEXT == 'Codeforces' and model.contest.isOngoing(tdoc) %}
+              <th class="col--score">{{ _('Score') }}</th>
+              {% endif %}
             </tr>
           </thead>
           <tbody>
-          {%- for pid in tdoc.pids -%}
+            {%- for pid in tdoc.pids -%}
             <tr>
-            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+              {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
               {% set rdoc = rdict[psdict[pid].rid] %}
               {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
-                {{ record.render_status_td(rdoc) }}
+              {{ record.render_status_td(rdoc) }}
               {% else %}
-                <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
+              <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{
+                  _('Submitted') }}</a></td>
               {% endif %}
-                <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
+              <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
               {% else %}
-                <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
-                <td class="col--submit-at">-</td>
+              <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
+              <td class="col--submit-at">-</td>
               {% endif %}
-            {% endif %}
+              {% endif %}
               <td class="col--problem col--problem-name">
                 {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
               </td>
+              {% if model.contest.RULES[tdoc.rule].TEXT == 'Codeforces' and model.contest.isOngoing(tdoc) %}
+              <td class="col--score">{{ model.contest.getScore(tdoc, pid) }}</td>
+              {% endif %}
             </tr>
-          {%- endfor -%}
+            {%- endfor -%}
           </tbody>
         </table>
       </div>
-    {% else %}
+      {% else %}
       {{ nothing.render('Please attend contest to see the problems.') }}
-    {% endif %}
+      {% endif %}
     </div>
-  {% endif %}
+    {% endif %}
   </div>
   <div class="medium-3 columns">
-  {% set owner_udoc = udict[tdoc.owner] %}
-  {% include "partials/contest_sidebar.html" %}
+    {% set owner_udoc = udict[tdoc.owner] %}
+    {% include "partials/contest_sidebar.html" %}
   </div>
 </div>
 {% endblock %}

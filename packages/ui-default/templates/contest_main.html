@@ -34,9 +34,9 @@
         <a href="{{ url('contest_detail', tid=tdoc.docId) }}" class="detail-button">{{ _('View Details') }}</a>
         <div class="typo text-center">
           {% if tsdict[tdoc.docId].attend %}
-            <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
+          <p><span class="icon icon-check"></span> {{ _('Attended') }}</p>
           {% else %}
-            <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
+          <p><span class="icon icon-schedule"></span> {{ _('Not Attended') }}</p>
           {% endif %}
         </div>
       </div>
@@ -47,25 +47,27 @@
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
-  {%- for tdoc in tdocs -%}
+    {%- for tdoc in tdocs -%}
     {% if model.contest.isOngoing(tdoc) %}
-      {{ render_important_contest('live', 'Live...', tdoc) }}
+    {{ render_important_contest('live', 'Live...', tdoc) }}
     {% elif model.contest.isUpcoming(tdoc) %}
-      {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
+    {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
     {% endif %}
-  {%- endfor -%}
+    {%- endfor -%}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0} Contests').format(model.contest.RULES[rule].TEXT) }}</h1>
+        <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0}
+          Contests').format(model.contest.RULES[rule].TEXT) }}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
             <select class="inline compact select" name="rule">
-              <option value=""{% if not rule %} selected{% endif %}>{{ _('All') }}</option>
+              <option value="" {% if not rule %} selected{% endif %}>{{ _('All') }}</option>
               {%- for k, v in model.contest.RULES -%}
-                {% if k != 'homework' %}
-                  <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(v.TEXT) }}</option>
-                {% endif %}
+              {% if k != 'homework' %}
+              <option value="{{ k }}" {% if rule==k %} selected{% endif %}>{{ _('All {0} Contests').format(v.TEXT) }}
+              </option>
+              {% endif %}
               {%- endfor -%}
             </select>
             <button type="submit" class="button hasjs--hide">
@@ -75,11 +77,11 @@
         </div>
       </div>
       <div class="section__body no-padding">
-      {% if not tdocs.length %}
+        {% if not tdocs.length %}
         {{ nothing.render('There are no contests...') }}
-      {% else %}
+        {% else %}
         <ol class="section__list contest__list">
-        {%- for tdoc in tdocs -%}
+          {%- for tdoc in tdocs -%}
           <li class="section__list__item contest__item contest-type--{{ tdoc['rule'] }}">
             <div class="media">
               <div class="media__left medium">
@@ -89,38 +91,41 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{
+                    tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
-                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
+                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{
+                      model.contest.RULES[tdoc.rule].TEXT }}</a>
                   </li>
                   {% if tdoc.rated %}
-                    <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
+                  <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
                   {% endif %}
                   <li>
-                    <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}
+                    <span class="icon icon-schedule--fill text-blue"></span> {{ contest.render_duration(tdoc) }} {{
+                    _('hour(s)') }}
                   </li>
                   <li>
                     <span class="icon icon-user--multiple"></span> {{ tdoc['attend']|default(0) }}
                   </li>
-                {% if tsdict[tdoc.docId].attend %}
+                  {% if tsdict[tdoc.docId].attend %}
                   <li class="contest__info-attended">
                     <span class="icon icon-check"></span> {{ _('Attended') }}
                   </li>
-                {% endif %}
+                  {% endif %}
                 </ul>
               </div>
             </div>
           </li>
-        {%- endfor -%}
+          {%- endfor -%}
         </ol>
         {{ paginator.render(page, tpcount, add_qs=qs) }}
-      {% endif %}
+        {% endif %}
       </div>
     </div>
   </div>
   <div class="medium-3 columns">
-  {% if handler.user.hasPerm(perm.PERM_CREATE_CONTEST) %}
+    {% if handler.user.hasPerm(perm.PERM_CREATE_CONTEST) %}
     <div class="section side">
       <div class="section__header">
         <h1 class="section__title">
@@ -131,7 +136,7 @@
         <p><a href="{{ url('contest_create') }}" class="expanded primary button">{{ _('Create a contest') }}</a></p>
       </div>
     </div>
-  {% endif %}
+    {% endif %}
   </div>
 </div>
 {% endblock %}

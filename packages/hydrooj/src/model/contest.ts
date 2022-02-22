@@ -662,6 +662,16 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
+export function getScore(tdoc: Tdoc, pid: number) {
+    let score = 0;
+    const time = Math.floor((new Date().getTime() - tdoc.beginAt.getTime()) / 60000);
+    for (let i = 0; i < tdoc.pids.length; ++i)
+        if (tdoc.pids[i] == pid) {
+            score = tdoc.fullScore[i];
+            break;
+        }
+    return '{0}'.format(score - time * Math.floor(score / 250));
+}
 export function isNew(tdoc: Tdoc, days = 1) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
@@ -817,6 +827,7 @@ global.Hydro.model.contest = {
     canShowScoreboard,
     canViewHiddenScoreboard,
     getScoreboard,
+    getScore,
     isNew,
     isUpcoming,
     isNotStarted,
