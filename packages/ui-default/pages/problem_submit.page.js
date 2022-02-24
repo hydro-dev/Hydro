@@ -33,6 +33,10 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     if (config.langs && !config.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
     if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
+    else {
+      const a = key.split('.')[0];
+      main[a] = window.LANGS[a].display;
+    }
   }
   setOptions($('#codelang-main-select'), main);
 
@@ -47,6 +51,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
       $('[name="lang"]').val(fallback);
     }
   } else $('#codelang-main-select').val(current);
+  onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
 
   $('#codelang-main-select').on('change', onChangeMain);
   $('#codelang-sub-select').on('change', function () {
