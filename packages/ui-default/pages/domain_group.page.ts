@@ -138,7 +138,7 @@ const page = new NamedPage('domain_group', () => {
   }
 
   $('[name="create_group"]').click(() => handleClickCreateGroup());
-  $('[name="delete_selected"]').click(() => handleClickDeleteSelected());
+  $('[name="remove_selected"]').click(() => handleClickDeleteSelected());
   $('[name="save_all"]').on('click', () => handleClickSaveAll());
 });
 
