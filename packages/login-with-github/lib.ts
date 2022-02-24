@@ -58,7 +58,7 @@ async function callback({ state, code }) {
         _id: `${userInfo.body.id}@github.local`,
         email: userInfo.body.email,
         bio: userInfo.body.bio,
-        uname: [userInfo.body.name, userInfo.body.login],
+        uname: [userInfo.body.name, userInfo.body.login].filter((i) => i),
         avatar: `github:${userInfo.body.login}`,
     };
     if (!ret.email) {
