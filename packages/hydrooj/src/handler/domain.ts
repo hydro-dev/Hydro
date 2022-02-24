@@ -231,7 +231,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     async get() {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id).sort();
-        this.response.body.rolesWithText = roles.map((role) => [role, role]);
+        this.response.body.rolesWithText = roles.filter((i) => !['default', 'guest'].includes(i)).map((role) => [role, role]);
         this.response.body.joinSettings = domain.getJoinSettings(this.domain, roles);
         this.response.body.expirations = { ...domain.JOIN_EXPIRATION_RANGE };
         if (!this.response.body.joinSettings) {
