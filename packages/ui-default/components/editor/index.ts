@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Notification from 'vj/components/notification';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 
 export const config = {
@@ -168,7 +169,16 @@ export default class Editor extends DOMAttachedObject {
       this.vditor = new Vditor(ele, {
         ...config,
         ...this.options,
-        after: () => resolve(null),
+        after: () => {
+          const pos = $(ele).find('button[data-mode="sv"]').get();
+          const button = $('<button data-mode="monaco">Monaco Editor</button>');
+          button.on('click', (e) => {
+            Notification.info('You can select this in PreferenceSettings');
+            e.preventDefault();
+          });
+          button.insertAfter(pos);
+          resolve(null);
+        },
         input(v) {
           $dom.val(v);
           $dom.text(v);

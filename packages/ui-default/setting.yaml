@@ -54,7 +54,7 @@ preferredEditorType:
     monaco: Monaco Editor
   family: markdown
   category: preference
-  value: monaco
+  value: sv
 monacoTheme:
   type:
     vs-dark: VS Dark

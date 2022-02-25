@@ -6,7 +6,7 @@
       <dt>{{ _('Code blocks') }}</dt>
       <dd><pre>```c++
 int main() {
-return 0;
+  return 0;
 }
 ```</pre></dd>
       <dt>{{ _('Inline formulas') }}</dt>
@@ -20,13 +20,15 @@ return 0;
       <dt>{{ _('Images') }}</dt>
       <dd><pre>![{{ _('Description') }}](https://...)</pre></dd>
       <dt>{{ _('Images With Size') }}</dt>
-      <dd><pre>![{{ _('Description') }}](url = 100x100)</pre></dd>
+      <dd><pre>![{{ _('Description') }}](url =100x100)</pre></dd>
       <dt>{{ _('Footnote') }}</dt>
-      <dd><pre>Here is a reference[^1].
+      <dd><pre>Here is a ref[^1].
 
-[^1]: Here is the footnote.</pre></dd>
+[^1]: And the footnote.</pre></dd>
       <dt>{{ _('Videos') }}</dt>
-      <dd><pre>@[video](https://.../file.mp4)</pre></dd>
+      <dd><pre>@[video](https://.../a.mp4)</pre></dd>
+      <dt>{{ _('Mention')}}</dt>
+      <dd><pre>@[](/user/uid)</pre></dd>
     </dl>
     <h2>{{ _('Learn More') }}</h2>
     <ul>
