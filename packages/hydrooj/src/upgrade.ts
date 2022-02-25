@@ -683,6 +683,10 @@ const scripts: UpgradeScript[] = [
         await TaskModel.deleteMany({ type: 'schedule', subType: 'contest.problemHide' });
         return true;
     },
+    async function _59_60() {
+        const langs = await system.get('hydrooj.langs');
+        await system.set('hydrooj.langs', langs.replace(/\$\{dir\}/g, '/w').replace(/\$\{name\}/g, 'foo'));
+    },
 ];
 
 export default scripts;

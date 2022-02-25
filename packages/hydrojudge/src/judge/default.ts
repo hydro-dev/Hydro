@@ -41,7 +41,7 @@ function judgeCase(c: Case, sid: string) {
         const copyOutCached = filename ? [`${filename}.out?`] : [];
         const stdin = filename ? null : c.input;
         const res = await run(
-            ctx.execute.execute.replace(/\$\{name\}/g, 'code'),
+            ctx.execute.execute,
             {
                 stdin,
                 copyIn,
@@ -67,6 +67,7 @@ function judgeCase(c: Case, sid: string) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 [status, score, message] = await check({
+                    execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
                     input: { src: c.input },
                     output: { src: c.output },
@@ -142,15 +143,15 @@ export const judge = async (ctx: Context) => {
         } else throw new CompileError('Language not supported by provided templates');
     }
     [ctx.execute, ctx.checker] = await Promise.all([
+        compile(
+            ctx.getLang(ctx.lang), ctx.code,
+            Object.fromEntries(
+                (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
+            ),
+            ctx.next,
+        ),
         (() => {
-            const copyIn = {};
-            for (const file of ctx.config.user_extra_files) {
-                copyIn[parseFilename(file)] = { src: file };
-            }
-            return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
-        })(),
-        (() => {
-            if (!ctx.config.checker_type || ['default', 'strict'].includes(ctx.config.checker_type)) {
+            if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
                 return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
             const copyIn = {};

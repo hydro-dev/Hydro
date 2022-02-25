@@ -112,7 +112,11 @@ class JudgeTask {
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
-            { detail: this.session.config.detail, ...this.config },
+            {
+                detail: this.session.config.detail,
+                isSelfSubmission: this.config.problemOwner === this.request.uid,
+                ...this.config,
+            },
             { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
         );
         this.stat.judge = new Date();
@@ -243,10 +247,11 @@ export default class Hydro {
         return filePath;
     }
 
-    getLang(name: string) {
+    getLang(name: string, doThrow = true) {
         if (this.language[name]) return this.language[name];
         if (name === 'cpp' && this.language.cc) return this.language.cc;
-        throw new SystemError('Unsupported language {0}', [name]);
+        if (doThrow) throw new SystemError('Unsupported language {0}', [name]);
+        return null;
     }
 
     async consume(queue: Queue<any>) {

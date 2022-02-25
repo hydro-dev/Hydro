@@ -155,7 +155,7 @@ async function read1(folder: string, files: string[], checkFile, cfg, rst) {
     return config;
 }
 
-async function readAutoCases(folder, { next }, cfg, rst) {
+async function readAutoCases(folder: string, { next }, cfg, rst) {
     const config = {
         checker_type: 'default',
         count: 0,
@@ -177,7 +177,7 @@ async function readAutoCases(folder, { next }, cfg, rst) {
         let result = await read0(folder, files, checkFile, cfg);
         if (!result.count) result = await read1(folder, files, checkFile, cfg, rst);
         Object.assign(config, result);
-        next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
+        if (cfg.isSelfSubmission) next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
         throw new SystemError('Cannot parse testdata.', [e.message, ...e.params]);
     }

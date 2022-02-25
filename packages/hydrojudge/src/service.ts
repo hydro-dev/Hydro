@@ -134,10 +134,11 @@ async function postInit() {
         };
     }
 
-    function getLang(lang: string) {
+    function getLang(lang: string, doThrow = true) {
         if (setting.langs[lang]) return setting.langs[lang];
         if (lang === 'cpp' && setting.langs['cc']) return setting.langs['cc'];
-        throw new SystemError('Unsupported language {0}.', [lang]);
+        if (doThrow) throw new SystemError('Unsupported language {0}.', [lang]);
+        return null;
     }
 
     class JudgeTask {

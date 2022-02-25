@@ -8,46 +8,32 @@ import signals from '../signals';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
+const failure = (status: number, message?: string) => ({
+    status,
+    score: 0,
+    time_ms: 0,
+    memory_kb: 0,
+    message,
+});
+
 export const judge = async (ctx: Context) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     try {
-        ctx.execute = await compile(ctx.getLang(ctx.lang), ctx.code, 'code', {}, ctx.next);
+        ctx.execute = await compile(ctx.getLang(ctx.lang), ctx.code, {}, ctx.next);
     } catch (e) {
         if (e instanceof CompileError) {
             ctx.next({
                 status: STATUS.STATUS_COMPILE_ERROR,
-                case: {
-                    status: STATUS.STATUS_COMPILE_ERROR,
-                    score: 0,
-                    time_ms: 0,
-                    memory_kb: 0,
-                    message: compilerText(e.stdout, e.stderr),
-                },
+                case: failure(STATUS.STATUS_COMPILE_ERROR, compilerText(e.stdout, e.stderr)),
             });
-            ctx.end({
-                status: STATUS.STATUS_COMPILE_ERROR,
-                score: 0,
-                time_ms: 0,
-                memory_kb: 0,
-            });
+            ctx.end(failure(STATUS.STATUS_COMPILE_ERROR));
         } else {
             ctx.next({
                 status: STATUS.STATUS_SYSTEM_ERROR,
-                case: {
-                    status: STATUS.STATUS_SYSTEM_ERROR,
-                    score: 0,
-                    time_ms: 0,
-                    memory_kb: 0,
-                    message: `${e.message}\n${JSON.stringify(e.params)}`,
-                },
+                case: failure(STATUS.STATUS_SYSTEM_ERROR, `${e.message}\n${JSON.stringify(e.params)}`),
             });
-            ctx.end({
-                status: STATUS.STATUS_COMPILE_ERROR,
-                score: 0,
-                time_ms: 0,
-                memory_kb: 0,
-            });
+            ctx.end(failure(STATUS.STATUS_SYSTEM_ERROR));
         }
         return;
     }
@@ -62,7 +48,7 @@ export const judge = async (ctx: Context) => {
     const stdout = path.resolve(ctx.tmpdir, '0.out');
     const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
-        ctx.execute.execute.replace(/\$\{name\}/g, 'code'),
+        ctx.execute.execute,
         {
             stdin: filename ? null : stdin,
             stdout: filename ? null : stdout,
@@ -96,7 +82,7 @@ export const judge = async (ctx: Context) => {
             status,
             time_ms: time_usage_ms,
             memory_kb: memory_usage_kb,
-            message: message.join('\n').substr(0, 102400),
+            message: message.join('\n').substring(0, 102400),
         },
     });
     ctx.stat.done = new Date();

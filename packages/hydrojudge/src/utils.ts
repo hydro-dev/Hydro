@@ -22,7 +22,6 @@ const encrypt = (algorithm: string, content: crypto.BinaryLike) => {
     return hash.digest('hex');
 };
 
-export const sha1 = (content: string) => encrypt('sha1', content);
 export const md5 = (content: string) => encrypt('md5', content);
 
 export class Queue<T> extends EventEmitter {
@@ -69,24 +68,9 @@ export namespace Lock {
 
 export function compilerText(stdout: string, stderr: string) {
     const ret = [];
-    if (!EMPTY_STR.test(stdout)) ret.push(stdout.substr(0, 1024 * 1024));
-    if (!EMPTY_STR.test(stderr)) ret.push(stderr.substr(0, 1024 * 1024));
+    if (!EMPTY_STR.test(stdout)) ret.push(stdout.substring(0, 1024 * 1024));
+    if (!EMPTY_STR.test(stderr)) ret.push(stderr.substring(0, 1024 * 1024));
     return ret.join('\n');
-}
-
-export function copyInDir(dir: string) {
-    const files = {};
-    if (fs.existsSync(dir)) {
-        fs.readdirSync(dir).forEach((f1) => {
-            const p1 = `${dir}/${f1}`;
-            if (fs.statSync(p1).isDirectory()) {
-                fs.readdirSync(p1).forEach((f2) => {
-                    files[`${f1}/${f2}`] = { src: `${dir}/${f1}/${f2}` };
-                });
-            } else files[f1] = { src: `${dir}/${f1}` };
-        });
-    }
-    return files;
 }
 
 export function restrictFile(p: string) {

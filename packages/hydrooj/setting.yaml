@@ -32,33 +32,33 @@ langs:
           target: Compiler output file
           display: Display name
     c:
-      compile: /usr/bin/gcc -Wall --std=c99 -o ${name} foo.c -lm
-      highlight: c astyle-c
+      compile: /usr/bin/gcc -Wall --std=c99 -o foo foo.c -lm
+      highlight: c
       monaco: cpp
       display: C
     cc:
-      compile: /usr/bin/g++ -Wall -std=c++14 -o ${name} foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm
       code_file: foo.cc
-      highlight: cpp astyle-c
+      highlight: cpp
       monaco: cpp
       display: C++
     cc.std98:
-      compile: /usr/bin/g++ -Wall -std=c++98 -o ${name} foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm
       display: C++ 98
     cc.std11:
-      compile: /usr/bin/g++ -Wall -std=c++11 -o ${name} foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm
       display: C++ 11
     cc.std14:
       display: C++ 14
     cc.std17:
-      compile: /usr/bin/g++ -Wall -std=c++17 -o ${name} foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm
       display: C++ 17
     pas:
-      compile: /usr/bin/fpc -O2 -o${dir}/${name} foo.pas
+      compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
       highlight: pascal
       display: Pascal
     java:
-      compile: /usr/bin/bash -c "javac -d ${dir} -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
+      compile: /usr/bin/bash -c "javac -d /w -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
       code_file: Main.java
       target: Main.jar
       execute: /usr/bin/java -cp Main.jar Main
@@ -67,46 +67,42 @@ langs:
       monaco: java
       display: Java
     py:
-      compile: /usr/bin/python -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
+      compile: /usr/bin/python -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       code_file: foo.py
-      execute: /usr/bin/python ${name}
+      execute: /usr/bin/python foo
       highlight: python
       display: Python
     py.py2:
       display: Python 2
     py.py3:
-      compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('${dir}/foo.py', '${dir}/${name}', doraise=True)"
-      execute: /usr/bin/python3 ${name}
+      compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
+      execute: /usr/bin/python3 foo
       display: Python 3
     php:
       execute: /usr/bin/php foo.php
       display: PHP
     rs:
-      compile: /usr/bin/rustc -O -o ${dir}/${name} ${dir}/foo.rs
+      compile: /usr/bin/rustc -O -o /w/foo /w/foo.rs
       highlight: rust
       display: Rust
     hs:
-      compile: /usr/bin/ghc -O -outputdir /tmp -o ${name} foo.hs
+      compile: /usr/bin/ghc -O -outputdir /tmp -o foo foo.hs
       highlight: haskell
       display: Haskell
     js:
-      execute: /usr/bin/jsc ${dir}/foo.js
+      execute: /usr/bin/jsc /w/foo.js
       highlight: javascript
       display: Javascript (JSC)
     go:
-      compile: /usr/bin/go build -o ${name} foo.go
+      compile: /usr/bin/go build -o foo foo.go
       display: Golang
     rb:
       execute: /usr/bin/ruby foo.rb
       highlight: ruby
       display: Ruby
     cs:
-      compile: /usr/bin/mcs -optimize+ -out:${dir}/${name} ${dir}/foo.cs
-      execute: /usr/bin/mono ${name}
-      highlight: csharp astyle-cs
+      compile: /usr/bin/mcs -optimize+ -out:/w/foo /w/foo.cs
+      execute: /usr/bin/mono foo
+      highlight: csharp
       monaco: csharp
-      display: Csharp
-    jl:
-      execute: /usr/bin/julia ${dir}/foo.jl
-      highlight: julia
-      display: Julia
+      display: 'C#'
