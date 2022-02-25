@@ -665,11 +665,12 @@ export function getMultiStatus(domainId: string, query: any) {
 export function getScore(tdoc: Tdoc, pid: number) {
     let score = 0;
     const time = Math.floor((new Date().getTime() - tdoc.beginAt.getTime()) / 60000);
-    for (let i = 0; i < tdoc.pids.length; ++i)
+    for (let i = 0; i < tdoc.pids.length; ++i) {
         if (tdoc.pids[i] === pid) {
             score = tdoc.fullScore[i];
             break;
         }
+    }
     return '{0}'.format(score - time * Math.floor(score / 250));
 }
 export function isNew(tdoc: Tdoc, days = 1) {
