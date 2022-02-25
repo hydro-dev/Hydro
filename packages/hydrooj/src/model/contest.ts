@@ -666,7 +666,7 @@ export function getScore(tdoc: Tdoc, pid: number) {
     let score = 0;
     const time = Math.floor((new Date().getTime() - tdoc.beginAt.getTime()) / 60000);
     for (let i = 0; i < tdoc.pids.length; ++i)
-        if (tdoc.pids[i] == pid) {
+        if (tdoc.pids[i] === pid) {
             score = tdoc.fullScore[i];
             break;
         }

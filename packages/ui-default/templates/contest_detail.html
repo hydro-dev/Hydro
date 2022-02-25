@@ -50,6 +50,9 @@
             <col class="col--status">
             <col class="col--submit-at">
             {% endif %}
+            {% if model.contest.RULES[tdoc.rule].TEXT === 'Codeforces' and model.contest.isOngoing(tdoc) %}
+            <col class="col--score">
+            {% endif %}
             <col class="col--problem">
           </colgroup>
           <thead>
