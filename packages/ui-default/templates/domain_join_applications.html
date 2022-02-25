@@ -2,29 +2,37 @@
 {% block domain_content %}
 {% if joinSettings %}
 <div class="section">
-    <div class="section__header">
-      <h1 class="section__title">{{ _('Information') }}</h1>
-    </div>
-    <div class="section__body typo">
-      <p>{{ _('User can join this domain by visiting the following URL') }}:</p>
-      <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}</code></pre>
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Information') }}</h1>
+  </div>
+  <div class="section__body typo">
+    <p>{{ _('User can join this domain by visiting the following URL') }}:</p>
+    <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}</code></pre>
     {% if joinSettings['method'] == model.domain.JOIN_METHOD_CODE %}
       <p>{{ _('Or, with automatically filled invitation code') }}:</p>
       <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}&code={{ joinSettings.code|urlencode }}</code></pre>
     {% endif %}
-    {% if not joinSettings['expire'] %}
+    {% if joinSettings.expire %}
       <br/>
       <blockquote class="note">
         {{ (_('The link will be expired at {0}').format(datetimeSpan(joinSettings.expire, relative=false)))|safe }}
       </blockquote>
     {% endif %}
-    </div>
   </div>
+</div>
 {% endif %}
 <div class="section">
   <div class="section__header">
     <h1 class="section__title">{{ _('Settings') }}</h1>
   </div>
+  {% if rolesWithText.length == 1 %}
+    <div class="section__body typo">
+      <blockquote class="warn">
+        <p>{{ _("The 'default' role applies to ALL REGISTERED USER.")|safe }}</p>
+        <p>{{ _("You may want to create a new role in 'Manage Role' page.")|safe }}</p>
+      </blockquote>
+    </div>
+  {% endif %}
   <div class="section__body">
     <form method="POST">
       {{ form.form_select({

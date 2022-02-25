@@ -39,8 +39,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.monaco = entry.monaco || entry.highlight;
         entry.time_limit_rate = entry.time_limit_rate || 1;
         entry.code_file = entry.code_file || `foo.${key}`;
-        // eslint-disable-next-line no-template-curly-in-string
-        entry.execute = entry.execute || '${dir}/${name}';
+        entry.execute = entry.execute || '/w/foo';
         entry.key = key;
     }
     return file;

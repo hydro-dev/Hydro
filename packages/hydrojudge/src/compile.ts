@@ -7,15 +7,15 @@ import { CopyInFile } from './sandbox/interface';
 import { compilerText } from './utils';
 
 export = async function compile(
-    lang: LangConfig, code: string, target: string, copyIn: Record<string, CopyInFile> = {}, next?: Function,
+    lang: LangConfig, code: string, copyIn: Record<string, CopyInFile> = {}, next?: Function,
 ): Promise<Execute> {
-    target = lang.target || target;
+    const target = lang.target || 'foo';
     copyIn[lang.code_file] = { content: code };
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
         } = await run(
-            lang.compile.replace(/\$\{name\}/g, target),
+            lang.compile,
             { copyIn, copyOutCached: [target] },
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });

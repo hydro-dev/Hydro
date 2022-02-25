@@ -59,7 +59,7 @@ function checkStringArray(args: ParseEntry[]): args is string[] {
 }
 
 function parseArgs(execute: string): string[] {
-    const args = cmd(execute.replace(/\$\{dir\}/g, '/w'));
+    const args = cmd(execute);
     if (!checkStringArray(args)) {
         throw new SystemError(`${execute} contains invalid operator`);
     }
@@ -76,7 +76,7 @@ function proc({
     env = {},
 }: Parameter = {}): Cmd {
     if (!supportOptional) {
-        copyOut = (copyOut as string[]).map((i) => (i.endsWith('?') ? i.substr(0, i.length - 1) : i));
+        copyOut = copyOut.map((i) => (i.endsWith('?') ? i.substring(0, i.length - 1) : i));
     }
     const size = parseMemoryMB(getConfig('stdio_size'));
     const rate = getConfig('rate');

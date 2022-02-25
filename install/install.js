@@ -68,12 +68,15 @@ const mirrors = {
         official: 'https://repo.mongodb.org/apt/ubuntu',
     },
     minio: {
+        hydro: 'https://kr.hydro.ac/download/minio',
+        // xiaoheiban: 'https://pro-file.xiaoheiban.cn/minio', // UNSAFE
         undefined: 'https://s3.undefined.moe/public/minio',
         official: 'https://dl.min.io/server/minio/release/linux-amd64/minio',
     },
     sandbox: {
+        hydro: 'https://kr.hydro.ac/download/sandbox',
         undefined: 'https://s3.undefined.moe/file/executor-amd64',
-        official: 'https://github.com/criyle/go-judge/releases/download/v1.2.0/executorserver-amd64',
+        official: 'https://github.com/criyle/go-judge/releases/download/v1.4.0/executorserver-amd64',
     },
 };
 let retry = 0;
@@ -131,7 +134,9 @@ const steps = [
             () => log.info('info.mirror', preferredMirror),
             'mkdir -p /data/db /data/file ~/.hydro',
             Arch ? 'pacman --needed --quiet --noconfirm -Sy' : 'apt-get -qq update',
-            Arch ? 'pacman --needed --quiet --noconfirm -S gnupg curl qrencode' : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
+            Arch
+                ? 'pacman --needed --quiet --noconfirm -S gnupg curl qrencode'
+                : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
             () => {
                 if (locale === 'zh') {
                     log.info('扫码加入QQ群：');
@@ -210,11 +215,11 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                 }
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
                 const shell = __env.SHELL.split('/');
-                const rc_path = `/root/.${shell[shell.length - 1]}rc`;
-                if (!fs.exist(rc_path)) fs.writefile(rc_path, source_nvm);
+                const rc = `/root/.${shell[shell.length - 1]}rc`;
+                if (!fs.exist(rc)) fs.writefile(rc, source_nvm);
                 else {
-                    const rc_file = fs.readfile(rc_path);
-                    if (!rc_file.includes(source_nvm)) fs.appendfile(rc_path, source_nvm);
+                    const file = fs.readfile(rc);
+                    if (!file.includes(source_nvm)) fs.appendfile(rc, source_nvm);
                 }
             },
             ['npm i yarn -g', { retry: true }],
@@ -277,7 +282,6 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                 ? [
                     ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
                     ['cd /root/Hydro && yarn', { retry: true }],
-                    'cd /root/Hydro && yarn build',
                     'cd /root/Hydro && yarn build:ui',
                     ['yarn global add npx', { retry: true }],
                 ]

@@ -4,7 +4,6 @@ import checkers from './checkers';
 import compile from './compile';
 import { SystemError } from './error';
 import { CheckConfig, Execute } from './interface';
-import { parseFilename } from './utils';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 
@@ -21,6 +20,15 @@ export async function compileChecker(getLang: Function, checkerType: string, che
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
     if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
     const file = await fs.readFile(checker);
+    const s = checker.replace('@', '.').split('.');
+    let lang;
+    let langId = s.pop();
+    while (s.length) {
+        lang = getLang(langId, false);
+        if (lang) break;
+        langId = `${s.pop()}.${langId}`;
+    }
+    if (!lang) throw new SystemError('Unknown checker language.');
     // TODO cache compiled checker
-    return await compile(getLang(parseFilename(checker).split('.')[1].replace('@', '.')), file.toString(), 'checker', copyIn);
+    return await compile(lang, file.toString(), copyIn);
 }

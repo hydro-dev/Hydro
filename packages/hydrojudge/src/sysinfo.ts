@@ -35,10 +35,10 @@ int main(){
             },
             end: () => { },
             getLang: () => ({
-                compile: '/usr/bin/g++ -Wall -std=c++14 -o foo.cc foo.cc -lm',
-                execute: 'foo',
+                compile: '/usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm',
+                execute: '/w/foo',
                 code_file: 'foo.cc',
-                highlight: 'cpp astyle-c',
+                highlight: 'cpp',
                 monaco: 'cpp',
                 display: 'C++',
                 time_limit_rate: 1,

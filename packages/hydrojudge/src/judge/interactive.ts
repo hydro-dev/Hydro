@@ -24,13 +24,13 @@ function judgeCase(c: Case) {
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
         const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await runPiped(
             {
-                execute: ctx.executeUser.execute.replace(/\$\{name\}/g, 'code'),
+                execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
                 time: ctxSubtask.subtask.time * ctx.executeUser.time,
                 memory: ctxSubtask.subtask.memory,
             },
             {
-                execute: `${ctx.executeInteractor.execute.replace(/\$\{name\}/g, 'interactor')} /w/in /w/tout /w/out`,
+                execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
                 time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
                 memory: ctxSubtask.subtask.memory * 2,
@@ -103,7 +103,7 @@ export const judge = async (ctx: Context) => {
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return compile(ctx.getLang(ctx.lang), ctx.code, 'code', copyIn, ctx.next);
+            return compile(ctx.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
         })(),
         (() => {
             const copyIn = { 'testlib.h': { src: testlibSrc } };
@@ -113,7 +113,6 @@ export const judge = async (ctx: Context) => {
             return compile(
                 ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
                 fs.readFileSync(ctx.config.interactor).toString(),
-                'interactor',
                 copyIn,
             );
         })(),

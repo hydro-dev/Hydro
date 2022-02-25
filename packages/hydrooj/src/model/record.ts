@@ -72,6 +72,7 @@ class RecordModel {
                 pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
                 if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
             }
+            (config as any).problemOwner = pdoc.owner;
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
