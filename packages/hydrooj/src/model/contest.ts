@@ -548,7 +548,8 @@ const cf = buildContestRule({
                     row.push({
                         type: 'record',
                         score: accept ? 100 : 0,
-                        value: accept ? doc.naccept <= 1 ? '{0}\n{1}'.format(colScore, colTimeStr) : '{0}({1})\n{2}'.format(colScore, -doc.naccept + 1, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
+                        value: accept ? doc.naccept <= 1 ? '{0}\n{1}'.format(colScore, colTimeStr) :
+                            '{0}({1})\n{2}'.format(colScore, -doc.naccept + 1, colTimeStr) : doc.naccept ? (-doc.naccept).toString() : '-',
                         raw: rid,
                     });
                 }
