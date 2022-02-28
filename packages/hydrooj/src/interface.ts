@@ -105,40 +105,11 @@ export interface GDoc {
 
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
-export interface User extends Record<string, any> {
-    _id: number;
-    _udoc: Udoc;
-    _dudoc: any;
-    _salt: string;
-    _hash: string;
-    _regip: string;
-    _loginip: string;
-    _tfa: string;
-
-    mail: string;
-    uname: string;
-    hashType: string;
-    priv: number;
-    regat: Date;
-    loginat: Date;
-    perm: bigint;
-    scope: bigint;
-    role: string;
-    group?: string[];
-    tfa: boolean;
-    own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean
-    own<T extends ownerInfo>(doc: T, exact: boolean): boolean
-    own<T extends ownerInfo>(doc: T): boolean
-    own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
-    hasPerm: (...perm: bigint[]) => boolean;
-    hasPriv: (...priv: number[]) => boolean;
-    checkPassword: (password: string) => void;
-}
-
+export type User = import('./model/user').User;
 export type Udict = NumericDictionary<User>;
 
 export interface FileInfo {
-    /** duplicate to filename */
+    /** storage path */
     _id: string,
     /** filename */
     name: string,
