@@ -21,8 +21,6 @@ const request = {
             reject(err);
           } else if (jqXHR.readyState === 0) {
             reject(new Error(i18n('Network error')));
-          } else if (errorThrown instanceof Error) {
-            reject(errorThrown);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
             const { error } = jqXHR.responseJSON;
             if (error.params) {
@@ -32,6 +30,8 @@ const request = {
               err.params = error.params;
               reject(err);
             } else reject(new Error(jqXHR.responseJSON.error.message));
+          } else if (errorThrown instanceof Error) {
+            reject(errorThrown);
           } else {
             reject(new Error(textStatus));
           }

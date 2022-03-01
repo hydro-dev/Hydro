@@ -2,7 +2,9 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import list from 'monaco-themes/themes/themelist.json';
+import { nanoid } from 'nanoid';
 import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
 import './monaco.styl';
 
 export default monaco;
@@ -59,6 +61,72 @@ class ChangeThemeAction extends EditorAction {
 
 registerEditorAction(ChangeThemeAction);
 
+const pagename = document.documentElement.getAttribute('data-page');
+const isProblemPage = ['problem_create', 'problem_edit'].includes(pagename);
+const isProblemEdit = pagename === 'problem_edit';
+function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
+  window.addEventListener('paste', (ev: ClipboardEvent) => {
+    if (!editor.hasTextFocus()) return;
+    const selection = editor.getSelection();
+    const { items } = ev.clipboardData;
+    let wrapper = ['', ''];
+    let ext;
+    const matches = items[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
+    if (matches) {
+      wrapper = ['![image](', ')'];
+      [, ext] = matches;
+    } else if (items[0].type === 'application/x-zip-compressed') {
+      wrapper = ['[file](', ')'];
+      ext = 'zip';
+    }
+    if (!ext) return;
+    const filename = `${nanoid()}.${ext}`;
+    const data = new FormData();
+    data.append('filename', filename);
+    data.append('file', items[0].getAsFile());
+    data.append('operation', 'upload_file');
+    if (isProblemEdit) data.append('type', 'additional_file');
+    let range: monaco.Range = null;
+    editor.executeEdits('', [{
+      range: new monaco.Range(selection.endLineNumber, selection.endColumn, selection.endLineNumber, selection.endColumn),
+      text: `![image](${i18n('Preparing Upload...')}) `,
+    }], (inverseOp) => { range = inverseOp[0].range; return null; });
+    editor.setPosition(editor.getSelection().getEndPosition());
+
+    function updateText(text: string) {
+      const pos = editor.getSelection();
+      const rangeBefore = range;
+      editor.executeEdits('', [{ range, text: `${wrapper[0]}${text}${wrapper[1]} ` }], (inverseOp) => {
+        range = inverseOp[0].range;
+        if (pos.endLineNumber !== pos.startLineNumber || pos.endLineNumber !== range.endLineNumber) return null;
+        const delta = rangeBefore.endColumn - range.endColumn;
+        editor.setPosition(new monaco.Position(pos.endLineNumber, pos.endColumn - delta));
+        return null;
+      });
+    }
+    let progress = 0;
+    request.postFile(isProblemEdit ? './file' : '/file', data, {
+      xhr() {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('loadstart', () => updateText(i18n('Uploading...')));
+        xhr.upload.addEventListener('progress', (e) => {
+          if (!e.lengthComputable) return;
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          if (percentComplete === progress) return;
+          progress = percentComplete;
+          updateText(`${i18n('Uploading...')} ${percentComplete}%`);
+        }, false);
+        return xhr;
+      },
+    })
+      .then(() => updateText(`${isProblemPage ? 'file://' : `/file/${UserContext._id}/`}${filename}`))
+      .catch((e) => {
+        console.error(e);
+        updateText(`${i18n('Upload Failed')}: ${e.message}`);
+      });
+  });
+}
+
 export function registerAction(
   editor: monaco.editor.IStandaloneCodeEditor,
   model: monaco.editor.IModel,
@@ -92,5 +160,6 @@ export function registerAction(
   if (model.getLanguageId() === 'markdown') {
     const suggestWidget = (editor.getContribution('editor.contrib.suggestController') as any).widget?.value;
     if (suggestWidget?._setDetailsVisible) suggestWidget._setDetailsVisible(true);
+    handlePasteEvent(editor);
   }
 }

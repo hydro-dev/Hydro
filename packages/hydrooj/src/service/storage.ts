@@ -108,8 +108,13 @@ class StorageService {
                 accessKey: this.opts.accessKey,
                 secretKey: this.opts.secretKey,
             });
-            const exists = await this.client.bucketExists(this.opts.bucket);
-            if (!exists) await this.client.makeBucket(this.opts.bucket, this.opts.region);
+            try {
+                const exists = await this.client.bucketExists(this.opts.bucket);
+                if (!exists) await this.client.makeBucket(this.opts.bucket, this.opts.region);
+            } catch (e) {
+                // Some platform doesn't support bucketExists & makeBucket API.
+                // Ignore this error.
+            }
             this.replaceWithAlternativeUrlFor = {
                 user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
                 judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),

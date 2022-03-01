@@ -99,35 +99,34 @@
               {% endif %}
               </div>
             </li>
+            {% if pdocs.length %}
+              <li class="section__tab-item">
+                <h1 class="section__tab-title">{{ _('Accepted Problems') }}</h1>
+                <div class="section__tab-main">
+                  <div class="typo section__body no-media">
+                    {% set _mark = Math.ceil(pdocs.length/4) %}
+                    {% macro col(pdocs) %}
+                      <div class="medium-3 columns"><ul>
+                        {% for pdoc in pdocs %}
+                          <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+                        {% endfor %}
+                      </ul></div>
+                    {% endmacro %}
+                    <div class="row">
+                      {{ col(pdocs.slice(0, _mark)) }}
+                      {{ col(pdocs.slice(_mark, _mark*2)) }}
+                      {{ col(pdocs.slice(_mark*2, _mark*3)) }}
+                      {{ col(pdocs.slice(_mark*3, pdocs.length - 1)) }}
+                    </div>
+                  </div>
+                </div>
+              </li>
+            {% endif %}
+            {% for page in findSubModule('user_detail/') %}{% include page %}{% endfor %}
           </ul>
         </div>
       </div>
     </div>
-    {% if pdocs.length %}
-      <div class="section">
-        <div class="section__header">
-          <h2 class="section__title">{{ _('Accepted Problems') }}</h2>
-        </div>
-        <div class="typo section__body no-media">
-          {% set _mark = Math.ceil(pdocs.length/4) %}
-          {% macro col(pdocs) %}
-            <div class="medium-3 columns">
-              <ul>
-                {% for pdoc in pdocs %}
-                  <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endmacro %}
-          <div class="row">
-            {{ col(pdocs.slice(0, _mark)) }}
-            {{ col(pdocs.slice(_mark, _mark*2)) }}
-            {{ col(pdocs.slice(_mark*2, _mark*3)) }}
-            {{ col(pdocs.slice(_mark*3, pdocs.length - 1)) }}
-          </div>
-        </div>
-      </div>
-    {% endif %}
   </div>
   <div class="medium-3 columns">
     {% if isSelfProfile %}

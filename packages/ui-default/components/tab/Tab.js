@@ -92,6 +92,7 @@ export default class Tab extends DOMAttachedObject {
       .removeClass('active');
     this.$content
       .css('x', '0');
+    $newTab.trigger('vjContentShow');
 
     // 4. Finalize
     this.currentIndex = idx;

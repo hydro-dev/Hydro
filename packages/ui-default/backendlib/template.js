@@ -140,9 +140,7 @@ env.addGlobal('set', (obj, key, val) => {
   else Object.assign(obj, key);
   return '';
 });
-env.addGlobal('findSubModule', (prefix) => {
-  filter(Object.keys(global.Hydro.ui.template), (n) => n.startsWith(prefix));
-});
+env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template).filter((n) => n.startsWith(prefix)));
 
 async function render(name, state) {
   // eslint-disable-next-line no-return-await

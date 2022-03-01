@@ -264,10 +264,10 @@ export class ProblemModel {
         await bus.emit('problem/delTestdata', domainId, pid, names);
     }
 
-    static async addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
+    static async addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string, skipUpload = false) {
         const [[, fileinfo]] = await Promise.all([
             document.getSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', name),
-            storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f),
+            skipUpload || storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f),
         ]);
         const meta = await storage.getMeta(`problem/${domainId}/${pid}/additional_file/${name}`);
         const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };

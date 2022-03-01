@@ -686,6 +686,7 @@ const scripts: UpgradeScript[] = [
     async function _59_60() {
         const langs = await system.get('hydrooj.langs');
         await system.set('hydrooj.langs', langs.replace(/\$\{dir\}/g, '/w').replace(/\$\{name\}/g, 'foo'));
+        return true;
     },
 ];
 
