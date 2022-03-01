@@ -3,7 +3,6 @@ const path = require('path');
 const yaml = require('js-yaml');
 const serialize = require('serialize-javascript');
 const nunjucks = require('nunjucks');
-const { filter } = require('lodash');
 const jsesc = require('jsesc');
 const argv = require('cac')().parse();
 const { findFileSync } = require('@hydrooj/utils/lib/utils');

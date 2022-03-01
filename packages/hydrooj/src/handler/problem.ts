@@ -380,10 +380,13 @@ export class ProblemDetailHandler extends ProblemHandler {
     async postRejudge(domainId: string, pid: number) {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         // TODO maybe async?
-        await record.getMulti(domainId, { pid }).forEach(async (doc) => {
-            await record.reset(domainId, doc._id, true);
-            await record.judge(domainId, doc._id, -50);
-        });
+        const rdocs = await record.getMulti(domainId, { pid, contest: { $ne: new ObjectID('0'.repeat(24)) } })
+            .project({ _id: 1 }).toArray();
+        const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
+        await Promise.all(rdocs.map(
+            (doc) => record.reset(domainId, doc._id, true)
+                .then(() => record.judge(domainId, doc._id, priority)),
+        ));
         this.back();
     }
 
