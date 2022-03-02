@@ -3,7 +3,7 @@ import { InfoDialog } from 'vj/components/dialog';
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
 
-export default new NamedPage(['problem_create', 'problem_edit', 'problem_import_syzoj'], () => {
+export default new NamedPage(['problem_create', 'problem_edit'], () => {
   $('input[name="pid"]').on('blur', () => {
     if (/^[0-9]+$/.test($('input[name="pid"]').val())) {
       new InfoDialog({

@@ -77,7 +77,6 @@ Nav('ranking', {}, 'ranking', PERM.PERM_VIEW_RANKING);
 Nav('domain_dashboard', {}, 'domain', PERM.PERM_EDIT_DOMAIN);
 Nav('manage_dashboard', {}, 'manage', PRIV.PRIV_EDIT_SYSTEM);
 ProblemAdd('problem_create');
-ProblemAdd('problem_import_syzoj', {}, 'copy', 'Import From SYZOJ');
 
 global.Hydro.ui.Nav = Nav;
 global.Hydro.ui.ProblemAdd = ProblemAdd;

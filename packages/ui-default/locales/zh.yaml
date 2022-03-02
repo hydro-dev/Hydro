@@ -381,7 +381,6 @@ If left blank, the built-in template of the corresponding language will be used.
 Images With Size: 指定大小的图片
 Images: 图片
 Import from: 导入自
-Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
 Import: 导入
 In 1 day: 一天后
