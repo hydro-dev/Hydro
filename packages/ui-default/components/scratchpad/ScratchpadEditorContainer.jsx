@@ -46,6 +46,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           }
         }),
       );
+      window.editor = this.editor;
+      window.monaco = monaco;
     }
   }
 
@@ -72,8 +74,11 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     const { load } = await import('vj/components/monaco/loader');
     const { monaco } = await load([language]);
     if (prevProps.language !== language) {
-      monaco.editor.setModelLanguage(model, language);
-      editor.updateOptions({ mode: language });
+      const val = model.getValue();
+      model.dispose();
+      const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+      this.model = monaco.editor.createModel(val, language, uri);
+      editor.setModel(this.model);
     }
     if (editor) {
       if (prevProps.mainSize !== mainSize

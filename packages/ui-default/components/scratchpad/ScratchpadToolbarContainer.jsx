@@ -66,27 +66,36 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
+const LANGS = {};
+const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
+for (const key in window.LANGS) {
+  if (prefix.has(key)) continue;
+  if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
+  if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
+  LANGS[key] = window.LANGS[key];
+}
+const keys = Object.keys(LANGS);
+
 export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadToolbarContainer extends React.PureComponent {
   static contextTypes = {
     store: PropTypes.object,
   };
+
+  constructor(props) {
+    super(props);
+    if (!LANGS[this.props.editorLang]) {
+      // preference not allowed
+      const key = keys.find((i) => LANGS[i].pretest === this.props.editorLang);
+      this.props.setEditorLanguage(key || Object.keys(LANGS)[0]);
+    }
+  }
 
   componentDidMount() {
     if (this.props.recordsVisible) this.props.loadSubmissions();
   }
 
   render() {
-    const LANGS = {};
-    const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-    const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
-    for (const key in window.LANGS) {
-      if (prefix.has(key)) continue;
-      if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
-      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
-      LANGS[key] = window.LANGS[key];
-    }
-    const keys = Object.keys(LANGS);
-    if (!keys.includes(this.props.editorLang)) this.props.setEditorLanguage(keys[0]);
     let canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
     if (UiContext.pdoc.config?.type === 'remote_judge') {
       if (window.LANGS[this.props.editorLang].pretest) canUsePretest = true;
