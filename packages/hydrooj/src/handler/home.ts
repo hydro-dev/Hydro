@@ -115,7 +115,7 @@ class HomeHandler extends Handler {
     }
 
     async get({ domainId }) {
-        const homepageConfig = system.get('hydrooj.homepage1');
+        const homepageConfig = system.get('hydrooj.homepage');
         const info = yaml.load(homepageConfig) as any;
         const contents = [];
         for (const column of info) {
