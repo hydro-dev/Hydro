@@ -688,6 +688,19 @@ const scripts: UpgradeScript[] = [
         await system.set('hydrooj.langs', langs.replace(/\$\{dir\}/g, '/w').replace(/\$\{name\}/g, 'foo'));
         return true;
     },
+    async function _60_61() {
+        const config = await system.get('hydrooj.homepage');
+        const data = yaml.load(config) as any;
+        if (!(data instanceof Array)) {
+            await system.set('hydrooj.homepage', yaml.dump([
+                { width: 9, bulletin: true, ...data },
+                {
+                    width: 3, hitokoto: true, starred_problems: 50, discussion_nodes: true, suggestion: true,
+                },
+            ]));
+        }
+        return true;
+    },
 ];
 
 export default scripts;

@@ -57,6 +57,14 @@ const replacer = (k, v) => {
 class Nunjucks extends nunjucks.Environment {
   constructor() {
     super(new Loader(), { autoescape: true, trimBlocks: true });
+    this.addFilter('await', async (promise, callback) => {
+      try {
+        const result = await promise;
+        callback(null, result);
+      } catch (error) {
+        callback(error);
+      }
+    }, true);
     this.addFilter('json', (self) => (self ? JSON.stringify(self, replacer) : ''));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
@@ -140,6 +148,7 @@ env.addGlobal('set', (obj, key, val) => {
   return '';
 });
 env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template).filter((n) => n.startsWith(prefix)));
+env.addGlobal('templateExists', (name) => !!global.Hydro.ui.template[name]);
 
 async function render(name, state) {
   // eslint-disable-next-line no-return-await

@@ -4,103 +4,18 @@
 {% import "components/problem.html" as problem with context %}
 {% block content %}
 <div class="row">
-  <div class="large-9 columns">
-    {% if domain['bulletin'] %}
-      <div class="section">
-        <div class="section__body typo">
-          {{ domain['bulletin']|markdown|safe }}
-        </div>
-      </div>
-    {% endif %}
-    {% for node in contents %}
-      {% if node[0] == 'contest' %}
-        {% set tdocs = node[1] %}
-        {% set tsdict = node[2] %}
-        {% include "partials/homepage/contest.html" %}
-      {% elif node[0] == 'homework' %}
-        {% set htdocs = node[1] %}
-        {% set htsdict = node[2] %}
-        {% include "partials/homepage/homework.html" %}
-      {% elif node[0] == 'training' %}
-        {% set tdocs = node[1] %}
-        {% set tsdict = node[2] %}
-        {% include "partials/homepage/training.html" %}
-      {% elif node[0] == 'ranking' %}
-        {% set uids = node[1] %}
-        {% include "partials/homepage/ranking.html" %}
-      {% elif node[0] == 'discussion' %}
-        {% set ddocs = node[1] %}
-        {% set vndict = node[2] %}
-        {% if ddocs.length %}
-          <div class="section page--discussion_main">
-            <div class="section__header">
-              <h1 class="section__title">{{ _('Discussion') }}</h1>
-            </div>
-            {% include "partials/discussion_list.html" %}
-          </div>
+  {% for column in contents %}
+    <div class="large-{{ column.width }} columns">
+      {% for s in column.sections %}
+        {% if templateExists("partials/homepage/" + s[0] + ".html") %}
+          {% set payload = s[1] %}
+          {% include "partials/homepage/" + s[0] + ".html" %}
+        {% else %}
+          {% set payload = _("Template {0} not found.").format(s[0]) %}
+          {% include "partials/homepage/error.html" %}
         {% endif %}
-      {% endif %}
-    {% endfor %}
-  </div>
-  <div class="large-3 columns">
-    <div class="section side nojs--hide">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Hitokoto') }}</h1>
-      </div>
-      <div class="section__body typo" name="hitokoto"></div>
+      {% endfor %}
     </div>
-    {% if pdocs.length %}
-      <div class="section side nojs--hide">
-        <div class="section__header">
-          <h1 class="section__title">{{ _('Starred Problems') }}</h1>
-        </div>
-        <div class="section__body typo no-media col--problem-name">
-          {%- for pdoc in pdocs -%}
-            <form class="form--inline" action="{{ url('problem_main') }}" method="post">
-              <input type="hidden" name="pid" value="{{ pdoc.docId }}">
-              <input type="hidden" name="operation" value="unstar">
-              <button class="star activated" type="submit">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
-              </button>
-            </form>
-            {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false) }}<br/>
-          {%- endfor -%}
-        </div>
-      </div>
-    {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
-      {% include 'partials/discussion_nodes_widget.html' %}
-    {% endif %}
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">{{ _('Recommended') }}</h1>
-      </div>
-      <div class="section__body"><ul class="group-list">
-        <li class="group-list__item">
-          <h2 class="section__title">{{ _('Chinese') }}</h2>
-          <ol class="chip-list">
-            <li class="chip-list__item"><a class="typo-a" href="https://www.cometoj.com/" target="_blank">CometOJ</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://loj.ac/" target="_blank">LibreOJ</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://www.luogu.com.cn/" target="_blank">洛谷</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://uoj.ac/" target="_blank">UOJ</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://vijos.org/" target="_blank">Vijos</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://zoj.pintia.cn/" target="_blank">ZOJ</a></li>
-          </ol>
-        </li>
-        <li class="group-list__item">
-          <h2 class="section__title">{{ _('English') }}</h2>
-          <ol class="chip-list">
-            <li class="chip-list__item"><a class="typo-a" href="https://atcoder.jp/" target="_blank">AtCoder</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://www.codechef.com/" target="_blank">CodeChef</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://codeforces.com/" target="_blank">Codeforces</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://www.spoj.com/" target="_blank">SPOJ</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://www.topcoder.com/" target="_blank">TopCoder</a></li>
-            <li class="chip-list__item"><a class="typo-a" href="https://onlinejudge.org/" target="_blank">OnlineJudge</a></li>
-          </ol>
-        </li>
-      </ul></div>
-    </div>
-  </div>
+  {% endfor %}
 </div>
 {% endblock %}
