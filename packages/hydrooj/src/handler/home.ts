@@ -193,10 +193,11 @@ class HomeSecurityHandler extends Handler {
             system.get('session.unsaved_expire_seconds'),
             { uid: this.user._id, email },
         );
+        const prefix = (this.domain.host || [])[0] || system.get('server.url');
         const m = await this.renderHTML('user_changemail_mail.html', {
-            path: `home/changeMail/${code}`,
+            path: `/home/changeMail/${code}`,
             uname: this.user.uname,
-            url_prefix: (this.domain.host || [])[0] || system.get('server.url'),
+            url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
         });
         await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m);
         this.response.template = 'user_changemail_mail_sent.html';

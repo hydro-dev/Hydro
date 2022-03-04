@@ -170,12 +170,13 @@ export class UserRegisterHandler extends Handler {
                 system.get('session.unsaved_expire_seconds'),
                 { mail, redirect: this.domain.registerRedirect },
             );
+            const prefix = this.domain.host
+                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}/`
+                : system.get('server.url');
             if (system.get('smtp.verify') && system.get('smtp.user')) {
                 const m = await this.renderHTML('user_register_mail.html', {
-                    path: `register/${t[0]}`,
-                    url_prefix: this.domain.host
-                        ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}/`
-                        : system.get('server.url'),
+                    path: `/register/${t[0]}`,
+                    url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
                 });
                 await sendMail(mail, 'Sign Up', 'user_register_mail', m);
                 this.response.template = 'user_register_mail_sent.html';
