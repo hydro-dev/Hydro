@@ -1,0 +1,4 @@
+{% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
+  {% set vnodes = payload %}
+  {% include 'partials/discussion_nodes_widget.html' %}
+{% endif %}

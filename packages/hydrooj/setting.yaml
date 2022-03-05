@@ -2,10 +2,18 @@ homepage:
   type: yaml
   desc: Homepage Config
   default:
-    contest: 5
-    homework: 10
-    training: 10
-    discussion: 20
+    - width: 9
+      bulletin: true
+      contest: 5
+      homework: 10
+      training: 10
+      ranking: 10
+      discussion: 20
+    - width: 3
+      hitokoto: true
+      starred_problems: 50
+      discussion_nodes: true
+      suggestion: true
 langs:
   type: yaml
   desc: Code language settings

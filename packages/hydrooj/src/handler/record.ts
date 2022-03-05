@@ -144,10 +144,11 @@ class RecordDetailHandler extends Handler {
     @param('rid', Types.ObjectID)
     async postRejudge(domainId: string, rid: ObjectID) {
         this.checkPerm(PERM.PERM_REJUDGE);
+        const priority = await record.submissionPriority(this.user._id, -20);
         const rdoc = await record.get(domainId, rid);
         if (rdoc) {
             await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid, -10);
+            await record.judge(domainId, rid, priority);
         }
         this.back();
     }

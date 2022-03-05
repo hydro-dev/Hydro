@@ -347,7 +347,6 @@ If enabled, source code will be emailed to you after the submission is accepted.
 If left blank, the built-in template of the corresponding language will be used.: 공백으로 둔다면, 기본 언어로 적용합니다.
 Images: 사진
 Import from: '다음에서 가져오기: '
-Import problem from syzoj.: syzoj에서 문제 가져오기
 Import Problem: 문제 가져오기
 Import: 가져오기
 In 1 day: 하루 안에

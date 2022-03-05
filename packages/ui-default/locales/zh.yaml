@@ -52,6 +52,8 @@ About test data: 关于测试数据
 about: 关于
 About: 关于
 AC Message: 通过消息
+Accept: 通过
+Accepted Problem: 通过的题目
 Accepted Ratio: 通过率
 Accepted: 已通过
 Access Control: 访问控制
@@ -380,7 +382,6 @@ If left blank, the built-in template of the corresponding language will be used.
 Images With Size: 指定大小的图片
 Images: 图片
 Import from: 导入自
-Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
 Import: 导入
 In 1 day: 一天后
@@ -575,6 +576,7 @@ Problem Settings: 题目设置
 Problem Solution List: 题解列表
 Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
+Problem Tags: 题目标签
 problem_create: 创建题目
 problem_edit: 编辑题目
 problem_import: 导入题目
@@ -829,8 +831,12 @@ User ID: 用户 ID
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户
 user_login: 登录
+Uploading...: 正在上传...
+Upload Failed: 上传失败
+Preparing Upload...: 准备上传...
 user_logout: 登出
 user_lostpass: 忘记密码
+user_register_with_code: 注册
 user_register: 注册
 User-defined role: 用户定义的角色
 User: 用户

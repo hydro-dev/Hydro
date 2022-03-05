@@ -377,10 +377,7 @@ If enabled, source code will be emailed to you after the submission is accepted.
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
 Images: 图片
 Import From Hydro: 从 Hydro 导入
-Import From SYZOJ: 从 SYZOJ 导入
-Import From SYZOJ.: 从 SYZOJ 导入
 Import from: 导入自
-Import problem from syzoj.: 从运行 syzoj 系统的 OJ 导入题目。
 Import Problem: 导入题目
 Import User: 导入用户
 Import: 导入
@@ -585,7 +582,6 @@ problem_create: 创建题目
 problem_detail: 题目详情
 problem_edit: 编辑题目
 problem_files: 题目文件
-problem_import_syzoj: 从 SYZOJ 导入题目
 problem_import: 导入题目
 problem_main: 题库
 problem_solution: 题解

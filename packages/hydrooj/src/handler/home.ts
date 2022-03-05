@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
+import { camelCase } from '@hydrooj/utils/lib/utils';
 import {
     BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
@@ -43,9 +44,9 @@ class HomeHandler extends Handler {
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
-            return ['homework', tdocs, tsdict];
+            return [tdocs, tsdict];
         }
-        return ['homework', [], {}];
+        return [[], {}];
     }
 
     async getContest(domainId: string, limit = 10) {
@@ -55,9 +56,9 @@ class HomeHandler extends Handler {
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
-            return ['contest', tdocs, tsdict];
+            return [tdocs, tsdict];
         }
-        return ['contest', [], {}];
+        return [[], {}];
     }
 
     async getTraining(domainId: string, limit = 10) {
@@ -67,9 +68,9 @@ class HomeHandler extends Handler {
             const tsdict = await training.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
-            return ['training', tdocs, tsdict];
+            return [tdocs, tsdict];
         }
-        return ['training', [], {}];
+        return [[], {}];
     }
 
     async getDiscussion(domainId: string, limit = 20) {
@@ -77,9 +78,9 @@ class HomeHandler extends Handler {
             const ddocs = await discussion.getMulti(domainId).limit(limit).toArray();
             const vndict = await discussion.getListVnodes(domainId, ddocs, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN), this.user.group);
             this.collectUser(ddocs.map((ddoc) => ddoc.owner));
-            return ['discussion', ddocs, vndict];
+            return [ddocs, vndict];
         }
-        return ['discussion', [], {}];
+        return [[], {}];
     }
 
     async getRanking(domainId: string, limit = 50) {
@@ -88,12 +89,12 @@ class HomeHandler extends Handler {
                 .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
             const uids = dudocs.map((dudoc) => dudoc.uid);
             this.collectUser(uids);
-            return ['ranking', uids];
+            return uids;
         }
-        return ['ranking', []];
+        return [];
     }
 
-    async getStarredProblem(domainId: string, limit = 50) {
+    async getStarredProblems(domainId: string, limit = 50) {
         if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
             const psdocs = await ProblemModel.getMultiStatus(domainId, { uid: this.user._id, star: true })
                 .sort('_id', 1).limit(limit).toArray();
@@ -104,35 +105,45 @@ class HomeHandler extends Handler {
                 this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, false,
             );
             const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
-            return ['problem', pdocs, psdict];
+            return [pdocs, psdict];
         }
-        return ['problem', [], {}];
+        return [[], {}];
+    }
+
+    getDiscussionNodes(domainId: string) {
+        return discussion.getNodes(domainId);
     }
 
     async get({ domainId }) {
         const homepageConfig = system.get('hydrooj.homepage');
-        const tasks = [];
         const info = yaml.load(homepageConfig) as any;
-        for (const key in info) {
-            const func = `get${key.replace(/^[a-z]/, (i) => i.toUpperCase())}`;
-            if (!this[func]) continue;
-            tasks.push(this[func](domainId, +info[key]));
+        const contents = [];
+        for (const column of info) {
+            const tasks = [];
+            for (const name in column) {
+                if (name === 'width') continue;
+                const func = `get${camelCase(name).replace(/^[a-z]/, (i) => i.toUpperCase())}`;
+                if (!this[func]) tasks.push([name, column[name]]);
+                else {
+                    tasks.push(
+                        this[func](domainId, column[name])
+                            .then((res) => [name, res])
+                            .catch((err) => ['error', err.message]),
+                    );
+                }
+            }
+            contents.push({
+                width: column.width,
+                // eslint-disable-next-line no-await-in-loop
+                sections: await Promise.all(tasks),
+            });
         }
-        const [, pdocs, psdict] = await this.getStarredProblem(domainId);
-        const contents = await Promise.all(tasks);
-        const [udict, dodoc, vnodes] = await Promise.all([
-            user.getList(domainId, Array.from(this.uids)),
-            domain.get(domainId),
-            discussion.getNodes(domainId),
-        ]);
+        const udict = await user.getList(domainId, Array.from(this.uids));
         this.response.template = 'main.html';
         this.response.body = {
             contents,
             udict,
-            domain: dodoc,
-            vnodes,
-            pdocs,
-            psdict,
+            domain: this.domain,
         };
     }
 }
@@ -182,10 +193,11 @@ class HomeSecurityHandler extends Handler {
             system.get('session.unsaved_expire_seconds'),
             { uid: this.user._id, email },
         );
+        const prefix = (this.domain.host || [])[0] || system.get('server.url');
         const m = await this.renderHTML('user_changemail_mail.html', {
-            path: `home/changeMail/${code}`,
+            path: `/home/changeMail/${code}`,
             uname: this.user.uname,
-            url_prefix: (this.domain.host || [])[0] || system.get('server.url'),
+            url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
         });
         await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m);
         this.response.template = 'user_changemail_mail_sent.html';

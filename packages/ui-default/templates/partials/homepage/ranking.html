@@ -1,4 +1,4 @@
-{% if uids.length %}
+{% if payload.length %}
   <div class="section">
     <div class="section__header">
       <h1 class="section__title">{{ _('Ranking') }}</h1>
@@ -21,7 +21,7 @@
             </tr>
           </thead>
           <tbody>
-            {%- for uid in uids -%}
+            {%- for uid in payload -%}
               {% set udoc = udict[uid] %}
               <tr>
                 <td class="col--rank">{{ loop.index }}</td>

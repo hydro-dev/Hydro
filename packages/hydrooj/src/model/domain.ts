@@ -284,7 +284,7 @@ bus.once('app/started', async () => {
     await db.ensureIndexes(
         collUser,
         { key: { domainId: 1, uid: 1 }, name: 'uid', unique: true },
-        { key: { domainId: 1, uid: 1, rp: -1 }, name: 'rp', sparse: true },
+        { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
     );
 });
 export default DomainModel;

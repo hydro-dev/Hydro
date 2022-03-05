@@ -146,6 +146,7 @@ Worker.addHandler('task.daily', async () => {
     if (global.Hydro.model.system.get('server.checkUpdate')) {
         await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
     }
+    await bus.serial('task/daily');
 });
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
 bus.once('app/started', async () => {

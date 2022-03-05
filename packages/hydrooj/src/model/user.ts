@@ -3,8 +3,8 @@ import LRU from 'lru-cache';
 import { Collection, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    FileInfo, GDoc, Udict,
-    Udoc, User as _User, VUdoc,
+    FileInfo, GDoc, ownerInfo,
+    Udict, Udoc, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import { Logger } from '../logger';
@@ -18,10 +18,10 @@ import * as setting from './setting';
 import * as system from './system';
 import token from './token';
 
-const coll: Collection<Udoc> = db.collection('user');
+export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
-const collV: Collection<VUdoc> = db.collection('vuser');
-const collGroup: Collection<GDoc> = db.collection('user.group');
+export const collV: Collection<VUdoc> = db.collection('vuser');
+export const collGroup: Collection<GDoc> = db.collection('user.group');
 const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
 
@@ -45,7 +45,7 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
 }
 bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));
 
-class User implements _User {
+export class User {
     _id: number;
 
     _udoc: Udoc;
@@ -108,6 +108,10 @@ class User implements _User {
         return this;
     }
 
+    own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean;
+    own<T extends ownerInfo>(doc: T, exact: boolean): boolean;
+    own<T extends ownerInfo>(doc: T): boolean;
+    own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
     own(doc: any, arg1: any = false): boolean {
         if (typeof arg1 === 'bigint' && !this.hasPerm(arg1)) return false;
         return (typeof arg1 === 'boolean' && arg1)
@@ -135,7 +139,8 @@ class User implements _User {
         const result = h(password, this._salt, this);
         if (result !== true && result !== this._hash) {
             throw new LoginError(this.uname);
-        } else if (this.hashType !== 'hydro') {
+        }
+        if (this.hashType !== 'hydro') {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             UserModel.setPassword(this._id, password);
         }

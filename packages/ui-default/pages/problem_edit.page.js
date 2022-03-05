@@ -172,9 +172,11 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
 
   setInterval(() => {
     $('img').each(function () {
-      if (this.src.startsWith('file://')) this.setAttribute('src', this.src.replace('file://', './file/'));
+      if (this.src.startsWith('file://')) {
+        this.setAttribute('src', this.src.replace('file://', './file/').replace(/\/$/, ''));
+      }
     });
-  }, 200);
+  }, 500);
 
   const $main = $('textarea[data-editor]');
   const $field = $('textarea[data-markdown-upload]');

@@ -1,0 +1,7 @@
+{% if domain.bulletin %}
+  <div class="section">
+    <div class="section__body typo">
+      {{ domain.bulletin|markdown|safe }}
+    </div>
+  </div>
+{% endif %}

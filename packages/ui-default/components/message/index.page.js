@@ -42,7 +42,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
         }).open();
       } else if (msg.udoc._id === 1 && msg.mdoc.flag & 4) {
         new VjNotification({
-          message: 'You received a system message, click here to view.',
+          message: i18n('You received a system message, click here to view.'),
           duration: 15000,
           action: () => window.open(`/home/messages?uid=${msg.udoc._id}`, '_blank'),
         }).show();

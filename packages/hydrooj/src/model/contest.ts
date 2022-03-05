@@ -147,7 +147,6 @@ const acm = buildContestRule({
                 row.push(
                     { type: 'string', value: penalty.toString() },
                     { type: 'string', value: tsdoc.time || 0.0 },
-                    { type: 'string', value: tsdoc.time || 0.0 },
                 );
             }
             for (const pid of tdoc.pids) {

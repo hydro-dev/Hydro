@@ -380,10 +380,13 @@ export class ProblemDetailHandler extends ProblemHandler {
     async postRejudge(domainId: string, pid: number) {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         // TODO maybe async?
-        await record.getMulti(domainId, { pid }).forEach(async (doc) => {
-            await record.reset(domainId, doc._id, true);
-            await record.judge(domainId, doc._id, -50);
-        });
+        const rdocs = await record.getMulti(domainId, { pid, contest: { $ne: new ObjectID('0'.repeat(24)) } })
+            .project({ _id: 1 }).toArray();
+        const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
+        await Promise.all(rdocs.map(
+            (doc) => record.reset(domainId, doc._id, true)
+                .then(() => record.judge(domainId, doc._id, priority)),
+        ));
         this.back();
     }
 
@@ -790,8 +793,20 @@ export class ProblemCreateHandler extends Handler {
         domainId: string, title: string, content: string, pid: string,
         hidden = false, difficulty = 0, tag: string[] = [], assign: string[] = [],
     ) {
-        if (pid && await problem.get(domainId, pid)) throw new BadRequestError('invalid pid');
+        if (pid && await problem.get(domainId, pid)) throw new BadRequestError('ProblemID already exists');
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden, assign);
+        const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
+        const tasks = [];
+        for (const file of files) {
+            if (this.user._files.find((i) => i.name === file)) {
+                tasks.push(
+                    storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`)
+                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', true)),
+                    user.setById(this.user._id, { _files: this.user._files.filter((i) => i.name !== file) }),
+                );
+            }
+        }
+        await Promise.all(tasks);
         if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });

@@ -100,10 +100,21 @@ export async function downloadProblemSet(pids, name = 'Export') {
           nAccept: pdoc.nAccept,
         }),
       });
-      targets.push({
-        filename: `${pid}/problem.md`,
-        content: pdoc.content,
-      });
+      try {
+        const c = JSON.parse(pdoc.content);
+        if (c instanceof Array || typeof c === 'string') throw new Error();
+        for (const key of Object.keys(c)) {
+          targets.push({
+            filename: `${pid}/problem_${key}.md`,
+            content: typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]),
+          });
+        }
+      } catch (e) {
+        targets.push({
+          filename: `${pid}/problem.md`,
+          content: pdoc.content,
+        });
+      }
       let { links } = await request.post(
         `/d/${UiContext.domainId}/p/${pid}/files`,
         { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' },

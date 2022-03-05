@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.5.1",
+    "version": "3.7.2",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -12,7 +12,7 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@graphql-tools/schema": "^8.3.1",
+        "@graphql-tools/schema": "^8.3.2",
         "@hydrooj/utils": "workspace:*",
         "adm-zip": "0.5.5",
         "ajv": "^8.10.0",
@@ -23,14 +23,14 @@
         "emoji-regex": "^10.0.0",
         "emojis-list": "2.1.0",
         "esbuild": "0.14.3",
-        "fs-extra": "^10.0.0",
+        "fs-extra": "^10.0.1",
         "graphql": "^16.3.0",
         "graphql-scalars": "1.14.1",
         "js-yaml": "^4.1.0",
         "koa": "^2.13.4",
         "koa-body": "^4.2.0",
         "koa-compress": "^5.1.0",
-        "koa-proxies": "^0.12.1",
+        "koa-proxies": "^0.12.2",
         "koa-router": "^10.1.1",
         "koa-static-cache": "^5.1.4",
         "lodash": "^4.17.21",
@@ -39,7 +39,7 @@
         "minio": "7.0.25",
         "moment-timezone": "^0.5.34",
         "mongodb": "^3.7.3",
-        "nanoid": "^3.3.0",
+        "nanoid": "^3.3.1",
         "nodemailer": "^6.7.2",
         "notp": "^2.0.3",
         "p-queue": "^7.2.0",
@@ -61,7 +61,7 @@
         "@types/koa-compress": "^4.0.3",
         "@types/koa-router": "^7.4.4",
         "@types/koa-static-cache": "^5.1.1",
-        "@types/lodash": "^4.14.178",
+        "@types/lodash": "^4.14.179",
         "@types/lru-cache": "^5.1.1",
         "@types/mime-types": "^2.1.1",
         "@types/minio": "^7.0.12",
@@ -74,7 +74,7 @@
         "@types/source-map-support": "^0.5.4",
         "@types/superagent": "^4.1.15",
         "moment": "^2.29.1",
-        "pm2": "^5.1.2"
+        "pm2": "^5.2.0"
     },
     "peerDependencies": {
         "pm2": "*"
