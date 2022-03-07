@@ -179,7 +179,7 @@ const acm = buildContestRule({
         return [rows, udict, nPages];
     },
     async ranked(tdoc, cursor) {
-        return await ranked.all(cursor, (a, b) => a.score === b.score);
+        return await ranked.all(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
     },
 });
 

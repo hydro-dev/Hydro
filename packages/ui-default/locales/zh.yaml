@@ -561,6 +561,7 @@ Please select at least one file to perform this operation.: 请选择至少一�
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Preference Settings: 偏好设置
+Preparing Upload...: 准备上传...
 Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试
 Pretest: 自测
@@ -659,6 +660,8 @@ Role name can only contains numbers, letters and underscores.: 角色名称只�
 Role: 角色
 Roles: 角色
 RP Algorithm: RP 算法
+rpDetailText_contest: 比赛
+rpDetailText_problem: 题目
 Rule: 规则
 Run Pretest: 运行自测
 Run: 运行
@@ -809,12 +812,14 @@ Unstar: 取消收藏
 Update Permission: 更新权限
 Update Settings: 更新设置
 Update: 更新
+Upload Failed: 上传失败
 Upload File: 上传文件
 Upload Problem: 上传题目
 Upload: 上传
 Uploaded By: 上传者
 Uploading files...: 正在上传文件...
 Uploading... ({0}%): 正在上传... ({0}%)
+Uploading...: 正在上传...
 Upvote: 好评
 Usage exceeded.: 用量超限。
 Use admin specificed: 由管理员指定
@@ -827,9 +832,6 @@ User ID: 用户 ID
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户
 user_login: 登录
-Uploading...: 正在上传...
-Upload Failed: 上传失败
-Preparing Upload...: 准备上传...
 user_logout: 登出
 user_lostpass: 忘记密码
 user_register_with_code: 注册

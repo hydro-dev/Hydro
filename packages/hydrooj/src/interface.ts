@@ -619,6 +619,7 @@ export interface Model {
     user: typeof import('./model/user').default,
     oauth: typeof import('./model/oauth').default,
     storage: typeof import('./model/storage').default,
+    rp: typeof import('./script/rating').RpTypes,
 }
 
 export interface Service {
