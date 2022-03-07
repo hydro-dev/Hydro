@@ -22,6 +22,8 @@ interface RpDef {
     base: number;
 }
 
+const { log, max, min } = Math;
+
 export const RpTypes: Record<string, RpDef> = {
     problem: {
         async run(domainIds, udict, report) {
@@ -38,13 +40,13 @@ export const RpTypes: Record<string, RpDef> = {
                     },
                 );
                 const difficulty = +pdoc.difficulty || difficultyAlgorithm(pdoc.nSubmit, pdoc.nAccept) || 5;
-                const p = difficulty / (Math.log(pdoc.nAccept) + 1) / 100;
+                const p = difficulty / 100;
                 let psdoc;
                 while (psdoc = await cursor.next()) {
-                    udict[psdoc.uid] += Math.max(psdoc.score, 100) * p;
+                    udict[psdoc.uid] += min(psdoc.score, 100) * p;
                 }
             }
-            for (const key in udict) udict[key] = Math.max(0, Math.log(udict[key]) / Math.log(1.03));
+            for (const key in udict) udict[key] = max(0, min(udict[key], log(udict[key]) / log(1.03)));
         },
         hidden: false,
         base: 0,
@@ -75,7 +77,7 @@ export const RpTypes: Record<string, RpDef> = {
                     },
                 });
             }
-            for (const key in udict) udict[key] = udict[key] / 2 - 725;
+            for (const key in udict) udict[key] = udict[key] / 2 - 700;
         },
         hidden: false,
         base: 1500,
