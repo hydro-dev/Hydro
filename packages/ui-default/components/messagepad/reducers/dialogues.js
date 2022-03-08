@@ -4,8 +4,7 @@ export default function reducer(state = {}, action) {
   switch (action.type) {
   case 'DIALOGUES_LOAD_DIALOGUES_FULFILLED': {
     const { messages } = action.payload;
-    if (Object.keys(state).length) return {...state, ..._.keyBy(messages, 'udoc._id')};
-    return _.keyBy(messages, 'udoc._id');
+    return {...state, ..._.keyBy(messages, 'udoc._id')};
   }
   case 'DIALOGUES_CREATE': {
     const { user } = action.payload;
