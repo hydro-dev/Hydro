@@ -2,30 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
-import request from 'vj/utils/request';
 import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
 import MessagePadDialogueList from './MessagePadDialogueListContainer';
 import MessagePadDialogueContent from './MessagePadDialogueContentContainer';
 import MessagePadInput from './MessagePadInputContainer';
 
-const mapDispatchToProps = (dispatch) => ({
-  loadDialogues() {
-    dispatch({
-      type: 'DIALOGUES_LOAD_DIALOGUES',
-      payload: request.get(''),
-    });
-  },
-});
-
-export default connect(null, mapDispatchToProps)(class MessagePadContainer extends React.PureComponent {
+export default connect()(class MessagePadContainer extends React.PureComponent {
   static propTypes = {
     onAdd: PropTypes.func.isRequired,
   };
-
-  componentDidMount() {
-    this.props.loadDialogues();
-  }
 
   render() {
     return (

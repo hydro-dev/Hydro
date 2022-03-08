@@ -5,6 +5,7 @@ import parseQueryString from 'vj/utils/parseQueryString';
 import VjNotification from 'vj/components/notification';
 import { ActionDialog } from 'vj/components/dialog';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import request from 'vj/utils/request';
 
 const page = new NamedPage('home_messages', () => {
   let reduxStore;
@@ -54,6 +55,11 @@ const page = new NamedPage('home_messages', () => {
       });
       notification.show();
     };
+
+    store.dispatch({
+      type: 'DIALOGUES_LOAD_DIALOGUES',
+      payload: await request.get(''),
+    });
 
     const userSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--user-select [name="user"]'));
     const userSelectDialog = new ActionDialog({
