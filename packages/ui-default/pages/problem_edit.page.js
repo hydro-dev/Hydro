@@ -257,6 +257,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   }
   const editor = Editor.getOrConstruct($main, { upload, onChange });
   $('[data-lang]').on('click', (ev) => {
+    $('[data-lang]').removeClass('tab--active');
+    $(ev.currentTarget).addClass('tab--active');
     const lang = $(ev.currentTarget).attr('data-lang');
     activeTab = lang;
     const val = getContent(lang);
