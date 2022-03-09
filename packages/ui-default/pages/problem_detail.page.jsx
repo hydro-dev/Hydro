@@ -250,6 +250,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         type: 'bar',
       }],
     });
+
+    window.onresize = function () {
+      statusChart.resize();
+      scoreChart.resize();
+    }
   }
 
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
