@@ -2,7 +2,8 @@
     "name": "hydro-workspace",
     "private": true,
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "plugins/*"
     ],
     "main": "package.json",
     "scripts": {
@@ -13,22 +14,20 @@
         "build:ui:production": "node packages/ui-default/build --production",
         "lint": "eslint packages --ext ts --fix",
         "lint:ci": "eslint packages --ext ts",
-        "lint:ui": "yarn run --cwd=packages/ui-default eslint . --fix",
-        "lint:ui:ci": "yarn run --cwd=packages/ui-default eslint .",
-        "pub": "node build/publish",
+        "lint:ui": "yarn workspace @hydrooj/ui-default eslint --ext .js,.ts,.jsx,.tsx . --fix",
+        "lint:ui:ci": "yarn workspace @hydrooj/ui-default eslint --ext .js,.ts,.jsx,.tsx .",
         "typedoc": "cross-env NODE_OPTIONS=--max_old_space_size=8192 typedoc",
         "debug:all": "node --trace-warnings --async-stack-traces --trace-deprecation build/start --debug --template",
         "debug": "node --trace-warnings --async-stack-traces --trace-deprecation node_modules/hydrooj/bin/hydrooj --debug --template",
         "start:all": "node build/start",
         "start": "node_modules/.bin/hydrooj",
-        "postinstall": "node build/hack",
-        "clean": "zsh -c \"rm -rf tsconfig.build.tsbuildinfo ./packages/*/tsconfig.tsbuildinfo ./.coverage\""
+        "postinstall": "node build/hack && node build/prepare.js"
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
         "@types/cross-spawn": "^6.0.2",
-        "@types/node": "^16.11.25",
+        "@types/node": "^16.11.26",
         "@types/semver": "^7.3.9",
         "@typescript-eslint/eslint-plugin": "5.12.0",
         "@typescript-eslint/parser": "5.12.0",
@@ -36,19 +35,18 @@
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
         "esbuild": "0.14.3",
-        "eslint": "^8.9.0",
+        "eslint": "^8.10.0",
         "eslint-config-airbnb-typescript": "12.3.1",
         "eslint-import-resolver-typescript": "2.5.0",
         "eslint-plugin-import": "2.25.4",
         "eslint-plugin-simple-import-sort": "7.0.0",
-        "fs-extra": "^10.0.0",
+        "fs-extra": "^10.0.1",
         "globby": "11.1.0",
         "latest-version": "^6.0.0",
         "mongodb": "^3.7.3",
-        "nmls": "^3.0.1",
         "ora": "5.4.1",
         "semver": "^7.3.5",
-        "typedoc": "^0.22.11",
+        "typedoc": "^0.22.12",
         "typescript": "4.4.3"
     }
 }
