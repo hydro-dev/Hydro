@@ -30,7 +30,7 @@ import {
 
 const { geoip, useragent } = global.Hydro.lib;
 
-class HomeHandler extends Handler {
+export class HomeHandler extends Handler {
     uids = new Set<number>();
 
     collectUser(uids: number[]) {

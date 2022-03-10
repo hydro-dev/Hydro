@@ -99,7 +99,7 @@ export const RpTypes: Record<string, RpDef> = {
 global.Hydro.model.rp = RpTypes;
 
 export async function calcLevel(domainId: string, report: Function) {
-    const filter = { rp: { $exists: true } };
+    const filter = { rp: { $gt: 0 } };
     const ducnt = await domain.getMultiUserInDomain(domainId, filter).count();
     await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
     if (!ducnt) return;
