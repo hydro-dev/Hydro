@@ -45,6 +45,7 @@ async function executeCommand(input: string) {
         if (input === 'exit' || input === 'quit' || input === 'shutdown') {
             return process.kill(process.pid, 'SIGINT');
         }
+        if (process.stdin.isRaw) return false;
         try {
             // eslint-disable-next-line no-eval
             shell.info(await eval(input));
