@@ -9,6 +9,9 @@ import './monaco.styl';
 
 export default monaco;
 export const customOptions: monaco.editor.IStandaloneDiffEditorConstructionOptions = JSON.parse(localStorage.getItem('editor.config') || '{}');
+export function saveCustomOptions() {
+  localStorage.setItem('editor.config', JSON.stringify(customOptions));
+}
 
 const loaded = {};
 async function fetchTheme(id: string, label: string) {
@@ -29,7 +32,7 @@ class ChangeThemeAction extends EditorAction {
     super({
       id: 'hydro.changeEditorTheme',
       label: i18n('Change Theme'),
-      alias: [i18n('Change Theme'), 'Change Theme'],
+      alias: 'Change Theme',
     });
   }
 
@@ -55,6 +58,7 @@ class ChangeThemeAction extends EditorAction {
     }
     await fetchTheme(selected.command, selected.label);
     customOptions.theme = selected.command;
+    saveCustomOptions();
     return monaco.editor.setTheme(selected.command);
   }
 }
@@ -155,11 +159,12 @@ export function registerAction(
   editor.onDidChangeConfiguration(() => {
     const current = editor.getOption(monaco.editor.EditorOptions.fontSize.id);
     customOptions.fontSize = current;
-    localStorage.setItem('editor.config', JSON.stringify(customOptions));
+    saveCustomOptions();
   });
   if (model.getLanguageId() === 'markdown') {
     const suggestWidget = (editor.getContribution('editor.contrib.suggestController') as any).widget?.value;
     if (suggestWidget?._setDetailsVisible) suggestWidget._setDetailsVisible(true);
     handlePasteEvent(editor);
   }
+  return loadThemePromise;
 }
