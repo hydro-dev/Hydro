@@ -10,25 +10,29 @@ export = async function compile(
     lang: LangConfig, code: string, copyIn: Record<string, CopyInFile> = {}, next?: Function,
 ): Promise<Execute> {
     const target = lang.target || 'foo';
-    copyIn[lang.code_file] = { content: code };
+    const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
+    const time = lang.time_limit_rate || 1;
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
         } = await run(
-            lang.compile,
-            { copyIn, copyOutCached: [target] },
+            copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
+            { copyIn: { ...copyIn, [lang.code_file]: { content: code } }, copyOutCached: [target] },
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
         if (next) next({ compiler_text: compilerText(stdout, stderr) });
         return {
-            execute: lang.execute,
+            execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
             clean: () => del(fileIds[target]),
-            time: lang.time_limit_rate || 1,
+            time,
         };
     }
     return {
-        execute: lang.execute, copyIn, clean: () => Promise.resolve(null), time: lang.time_limit_rate || 1,
+        execute,
+        copyIn: { ...copyIn, [lang.code_file]: { content: code } },
+        clean: () => Promise.resolve(null),
+        time,
     };
 };
