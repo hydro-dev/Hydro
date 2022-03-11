@@ -573,6 +573,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 });
             }
         } else {
+            this.response.body.filename = filename;
             files.push({
                 type,
                 name: filename,

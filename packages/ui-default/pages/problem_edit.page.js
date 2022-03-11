@@ -174,7 +174,9 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   setInterval(() => {
     $('img').each(function () {
       if (this.src.startsWith('file://')) {
-        this.setAttribute('src', this.src.replace('file://', './file/').replace(/\/$/, ''));
+        if (pagename === 'problem_create') {
+          this.setAttribute('src', this.src.replace('file://', `/file/${UserContext._id}`).replace(/\/$/, ''));
+        } else this.setAttribute('src', this.src.replace('file://', './file/').replace(/\/$/, ''));
       }
     });
   }, 500);
