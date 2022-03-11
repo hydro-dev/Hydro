@@ -35,12 +35,21 @@ export function parse(output: string, fullscore: number) {
     }
     while (operation.test(message)) {
         const [, op, val, rest] = message.match(operation);
+        message = rest;
         if (op === 'status') {
-            status = +val;
-            message = rest;
+            const s = +val;
+            if ([
+                STATUS.STATUS_ACCEPTED,
+                STATUS.STATUS_WRONG_ANSWER,
+                STATUS.STATUS_COMPILE_ERROR,
+                STATUS.STATUS_RUNTIME_ERROR,
+                STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+                STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+                STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
+                STATUS.STATUS_FORMAT_ERROR,
+            ].includes(s)) status = +val;
         } else if (op === 'score') {
             score = +val;
-            message = rest;
         }
     }
     return { status, score, message: builder(message) };
