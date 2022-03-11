@@ -20,7 +20,13 @@ export const judge = async (ctx: Context) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     try {
-        ctx.execute = await compile(ctx.getLang(ctx.lang), ctx.code, {}, ctx.next);
+        ctx.execute = await compile(
+            ctx.getLang(ctx.lang), ctx.code,
+            Object.fromEntries(
+                (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
+            ),
+            ctx.next,
+        );
     } catch (e) {
         if (e instanceof CompileError) {
             ctx.next({

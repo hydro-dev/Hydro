@@ -35,7 +35,9 @@ jobs:
         yarn build
         yarn build:ui:production
     - name: Lint
-      run: yarn lint:ci
+      run: |
+        yarn lint:ci
+        yarn lint:ui:ci
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js

@@ -42,6 +42,8 @@ problem.import.problem_description: '## Description'
 ranking: Ranking
 record_detail: Record Detail
 record_main: Record
+rpDetailText_contest: Contest
+rpDetailText_problem: Problem
 setting_customize: Customize
 setting_display: Display Preference
 setting_function: Function

@@ -40,10 +40,10 @@ export function setLocaleData(data) {
   CURRENT_LOCALE_DATA = data;
 }
 
-export function loadMessageBundle(file) {
+export function loadMessageBundle() {
   return localize;
 }
 
-export function config(opt) {
+export function config() {
   return loadMessageBundle;
 }

@@ -7,17 +7,21 @@
     width: rem(220px)
 
   .col--rp
-    width: rem(80px)
+    width: rem(60px)
     text-align: right
 
+  .col--detail
+    width: rem(50px)
+    text-align: center
+
   .col--ac
-    width: rem(70px)
-    text-align: right
+    width: rem(50px)
+    text-align: center
 
   .col--bio
     height: 36px !important;
     display: block;
 
   +mobile()
-    .col--bio
+    .col--bio, .col--detail
       display: none

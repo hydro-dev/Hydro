@@ -73,9 +73,11 @@ function handleNavbar() {
   }
   trigger.show();
 
+  const base = 70;
+
   let navItems = $('.nav__list--main > .nav__list-item');
   let navItem = navItems.length - 2;
-  while (navItem && $('#menu').children('div').height() > 45) {
+  while (navItem && $('#menu').children('div').height() > base) {
     if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
       $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
       $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
@@ -86,7 +88,7 @@ function handleNavbar() {
   }
 
   if (!fromHide && menu.children().length) {
-    while ($('#menu').children('div').height() <= 45 && menu.children().length) {
+    while ($('#menu').children('div').height() <= base && menu.children().length) {
       const ele = menu.children(0);
       $(ele).addClass('nav__list-item').removeClass('menu__item');
       $(ele).children('a').addClass('nav__item').removeClass('menu__link');
@@ -96,8 +98,8 @@ function handleNavbar() {
 
   navItems = $('.nav__list--main > .nav__list-item');
   navItem = navItems.length - 2;
-  if ($('#menu').children('div').height() > 45) {
-    while (navItem && $('#menu').children('div').height() > 45) {
+  if ($('#menu').children('div').height() > base) {
+    while (navItem && $('#menu').children('div').height() > base) {
       if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
         $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
         $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');

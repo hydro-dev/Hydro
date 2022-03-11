@@ -20,8 +20,8 @@ function parseParameters(fn: Function) {
         .replace(COMMENTS, '')
         .replace(ARR, '');
     const result = code.slice(code.indexOf('(') + 1, code.indexOf(')'))
-        .match(/([^,]+)/g).map((i) => i.trim());
-    return result === null ? [] : result;
+        .match(/([^,]+)/g)?.map((i) => i.trim());
+    return result ?? [];
 }
 
 async function runScript(name: string, arg: any) {

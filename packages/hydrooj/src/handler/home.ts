@@ -30,7 +30,7 @@ import {
 
 const { geoip, useragent } = global.Hydro.lib;
 
-class HomeHandler extends Handler {
+export class HomeHandler extends Handler {
     uids = new Set<number>();
 
     collectUser(uids: number[]) {
@@ -432,7 +432,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-async function apply() {
+export async function apply() {
     Route('homepage', '/', HomeHandler);
     Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
     Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);
@@ -443,4 +443,4 @@ async function apply() {
     Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
 }
 
-global.Hydro.handler.home = module.exports = apply;
+global.Hydro.handler.home = apply;
