@@ -61,7 +61,7 @@ const acm = buildContestRule({
         for (const j of filterEffective(tdoc, journal, ignoreLock)) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             effective[j.pid] = j;
-            if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR].includes(j.status)) {
+            if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
             }
         }
