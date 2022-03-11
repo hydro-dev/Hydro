@@ -64,6 +64,7 @@ export class FilesHandler extends Handler {
         if (!meta) throw new Error('Upload failed');
         this.user._files.push({ _id: filename, ...payload });
         await user.setById(this.user._id, { _files: this.user._files });
+        this.response.body.filename = filename;
         this.back();
     }
 

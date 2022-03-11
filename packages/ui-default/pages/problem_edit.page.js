@@ -7,6 +7,7 @@ import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
+import { nanoid } from 'nanoid';
 
 const categories = {};
 const dirtyCategories = [];
@@ -190,9 +191,11 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   } catch (e) { }
   if (!isObject) content = { [activeTab]: content };
   const upload = {
-    accept: 'image/*,.mp3, .wav, .zip',
-    url: './files',
-    extraData: {
+    accept: 'image/*, .zip',
+    url: pagename === 'problem_create' ? '/file' : './files',
+    extraData: pagename === 'problem_create' ? {
+      operation: 'upload_file',
+    } : {
       type: 'additional_file',
       operation: 'upload_file',
     },
@@ -201,6 +204,18 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     setHeaders() {
       return { accept: 'application/json' };
     },
+    file(files) {
+      let ext;
+      const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
+      if (matches) {
+        [, ext] = matches;
+      } else if (files[0].type === 'application/x-zip-compressed') ext = 'zip';
+      const fileName = `${nanoid()}.${ext}`.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
+        .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
+        .replace(/\s/g, '');
+      const fileList = [new File(files, fileName, { type: files[0].type })];
+      return fileList;
+    },
     format(files, resp) {
       const res = JSON.parse(resp);
       if (res.error) {
@@ -208,7 +223,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
           msg: res.error.message,
           code: -1,
           data: {
-            errFiles: [files[0].name],
+            errFiles: [res.filename],
             succMap: {},
           },
         });
@@ -219,19 +234,11 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
         data: {
           errFiles: [],
           succMap: {
-            [files[0].name]: `file://${files[0].name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-              .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-              .replace(/\s/g, '')}`,
+            [res.filename]: `file://${res.filename}`,
           },
         },
       });
     },
-    filename(name) {
-      return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-        .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-        .replace(/\s/g, '');
-    },
-    validate: () => (pagename === 'problem_create' ? i18n('Cannot upload file before problem is created.') : true),
   };
   function getContent(lang) {
     let c = '';
