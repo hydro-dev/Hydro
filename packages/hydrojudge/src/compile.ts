@@ -17,7 +17,11 @@ export = async function compile(
             status, stdout, stderr, fileIds,
         } = await run(
             copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
-            { copyIn: { ...copyIn, [lang.code_file]: { content: code } }, copyOutCached: [target] },
+            {
+                copyIn: { ...copyIn, [lang.code_file]: { content: code } },
+                copyOutCached: [target],
+                env: { HYDRO_LANG: lang.key },
+            },
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
