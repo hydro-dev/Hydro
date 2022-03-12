@@ -196,13 +196,13 @@ export default class Editor extends DOMAttachedObject {
             request.postFile(isProblemEdit ? './files' : '/file', data, {
               xhr: () => {
                 const xhr = new XMLHttpRequest();
-                xhr.upload.addEventListener('loadstart', () => this.vditor.vditor.tip.show(i18n('Uploading...')));
+                xhr.upload.addEventListener('loadstart', () => this.vditor.vditor.tip.show(i18n('Uploading...'), 0));
                 xhr.upload.addEventListener('progress', (e) => {
                   if (!e.lengthComputable) return;
                   const percentComplete = Math.round((e.loaded / e.total) * 100);
                   if (percentComplete === progress) return;
                   progress = percentComplete;
-                  this.vditor.vditor.tip.show(`${i18n('Uploading...')} ${percentComplete}%`);
+                  this.vditor.vditor.tip.show(`${i18n('Uploading...')} ${percentComplete}%`, 0);
                 }, false);
                 return xhr;
               },
