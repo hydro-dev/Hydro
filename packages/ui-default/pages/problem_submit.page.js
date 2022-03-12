@@ -59,7 +59,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
 
   if (isFallback) {
     $('#codelang-main-select').val(Object.keys(main)[0]);
-    onChangeMain.call({ value: Object.keys(main)[0] }, false);
+    onChangeMain.call({ value: Object.keys(main)[0] }, true);
   }
 
   $('#codelang-main-select').on('change', onChangeMain);
