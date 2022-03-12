@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
+import i18n from '../lib/i18n';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
 
@@ -75,7 +76,7 @@ export async function locale(pending: string[], fail: string[]) {
                     const content = fs.readFileSync(path.resolve(p, file)).toString();
                     locales[file.split('.')[0]] = yaml.load(content);
                 }
-                global.Hydro.lib.i18n(locales);
+                i18n(locales);
                 logger.info('Locale init: %s', i);
             } catch (e) {
                 fail.push(i);

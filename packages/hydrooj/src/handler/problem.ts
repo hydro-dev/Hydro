@@ -311,13 +311,17 @@ export class ProblemDetailHandler extends ProblemHandler {
             if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             this.pdoc.config = pdoc.config;
         }
-        if (ddoc.langs && typeof this.pdoc.config !== 'string') {
-            const dl = ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i);
-            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
-        }
-        if (this.domain.langs && typeof this.pdoc.config !== 'string') {
-            const dl = this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i);
-            this.pdoc.config.langs = intersection(this.pdoc.config.langs || dl, dl);
+        if (typeof this.pdoc.config !== 'string') {
+            const t = [];
+            if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
+            if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
+            if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
+            if (this.pdoc.config.type === 'remote_judge') {
+                const p = this.pdoc.config.subType;
+                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
+                t.push(dl);
+            }
+            if (t.length) this.pdoc.config.langs = intersection(...t);
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
