@@ -170,12 +170,11 @@ export default class Editor extends DOMAttachedObject {
     const ele = document.createElement('div');
     const value = $dom.val();
     const { onChange } = this.options;
-    const that = this;
     await new Promise((resolve) => {
       this.vditor = new Vditor(ele, {
         upload: {
           multiple: false,
-          handler(files) {
+          handler: (files) => {
             let wrapper = ['', ''];
             let ext: string;
             const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
@@ -186,7 +185,7 @@ export default class Editor extends DOMAttachedObject {
               wrapper = ['[file](', ')'];
               ext = 'zip';
             }
-            if (!ext) return `${window.VditorI18n.fileTypeError}`;
+            if (!ext) return i18n('No Supported file type.');
             const filename = `${nanoid()}.${ext}`;
             const data = new FormData();
             data.append('filename', filename);
@@ -195,25 +194,28 @@ export default class Editor extends DOMAttachedObject {
             if (isProblemEdit) data.append('type', 'additional_file');
             let progress = 0;
             request.postFile(isProblemEdit ? './files' : '/file', data, {
-              xhr() {
+              xhr: () => {
                 const xhr = new XMLHttpRequest();
-                xhr.upload.addEventListener('loadstart', () => Notification.info(i18n('Uploading...')));
+                xhr.upload.addEventListener('loadstart', () => this.vditor.vditor.tip.show(i18n('Uploading...')));
                 xhr.upload.addEventListener('progress', (e) => {
                   if (!e.lengthComputable) return;
                   const percentComplete = Math.round((e.loaded / e.total) * 100);
                   if (percentComplete === progress) return;
                   progress = percentComplete;
-                  Notification.info(`${i18n('Uploading...')} ${percentComplete}%`);
+                  this.vditor.vditor.tip.show(`${i18n('Uploading...')} ${percentComplete}%`);
                 }, false);
                 return xhr;
               },
             })
-              .then(() => that.vditor.insertValue(`${wrapper.join(`file://${filename}`)} `))
+              .then(() => {
+                this.vditor.insertValue(`${wrapper.join(`file://${filename}`)} `);
+                this.vditor.vditor.tip.hide();
+              })
               .catch((e: { message: string; }) => {
                 console.error(e);
                 return `${i18n('Upload Failed')}: ${e.message}`;
               });
-            return '';
+            return null;
           },
         },
         ...this.options,
