@@ -7,7 +7,6 @@ import { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
-import { nanoid } from 'nanoid';
 
 const categories = {};
 const dirtyCategories = [];
@@ -174,9 +173,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   setInterval(() => {
     $('img').each(function () {
       if (this.src.startsWith('file://')) {
-        if (pagename === 'problem_create') {
-          this.setAttribute('src', this.src.replace('file://', `/file/${UserContext._id}`).replace(/\/$/, ''));
-        } else this.setAttribute('src', this.src.replace('file://', './file/').replace(/\/$/, ''));
+        $(this).attr('src', $(this).attr('src').replace('file://', (pagename === 'problem_create' ? `/file/${UserContext._id}/` : './file/')));
       }
     });
   }, 500);
@@ -192,56 +189,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (!isObject) content = JSON.stringify(content);
   } catch (e) { }
   if (!isObject) content = { [activeTab]: content };
-  const upload = {
-    accept: 'image/*, .zip',
-    url: pagename === 'problem_create' ? '/file' : './files',
-    extraData: pagename === 'problem_create' ? {
-      operation: 'upload_file',
-    } : {
-      type: 'additional_file',
-      operation: 'upload_file',
-    },
-    multiple: false,
-    fieldName: 'file',
-    setHeaders() {
-      return { accept: 'application/json' };
-    },
-    file(files) {
-      let ext;
-      const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
-      if (matches) {
-        [, ext] = matches;
-      } else if (files[0].type === 'application/x-zip-compressed') ext = 'zip';
-      const fileName = `${nanoid()}.${ext}`.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-        .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-        .replace(/\s/g, '');
-      const fileList = [new File(files, fileName, { type: files[0].type })];
-      return fileList;
-    },
-    format(files, resp) {
-      const res = JSON.parse(resp);
-      if (res.error) {
-        return JSON.stringify({
-          msg: res.error.message,
-          code: -1,
-          data: {
-            errFiles: [res.filename],
-            succMap: {},
-          },
-        });
-      }
-      return JSON.stringify({
-        msg: '',
-        code: 0,
-        data: {
-          errFiles: [],
-          succMap: {
-            [res.filename]: `file://${res.filename}`,
-          },
-        },
-      });
-    },
-  };
   function getContent(lang) {
     let c = '';
     if (content[lang]) c = content[lang];
@@ -264,7 +211,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (!Object.keys(content).length) $field.text('');
     else $field.text(JSON.stringify(content));
   }
-  const editor = Editor.getOrConstruct($main, { upload, onChange });
+  const editor = Editor.getOrConstruct($main, { onChange });
   $('[data-lang]').on('click', (ev) => {
     $('[data-lang]').removeClass('tab--active');
     $(ev.currentTarget).addClass('tab--active');
