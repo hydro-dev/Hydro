@@ -11,6 +11,7 @@ parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
   - simple-import-sort
+  - eslint-plugin-import
 ignorePatterns:
   - public/
   - '*.spec.ts'
@@ -56,6 +57,14 @@ rules:
         match: false
       format: [camelCase, PascalCase]
       leadingUnderscore: allowSingleOrDouble
+    - selector: [objectLiteralProperty]
+      filter:
+        regex: '^[\d]+$'
+        match: true
+      format: null
+    - selector: [typeProperty, objectLiteralProperty]
+      modifiers: [requiresQuotes]
+      format: null
     - selector: enum
       format: [PascalCase]
     - selector: [class, interface, typeAlias, enumMember]
@@ -64,6 +73,7 @@ rules:
       format: [camelCase, PascalCase, UPPER_CASE]
 
   '@typescript-eslint/no-redeclare': 0
+  '@typescript-eslint/default-param-last': 0
 
   class-methods-use-this: 0
   global-require: 0
@@ -95,6 +105,7 @@ rules:
   no-return-await: 0
   no-underscore-dangle: 0
   prefer-destructuring: 0
+  function-paren-newline: 0
   simple-import-sort/imports: 
    - warn
    - groups:

@@ -1,3 +1,4 @@
+/* eslint-disable react/function-component-definition */
 import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 import React from 'react';

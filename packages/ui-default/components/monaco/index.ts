@@ -109,7 +109,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
       });
     }
     let progress = 0;
-    request.postFile(isProblemEdit ? './file' : '/file', data, {
+    request.postFile(isProblemEdit ? './files' : '/file', data, {
       xhr() {
         const xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('loadstart', () => updateText(i18n('Uploading...')));

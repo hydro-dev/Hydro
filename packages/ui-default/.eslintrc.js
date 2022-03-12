@@ -87,6 +87,8 @@ module.exports = {
     'class-methods-use-this': 'off',
     'consistent-return': 'warn',
     'func-names': 'off',
+    'function-paren-newline': 'off',
+    'default-param-last': 'off',
     'import/first': 'off',
     'import/extensions': 'off',
     'import/no-extraneous-dependencies': 'off',

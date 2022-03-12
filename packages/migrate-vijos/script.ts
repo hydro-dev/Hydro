@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {

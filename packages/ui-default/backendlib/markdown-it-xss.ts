@@ -32,7 +32,7 @@ const tagCheck = new Xss.FilterXSS({
   },
 });
 
-const xss = new Xss.FilterXSS({
+export const xss = new Xss.FilterXSS({
   whiteList: {
     a: ['target', 'href', 'title'],
     abbr: ['title'],
@@ -107,13 +107,13 @@ const xss = new Xss.FilterXSS({
   },
 });
 
-function ensureTag(html: string) {
+export function ensureTag(html: string) {
   stack.length = 0;
   const res = tagCheck.process(html);
   return res + stack.map((i) => `</${i}>`).join('');
 }
 
-function xssProtector(md) {
+export function xssProtector(md) {
   function protector(state) {
     for (let i = 0; i < state.tokens.length; i++) {
       const cur = state.tokens[i];
@@ -133,5 +133,3 @@ function xssProtector(md) {
 
   md.core.ruler.after('linkify', 'xss', protector);
 }
-
-module.exports = { xss, ensureTag, xssProtector };

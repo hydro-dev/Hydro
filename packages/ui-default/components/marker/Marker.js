@@ -23,9 +23,8 @@ class Marker {
   }
 
   constructor() {
-    if (Marker.exists()) {
-      return markerInstance;
-    }
+    // eslint-disable-next-line no-constructor-return
+    if (Marker.exists()) return markerInstance;
     if (markerInstance) {
       markerInstance.destroy();
     }

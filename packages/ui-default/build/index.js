@@ -23,7 +23,7 @@ function transform(filename) {
   return result.outputFiles[0].text;
 }
 require.extensions['.js'] = function loader(module, filename) {
-  if (!filename.includes('node_modules') && !filename.includes('postcss.config.js')) {
+  if (filename.includes('chalk') || (!filename.includes('node_modules') && !filename.includes('postcss.config.js'))) {
     return module._compile(transform(filename), filename);
   }
   const content = fs.readFileSync(filename, 'utf-8');

@@ -10,7 +10,7 @@
     "dependencies": {
         "adm-zip": "0.5.5",
         "decode-html": "^2.0.0",
-        "fs-extra": "^10.0.0",
+        "fs-extra": "^10.0.1",
         "mongodb": "^3.7.3",
         "xml2js": "^0.4.23"
     },

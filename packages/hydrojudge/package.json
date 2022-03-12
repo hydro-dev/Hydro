@@ -7,7 +7,7 @@
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
-        "axios": "^0.25.0",
+        "axios": "^0.26.1",
         "cac": "^6.7.12",
         "esbuild": "0.14.3",
         "fs-extra": "^10.0.1",
@@ -25,7 +25,7 @@
         "@types/js-yaml": "^4.0.5",
         "@types/lodash": "^4.14.179",
         "@types/shell-quote": "^1.7.1",
-        "@types/ws": "^8.5.2"
+        "@types/ws": "^8.5.3"
     },
     "peerDependencies": {
         "hydrooj": "*"

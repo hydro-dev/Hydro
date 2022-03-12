@@ -35,12 +35,12 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
     }
     if (typeof udoc === 'string') {
         // is domainId
-        for (const key of cache.keys().filter((i) => i.endsWith(`/${udoc}`))) cache.del(key);
+        for (const key of [...cache.keys()].filter((i) => i.endsWith(`/${udoc}`))) cache.delete(key);
         return;
     }
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
-    for (const key of cache.keys().filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
-        cache.del(key);
+    for (const key of [...cache.keys()].filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
+        cache.delete(key);
     }
 }
 bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));

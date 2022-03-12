@@ -25,6 +25,7 @@ function isBailed(value: any) {
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export interface EventMap extends Record<string, any> {
     'app/started': () => void
     'app/load/lib': () => VoidReturn
@@ -100,6 +101,7 @@ export interface EventMap extends Record<string, any> {
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any) => void
     'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function getHooks<K extends keyof EventMap>(name: K) {
     const hooks = _hooks[name] || (_hooks[name] = []);
