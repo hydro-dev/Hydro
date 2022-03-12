@@ -50,8 +50,10 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
       $('#codelang-sub-select').val(fallback);
       $('[name="lang"]').val(fallback);
     }
-  } else $('#codelang-main-select').val(current);
-  onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
+  } else {
+    $('#codelang-main-select').val(current);
+    onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
+  }
 
   $('#codelang-main-select').on('change', onChangeMain);
   $('#codelang-sub-select').on('change', function () {
