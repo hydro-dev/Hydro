@@ -38,27 +38,35 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     }
   }
   setOptions($('#codelang-main-select'), main);
-  if (Object.keys(main).length === 1) $('#codelang-main-container').hide();
 
+  let isFallback = false;
   const current = $('[name="lang"]').val();
   if (current.includes('.')) {
     const [m] = current.split('.');
-    $('#codelang-main-select').val(m);
-    const fallback = onChangeMain.call({ value: m }, false);
-    $('#codelang-sub-select').val(current);
-    if (fallback && !$('#codelang-sub-select').val()) {
-      $('#codelang-sub-select').val(fallback);
-      $('[name="lang"]').val(fallback);
-    }
-  } else {
+    if (main[m]) {
+      $('#codelang-main-select').val(m);
+      const fallback = onChangeMain.call({ value: m }, false);
+      $('#codelang-sub-select').val(current);
+      if (fallback && !$('#codelang-sub-select').val()) {
+        $('#codelang-sub-select').val(fallback);
+        $('[name="lang"]').val(fallback);
+      }
+    } else isFallback = true;
+  } else if (main[current]) {
     $('#codelang-main-select').val(current);
     onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
+  } else isFallback = true;
+
+  if (isFallback) {
+    $('#codelang-main-select').val(Object.keys(main)[0]);
+    onChangeMain.call({ value: Object.keys(main)[0] }, false);
   }
 
   $('#codelang-main-select').on('change', onChangeMain);
   $('#codelang-sub-select').on('change', function () {
     $('[name="lang"]').val(this.value);
   });
+  if (Object.keys(main).length === 1) $('#codelang-main-container').hide();
 });
 
 export default page;
