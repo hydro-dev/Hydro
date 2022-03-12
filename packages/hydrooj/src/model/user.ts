@@ -23,7 +23,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
 const logger = new Logger('model/user');
-const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
+const cache = new LRU<string, User>({ max: 500, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
     if (!udoc) return;
@@ -170,6 +170,7 @@ class UserModel {
         hash: '',
         hashType: 'hydro',
         priv: 0,
+        perm: 0n,
         regat: new Date('2000-01-01'),
         loginat: new Date('2000-01-01'),
         ip: ['127.0.0.1'],
