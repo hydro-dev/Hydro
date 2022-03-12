@@ -134,7 +134,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
 export function registerAction(
   editor: monaco.editor.IStandaloneCodeEditor,
   model: monaco.editor.IModel,
-  element,
+  element?,
 ) {
   if (element) {
     editor.addAction({

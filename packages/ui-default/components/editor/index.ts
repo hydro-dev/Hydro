@@ -143,7 +143,7 @@ export default class Editor extends DOMAttachedObject {
       });
     }
     this.editor.onDidChangeModelContent(() => {
-      const val = this.editor.getValue();
+      const val = this.editor.getValue({ lineEnding: '\n', preserveBOM: false });
       $dom.val(val);
       $dom.text(val);
       if (onChange) onChange(val);
@@ -208,7 +208,7 @@ export default class Editor extends DOMAttachedObject {
   value(val?: string) {
     this.ensureValid();
     if (typeof val === 'string') return (this.editor || this.vditor).setValue(val);
-    return (this.editor || this.vditor).getValue();
+    return (this.editor || this.vditor).getValue({ lineEnding: '\n', preserveBOM: false });
   }
 
   focus() {
