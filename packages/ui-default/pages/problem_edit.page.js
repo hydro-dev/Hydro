@@ -173,7 +173,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   setInterval(() => {
     $('img').each(function () {
       if (this.src.startsWith('file://')) {
-        this.setAttribute('src', this.src.replace('file://', './file/').replace(/\/$/, ''));
+        $(this).attr('src', $(this).attr('src').replace('file://', (pagename === 'problem_create' ? `/file/${UserContext._id}/` : './file/')));
       }
     });
   }, 500);
@@ -189,50 +189,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (!isObject) content = JSON.stringify(content);
   } catch (e) { }
   if (!isObject) content = { [activeTab]: content };
-  const upload = {
-    accept: 'image/*,.mp3, .wav, .zip',
-    url: './files',
-    extraData: {
-      type: 'additional_file',
-      operation: 'upload_file',
-    },
-    multiple: false,
-    fieldName: 'file',
-    setHeaders() {
-      return { accept: 'application/json' };
-    },
-    format(files, resp) {
-      const res = JSON.parse(resp);
-      if (res.error) {
-        return JSON.stringify({
-          msg: res.error.message,
-          code: -1,
-          data: {
-            errFiles: [files[0].name],
-            succMap: {},
-          },
-        });
-      }
-      return JSON.stringify({
-        msg: '',
-        code: 0,
-        data: {
-          errFiles: [],
-          succMap: {
-            [files[0].name]: `file://${files[0].name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-              .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-              .replace(/\s/g, '')}`,
-          },
-        },
-      });
-    },
-    filename(name) {
-      return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '')
-        .replace(/[?\\/:|<>*[\]()$%{}@~]/g, '')
-        .replace(/\s/g, '');
-    },
-    validate: () => (pagename === 'problem_create' ? i18n('Cannot upload file before problem is created.') : true),
-  };
   function getContent(lang) {
     let c = '';
     if (content[lang]) c = content[lang];
@@ -255,7 +211,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     if (!Object.keys(content).length) $field.text('');
     else $field.text(JSON.stringify(content));
   }
-  const editor = Editor.getOrConstruct($main, { upload, onChange });
+  const editor = Editor.getOrConstruct($main, { onChange });
   $('[data-lang]').on('click', (ev) => {
     $('[data-lang]').removeClass('tab--active');
     $(ev.currentTarget).addClass('tab--active');
