@@ -166,5 +166,6 @@ export function registerAction(
     if (suggestWidget?._setDetailsVisible) suggestWidget._setDetailsVisible(true);
     handlePasteEvent(editor);
   }
-  return loadThemePromise;
+  if (!customOptions.theme) return null;
+  return loadThemePromise.then(() => editor.updateOptions({ theme: customOptions.theme }));
 }
