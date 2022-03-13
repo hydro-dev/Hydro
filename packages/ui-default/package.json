@@ -41,6 +41,7 @@
     "emojis-keywords": "2.0.0",
     "emojis-list": "2.1.0",
     "esbuild-loader": "^2.18.0",
+    "eslint": "^8.11.0",
     "fancy-log": "^2.0.0",
     "file-loader": "^6.2.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
