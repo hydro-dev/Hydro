@@ -1,4 +1,4 @@
-{% macro render_inline(udoc, avatar=true, badge=true, modbadge=true) %}
+{% macro render_inline(udoc, avatar=true, badge=true, modbadge=true, levelbadge=true) %}
 {% if udoc %}
 <span class="user-profile-link">
   {% if avatar %}
@@ -16,7 +16,7 @@
       {% set _badge = udoc.badge.split('#') %}
       <span class="user-profile-badge v-center" style="background-color:#{{ _badge[1] }}{% if _badge[2] %};color:#{{ _badge[2] }}{% endif %}">{{ _badge[0] }}</span>
     {% endif %}
-    {% if udoc.level %}
+    {% if levelbadge and udoc.level %}
       {% set level = udoc.level %}
       <a class="user-profile-badge v-center badge--lv{{ level }}" href="{{ url('user_detail', uid=udoc._id) }}" data-tooltip="LV {{ level }}: Top {{ model.builtin.LEVELS[level]|default('N/A') }}%">LV {{ level }}</a>
     {% endif %}
