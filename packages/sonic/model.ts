@@ -1,7 +1,10 @@
+import { Logger } from 'hydrooj/src/logger';
 import DomainModel from 'hydrooj/src/model/domain';
 import * as system from 'hydrooj/src/model/system';
 import * as bus from 'hydrooj/src/service/bus';
 import sonic from './service';
+
+const logger = new Logger('sonic');
 
 bus.on('problem/add', async (doc, docId) => {
     const union = await DomainModel.searchUnion({ union: doc.domainId, problem: true });
@@ -12,7 +15,7 @@ bus.on('problem/add', async (doc, docId) => {
             sonic.push('problem', `${domainId}@content`, `${doc.domainId}/${docId}`, doc.content.toString()),
         );
     }
-    await Promise.all(tasks);
+    Promise.all(tasks).catch((e) => logger.error(e));
 });
 
 bus.on('problem/edit', async (pdoc) => {
@@ -27,7 +30,7 @@ bus.on('problem/edit', async (pdoc) => {
                 .then(() => sonic.push('problem', `${domainId}@content`, id, pdoc.content.toString())),
         );
     }
-    await Promise.all(tasks);
+    Promise.all(tasks).catch((e) => logger.error(e));
 });
 
 bus.on('problem/del', async (domainId, docId) => {

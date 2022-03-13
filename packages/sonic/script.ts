@@ -25,7 +25,7 @@ export async function run({ domainId }, report) {
         await Promise.all(tasks).catch((e) => console.log(`${pdoc.domainId}/${pdoc.docId}`, e));
     };
     if (domainId) await iterateAllProblemInDomain(domainId, ['title', 'content'], cb);
-    else await iterateAllProblem(['title', 'content'], cb);
+    else await iterateAllProblem(['title', 'content', 'tag'], cb);
     return true;
 }
 
