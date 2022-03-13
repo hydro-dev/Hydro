@@ -55,6 +55,10 @@ export default function reducer(state = {
   case 'SCRATCHPAD_POST_SUBMIT_PENDING': {
     return {
       ...state,
+      records: {
+        ...state.records,
+        visible: true,
+      },
       isPosting: true,
     };
   }
