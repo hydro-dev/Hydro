@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+    
+  oj-db:
+    image: mongo
+    container_name: oj-db
+    restart: always
+    volumes:
+      - ./data/db:/data/db
+
+  oj-main:
+    build: ./docker
+    container_name: oj-main
+    restart: always
+    depends_on:
+      - oj-db
+    volumes:
+      - ./data/oj:/root/.hydro
+    ports:
+      - "0.0.0.0:8888:8888"
