@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { load } from 'vj/components/monaco/loader';
 
 const mapStateToProps = (state) => ({
   value: state.editor.code,
@@ -23,7 +24,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   async componentDidMount() {
     const value = this.props.value || '';
     const { language } = this.props;
-    const { load } = await import('vj/components/monaco/loader');
     const { monaco, registerAction, customOptions } = await load([language]);
     const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
     this.model = monaco.editor.createModel(value, language, uri);
@@ -42,7 +42,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       this.disposable.push(
         this.editor.onDidChangeModelContent((event) => {
           if (!this.__prevent_trigger_change_event) {
-            this.props.handleUpdateCode(this.editor.getValue(), event);
+            this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
           }
         }),
       );
@@ -56,7 +56,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       value, language, mainSize, recordSize, pretestSize,
     } = this.props;
     const { editor, model } = this;
-    if (this.props.value != null && this.props.value !== model.getValue()) {
+    const { monaco } = await load([language]);
+    const { LF } = monaco.editor.EndOfLinePreference;
+    if (this.props.value != null && this.props.value !== model.getValue(LF, false)) {
       this.__prevent_trigger_change_event = true;
       editor.pushUndoStop();
       model.pushEditOperations(
@@ -71,10 +73,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;
     }
-    const { load } = await import('vj/components/monaco/loader');
-    const { monaco } = await load([language]);
     if (prevProps.language !== language) {
-      const val = model.getValue();
+      const val = model.getValue(LF, false);
       model.dispose();
       const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
       this.model = monaco.editor.createModel(val, language, uri);

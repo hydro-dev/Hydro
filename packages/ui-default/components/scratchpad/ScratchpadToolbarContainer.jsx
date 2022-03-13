@@ -68,11 +68,10 @@ const mapDispatchToProps = (dispatch) => ({
 
 const LANGS = {};
 const prefix = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
 for (const key in window.LANGS) {
   if (prefix.has(key)) continue;
   if (UiContext.pdoc.config.langs && !UiContext.pdoc.config.langs.includes(key)) continue;
-  if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
+  if (window.LANGS[key].hidden && !UiContext.pdoc.config.langs?.includes(key)) continue;
   LANGS[key] = window.LANGS[key];
 }
 const keys = Object.keys(LANGS);

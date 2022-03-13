@@ -10,8 +10,8 @@ export interface LangConfig {
     domain: string[];
     display: string;
     target?: string;
-    sub?: LangConfig[];
     key: string;
+    hidden: boolean;
 }
 
 export function parseLang(config: string): Record<string, LangConfig> {
@@ -23,13 +23,8 @@ export function parseLang(config: string): Record<string, LangConfig> {
         if (key.includes('.')) {
             const base = key.split('.')[0];
             const baseCfg = file[base];
-            if (baseCfg) {
-                for (const bkey in baseCfg) {
-                    if (bkey === 'sub') continue;
-                    if (!(bkey in entry)) entry[bkey] = baseCfg[bkey];
-                }
-                if (baseCfg.sub) baseCfg.sub.push(entry);
-                else baseCfg.sub = [entry];
+            for (const bkey in baseCfg || {}) {
+                if (!(bkey in entry)) entry[bkey] = baseCfg[bkey];
             }
         }
     }
@@ -41,6 +36,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.code_file = entry.code_file || `foo.${key}`;
         entry.execute = entry.execute || '/w/foo';
         entry.key = key;
+        entry.hidden = entry.hidden || false;
     }
     return file;
 }

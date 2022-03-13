@@ -52,9 +52,7 @@ export async function set(_id: string, value: any, broadcast = true) {
 export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
     const res = await coll.findOneAndUpdate(
         { _id },
-        // FIXME NumberKeys<>
-        // @ts-ignore
-        { $inc: { value: 1 } },
+        { $inc: { value: 1 } as any },
         { upsert: true, returnDocument: 'after' },
     );
     cache[_id] = res.value.value;

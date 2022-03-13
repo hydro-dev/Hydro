@@ -119,6 +119,7 @@ export default class DOMAttachedObject {
   }
 
   constructor($dom: JQuery<HTMLElement>, monitorDetach = false) {
+    // eslint-disable-next-line no-constructor-return
     if ($dom == null) return null;
     this.$dom = $dom;
     this.id = ++DOMAttachedObject.uniqueIdCounter;

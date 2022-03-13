@@ -9,13 +9,12 @@ function setOptions($el, options) {
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
   const { config } = UiContext.pdoc;
-  const domainId = UiContext.pdoc.reference?.domainId || UiContext.pdoc.domainId;
 
   function onChangeMain(update = true) {
     const options = {};
     for (const key in window.LANGS) {
       if (config.langs && !config.langs.includes(key)) continue;
-      if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
+      if (window.LANGS[key].hidden && !config.langs?.includes(key)) continue;
       if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
     }
     setOptions($('#codelang-sub-select'), options);
@@ -31,7 +30,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   const main = {};
   for (const key in window.LANGS) {
     if (config.langs && !config.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
-    if (window.LANGS[key].domain && !window.LANGS[key].domain.includes(domainId)) continue;
+    if (window.LANGS[key].hidden && !config.langs?.includes(key)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
     else {
       const a = key.split('.')[0];
@@ -40,23 +39,34 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   }
   setOptions($('#codelang-main-select'), main);
 
+  let isFallback = false;
   const current = $('[name="lang"]').val();
   if (current.includes('.')) {
     const [m] = current.split('.');
-    $('#codelang-main-select').val(m);
-    const fallback = onChangeMain.call({ value: m }, false);
-    $('#codelang-sub-select').val(current);
-    if (fallback && !$('#codelang-sub-select').val()) {
-      $('#codelang-sub-select').val(fallback);
-      $('[name="lang"]').val(fallback);
-    }
-  } else $('#codelang-main-select').val(current);
-  onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
+    if (main[m]) {
+      $('#codelang-main-select').val(m);
+      const fallback = onChangeMain.call({ value: m }, false);
+      $('#codelang-sub-select').val(current);
+      if (fallback && !$('#codelang-sub-select').val()) {
+        $('#codelang-sub-select').val(fallback);
+        $('[name="lang"]').val(fallback);
+      }
+    } else isFallback = true;
+  } else if (main[current]) {
+    $('#codelang-main-select').val(current);
+    onChangeMain.call({ value: $('#codelang-main-select').val() }, false);
+  } else isFallback = true;
+
+  if (isFallback) {
+    $('#codelang-main-select').val(Object.keys(main)[0]);
+    onChangeMain.call({ value: Object.keys(main)[0] }, true);
+  }
 
   $('#codelang-main-select').on('change', onChangeMain);
   $('#codelang-sub-select').on('change', function () {
     $('[name="lang"]').val(this.value);
   });
+  if (Object.keys(main).length === 1) $('#codelang-main-container').hide();
 });
 
 export default page;

@@ -1,6 +1,9 @@
 import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
+import { nanoid } from 'nanoid';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
 
 export const config = {
   toolbar: [
@@ -143,7 +146,7 @@ export default class Editor extends DOMAttachedObject {
       });
     }
     this.editor.onDidChangeModelContent(() => {
-      const val = this.editor.getValue();
+      const val = this.editor.getValue({ lineEnding: '\n', preserveBOM: false });
       $dom.val(val);
       $dom.text(val);
       if (onChange) onChange(val);
@@ -158,6 +161,8 @@ export default class Editor extends DOMAttachedObject {
   }
 
   async initVditor() {
+    const pagename = document.documentElement.getAttribute('data-page');
+    const isProblemEdit = pagename === 'problem_edit';
     const { default: Vditor } = await import('vditor');
     const { $dom } = this;
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
@@ -167,7 +172,52 @@ export default class Editor extends DOMAttachedObject {
     const { onChange } = this.options;
     await new Promise((resolve) => {
       this.vditor = new Vditor(ele, {
-        ...config,
+        upload: {
+          multiple: false,
+          handler: (files) => {
+            let wrapper = ['', ''];
+            let ext: string;
+            const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
+            if (matches) {
+              wrapper = ['![image](', ')'];
+              [, ext] = matches;
+            } else if (files[0].type === 'application/x-zip-compressed') {
+              wrapper = ['[file](', ')'];
+              ext = 'zip';
+            }
+            if (!ext) return i18n('No Supported file type.');
+            const filename = `${nanoid()}.${ext}`;
+            const data = new FormData();
+            data.append('filename', filename);
+            data.append('file', files[0]);
+            data.append('operation', 'upload_file');
+            if (isProblemEdit) data.append('type', 'additional_file');
+            let progress = 0;
+            request.postFile(isProblemEdit ? './files' : '/file', data, {
+              xhr: () => {
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('loadstart', () => this.vditor.vditor.tip.show(i18n('Uploading...'), 0));
+                xhr.upload.addEventListener('progress', (e) => {
+                  if (!e.lengthComputable) return;
+                  const percentComplete = Math.round((e.loaded / e.total) * 100);
+                  if (percentComplete === progress) return;
+                  progress = percentComplete;
+                  this.vditor.vditor.tip.show(`${i18n('Uploading...')} ${percentComplete}%`, 0);
+                }, false);
+                return xhr;
+              },
+            })
+              .then(() => {
+                this.vditor.insertValue(`${wrapper.join(`file://${filename}`)} `);
+                this.vditor.vditor.tip.hide();
+              })
+              .catch((e: { message: string; }) => {
+                console.error(e);
+                return `${i18n('Upload Failed')}: ${e.message}`;
+              });
+            return null;
+          },
+        },
         ...this.options,
         after: () => {
           const pos = $(ele).find('button[data-mode="sv"]').get();
@@ -208,7 +258,7 @@ export default class Editor extends DOMAttachedObject {
   value(val?: string) {
     this.ensureValid();
     if (typeof val === 'string') return (this.editor || this.vditor).setValue(val);
-    return (this.editor || this.vditor).getValue();
+    return (this.editor || this.vditor).getValue({ lineEnding: '\n', preserveBOM: false });
   }
 
   focus() {

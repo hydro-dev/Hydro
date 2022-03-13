@@ -109,7 +109,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
       });
     }
     let progress = 0;
-    request.postFile(isProblemEdit ? './file' : '/file', data, {
+    request.postFile(isProblemEdit ? './files' : '/file', data, {
       xhr() {
         const xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('loadstart', () => updateText(i18n('Uploading...')));
@@ -134,7 +134,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
 export function registerAction(
   editor: monaco.editor.IStandaloneCodeEditor,
   model: monaco.editor.IModel,
-  element,
+  element?,
 ) {
   if (element) {
     editor.addAction({
@@ -166,5 +166,6 @@ export function registerAction(
     if (suggestWidget?._setDetailsVisible) suggestWidget._setDetailsVisible(true);
     handlePasteEvent(editor);
   }
-  return loadThemePromise;
+  if (!customOptions.theme) return null;
+  return loadThemePromise.then(() => editor.updateOptions({ theme: customOptions.theme }));
 }

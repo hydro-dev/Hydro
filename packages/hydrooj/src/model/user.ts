@@ -23,7 +23,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
 const logger = new Logger('model/user');
-const cache = new LRU<string, User>({ max: 500, maxAge: 300 * 1000 });
+const cache = new LRU<string, User>({ max: 500, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
     if (!udoc) return;
@@ -35,12 +35,12 @@ export function deleteUserCache(udoc: User | Udoc | string | undefined | null, r
     }
     if (typeof udoc === 'string') {
         // is domainId
-        for (const key of cache.keys().filter((i) => i.endsWith(`/${udoc}`))) cache.del(key);
+        for (const key of [...cache.keys()].filter((i) => i.endsWith(`/${udoc}`))) cache.delete(key);
         return;
     }
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
-    for (const key of cache.keys().filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
-        cache.del(key);
+    for (const key of [...cache.keys()].filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
+        cache.delete(key);
     }
 }
 bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));
@@ -170,6 +170,7 @@ class UserModel {
         hash: '',
         hashType: 'hydro',
         priv: 0,
+        perm: 0n,
         regat: new Date('2000-01-01'),
         loginat: new Date('2000-01-01'),
         ip: ['127.0.0.1'],

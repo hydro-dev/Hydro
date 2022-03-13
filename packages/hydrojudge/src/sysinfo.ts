@@ -44,6 +44,7 @@ int main(){
                 time_limit_rate: 1,
                 domain: [],
                 key: '',
+                hidden: false,
             }),
             tmpdir: path.resolve(getConfig('tmp_dir'), 'sysinfo'),
         };

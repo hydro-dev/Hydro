@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/sonic",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "description": "Sonic search service",
     "main": "service.js",
     "typings": "service.d.ts",

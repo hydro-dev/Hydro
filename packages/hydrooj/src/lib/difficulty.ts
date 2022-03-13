@@ -5,7 +5,7 @@ const _CACHE_INFO = {
 };
 
 function _LOGP(x: number) {
-    const sqrtPi = 2.506628274631000502415765284811; // Sqrt[Pi]
+    const sqrtPi = 2.506628274631; // Sqrt[Pi]
     return (2 * Math.exp(-1.0 * (Math.log(x) ** 2) * 2)) / x / sqrtPi;
 }
 

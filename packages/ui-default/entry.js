@@ -11,7 +11,8 @@ console.log(
   '%c%s%c%s',
   'color:red;font-size:24px;',
   '   Welcome to\n',
-  'color:blue;font-weight:bold;', `\
+  'color:blue;font-weight:bold;',
+  `\
     __  __          __         
    / / / /_  ______/ /________ 
   / /_/ / / / / __  / ___/ __ \\

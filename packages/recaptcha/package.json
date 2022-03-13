@@ -8,6 +8,6 @@
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "dependencies": {
-        "superagent": "^6.1.0"
+        "superagent": "^7.1.1"
     }
 }
