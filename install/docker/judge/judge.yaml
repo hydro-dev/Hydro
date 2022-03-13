@@ -1,7 +1,0 @@
-hosts:
-  localhost:
-    type: hydro
-    server_url: http://oj-backend:8888/
-    uname: root
-    password: rootroot
-    detail: true
