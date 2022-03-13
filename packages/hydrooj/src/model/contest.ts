@@ -122,16 +122,20 @@ const acm = buildContestRule({
 
         // Find first accept
         const first = {};
-        for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
-        for (const [, tsdoc] of rankedTsdocs) {
-            const tsddict = {};
-            for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
-            for (const pid of tdoc.pids) {
-                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
-                    first[pid] = tsddict[pid].rid.generationTime;
-                }
-            }
-        }
+        const data = await document.collStatus.aggregate([
+            {
+                $match: {
+                    domainId: tdoc.domainId, docType: document.TYPE_CONTEST, docId: tdoc.docId,
+                    accept: { $gte: 1 },
+                    detail: { $elemMatch: { status: STATUS.STATUS_ACCEPTED } },
+                },
+            },
+            { $unwind: '$detail' },
+            { $match: { 'detail.status': STATUS.STATUS_ACCEPTED } },
+            { $sort: { 'detail.rid': 1 } },
+            { $group: { _id: '$detail.pid', first: { $first: '$detail.rid' } } },
+        ]).toArray();
+        for (const t of data) first[t._id] = t.first.generationTime;
 
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
@@ -192,7 +196,7 @@ const oi = buildContestRule({
         const detail = {};
         let score = 0;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            if (detail[j.pid]?.status !== STATUS.STATUS_ACCEPTED || !this.submitAfterAccept) detail[j.pid] = j;
+            if (detail[j.pid]?.status !== STATUS.STATUS_ACCEPTED || this.submitAfterAccept) detail[j.pid] = j;
         }
         for (const i in detail) score += detail[i].score;
         return { score, detail };
@@ -225,15 +229,13 @@ const oi = buildContestRule({
         }
         const psdict = {};
         const first = {};
-        for (const pid of tdoc.pids) first[pid] = new ObjectID().generationTime;
-        for (const [, tsdoc] of rankedTsdocs) {
-            const tsddict = {};
-            for (const item of tsdoc.journal || []) tsddict[item.pid] = item;
-            for (const pid of tdoc.pids) {
-                if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid].rid.generationTime < first[pid]) {
-                    first[pid] = tsddict[pid].rid.generationTime;
-                }
-            }
+        for (const pid of tdoc.pids) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            const [data] = await getMultiStatus(tdoc.domainId, {
+                docType: document.TYPE_CONTEST, docId: tdoc.docId,
+                [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
+            }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
+            first[pid] = data ? data.detail[pid].rid.generationTime : new ObjectID().generationTime;
         }
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
