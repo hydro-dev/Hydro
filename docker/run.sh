@@ -6,6 +6,7 @@ if [ ! -d "/root/Hydro/" ]; then
 	yarn build:ui:production
 	echo "Created."
 else
+	cd /root/Hydro
 	LOCAL = $(git log)
 	REMOTE = $(git log origin/master)
 	if [ ! $LOCAL = $REMOTE ]; then
