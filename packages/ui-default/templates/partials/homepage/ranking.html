@@ -25,7 +25,7 @@
               {% set udoc = udict[uid] %}
               <tr>
                 <td class="col--rank">{{ loop.index }}</td>
-                <td class="col--user">{{ user.render_inline(udoc) }}</td>
+                <td class="col--user">{{ user.render_inline(udoc, levelbadge=false) }}</td>
                 <td class="col--rp">{{ udoc.rp|default(1500)|round(0) }}</td>
                 <td class="col--bio">{{ udoc.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
               </tr>

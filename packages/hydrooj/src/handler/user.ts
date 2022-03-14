@@ -171,7 +171,7 @@ export class UserRegisterHandler extends Handler {
                 { mail, redirect: this.domain.registerRedirect },
             );
             const prefix = this.domain.host
-                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}/`
+                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
                 : system.get('server.url');
             if (system.get('smtp.verify') && system.get('smtp.user')) {
                 const m = await this.renderHTML('user_register_mail.html', {
@@ -254,7 +254,7 @@ class UserLostPassHandler extends Handler {
         const m = await this.renderHTML('user_lostpass_mail.html', {
             url: `lostpass/${tid}`,
             url_prefix: this.domain.host
-                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}/`
+                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
                 : system.get('server.url'),
             uname: udoc.uname,
         });
