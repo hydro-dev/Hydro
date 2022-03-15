@@ -46,7 +46,7 @@
       } catch(e) {
         const s = document.createElement('script');
         s.async = false;
-        s.src = "{{ '/polyfill.js' if process.env.DEV else static_url(global.Hydro.version['ui-default'] + '.polyfill.js') }}";
+        s.src = "{{ '/polyfill.js' if process.env.DEV else static_url('polyfill-' + global.Hydro.version['ui-default'] + '.js') }}";
         document.head.appendChild(s);
       }
     </script>

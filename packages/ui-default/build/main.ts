@@ -54,7 +54,7 @@ async function runWebpack({
       }
       if (argv.options.detail) console.log(stats.toString());
       if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
-      resolve();
+      resolve(null);
     }
     if (watch) compiler.watch({}, compilerCallback);
     else compiler.run(compilerCallback);
@@ -77,7 +77,7 @@ async function runGulp() {
     gulp.on('stop', ({ uid, name }) => {
       log(chalk.green('Finished: %s'), chalk.reset(name));
       taskList[uid] = false;
-      if (Object.values(taskList).filter((b) => b).length === 0) resolve();
+      if (Object.values(taskList).filter((b) => b).length === 0) resolve(null);
     });
     gulpTasks.default();
   });
@@ -87,7 +87,7 @@ async function main() {
   const dir = process.cwd();
   process.chdir(root());
   await runGulp();
-  await runWebpack(argv.options);
+  await runWebpack(argv.options as any);
   if (fs.existsSync('public/hydro.js')) {
     fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
   }
