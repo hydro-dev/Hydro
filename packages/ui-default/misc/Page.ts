@@ -1,15 +1,29 @@
+type callback = (pagename: string, loadPage: (name: string) => Promise<any>) => any;
+
 export class Page {
-  constructor(public name: string | string[], public autoload: boolean, public afterLoading, public beforeLoading) {
+  moduleName?: string;
+  autoload = false;
+  afterLoading?: callback;
+  beforeLoading?: callback;
+  constructor(pagename: string | string[], afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], ...args: any[]);
+  constructor(public name: string | string[], ...args: any[]) {
+    if (typeof args[0] === 'string') {
+      [this.moduleName, this.afterLoading, this.beforeLoading] = args;
+    } else {
+      [this.afterLoading, this.beforeLoading] = args;
+    }
     if (process.env.NODE_ENV !== 'production') {
       if (typeof name !== 'string' && !(name instanceof Array)) {
         // eslint-disable-next-line quotes
         throw new Error(`'name' should be a string or string[]`);
       }
-      if (typeof afterLoading !== 'function' && afterLoading != null) {
+      if (typeof this.afterLoading !== 'function' && this.afterLoading != null) {
         // eslint-disable-next-line quotes
         throw new Error(`'afterLoading' should be a function`);
       }
-      if (typeof beforeLoading !== 'function' && beforeLoading != null) {
+      if (typeof this.beforeLoading !== 'function' && this.beforeLoading != null) {
         // eslint-disable-next-line quotes
         throw new Error(`'beforeLoading' should be a function`);
       }
@@ -23,15 +37,14 @@ export class Page {
   }
 }
 
-export class NamedPage extends Page {
-  constructor(name: string | string[], afterLoading: (pagename: string) => any = null, beforeLoading = null) {
-    super(name, false, afterLoading, beforeLoading);
-  }
-}
+export class NamedPage extends Page { }
 
 export class AutoloadPage extends Page {
-  constructor(name: string | string[], afterLoading: (pagename: string) => any = null, beforeLoading = null) {
-    super(name, true, afterLoading, beforeLoading);
+  constructor(pagename: string | string[], afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], ...args: any[]) {
+    super(pagename, ...args);
+    this.autoload = true;
   }
 }
 

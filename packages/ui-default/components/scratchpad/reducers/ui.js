@@ -55,16 +55,15 @@ export default function reducer(state = {
   case 'SCRATCHPAD_POST_SUBMIT_PENDING': {
     return {
       ...state,
-      records: {
-        ...state.records,
-        visible: true,
-      },
       isPosting: true,
     };
   }
   case 'SCRATCHPAD_POST_PRETEST_FULFILLED':
   case 'SCRATCHPAD_POST_SUBMIT_FULFILLED': {
     Notification.success(i18n('Submitted.'));
+    if (action.type === 'SCRATCHPAD_POST_SUBMIT_FULFILLED') {
+      state.records.visible = true;
+    }
     return {
       ...state,
       isPosting: false,
