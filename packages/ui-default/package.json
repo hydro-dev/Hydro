@@ -30,6 +30,7 @@
     "@undefined-moe/monaco-yaml": "^2.5.1",
     "ansi_up": "^5.1.0",
     "autoprefixer": "^9.8.8",
+    "browser-update": "^3.3.38",
     "chalk": "^5.0.1",
     "classnames": "^2.3.1",
     "clean-webpack-plugin": "^4.0.0",
