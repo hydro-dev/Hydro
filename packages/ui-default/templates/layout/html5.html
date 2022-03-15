@@ -5,7 +5,7 @@
 {% import "components/noscript_note.html" as noscript_note with context %}
 {% import "components/user.html" as user with context %}
 <!DOCTYPE html>
-<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} nojs" lang="{{ handler.viewLang }}">
+<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} nojs" lang="{{ handler.viewLang }}" data-app="Hydro">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -29,6 +29,7 @@
     body {
       --font-family: "{{ UserContext.fontFamily }}", "Open Sans", "Seravek", "Segoe UI", "Verdana", "PingFang SC", "Hiragino Sans GB", "Lantinghei SC", "Microsoft Yahei", "WenQuanYi Micro Hei", "sans";
       --code-font-family: "{{ UserContext.codeFontFamily }}", "monaco", "Source Code Pro", "Consolas", "Lucida Console", "monospace";
+      --font-ligatures: {{ "normal" if UserContext.codeFontLigatures else "none" }} !important;
     }
   </style>
   {% if process.env.DEV %}
@@ -40,6 +41,14 @@
     <script>
       var _htmlNode = document.documentElement;
       _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
+      try {
+        import('data:text/javascript,');Object.fromEntries([])
+      } catch(e) {
+        const s = document.createElement('script');
+        s.async = false;
+        s.src = "{{ '/polyfill.js' if process.env.DEV else static_url('polyfill-' + global.Hydro.version['ui-default'] + '.js') }}";
+        document.head.appendChild(s);
+      }
     </script>
   {% endif %}
 </head>

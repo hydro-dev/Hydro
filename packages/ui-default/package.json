@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.34.3",
+  "version": "4.34.5",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -30,6 +30,7 @@
     "@undefined-moe/monaco-yaml": "^2.5.1",
     "ansi_up": "^5.1.0",
     "autoprefixer": "^9.8.8",
+    "browser-update": "^3.3.38",
     "chalk": "^5.0.1",
     "classnames": "^2.3.1",
     "clean-webpack-plugin": "^4.0.0",
@@ -72,6 +73,7 @@
     "prismjs": "^1.27.0",
     "prop-types": "^15.8.1",
     "qrcode": "^1.5.0",
+    "queue-microtask": "^1.2.3",
     "raw-loader": "^4.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
