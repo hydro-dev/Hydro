@@ -19,7 +19,6 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
         if (e.message.includes('duplicate')) throw new OpcountExceededError(op, periodSecs, maxOperations);
         throw e;
     }
-    return -1;
 }
 
 bus.once('app/started', () => db.ensureIndexes(
