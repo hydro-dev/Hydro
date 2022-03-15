@@ -8,16 +8,18 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
     const now = new Date().getTime();
     const expireAt = new Date(now - (now % (periodSecs * 1000)) + periodSecs * 1000);
     try {
-        await coll.findOneAndUpdate({
+        const res = await coll.findOneAndUpdate({
             op,
             ident,
             expireAt,
             opcount: { $lt: maxOperations },
-        }, { $inc: { opcount: 1 } }, { upsert: true });
+        }, { $inc: { opcount: 1 } }, { upsert: true, returnDocument: 'after' });
+        return res.value.opcount;
     } catch (e) {
         if (e.message.includes('duplicate')) throw new OpcountExceededError(op, periodSecs, maxOperations);
         throw e;
     }
+    return -1;
 }
 
 bus.once('app/started', () => db.ensureIndexes(
