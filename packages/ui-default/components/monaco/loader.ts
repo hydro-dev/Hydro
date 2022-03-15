@@ -44,10 +44,14 @@ export async function load(features = ['markdown']) {
     }
     s = Date.now();
     console.log('Loading monaco feature:', feat);
-    if (loaders[feat]) await loaders[feat]();
-    else await loaders.external(res.default, feat);
-    console.log('Loaded monaco feature:', feat, 'in', Date.now() - s, 'ms');
-    loaded.push(feat);
+    try {
+      if (loaders[feat]) await loaders[feat]();
+      else await loaders.external(res.default, feat);
+      console.log('Loaded monaco feature:', feat, 'in', Date.now() - s, 'ms');
+      loaded.push(feat);
+    } catch (e) {
+      console.log('Monaco feat', feat, 'failed to load:', e);
+    }
   }
   await res.loadThemePromise;
   return { monaco: res.default, registerAction: res.registerAction };

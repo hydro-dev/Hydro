@@ -83,6 +83,7 @@ export default function (env = {}) {
     context: root(),
     entry: {
       hydro: './entry.js',
+      polyfill: './polyfill.ts',
       'default.theme': './theme/default.js',
     },
     output: {
