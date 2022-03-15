@@ -9,6 +9,7 @@ if [ ! -d "/root/Hydro/" ];then
 	echo "Created."
 else
 	cd /root/Hydro
+	git fetch origin
 	LOCAL=$(git log)
 	REMOTE=$(git log origin/master)
 	if [ "$LOCAL" = "$REMOTE" ];then
@@ -16,7 +17,6 @@ else
 	else
 		echo "Updating..."
 		cd /root/Hydro
-		git fetch origin
 		git pull
 		yarn install
 		yarn build:ui:production
