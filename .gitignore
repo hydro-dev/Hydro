@@ -21,7 +21,6 @@ globalConfig.json
 .yarn/install-state.gz
 .pnp.*
 data/
-docker/.ssh
 # Config Files
 /config.yaml
 /config.json

@@ -1,6 +1,8 @@
+git config --global url."https://hub.fastgit.xyz/".insteadOf "https://github.com/"
+git config protocol.https.allow always
 if [ ! -d "/root/Hydro/" ];then
 	echo "Creating..."
-	git clone git@github.com:Henry-Chen0227/Hydro.git /root/Hydro --recursive
+	git clone https://hub.fastgit.xyz/Henry-Chen0227/Hydro.git /root/Hydro --recursive
 	cd /root/Hydro
 	yarn install
 	yarn build:ui:production
