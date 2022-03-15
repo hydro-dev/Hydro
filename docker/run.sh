@@ -1,5 +1,5 @@
 git config --global url."https://hub.fastgit.xyz/".insteadOf "https://github.com/"
-git config protocol.https.allow always
+# git config protocol.https.allow always
 if [ ! -d "/root/Hydro/" ];then
 	echo "Creating..."
 	git clone https://hub.fastgit.xyz/Henry-Chen0227/Hydro.git /root/Hydro --recursive
@@ -11,11 +11,12 @@ else
 	cd /root/Hydro
 	LOCAL=$(git log)
 	REMOTE=$(git log origin/master)
-	if [ $LOCAL = $REMOTE ];then
+	if [ "$LOCAL" = "$REMOTE" ];then
 		echo "Updated."
 	else
 		echo "Updating..."
 		cd /root/Hydro
+		git fetch origin
 		git pull
 		yarn install
 		yarn build:ui:production
