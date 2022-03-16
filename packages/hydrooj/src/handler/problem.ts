@@ -480,7 +480,7 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
-        this.response.template = 'problem_config.html';
+        this.response.template = 'problem_edit.html';
     }
 
     @route('pid', Types.Name, null, parsePid)

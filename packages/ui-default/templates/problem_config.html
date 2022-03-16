@@ -1,0 +1,19 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div id="problemConfig" class="medium-9 columns">
+    <div class="section side section--problem-sidebar-testdata collapsed">
+      <div class="section__header">
+        <h1 class="section__title">{{_('Judge Config')}}</h1>
+      </div>
+        {{ noscript_note.render() }}
+        <div class="loader-container"><div class="loader"></div></div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/problem_sidebar_testdata.html" %}
+    {% set owner_udoc = udoc %}
+    {% include "partials/problem_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}
