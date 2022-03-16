@@ -90,11 +90,24 @@
   .data-table tr:nth-child(even)
     background-color: #1b1b1b
 
-  &.page--problem_main .col--ac-tried, &.page--problem_category .col--ac-tried
+  .col--ac-tried, .col--ac-tried
     border-left-color: #2b2b2b
 
-  &.page--problem_main .col--status, &.page--problem_category .col--status
+  .col--status, .col--submit-by, .col--lang, .col--case
     border-right-color: #2b2b2b
+
+  .col--role
+    border-left: 1px solid #2b2b2b
+    border-left-color: rgb(43, 43, 43)
+
+  .sidebar-user-profile .user-profile-name
+    color: #bbb
+
+  .section__tab-header-item:hover
+    background-color: #171717
+
+  .sessionlist__item
+    border-bottom-color: #323232
 
   .pager.pager-top
     border-bottom-color: #2b2b2b
@@ -123,13 +136,6 @@
   .select:focus
     border-color: #2960a0
     outline-color: #102f4e
-
-  &.page--record_main .col--status, &.page--record_main .col--submit-by, &.page--record_main .col--lang
-    border-right-color: #2b2b2b
-
-  &.page--home_domain .col--role
-    border-left: 1px solid #2b2b2b
-    border-left-color: rgb(43, 43, 43)
 
   input.textbox, textarea.textbox
     border: 1px solid #323232
@@ -276,13 +282,6 @@
   .section__footer
     border-top-color: #2b2b2b
 
-  &.page--discussion_detail .sidebar-user-profile .user-profile-name, &.page--blog_detail .sidebar-user-profile .user-profile-name
-    color: #bbb
-
-  &.page--record_detail
-    .col--case, .col--status
-      border-right-color: #2b2b2b
-
   .data-table thead>tr
     border-bottom-color: #2b2b2b
 
@@ -354,12 +353,6 @@
   .token.directive.tag .tag
     background: #ffff00
     color: #393a34
-
-  &.page--problem_edit .section__tab-header-item:hover
-    background-color: #171717
-
-  &.page--home_security .sessionlist__item
-    border-bottom-color: #323232
 
   @media only screen and (max-width: 600px) {
     .footer__category {
