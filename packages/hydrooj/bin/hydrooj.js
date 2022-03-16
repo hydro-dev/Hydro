@@ -130,7 +130,7 @@ if (argv.args[0] === 'backup') {
     exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
     const env = `${os.homedir()}/.hydro/env`;
     if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
-    const target = `${process.cwd()}/backup-${new Date().toISOString()}.zip`;
+    const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
     exec('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
     if (!argv.options.dbOnly) {
         exec('zip', ['-r', target, 'file'], { cwd: '/data', stdio: 'inherit' });
