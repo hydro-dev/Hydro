@@ -83,6 +83,9 @@
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.pid|default(pdoc.docId)) }}">
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_config' %} active{% endif %}" href="{{ url('problem_config', pid=pdoc.pid|default(pdoc.docId)) }}">
+        <span class="icon icon-settings"></span> {{ _('Judge Config') }}
+      </a></li>
     {% endif %}
     {% if page_name == 'problem_detail' %}
       <li class="menu__seperator nojs--hide"></li>
@@ -100,14 +103,14 @@
     </ol>
   </div>
 </div>
-{% if page_name != 'problem_detail' and page_name != 'homework_detail_problem' and page_name != 'contest_detail_problem' %}
+{% if page_name not in ['problem_config', 'problem_detail', 'homework_detail_problem', 'contest_detail_problem'] %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Information') }}</h1>
   </div>
   {% include "partials/problem-sidebar-information.html" %}
 </div>
-{% elif page_name != 'contest_detail_problem' %}
+{% elif page_name != 'contest_detail_problem' and page_name != 'problem_config' %}
 <div class="section side nojs--hide">
   <div class="section__header">
     <h1 class="section__title">{{ _('Statistics') }}</h1>
