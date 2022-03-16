@@ -4,7 +4,8 @@ import { isBinaryFile } from 'isbinaryfile';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
-import { sortFiles } from '@hydrooj/utils/lib/utils';
+import { readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/cases';
+import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
     ContestNotFoundError, ContestNotLiveError,
@@ -38,6 +39,9 @@ import { registerResolver, registerValue } from './api';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
+function ensureFile(testdata) {
+    return (file: string) => testdata.filter((i) => i === file)[0];
+}
 
 registerValue('FileInfo', [
     ['_id', 'String!'],
@@ -525,6 +529,7 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 
 export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
+        this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
         this.response.template = 'problem_edit.html';
     }
 
@@ -547,6 +552,30 @@ export class ProblemEditHandler extends ProblemManageHandler {
         let pdoc = await problem.get(domainId, pid);
         pdoc = await problem.edit(domainId, pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
+    }
+}
+
+export class ProblemConfigHandler extends ProblemManageHandler {
+    async get() {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot edit config of a referenced problem.');
+        this.response.body.testdata = sortFiles(this.pdoc.data || []);
+        const configFile = (this.pdoc.data || []).filter((i) => i.name.toLowerCase() === 'config.yaml');
+        this.response.body.config = '';
+        if (configFile.length > 0) {
+            try {
+                this.response.body.config = (await streamToBuffer(
+                    await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`),
+                )).toString();
+            } catch (e) { /* ignore */ }
+        }
+        const testdata = (this.pdoc.data || []).map((i) => i.name);
+        const checkFile = ensureFile(testdata);
+        let autocases = await readCasesFromFiles(testdata, checkFile, {});
+        if (!autocases.count) {
+            autocases = await readSubtasksFromFiles(testdata, checkFile, {}, { subtasks: [] });
+        }
+        this.response.body.autocases = autocases;
+        this.response.template = 'problem_config.html';
     }
 }
 
@@ -831,6 +860,7 @@ export class ProblemCreateHandler extends Handler {
         this.response.template = 'problem_edit.html';
         this.response.body = {
             page_name: 'problem_create',
+            additional_file: [],
         };
     }
 
@@ -892,6 +922,7 @@ export async function apply() {
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
+    Route('problem_config', '/p/:pid/config', ProblemConfigHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
