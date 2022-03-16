@@ -15,6 +15,7 @@ function findOverrideContent(dir: string) {
     if (files.includes('problem.md')) return fs.readFileSync(path.join(dir, 'problem.md'), 'utf8');
     const languages = {};
     files = files.filter((i) => /^problem_[a-zA-Z_]+\.md$/.test(i));
+    if (!files.length) return null;
     for (const file of files) {
         const lang = file.slice(8, -3);
         languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
