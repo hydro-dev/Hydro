@@ -13,5 +13,6 @@
     "search.exclude": {
         "**/.yarn": true,
         "**/.pnp.*": true
-    }
+    },
+    "git.ignoreLimitWarning": true
 }
