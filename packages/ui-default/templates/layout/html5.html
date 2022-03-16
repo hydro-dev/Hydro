@@ -5,7 +5,7 @@
 {% import "components/noscript_note.html" as noscript_note with context %}
 {% import "components/user.html" as user with context %}
 <!DOCTYPE html>
-<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} nojs" lang="{{ handler.viewLang }}" data-app="Hydro">
+<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} theme--{{ (handler.user|default({})).theme|default('default') }} nojs" lang="{{ handler.viewLang }}" data-app="Hydro">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -35,7 +35,7 @@
   {% if process.env.DEV %}
     <link rel="stylesheet" media="all" href="/default.theme.css">
   {% else %}
-    <link rel="stylesheet" media="all" href="{{ static_url((handler.user|default({})).theme|default('default') + '-' + global.Hydro.version['ui-default'] +'.theme.css') }}">
+    <link rel="stylesheet" media="all" href="{{ static_url('default-' + global.Hydro.version['ui-default'] +'.theme.css') }}">
   {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script>
@@ -71,7 +71,7 @@
       <script type="module" src="http://localhost:3000/@vite/client"></script>
       <script type="module" src="http://localhost:3000/entry.js"></script>
     {% else %}
-      <script src="{{ static_url((handler.user|default({})).theme|default('default') + '.theme.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
+      <script src="{{ static_url('default.theme.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
       {% if process.env.DEV %}
         <script type="text/javascript" src="/hydro.js"></script>
       {% else %}

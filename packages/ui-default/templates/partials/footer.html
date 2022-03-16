@@ -61,9 +61,8 @@
           <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-theme">
             <span><span class="icon icon-global"></span> Theme <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-theme">
-            {%- for k in UiContext.themes -%}
-              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', id=k) }}">{{ k }}</a></li>
-            {%- endfor -%}
+              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='light') }}">Light</a></li>
+              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='dark') }}">Dark</a></li>
             </ol>
           </li>
         </ol>
