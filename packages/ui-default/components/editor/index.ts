@@ -172,6 +172,7 @@ export default class Editor extends DOMAttachedObject {
     const { onChange } = this.options;
     await new Promise((resolve) => {
       this.vditor = new Vditor(ele, {
+        ...config,
         upload: {
           multiple: false,
           handler: (files) => {
