@@ -62,6 +62,13 @@ monacoTheme:
   category: preference
   value: vs-light
   family: markdown
+theme:
+  type:
+    light: Light
+    dark: Dark
+  category: preference
+  value: light
+  family: setting_display
 showInvisibleChar:
   type: boolean
   family: highlight
