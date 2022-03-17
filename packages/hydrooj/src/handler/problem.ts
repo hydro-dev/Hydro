@@ -508,8 +508,8 @@ export class ProblemEditHandler extends ProblemManageHandler {
 export class ProblemConfigHandler extends ProblemManageHandler {
     async get() {
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
-        const configFile = this.pdoc.data.filter(i => i.name === 'config.yaml');
-        this.response.body.config = configFile ? storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/config.yaml`) : [];
+        const configFile = (this.pdoc.data || []).filter(i => i.name.toLowerCase() === 'config.yaml');
+        this.response.body.config = configFile ? await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/config.yaml`) : [];
         this.response.template = 'problem_config.html';
     }
 }
