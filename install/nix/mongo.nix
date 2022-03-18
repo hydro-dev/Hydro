@@ -1,6 +1,6 @@
 { stdenv, fetchurl, dpkg, glibc, xz, curl, openssl, gcc-unwrapped, autoPatchelfHook }:
 
-let in stdenv.mkDerivation {
+stdenv.mkDerivation {
   name = "mongodb-5.0.6";
   system = "x86_64-linux";
   src = fetchurl {
