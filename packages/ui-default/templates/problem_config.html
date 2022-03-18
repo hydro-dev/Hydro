@@ -1,13 +1,15 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
-  <div id="problemConfig" class="medium-9 columns">
-    <div class="section side section--problem-sidebar-testdata collapsed">
+  <div class="medium-9 columns">
+    <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{_('Judge Config')}}</h1>
       </div>
+      <div id="ProblemConfig" class="section__body">
         {{ noscript_note.render() }}
         <div class="loader-container"><div class="loader"></div></div>
+      </div>
     </div>
   </div>
   <div class="medium-3 columns">
