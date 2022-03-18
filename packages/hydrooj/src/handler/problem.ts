@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import { statSync } from 'fs-extra';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
-import { sortFiles } from '@hydrooj/utils/lib/utils';
+import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
     ContestNotFoundError, ContestNotLiveError,
@@ -524,7 +524,10 @@ export class ProblemConfigHandler extends ProblemManageHandler {
     async get() {
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
         const configFile = (this.pdoc.data || []).filter(i => i.name.toLowerCase() === 'config.yaml');
-        this.response.body.config = configFile ? await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/config.yaml`) : [];
+        this.response.body.config = configFile.length > 0 ?
+            (await streamToBuffer(
+                await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`))).toString() : '';
+        console.log(this.response.body.config);
         this.response.template = 'problem_config.html';
     }
 }
