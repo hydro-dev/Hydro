@@ -18,7 +18,12 @@ function findOverrideContent(dir: string) {
     if (!files.length) return null;
     for (const file of files) {
         const lang = file.slice(8, -3);
-        languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
+        let content: string | any[] = fs.readFileSync(path.join(dir, file), 'utf8');
+        try {
+            content = JSON.parse(content);
+            if (!(content instanceof Array)) content = JSON.stringify(content);
+        } catch (e) { }
+        languages[lang] = content;
     }
     return JSON.stringify(languages);
 }
