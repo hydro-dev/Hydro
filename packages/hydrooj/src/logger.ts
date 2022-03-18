@@ -39,6 +39,7 @@ export class Logger {
     }
 
     constructor(public name: string) {
+        // eslint-disable-next-line no-constructor-return
         if (name in instances) return instances[name];
         let hash = 0;
         for (let i = 0; i < name.length; i++) {

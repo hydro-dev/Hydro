@@ -527,6 +527,7 @@ Or, with automatically filled invitation code: 或者，这是可以自动填写
 Ordered List: 有序列表
 Original Score: 原始分数
 OS Info: 系统信息
+Over {0} problems: 超过 {0} 道题目
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。

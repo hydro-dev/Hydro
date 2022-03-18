@@ -7,9 +7,7 @@ import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import {
-    builtinLib, builtinModel, builtinScript,
-    lib, model, script,
-    service,
+    lib, model, script, service,
 } from './common';
 
 const argv = cac().parse();
@@ -92,14 +90,14 @@ export async function load() {
     await db.start(opts);
     const storage = require('../service/storage');
     await storage.start();
-    for (const i of builtinLib) require(`../lib/${i}`);
+    require('../lib/index');
     await lib(pending, fail);
     const systemModel = require('../model/system');
     await systemModel.runConfig();
     await service(pending, fail);
-    for (const i of builtinModel) require(`../model/${i}`);
+    require('../model/index');
     await model(pending, fail);
-    for (const i of builtinScript) require(`../script/${i}`);
+    require('../script/index');
     await script(pending, fail, []);
     await bus.parallel('app/started');
     await cli();
