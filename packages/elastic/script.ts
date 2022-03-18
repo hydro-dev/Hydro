@@ -6,7 +6,7 @@ import * as system from 'hydrooj/src/model/system';
 import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
 import * as bus from 'hydrooj/src/service/bus';
 
-const client = new Client({ node: system.get('elasticsearch.url') || 'http://192.168.1.82:9200' });
+const client = new Client({ node: system.get('elastic-search.url') || 'http://127.0.0.1:9200' });
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
 
