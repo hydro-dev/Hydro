@@ -1,4 +1,6 @@
-export default async function loadReactRedux(storeReducer) {
+import { Action, AnyAction, Reducer } from 'redux';
+
+export default async function loadReactRedux<S, A extends Action = AnyAction>(storeReducer: Reducer<S, A>) {
   const React = await import('react');
   const { render, unmountComponentAtNode } = await import('react-dom');
   const { Provider } = await import('react-redux');
