@@ -252,7 +252,8 @@ export default class UOJProvider implements IBasicProvider {
                 }
             }
             if (document.querySelector('tbody').innerHTML.includes('Judging')) continue;
-            const score = +summary.children[3]?.children[0].innerHTML || 0;
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            const score = +summary.children[3]?.children[0]?.innerHTML || 0;
             const status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
             return await end({
                 status,

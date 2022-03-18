@@ -114,15 +114,15 @@ export class ProblemHandler extends Handler {
     async cleanup() {
         if (this.response.template === 'problem_main.html' && this.request.json) {
             const {
-                page, pcount, ppcount, pdocs, psdict, category,
+                page, pcount, pcountRelation, ppcount, pdocs, psdict, category, qs,
             } = this.response.body;
             this.response.body = {
                 title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
                     this.renderHTML('partials/problem_list.html', {
-                        page, ppcount, pcount, pdocs, psdict,
+                        page, ppcount, pcount, pdocs, psdict, qs,
                     }),
-                    this.renderHTML('partials/problem_stat.html', { pcount }),
+                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { category }),
                 ])).map((i) => ({ html: i })),
                 raw: {
@@ -145,21 +145,25 @@ export class ProblemMainHandler extends ProblemHandler {
         const search = global.Hydro.lib.problemSearch;
         let sort: string[];
         let fail = false;
+        let pcountRelation = 'eq';
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (q) category.push(q);
         if (category.length) this.extraTitleContent = category.join(',');
+        let total = 0;
         if (q) {
             if (search) {
-                const result = await search(domainId, q);
-                if (!result.length) fail = true;
+                const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
+                total = result.total;
+                pcountRelation = result.countRelation;
+                if (!result.hits.length) fail = true;
                 if (!query.$and) query.$and = [];
                 query.$and.push({
-                    $or: result.map((i) => {
+                    $or: result.hits.map((i) => {
                         const [did, docId] = i.split('/');
                         return { domainId: did, docId: +docId };
                     }),
                 });
-                sort = result;
+                sort = result.hits;
             } else query.$text = { $search: q };
         }
         await bus.serial('problem/list', query, this);
@@ -168,11 +172,15 @@ export class ProblemMainHandler extends ProblemHandler {
             ? [[], 0, 0]
             : await problem.list(
                 domainId, query,
-                page, system.get('pagination.problem'),
+                sort?.length ? 1 : page, system.get('pagination.problem'),
                 undefined, this.user._id,
             );
+        if (total) {
+            pcount = total;
+            ppcount = Math.ceil(total / system.get('pagination.problem'));
+        }
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
-        if (q) {
+        if (q && page === 1) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
             if (pdoc && problem.canViewBy(pdoc, this.user)) {
                 const count = pdocs.length;
@@ -192,7 +200,14 @@ export class ProblemMainHandler extends ProblemHandler {
             );
         }
         this.response.body = {
-            page, pcount, ppcount, pdocs, psdict, category: category.join(','),
+            page,
+            pcount,
+            ppcount,
+            pcountRelation,
+            pdocs,
+            psdict,
+            category: category.join(','),
+            qs: q ? `q=${encodeURIComponent(q)}` : '',
         };
     }
 
@@ -840,8 +855,8 @@ export class ProblemPrefixListHandler extends Handler {
         const search = global.Hydro.lib.problemSearch;
         if (pdocs.length < 20) {
             if (search) {
-                const result = await search(domainId, prefix, 20 - pdocs.length);
-                const docs = await problem.getMulti(domainId, { docId: { $in: result } }).toArray();
+                const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
+                const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } }).toArray();
                 pdocs.push(...docs);
             }
         }

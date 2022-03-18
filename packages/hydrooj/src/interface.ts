@@ -103,6 +103,13 @@ export interface GDoc {
     uids: number[];
 }
 
+export interface UserPreferenceDoc {
+    _id: ObjectID;
+    filename: string;
+    uid: number;
+    content: string;
+}
+
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export type User = import('./model/user').User;
@@ -579,6 +586,7 @@ export interface Collections {
     'document.status': any;
     'problem': ProblemDoc;
     'user': Udoc;
+    'user.preference': UserPreferenceDoc;
     'vuser': VUdoc;
     'user.group': GDoc;
     'check': any;
@@ -631,10 +639,22 @@ export interface Service {
     storage: typeof import('./service/storage'),
 }
 
-interface GeoIP {
+export interface GeoIP {
     provider: string,
     lookup: (ip: string, locale?: string) => any,
 }
+
+export interface ProblemSearchResponse {
+    hits: string[];
+    total: number;
+    countRelation: 'eq' | 'gte';
+}
+export interface ProblemSearchOptions {
+    limit?: number;
+    skip?: number;
+}
+
+export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
     download: typeof import('./lib/download'),
@@ -655,6 +675,7 @@ export interface Lib extends Record<string, any> {
     validator: typeof import('./lib/validator'),
     template?: any,
     geoip?: GeoIP,
+    problemSearch: ProblemSearch;
 }
 
 export interface UI {

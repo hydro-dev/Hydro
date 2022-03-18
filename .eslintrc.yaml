@@ -1,5 +1,6 @@
 root: true
 extends:
+  - airbnb
   - airbnb-typescript/base
 env:
   jquery: true
@@ -16,6 +17,8 @@ ignorePatterns:
   - public/
   - '*.spec.ts'
 rules:
+  function-call-argument-newline: 0
+  react/function-component-definition: 0
   '@typescript-eslint/dot-notation': 0
   '@typescript-eslint/no-implied-eval': 0
   '@typescript-eslint/no-throw-literal': 0

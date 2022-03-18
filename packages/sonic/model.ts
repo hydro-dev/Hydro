@@ -46,8 +46,13 @@ bus.on('problem/del', async (domainId, docId) => {
     await Promise.all(tasks);
 });
 
-global.Hydro.lib.problemSearch = async (domainId: string, query: string, limit = system.get('pagination.problem')) => {
+global.Hydro.lib.problemSearch = async (domainId, query, opts) => {
+    const limit = opts?.limit || system.get('pagination.problem');
     const ids = await sonic.query('problem', `${domainId}@title`, query, { limit });
     if (limit - ids.length > 0) ids.push(...await sonic.query('problem', `${domainId}@content`, query, { limit: limit - ids.length }));
-    return ids;
+    return {
+        countRelation: ids.length >= limit ? 'gte' : 'eq',
+        total: ids.length,
+        hits: ids,
+    };
 };

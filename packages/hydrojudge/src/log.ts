@@ -68,6 +68,7 @@ export class Logger {
     public stream: NodeJS.WritableStream = process.stderr;
 
     constructor(public name: string, private showDiff = false) {
+        // eslint-disable-next-line no-constructor-return
         if (name in instances) return instances[name];
         let hash = 0;
         for (let i = 0; i < name.length; i++) {

@@ -9,8 +9,7 @@ import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import {
-    builtinHandler, builtinLib, builtinModel,
-    builtinScript, handler, lib, locale, model, script, service, setting, template,
+    handler, lib, locale, model, script, service, setting, template,
 } from './common';
 
 const logger = new Logger('worker');
@@ -45,15 +44,7 @@ export async function load() {
     const storage = require('../service/storage');
     await storage.start();
     if (detail) logger.info('finish: storage.connect');
-    for (const i of builtinLib) {
-        let t;
-        try {
-            t = require.resolve(`../lib/${i}`);
-        } catch (e) {
-            t = require.resolve(`@hydrooj/utils/lib/${i}`);
-        }
-        require(t);
-    }
+    require('../lib/index');
     if (detail) logger.info('finish: lib.builtin');
     await lib(pending, fail);
     if (detail) logger.info('finish: lib.extra');
@@ -64,9 +55,9 @@ export async function load() {
     if (detail) logger.info('finish: server');
     await service(pending, fail);
     if (detail) logger.info('finish: service.extra');
-    for (const i of builtinModel) require(`../model/${i}`);
+    require('../model/index');
     if (detail) logger.info('finish: model.builtin');
-    for (const i of builtinHandler) require(`../handler/${i}`);
+    require('../handler/index');
     if (detail) logger.info('finish: handler.builtin');
     await model(pending, fail);
     if (detail) logger.info('finish: model.extra');
@@ -79,7 +70,7 @@ export async function load() {
     if (detail) logger.info('finish: handler.apply');
     const notfound = require('../handler/notfound');
     await notfound.apply();
-    for (const i of builtinScript) require(`../script/${i}`);
+    require('../script/index');
     if (detail) logger.info('finish: script.builtin');
     await script(pending, fail, active);
     if (detail) logger.info('finish: script.extra');

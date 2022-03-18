@@ -1,3 +1,4 @@
+/* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
 import os from 'os';
@@ -9,31 +10,6 @@ import { Logger } from '../logger';
 import * as bus from '../service/bus';
 
 const logger = new Logger('common');
-
-export const builtinLib = [
-    'jwt', 'download', 'i18n', 'mail', 'useragent',
-    'crypto', 'misc', 'paginate', 'hash.hydro', 'rank',
-    'validator', 'ui', 'testdataConfig', 'difficulty', 'content',
-    'avatar',
-];
-
-export const builtinModel = [
-    'builtin', 'document', 'domain', 'blacklist', 'opcount',
-    'setting', 'token', 'user', 'storage', 'problem',
-    'record', 'contest', 'message', 'solution', 'training',
-    'discussion', 'system', 'oplog', 'blog',
-];
-
-export const builtinHandler = [
-    'home', 'problem', 'record', 'judge', 'user',
-    'contest', 'training', 'discussion', 'manage', 'import',
-    'misc', 'homework', 'domain', 'status', 'api', 'blog',
-];
-
-export const builtinScript = [
-    'rating', 'problemStat', 'blacklist', 'deleteUser', 'storageUsage',
-    'checkUpdate',
-];
 
 function getFiles(folder: string, base = ''): string[] {
     const files = [];
@@ -53,7 +29,7 @@ export async function handler(pending: string[], fail: string[]) {
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Handler init: %s', i);
-                eval('require')(p);
+                require(p);
             } catch (e) {
                 fail.push(i);
                 logger.error('Handler Load Fail: %s', i);
@@ -136,7 +112,7 @@ export async function template(pending: string[], fail: string[]) {
             try {
                 const files = getFiles(p);
                 for (const file of files) {
-                    if (file.endsWith('.tsx')) global.Hydro.ui.template[file] = eval('require')(path.resolve(p, file));
+                    if (file.endsWith('.tsx')) global.Hydro.ui.template[file] = require(path.resolve(p, file));
                     global.Hydro.ui.template[file] = await fs.readFile(path.resolve(p, file), 'utf-8');
                 }
                 logger.info('Template init: %s', i);
@@ -157,7 +133,7 @@ export async function model(pending: string[], fail: string[]) {
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Model init: %s', i);
-                eval('require')(p);
+                require(p);
             } catch (e) {
                 fail.push(i);
                 logger.error('Model Load Fail: %s', i);
@@ -175,7 +151,7 @@ export async function lib(pending: string[], fail: string[]) {
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Lib init: %s', i);
-                eval('require')(p);
+                require(p);
             } catch (e) {
                 fail.push(i);
                 logger.error('Lib Load Fail: %s', i);
@@ -193,7 +169,7 @@ export async function service(pending: string[], fail: string[]) {
         if (fs.existsSync(p) && !fail.includes(i)) {
             try {
                 logger.info('Service init: %s', i);
-                eval('require')(p);
+                require(p);
             } catch (e) {
                 fail.push(i);
                 logger.error('Service Load Fail: %s', i);
@@ -215,7 +191,7 @@ export async function script(pending: string[], fail: string[], active: string[]
         if (await fs.pathExists(p) && !fail.includes(i)) {
             try {
                 logger.info('Script init: %s', i);
-                eval('require')(p);
+                require(p);
             } catch (e) {
                 fail.push(i);
                 logger.error('Script Load Fail: %s', i);
