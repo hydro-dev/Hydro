@@ -172,7 +172,7 @@ export class ProblemMainHandler extends ProblemHandler {
             ? [[], 0, 0]
             : await problem.list(
                 domainId, query,
-                sort.length ? 1 : page, system.get('pagination.problem'),
+                sort?.length ? 1 : page, system.get('pagination.problem'),
                 undefined, this.user._id,
             );
         if (total) {
