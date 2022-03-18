@@ -91,7 +91,19 @@
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
         {% endif %}
-        {{ pdoc.content|content(handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
+        <div class="section__tab-container nojs--hide">
+          <div class="section__tab-header-wrapper">
+            <ul class="section__tab-header">
+              <li class="section__tab-header-item {{'tab--active' if not handler.request.query.lang or handler.request.query.lang == _('__id')}}" data-lang="{{ _('__id') }}">{{ _('__langname') }}</li>
+              {% for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range %}
+                {% if k != handler.user.viewLang %}
+                  <li class="section__tab-header-item {{'tab--active' if handler.request.query.lang == k }}" data-lang="{{ k }}">{{ v }}</li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {{ pdoc.content|content(handler.request.query.lang or handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
         </div>
       </div></div>
     </div>
