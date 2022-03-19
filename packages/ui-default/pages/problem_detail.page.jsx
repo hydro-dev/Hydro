@@ -265,9 +265,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     leaveScratchpadMode();
     ev.preventDefault();
   });
-  $('[data-lang]').on('click', (ev) => {
-    window.location.search = `?lang=${ $(ev.currentTarget).attr('data-lang')}`;
-  });
 
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();

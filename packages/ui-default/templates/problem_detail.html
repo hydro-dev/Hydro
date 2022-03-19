@@ -75,6 +75,19 @@
         <div class="section__header non-scratchpad--hide">
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
+        {% if pdoc.content|contentLang %}
+        <div class="section__tab-container nojs--hide">
+          <div class="section__tab-header-wrapper">
+            <ul class="section__tab-header">
+              {% for k in pdoc.content|contentLang %}
+              <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+                {{ model.setting.SETTINGS_BY_KEY['viewLang'].range[k] }}
+              </a>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
         <div class="section__body typo">
         {% if not pdoc.data.length and not pdoc.reference %}
           <blockquote class="warn">
@@ -90,19 +103,6 @@
           <blockquote class="note">
             <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
           </blockquote>
-        {% endif %}
-        {% if pdoc.content|contentLang %}
-        <div class="section__tab-container nojs--hide">
-          <div class="section__tab-header-wrapper">
-            <ul class="section__tab-header">
-              {% for k in pdoc.content|contentLang %}
-              <li class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang) == k }}" data-lang="{{ k }}">
-                {{ model.setting.SETTINGS_BY_KEY['viewLang'].range[k] }}
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
         {% endif %}
         {{ pdoc.content|content(handler.request.query.lang or handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
         </div>
