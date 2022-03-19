@@ -75,7 +75,7 @@
         <div class="section__header non-scratchpad--hide">
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
-        {% if pdoc.content|contentLang|length %}
+        {% if pdoc.content|contentLang|length > 1 %}
         <div class="section__tab-container">
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header flex-row">
