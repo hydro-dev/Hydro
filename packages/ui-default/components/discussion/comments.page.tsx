@@ -6,7 +6,6 @@ import { Popover } from '@blueprintjs/core';
 import { AutoloadPage } from 'vj/misc/Page';
 import CommentBox from 'vj/components/discussion/CommentBox';
 import { ConfirmDialog } from 'vj/components/dialog';
-import Notification from 'vj/components/notification';
 
 import delay from 'vj/utils/delay';
 import { slideDown, slideUp } from 'vj/utils/slide';
