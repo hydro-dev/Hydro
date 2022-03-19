@@ -56,7 +56,7 @@ const nameMap = {
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
-    dataDir,
+    dataDir, rerun = false,
 }, report: Function) {
     const src = mysql.createConnection({
         host,
@@ -65,7 +65,9 @@ export async function run({
         password,
         database: name,
     });
-    await new Promise((resolve, reject) => src.connect((err) => (err ? reject(err) : resolve(null))));
+    await new Promise((resolve, reject) => {
+        src.connect((err) => (err ? reject(err) : resolve(null)));
+    });
     const query = (q: string | mysql.Query) => new Promise<[values: any[], fields: mysql.FieldInfo[]]>((res, rej) => {
         src.query(q, (err, val, fields) => {
             if (err) rej(err);
@@ -151,23 +153,29 @@ export async function run({
     for (let pageId = 0; pageId < pageCount; pageId++) {
         const [pdocs] = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
         for (const pdoc of pdocs) {
-            const pid = await problem.add(
-                domainId, `P${pdoc.problem_id}`,
-                pdoc.title, buildContent({
-                    description: pdoc.description,
-                    input: pdoc.input,
-                    output: pdoc.output,
-                    samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
-                    hint: pdoc.hint,
-                    source: pdoc.source,
-                }, 'html'),
-                1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i), pdoc.defunct === 'Y',
-            );
-            pidMap[pdoc.problem_id] = pid;
+            if (rerun) {
+                const opdoc = await problem.get(domainId, `P${pdoc.problem_id}`);
+                if (opdoc) pidMap[pdoc.problem_id] = opdoc.docId;
+            }
+            if (!pidMap[pdoc.problem_id]) {
+                const pid = await problem.add(
+                    domainId, `P${pdoc.problem_id}`,
+                    pdoc.title, buildContent({
+                        description: pdoc.description,
+                        input: pdoc.input,
+                        output: pdoc.output,
+                        samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
+                        hint: pdoc.hint,
+                        source: pdoc.source,
+                    }, 'html'),
+                    1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i), pdoc.defunct === 'Y',
+                );
+                pidMap[pdoc.problem_id] = pid;
+            }
             const [cdoc] = await query(`SELECT * FROM \`privilege\` WHERE \`rightstr\` = 'p${pdoc.problem_id}'`);
             const maintainer = [];
             for (let i = 1; i < cdoc.length; i++) maintainer.push(uidMap[cdoc[i].user_id]);
-            await problem.edit(domainId, pid, {
+            await problem.edit(domainId, pidMap[pdoc.problem_id], {
                 nAccept: 0,
                 nSubmit: pdoc.submit,
                 config: `time: ${pdoc.time_limit}s\nmemory: ${pdoc.memory_limit}m`,
@@ -264,6 +272,7 @@ export async function run({
 
     src.end();
 
+    if (!dataDir) return true;
     if (dataDir.endsWith('/')) dataDir = dataDir.slice(0, -1);
     const files = await fs.readdir(dataDir, { withFileTypes: true });
     for (const file of files) {

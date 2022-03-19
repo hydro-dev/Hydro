@@ -125,7 +125,9 @@ const acm = buildContestRule({
         const data = await document.collStatus.aggregate([
             {
                 $match: {
-                    domainId: tdoc.domainId, docType: document.TYPE_CONTEST, docId: tdoc.docId,
+                    domainId: tdoc.domainId,
+                    docType: document.TYPE_CONTEST,
+                    docId: tdoc.docId,
                     accept: { $gte: 1 },
                     detail: { $elemMatch: { status: STATUS.STATUS_ACCEPTED } },
                 },
@@ -230,9 +232,10 @@ const oi = buildContestRule({
         const psdict = {};
         const first = {};
         for (const pid of tdoc.pids) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define, no-await-in-loop
             const [data] = await getMultiStatus(tdoc.domainId, {
-                docType: document.TYPE_CONTEST, docId: tdoc.docId,
+                docType: document.TYPE_CONTEST,
+                docId: tdoc.docId,
                 [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
             }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
             first[pid] = data ? data.detail[pid].rid.generationTime : new ObjectID().generationTime;
