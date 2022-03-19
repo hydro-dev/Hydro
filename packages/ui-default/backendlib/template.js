@@ -96,6 +96,18 @@ class Nunjucks extends nunjucks.Environment {
       if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
       return ensureTag(html ? xss.process(s) : markdown.render(s));
     });
+    this.addFilter('contentLang', (content) => {
+      let s = '';
+      try {
+        s = JSON.parse(content);
+      } catch {
+        s = content;
+      }
+      if (typeof s === 'object' && !(s instanceof Array)) {
+        return Object.keys(s);
+      }
+      return [];
+    });
     this.addFilter('log', (self) => {
       console.log(self);
       return self;
