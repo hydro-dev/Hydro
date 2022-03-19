@@ -106,7 +106,7 @@ class Nunjucks extends nunjucks.Environment {
       if (typeof s === 'object' && !(s instanceof Array)) {
         return Object.keys(s);
       }
-      return '';
+      return [];
     });
     this.addFilter('log', (self) => {
       console.log(self);
