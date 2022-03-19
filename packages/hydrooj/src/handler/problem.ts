@@ -362,10 +362,11 @@ export class ProblemDetailHandler extends ProblemHandler {
     }
 
     @query('tid', Types.ObjectID, true)
+    @query('pjax', Types.Boolean, true)
     async get(...args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        if (!this.request.json) {
+        if (!this.request.json || args[2]) {
             if (args[1]) {
                 this.response.body.pdoc.content = this.response.body.pdoc.content
                     .replace(/\(file:\/\/(.+?)\)/g, (str) => {
@@ -387,6 +388,16 @@ export class ProblemDetailHandler extends ProblemHandler {
                 ? 'homework_detail_problem'
                 : 'contest_detail_problem'
             : 'problem_detail';
+        if (args[2]) {
+            const data = { pdoc: this.pdoc, tdoc: this.tdoc };
+            this.response.body = {
+                title: this.renderTitle(this.response.body.page_name),
+                fragments: [
+                    { html: await this.renderHTML('partials/problem_description.html', data) },
+                ],
+                raw: data,
+            };
+        }
         if (!this.response.body.tdoc) {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);

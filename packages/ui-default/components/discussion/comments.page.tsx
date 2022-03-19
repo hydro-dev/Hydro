@@ -254,10 +254,15 @@ const commentsPage = new AutoloadPage('commentsPage', () => {
   $(document).on('click', '[data-op="delete"][data-type="comment"]', onCommentClickDeleteComment);
   $(document).on('click', '[data-op="delete"][data-type="reply"]', onCommentClickDeleteReply);
 
+  const canUseReaction = $('[data-op="react"]').length > 0;
   $('[data-op="react"]').each((i, e) => {
     ReactDOM.render(<Reaction payload={$(e).data('form')} ele={$(e).closest('.media__body').find('.reactions')} />, e);
   });
   $(document).on('click', '.reaction', async (e) => {
+    if (!canUseReaction) {
+      (window as any).showSignInDialog();
+      return;
+    }
     const target = $(e.currentTarget);
     const res = await request.post('', {
       operation: 'reaction',

@@ -1,0 +1,18 @@
+<div class="section__body typo" data-fragment-id="problem-description">
+  {% if not pdoc.data.length and not pdoc.reference %}
+    <blockquote class="warn">
+      <p>{{ _('No testdata at current.') }}</p>
+    </blockquote>
+  {% endif %}
+  {% if typeof(pdoc.config) == 'string' %}
+    <blockquote class="warn">
+      <p>{{ pdoc.config }}</p>
+    </blockquote>
+  {% endif %}
+  {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
+    <blockquote class="note">
+      <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
+    </blockquote>
+  {% endif %}
+  {{ pdoc.content|content(handler.request.query.lang or handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
+</div>

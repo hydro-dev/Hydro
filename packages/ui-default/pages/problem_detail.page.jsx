@@ -4,6 +4,7 @@ import { NamedPage } from 'vj/misc/Page';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
+import pjax from 'vj/utils/pjax';
 
 class ProblemPageExtender {
   constructor() {
@@ -266,6 +267,14 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     ev.preventDefault();
   });
 
+  $(document).on('click', '[data-lang]', (ev) => {
+    ev.preventDefault();
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', ev.currentTarget.dataset.lang);
+    $('[data-lang]').removeClass('tab--active');
+    pjax.request({ url: url.toString() });
+    $(ev.currentTarget).addClass('tab--active');
+  });
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();
     $('span.tags').css('display', 'inline-block');
