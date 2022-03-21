@@ -236,16 +236,16 @@ const page = new NamedPage(['problem_main', 'problem_category'], () => {
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   parseCategorySelection();
-  $('[name="leave-edit-mode"]').on('click', () => {
+  $(document).on('click', '[name="leave-edit-mode"]', () => {
     doc.className = doc.className.replace(' edit-mode', ' display-mode');
   });
-  $('[name="enter-edit-mode"]').on('click', () => {
+  $(document).on('click', '[name="enter-edit-mode"]', () => {
     doc.className = doc.className.replace(' display-mode', ' edit-mode');
   });
   ['delete', 'hide', 'unhide', 'copy'].forEach((op) => {
-    $(`[name="${op}_selected_problems"]`).on('click', () => handleOperation(op));
+    $(document).on('click', `[name="${op}_selected_problems"]`, () => handleOperation(op));
   });
-  $('[name="download_selected_problems"]').on('click', handleDownload);
+  $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {
     $('.section__table-container').children(1).toggleClass('hide-problem-tag');
