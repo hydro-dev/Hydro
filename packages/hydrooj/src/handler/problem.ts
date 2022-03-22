@@ -749,7 +749,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(domainId, psid);
-        if (!(!this.user.own(psrdoc)
+        if (!(this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
             throw new PermissionError(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF);
         }
@@ -762,7 +762,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postDeleteReply(domainId: string, psid: ObjectID, psrid: ObjectID) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (!(!this.user.own(psrdoc)
+        if (!(this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF))) {
             this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
         }
