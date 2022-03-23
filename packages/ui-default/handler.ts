@@ -7,6 +7,7 @@ import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
 import { PERM, PRIV } from 'hydrooj/src/model/builtin';
 import esbuild from 'esbuild';
+import { tmpdir } from 'os';
 import markdown from './backendlib/markdown';
 
 const {
@@ -19,6 +20,7 @@ const build = esbuild.buildSync({
   format: 'iife',
   entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
   bundle: true,
+  outdir: tmpdir(),
   splitting: false,
   write: false,
   minify: !process.env.DEV,
