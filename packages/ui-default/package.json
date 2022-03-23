@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.34.19",
+  "version": "4.34.20",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -122,6 +122,7 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
+    "p-queue": "^7.2.0",
     "react-query": "^3.34.16",
     "streamsaver": "^2.0.6",
     "xss": "^1.0.11"
