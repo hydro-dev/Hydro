@@ -106,7 +106,10 @@ export const judge = async (ctx: Context) => {
             return compile(ctx.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
         })(),
         (() => {
-            const copyIn = { 'testlib.h': { src: testlibSrc } };
+            const copyIn = {
+                'testlib.h': { src: testlibSrc },
+                user_code: { content: ctx.code },
+            };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
