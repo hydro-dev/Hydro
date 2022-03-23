@@ -137,6 +137,7 @@ export class ContestDetailHandler extends Handler {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
+        await record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' });
         await TaskModel.deleteMany({
             type: 'schedule', subType: 'contest', domainId, tid,
         });
