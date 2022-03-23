@@ -558,6 +558,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
+            if (this.pdoc.reference) throw new BadRequestError('Cannot download testdata.');
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
             if (this.tdoc && !contest.isDone(this.tdoc)) throw new ContestNotEndedError(this.tdoc.domainId, this.tdoc.docId);
         }
