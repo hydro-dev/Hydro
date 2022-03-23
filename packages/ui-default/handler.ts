@@ -1,21 +1,31 @@
 /* eslint-disable no-return-await */
 /* eslint-disable camelcase */
 import crypto from 'crypto';
-import { readFileSync } from 'fs-extra';
 import { join } from 'path';
 import { ObjectID } from 'mongodb';
 import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
 import { PERM, PRIV } from 'hydrooj/src/model/builtin';
+import esbuild from 'esbuild';
 import markdown from './backendlib/markdown';
 
 const {
   system, user, setting, problem, contest,
 } = global.Hydro.model;
 
-const pages = Object.keys(global.Hydro.ui.manifest)
-  .filter((file) => file.endsWith('.page.js'))
-  .map((i) => readFileSync(join(global.Hydro.ui.manifest[i], i), 'utf-8'));
+const pageFiles = Object.keys(global.Hydro.ui.manifest)
+  .filter((file) => file.endsWith('.page.js') || file.endsWith('.page.ts'));
+const build = esbuild.buildSync({
+  format: 'iife',
+  entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
+  bundle: true,
+  splitting: false,
+  write: false,
+  minify: !process.env.DEV,
+});
+if (build.errors.length) console.error(build.errors);
+if (build.warnings.length) console.warn(build.warnings);
+const pages = build.outputFiles.map((i) => i.text);
 
 let constant = '';
 let hash = '';
