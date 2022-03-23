@@ -25,7 +25,7 @@ const RE0: Re0[] = [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
             (a) => `${a[1] + a[2]}.out`.replace(/input/g, 'output'),
-            (a) => `${a[1] + a[2]}.txt`.replace(/input/g, 'output'),
+            (a) => (a[1].includes('input') ? `${a[1] + a[2]}.txt`.replace(/input/g, 'output') : null),
         ],
         id: (a) => +a[2],
     },
@@ -57,7 +57,7 @@ async function read0(folder: string, files: string[], checkFile, cfg) {
                 for (const func of REG.output) {
                     if (cfg.noOutputFile) c.output = '/dev/null';
                     else c.output = func(data);
-                    if (c.output === '/dev/null' || fs.existsSync(path.resolve(folder, c.output))) {
+                    if (c.output && (c.output === '/dev/null' || fs.existsSync(path.resolve(folder, c.output)))) {
                         cases.push(c);
                         break;
                     }
