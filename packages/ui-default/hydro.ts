@@ -66,6 +66,7 @@ async function load() {
     } catch (e) {
       Notification.warn(`Failed to call '${type}Loading' of ${page.name}`);
       console.error(`Failed to call '${type}Loading' of ${page.name}\n${e.stack}`);
+      console.error(e);
     }
     if (process.env.NODE_ENV !== 'production') {
       console.time(`${page.name}: ${type}Loading`);

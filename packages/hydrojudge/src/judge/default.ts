@@ -154,7 +154,7 @@ export const judge = async (ctx: Context) => {
             if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
                 return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
-            const copyIn = {};
+            const copyIn = { user_code: { content: ctx.code } };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }

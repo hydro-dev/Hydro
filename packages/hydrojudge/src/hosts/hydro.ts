@@ -180,7 +180,7 @@ export default class Hydro {
     async init() {
         await this.setCookie(this.config.cookie || '');
         await this.ensureLogin();
-        setInterval(() => { this.axios.get('judge/noop'); }, 30000000);
+        setInterval(() => { this.axios.get(''); }, 30000000); // Cookie refresh only
     }
 
     async cacheOpen(source: string, files: any[], next?) {
