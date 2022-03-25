@@ -486,14 +486,14 @@ const cf = buildContestRule({
             if (isExport) {
                 columns.push(
                     {
-                        type: 'problem_flag',
+                        type: 'problem',
                         value: '{0} {1}'.format(String.fromCharCode(64 + i), pdict[pid].title),
                     },
                 );
             } else {
                 columns.push({
-                    type: 'problem_detail',
-                    value: '#{0} ({1})'.format(i, tdoc.fullScore[i - 1]),
+                    type: 'problem',
+                    value: '#{0} ({1})'.format(65 + i - 1, tdoc.fullScore[i - 1]),
                     raw: pid,
                 });
             }
