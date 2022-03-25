@@ -133,9 +133,9 @@ function judgeSubtask(subtask: SubTask, sid: string) {
     };
 }
 
-export const judge = async (ctx: Context) => {
+export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
-    ctx.next({ status: STATUS.STATUS_COMPILING });
+    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
     if (ctx.config.template) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];
@@ -167,6 +167,7 @@ export const judge = async (ctx: Context) => {
         })(),
     ]);
     ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
+    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = 0;

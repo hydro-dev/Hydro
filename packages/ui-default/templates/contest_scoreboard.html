@@ -2,7 +2,7 @@
 {% extends "layout/basic.html" %}
 {% set type = 'homework' if tdoc.docType == 60 else 'contest' %}
 {% block content %}
-<div class="row"><div class="medium-12 columns">
+<div class="row"><div class="medium-12 columns scoreboard--{{ tdoc.rule }}">
   <div class="section visible">
     <div class="section__header">
       <a class="button" target="_blank" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext='html') }}">
@@ -30,10 +30,12 @@
           <tr>
           {%- for column in rows[0] -%}
             <th class="col--{{ column.type }}">
-            {% if column.type == 'problem_detail' %}
-              <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">{{ column.value }}</a>
+            {% if column.type == 'problem' %}
+              <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">
+                {{ column.value }}<br />{{ pdict[column.raw].nAccept }}/{{ pdict[column.raw].nSubmit }}
+              </a>
             {% else %}
-              {{ column.value }}
+              {{ column.value|replaceBr|safe }}
             {% endif %}
             </th>
           {%- endfor -%}
@@ -49,7 +51,7 @@
                 {% set canView = canViewAll or handler.user._id == column.raw %}
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
-                <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}">
+                <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}" data-tooltip="{{ column.hover }}">
                   <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|replaceBr|safe }}</span>
                 </a>
               {% elif column.type == 'records' %}

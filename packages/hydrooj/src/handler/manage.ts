@@ -1,8 +1,9 @@
+import { exec } from 'child_process';
 import { inspect } from 'util';
 import Ajv from 'ajv';
 import * as yaml from 'js-yaml';
 import * as check from '../check';
-import { ValidationError } from '../error';
+import { BadRequestError, ValidationError } from '../error';
 import {
     isEmail, isPassword, isUname, validate,
 } from '../lib/validator';
@@ -85,6 +86,12 @@ class SystemCheckConnHandler extends ConnectionHandler {
 class SystemDashboardHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_dashboard.html';
+    }
+
+    async postRestart() {
+        if (!process.env.pm_cwd) throw new BadRequestError('Not launched by pm2');
+        exec(`pm2 reload "${process.env.name}"`);
+        this.back();
     }
 }
 

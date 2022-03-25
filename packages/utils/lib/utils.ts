@@ -305,13 +305,14 @@ function _digit2(number: number) {
     return number < 10 ? `0${number}` : number.toString();
 }
 
-export function formatSeconds(_seconds: string | number = '0') {
+export function formatSeconds(_seconds: string | number = '0', showSeconds = true) {
     const seconds = +_seconds;
-    return '{0}:{1}:{2}'.format(
-        _digit2(Math.floor(seconds / 3600)),
+    let res = '{0}:{1}'.format(
+        showSeconds ? _digit2(Math.floor(seconds / 3600)) : Math.floor(seconds / 3600),
         _digit2(Math.floor((seconds % 3600) / 60)),
-        _digit2(seconds % 60),
     );
+    if (showSeconds) res += `:${_digit2(seconds % 60)}`;
+    return res;
 }
 
 export function changeErrorType(err: any, Err: any) {

@@ -40,8 +40,9 @@ if (argv._[0] === 'backup') {
     const url = buildUrl(JSON.parse(dbConfig));
     const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
     exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
-    const env = `${os.homedir()}/.hydro/env`;
-    if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
+    // Do not backup .env & config.json as they are all related to local installation
+    const env = `${os.homedir()}/.hydro/addon.json`;
+    if (fs.existsSync(env)) fs.copySync(env, `${dir}/addon.json`);
     const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
     exec('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
     if (!argv.dbOnly) {
@@ -66,8 +67,8 @@ if (argv._[0] === 'restore') {
         exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
         exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });
     }
-    if (fs.existsSync(`${dir}/env`)) {
-        fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
+    if (fs.existsSync(`${dir}/addon.json`)) {
+        fs.copySync(`${dir}/addon.json`, `${os.homedir()}/.hydro/addon.json`, { overwrite: true });
     }
     fs.removeSync(dir);
     console.log('Successfully restored.');

@@ -23,6 +23,9 @@ const build = esbuild.buildSync({
   outdir: tmpdir(),
   splitting: false,
   write: false,
+  target: [
+    'chrome60',
+  ],
   minify: !process.env.DEV,
 });
 if (build.errors.length) console.error(build.errors);

@@ -1,23 +1,32 @@
 .page--contest_scoreboard
   .col--rank
-    width: rem(60px)
+    width: rem(45px)
+    text-align: center
     border-right: 1px solid $table-border-color
 
   .col--user
     min-width: rem(150px)
 
-  .col--total_score, .col--total_time_str, .col--solved_problems
+  .col--solved, .col--time
+    width: rem(70px)
+    text-align: center
+
+  .col--total_score
     width: rem(100px)
     text-align: center
 
-  .col--problem_detail
+  .col--problem
     width: rem(100px)
     border-left: 1px solid $table-border-color
     text-align: center
+
+  .scoreboard--acm
+    .col--problem
+      width: rem(70px) !important
 
   +mobile()
     .col--user
       width: auto
 
-    .col--problem_detail
+    .col--problem
       display: none
