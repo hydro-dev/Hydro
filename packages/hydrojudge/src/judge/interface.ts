@@ -46,6 +46,7 @@ export interface RuntimeContext {
     queue?: PQueue;
     errored?: boolean;
     rerun?: number;
+    analysis?: boolean;
     failed?: Record<string, boolean>;
 
     execute?: Execute;

@@ -62,9 +62,11 @@ int main(){
     return parseInt(a[a.length - 2], 10);
 }
 
+const stackPromise = stackSize();
+
 export async function get() {
     const info = await _get();
     // @ts-ignore
-    info.stack = await stackSize();
+    info.stack = await stackPromise;
     return info;
 }

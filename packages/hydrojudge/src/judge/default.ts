@@ -82,22 +82,6 @@ function judgeCase(c: Case, sid: string) {
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
-            const langConfig = ctx.getLang(ctx.lang);
-            if (langConfig.runtimeErrorAnalysis && !this.runtimeErrorAnalysis) {
-                this.runtimeErrorAnalysis = true;
-                run(langConfig.runtimeErrorAnalysis, {
-                    copyIn: {
-                        input: { src: stdin },
-                        [langConfig.code_file || 'foo']: { content: ctx.code },
-                        compile: { content: langConfig.compile },
-                        execute: { content: langConfig.execute },
-                    },
-                    time: 5000,
-                    memory: 256,
-                })
-                    .then((r) => ctx.next({ compiler_text: r.stdout.toString().substring(0, 1024) }))
-                    .catch((e) => console.error(e));
-            }
         }
         await Promise.all(
             Object.values(res.fileIds).map((id) => del(id)),
@@ -106,6 +90,25 @@ function judgeCase(c: Case, sid: string) {
             ctx.rerun--;
             await runner(ctx, ctxSubtask);
             return;
+        }
+        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+            const langConfig = ctx.getLang(ctx.lang);
+            if (langConfig.analysis && !ctx.analysis) {
+                ctx.analysis = true;
+                run(langConfig.analysis, {
+                    copyIn: {
+                        input: { src: stdin },
+                        [langConfig.code_file || 'foo']: { content: ctx.code },
+                        compile: { content: langConfig.compile },
+                        execute: { content: langConfig.execute },
+                    },
+                    time: 5000,
+                    memory: 256,
+                }).then((r) => {
+                    ctx.next({ compiler_text: r.stdout.toString().substring(0, 1024) });
+                    if (process.env.DEV) console.log(r);
+                });
+            }
         }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
