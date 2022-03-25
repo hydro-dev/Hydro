@@ -71,7 +71,7 @@ function judgeCase(c: Case) {
                 message,
             },
             progress: Math.floor((c.id * 100) / ctx.config.count),
-        });
+        }, c.id);
     };
 }
 
@@ -95,8 +95,8 @@ function judgeSubtask(subtask: SubTask) {
     };
 }
 
-export const judge = async (ctx: Context) => {
-    ctx.next({ status: STATUS.STATUS_COMPILING });
+export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
+    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (() => {
             const copyIn = {};
@@ -121,6 +121,7 @@ export const judge = async (ctx: Context) => {
         })(),
     ]);
     ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
+    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = ctx.total_score = ctx.total_memory_usage_kb = ctx.total_time_usage_ms = 0;
