@@ -66,7 +66,7 @@ function handleNavbar() {
   let fromHide = false;
   if ($(document).width() <= 600) {
     for (const ele of menu.children()) {
-      ele.insertBefore(trigger);
+      ele.insertBefore(trigger, null);
     }
     trigger.hide();
     return;
@@ -92,7 +92,7 @@ function handleNavbar() {
       const ele = menu.children(0);
       $(ele).addClass('nav__list-item').removeClass('menu__item');
       $(ele).children('a').addClass('nav__item').removeClass('menu__link');
-      ele.insertBefore(trigger);
+      ele.insertBefore(trigger, null);
     }
   }
 
