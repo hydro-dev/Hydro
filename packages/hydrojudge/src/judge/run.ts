@@ -79,6 +79,21 @@ export const judge = async (ctx: Context) => {
         status = STATUS.STATUS_RUNTIME_ERROR;
         if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
+        const langConfig = ctx.getLang(ctx.lang);
+        if (langConfig.runtimeErrorAnalysis) {
+            run(langConfig.runtimeErrorAnalysis, {
+                copyIn: {
+                    input: { src: stdin },
+                    [langConfig.code_file || 'foo']: { content: ctx.code },
+                    compile: { content: langConfig.compile },
+                    execute: { content: langConfig.execute },
+                },
+                time: 5000,
+                memory: 256,
+            })
+                .then((r) => ctx.next({ compiler_text: r.stdout.toString().substring(0, 1024) }))
+                .catch((e) => console.error(e));
+        }
     }
     message.push(fs.readFileSync(stdout).toString());
     message.push(fs.readFileSync(stderr).toString());

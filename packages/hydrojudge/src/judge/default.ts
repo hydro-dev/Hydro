@@ -82,6 +82,22 @@ function judgeCase(c: Case, sid: string) {
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
+            const langConfig = ctx.getLang(ctx.lang);
+            if (langConfig.runtimeErrorAnalysis && !this.runtimeErrorAnalysis) {
+                this.runtimeErrorAnalysis = true;
+                run(langConfig.runtimeErrorAnalysis, {
+                    copyIn: {
+                        input: { src: stdin },
+                        [langConfig.code_file || 'foo']: { content: ctx.code },
+                        compile: { content: langConfig.compile },
+                        execute: { content: langConfig.execute },
+                    },
+                    time: 5000,
+                    memory: 256,
+                })
+                    .then((r) => ctx.next({ compiler_text: r.stdout.toString().substring(0, 1024) }))
+                    .catch((e) => console.error(e));
+            }
         }
         await Promise.all(
             Object.values(res.fileIds).map((id) => del(id)),

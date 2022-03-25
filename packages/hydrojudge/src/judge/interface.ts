@@ -6,6 +6,7 @@ export type Context = JudgeTaskInterface & RuntimeContext;
 
 export interface JudgeTaskInterface {
     next(arg0: {
+        compiler_text?: string;
         status?: number;
         message?: string;
         progress?: number;
