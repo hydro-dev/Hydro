@@ -61,7 +61,7 @@ export default function reducer(state = {
   case 'SCRATCHPAD_POST_PRETEST_FULFILLED':
   case 'SCRATCHPAD_POST_SUBMIT_FULFILLED': {
     Notification.success(i18n('Submitted.'));
-    if (action.type === 'SCRATCHPAD_POST_SUBMIT_FULFILLED') {
+    if (action.type === 'SCRATCHPAD_POST_SUBMIT_FULFILLED' && UiContext.canViewRecord) {
       state.records.visible = true;
     }
     return {
