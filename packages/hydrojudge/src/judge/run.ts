@@ -86,10 +86,11 @@ export const judge = async (ctx: Context) => {
             ctx.analysis = true;
             run(langConfig.analysis, {
                 copyIn: {
+                    ...copyIn,
                     input: { src: stdin },
                     [langConfig.code_file || 'foo']: { content: ctx.code },
-                    compile: { content: langConfig.compile },
-                    execute: { content: langConfig.execute },
+                    compile: { content: langConfig.compile || '' },
+                    execute: { content: langConfig.execute || '' },
                 },
                 env: {
                     ...ctx.env,

@@ -91,16 +91,17 @@ function judgeCase(c: Case, sid: string) {
             await runner(ctx, ctxSubtask);
             return;
         }
-        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status) && ctx.config.detail) {
             const langConfig = ctx.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {
                 ctx.analysis = true;
                 run(langConfig.analysis, {
                     copyIn: {
-                        input: { src: stdin },
+                        ...copyIn,
+                        input: stdin ? { src: stdin } : { content: '' },
                         [langConfig.code_file || 'foo']: { content: ctx.code },
-                        compile: { content: langConfig.compile },
-                        execute: { content: langConfig.execute },
+                        compile: { content: langConfig.compile || '' },
+                        execute: { content: langConfig.execute || '' },
                     },
                     time: 5000,
                     memory: 256,
