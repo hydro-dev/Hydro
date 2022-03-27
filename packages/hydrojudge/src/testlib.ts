@@ -1,6 +1,6 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 
-const operation = /^(status|score)\((\d+)\) *(.*)$/;
+const operation = /^\s*(status|score)\((\d+)\)\s*(.*)$/m;
 
 export function parse(output: string, fullscore: number) {
     let status = STATUS.STATUS_WRONG_ANSWER;

@@ -105,6 +105,7 @@ function judgeCase(c: Case, sid: string) {
                     },
                     time: 5000,
                     memory: 256,
+                    env: ctx.env,
                 }).then((r) => {
                     const out = r.stdout.toString();
                     if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
