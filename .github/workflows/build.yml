@@ -44,7 +44,8 @@ jobs:
         yarn
     - name: Build And Lint
       run: |
-        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production
+        yarn build:ui:gulp
+        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js
