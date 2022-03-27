@@ -49,7 +49,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         post_filter: {
             bool: {
                 minimum_should_match: 1,
-                should: domainIds.map((i) => ({ term: { domainId: i } })),
+                should: domainIds.map((i) => ({ match: { domainId: i } })),
             },
         },
     });
@@ -64,7 +64,7 @@ export const description = 'Elastic problem search re-index';
 
 export async function run({ domainId }, report) {
     try {
-        if (domainId) await client.deleteByQuery({ index: 'problem', query: { term: { domainId } } });
+        if (domainId) await client.deleteByQuery({ index: 'problem', query: { match: { domainId } } });
         else await client.deleteByQuery({ index: 'problem', query: { match_all: {} } });
     } catch (e) {
         if (!e.message.includes('index_not_found_exception')) throw e;
