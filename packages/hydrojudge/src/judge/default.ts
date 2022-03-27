@@ -91,7 +91,7 @@ function judgeCase(c: Case, sid: string) {
             await runner(ctx, ctxSubtask);
             return;
         }
-        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status) && ctx.config.detail) {
+        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             const langConfig = ctx.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {
                 ctx.analysis = true;
@@ -106,7 +106,8 @@ function judgeCase(c: Case, sid: string) {
                     time: 5000,
                     memory: 256,
                 }).then((r) => {
-                    ctx.next({ compiler_text: r.stdout.toString().substring(0, 1024) });
+                    const out = r.stdout.toString();
+                    if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
                     if (process.env.DEV) console.log(r);
                 });
             }
