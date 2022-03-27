@@ -91,6 +91,10 @@ export const judge = async (ctx: Context) => {
                     compile: { content: langConfig.compile },
                     execute: { content: langConfig.execute },
                 },
+                env: {
+                    ...ctx.env,
+                    HYDRO_PRETEST: 'true',
+                },
                 time: 5000,
                 memory: 256,
             }).then((r) => {
