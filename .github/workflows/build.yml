@@ -23,11 +23,16 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - name: Cache node modules
-      uses: actions/cache@v2
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+    - uses: actions/cache@v3
+      id: yarn-cache
       with:
-        path: .yarn/cache
-        key: ${{ runner.os }}-deps-${{ hashFiles('**/package.json') }}
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
     - name: Config
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml

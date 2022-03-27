@@ -54,6 +54,7 @@ export default async function download(filename, targets) {
       stopDownload();
       Notification.error(i18n('Download Error', [target.filename, e.toString()]));
     }
+    return {};
   }
   const handles = [];
   for (const target of targets) {
