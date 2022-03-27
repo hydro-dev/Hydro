@@ -8,9 +8,12 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/hydro-dev/Hydro)
 
 Hydro 是一个高效的信息学在线测评系统。特点：易于部署（且提供安装脚本），轻量，功能强大且易于扩展。  
-Also see previous version at [vijos/vj4](https://github.com/vijos/vj4)
+我们提供了一套在线服务供用户直接使用或是体验系统功能而无需自行部署安装。  
+详情前往 [https://hydro.ac](https://hydro.ac) 查看 [操作指引](https://hydro.ac/discuss/6172ceeed850d38c79ae18f9)  
 
-[Demo](https://hydro.ac/) [中文文档](https://hydro.js.org/)  [English](./README-EN.md)  
+[中文文档](https://hydro.js.org/)  
+
+[English](./README-EN.md)  
 
 如果觉得本项目对你有帮助，不妨点一下右上角的 star 哦（）  
 项目的开发与维护需要资金，欢迎[进行捐助](https://pay.undefined.moe) 。  
@@ -24,7 +27,7 @@ bug 和功能建议请在 Issues 提出。
 
 QQ [3402182471](https://wpa.qq.com/msgrd?v=3&uin=3402182471&site=qq&menu=yes)  
 Hydro 用户群：1085853538  
-Discord [Hydro](https://discord.gg/c633mBUJwS)  
+Telegram 群 [@hydrodev](https://t.me/hydrodev)
 Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
 
 ## 开源许可
