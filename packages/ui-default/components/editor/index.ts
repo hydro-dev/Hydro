@@ -162,6 +162,7 @@ export default class Editor extends DOMAttachedObject {
 
   async initVditor() {
     const pagename = document.documentElement.getAttribute('data-page');
+    const isProblemPage = ['problem_create', 'problem_edit'].includes(pagename);
     const isProblemEdit = pagename === 'problem_edit';
     const { default: Vditor } = await import('vditor');
     const { $dom } = this;
@@ -209,7 +210,7 @@ export default class Editor extends DOMAttachedObject {
               },
             })
               .then(() => {
-                this.vditor.insertValue(`${wrapper.join(`file://${filename}`)} `);
+                this.vditor.insertValue(`${wrapper.join(`${isProblemPage ? 'file://' : `/file/${UserContext._id}/`}${filename}`)} `);
                 this.vditor.vditor.tip.hide();
               })
               .catch((e: { message: string; }) => {
