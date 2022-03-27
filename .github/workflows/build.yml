@@ -23,6 +23,11 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
+    - name: Cache node modules
+      uses: actions/cache@v2
+      with:
+        path: .yarn/cache
+        key: ${{ runner.os }}-deps-${{ hashFiles('**/package.json') }}
     - name: Config
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
