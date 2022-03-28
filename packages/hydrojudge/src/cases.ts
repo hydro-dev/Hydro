@@ -206,12 +206,12 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     const ymlConfig = path.resolve(folder, 'config.yml');
     let config;
     if (fs.existsSync(yamlConfig)) {
-        config = { ...yaml.load(fs.readFileSync(yamlConfig).toString()) as object, ...cfg };
+        config = { ...cfg, ...yaml.load(fs.readFileSync(yamlConfig).toString()) as object };
     } else if (fs.existsSync(ymlConfig)) {
-        config = { ...yaml.load(fs.readFileSync(ymlConfig).toString()) as object, ...cfg };
+        config = { ...cfg, ...yaml.load(fs.readFileSync(ymlConfig).toString()) as object };
     } else if (fs.existsSync(iniConfig)) {
         try {
-            config = { ...convertIniConfig(fs.readFileSync(iniConfig).toString()), ...cfg };
+            config = { ...cfg, ...convertIniConfig(fs.readFileSync(iniConfig).toString()) };
         } catch (e) {
             throw changeErrorType(e, FormatError);
         }

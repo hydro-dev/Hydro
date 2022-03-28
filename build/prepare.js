@@ -6,13 +6,14 @@ const compilerOptionsBase = {
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',
-    declaration: true,
+    // declaration: true,
     sourceMap: false,
     composite: true,
     strictBindCallApply: true,
     experimentalDecorators: true,
-    emitDecoratorMetadata: true,
+    // emitDecoratorMetadata: true,
     noEmit: true,
+    incremental: true,
 };
 const config = {
     compilerOptions: compilerOptionsBase,

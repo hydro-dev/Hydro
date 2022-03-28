@@ -6,6 +6,7 @@ export type Context = JudgeTaskInterface & RuntimeContext;
 
 export interface JudgeTaskInterface {
     next(arg0: {
+        compiler_text?: string;
         status?: number;
         message?: string;
         progress?: number;
@@ -45,6 +46,7 @@ export interface RuntimeContext {
     queue?: PQueue;
     errored?: boolean;
     rerun?: number;
+    analysis?: boolean;
     failed?: Record<string, boolean>;
 
     execute?: Execute;

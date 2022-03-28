@@ -86,23 +86,25 @@ async function runGulp() {
 async function main() {
   const dir = process.cwd();
   process.chdir(root());
-  await runGulp();
-  await runWebpack(argv.options as any);
-  if (fs.existsSync('public/hydro.js')) {
-    fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
-  }
-  if (fs.existsSync('public/polyfill.js')) {
-    fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
-  }
-  if (fs.existsSync('public/default.theme.css')) {
-    fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
-  }
-  if (argv.options.production) {
-    fs.removeSync('public/vditor/dist/js/mathjax');
-    fs.removeSync('public/vditor/dist/js/echarts');
-    fs.removeSync('public/vditor/dist/js/graphviz');
-    fs.removeSync('public/vditor/dist/js/mermaid');
-    fs.removeSync('public/vditor/dist/js/abcjs');
+  if (argv.options.gulp) await runGulp();
+  else {
+    await runWebpack(argv.options as any);
+    if (fs.existsSync('public/hydro.js')) {
+      fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
+    }
+    if (fs.existsSync('public/polyfill.js')) {
+      fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
+    }
+    if (fs.existsSync('public/default.theme.css')) {
+      fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
+    }
+    if (argv.options.production) {
+      fs.removeSync('public/vditor/dist/js/mathjax');
+      fs.removeSync('public/vditor/dist/js/echarts');
+      fs.removeSync('public/vditor/dist/js/graphviz');
+      fs.removeSync('public/vditor/dist/js/mermaid');
+      fs.removeSync('public/vditor/dist/js/abcjs');
+    }
   }
   process.chdir(dir);
 }
