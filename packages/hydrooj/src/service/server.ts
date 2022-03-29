@@ -509,7 +509,10 @@ export class Handler extends HandlerCommon {
     }
 
     async getSession() {
-        const sid = this.request.cookies.get('sid');
+        const header = this.request.headers['authorization'];
+        const sid = header
+            ? header.split(' ')[1] // Just accept bearer token
+            : this.request.cookies.get('sid');
         this.session = await token.get(sid, token.TYPE_SESSION);
         if (!this.session) this.session = { uid: 0 };
     }
