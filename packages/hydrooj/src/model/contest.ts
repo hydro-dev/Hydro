@@ -157,7 +157,7 @@ const acm = buildContestRule({
                         type: 'record',
                         score: accept ? 100 : 0,
                         value: accept
-                            ? `${colTime}\n<span style="font-weight:normal;color:#000">${doc.penalty ? `+ (-${doc.naccept})` : ''}</span>`
+                            ? `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`
                             : doc.rid
                                 ? `-${doc.naccept}`
                                 : '',
