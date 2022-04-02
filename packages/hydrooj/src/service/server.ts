@@ -452,7 +452,7 @@ export class Handler extends HandlerCommon {
             headers: ctx.request.headers,
             cookies: ctx.cookies,
             body: ctx.request.body,
-            files: ctx.request.files,
+            files: ctx.request.files as any,
             query: ctx.query,
             path: ctx.path,
             params: ctx.params,
