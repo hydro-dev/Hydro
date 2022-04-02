@@ -86,8 +86,9 @@ const acm = buildContestRule({
         const columns: ScoreboardRow = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
-            { type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` },
         ];
+        if (isExport) columns.push({ type: 'string', value: _('Email') });
+        columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
             if (isExport) {
@@ -136,12 +137,13 @@ const acm = buildContestRule({
             const row: ScoreboardRow = [
                 { type: 'rank', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
-                {
-                    type: 'time',
-                    value: `${tsdoc.accept || 0}\n${misc.formatSeconds(tsdoc.time || 0.0, false)}`,
-                    hover: misc.formatSeconds(tsdoc.time || 0.0),
-                },
             ];
+            if (isExport) row.push({ type: 'string', value: udict[tsdoc.uid].mail });
+            row.push({
+                type: 'time',
+                value: `${tsdoc.accept || 0}\n${misc.formatSeconds(tsdoc.time || 0.0, false)}`,
+                hover: misc.formatSeconds(tsdoc.time || 0.0),
+            });
             for (const pid of tdoc.pids) {
                 const doc = tsddict[pid] || {} as Partial<AcmDetail>;
                 const accept = doc.status === STATUS.STATUS_ACCEPTED;
@@ -202,8 +204,9 @@ const oi = buildContestRule({
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
-            { type: 'total_score', value: _('Total Score') },
         ];
+        if (isExport) columns.push({ type: 'string', value: _('Email') });
+        columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             if (isExport) {
                 columns.push({
@@ -246,12 +249,12 @@ const oi = buildContestRule({
             if (tsdoc.journal) {
                 for (const item of tsdoc.journal) tsddict[item.pid] = item;
             }
-            const row: ScoreboardNode[] = [];
-            row.push(
+            const row: ScoreboardNode[] = [
                 { type: 'string', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
-                { type: 'total_score', value: tsdoc.score || 0 },
-            );
+            ];
+            if (isExport) row.push({ type: 'string', value: udict[tsdoc.uid].mail });
+            row.push({ type: 'total_score', value: tsdoc.score || 0 });
             for (const pid of tdoc.pids) {
                 const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
