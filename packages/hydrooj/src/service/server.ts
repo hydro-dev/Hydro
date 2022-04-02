@@ -415,7 +415,7 @@ export class Handler extends HandlerCommon {
         headers: any,
         cookies: any,
         body: any,
-        files: any,
+        files: Record<string, import('formidable').File>,
         query: any,
         path: string,
         params: any,
