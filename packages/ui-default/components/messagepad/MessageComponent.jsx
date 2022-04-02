@@ -15,7 +15,7 @@ export default function MessageComponent(props) {
   });
   return (
     <div {...rest} className={cn}>
-      <img src={faceUrl} alt="avatar" className="headIcon radius" ondragstart="return false;" oncontextmenu="return false;" />
+      <img src={faceUrl} alt="avatar" className="headIcon radius" onDragStart="return false;" onContextMenu="return false;" />
       <div className="content">
         {children}
       </div>
