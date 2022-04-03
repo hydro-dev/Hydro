@@ -24,6 +24,7 @@ interface Props {
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent<Props> {
   disposable = [];
   containerElement: HTMLElement;
+  private __preventUpdate = false;
 
   editor: editor.IStandaloneCodeEditor;
   model: editor.ITextModel;
@@ -36,13 +37,16 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       theme: 'vs-light',
       lineNumbers: 'off',
       glyphMargin: true,
+      minimap: { enabled: false },
       lightbulb: { enabled: true },
       model: this.model,
     });
     registerAction(this.editor, this.model);
     this.disposable.push(
       this.editor.onDidChangeModelContent((event) => {
+        this.__preventUpdate = true;
         this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
+        this.__preventUpdate = false;
       }),
     );
     // @ts-ignore
@@ -52,6 +56,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   }
 
   componentDidUpdate(prevProps) {
+    if (this.__preventUpdate) return;
     if (yaml.dump(prevProps.config) !== yaml.dump(this.props.config)) {
       this.model?.pushEditOperations(
         [],

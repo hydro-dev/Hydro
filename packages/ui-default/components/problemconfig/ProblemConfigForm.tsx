@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
+import { isEqual } from 'lodash';
 import { Switch, Tab, Tabs } from '@blueprintjs/core';
+import type { SubtaskConfig } from 'hydrooj/src/interface';
 import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/CustomSelectAutoComplete';
 
@@ -10,6 +12,8 @@ const SelectValue = {
   checker_type: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'qduoj'],
   task_type: ['min', 'max', 'sum'],
 };
+
+const eq = (a: SubtaskConfig[], b: SubtaskConfig[]) => isEqual(a, b);
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -181,10 +185,11 @@ function ExtraFilesConfig() {
   );
 }
 
+// FIXME 直接转换为Subtask，不需要Cases
 function CasesTable({ index }) {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
-  const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases));
+  const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
   return (
@@ -197,7 +202,7 @@ function CasesTable({ index }) {
               width="100%"
               data={Files}
               defaultItems={input}
-              onChange={(val) => setInput(val)}
+              onChange={setInput}
             />
           </th>
           <th>
@@ -206,17 +211,19 @@ function CasesTable({ index }) {
               width="100%"
               data={Files}
               defaultItems={output}
-              onChange={(val) => setOutput(val)}
+              onChange={setOutput}
             />
           </th>
           <th>
             <span className="icon icon-wrench"></span><br />
             <a
-              onClick={
-                () => dispatch({
+              onClick={() => {
+                setInput('');
+                setOutput('');
+                dispatch({
                   type: index === -1 ? 'CONFIG_TASK_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-add', value: { input, output },
-                })
-              }
+                });
+              }}
             ><span className="icon icon-add">{i18n('Add')}</span>
             </a>
           </th>
@@ -233,16 +240,10 @@ function CasesTable({ index }) {
             </td>
             <td>
               <a
-                onClick={
-                  () => {
-                    setInput('');
-                    setOutput('');
-                    dispatch({
-                      type: index === -1 ? 'CONFIG_TASK_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
-                    });
-                  }
-                }
-              ><span className="icon icon-delete">{i18n('Delete')}</span>
+                onClick={() => dispatch({
+                  type: index === -1 ? 'CONFIG_TASK_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
+                })}
+              ><span className="icon icon-close"></span>
               </a>
             </td>
           </tr>
@@ -253,8 +254,13 @@ function CasesTable({ index }) {
 }
 
 function SubtasksTable({ data, index }) {
-  const subtasks = useSelector((state: RootState) => state.config.subtasks);
+  const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
   const dispatch = useDispatch();
+  const dispatcher = (key: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
+    dispatch({
+      type: 'CONFIG_TASK_UPDATE', id: index, key, value: ev.currentTarget.value,
+    });
+  };
   return (
     <div key={index}>
       <p>Subtasks #{index}</p>
@@ -273,33 +279,21 @@ function SubtasksTable({ data, index }) {
             <td>
               <input
                 value={data.id}
-                onChange={(ev) => {
-                  dispatch({
-                    type: 'CONFIG_TASK_UPDATE', id: index, key: 'id', value: ev.currentTarget.value,
-                  });
-                }}
+                onChange={dispatcher('id')}
                 className="textbox"
               />
             </td>
             <td>
               <input
                 value={data.score || ''}
-                onChange={(ev) => {
-                  dispatch({
-                    type: 'CONFIG_TASK_UPDATE', id: index, key: 'score', value: ev.currentTarget.value,
-                  });
-                }}
+                onChange={dispatcher('score')}
                 className="textbox"
               />
             </td>
             <td>
               <select
                 value={data.type}
-                onChange={(ev) => {
-                  dispatch({
-                    type: 'CONFIG_TASK_UPDATE', id: index, key: 'id', value: ev.currentTarget.value,
-                  });
-                }}
+                onChange={dispatcher('id')}
                 className="select"
               >
                 <option aria-label="null" value="" style={{ display: 'none' }}></option>
@@ -309,22 +303,14 @@ function SubtasksTable({ data, index }) {
             <td>
               <input
                 value={data.time || ''}
-                onChange={(ev) => {
-                  dispatch({
-                    type: 'CONFIG_TASK_UPDATE', id: index, key: 'time', value: ev.currentTarget.value,
-                  });
-                }}
+                onChange={dispatcher('time')}
                 className="textbox"
               />
             </td>
             <td>
               <input
                 value={data.memory || ''}
-                onChange={(ev) => {
-                  dispatch({
-                    type: 'CONFIG_TASK_UPDATE', id: index, key: 'memory', value: ev.currentTarget.value,
-                  });
-                }}
+                onChange={dispatcher('memory')}
                 className="textbox"
               />
             </td>
@@ -350,8 +336,8 @@ function SubtasksTable({ data, index }) {
 }
 
 function TaskConfig() {
-  const subtasks = useSelector((state: RootState) => state.config.subtasks);
-  const cases = useSelector((state: RootState) => state.config.cases);
+  const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
+  const cases = useSelector((state: RootState) => state.config.cases, eq);
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="Task Settings">
@@ -368,8 +354,8 @@ function TaskConfig() {
         <FormItem columns={12} label="Cases Settings" disableLabel>
           {
             subtasks || cases
-              ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} />)}</ul>
-                || cases && (<CasesTable index={-1} />)
+              ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
+              || cases && (<CasesTable index={-1} />)
               : <Switch checked label="Use Auto Cases" onChange={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE', value: false })} />
           }
         </FormItem>
