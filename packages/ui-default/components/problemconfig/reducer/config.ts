@@ -32,11 +32,18 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
     delete next.subtasks;
     return next;
   }
+  case 'CONFIG_SUBTASKS_SWITCH': {
+    const next = state;
+    next.subtasks = next.cases;
+    if (!next.subtasks.length) next.subtasks.push({ id: 0 });
+    delete next.cases;
+    return next;
+  }
   case 'CONFIG_CASES_UPDATE': {
     const next = state;
     if (action.key === 'cases-add') next.cases.push(action.value);
     else if (action.key === 'cases-delete') {
-      next.subtasks[action.id].cases = next.cases.filter((k, v) => v !== action.value);
+      next.cases = next.cases.filter((k, v) => v !== action.value);
     }
     return next;
   }

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
 import { Switch, Tab, Tabs } from '@blueprintjs/core';
-import type { SubtaskConfig } from 'hydrooj/src/interface';
+import type { SubtaskConfig, TestCaseConfig } from 'hydrooj/src/interface';
 import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/CustomSelectAutoComplete';
 
@@ -13,7 +13,7 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: SubtaskConfig[], b: SubtaskConfig[]) => isEqual(a, b);
+const eq = (a: SubtaskConfig[] | TestCaseConfig[], b: SubtaskConfig[] | TestCaseConfig[]) => isEqual(a, b);
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -88,7 +88,7 @@ function BasicInfo() {
       <FormItem columns={6} label="Type">
         <ManagedSelect placeholder="type" formKey="type" />
       </FormItem>
-      <FormItem columns={6} label="Filename">
+      <FormItem columns={6} label="Filename" style={Type === 'interactive' ? { display: 'none' } : {}}>
         <ManagedInput placeholder="filename" formKey="filename" />
       </FormItem>
       <FormItem
@@ -187,6 +187,8 @@ function ExtraFilesConfig() {
 
 // FIXME 直接转换为Subtask，不需要Cases
 function CasesTable({ index }) {
+  const [time, setTime] = useState('');
+  const [memory, setMemory] = useState('');
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
@@ -196,6 +198,28 @@ function CasesTable({ index }) {
     <table className="data-table">
       <thead>
         <tr>
+          {
+            index === -1 && (
+              <>
+                <th>
+                  {i18n('Time')}<br />
+                  <input
+                    value={time || ''}
+                    onChange={(ev) => setTime(ev.currentTarget.value)}
+                    className="textbox"
+                  />
+                </th>
+                <th>
+                  {i18n('Memory')}<br />
+                  <input
+                    value={memory || ''}
+                    onChange={(ev) => setMemory(ev.currentTarget.value)}
+                    className="textbox"
+                  />
+                </th>
+              </>
+            )
+          }
           <th>
             {i18n('Input')}<br />
             <CustomSelectAutoComplete
@@ -218,10 +242,17 @@ function CasesTable({ index }) {
             <span className="icon icon-wrench"></span><br />
             <a
               onClick={() => {
+                setTime('');
+                setMemory('');
                 setInput('');
                 setOutput('');
                 dispatch({
-                  type: index === -1 ? 'CONFIG_TASK_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-add', value: { input, output },
+                  type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+                  id: index,
+                  key: 'cases-add',
+                  value: index === -1 ? {
+                    time, memory, input, output,
+                  } : { input, output },
                 });
               }}
             ><span className="icon icon-add">{i18n('Add')}</span>
@@ -230,8 +261,20 @@ function CasesTable({ index }) {
         </tr>
       </thead>
       <tbody>
-        {cases.map((k, v) => (
+        {cases && cases.map((k, v) => (
           <tr key={JSON.stringify(k)}>
+            {
+              index === -1 && (
+                <>
+                  <td>
+                    {k.time}
+                  </td>
+                  <td>
+                    {k.memory}
+                  </td>
+                </>
+              )
+            }
             <td>
               {k.input}
             </td>
@@ -241,7 +284,7 @@ function CasesTable({ index }) {
             <td>
               <a
                 onClick={() => dispatch({
-                  type: index === -1 ? 'CONFIG_TASK_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
+                  type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
                 })}
               ><span className="icon icon-close"></span>
               </a>
@@ -258,7 +301,7 @@ function SubtasksTable({ data, index }) {
   const dispatch = useDispatch();
   const dispatcher = (key: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
     dispatch({
-      type: 'CONFIG_TASK_UPDATE', id: index, key, value: ev.currentTarget.value,
+      type: 'CONFIG_SUBTASK_UPDATE', id: index, key, value: ev.currentTarget.value,
     });
   };
   return (
@@ -322,7 +365,7 @@ function SubtasksTable({ data, index }) {
                 data={subtasks}
                 defaultItems={data.if}
                 onChange={(val) => dispatch({
-                  type: 'CONFIG_TASK_UPDATE', id: index, key: 'if', value: val.split(','),
+                  type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'if', value: val.split(','),
                 })}
                 multi
               />
@@ -352,6 +395,7 @@ function TaskConfig() {
           <ManagedInput placeholder="Score" formKey="score" />
         </FormItem>
         <FormItem columns={12} label="Cases Settings" disableLabel>
+          { cases && <Switch label="Use Subtasks" onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
           {
             subtasks || cases
               ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
