@@ -76,17 +76,8 @@ async function postInit() {
     }
 
     async function fetchCodeFile(name: string) {
-        const res = await this.axios.post('judge/code', { id: name });
-        const f = await this.axios.get(res.body.link, { responseType: 'stream' })
-            .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
-        if (f instanceof Error) throw f;
         const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
-        const w = fs.createWriteStream(target);
-        f.data.pipe(w);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
-        });
+        await storage.get(`submission/${name}`, target);
         return target;
     }
 

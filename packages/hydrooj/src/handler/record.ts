@@ -143,7 +143,7 @@ class RecordDetailHandler extends Handler {
         if (download) {
             const lang = langs[rdoc.lang]?.pretest || rdoc.lang;
             this.response.body = rdoc.code;
-            this.response.disposition = `attachment; filename="${langs[lang].code_file}` || `foo.${rdoc.lang}"`;
+            this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${rdoc.lang}`}"`;
             return;
         }
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {

@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
