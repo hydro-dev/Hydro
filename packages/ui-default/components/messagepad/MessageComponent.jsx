@@ -10,16 +10,18 @@ export default function MessageComponent(props) {
     ...rest
   } = props;
   const cn = classNames(className, {
-    'cright cmsg': isSelf,
-    'cleft cmsg': !isSelf,
+    'cmsg cright': isSelf,
+    'cmsg cleft': !isSelf,
   });
   return (
-    <div {...rest} className={cn}>
-      <img src={faceUrl} alt="avatar" className="headIcon radius" onDragStart="return false;" onContextMenu="return false;" />
+    <li {...rest} className={cn}>
+      <div>
+        <img src={faceUrl} alt="avatar" className="headIcon radius" onDragStart="return false;" onContextMenu="return false;" />
+      </div>
       <div className="content">
         {children}
       </div>
-    </div>
+    </li>
   );
 }
 
