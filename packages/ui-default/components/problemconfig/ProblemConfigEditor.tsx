@@ -1,5 +1,5 @@
 import React from 'react';
-import type { editor } from 'monaco-editor'
+import type { editor } from 'monaco-editor';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
 import yaml from 'js-yaml';
@@ -10,7 +10,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => ({
   handleUpdateCode: (code) => {
     dispatch({
-      type: 'CONFIG_EDITOR_UPDATE_CODE',
+      type: 'CONFIG_CODE_UPDATE',
       payload: code,
     });
   },
@@ -27,13 +27,11 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
 
   editor: editor.IStandaloneCodeEditor;
   model: editor.ITextModel;
-  __prevent_trigger_change_event: boolean;
 
   async componentDidMount() {
     const { monaco, registerAction } = await load(['yaml']);
     const uri = monaco.Uri.parse('hydro://problem/file/config.yaml');
     this.model = monaco.editor.createModel(yaml.dump(this.props.config), 'yaml', uri);
-    console.log(this.model);
     this.editor = monaco.editor.create(this.containerElement, {
       theme: 'vs-light',
       lineNumbers: 'off',
@@ -44,9 +42,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     registerAction(this.editor, this.model);
     this.disposable.push(
       this.editor.onDidChangeModelContent((event) => {
-        if (!this.__prevent_trigger_change_event) {
-          this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
-        }
+        this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
       }),
     );
     // @ts-ignore
@@ -65,9 +61,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
             text: yaml.dump(this.props.config),
           },
         ],
-        undefined
+        undefined,
       );
-
     }
   }
 
