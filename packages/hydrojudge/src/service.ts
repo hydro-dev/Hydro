@@ -232,6 +232,7 @@ async function postInit() {
             this.folder = await cacheOpen(this.source, this.data);
             if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
                 const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
+                if (!id) throw new SystemError('Submission File Not Found');
                 const target = await fetchCodeFile(id);
                 this.code = { src: target };
                 this.clean.push(() => fs.remove(target));
