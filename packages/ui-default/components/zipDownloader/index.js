@@ -4,6 +4,7 @@ import { createZipStream } from 'vj/utils/zip';
 import pipeStream from 'vj/utils/pipeStream';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
+import PQueue from 'p-queue/dist/index';
 import Notification from 'vj/components/notification';
 import api, { gql } from 'vj/utils/api';
 
@@ -28,38 +29,50 @@ const waitForWritableStream = window.WritableStream
     streamsaver.WritableStream = window.WritableStream;
   });
 
-export default async function download(name, targets) {
+export default async function download(filename, targets) {
   await waitForWritableStream;
-  const fileStream = streamsaver.createWriteStream(name);
+  const fileStream = streamsaver.createWriteStream(filename);
+  const queue = new PQueue({ concurrency: 5 });
+  const abortCallbackReceiver = {};
+  function stopDownload() { abortCallbackReceiver.abort(); }
   let i = 0;
+  async function downloadFile(target) {
+    try {
+      let stream;
+      if (target.url) {
+        const response = await fetch(target.url);
+        if (!response.ok) throw response.statusText;
+        stream = response.body;
+      } else {
+        stream = new Blob([target.content]).stream();
+      }
+      return {
+        name: target.filename,
+        stream,
+      };
+    } catch (e) {
+      stopDownload();
+      Notification.error(i18n('Download Error', [target.filename, e.toString()]));
+    }
+    return {};
+  }
+  const handles = [];
+  for (const target of targets) {
+    handles.push(queue.add(() => downloadFile(target)));
+  }
+  queue.start();
   const zipStream = createZipStream({
     // eslint-disable-next-line consistent-return
     async pull(ctrl) {
-      if (i === targets.length) return ctrl.close();
-      try {
-        if (targets[i].url) {
-          const response = await fetch(targets[i].url);
-          if (!response.ok) throw response.statusText;
-          ctrl.enqueue({
-            name: targets[i].filename,
-            stream: () => response.body,
-          });
-        } else {
-          ctrl.enqueue({
-            name: targets[i].filename,
-            stream: () => new Blob([targets[i].content]).stream(),
-          });
-        }
-      } catch (e) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        stopDownload();
-        Notification.error(i18n('Download Error', [targets[i].filename, e.toString()]));
-      }
+      if (!handles[i]) return ctrl.close();
+      const { name, stream } = await handles[i];
       i++;
+      ctrl.enqueue({
+        name,
+        stream: () => stream,
+      });
     },
   });
-  const abortCallbackReceiver = {};
-  function stopDownload() { abortCallbackReceiver.abort(); }
   window.addEventListener('unload', stopDownload);
   window.addEventListener('beforeunload', onBeforeUnload);
   await pipeStream(zipStream, fileStream, abortCallbackReceiver);
@@ -68,7 +81,7 @@ export default async function download(name, targets) {
 }
 
 export async function downloadProblemSet(pids, name = 'Export') {
-  Notification.info('Downloading...');
+  Notification.info(i18n('Downloading...'));
   const targets = [];
   try {
     for (const pid of pids) {
@@ -131,7 +144,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
     }
     await download(`${name}.zip`, targets);
   } catch (e) {
-    Notification.warn(`${e.error?.message} ${e.error?.params?.[0]}`);
+    Notification.error(`${e.message} ${e.params?.[0]}`);
   }
 }
 

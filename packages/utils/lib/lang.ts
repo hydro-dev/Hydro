@@ -12,6 +12,7 @@ export interface LangConfig {
     target?: string;
     key: string;
     hidden: boolean;
+    analysis?: string;
 }
 
 export function parseLang(config: string): Record<string, LangConfig> {

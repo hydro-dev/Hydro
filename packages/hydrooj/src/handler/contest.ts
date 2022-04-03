@@ -137,6 +137,7 @@ export class ContestDetailHandler extends Handler {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
+        await record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' });
         await TaskModel.deleteMany({
             type: 'schedule', subType: 'contest', domainId, tid,
         });
@@ -182,6 +183,10 @@ export class ContestScoreboardHandler extends Handler {
         if (ignoreLock && !this.user.own(tdoc)) {
             this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
+        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, false, [
+            // Problem statistics display is allowed as we can view submission info in scoreboard.
+            ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
+        ]);
         const [, rows, udict, , nPages] = await contest.getScoreboard.call(this, domainId, tid, false, page, ignoreLock);
         const path = [
             ['Hydro', 'homepage'],
@@ -191,7 +196,7 @@ export class ContestScoreboardHandler extends Handler {
         ];
         this.response.template = 'contest_scoreboard.html';
         this.response.body = {
-            tdoc, rows, path, udict, nPages, page,
+            tdoc, rows, path, udict, nPages, page, pdict,
         };
     }
 }

@@ -8,7 +8,7 @@
         <h1 class="section__title">{{ _('Submit to Judge') }}</h1>
       </div>
       <div class="section__body">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
           <div class="hasjs--hide">
             {{ form.form_select({
                 label:'Code language',
@@ -36,6 +36,12 @@
             </div>
           </div>
           {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
+          <div class="row">
+            <div class="medium-12 columns">
+              <p>{{ _('Or upload a file:') }} <input type="file" name="file"></p>
+              <br />
+            </div>
+          </div>
           <div class="row"><div class="columns">
             <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">

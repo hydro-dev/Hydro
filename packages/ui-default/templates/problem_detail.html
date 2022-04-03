@@ -75,24 +75,20 @@
         <div class="section__header non-scratchpad--hide">
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
-        <div class="section__body typo">
-        {% if not pdoc.data.length and not pdoc.reference %}
-          <blockquote class="warn">
-            <p>{{ _('No testdata at current.') }}</p>
-          </blockquote>
-        {% endif %}
-        {% if typeof(pdoc.config) == 'string' %}
-          <blockquote class="warn">
-            <p>{{ pdoc.config }}</p>
-          </blockquote>
-        {% endif %}
-        {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
-          <blockquote class="note">
-            <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
-          </blockquote>
-        {% endif %}
-        {{ pdoc.content|content(handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
+        {% if pdoc.content|contentLang|length > 1 %}
+        <div class="section__tab-container">
+          <div class="section__tab-header-wrapper">
+            <ul class="section__tab-header flex-row">
+              {% for k in pdoc.content|contentLang %}
+              <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+                {{ model.setting.SETTINGS_BY_KEY['viewLang'].range[k] }}
+              </a>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
+        {% endif %}
+        {% include "partials/problem_description.html" %}
       </div></div>
     </div>
   </div>

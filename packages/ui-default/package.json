@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.34.13",
+  "version": "4.34.32",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -32,6 +32,7 @@
     "autoprefixer": "^9.8.8",
     "browser-update": "^3.3.38",
     "chalk": "^5.0.1",
+    "chunk-progress-webpack-plugin": "^2.0.1",
     "classnames": "^2.3.1",
     "clean-webpack-plugin": "^4.0.0",
     "clipboard": "^2.0.10",
@@ -122,6 +123,7 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
+    "p-queue": "^7.2.0",
     "react-query": "^3.34.16",
     "streamsaver": "^2.0.6",
     "xss": "^1.0.11"

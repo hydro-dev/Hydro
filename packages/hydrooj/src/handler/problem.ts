@@ -2,6 +2,7 @@ import AdmZip from 'adm-zip';
 import { statSync } from 'fs-extra';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
@@ -362,10 +363,11 @@ export class ProblemDetailHandler extends ProblemHandler {
     }
 
     @query('tid', Types.ObjectID, true)
+    @query('pjax', Types.Boolean, true)
     async get(...args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
-        if (!this.request.json) {
+        if (!this.request.json || args[2]) {
             if (args[1]) {
                 this.response.body.pdoc.content = this.response.body.pdoc.content
                     .replace(/\(file:\/\/(.+?)\)/g, (str) => {
@@ -387,6 +389,16 @@ export class ProblemDetailHandler extends ProblemHandler {
                 ? 'homework_detail_problem'
                 : 'contest_detail_problem'
             : 'problem_detail';
+        if (args[2]) {
+            const data = { pdoc: this.pdoc, tdoc: this.tdoc };
+            this.response.body = {
+                title: this.renderTitle(this.response.body.page_name),
+                fragments: [
+                    { html: await this.renderHTML('partials/problem_description.html', data) },
+                ],
+                raw: data,
+            };
+        }
         if (!this.response.body.tdoc) {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
@@ -451,7 +463,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     }
 
     @param('lang', Types.Name)
-    @param('code', Types.Content)
+    @param('code', Types.Content, true)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
     @param('tid', Types.ObjectID, true)
@@ -459,11 +471,21 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
-        if (pretest && setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
-        if (pretest && setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
-        if (pretest && !['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
-            throw new BadRequestError('unable to run pretest');
+        if (pretest) {
+            if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
+            if (setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
+            if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+                throw new BadRequestError('unable to run pretest');
+            }
         }
+        if (!code) {
+            const file = this.request.files?.file;
+            if (!file) throw new ValidationError('code');
+            if (file.size > 128 * 1024 * 1024) throw new ValidationError('file');
+            const id = nanoid();
+            await storage.put(`submission/${this.user._id}/${id}`, file.path);
+            code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
+        } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);
         const rdoc = await record.get(domainId, rid);
@@ -523,9 +545,9 @@ export class ProblemEditHandler extends ProblemManageHandler {
 export class ProblemConfigHandler extends ProblemManageHandler {
     async get() {
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
-        const configFile = (this.pdoc.data || []).filter(i => i.name.toLowerCase() === 'config.yaml');
-        this.response.body.config = configFile.length > 0 ?
-            (await streamToBuffer(
+        const configFile = (this.pdoc.data || []).filter((i) => i.name.toLowerCase() === 'config.yaml');
+        this.response.body.config = configFile.length > 0
+            ? (await streamToBuffer(
                 await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`))).toString() : '';
         console.log(this.response.body.config);
         this.response.template = 'problem_config.html';
@@ -560,6 +582,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
+            if (this.pdoc.reference) throw new BadRequestError('Cannot download testdata.');
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
             if (this.tdoc && !contest.isDone(this.tdoc)) throw new ContestNotEndedError(this.tdoc.domainId, this.tdoc.docId);
         }
@@ -751,7 +774,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(domainId, psid);
-        if (!(!this.user.own(psrdoc)
+        if (!(this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF))) {
             throw new PermissionError(PERM.PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF);
         }
@@ -764,7 +787,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postDeleteReply(domainId: string, psid: ObjectID, psrid: ObjectID) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
-        if (!(!this.user.own(psrdoc)
+        if (!(this.user.own(psrdoc)
             && this.user.hasPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF))) {
             this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
         }

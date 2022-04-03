@@ -26,11 +26,11 @@ export default class Dropdown extends DOMAttachedObject {
     };
     this.dropInstance = new Drop({
       target: $dom[0],
-      classes: 'dropdown',
+      classes: `dropdown ${$dom.attr('data-dropdown-custom-class') || ''}`,
       content: this.options.target || $.find($dom.attr('data-dropdown-target'))[0],
       position: this.options.position,
       openOn: 'hover',
-      constrainToWindow: true,
+      constrainToWindow: $dom.attr('data-dropdown-disabledconstrainToWindow') === undefined,
       constrainToScrollParent: false,
     });
     this.dropInstance.on('open', this.onDropOpen.bind(this));

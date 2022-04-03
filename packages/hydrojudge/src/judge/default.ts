@@ -4,6 +4,7 @@ import { check, compileChecker } from '../check';
 import compile from '../compile';
 import { getConfig } from '../config';
 import { CompileError, FormatError } from '../error';
+import { Logger } from '../log';
 import { del, run } from '../sandbox';
 import signals from '../signals';
 import { parseFilename } from '../utils';
@@ -16,6 +17,8 @@ const Score = {
     max: Math.max,
     min: Math.min,
 };
+
+const logger = new Logger('judge/default');
 
 function judgeCase(c: Case, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
@@ -106,6 +109,32 @@ function judgeCase(c: Case, sid: string) {
             },
             addProgress: 100 / ctx.config.count,
         }, c.id);
+        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+            const langConfig = ctx.getLang(ctx.lang);
+            if (langConfig.analysis && !ctx.analysis) {
+                ctx.analysis = true;
+                try {
+                    const r = await run(langConfig.analysis, {
+                        copyIn: {
+                            ...copyIn,
+                            input: stdin ? { src: stdin } : { content: '' },
+                            [langConfig.code_file || 'foo']: ctx.code,
+                            compile: { content: langConfig.compile || '' },
+                            execute: { content: langConfig.execute || '' },
+                        },
+                        time: 5000,
+                        memory: 256,
+                        env: ctx.env,
+                    });
+                    const out = r.stdout.toString();
+                    if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
+                    if (process.env.DEV) console.log(r);
+                } catch (e) {
+                    logger.info('Failed to run analysis');
+                    logger.error(e);
+                }
+            }
+        }
     };
 }
 
@@ -133,13 +162,13 @@ function judgeSubtask(subtask: SubTask, sid: string) {
     };
 }
 
-export const judge = async (ctx: Context) => {
+export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
-    ctx.next({ status: STATUS.STATUS_COMPILING });
-    if (ctx.config.template) {
+    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
+    if (ctx.config.template && 'content' in ctx.code) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];
-            ctx.code = tpl[0] + ctx.code + tpl[1];
+            ctx.code.content = tpl[0] + ctx.code.content + tpl[1];
         } else throw new CompileError('Language not supported by provided templates');
     }
     [ctx.execute, ctx.checker] = await Promise.all([
@@ -154,7 +183,7 @@ export const judge = async (ctx: Context) => {
             if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
                 return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
             }
-            const copyIn = {};
+            const copyIn = { user_code: ctx.code };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
@@ -167,6 +196,7 @@ export const judge = async (ctx: Context) => {
         })(),
     ]);
     ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
+    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = 0;

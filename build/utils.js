@@ -14,18 +14,6 @@ function getWorkspaces() {
     });
 }
 
-function spawnSync(command, silent) {
-    if (!silent) console.log(`$ ${command}`);
-    const args = command.split(/\s+/);
-    const result = spawn.sync(args[0], [...args.slice(1), '--color'], { cwd, encoding: 'utf8' });
-    if (result.status) {
-        throw new Error(result.stderr);
-    } else {
-        if (!silent) console.log(result.stdout);
-        return result.stdout.trim();
-    }
-}
-
 function spawnAsync(command, path) {
     const args = command.split(/\s+/);
     const options = { stdio: 'inherit' };
@@ -38,5 +26,5 @@ function spawnAsync(command, path) {
 }
 
 module.exports = {
-    cwd, spawnSync, spawnAsync, getWorkspaces,
+    cwd, spawnAsync, getWorkspaces,
 };

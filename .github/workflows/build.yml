@@ -23,21 +23,29 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - name: Config
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+    - uses: actions/cache@v3
+      id: yarn-cache
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          yarn.lock
+          **/tsconfig.tsbuildinfo
+        key: yarn-${{ hashFiles('**/package.json') }}
+        restore-keys: |
+          yarn-
+    - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
-    - name: Install
-      run: yarn
-    - name: Build
+        yarn
+    - name: Build And Lint
       run: |
-        yarn build
-        yarn build:ui:production
-    - name: Lint
-      run: |
-        yarn lint:ci
-        yarn lint:ui:ci
+        yarn build:ui:gulp
+        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js

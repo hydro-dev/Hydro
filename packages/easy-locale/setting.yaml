@@ -1,6 +1,0 @@
-langs:
-  type: yaml
-  desc: Custom Translation
-  default:
-    zh:
-      text: 文本

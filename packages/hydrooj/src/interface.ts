@@ -304,11 +304,12 @@ export interface RecordDoc {
 }
 
 export interface ScoreboardNode {
-    type: string;
+    type: 'string' | 'rank' | 'user' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
     value: string;
     raw?: any;
     score?: number;
     style?: string;
+    hover?: string;
 }
 export type ScoreboardRow = ScoreboardNode[] & { raw?: any };
 

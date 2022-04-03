@@ -8,6 +8,8 @@ import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import problem from '../model/problem';
 import record from '../model/record';
+import { langs } from '../model/setting';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
@@ -101,8 +103,8 @@ class RecordListHandler extends Handler {
 
 class RecordDetailHandler extends Handler {
     @param('rid', Types.ObjectID)
-    async get(domainId: string, rid: ObjectID) {
-        this.response.template = 'record_detail.html';
+    @param('download', Types.Boolean)
+    async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(rid);
         let tdoc;
@@ -132,10 +134,23 @@ class RecordDetailHandler extends Handler {
             rdoc.compilerTexts = [];
         }
 
+        if (download && rdoc.code.startsWith('@@hydro_submission_file@@')) {
+            const [id, filename] = rdoc.code.split('@@hydro_submission_file@@')[1].split('#');
+            this.response.redirect = await storage.signDownloadLink(`submission/${id}`, filename || 'code', true, 'judge');
+            return;
+        }
+        if (download) {
+            const lang = langs[rdoc.lang]?.pretest || rdoc.lang;
+            this.response.body = rdoc.code;
+            this.response.type = 'text/plain';
+            this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${rdoc.lang}`}"`;
+            return;
+        }
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
+        this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc, pdoc, tdoc,
         };
@@ -239,7 +254,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.pretest && rdoc.input) return;
             if (rdoc.domainId !== this.domainId) return;
             if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
-            if (this.tid && contest.isLocked(this.tdoc) && !contest.canShowScoreboard.call(this, this.tdoc, true)) return;
+            if (this.tid && contest.isLocked(this.tdoc)) return;
+            if (this.tid && !contest.canShowSelfRecord.call(this, this.tdoc, true)) return;
         }
         if (this.pid && rdoc.pid !== this.pid) return;
         if (this.uid && rdoc.uid !== this.uid) return;

@@ -5,8 +5,8 @@ export class Page {
   autoload = false;
   afterLoading?: callback;
   beforeLoading?: callback;
-  constructor(pagename: string | string[], afterLoading: callback, beforeLoading: callback);
-  constructor(pagename: string | string[], moduleName: string, afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], afterLoading?: callback, beforeLoading?: callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading?: callback, beforeLoading?: callback);
   constructor(pagename: string | string[], ...args: any[]);
   constructor(public name: string | string[], ...args: any[]) {
     if (typeof args[0] === 'string') {
@@ -40,8 +40,8 @@ export class Page {
 export class NamedPage extends Page { }
 
 export class AutoloadPage extends Page {
-  constructor(pagename: string | string[], afterLoading: callback, beforeLoading: callback);
-  constructor(pagename: string | string[], moduleName: string, afterLoading: callback, beforeLoading: callback);
+  constructor(pagename: string | string[], afterLoading?: callback, beforeLoading?: callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading?: callback, beforeLoading?: callback);
   constructor(pagename: string | string[], ...args: any[]) {
     super(pagename, ...args);
     this.autoload = true;

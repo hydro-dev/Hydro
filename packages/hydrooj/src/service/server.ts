@@ -415,7 +415,7 @@ export class Handler extends HandlerCommon {
         headers: any,
         cookies: any,
         body: any,
-        files: any,
+        files: Record<string, import('formidable').File>,
         query: any,
         path: string,
         params: any,
@@ -452,7 +452,7 @@ export class Handler extends HandlerCommon {
             headers: ctx.request.headers,
             cookies: ctx.cookies,
             body: ctx.request.body,
-            files: ctx.request.files,
+            files: ctx.request.files as any,
             query: ctx.query,
             path: ctx.path,
             params: ctx.params,
@@ -509,7 +509,10 @@ export class Handler extends HandlerCommon {
     }
 
     async getSession() {
-        const sid = this.request.cookies.get('sid');
+        const header = this.request.headers['authorization'];
+        const sid = header
+            ? header.split(' ')[1] // Just accept bearer token
+            : this.request.cookies.get('sid');
         this.session = await token.get(sid, token.TYPE_SESSION);
         if (!this.session) this.session = { uid: 0 };
     }

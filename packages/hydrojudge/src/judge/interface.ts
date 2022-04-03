@@ -1,11 +1,13 @@
 import PQueue from 'p-queue';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { Execute } from '../interface';
+import { CopyInFile } from '../sandbox/interface';
 
 export type Context = JudgeTaskInterface & RuntimeContext;
 
 export interface JudgeTaskInterface {
     next(arg0: {
+        compiler_text?: string;
         status?: number;
         message?: string;
         progress?: number;
@@ -28,7 +30,7 @@ export interface JudgeTaskInterface {
 
     stat: Record<string, Date>;
     lang: string;
-    code: string;
+    code: CopyInFile;
     tmpdir: string;
     input?: string;
     clean: Function[];
@@ -45,6 +47,7 @@ export interface RuntimeContext {
     queue?: PQueue;
     errored?: boolean;
     rerun?: number;
+    analysis?: boolean;
     failed?: Record<string, boolean>;
 
     execute?: Execute;

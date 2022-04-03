@@ -4,20 +4,17 @@
     border-right: 1px solid $table-border-color
 
   .col--user
-    width: rem(140px)
+    width: auto
 
-  .col--total_score, .col--total_time_str, .col--solved_problems
+  .col--total_score, .col--time
     width: rem(100px)
     text-align: center
 
-  .col--problem_detail
-    min-width: rem(100px)
+  .col--problem, .col--record
+    width: rem(100px)
     border-left: 1px solid $table-border-color
     text-align: center
 
   +mobile()
-    .col--user
-      width: auto
-
-    .col--problem_detail
+    .col--problem, .col--record
       display: none
