@@ -78,7 +78,7 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
         }
       >
         <div>{this.renderContent(msg)}</div>
-        <time data-tooltip={moment(parseMongoId(msg._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
+        <time className="timeShow" data-tooltip={moment(parseMongoId(msg._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
           <TimeAgo datetime={parseMongoId(msg._id).timestamp * 1000} locale={i18n('timeago_locale')} />
         </time>
       </Message>
@@ -88,7 +88,9 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
   render() {
     return (
       <ol className="messagepad__content" ref="list">
-        {this.renderInner()}
+        <div className="lite-chatbox">
+          {this.renderInner()}
+        </div>
       </ol>
     );
   }

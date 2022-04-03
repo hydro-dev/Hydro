@@ -9,16 +9,16 @@ export default function MessageComponent(props) {
     children,
     ...rest
   } = props;
-  const cn = classNames(className, 'messagepad__message', {
-    'side--self': isSelf,
-    'side--other': !isSelf,
+  const cn = classNames(className, {
+    'cmsg cright': isSelf,
+    'cmsg cleft': !isSelf,
   });
   return (
     <li {...rest} className={cn}>
-      <div className="messagepad__message__avatar">
-        <img src={faceUrl} alt="avatar" width="50" height="50" className="medium user-profile-avatar" />
+      <div>
+        <img src={faceUrl} alt="avatar" className="headIcon radius" onDragStart="return false;" onContextMenu="return false;" />
       </div>
-      <div className="messagepad__message__body">
+      <div className="content">
         {children}
       </div>
     </li>
