@@ -306,7 +306,13 @@ function SubtasksTable({ data, index }) {
   };
   return (
     <div key={index}>
-      <p>Subtasks #{index}</p>
+      <span>Subtasks #{index} </span>
+      <a onClick={() => { dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'add' }); }}><span className="icon icon-add"></span></a>
+      <a
+        style={index === 0 ? { display: 'none' } : {}}
+        onClick={() => { dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'delete' }); }}
+      ><span className="icon icon-delete"></span>
+      </a>
       <table className="data-table">
         <thead>
           <tr>

@@ -49,7 +49,9 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_SUBTASK_UPDATE': {
     const next = state;
-    if (action.key === 'cases-add') next.subtasks[action.id].cases.push(action.value);
+    if (action.key === 'add') next.subtasks.splice(action.id, 0, { id: 0 });
+    else if (action.key === 'delete') delete next.subtasks[action.key];
+    else if (action.key === 'cases-add') next.subtasks[action.id].cases.push(action.value);
     else if (action.key === 'cases-delete') {
       next.subtasks[action.id].cases = next.subtasks[action.id].cases.filter((k, v) => v !== action.value);
     } else next.subtasks[action.id][action.key] = action.value;
