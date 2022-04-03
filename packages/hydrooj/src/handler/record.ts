@@ -105,7 +105,6 @@ class RecordDetailHandler extends Handler {
     @param('rid', Types.ObjectID)
     @param('download', Types.Boolean)
     async get(domainId: string, rid: ObjectID, download = false) {
-        this.response.template = 'record_detail.html';
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) throw new RecordNotFoundError(rid);
         let tdoc;
@@ -143,6 +142,7 @@ class RecordDetailHandler extends Handler {
         if (download) {
             const lang = langs[rdoc.lang]?.pretest || rdoc.lang;
             this.response.body = rdoc.code;
+            this.response.type = 'text/plain';
             this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${rdoc.lang}`}"`;
             return;
         }
@@ -150,6 +150,7 @@ class RecordDetailHandler extends Handler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
+        this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc, pdoc, tdoc,
         };
