@@ -78,23 +78,20 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
         }
       >
         <div>{this.renderContent(msg)}</div>
-        <div className="timeShow">
-          <time data-tooltip={moment(parseMongoId(msg._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
-            <TimeAgo datetime={parseMongoId(msg._id).timestamp * 1000} locale={i18n('timeago_locale')} />
-          </time>
-        </div>
-
+        <time className="timeShow" data-tooltip={moment(parseMongoId(msg._id).timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}>
+          <TimeAgo datetime={parseMongoId(msg._id).timestamp * 1000} locale={i18n('timeago_locale')} />
+        </time>
       </Message>
     ));
   }
 
   render() {
     return (
-      <div className="messagepad__content" ref="list">
+      <ol className="messagepad__content" ref="list">
         <div className="lite-chatbox">
           {this.renderInner()}
         </div>
-      </div>
+      </ol>
     );
   }
 });
