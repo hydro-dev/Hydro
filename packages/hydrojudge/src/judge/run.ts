@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { CompileError } from '../error';
+import { Logger } from '../log';
 import { run } from '../sandbox';
 import signals from '../signals';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
@@ -15,6 +16,8 @@ const failure = (status: number, message?: string) => ({
     memory_kb: 0,
     message,
 });
+
+const logger = new Logger('judge/run');
 
 export const judge = async (ctx: Context) => {
     ctx.stat.judge = new Date();
@@ -80,31 +83,6 @@ export const judge = async (ctx: Context) => {
         if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
     }
-    if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-        const langConfig = ctx.getLang(ctx.lang);
-        if (langConfig.analysis) {
-            ctx.analysis = true;
-            run(langConfig.analysis, {
-                copyIn: {
-                    ...copyIn,
-                    input: { src: stdin },
-                    [langConfig.code_file || 'foo']: { content: ctx.code },
-                    compile: { content: langConfig.compile || '' },
-                    execute: { content: langConfig.execute || '' },
-                },
-                env: {
-                    ...ctx.env,
-                    HYDRO_PRETEST: 'true',
-                },
-                time: 5000,
-                memory: 256,
-            }).then((r) => {
-                const out = r.stdout.toString();
-                if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
-                if (process.env.DEV) console.log(r);
-            });
-        }
-    }
     message.push(fs.readFileSync(stdout).toString());
     message.push(fs.readFileSync(stderr).toString());
     ctx.next({
@@ -116,6 +94,35 @@ export const judge = async (ctx: Context) => {
             message: message.join('\n').substring(0, 102400),
         },
     });
+    if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+        const langConfig = ctx.getLang(ctx.lang);
+        if (langConfig.analysis) {
+            try {
+                ctx.analysis = true;
+                const r = await run(langConfig.analysis, {
+                    copyIn: {
+                        ...copyIn,
+                        input: { src: stdin },
+                        [langConfig.code_file || 'foo']: ctx.code,
+                        compile: { content: langConfig.compile || '' },
+                        execute: { content: langConfig.execute || '' },
+                    },
+                    env: {
+                        ...ctx.env,
+                        HYDRO_PRETEST: 'true',
+                    },
+                    time: 5000,
+                    memory: 256,
+                });
+                const out = r.stdout.toString();
+                if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
+                if (process.env.DEV) console.log(r);
+            } catch (e) {
+                logger.info('Failed to run analysis');
+                logger.error(e);
+            }
+        }
+    }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({

@@ -117,10 +117,17 @@ export class JudgeFilesDownloadHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             links[file] = await storage.signDownloadLink(
                 `problem/${pdoc.domainId}/${pdoc.docId}/testdata/${file}`,
-                file, false, 'judge',
+                file, true, 'judge',
             );
         }
         this.response.body.links = links;
+    }
+}
+
+export class SubmissionDataDownloadHandler extends Handler {
+    @post('id', Types.String)
+    async post(domainId: string, id: string) {
+        this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
     }
 }
 
@@ -190,6 +197,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
 export async function apply() {
     Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
+    Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 
