@@ -81,7 +81,7 @@ export default class Editor extends DOMAttachedObject {
       ? monaco.editor.getModel(monaco.Uri.parse(model))
       || monaco.editor.createModel(value, language === 'auto' ? undefined : language, monaco.Uri.parse(model))
       : model;
-    this.model.setValue(value);
+    if (!this.options.model) this.model.setValue(value);
     const cfg: import('../monaco').default.editor.IStandaloneEditorConstructionOptions = {
       theme,
       lineNumbers: 'on',

@@ -2,6 +2,7 @@ import React from 'react';
 import type { editor } from 'monaco-editor';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
+import Editor from 'vj/components/editor';
 import yaml from 'js-yaml';
 
 const mapStateToProps = (state) => ({
@@ -28,31 +29,22 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
 
   editor: editor.IStandaloneCodeEditor;
   model: editor.ITextModel;
+  vjEditor: Editor;
 
   async componentDidMount() {
-    const { monaco, registerAction } = await load(['yaml']);
+    const { monaco } = await load(['yaml']);
     const uri = monaco.Uri.parse('hydro://problem/file/config.yaml');
     this.model = monaco.editor.createModel(yaml.dump(this.props.config), 'yaml', uri);
-    this.editor = monaco.editor.create(this.containerElement, {
-      theme: 'vs-light',
-      lineNumbers: 'off',
-      glyphMargin: true,
-      minimap: { enabled: false },
-      lightbulb: { enabled: true },
+    this.vjEditor = Editor.getOrConstruct($(this.containerElement), {
+      language: 'yaml',
       model: this.model,
-    });
-    registerAction(this.editor, this.model);
-    this.disposable.push(
-      this.editor.onDidChangeModelContent((event) => {
+      onChange: (value: string) => {
         this.__preventUpdate = true;
-        this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
+        this.props.handleUpdateCode(value);
         this.__preventUpdate = false;
-      }),
-    );
-    // @ts-ignore
-    window.editor = this.editor;
-    // @ts-ignore
-    window.monaco = monaco;
+      },
+    }) as Editor;
+    this.editor = this.vjEditor.editor;
   }
 
   componentDidUpdate(prevProps) {
@@ -60,18 +52,17 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     if (yaml.dump(prevProps.config) !== yaml.dump(this.props.config)) {
       this.model?.pushEditOperations(
         [],
-        [
-          {
-            range: this.model.getFullModelRange(),
-            text: yaml.dump(this.props.config),
-          },
-        ],
+        [{
+          range: this.model.getFullModelRange(),
+          text: yaml.dump(this.props.config),
+        }],
         undefined,
       );
     }
   }
 
   componentWillUnmount() {
+    if (this.vjEditor) this.vjEditor.destory();
     if (this.model) this.model.dispose();
     if (this.editor) this.editor.dispose();
     this.disposable.map((i) => i.dispose());
