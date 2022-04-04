@@ -1,12 +1,19 @@
+import { readFile } from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { Context } from './interface';
 
+// TODO drop this format in next major version
+// NOT RECOMMENDED TO USE
 export async function judge({
     next, end, config, code,
 }: Context) {
     next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    code = code.replace(/\r/g, '');
-    const outputs = code.split('\n');
+    const answer = ('src' in code)
+        ? await readFile(code.src, 'utf-8')
+        : ('content' in code)
+            ? code.content.toString().replace(/\r/g, '')
+            : '';
+    const outputs = answer.split('\n');
     let totalScore = 0;
     let totalStatus = 0;
     for (const i in config.outputs) {

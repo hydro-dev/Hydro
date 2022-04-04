@@ -7,7 +7,7 @@ import { CopyInFile } from './sandbox/interface';
 import { compilerText } from './utils';
 
 export = async function compile(
-    lang: LangConfig, code: string, copyIn: Record<string, CopyInFile> = {}, next?: Function,
+    lang: LangConfig, code: CopyInFile, copyIn: Record<string, CopyInFile> = {}, next?: Function,
 ): Promise<Execute> {
     const target = lang.target || 'foo';
     const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
@@ -18,7 +18,7 @@ export = async function compile(
         } = await run(
             copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
             {
-                copyIn: { ...copyIn, [lang.code_file]: { content: code } },
+                copyIn: { ...copyIn, [lang.code_file]: code },
                 copyOutCached: [target],
                 env: { HYDRO_LANG: lang.key },
             },
@@ -35,7 +35,7 @@ export = async function compile(
     }
     return {
         execute,
-        copyIn: { ...copyIn, [lang.code_file]: { content: code } },
+        copyIn: { ...copyIn, [lang.code_file]: code },
         clean: () => Promise.resolve(null),
         time,
     };

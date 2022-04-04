@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import checkers from './checkers';
 import compile from './compile';
@@ -19,7 +18,6 @@ export async function check(config: CheckConfig): Promise<[number, number, strin
 export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
     if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
-    const file = await fs.readFile(checker);
     const s = checker.replace('@', '.').split('.');
     let lang;
     let langId = s.pop();
@@ -30,5 +28,5 @@ export async function compileChecker(getLang: Function, checkerType: string, che
     }
     if (!lang) throw new SystemError('Unknown checker language.');
     // TODO cache compiled checker
-    return await compile(lang, file.toString(), copyIn);
+    return await compile(lang, { src: checker }, copyIn);
 }

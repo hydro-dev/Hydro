@@ -14,6 +14,7 @@ import { getConfig } from '../config';
 import { CompileError, FormatError, SystemError } from '../error';
 import judge from '../judge';
 import log from '../log';
+import { CopyInFile } from '../sandbox/interface';
 import * as sysinfo from '../sysinfo';
 import * as tmpfs from '../tmpfs';
 import {
@@ -31,10 +32,10 @@ class JudgeTask {
     source: string;
     rid: string;
     lang: string;
-    code: string;
+    code: CopyInFile;
     tmpdir: string;
     input?: string;
-    clean: Function[];
+    clean: (() => Promise<any>)[];
     data: any[];
     folder: string;
     config: any;
@@ -57,7 +58,7 @@ class JudgeTask {
         this.stat.handle = new Date();
         this.rid = this.request.rid;
         this.lang = this.request.lang;
-        this.code = this.request.code;
+        this.code = { content: this.request.code };
         this.config = this.request.config;
         this.input = this.request.input;
         this.data = this.request.data;
@@ -100,7 +101,7 @@ class JudgeTask {
             }
         } finally {
             Lock.release(`${this.host}/${this.source}/${this.rid}`);
-            for (const clean of this.clean) await clean().catch(noop);
+            for (const clean of this.clean) await clean()?.catch(noop);
             tmpfs.umount(this.tmpdir);
             fs.removeSync(this.tmpdir);
         }
@@ -109,6 +110,12 @@ class JudgeTask {
     async doSubmission(startPromise = Promise.resolve()) {
         this.stat.cache_start = new Date();
         this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
+        if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
+            const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
+            const target = await this.session.fetchCodeFile(id);
+            this.code = { src: target };
+            this.clean.push(() => fs.remove(target));
+        }
         this.stat.read_cases = new Date();
         this.config = await readCases(
             this.folder,
@@ -245,6 +252,21 @@ export default class Hydro {
         }
         fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
+    }
+
+    async fetchCodeFile(name: string) {
+        const res = await this.axios.post('judge/code', { id: name });
+        const f = await this.axios.get(res.data.url, { responseType: 'stream' })
+            .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
+        if (f instanceof Error) throw f;
+        const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
+        const w = fs.createWriteStream(target);
+        f.data.pipe(w);
+        await new Promise((resolve, reject) => {
+            w.on('finish', resolve);
+            w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
+        });
+        return target;
     }
 
     getLang(name: string, doThrow = true) {

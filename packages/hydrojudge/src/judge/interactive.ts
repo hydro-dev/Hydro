@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
@@ -108,14 +107,14 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
         (() => {
             const copyIn = {
                 'testlib.h': { src: testlibSrc },
-                user_code: { content: ctx.code },
+                user_code: ctx.code,
             };
             for (const file of ctx.config.judge_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return compile(
                 ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
-                fs.readFileSync(ctx.config.interactor).toString(),
+                { src: ctx.config.interactor },
                 copyIn,
             );
         })(),

@@ -2,6 +2,7 @@ import AdmZip from 'adm-zip';
 import { statSync } from 'fs-extra';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { nanoid } from 'nanoid';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
@@ -462,7 +463,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     }
 
     @param('lang', Types.Name)
-    @param('code', Types.Content)
+    @param('code', Types.Content, true)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
     @param('tid', Types.ObjectID, true)
@@ -470,11 +471,21 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
-        if (pretest && setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
-        if (pretest && setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
-        if (pretest && !['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
-            throw new BadRequestError('unable to run pretest');
+        if (pretest) {
+            if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
+            if (setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
+            if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+                throw new BadRequestError('unable to run pretest');
+            }
         }
+        if (!code) {
+            const file = this.request.files?.file;
+            if (!file) throw new ValidationError('code');
+            if (file.size > 128 * 1024 * 1024) throw new ValidationError('file');
+            const id = nanoid();
+            await storage.put(`submission/${this.user._id}/${id}`, file.path);
+            code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
+        } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);
         const rdoc = await record.get(domainId, rid);

@@ -12,6 +12,7 @@ import * as monitor from 'hydrooj/src/service/monitor';
 import readCases from './cases';
 import { getConfig } from './config';
 import { CompileError, FormatError, SystemError } from './error';
+import { CopyInFile } from './sandbox/interface';
 import * as sysinfo from './sysinfo';
 import * as tmpfs from './tmpfs';
 import { compilerText, md5 } from './utils';
@@ -72,6 +73,12 @@ async function postInit() {
             files = await fs.readdir(`${folder}/output`);
             for (const i of files) await fs.rename(`${folder}/output/${i}`, `${folder}/output/${i.toLowerCase()}`);
         }
+    }
+
+    async function fetchCodeFile(name: string) {
+        const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
+        await storage.get(`submission/${name}`, target);
+        return target;
     }
 
     async function cacheOpen(source: string, files: any[]) {
@@ -148,7 +155,7 @@ async function postInit() {
         source: string;
         rid: string;
         lang: string;
-        code: string;
+        code: CopyInFile;
         data: any[];
         config: any;
         env: any;
@@ -156,7 +163,7 @@ async function postInit() {
         next: (data: any, id?: number) => void;
         end: (data: any) => void;
         tmpdir: string;
-        clean: any[];
+        clean: (() => Promise<any>)[];
         folder: string;
         getLang: (lang: string) => any;
 
@@ -173,7 +180,7 @@ async function postInit() {
                 this.stat.handle = new Date();
                 this.rid = this.request.rid.toString();
                 this.lang = this.request.lang;
-                this.code = this.request.code;
+                this.code = { content: this.request.code };
                 this.data = this.request.data;
                 this.source = this.request.source;
                 this.config = this.request.config;
@@ -223,6 +230,13 @@ async function postInit() {
         async submission() {
             this.stat.cache_start = new Date();
             this.folder = await cacheOpen(this.source, this.data);
+            if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
+                const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
+                if (!id) throw new SystemError('Submission File Not Found');
+                const target = await fetchCodeFile(id);
+                this.code = { src: target };
+                this.clean.push(() => fs.remove(target));
+            }
             this.stat.read_cases = new Date();
             this.config = await readCases(
                 this.folder,
