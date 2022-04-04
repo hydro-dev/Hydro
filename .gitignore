@@ -11,6 +11,7 @@ dist/
 *.tsbuildinfo
 *.hydro
 .coverage
+benchmark.json
 globalConfig.json
 *.out
 .clinic/
