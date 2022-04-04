@@ -49,14 +49,14 @@ jobs:
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js
-    - name: Benchmark
-      run: yarn benchmark
-    - name: Benchmark result
-      uses: benchmark-action/github-action-benchmark@v1
-      with:
-        name: Benchmark
-        tool: customBiggerIsBetter
-        output-file-path: benchmark.json
+    # - name: Benchmark
+    #   run: yarn benchmark
+    # - name: Benchmark result
+    #   uses: benchmark-action/github-action-benchmark@v1
+    #   with:
+    #     name: Benchmark
+    #     tool: customBiggerIsBetter
+    #     output-file-path: benchmark.json
   # web:
   #   needs: build
   #   permissions:
