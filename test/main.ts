@@ -14,10 +14,14 @@ describe('App', () => {
     let agent: supertest.SuperAgentTest;
     before('init', function init(done) {
         this.timeout(30000);
-        bus.on('app/started', () => setTimeout(() => {
+        let timeout;
+        const resolve = () => setTimeout(() => {
+            clearTimeout(timeout);
             agent = supertest.agent(require('hydrooj/src/service/server').server);
             done();
-        }, 2000));
+        }, 2000);
+        bus.on('app/started', resolve);
+        timeout = setTimeout(resolve, 20000);
     });
 
     const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
