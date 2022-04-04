@@ -42,7 +42,7 @@ class MongoService implements BaseService {
         }
         this.opts = opts;
         this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
-        this.db = this.client.db(opts.name);
+        this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
         this.started = true;
     }
