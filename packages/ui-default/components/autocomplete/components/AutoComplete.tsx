@@ -103,13 +103,11 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     setCurrentItem(null);
   };
 
-  const calculateValue = () => {
+  const dispatchChange = () => {
     const query = inputRef.current?.value;
-    if (!query) return multi ? selectedKeys.join(',') : '';
-    return (multi && selectedKeys.length) ? `${selectedKeys.join(',')},${query}` : query;
+    const val = [...selectedKeys, query].filter((i) => i).join(',');
+    onChange(val);
   };
-
-  const dispatchChange = () => onChange(calculateValue());
 
   useEffect(() => {
     dispatchChange();

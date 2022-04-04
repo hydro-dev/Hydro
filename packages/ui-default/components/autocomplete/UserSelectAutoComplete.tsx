@@ -32,7 +32,7 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
   }
 
   value(): Multi extends true ? number[] : string {
-    if (this.options.multi) return this.ref?.getSelectedItems().map((item) => item._id) ?? this.$dom.val();
+    if (this.options.multi) return this.ref?.getSelectedItemKeys().map((i) => +i) ?? this.$dom.val();
     return this.ref?.getSelectedItems()[0] ?? null;
   }
 
