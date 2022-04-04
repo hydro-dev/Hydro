@@ -33,7 +33,7 @@ class MongoService implements BaseService {
         return mongourl;
     }
 
-    async start(opts: MongoConfig) {
+    async start(opts: MongoConfig = {}) {
         let mongourl = MongoService.buildUrl(opts);
         if (process.env.CI) {
             const { MongoMemoryServer } = require('mongodb-memory-server');
