@@ -26,6 +26,7 @@
         "fs-extra": "^10.0.1",
         "graphql": "^16.3.0",
         "graphql-scalars": "1.17.0",
+        "isbinaryfile": "^5.0.0",
         "js-yaml": "^4.1.0",
         "koa": "^2.13.4",
         "koa-body": "^4.2.0",

@@ -185,7 +185,6 @@ async function readAutoCases(folder: string, { next }, cfg, rst) {
 }
 
 function isValidConfig(config) {
-    if (config.type === 'submit_answer' && !config.outputs.length) throw new FormatError('Problem data not found.');
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
