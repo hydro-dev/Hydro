@@ -161,27 +161,18 @@ bus.once('app/started', async () => {
         });
     }
     await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
-    (async () => {
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            // eslint-disable-next-line no-await-in-loop
-            const res = await collEvent.findOneAndUpdate(
-                { ack: { $nin: [id] } },
-                { $push: { ack: id } },
-            );
-            // eslint-disable-next-line no-await-in-loop
-            if (!res.value) await sleep(100);
-            else {
-                const payload = JSON.parse(res.value.payload);
-                if (process.send) process.send({ type: 'hydro:broadcast', data: { event: res.value.event, payload } });
-                if (res.value) bus.parallel(res.value.event, ...payload);
-            }
-        }
-    })();
+    const stream = collEvent.watch([{ $match: { sender: { $ne: id } } }]);
+    stream.on('change', async (change) => {
+        if (change.operationType !== 'insert') return;
+        const doc = change.fullDocument;
+        const payload = JSON.parse(doc.payload);
+        if (process.send) process.send({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
+        if (doc) bus.parallel(doc.event, ...payload);
+    });
 });
 bus.on('bus/broadcast', (event, payload) => {
     collEvent.insertOne({
-        ack: [id],
+        sender: id,
         event,
         payload: JSON.stringify(payload),
         expire: new Date(Date.now() + 10000),

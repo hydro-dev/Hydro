@@ -562,7 +562,7 @@ export interface FileNode {
 }
 
 export interface EventDoc {
-    ack: string[];
+    sender: string;
     event: number | string;
     payload: string;
     expire: Date;
