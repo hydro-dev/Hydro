@@ -1,3 +1,4 @@
+import { readFile } from 'fs-extra';
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
@@ -33,43 +34,50 @@ function judgeCase(c: Case, sid: string) {
             }, c.id);
             return;
         }
-
-        const res = await run(
-            ctx.config.subType === 'multi'
-                ? '/bin/bash -c "unzip foo.zip >/dev/null && read line && cat $line"'
-                : '/bin/cat foo.zip',
-            {
-                stdin: c.input,
-                copyIn: { 'foo.zip': ctx.code },
-                copyOutCached: [],
-                time: 1000,
-                memory: 128,
-                cacheStdoutAndStderr: true,
-            },
-        );
-        const { code } = res;
-        let { status } = res;
+        const chars = /[a-zA-Z0-9_.-]/;
+        const name = await readFile(c.input, 'utf-8').then((res) => res.trim().split('').filter((i) => chars.test(i)).join(''));
+        let file = ctx.code;
+        let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
+        const fileIds = [];
+        if (ctx.config.subType === 'multi') {
+            const res = await run(
+                '/usr/bin/unzip foo.zip',
+                {
+                    stdin: null,
+                    copyIn: { 'foo.zip': ctx.code },
+                    copyOutCached: [`${name}?`],
+                    time: 1000,
+                    memory: 128,
+                    cacheStdoutAndStderr: true,
+                },
+            );
+            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
+                message = { message: 'Unzip failed.' };
+                status = STATUS.STATUS_WRONG_ANSWER;
+            } else if (!res.fileIds[name]) {
+                message = { message: 'File not found.' };
+                status = STATUS.STATUS_WRONG_ANSWER;
+            }
+            file = { fileId: res.fileIds[name] };
+            fileIds.push(...Object.values(res.fileIds));
+        }
         if (status === STATUS.STATUS_ACCEPTED) {
             [status, score, message] = await check({
                 execute: ctx.checker.execute,
                 copyIn: ctx.checker.copyIn || {},
                 input: { src: c.input },
                 output: { src: c.output },
-                user_stdout: { fileId: res.fileIds['stdout'] },
-                user_stderr: { fileId: res.fileIds['stderr'] },
+                user_stdout: file,
+                user_stderr: { content: '' },
                 checker_type: ctx.config.checker_type,
                 score: ctxSubtask.subtask.score,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             });
-        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-            message = { message: 'Unzip failed or file not found.' };
         }
-        await Promise.all(
-            Object.values(res.fileIds).map((id) => del(id)),
-        ).catch(() => { /* Ignore file doesn't exist */ });
+        await Promise.all(fileIds.map(del)).catch(() => { /* Ignore file doesn't exist */ });
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
