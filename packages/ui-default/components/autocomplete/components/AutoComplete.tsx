@@ -7,38 +7,89 @@ import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
 import Icon from 'vj/components/react/IconComponent';
 
+export interface AutoCompleteProps<Item> {
+  width?: string;
+  /**
+   * if you need fix height, set to at least "30px"
+   * for Hydro, no less then "34px" can be better
+   */
+  height?: string;
+  disabled?: boolean;
+  disabledHint?: string;
+  listStyle?: React.CSSProperties;
+  cacheKey?: string;
+  renderItem?: (item: Item) => any;
+  queryItems?: (query: string) => Promise<Item[]> | Item[];
+  fetchItems?: (ids: string[]) => Promise<Item[]> | Item[];
+  itemText?: (item: Item) => string;
+  itemKey?: (item: Item) => string;
+  onChange?: (value: string) => any;
+  multi?: boolean;
+  selectedKeys?: string[];
+  allowEmptyQuery?: boolean;
+  freeSolo?: boolean;
+  freeSoloConverter?: (value: string) => string;
+}
+
+export interface AutoCompleteHandle<Item> {
+  getSelectedItems: () => Item[];
+  getSelectedItemKeys: () => string[];
+  getSelectedItemsAsString: () => string;
+  setSelectedItems: (items: Item[]) => void;
+  getQuery: () => string;
+  setQuery: (query: string) => void;
+  triggerQuery: () => any;
+  closeList: () => void;
+  /** returns comma seperated value text */
+  getValue: () => string;
+  /** return value detail */
+  getValueArray: () => Item[];
+  clear: () => void;
+  focus: () => void;
+}
+
+const superCache = {};
+
 // eslint-disable-next-line prefer-arrow-callback
-const AutoComplete = forwardRef(function AutoComplete(props, ref) {
+const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const width = props.width ?? '100%';
-  // if you need fix height, set to at least "30px"
-  // for Hydro, no less then "34px" can be better
   const height = props.height ?? 'auto';
   const disabled = props.disabled ?? false;
   const disabledHint = props.disabledHint ?? '';
   const listStyle = props.listStyle ?? {};
-  const itemsFn = props.itemsFn ?? (async () => []);
+  const queryItems = props.queryItems ?? (() => []);
   const renderItem = props.renderItem ?? ((item) => item);
-  const itemText = props.itemText ?? ((item) => item);
+  const itemText = props.itemText ?? ((item) => item.toString());
   const itemKey = props.itemKey ?? itemText;
   const onChange = props.onChange ?? (() => { });
   const multi = props.multi ?? false;
-  const rawDefaultItems = props.defaultItems ?? [];
-  const defaultItems = typeof rawDefaultItems === 'string'
-    ? rawDefaultItems.split(',').map((i) => i.trim()).filter((i) => i.length > 0) : rawDefaultItems;
   const allowEmptyQuery = props.allowEmptyQuery ?? false;
   const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
 
   const [focused, setFocused] = useState(false); // is focused
-  const [selected, setSelected] = useState(multi ? defaultItems : []); // selected items
-  const [selectedKeys, setSelectedKeys] = useState(multi ? defaultItems.map((i) => itemKey(i)) : []); // keys of selected items
+  const [selected, setSelected] = useState([]); // selected items
+  const [selectedKeys, setSelectedKeys] = useState(props.selectedKeys); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
+  const [rerender, setRerender] = useState(false);
 
-  const inputRef = useRef();
-  const listRef = useRef();
+  const inputRef = useRef<HTMLInputElement>();
+  const listRef = useRef<HTMLUListElement>();
 
-  const cache = useRef({});
+  if (props.cacheKey) superCache[props.cacheKey] ||= { query: {}, value: {} };
+  const queryCache = props.cacheKey ? superCache[props.cacheKey].query : useRef({}).current;
+  const valueCache = props.cacheKey ? superCache[props.cacheKey].value : useRef({}).current;
+
+  useEffect(() => {
+    const ids = [];
+    for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
+    if (!ids.length) return;
+    Promise.resolve(props.fetchItems(ids)).then((items) => {
+      for (const item of items) valueCache[itemKey(item)] = item;
+      setRerender(!rerender);
+    });
+  }, [selectedKeys]);
 
   const queryList = async (query) => {
     if (!query && !allowEmptyQuery) {
@@ -46,26 +97,16 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
       setCurrentItem(null);
       return;
     }
-    let items;
-    if (cache.current[query]) {
-      items = cache.current[query];
-    } else {
-      items = await itemsFn(query);
-      cache.current[query] = items;
-    }
-    setItemList(items);
+    if (!queryCache[query]) queryCache[query] = await queryItems(query);
+    for (const item of queryCache[query]) valueCache[itemKey(item)] = item;
+    setItemList(queryCache[query]);
     setCurrentItem(null);
   };
 
-  const calculateValue = () => {
-    const query = inputRef.current?.value;
-    if (!query) return multi ? selectedKeys.join(',') : '';
-    return (multi && selectedKeys.length > 0) ? `${selectedKeys.join(',')},${query}` : query;
-  };
-
   const dispatchChange = () => {
-    const value = calculateValue();
-    onChange(value);
+    const query = inputRef.current?.value;
+    const val = [...selectedKeys, query].filter((i) => i).join(',');
+    onChange(val);
   };
 
   useEffect(() => {
@@ -78,8 +119,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     queryList(value);
   }, 300);
 
-  const toggleItem = (item) => {
-    const key = itemKey(item);
+  const toggleItem = (item: T, key = itemKey(item)) => {
     if (multi) {
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {
@@ -159,6 +199,7 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
 
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
+    getSelectedItemKeys: () => selectedKeys,
     getSelectedItemsAsString: () => selectedKeys.join(','),
     setSelectedItems: (items) => {
       setSelected(items);
@@ -175,12 +216,6 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
     },
     getValue: () => (multi ? selectedKeys.join(',') : (inputRef.current.value ?? '')),
     getValueArray: () => (multi ? selected : [inputRef.current?.value].filter((i) => !!i)),
-    getValueWithQuery: () => calculateValue(),
-    getValueArrayWithQuery: () => {
-      const query = inputRef.current?.value;
-      if (!query) return multi ? selected : [''];
-      return multi ? [...selected, query] : [query];
-    },
     clear: () => {
       setSelected([]);
       setSelectedKeys([]);
@@ -198,12 +233,15 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
         className={focused ? 'autocomplete-wrapper focused' : 'autocomplete-wrapper'}
         style={{ width, height }}
       >
-        {multi && selected.map((item, idx) => (
-          <div className="autocomplete-tag" key={selectedKeys[idx]}>
-            <div>{itemText(item)}</div>
-            <Icon name="close" onClick={() => toggleItem(item)} />
-          </div>
-        ))}
+        {multi && selectedKeys.map((key) => {
+          const item = valueCache[key];
+          return (
+            <div className="autocomplete-tag" key={item ? key : `draft-${key}`}>
+              <div>{item ? itemText(item) : key}</div>
+              <Icon name="close" onClick={() => toggleItem(item, key)} />
+            </div>
+          );
+        })}
         {disabled && (
           <input
             disabled
@@ -219,15 +257,10 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
             dispatchChange();
             handleInputChange(e);
           }}
-          onFocus={() => {
-            setFocused(true);
-            if (allowEmptyQuery) {
-              handleInputChange();
-            }
-          }}
+          onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onKeyDown={handleInputKeyDown}
-          defaultValue={multi ? '' : defaultItems.join(',')}
+          defaultValue={multi ? '' : selectedKeys.join(',')}
         />
       </div>
       {focused && itemList.length > 0 && (
@@ -241,14 +274,14 @@ const AutoComplete = forwardRef(function AutoComplete(props, ref) {
               data-focus={idx === currentItem}
             >
               <div>{renderItem(item)}</div>
-              <Icon name="check" />
+              {selectedKeys.includes(itemKey(item)) && <Icon name="check" />}
             </li>
           ))}
         </ul>
       )}
     </div>
   );
-});
+}) as (<T>(props: AutoCompleteProps<T> & { ref: React.Ref<AutoCompleteHandle<T>> }) => React.ReactElement) & React.FC;
 
 AutoComplete.propTypes = {
   width: PropTypes.string,
@@ -256,13 +289,13 @@ AutoComplete.propTypes = {
   disabled: PropTypes.bool,
   disabledHint: PropTypes.string,
   listStyle: PropTypes.object,
-  itemsFn: PropTypes.func.isRequired,
+  queryItems: PropTypes.func.isRequired,
   itemKey: PropTypes.func,
   renderItem: PropTypes.func,
   itemText: PropTypes.func,
   onChange: PropTypes.func.isRequired,
   multi: PropTypes.bool,
-  defaultItems: PropTypes.oneOfType([(PropTypes.arrayOf(PropTypes.any)), PropTypes.string]),
+  selectedKeys: PropTypes.arrayOf(PropTypes.string),
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
@@ -275,9 +308,9 @@ AutoComplete.defaultProps = {
   disabledHint: '',
   listStyle: {},
   renderItem: (item) => item,
-  itemText: (item) => item,
+  itemText: (item) => item.toString(),
   multi: false,
-  defaultItems: [],
+  selectedKeys: [],
   allowEmptyQuery: false,
   freeSolo: false,
   freeSoloConverter: (input) => input,

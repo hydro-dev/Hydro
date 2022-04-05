@@ -39,7 +39,7 @@ export function registerResolver(
     registerValue(typeName, key, value, description);
     const wrappedFunc = async (arg, ctx, info) => {
         const res = await func(arg, ctx, info);
-        if (typeof res !== 'object') return res;
+        if (typeof res !== 'object' || res === null) return res;
         const node = value.includes('!') ? value.split('!')[0] : value;
         if (handlers[node]) Object.assign(res, handlers[node]);
         ctx.parent = res;

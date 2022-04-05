@@ -12,6 +12,7 @@ const coll = db.collection('task');
 const collEvent = db.collection('event');
 
 async function getFirst(query: FilterQuery<Task>) {
+    if (process.env.CI) return null;
     const q = { ...query };
     q.executeAfter = q.executeAfter || { $lt: new Date() };
     const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });

@@ -5,6 +5,22 @@ import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
 import DomainSelectAutoCompleteFC from './components/DomainSelectAutoComplete';
 
+const Component = React.forwardRef((props: { value: string, multi: boolean, onChange: (v: string) => void }, ref) => {
+  const [value, setValue] = React.useState(props.value);
+  return (
+    <DomainSelectAutoCompleteFC
+      ref={ref as any}
+      height="34px"
+      selectedKeys={value.split(',').map((i) => i.trim())}
+      onChange={(v) => {
+        setValue(v);
+        props.onChange(v);
+      }}
+      multi={props.multi}
+    />
+  );
+});
+
 export default class DomainSelectAutoComplete extends AutoComplete {
   static DOMAttachKey = 'ucwDomainSelectAutoCompleteInstance';
 
@@ -18,13 +34,11 @@ export default class DomainSelectAutoComplete extends AutoComplete {
   attach() {
     const value = this.$dom.val();
     ReactDOM.render(
-      <DomainSelectAutoCompleteFC
+      <Component
         ref={(ref) => { this.ref = ref; }}
-        height="34px"
-        defaultItems={value}
+        value={value}
         onChange={this.onChange}
         multi={this.options.multi}
-        freeSolo={this.options.multi}
       />,
       this.container,
     );
