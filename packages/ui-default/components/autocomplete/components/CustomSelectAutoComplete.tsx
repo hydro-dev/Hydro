@@ -2,13 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import AutoComplete from './AutoComplete';
 
+type DefaultProps = {
+  _id: string;
+  name: string;
+} & string;
+
 const CustomSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
-  <AutoComplete<any>
+  <AutoComplete<DefaultProps>
     ref={ref as any}
-    queryItems={(query) => props.data.filter((i) => (i.name ? i.name.match(query) : i.match(query)))}
+    fetchItems={(keys) => props.data.filter((i) => (i._id ? keys.includes(i._id) : keys.includes(i)))}
+    queryItems={(query) => props.data.filter((i) => (i.name
+      ? i.name.toLowerCase().match(query.toLowerCase())
+      : i.toString().toLowerCase().match(query.toLowerCase())
+    ))}
     itemText={(item) => `${item.name || item}`}
     itemKey={(item) => `${item._id?.toString() || item.name || item}`}
     renderItem={(item) => `${item.name || item}`}
+    allowEmptyQuery
     {...props}
   />
 ));
@@ -34,7 +44,6 @@ CustomSelectAutoComplete.defaultProps = {
   listStyle: {},
   multi: false,
   selectedKeys: [],
-  allowEmptyQuery: false,
   freeSolo: false,
   freeSoloConverter: (input) => input,
 };

@@ -4,3 +4,4 @@ declare let UiContext: any;
 declare let Hydro: any;
 // eslint-disable-next-line camelcase
 declare let node_modules: any;
+declare let LANGS: Record<string, import('@hydrooj/utils/lib/lang').LangConfig>;
