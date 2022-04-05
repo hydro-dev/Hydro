@@ -210,6 +210,10 @@ class HomeworkScoreboardHandler extends Handler {
         const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(
             this, domainId, tid, false, page,
         );
+        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, false, [
+            // Problem statistics display is allowed as we can view submission info in scoreboard.
+            ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
+        ]);
         const path = [
             ['Hydro', 'homepage'],
             ['homework_main', 'homework_main'],
@@ -218,7 +222,7 @@ class HomeworkScoreboardHandler extends Handler {
         ];
         this.response.template = 'contest_scoreboard.html';
         this.response.body = {
-            tdoc, rows, path, udict, page, nPages, page_name: 'homework_scoreboard',
+            tdoc, rows, path, udict, pdict, page, nPages, page_name: 'homework_scoreboard',
         };
     }
 }

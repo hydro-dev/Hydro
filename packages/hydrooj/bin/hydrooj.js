@@ -149,7 +149,7 @@ if (argv.args[0] === 'restore') {
         return;
     }
     exec('unzip', [argv.args[1], '-d', dir], { stdio: 'inherit' });
-    exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/${JSON.parse(dbConfig).name}`, '--drop'], { stdio: 'inherit' });
+    exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/hydro`, '--drop'], { stdio: 'inherit' });
     if (fs.existsSync(`${dir}/file`)) {
         exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
         exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });

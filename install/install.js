@@ -294,7 +294,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         operations: [
             `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
-            'pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb',
+            'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
             () => sleep(1000),
             'pm2 start hydro-sandbox',
             'pm2 start hydrooj',
