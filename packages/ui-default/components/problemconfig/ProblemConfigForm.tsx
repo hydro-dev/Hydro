@@ -73,7 +73,7 @@ function SingleFileSelect({ formKey }: { formKey: KeyType<RootState['config']> }
     <CustomSelectAutoComplete
       width="100%"
       data={Files}
-      Sele={value}
+      selectedKeys={[value]}
       onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: formKey, value: val })}
     />
   );
@@ -190,10 +190,7 @@ function CasesTable({ index }) {
   const [memory, setMemory] = useState('');
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
-  const cases = useSelector((state: RootState) => {
-    console.log((index === -1 ? state.config.cases : state.config.subtasks[index].cases));
-    return (index === -1 ? state.config.cases : state.config.subtasks[index].cases);
-  }, eq);
+  const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
   console.log(cases);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
@@ -228,7 +225,7 @@ function CasesTable({ index }) {
             <CustomSelectAutoComplete
               width="100%"
               data={Files}
-              selectedKeys={[input] || []}
+              selectedKeys={[input]}
               onChange={setInput}
             />
           </th>
@@ -237,7 +234,7 @@ function CasesTable({ index }) {
             <CustomSelectAutoComplete
               width="100%"
               data={Files}
-              selectedKeys={[output] || []}
+              selectedKeys={[output]}
               onChange={setOutput}
             />
           </th>
@@ -312,8 +309,8 @@ function SubtasksTable({ data, index }) {
         <thead>
           <tr>
             <th>#</th>
-            <th>Type</th>
             <th>Score</th>
+            <th>Type</th>
             <th>Time</th>
             <th>Memory</th>
           </tr>
@@ -337,7 +334,7 @@ function SubtasksTable({ data, index }) {
             <td>
               <select
                 value={data.type}
-                onChange={dispatcher('id')}
+                onChange={dispatcher('type')}
                 className="select"
               >
                 <option aria-label="null" value="" style={{ display: 'none' }}></option>
@@ -401,7 +398,12 @@ function TaskConfig() {
             subtasks || cases
               ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
               || cases && (<CasesTable index={-1} />)
-              : <Switch checked label="Use Auto Cases" onChange={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE', value: false })} />
+              : (
+                <a
+                  onChange={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE' })}
+                ><span className="icon icon-settings"> {i18n('Manual Configure Tasks')}</span>
+                </a>
+              )
           }
         </FormItem>
       </div>
