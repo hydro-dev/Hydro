@@ -44,6 +44,7 @@ module.exports = {
     UserContext: true,
     externalModules: true,
     LOCALES: true,
+    LANGS: true,
     window: true,
     JQuery: true,
   },
