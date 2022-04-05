@@ -1,5 +1,6 @@
 import AdmZip from 'adm-zip';
-import { statSync } from 'fs-extra';
+import { readFile, statSync } from 'fs-extra';
+import { isBinaryFile } from 'isbinaryfile';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
@@ -481,10 +482,18 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (!code) {
             const file = this.request.files?.file;
             if (!file) throw new ValidationError('code');
-            if (file.size > 128 * 1024 * 1024) throw new ValidationError('file');
-            const id = nanoid();
-            await storage.put(`submission/${this.user._id}/${id}`, file.path);
-            code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
+            const config = this.response.body.pdoc.config;
+            if (typeof config !== 'object' || config === null) throw new BadRequestError('Incorrect problem config');
+            const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
+            if (file.size > sizeLimit) throw new ValidationError('file');
+            if (file.size > 65535 || await isBinaryFile(file.path, file.size)) {
+                const id = nanoid();
+                await storage.put(`submission/${this.user._id}/${id}`, file.path);
+                code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
+            } else {
+                // TODO auto detect & convert encoding
+                code = await readFile(file.path, 'utf-8');
+            }
         } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);

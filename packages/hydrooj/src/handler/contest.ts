@@ -208,7 +208,7 @@ export class ContestScoreboardDownloadHandler extends Handler {
     async get(domainId: string, tid: ObjectID, ext: string, ignoreLock = false) {
         await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
-            csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
+            csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value.replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
         const tdoc = await contest.get(domainId, tid);

@@ -38,6 +38,7 @@ export interface AutoCompleteHandle<Item> {
   setSelectedItems: (items: Item[]) => void;
   getQuery: () => string;
   setQuery: (query: string) => void;
+  setSelectedKeys: (keys: string[]) => void;
   triggerQuery: () => any;
   closeList: () => void;
   /** returns comma seperated value text */
@@ -69,7 +70,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   const [focused, setFocused] = useState(false); // is focused
   const [selected, setSelected] = useState([]); // selected items
-  const [selectedKeys, setSelectedKeys] = useState(props.selectedKeys); // keys of selected items
+  const [selectedKeys, setSelectedKeys] = useState(props.selectedKeys || []); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
   const [rerender, setRerender] = useState(false);
@@ -80,16 +81,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   if (props.cacheKey) superCache[props.cacheKey] ||= { query: {}, value: {} };
   const queryCache = props.cacheKey ? superCache[props.cacheKey].query : useRef({}).current;
   const valueCache = props.cacheKey ? superCache[props.cacheKey].value : useRef({}).current;
-
-  useEffect(() => {
-    const ids = [];
-    for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
-    if (!ids.length) return;
-    Promise.resolve(props.fetchItems(ids)).then((items) => {
-      for (const item of items) valueCache[itemKey(item)] = item;
-      setRerender(!rerender);
-    });
-  }, [selectedKeys]);
 
   const queryList = async (query) => {
     if (!query && !allowEmptyQuery) {
@@ -104,22 +95,25 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   };
 
   const dispatchChange = () => {
-    const query = inputRef.current?.value;
-    const val = [...selectedKeys, query].filter((i) => i).join(',');
-    onChange(val);
+    if (!multi) onChange(inputRef.current?.value);
+    else onChange(selectedKeys.join(','));
   };
 
   useEffect(() => {
     dispatchChange();
+    const ids = [];
+    for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
+    if (!ids.length) return;
+    Promise.resolve(props.fetchItems(ids)).then((items) => {
+      for (const item of items) valueCache[itemKey(item)] = item;
+      setRerender(!rerender);
+    });
   }, [selectedKeys, multi]);
 
-  const handleInputChange = debounce(async (e) => {
-    const { target } = e;
-    const { value } = target;
-    queryList(value);
-  }, 300);
+  const handleInputChange = debounce((e?) => queryList(e ? e.target.value : ''), 300);
 
   const toggleItem = (item: T, key = itemKey(item)) => {
+    const shouldKeepOpen = allowEmptyQuery && inputRef.current.value === '' && !multi;
     if (multi) {
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {
@@ -145,8 +139,10 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       inputRef.current.value = key;
       dispatchChange();
     }
-    setItemList([]);
-    setCurrentItem(null);
+    if (!shouldKeepOpen) {
+      setItemList([]);
+      setCurrentItem(null);
+    }
   };
 
   const handleInputKeyDown = (e) => {
@@ -169,7 +165,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     }
     if (key === 'Backspace') {
       if (target.value.length > 0) return;
-      if (selected.length > 0) {
+      if (selectedKeys.length > 0) {
         setSelected((s) => s.slice(0, -1));
         setSelectedKeys((s) => s.slice(0, -1));
       }
@@ -209,6 +205,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     setQuery: (query) => {
       if (inputRef.current) inputRef.current.value = query;
     },
+    setSelectedKeys: (keys) => setSelectedKeys(keys),
     triggerQuery: () => queryList(inputRef.current?.value),
     closeList: () => {
       setItemList([]);
@@ -257,7 +254,10 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
             dispatchChange();
             handleInputChange(e);
           }}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            if (allowEmptyQuery) handleInputChange();
+            setFocused(true);
+          }}
           onBlur={() => setFocused(false)}
           onKeyDown={handleInputKeyDown}
           defaultValue={multi ? '' : selectedKeys.join(',')}
