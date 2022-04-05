@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import type { ProblemConfigFile } from 'vj/../hydrooj/src/interface';
+import type { ProblemConfigFile } from 'hydrooj/src/interface';
 
 export default function reducer(state = { type: 'default' } as ProblemConfigFile, action): ProblemConfigFile {
   switch (action.type) {
@@ -27,20 +27,20 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_AUTOCASES_UPDATE': {
     if (!action.value) return { ...state, cases: [] };
-    const next = state;
+    const next = { ...state };
     delete next.cases;
     delete next.subtasks;
     return next;
   }
   case 'CONFIG_SUBTASKS_SWITCH': {
-    const next = state;
+    const next = { ...state };
     next.subtasks = next.cases;
     if (!next.subtasks.length) next.subtasks.push({ id: 0 });
     delete next.cases;
     return next;
   }
   case 'CONFIG_CASES_UPDATE': {
-    const next = state;
+    const next = { ...state };
     if (action.key === 'cases-add') next.cases.push(action.value);
     else if (action.key === 'cases-delete') {
       next.cases = next.cases.filter((k, v) => v !== action.value);
@@ -48,7 +48,7 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
     return next;
   }
   case 'CONFIG_SUBTASK_UPDATE': {
-    const next = state;
+    const next = { ...state };
     if (action.key === 'add') next.subtasks.splice(action.id, 0, { id: 0 });
     else if (action.key === 'delete') delete next.subtasks[action.key];
     else if (action.key === 'cases-add') next.subtasks[action.id].cases.push(action.value);

@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
 import { Switch, Tab, Tabs } from '@blueprintjs/core';
-import type { SubtaskConfig, TestCaseConfig } from 'hydrooj/src/interface';
+import type { TestCaseConfig } from 'hydrooj/src/interface';
 import type { RootState } from './reducer/index';
-import CustomSelectAutoComplete from '../autocomplete/CustomSelectAutoComplete';
+import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 
 const SelectValue = {
   type: ['default', 'interactive', 'submit_answer', 'objective'],
@@ -13,7 +13,7 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: SubtaskConfig[] | TestCaseConfig[], b: SubtaskConfig[] | TestCaseConfig[]) => isEqual(a, b);
+const eq = (a: TestCaseConfig[], b: TestCaseConfig[]) => isEqual(a, b);
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -73,7 +73,7 @@ function SingleFileSelect({ formKey }: { formKey: KeyType<RootState['config']> }
     <CustomSelectAutoComplete
       width="100%"
       data={Files}
-      defaultItems={value}
+      Sele={value}
       onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: formKey, value: val })}
     />
   );
@@ -161,7 +161,7 @@ function ExtraFilesConfig() {
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
-                defaultItems={userExtraFiles}
+                selectedKeys={userExtraFiles || []}
                 onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'user_extra_files', value: val.split(',') })}
                 multi
               />
@@ -173,7 +173,7 @@ function ExtraFilesConfig() {
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
-                defaultItems={judgeExtraFiles}
+                selectedKeys={judgeExtraFiles || []}
                 onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'judge_extra_files', value: val.split(',') })}
                 multi
               />
@@ -185,13 +185,16 @@ function ExtraFilesConfig() {
   );
 }
 
-// FIXME 直接转换为Subtask，不需要Cases
 function CasesTable({ index }) {
   const [time, setTime] = useState('');
   const [memory, setMemory] = useState('');
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
-  const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
+  const cases = useSelector((state: RootState) => {
+    console.log((index === -1 ? state.config.cases : state.config.subtasks[index].cases));
+    return (index === -1 ? state.config.cases : state.config.subtasks[index].cases);
+  }, eq);
+  console.log(cases);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
   return (
@@ -225,7 +228,7 @@ function CasesTable({ index }) {
             <CustomSelectAutoComplete
               width="100%"
               data={Files}
-              defaultItems={input}
+              selectedKeys={[input] || []}
               onChange={setInput}
             />
           </th>
@@ -234,7 +237,7 @@ function CasesTable({ index }) {
             <CustomSelectAutoComplete
               width="100%"
               data={Files}
-              defaultItems={output}
+              selectedKeys={[output] || []}
               onChange={setOutput}
             />
           </th>
@@ -266,21 +269,13 @@ function CasesTable({ index }) {
             {
               index === -1 && (
                 <>
-                  <td>
-                    {k.time}
-                  </td>
-                  <td>
-                    {k.memory}
-                  </td>
+                  <td>{k.time}</td>
+                  <td>{k.memory}</td>
                 </>
               )
             }
-            <td>
-              {k.input}
-            </td>
-            <td>
-              {k.output}
-            </td>
+            <td>{k.input}</td>
+            <td>{k.output}</td>
             <td>
               <a
                 onClick={() => dispatch({
@@ -369,7 +364,7 @@ function SubtasksTable({ data, index }) {
             <td colSpan={4}>
               <CustomSelectAutoComplete
                 data={subtasks}
-                defaultItems={data.if}
+                selectedKeys={data.if || []}
                 onChange={(val) => dispatch({
                   type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'if', value: val.split(','),
                 })}
@@ -401,7 +396,7 @@ function TaskConfig() {
           <ManagedInput placeholder="Score" formKey="score" />
         </FormItem>
         <FormItem columns={12} label="Cases Settings" disableLabel>
-          { cases && <Switch label="Use Subtasks" onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
+          {cases && <Switch label="Use Subtasks" onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
           {
             subtasks || cases
               ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
@@ -416,18 +411,29 @@ function TaskConfig() {
 
 function LangConfig() {
   const [showTab, setshowTab] = useState(false);
-  const langs = useSelector((state: RootState) => state.config.langs);
-  // @ts-ignore
-  const data = Object.keys(window.LANGS);
+  const langs = useSelector((state: RootState) => state.config.langs) || [];
+  const prefixes = new Set(Object.keys(LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+  const data = Object.keys(LANGS).filter((i) => !prefixes.has(i))
+    .map((i) => ({ name: LANGS[i].display, _id: i }));
   const dispatch = useDispatch();
+  const ref = React.useRef<any>();
+  const selectedKeys = langs.filter((i) => !prefixes.has(i));
+  React.useEffect(() => {
+    ref.current.setSelectedKeys(selectedKeys);
+  }, [JSON.stringify(selectedKeys)]);
   return (
     <FormItem columns={12} label="LangsTabs" disableLabel>
       <Switch checked={showTab} label="Langs Config" onChange={() => setshowTab(!showTab)} />
       <FormItem columns={12} label="langs" style={!showTab ? { display: 'none' } : {}}>
         <CustomSelectAutoComplete
+          ref={ref}
           data={data}
-          defaultItems={langs || []}
-          onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value: val.split(',') })}
+          selectedKeys={selectedKeys}
+          onChange={(val) => {
+            const value = val.split(',');
+            value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]))));
+            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value });
+          }}
           multi
         />
       </FormItem>
