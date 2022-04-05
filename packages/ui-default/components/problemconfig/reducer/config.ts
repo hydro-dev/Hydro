@@ -1,6 +1,10 @@
 import yaml from 'js-yaml';
-import type { ProblemConfigFile } from 'hydrooj/src/interface';
+import type { FileInfo, ProblemConfigFile, SubtaskConfig } from 'hydrooj/src/interface';
+import { read0, read1 } from '@hydrooj/utils/lib/cases';
 
+function ensureFile(testdata) {
+  return (file: string) => testdata.filter((i: FileInfo) => i.name === file);
+}
 export default function reducer(state = { type: 'default' } as ProblemConfigFile, action): ProblemConfigFile {
   switch (action.type) {
   case 'CONFIG_LOAD_FULFILLED': {
@@ -26,10 +30,16 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
     }
   }
   case 'CONFIG_AUTOCASES_UPDATE': {
-    if (!action.value) return { ...state, cases: [] };
     const next = { ...state };
-    delete next.cases;
-    delete next.subtasks;
+    // FIXME: get testdata from another state and await read0&read1
+    const testdata = [];
+    const checkFile = ensureFile(testdata);
+    let result;
+    result = read0(testdata, checkFile, state);
+    if (!result.count) {
+      result = read1(testdata, checkFile, state, {});
+      if (!result.count) next.cases = []; else next.subtasks = result.subtasks as SubtaskConfig[];
+    } else next.subtasks = result.subtasks as SubtaskConfig[];
     return next;
   }
   case 'CONFIG_SUBTASKS_SWITCH': {
