@@ -58,16 +58,16 @@ function DraggableSelection({
   type, id, move, children, ...props
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isDragging, drag] = useDrag<string, any, boolean>(() => ({
+  const [isDragging, drag] = useDrag<{ id: string }, any, boolean>(() => ({
     type,
-    item: id,
+    item: { id },
     collect: (m) => m.isDragging(),
   }));
   const [, drop] = useDrop({
     accept: type,
-    hover: (item: string) => {
+    hover: (item: { id: string }) => {
       if (!ref.current) return;
-      move(item, id);
+      move(item.id, id);
     },
   });
   drag(drop(ref));
