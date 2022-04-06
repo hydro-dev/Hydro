@@ -10,7 +10,7 @@ const Component = React.forwardRef<any, any>((props, ref) => {
   return (
     <ProblemSelectAutoCompleteFC
       ref={ref as any}
-      height="34px"
+      height="auto"
       selectedKeys={value.split(',').map((i) => i.trim()).filter((i) => i)}
       onChange={(v) => {
         setValue(v);
