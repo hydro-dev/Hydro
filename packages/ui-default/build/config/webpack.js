@@ -159,6 +159,7 @@ export default function (env = {}) {
           },
         },
       },
+      usedExports: true,
       minimizer: [new ESBuildMinifyPlugin({
         css: true,
         minify: true,

@@ -68,10 +68,10 @@ export default class AutoComplete extends DOMAttachedObject {
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
         height="34px"
-        itemsFn={this.options.items}
+        queryItems={this.options.items}
         renderItem={this.options.render}
         itemText={this.options.text}
-        defaultItems={value}
+        selectedKeys={value.split(',').map((i) => i.trim())}
         onChange={this.onChange}
         multi={this.options.multi}
         freeSolo={this.options.multi}

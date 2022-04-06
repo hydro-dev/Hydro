@@ -1,24 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete, { AutoCompleteOptions } from '.';
 import UserSelectAutoCompleteFC from './components/UserSelectAutoComplete';
 
+const Component = React.forwardRef<any, any>((props, ref) => {
+  const [value, setValue] = React.useState(props.value);
+  return (
+    <UserSelectAutoCompleteFC
+      ref={ref as any}
+      height="34px"
+      selectedKeys={value.split(',').map((i) => i.trim())}
+      onChange={(v) => {
+        setValue(v);
+        props.onChange(v);
+      }}
+      multi={props.multi}
+    />
+  );
+});
+
 export default class UserSelectAutoComplete<Multi extends boolean> extends AutoComplete {
   static DOMAttachKey = 'ucwUserSelectAutoCompleteInstance';
-  client = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        retry: false,
-        staleTime: Infinity,
-      },
-    },
-  });
 
   constructor($dom, options: AutoCompleteOptions<Multi>) {
     super($dom, {
@@ -28,23 +32,19 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
   }
 
   value(): Multi extends true ? number[] : string {
-    if (this.options.multi) return this.ref?.getSelectedItems().map((item) => item._id) ?? this.$dom.val();
+    if (this.options.multi) return this.ref?.getSelectedItemKeys().map((i) => +i) ?? this.$dom.val();
     return this.ref?.getSelectedItems()[0] ?? null;
   }
 
   attach() {
     const value = this.$dom.val();
     ReactDOM.render(
-      <QueryClientProvider client={this.client}>
-        <UserSelectAutoCompleteFC
-          ref={(ref) => { this.ref = ref; }}
-          height={this.options.height || '34px'}
-          defaultItems={value}
-          onChange={this.onChange}
-          multi={this.options.multi}
-          freeSolo={this.options.multi}
-        />
-      </QueryClientProvider>,
+      <Component
+        ref={(ref) => { this.ref = ref; }}
+        value={value}
+        multi={this.options.multi}
+        onChange={this.onChange}
+      />,
       this.container,
     );
   }

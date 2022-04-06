@@ -59,6 +59,8 @@ export interface RuntimeContext {
 type ExtraFile = string[];
 
 export interface Config {
+    type: string;
+    subType?: string;
     time: string;
     memory: string;
 

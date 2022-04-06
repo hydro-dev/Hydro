@@ -1,7 +1,6 @@
 /* eslint-disable simple-import-sort/imports */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
-import 'reflect-metadata';
 import './init';
 import './interface';
 import path from 'path';

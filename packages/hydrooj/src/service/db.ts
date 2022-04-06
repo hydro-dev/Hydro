@@ -34,10 +34,16 @@ class MongoService implements BaseService {
     }
 
     async start(opts: MongoConfig) {
+        opts ||= {};
+        let mongourl = MongoService.buildUrl(opts);
+        if (process.env.CI) {
+            const { MongoMemoryServer } = require('mongodb-memory-server');
+            const mongod = await MongoMemoryServer.create();
+            mongourl = mongod.getUri();
+        }
         this.opts = opts;
-        const mongourl = MongoService.buildUrl(opts);
         this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
-        this.db = this.client.db(opts.name);
+        this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
         this.started = true;
     }

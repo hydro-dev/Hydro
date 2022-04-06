@@ -30,6 +30,7 @@ import db from './service/db';
 import storage from './service/storage';
 import { Progress } from './ui';
 import { streamToBuffer } from './utils';
+import welcome from './welcome';
 
 const logger = new Logger('upgrade');
 type UpgradeScript = void | (() => Promise<boolean | void>);
@@ -41,6 +42,7 @@ const scripts: UpgradeScript[] = [
     async function _1_2() {
         const ddoc = await domain.get('system');
         if (!ddoc) await domain.add('system', 1, 'Hydro', 'Welcome to Hydro!');
+        await welcome();
         // TODO discussion node?
         return true;
     },

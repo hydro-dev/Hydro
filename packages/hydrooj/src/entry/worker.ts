@@ -22,7 +22,7 @@ export async function load() {
     require('../utils');
     require('../error');
     const config = require('../options')();
-    if (!config) {
+    if (!process.env.CI && !config) {
         logger.info('Starting setup');
         return require('./setup').load();
     }

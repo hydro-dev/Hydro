@@ -25,7 +25,7 @@ export const PERM = {
 
     // Record
     PERM_READ_RECORD_CODE: 1n << 12n,
-    PERM_READ_RECORD_CODE_ACCEPT: 1n << 64n,
+    PERM_READ_RECORD_CODE_ACCEPT: 1n << 66n,
     PERM_REJUDGE_PROBLEM: 1n << 13n,
     PERM_REJUDGE: 1n << 14n,
 

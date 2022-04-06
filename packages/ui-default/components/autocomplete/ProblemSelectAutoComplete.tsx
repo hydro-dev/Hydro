@@ -5,6 +5,22 @@ import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
 import ProblemSelectAutoCompleteFC from './components/ProblemSelectAutoComplete';
 
+const Component = React.forwardRef<any, any>((props, ref) => {
+  const [value, setValue] = React.useState(props.value);
+  return (
+    <ProblemSelectAutoCompleteFC
+      ref={ref as any}
+      height="34px"
+      selectedKeys={value.split(',').map((i) => i.trim())}
+      onChange={(v) => {
+        setValue(v);
+        props.onChange(v);
+      }}
+      multi={props.multi}
+    />
+  );
+});
+
 export default class ProblemSelectAutoComplete extends AutoComplete {
   static DOMAttachKey = 'ucwProblemSelectAutoCompleteInstance';
 
@@ -18,13 +34,11 @@ export default class ProblemSelectAutoComplete extends AutoComplete {
   attach() {
     const value = this.$dom.val();
     ReactDOM.render(
-      <ProblemSelectAutoCompleteFC
+      <Component
         ref={(ref) => { this.ref = ref; }}
-        height="34px"
-        defaultItems={value}
-        onChange={this.onChange}
+        value={value}
         multi={this.options.multi}
-        freeSolo={this.options.multi}
+        onChange={this.onChange}
       />,
       this.container,
     );

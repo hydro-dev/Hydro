@@ -27,6 +27,7 @@ int main(){
 }`,
             },
             config: {
+                type: 'default',
                 time: '3s',
                 memory: '256m',
             },
@@ -64,10 +65,11 @@ int main(){
     return parseInt(a[a.length - 2], 10);
 }
 
-const stackPromise = stackSize();
+let stackPromise;
 
 export async function get() {
     const info = await _get();
+    if (!stackPromise) stackPromise = stackSize();
     // @ts-ignore
     info.stack = await stackPromise;
     return info;
