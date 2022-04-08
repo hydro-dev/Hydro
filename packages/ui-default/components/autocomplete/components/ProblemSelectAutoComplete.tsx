@@ -10,8 +10,8 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
     cacheKey={`problem-${UiContext.domainId}`}
     queryItems={(query) => request.get(`/d/${UiContext.domainId}/problem/list`, { prefix: query })}
     // FIXME fetch items
-    fetchItems={() => []}
-    itemText={(pdoc) => `${pdoc.docId || pdoc}`}
+    fetchItems={(ids) => ids.map((id) => ({ docId: id, pid: id, title: id }) as any)}
+    itemText={(pdoc) => `${`${pdoc.docId} ${pdoc.title}`}`}
     itemKey={(pdoc) => `${pdoc.docId || pdoc}`}
     renderItem={(pdoc) => (
       <div className="media">
