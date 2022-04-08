@@ -284,6 +284,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 class RecordDetailConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
     rid: string = '';
+    disconnectTimeout: NodeJS.Timeout;
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
@@ -322,12 +323,19 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     // eslint-disable-next-line
     async onRecordChange(rdoc: RecordDoc, $set?: any, $push?: any) {
         if (rdoc._id.toString() !== this.rid) return;
+        if (this.disconnectTimeout) {
+            clearTimeout(this.disconnectTimeout);
+            this.disconnectTimeout = null;
+        }
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         this.send({
             status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
         });
+        if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
+            this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 10000);
+        }
     }
 }
 
