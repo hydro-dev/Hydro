@@ -61,6 +61,10 @@ export function getPids(dag: TrainingNode[]) {
     return Array.from(new Set(flatten(dag.map((node) => node.pids))));
 }
 
+export async function getRelated(domainId: string, pid: number) {
+    return await document.getMulti(domainId, document.TYPE_TRAINING, { 'dag.pids': { $eq: pid } }).toArray();
+}
+
 export function isDone(node: TrainingNode, doneNids: Set<number> | number[], donePids: Set<number> | number[]) {
     return (Set.isSuperset(new Set(doneNids), new Set(node.requireNids))
         && Set.isSuperset(new Set(donePids), new Set(node.pids)));
@@ -130,6 +134,7 @@ global.Hydro.model.training = {
     getList,
     getMulti,
     getMultiStatus,
+    getRelated,
     getStatus,
     enroll,
     setStatus,
