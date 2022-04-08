@@ -544,10 +544,6 @@ export class ProblemEditHandler extends ProblemManageHandler {
         newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0, assign: string[] = [],
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
-        if (hidden !== this.pdoc.hidden) {
-            const trdocs = await training.getRelated(this.domainId, this.pdoc.docId);
-            if (trdocs.length) throw new BadRequestError('Problem already used by training {0}', trdocs[0]._id);
-        }
         const $update: Partial<ProblemDoc> = {
             title, content, pid: newPid, hidden, assign, tag: tag ?? [], difficulty,
         };
