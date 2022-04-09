@@ -2,7 +2,7 @@ import { hostname } from 'os';
 import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { sleep } from '@hydrooj/utils/lib/utils';
-import { BaseService, Task } from '../interface';
+import { BaseService, EventDoc, Task } from '../interface';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -161,7 +161,20 @@ bus.once('app/started', async () => {
         });
     }
     await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
-    (async () => {
+    const stream = collEvent.watch();
+    const handleEvent = async (doc: EventDoc) => {
+        const payload = JSON.parse(doc.payload);
+        if (process.send) process.send({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
+        await bus.parallel(doc.event, ...payload);
+    };
+    stream.on('change', async (change) => {
+        if (change.operationType !== 'insert') return;
+        if (change.fullDocument.ack.includes(id)) return;
+        await handleEvent(change.fullDocument);
+    });
+    stream.on('error', async () => {
+        // The $changeStream stage is only supported on replica sets
+        logger.info('No replica set found.');
         // eslint-disable-next-line no-constant-condition
         while (true) {
             // eslint-disable-next-line no-await-in-loop
@@ -170,14 +183,9 @@ bus.once('app/started', async () => {
                 { $push: { ack: id } },
             );
             // eslint-disable-next-line no-await-in-loop
-            if (!res.value) await sleep(100);
-            else {
-                const payload = JSON.parse(res.value.payload);
-                if (process.send) process.send({ type: 'hydro:broadcast', data: { event: res.value.event, payload } });
-                if (res.value) bus.parallel(res.value.event, ...payload);
-            }
+            await (res.value ? handleEvent(res.value) : sleep(500));
         }
-    })();
+    });
 });
 bus.on('bus/broadcast', (event, payload) => {
     collEvent.insertOne({

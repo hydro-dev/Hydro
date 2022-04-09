@@ -3,8 +3,10 @@
 import React, {
   forwardRef, useState, useRef, useImperativeHandle, useEffect,
 } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
-import { debounce } from 'lodash';
+import { debounce, uniqueId } from 'lodash';
 import Icon from 'vj/components/react/IconComponent';
 
 export interface AutoCompleteProps<Item> {
@@ -25,6 +27,7 @@ export interface AutoCompleteProps<Item> {
   itemKey?: (item: Item) => string;
   onChange?: (value: string) => any;
   multi?: boolean;
+  draggable?: boolean;
   selectedKeys?: string[];
   allowEmptyQuery?: boolean;
   freeSolo?: boolean;
@@ -51,6 +54,30 @@ export interface AutoCompleteHandle<Item> {
 
 const superCache = {};
 
+function DraggableSelection({
+  type, id, move, children, ...props
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isDragging, drag] = useDrag<{ id: string }, any, boolean>(() => ({
+    type,
+    item: { id },
+    collect: (m) => m.isDragging(),
+  }));
+  const [, drop] = useDrop({
+    accept: type,
+    hover: (item: { id: string }) => {
+      if (!ref.current) return;
+      move(item.id, id);
+    },
+  });
+  drag(drop(ref));
+  return (
+    <div ref={ref} {...props} style={{ opacity: isDragging ? 0.2 : 1 }}>
+      {children}
+    </div>
+  );
+}
+
 // eslint-disable-next-line prefer-arrow-callback
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const width = props.width ?? '100%';
@@ -64,6 +91,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const itemKey = props.itemKey ?? itemText;
   const onChange = props.onChange ?? (() => { });
   const multi = props.multi ?? false;
+  const draggable = props.draggable ?? props.multi;
   const allowEmptyQuery = props.allowEmptyQuery ?? false;
   const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
@@ -74,6 +102,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
   const [rerender, setRerender] = useState(false);
+  const [draggableId] = useState(uniqueId());
 
   const inputRef = useRef<HTMLInputElement>();
   const listRef = useRef<HTMLUListElement>();
@@ -224,45 +253,59 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     },
   }), [selected, selectedKeys, inputRef, multi]);
 
+  const move = (dragId: string, hoverId: string) => {
+    if (dragId === hoverId || !draggable) return;
+    const dragIndex = selectedKeys.indexOf(dragId);
+    const hoverIndex = selectedKeys.indexOf(hoverId);
+    setSelectedKeys((s) => {
+      const a = [...s];
+      a.splice(dragIndex, 1);
+      a.splice(hoverIndex, 0, s[dragIndex]);
+      return a;
+    });
+  };
+
   return (
     <div style={{ display: 'inline-block', width: '100%' }}>
       <div
         className={focused ? 'autocomplete-wrapper focused' : 'autocomplete-wrapper'}
         style={{ width, height }}
       >
-        {multi && selectedKeys.map((key) => {
-          const item = valueCache[key];
-          return (
-            <div className="autocomplete-tag" key={item ? key : `draft-${key}`}>
-              <div>{item ? itemText(item) : key}</div>
-              <Icon name="close" onClick={() => toggleItem(item, key)} />
-            </div>
-          );
-        })}
-        {disabled && (
+        <DndProvider backend={HTML5Backend}>
+          {multi && selectedKeys.map((key) => {
+            const item = valueCache[key];
+            return (
+              <DraggableSelection type={draggableId} id={key} move={move} className="autocomplete-tag" key={item ? key : `draft-${key}`}>
+                <div>{item ? itemText(item) : key}</div>
+                <Icon name="close" onClick={() => toggleItem(item, key)} />
+              </DraggableSelection>
+            );
+          })}
           <input
-            disabled
+            ref={inputRef}
             autoComplete="off"
-            value={disabledHint}
+            hidden={disabled}
+            onChange={(e) => {
+              dispatchChange();
+              handleInputChange(e);
+            }}
+            onFocus={() => {
+              if (allowEmptyQuery) handleInputChange();
+              setFocused(true);
+            }}
+            onBlur={() => setFocused(false)}
+            onKeyDown={handleInputKeyDown}
+            defaultValue={multi ? '' : selectedKeys.join(',')}
           />
-        )}
-        <input
-          ref={inputRef}
-          autoComplete="off"
-          hidden={disabled}
-          onChange={(e) => {
-            dispatchChange();
-            handleInputChange(e);
-          }}
-          onFocus={() => {
-            if (allowEmptyQuery) handleInputChange();
-            setFocused(true);
-          }}
-          onBlur={() => setFocused(false)}
-          onKeyDown={handleInputKeyDown}
-          defaultValue={multi ? '' : selectedKeys.join(',')}
-        />
+        </DndProvider>
       </div>
+      {disabled && (
+        <input
+          disabled
+          autoComplete="off"
+          value={disabledHint}
+        />
+      )}
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
           {itemList.map((item, idx) => (

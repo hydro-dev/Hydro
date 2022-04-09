@@ -413,11 +413,11 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         // TODO maybe async?
         const rdocs = await record.getMulti(domainId, { pid, contest: { $ne: new ObjectID('0'.repeat(24)) } })
-            .project({ _id: 1 }).toArray();
+            .project({ _id: 1, contest: 1 }).toArray();
         const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
         await Promise.all(rdocs.map(
             (doc) => record.reset(domainId, doc._id, true)
-                .then(() => record.judge(domainId, doc._id, priority)),
+                .then(() => record.judge(domainId, doc._id, priority, doc.contest ? { detail: false } : {})),
         ));
         this.back();
     }
