@@ -21,6 +21,7 @@ import './components/autocomplete';
 import './components/dialog';
 import './components/notification';
 import './components/nprogress';
+import './components/monaco/loader';
 
 window.node_modules = { _, $ };
 window.$ = $;
