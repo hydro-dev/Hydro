@@ -388,7 +388,7 @@ const homework = buildContestRule({
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
             for (const item of tsdoc.detail || []) {
-                if ((tsddict[item.pid].score || 0) <= item.score) tsddict[item.pid] = item;
+                if ((tsddict[item.pid]?.score || 0) <= item.score) tsddict[item.pid] = item;
             }
             const row: ScoreboardRow = [
                 { type: 'string', value: rank },
