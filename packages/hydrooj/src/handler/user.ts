@@ -229,7 +229,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (Object.keys($set).length) await user.setById(uid, $set);
         this.session.viewLang = '';
         this.session.uid = uid;
-        this.session.scpoe = PERM.PERM_ALL.toString();
+        this.session.scope = PERM.PERM_ALL.toString();
         this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
@@ -373,7 +373,7 @@ class OauthCallbackHandler extends Handler {
                 if (udoc) {
                     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
                     this.session.uid = udoc._id;
-                    this.session.scpoe = PERM.PERM_ALL.toString();
+                    this.session.scope = PERM.PERM_ALL.toString();
                     return;
                 }
             }
