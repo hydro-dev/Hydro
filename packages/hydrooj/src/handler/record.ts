@@ -162,8 +162,9 @@ class RecordDetailHandler extends Handler {
         const priority = await record.submissionPriority(this.user._id, -20);
         const rdoc = await record.get(domainId, rid);
         if (rdoc) {
+            const isContest = rdoc.contest && rdoc.contest.toHexString() !== '000000000000000000000000';
             await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid, priority);
+            await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
         }
         this.back();
     }
