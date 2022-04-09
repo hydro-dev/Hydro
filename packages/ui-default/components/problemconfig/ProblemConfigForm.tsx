@@ -400,8 +400,8 @@ function TaskConfig() {
               || cases && (<CasesTable index={-1} />)
               : (
                 <a
-                  onChange={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE' })}
-                ><span className="icon icon-settings"> {i18n('Manual Configure Tasks')}</span>
+                  onClick={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE' })}
+                ><span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
                 </a>
               )
           }

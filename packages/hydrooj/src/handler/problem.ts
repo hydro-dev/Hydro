@@ -4,6 +4,7 @@ import { isBinaryFile } from 'isbinaryfile';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
+import { read0, read1 } from '@hydrooj/utils/lib/cases';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
@@ -38,6 +39,9 @@ import { registerResolver, registerValue } from './api';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
+function ensureFile(testdata) {
+    return (file: string) => testdata.filter((i) => i === file)[0];
+}
 
 registerValue('FileInfo', [
     ['_id', 'String!'],
@@ -558,7 +562,13 @@ export class ProblemConfigHandler extends ProblemManageHandler {
         this.response.body.config = configFile.length > 0
             ? (await streamToBuffer(
                 await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`))).toString() : '';
-        console.log(this.response.body.config);
+        const testdata = (this.pdoc.data || []).map((i) => i.name);
+        const checkFile = ensureFile(testdata);
+        let autocases = await read0(testdata, checkFile, {});
+        if (!autocases.count) {
+            autocases = await read1(testdata, checkFile, {}, { subtasks: [] });
+        }
+        this.response.body.autocases = autocases;
         this.response.template = 'problem_config.html';
     }
 }

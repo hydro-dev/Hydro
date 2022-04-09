@@ -1,14 +1,13 @@
 import yaml from 'js-yaml';
-import type { FileInfo, ProblemConfigFile, SubtaskConfig } from 'hydrooj/src/interface';
-import { read0, read1 } from '@hydrooj/utils/lib/cases';
+import type { ProblemConfigFile } from 'hydrooj/src/interface';
 
-function ensureFile(testdata) {
-  return (file: string) => testdata.filter((i: FileInfo) => i.name === file);
-}
+let autocases = { subtasks: [] };
+
 export default function reducer(state = { type: 'default' } as ProblemConfigFile, action): ProblemConfigFile {
   switch (action.type) {
   case 'CONFIG_LOAD_FULFILLED': {
     // TODO set yaml schema
+    autocases = action.payload.autocases;
     return { ...state, ...yaml.load(action.payload.config) as object };
   }
   case 'CONFIG_FORM_UPDATE': {
@@ -31,15 +30,16 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_AUTOCASES_UPDATE': {
     const next = { ...state };
-    // FIXME: get testdata from another state and await read0&read1
-    const testdata = [];
-    const checkFile = ensureFile(testdata);
-    let result;
-    result = read0(testdata, checkFile, state);
-    if (!result.count) {
-      result = read1(testdata, checkFile, state, {});
-      if (!result.count) next.cases = []; else next.subtasks = result.subtasks as SubtaskConfig[];
-    } else next.subtasks = result.subtasks as SubtaskConfig[];
+    if (autocases.subtasks.length === 1) {
+      next.score = autocases.subtasks[0].score;
+      next.cases = [];
+      autocases.subtasks[0].cases.map((i) => next.cases.push({
+        time: autocases.subtasks[0].time, memory: autocases.subtasks[0].memory, input: i.input, output: i.output,
+      }));
+    } else {
+      next.subtasks = autocases.subtasks.map((subtask) => (
+        { ...subtask, ...{ cases: subtask.cases.map((i) => ({ input: i.input, output: i.output })) } }));
+    }
     return next;
   }
   case 'CONFIG_SUBTASKS_SWITCH': {
