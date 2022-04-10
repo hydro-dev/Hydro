@@ -138,7 +138,7 @@ export function convertIniConfig(ini: string) {
     return res;
 }
 
-export async function read0(files: string[], checkFile, cfg) {
+export async function readCasesFromFiles(files: string[], checkFile, cfg) {
     const cases = [];
     for (const file of files) {
         for (const REG of RE0) {
@@ -196,7 +196,7 @@ export async function read0(files: string[], checkFile, cfg) {
     return config;
 }
 
-export async function read1(files: string[], checkFile, cfg, rst) {
+export async function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
     const subtask = {};
     for (const s of rst.subtasks) if (s.id) subtask[s.id] = s;
     const subtasks = [];

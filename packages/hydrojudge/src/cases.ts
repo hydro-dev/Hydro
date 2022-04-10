@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { max, sum } from 'lodash';
-import readYamlCases, { convertIniConfig, read0, read1 } from '@hydrooj/utils/lib/cases';
+import readYamlCases, { convertIniConfig, readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/cases';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
@@ -27,8 +27,8 @@ async function readAutoCases(folder: string, { next }, cfg, rst) {
             const outputs = await fs.readdir(path.resolve(folder, 'output'));
             files.push(...outputs.map((i) => `output/${i}`));
         }
-        let result = await read0(files, checkFile, cfg);
-        if (!result.count) result = await read1(files, checkFile, cfg, rst);
+        let result = await readCasesFromFiles(files, checkFile, cfg);
+        if (!result.count) result = await readSubtasksFromFiles(files, checkFile, cfg, rst);
         Object.assign(config, result);
         if (cfg.isSelfSubmission) next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
