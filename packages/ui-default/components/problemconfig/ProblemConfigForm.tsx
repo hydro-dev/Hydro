@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
 import { Switch, Tab, Tabs } from '@blueprintjs/core';
-import type { TestCaseConfig } from 'hydrooj/src/interface';
+import type { SubtaskConfig, TestCaseConfig } from 'hydrooj/src/interface';
 import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 
@@ -13,7 +13,8 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: TestCaseConfig[], b: TestCaseConfig[]) => isEqual(a, b);
+const eq = (a: SubtaskConfig[], b: SubtaskConfig[]) => isEqual(a, b);
+const eq1 = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -185,14 +186,90 @@ function ExtraFilesConfig() {
   );
 }
 
+function CasesSubCasesTable({ index, subindex }) {
+  const subcases = useSelector((state: RootState) => (index === -1
+    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq1);
+  const Files = useSelector((state: RootState) => state.testdata);
+  const dispatch = useDispatch();
+  const dispatcher = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
+    dispatch({
+      type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+      id: index,
+      key: 'cases-edit',
+      casesId: subindex,
+      casesKey,
+      value: ev.currentTarget.value,
+    });
+  };
+  const dispatcher1 = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (val) => {
+    dispatch({
+      type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+      id: index,
+      key: 'cases-edit',
+      casesId: subindex,
+      casesKey,
+      value: val,
+    });
+  };
+  return (
+    <tr>
+      {
+        index === -1 && (
+          <>
+            <td>
+              <input
+                value={subcases.time || ''}
+                onChange={dispatcher('time')}
+                className="textbox"
+              />
+            </td>
+            <td>
+              <input
+                value={subcases.memory || ''}
+                onChange={dispatcher('memory')}
+                className="textbox"
+              />
+            </td>
+          </>
+        )
+      }
+      <td>
+        <CustomSelectAutoComplete
+          width="100%"
+          data={Files}
+          selectedKeys={[subcases.input]}
+          onChange={dispatcher1('input')}
+        />
+      </td>
+      <td>
+        <CustomSelectAutoComplete
+          width="100%"
+          data={Files}
+          selectedKeys={[subcases.output]}
+          onChange={dispatcher1('output')}
+        />
+      </td>
+      <td>
+        <a
+          onClick={() => dispatch({
+            type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: subindex,
+          })}
+        ><span className="icon icon-close"></span>
+        </a>
+      </td>
+    </tr>
+  );
+}
+
 function CasesTable({ index }) {
   const [time, setTime] = useState('');
   const [memory, setMemory] = useState('');
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
-  console.log(cases);
   const Files = useSelector((state: RootState) => state.testdata);
+  const inputRef = useRef(null);
+  const outputRef = useRef(null);
   const dispatch = useDispatch();
   return (
     <table className="data-table">
@@ -223,29 +300,29 @@ function CasesTable({ index }) {
           <th>
             {i18n('Input')}<br />
             <CustomSelectAutoComplete
+              ref={inputRef}
               width="100%"
               data={Files}
-              selectedKeys={[input]}
               onChange={setInput}
             />
           </th>
           <th>
             {i18n('Output')}<br />
             <CustomSelectAutoComplete
+              ref={outputRef}
               width="100%"
               data={Files}
-              selectedKeys={[output]}
               onChange={setOutput}
             />
           </th>
-          <th>
+          <th className="col--operation">
             <span className="icon icon-wrench"></span><br />
             <a
               onClick={() => {
                 setTime('');
                 setMemory('');
-                setInput('');
-                setOutput('');
+                inputRef?.current.setQuery('');
+                outputRef?.current.setQuery('');
                 dispatch({
                   type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
                   id: index,
@@ -255,34 +332,13 @@ function CasesTable({ index }) {
                   } : { input, output },
                 });
               }}
-            ><span className="icon icon-add">{i18n('Add')}</span>
+            ><span className="icon icon-add" />
             </a>
           </th>
         </tr>
       </thead>
       <tbody>
-        {cases && cases.map((k, v) => (
-          <tr key={JSON.stringify(k)}>
-            {
-              index === -1 && (
-                <>
-                  <td>{k.time}</td>
-                  <td>{k.memory}</td>
-                </>
-              )
-            }
-            <td>{k.input}</td>
-            <td>{k.output}</td>
-            <td>
-              <a
-                onClick={() => dispatch({
-                  type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
-                })}
-              ><span className="icon icon-close"></span>
-              </a>
-            </td>
-          </tr>
-        ))}
+        {cases && cases.map((k, v) => <CasesSubCasesTable index={index} subindex={v} key={JSON.stringify(k)} />)}
       </tbody>
     </table>
   );
@@ -298,7 +354,7 @@ function SubtasksTable({ data, index }) {
   };
   return (
     <div key={index}>
-      <span>Subtasks #{index} </span>
+      <span>Subtasks #{index + 1} </span>
       <a onClick={() => { dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'add' }); }}><span className="icon icon-add"></span></a>
       <a
         style={index === 0 ? { display: 'none' } : {}}
@@ -376,7 +432,7 @@ function SubtasksTable({ data, index }) {
   );
 }
 
-function TaskConfig() {
+function TaskConfig({ onAutoLoad }) {
   const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
   const cases = useSelector((state: RootState) => state.config.cases, eq);
   const dispatch = useDispatch();
@@ -399,9 +455,8 @@ function TaskConfig() {
               ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
               || cases && (<CasesTable index={-1} />)
               : (
-                <a
-                  onClick={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE' })}
-                ><span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
+                <a onClick={() => onAutoLoad()}>
+                  <span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
                 </a>
               )
           }
@@ -443,11 +498,11 @@ function LangConfig() {
   );
 }
 
-export default function ProblemConfigForm() {
+export default function ProblemConfigForm({ onAutoLoad }) {
   return (
     <div className="row">
       <BasicInfo />
-      <TaskConfig />
+      <TaskConfig onAutoLoad={onAutoLoad} />
       <ExtraFilesConfig />
       <LangConfig />
     </div>

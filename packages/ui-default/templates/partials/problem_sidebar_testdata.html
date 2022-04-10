@@ -6,29 +6,26 @@
   </div>
   <ol class="menu">
     <li class="menu__item flex-row">
-      <a class="menu__link half" href="javascript:;" name="create_file">
-        <span class="icon icon-add"></span> {{ _('Create') }}
-      </a>
-      <a class="menu__link half" href="javascript:;" name="upload_file">
+      <a class="menu__link half" href="javascript:;" name="testdata__upload">
         <span class="icon icon-upload"></span> {{ _('Upload') }}
+      </a>
+      <a class="menu__link half" href="javascript:;" name="testdata__download">
+        <span class="icon icon-download"></span> {{ _('Download All') }}
       </a>
     </li>
     <li class="menu__seperator"></li>
     <li class="menu__item flex-row">
-      <a class="menu__link half" href="javascript:;" name="upload_file">
-        <span class="icon icon-download"></span> {{ _('Download All') }}
-      </a>
-      <a class="menu__link half expanded--hidden" href="javascript:;" name="testdata__section__expand">
+      <a class="menu__link expanded--hidden" href="javascript:;" name="testdata__section__expand">
         <span class="icon icon-expand_more"></span> {{ _('expand') }}
       </a>
-      <a class="menu__link half collapsed--hidden" href="javascript:;" name="testdata__section__collapse">
+      <a class="menu__link collapsed--hidden" href="javascript:;" name="testdata__section__collapse">
         <span class="icon icon-expand_less"></span> {{ _('collapse') }}
       </a>
     </li>
   </ol>
   <div class="section__body no-padding problem-sidebar-testdata__detail" data-fragment-id="problem-sidebar-testdata">
     {% if testdata.length %}
-      <table class="data-table">
+      <table class="data-table testdata-table">
         <colgroup>
           <col class="col--name">
           <col class="col--size">
@@ -46,7 +43,7 @@
           <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
             <td class="col--name" title="{{ file.name }}"><a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a></td>
             <td class="col--size">{{ size(file.size) }}</td>
-            <td class="col--operation"><a href="javascript:;" name="{{ file.name }}"><span class="icon icon-delete"></span></a></td>
+            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
           </tr>
           {%- endfor -%}
         </tbody>
