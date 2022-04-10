@@ -376,7 +376,7 @@ function SubtasksTable({ data, index }) {
   );
 }
 
-function TaskConfig() {
+function TaskConfig({ onAutoLoad }) {
   const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
   const cases = useSelector((state: RootState) => state.config.cases, eq);
   const dispatch = useDispatch();
@@ -399,9 +399,8 @@ function TaskConfig() {
               ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
               || cases && (<CasesTable index={-1} />)
               : (
-                <a
-                  onClick={() => dispatch({ type: 'CONFIG_AUTOCASES_UPDATE' })}
-                ><span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
+                <a onClick={() => onAutoLoad()}>
+                  <span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
                 </a>
               )
           }
@@ -443,11 +442,11 @@ function LangConfig() {
   );
 }
 
-export default function ProblemConfigForm() {
+export default function ProblemConfigForm({ onAutoLoad }) {
   return (
     <div className="row">
       <BasicInfo />
-      <TaskConfig />
+      <TaskConfig onAutoLoad={onAutoLoad} />
       <ExtraFilesConfig />
       <LangConfig />
     </div>
