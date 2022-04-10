@@ -410,6 +410,7 @@ class OauthCallbackHandler extends Handler {
             this.session.uid = _id;
             this.session.scope = PERM.PERM_ALL.toString();
         }
+        this.response.redirect = '/';
     }
 }
 
