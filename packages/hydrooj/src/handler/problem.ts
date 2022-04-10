@@ -4,7 +4,7 @@ import { isBinaryFile } from 'isbinaryfile';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
-import { read0, read1 } from '@hydrooj/utils/lib/cases';
+import { readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/cases';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
@@ -557,16 +557,22 @@ export class ProblemEditHandler extends ProblemManageHandler {
 
 export class ProblemConfigHandler extends ProblemManageHandler {
     async get() {
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot edit config of a referenced problem.');
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
         const configFile = (this.pdoc.data || []).filter((i) => i.name.toLowerCase() === 'config.yaml');
-        this.response.body.config = configFile.length > 0
-            ? (await streamToBuffer(
-                await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`))).toString() : '';
+        this.response.body.config = '';
+        if (configFile.length > 0) {
+            try {
+                this.response.body.config = (await streamToBuffer(
+                    await storage.get(`problem/${this.pdoc.domainId}/${this.pdoc.docId}/testdata/${configFile[0].name}`),
+                )).toString();
+            } catch (e) { /* ignore */ }
+        }
         const testdata = (this.pdoc.data || []).map((i) => i.name);
         const checkFile = ensureFile(testdata);
-        let autocases = await read0(testdata, checkFile, {});
+        let autocases = await readCasesFromFiles(testdata, checkFile, {});
         if (!autocases.count) {
-            autocases = await read1(testdata, checkFile, {}, { subtasks: [] });
+            autocases = await readSubtasksFromFiles(testdata, checkFile, {}, { subtasks: [] });
         }
         this.response.body.autocases = autocases;
         this.response.template = 'problem_config.html';

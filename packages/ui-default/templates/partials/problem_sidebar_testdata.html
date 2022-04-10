@@ -27,11 +27,7 @@
     </li>
   </ol>
   <div class="section__body no-padding problem-sidebar-testdata__detail" data-fragment-id="problem-sidebar-testdata">
-    {% if reference %}
-      <blockquote class="note">
-        <p>{{ _('This is a copy of another problem.') }}</p>
-      </blockquote>
-    {% elif testdata.length %}
+    {% if testdata.length %}
       <table class="data-table">
         <colgroup>
           <col class="col--name">
