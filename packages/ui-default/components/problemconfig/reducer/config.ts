@@ -1,13 +1,10 @@
 import yaml from 'js-yaml';
 import type { ProblemConfigFile } from 'hydrooj/src/interface';
 
-let autocases = { subtasks: [] };
-
 export default function reducer(state = { type: 'default' } as ProblemConfigFile, action): ProblemConfigFile {
   switch (action.type) {
   case 'CONFIG_LOAD_FULFILLED': {
     // TODO set yaml schema
-    autocases = action.payload.autocases;
     return { ...state, ...yaml.load(action.payload.config) as object };
   }
   case 'CONFIG_FORM_UPDATE': {
@@ -30,7 +27,9 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_AUTOCASES_UPDATE': {
     const next = { ...state };
-    if (autocases.subtasks.length === 1) {
+    const autocases = action.value;
+    if (autocases.subtasks.length === 0) next.cases = [];
+    else if (autocases.subtasks.length === 1) {
       next.score = autocases.subtasks[0].score;
       next.cases = [];
       autocases.subtasks[0].cases.map((i) => next.cases.push({
@@ -52,6 +51,7 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   case 'CONFIG_CASES_UPDATE': {
     const next = { ...state };
     if (action.key === 'cases-add') next.cases.push(action.value);
+    else if (action.key === 'cases-edit') next.cases[action.casesId][action.casesKey] = action.value;
     else if (action.key === 'cases-delete') {
       next.cases = next.cases.filter((k, v) => v !== action.value);
     }
@@ -62,6 +62,7 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
     if (action.key === 'add') next.subtasks.splice(action.id, 0, { id: 0 });
     else if (action.key === 'delete') delete next.subtasks[action.key];
     else if (action.key === 'cases-add') next.subtasks[action.id].cases.push(action.value);
+    else if (action.key === 'cases-edit') next.subtasks[action.id].cases[action.casesId][action.casesKey] = action.value;
     else if (action.key === 'cases-delete') {
       next.subtasks[action.id].cases = next.subtasks[action.id].cases.filter((k, v) => v !== action.value);
     } else next.subtasks[action.id][action.key] = action.value;

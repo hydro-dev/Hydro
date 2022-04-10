@@ -4,7 +4,6 @@ import { isBinaryFile } from 'isbinaryfile';
 import { intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
-import { readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/cases';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
@@ -39,9 +38,6 @@ import { registerResolver, registerValue } from './api';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
-function ensureFile(testdata) {
-    return (file: string) => testdata.filter((i) => i === file)[0];
-}
 
 registerValue('FileInfo', [
     ['_id', 'String!'],
@@ -568,13 +564,6 @@ export class ProblemConfigHandler extends ProblemManageHandler {
                 )).toString();
             } catch (e) { /* ignore */ }
         }
-        const testdata = (this.pdoc.data || []).map((i) => i.name);
-        const checkFile = ensureFile(testdata);
-        let autocases = await readCasesFromFiles(testdata, checkFile, {});
-        if (!autocases.count) {
-            autocases = await readSubtasksFromFiles(testdata, checkFile, {}, { subtasks: [] });
-        }
-        this.response.body.autocases = autocases;
         this.response.template = 'problem_config.html';
     }
 }
