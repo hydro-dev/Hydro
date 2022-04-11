@@ -58,7 +58,7 @@ export class FilesHandler extends Handler {
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (this.user._files.filter((i) => i.name === filename).length) throw new BadRequestError('file exists');
-        await storage.put(`user/${this.user._id}/${filename}`, this.request.files.file.path);
+        await storage.put(`user/${this.user._id}/${filename}`, this.request.files.file.path, this.user._id);
         const meta = await storage.getMeta(`user/${this.user._id}/${filename}`);
         const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
         if (!meta) throw new Error('Upload failed');
@@ -70,14 +70,14 @@ export class FilesHandler extends Handler {
     @post('from', Types.String)
     @post('to', Types.String)
     async postRename(domainId: string, from: string, to: string) {
-        await storage.rename(`user/${this.user._id}/${from}`, `user/${this.user._id}/${to}`);
+        await storage.rename(`user/${this.user._id}/${from}`, `user/${this.user._id}/${to}`, this.user._id);
         this.back();
     }
 
     @post('files', Types.Array)
     async postDeleteFiles(domainId: string, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `user/${this.user._id}/${t}`)),
+            storage.del(files.map((t) => `user/${this.user._id}/${t}`), this.user._id),
             user.setById(this.user._id, { _files: this.user._files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

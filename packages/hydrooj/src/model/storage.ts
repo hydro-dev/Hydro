@@ -8,21 +8,29 @@ import type { Readable } from 'stream';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import storage from '../service/storage';
+import * as system from './system';
 import TaskModel from './task';
 
 export class StorageModel {
     static coll = db.collection('storage');
 
-    static async put(path: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
+    static async put(path: string, file: string | Buffer | Readable, meta?: ItemBucketMetadata, owner?: number);
+    static async put(path: string, file: string | Buffer | Readable, owner?: number);
+    static async put(path: string, file: string | Buffer | Readable, arg0?: ItemBucketMetadata | number, arg1?: number) {
+        const meta = typeof arg0 === 'object' ? arg0 : {};
+        const owner = (typeof arg0 === 'number' ? arg0 : arg1) ?? 1;
         await StorageModel.del([path]);
         meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
             ? 'text/plain'
             : lookup(path) || 'application/octet-stream';
-        const _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        let _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        // Make sure id is not used
+        // eslint-disable-next-line no-await-in-loop
+        while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
         await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
-            _id, meta: metaData, path, size, etag, lastModified: new Date(),
+            _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
         });
         return path;
     }
@@ -36,18 +44,19 @@ export class StorageModel {
         return await storage.get(value?._id || path, savePath);
     }
 
-    static async rename(path: string, newPath: string) {
+    static async rename(path: string, newPath: string, operator = 1) {
         return await StorageModel.coll.updateOne(
             { path, autoDelete: null },
-            { $set: { path: newPath } },
+            { $set: { path: newPath }, $push: { operator } },
         );
     }
 
-    static async del(path: string[]) {
+    static async del(path: string[], operator = 1) {
+        if (!path.length) return;
         const autoDelete = moment().add(7, 'day').toDate();
         await StorageModel.coll.updateMany(
             { path: { $in: path }, autoDelete: null },
-            { $set: { autoDelete } },
+            { $set: { autoDelete }, $push: { operator } },
         );
     }
 
@@ -93,6 +102,7 @@ export class StorageModel {
 }
 
 async function cleanFiles() {
+    if (system.get('server.keepFiles')) return;
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     while (res.value) {
         // eslint-disable-next-line no-await-in-loop
