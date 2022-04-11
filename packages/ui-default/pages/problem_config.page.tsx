@@ -5,8 +5,10 @@ import loadReactRedux from 'vj/utils/loadReactRedux';
 import i18n from 'vj/utils/i18n';
 import yaml from 'js-yaml';
 import Notification from 'vj/components/notification';
-import Dialog from 'vj/components/dialog/index';
+import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
+import download from 'vj/components/zipDownloader';
 import { size, readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import tpl from 'vj/utils/tpl';
 
 async function handleSection(ev: JQuery.ClickEvent<Document, undefined, any, any>, type: string) {
   const $section = $(ev.currentTarget).closest('.section--problem-sidebar-testdata');
@@ -97,12 +99,11 @@ const page = new NamedPage('problem_config', () => {
           },
         });
         $('.testdata-table tbody').append(
-          // FIXME: problemId
-          `<tr data-filename="1.in" data-size="6">
-            <td class="col--name" title="${file.name}"><a href="/p/?/file/${file.name}?type=testdata">${file.name}</a></td>
+          $(tpl`<tr data-filename="${file.name}" data-size="${file.size.toString()}">
+            <td class="col--name" title="${file.name}"><a href="./file/${file.name}?type=testdata">${file.name}</a></td>
             <td class="col--size">${size(file.size)}</td>
-            <td class="col--operation"><a href="javascript:;" name="${file.name}"><span class="icon icon-delete"></span></a></td>
-          </tr>`,
+            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
+          </tr>`),
         );
       }
       window.removeEventListener('beforeunload', onBeforeUnload);
@@ -113,6 +114,38 @@ const page = new NamedPage('problem_config', () => {
     } finally {
       dialog.close();
     }
+  }
+
+  async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    if (!file) return;
+    const action = await new ConfirmDialog({
+      $body: tpl.typoMsg(i18n('Confirm to delete the file?')),
+    }).open();
+    if (action !== 'yes') return;
+    try {
+      await request.post('./files', {
+        operation: 'delete_files',
+        files: file,
+        type: 'testdata',
+      });
+      Notification.success(i18n('File have been deleted.'));
+      reduxStore.dispatch({
+        type: 'CONFIG_DELETE_TESTDATA',
+        value: file,
+      });
+      $(ev.currentTarget).parent().parent().remove();
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
+  async function handleClickDownloadAll() {
+    const files = reduxStore.getState().testdata.map((i) => i.name);
+    const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'testdata' });
+    const targets = [];
+    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+    await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
   }
 
   async function uploadConfig(config:object) {
@@ -175,6 +208,8 @@ const page = new NamedPage('problem_config', () => {
   mountComponent();
 
   $(document).on('click', '[name="testdata__upload"]', () => handleClickUpload());
+  $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev));
+  $(document).on('click', '[name="testdata__download__all"]', () => handleClickDownloadAll());
   $(document).on('click', '[name="testdata__section__expand"]', (ev) => handleSection(ev, 'expand'));
   $(document).on('click', '[name="testdata__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
 });

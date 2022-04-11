@@ -151,7 +151,6 @@ export function parseMemoryMB(str: string | number) {
 }
 
 export function size(s: number, base = 1) {
-    console.log(s);
     s *= base;
     const unit = 1024;
     const unitNames = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
