@@ -1,7 +1,7 @@
 [submodule "testlib"]
-path = packages/hydrojudge/vendor/testlib
-url = https://github.com/MikeMirzayanov/testlib.git
+	path = packages/hydrojudge/vendor/testlib
+	url = https://github.com/MikeMirzayanov/testlib.git
 
 [submodule "sandbox"]
-path = sandbox
-url = https://github.com/Henry-Chen0227/go-judge.git
+	path = sandbox
+	url = https://github.com/Henry-Chen0227/go-judge.git

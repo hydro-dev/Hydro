@@ -49,6 +49,7 @@ plugins/**
 *.mmdb
 
 # Base
+sandbox/
 node_modules/
 __*
 !__mocks__
