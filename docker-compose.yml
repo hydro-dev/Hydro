@@ -8,17 +8,30 @@ services:
     restart: always
     volumes:
       - ./data/db:/data/db
+      - /etc/localtime:/etc/localtime
+      
+  oj-judge:
+    image: executorserver
+    privileged: true
+    container_name: oj-judge
+    restart: always
+    volumes: 
+      - /root/.cache:/root/.cache
+      - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
+    ports:
+      - "0.0.0.0:5050:5050"
 
   oj-main:
-    build: ./docker
-    extra_hosts:
-      - "github.com:140.82.114.3"
+    build: ./
     container_name: oj-main
     restart: always
     privileged: true
     depends_on:
       - oj-db
+      - oj-judge
     volumes:
+      - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
       - ./data/oj:/root/.hydro
+      - /root/.cache:/root/.cache
     ports:
       - "0.0.0.0:8888:8888"

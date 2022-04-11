@@ -17,13 +17,17 @@
     <h1 class="section__title" id="compiler" data-heading>{{ _("Compilers' Version and Parameters") }}</h1>
   </div>
   <div class="section__body typo">
-    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数如下：</p>
+    <p>{{ name }} 的编译参数如下：（部分通信题依题目而定）</p>
     {% if languages %}
-      <blockquote><ul>
+    <blockquote>
+      <ul>
         {%- for k, v in languages -%}
-          <li>{{ k }} <pre>{{ v }}</pre></li>
+        <li>{{ k }}
+          <pre>{{ v }}</pre>
+        </li>
         {%- endfor -%}
-      </ul></blockquote>
+      </ul>
+    </blockquote>
     {% endif %}
   </div>
 </div>
@@ -32,8 +36,8 @@
     <h1 class="section__title" id="limits" data-heading>{{ _('Limitations') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>{{ name }} 评测机使用进程的CPU时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p>
-    <p>{{ name }} 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。内存空间默认限定为256MiB，题目中特别指明的，限定为题目中评测点所指定的内存空间。</p>
+    <p>{{ name }} 评测机使用进程的 CPU 时间计算时间消耗，时间的限定为题目中评测点所指定的时间。</p>
+    <p>{{ name }} 评测机使用进程虚拟内存与物理内存总和计算内存空间消耗。</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -41,7 +45,7 @@
     <h1 class="section__title" id="io" data-heading>{{ _('IO') }}</h1>
   </div>
   <div class="section__body typo">
-    <p>若无特殊说明，{{ name }} 使用标准输入输出（控制台输入输出，屏幕输入输出，STD I/O）。  </p>
+    <p>若无特殊说明，{{ name }} 使用标准输入输出（控制台输入输出，屏幕输入输出，STD I/O）。 </p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -55,50 +59,16 @@
       <li><span class="record-status--text progress">Compiling</span> 评测：正在编译中</li>
       <li><span class="record-status--text progress">Judging</span> 评测：编译成功，正在评测中</li>
       <li><span class="record-status--text pass">Accepted</span> 通过：程序输出完全正确</li>
-      <li><span class="record-status--text fail">Wrong Answer</span> 不通过：程序输出与标准答案不一致（不包括行末空格以及文件末空行）</li>
+      <li><span class="record-status--text fail">Wrong Answer</span>
+        不通过：答案（部分）错误，程序输出与标准答案不一致（不包括行末空格以及文件末空行），对于特定题目，可能存在特定的比较器或部分分。</li>
       <li><span class="record-status--text fail">Time Limit Exceeded</span> 不通过：程序运行时间超过了题目限制</li>
       <li><span class="record-status--text fail">Memory Limit Exceeded</span> 不通过：程序运行内存空间超过了题目限制</li>
       <li><span class="record-status--text fail">Runtime Error</span> 不通过：程序运行时错误（如数组越界、被零除、运算溢出、栈溢出、无效指针等）</li>
       <li><span class="record-status--text fail">Compile Error</span> 不通过：编译失败</li>
       <li><span class="record-status--text fail">System Error</span> 错误：系统错误（如果您遇到此问题，请及时在讨论区进行反馈）</li>
+      <li><span class="record-status--text fail">Format Error</span> 错误：题目暂无测试数据，请联系管理员</li>
       <li><span class="record-status--text ignored">Canceled</span> 其他：评测被取消</li>
-      <li><span class="record-status--text fail">Unknown Error</span> 其他：未知错误</li>
-      <li><span class="record-status--text ignored">Ignored</span> 其他：被忽略</li>
     </ul>
-    <blockquote class="note">有“成绩取消”字样则说明管理员手动标记此记录为取消，可能违反了服务条款，比如代码被发现与其他用户的代码十分相似。</blockquote>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="ce" data-heading>{{ _('Compile Error') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>可能有以下情况：</p>
-    <blockquote><ul>
-    <li>1. 递交时选错了编程语言</li>
-    <li>2. Java 的主类名没有使用 "Main"</li>
-    <li>3. 对于 C/C++：见下</li>
-    <li>4. 一般性的编译错误</li>
-    </ul></blockquote>
-    
-    <blockquote class="warn">
-      <p>对 C/C++ 选手的特别提醒：</p>
-      <ul>
-      <li>1. __int64 在 GNU C++ 中应写成 long long 类型</li>
-      <li>2. main() 返回值必须定义为 int ，而不是 void</li>
-      <li>3. for 语句中的指标变量 i 将会在如"for (int i = 0...) {...}"语句之后变为无效</li>
-      <li>4. itoa 不是一个通用 ANSI 函数（标准 C/C++ 中无此函数）</li>
-      <li>5. printf 中使用 %lf 格式是不正确的</li>
-      </ul>
-    </blockquote>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="training" data-heading>{{ _('Training') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>我们精心挑选了一些题目组成了训练计划。单击导航栏的“训练”即可进入！</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -109,57 +79,11 @@
     <p>按照赛制不同，有不同的递交、排名规则。
     <p>OI 赛制所有题目均以最后一次递交为准，特别地，请避免编译错误。</p>
     <p>OI 赛制排名规则为：总分高的排在前面，总分相等则排名相同。</p>
+    <p>IOI 赛制与 OI 赛制不同的是：所有题目递交后立即评测，可以看到自己的评测结果。</p>
     <p>ACM/ICPC 赛制所有题目递交后立即评测，以是否通过为准。</p>
     <p>ACM/ICPC 赛制排名规则为：通过题目数多的排在前面，通过题目数相同的做题耗时（含罚时）少的排在前。</p>
-    <p>时间与空间限制以题目说明为准，默认限制参见<a href="#limits">{{ _('Limitations') }}</a>。</p>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="acratio" data-heading>{{ _('Accepted Ratio') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>通过率的影响极其恶劣，{{ name }} 不提供也不承认通过率。</p>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="rp" data-heading>{{ _('RP Algorithm') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>RP 可由题目，活动，比赛等获得。</p>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="pbmdiff" data-heading>{{ _('Difficulty Algorithm') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>{{ name }} 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，通过算法计算得出。</p>
-    <p>因此，请注意以下几点：</p>
-    <ul>
-    <li>0. 一般地，难度的数值越大，该题目越难。</li>
-    <li>1. 新题目的难度可能不准确；在题目获得大量递交之后，难度才会变得较为准确。</li>
-    <li>2. 越早递交评测的用户代码的评测结果对题目难度影响越大。</li>
-    <li>3. 题目的难度由算法计算得出，有可能出现不准确的结果。</li>
-    </ul>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="upload" data-heading>{{ _('Dataset Format') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>详见<a href="https://hydro.js.org/docs/user/testdata/">配置文档</a></p>
-  </div>
-</div>
-<div class="section" data-heading-extract-to="#menu-item-wiki_help">
-  <div class="section__header">
-    <h1 class="section__title" id="lostpass" data-heading>{{ _('Forgot Password and/or Username') }}</h1>
-  </div>
-  <div class="section__body typo">
-    <p>如果您无法登录，请仔细想想，是不是用户名记错了。比如，自己原本想要注册的用户名已经被注册，所以使用了一个带有前和/或后缀的用户名。</p>
-    <p>如果您确信您的账号被盗或者忘记了账号和/或密码，请及时<a href="{{ url('user_lostpass') }}">{{ _('Reset Password or Find Username') }}</a>。</p>
+    <p>Codeforces 赛制所有题目递交后立即评测，以是否通过为准。通过时的得分取决于本题权重、做题耗时与错误提交次数。</p>
+    <p>Codeforces 赛制排名规则为：总分高的排在前面，总分相等则排名相同。</p>
   </div>
 </div>
 {% endblock %}

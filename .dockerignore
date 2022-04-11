@@ -1,0 +1,56 @@
+# Built Files & Log
+.build/
+dist/
+*.cache
+.cache
+/build/*.js
+.cache/
+*.log
+*.d.ts
+*.js.map
+*.tsbuildinfo
+*.hydro
+.coverage
+benchmark.json
+globalConfig.json
+*.out
+.clinic/
+.yarn/cache
+.yarn/build-state.yml
+.yarn/unplugged
+.yarn/sdks
+.yarn/install-state.gz
+.pnp.*
+data/
+.vscode/
+# Config Files
+/config.yaml
+/config.json
+yarn.lock
+tsconfig.json
+
+# Project Rules
+## Core
+packages/**/*.js
+!/build/*.js
+!**/bin/*.js
+!*.page.js
+!/install/jssh.d.ts
+## ui-default
+!packages/ui-default/**/*.js
+!packages/geoip/download.js
+!examples/**
+packages/ui-default/public
+packages/ui-default/misc/.iconfont
+packages/ui-default/static/locale
+plugins/**
+
+# Data files
+*.mmdb
+
+# Base
+node_modules/
+__*
+!__mocks__
+!.gitkeep
+*.local
