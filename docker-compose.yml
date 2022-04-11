@@ -8,7 +8,9 @@ services:
     restart: always
     volumes:
       - ./data/db:/data/db
-      
+    environment:
+      - TZ=Asia/Shanghai
+
   oj-judge:
     image: executorserver
     privileged: true
@@ -17,6 +19,8 @@ services:
     volumes:
       - /root/.cache/hydro/judge:/root/.cache/hydro/judge
       - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
+    environment:
+      - TZ=Asia/Shanghai
 
   oj-main:
     build: ./
@@ -32,3 +36,5 @@ services:
       - /root/.cache/hydro/judge:/root/.cache/hydro/judge
     ports:
       - "0.0.0.0:8888:8888"
+    environment:
+      - TZ=Asia/Shanghai
