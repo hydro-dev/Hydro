@@ -240,11 +240,11 @@ export class ProblemModel {
         return !!res[0][0].deletedCount;
     }
 
-    static async addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string) {
+    static async addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string, operator = 1) {
         if (!name) throw new ValidationError('name');
         const [[, fileinfo]] = await Promise.all([
             document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', name),
-            storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f),
+            storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f, operator),
         ]);
         const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
         if (!meta) throw new Error('Upload failed');
@@ -255,17 +255,22 @@ export class ProblemModel {
         await bus.emit('problem/addTestdata', domainId, pid, name, payload);
     }
 
-    static async delTestdata(domainId: string, pid: number, name: string | string[]) {
+    static async delTestdata(domainId: string, pid: number, name: string | string[], operator = 1) {
         const names = (name instanceof Array) ? name : [name];
-        await storage.del(names.map((t) => `problem/${domainId}/${pid}/testdata/${t}`));
-        await ProblemModel.pull(domainId, pid, 'data', names);
+        await Promise.all([
+            storage.del(names.map((t) => `problem/${domainId}/${pid}/testdata/${t}`), operator),
+            ProblemModel.pull(domainId, pid, 'data', names),
+        ]);
         await bus.emit('problem/delTestdata', domainId, pid, names);
     }
 
-    static async addAdditionalFile(domainId: string, pid: number, name: string, f: Readable | Buffer | string, skipUpload = false) {
+    static async addAdditionalFile(
+        domainId: string, pid: number, name: string,
+        f: Readable | Buffer | string, operator = 1, skipUpload = false,
+    ) {
         const [[, fileinfo]] = await Promise.all([
             document.getSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', name),
-            skipUpload ? '' : storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f),
+            skipUpload ? '' : storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f, operator),
         ]);
         const meta = await storage.getMeta(`problem/${domainId}/${pid}/additional_file/${name}`);
         const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
@@ -274,20 +279,21 @@ export class ProblemModel {
         await bus.emit('problem/addAdditionalFile', domainId, pid, name, payload);
     }
 
-    static async delAdditionalFile(domainId: string, pid: number, name: MaybeArray<string>) {
+    static async delAdditionalFile(domainId: string, pid: number, name: MaybeArray<string>, operator = 1) {
         const names = (name instanceof Array) ? name : [name];
-        await storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`));
-        await ProblemModel.pull(domainId, pid, 'additional_file', names);
+        await Promise.all([
+            storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`), operator),
+            ProblemModel.pull(domainId, pid, 'additional_file', names),
+        ]);
         await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }
 
-    static async random(domainId: string, query: FilterQuery<ProblemDoc>): Promise<string | number | null> {
+    static async random(domainId: string, query: FilterQuery<ProblemDoc>) {
         const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
         const pcount = await cursor.count();
-        if (pcount) {
-            const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
-            return pdoc[0].pid || pdoc[0].docId;
-        } return null;
+        if (!pcount) return null;
+        const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
+        return pdoc[0].pid || pdoc[0].docId;
     }
 
     static async getList(

@@ -488,7 +488,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (file.size > sizeLimit) throw new ValidationError('file');
             if (file.size > 65535 || await isBinaryFile(file.path, file.size)) {
                 const id = nanoid();
-                await storage.put(`submission/${this.user._id}/${id}`, file.path);
+                await storage.put(`submission/${this.user._id}/${id}`, file.path, this.user._id);
                 code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
             } else {
                 // TODO auto detect & convert encoding
@@ -606,7 +606,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
+        if (this.pdoc.reference) throw new ForbiddenError('Cannot edit files of a referenced problem.');
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.name || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -651,10 +651,10 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         for (const entry of files) {
             if (entry.type === 'testdata') {
                 // eslint-disable-next-line no-await-in-loop
-                await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.data());
+                await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
             } else {
                 // eslint-disable-next-line no-await-in-loop
-                await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.data());
+                await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
             }
         }
         this.back();
@@ -665,8 +665,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files);
-        else await problem.delAdditionalFile(domainId, this.pdoc.docId, files);
+        if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files, this.user._id);
+        else await problem.delAdditionalFile(domainId, this.pdoc.docId, files, this.user._id);
         this.back();
     }
 }
@@ -852,8 +852,8 @@ export class ProblemCreateHandler extends Handler {
         for (const file of files) {
             if (this.user._files.find((i) => i.name === file)) {
                 tasks.push(
-                    storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`)
-                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', true)),
+                    storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`, this.user._id)
+                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', this.user._id, true)),
                     user.setById(this.user._id, { _files: this.user._files.filter((i) => i.name !== file) }),
                 );
             }

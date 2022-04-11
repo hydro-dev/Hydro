@@ -549,17 +549,19 @@ export interface BaseService {
 
 export interface FileNode {
     /** File Path In MinIO */
-    _id: string
+    _id: string;
     /** Actual File Path */
-    path: string
-    lastUsage?: Date
-    lastModified?: Date
-    etag?: string
+    path: string;
+    lastUsage?: Date;
+    lastModified?: Date;
+    etag?: string;
     /** Size: in bytes */
-    size?: number
+    size?: number;
     /** AutoDelete */
-    autoDelete?: Date
-    meta?: ItemBucketMetadata,
+    autoDelete?: Date;
+    owner?: number;
+    operator?: number[];
+    meta?: ItemBucketMetadata;
 }
 
 export interface EventDoc {
