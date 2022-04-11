@@ -118,7 +118,6 @@ const page = new NamedPage('problem_config', () => {
 
   async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
     const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
-    if (!file) return;
     const action = await new ConfirmDialog({
       $body: tpl.typoMsg(i18n('Confirm to delete the file?')),
     }).open();
