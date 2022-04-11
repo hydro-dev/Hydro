@@ -17,8 +17,6 @@ services:
     volumes:
       - /root/.cache/hydro/judge:/root/.cache/hydro/judge
       - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
-    ports:
-      - "0.0.0.0:5050:5050"
 
   oj-main:
     build: ./
