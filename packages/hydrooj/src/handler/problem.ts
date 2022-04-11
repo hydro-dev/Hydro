@@ -853,7 +853,7 @@ export class ProblemCreateHandler extends Handler {
             if (this.user._files.find((i) => i.name === file)) {
                 tasks.push(
                     storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`, this.user._id)
-                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', true)),
+                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', this.user._id, true)),
                     user.setById(this.user._id, { _files: this.user._files.filter((i) => i.name !== file) }),
                 );
             }
