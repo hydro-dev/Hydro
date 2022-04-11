@@ -8,15 +8,14 @@ services:
     restart: always
     volumes:
       - ./data/db:/data/db
-      - /etc/localtime:/etc/localtime
       
   oj-judge:
     image: executorserver
     privileged: true
     container_name: oj-judge
     restart: always
-    volumes: 
-      - /root/.cache:/root/.cache
+    volumes:
+      - /root/.cache/hydro/judge:/root/.cache/hydro/judge
       - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
     ports:
       - "0.0.0.0:5050:5050"
@@ -32,6 +31,6 @@ services:
     volumes:
       - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
       - ./data/oj:/root/.hydro
-      - /root/.cache:/root/.cache
+      - /root/.cache/hydro/judge:/root/.cache/hydro/judge
     ports:
       - "0.0.0.0:8888:8888"
