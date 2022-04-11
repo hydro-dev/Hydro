@@ -56,4 +56,6 @@ export async function load(features = ['markdown']) {
   await res.loadThemePromise;
   return { monaco: res.default, registerAction: res.registerAction };
 }
+
 export default load;
+window.Hydro.components.loadMonaco = load;
