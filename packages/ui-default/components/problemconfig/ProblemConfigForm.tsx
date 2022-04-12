@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
 import { Switch, Tab, Tabs } from '@blueprintjs/core';
-import type { TestCaseConfig } from 'hydrooj/src/interface';
+import type { SubtaskConfig, TestCaseConfig } from 'hydrooj/src/interface';
 import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 
@@ -13,7 +13,8 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: TestCaseConfig[], b: TestCaseConfig[]) => isEqual(a, b);
+const eq = (a: SubtaskConfig[], b: SubtaskConfig[]) => isEqual(a, b);
+const eq1 = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -185,13 +186,74 @@ function ExtraFilesConfig() {
   );
 }
 
+function CasesSubCasesTable({ index, subindex }) {
+  const subcases = useSelector((state: RootState) => (index === -1
+    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq1);
+  const dispatch = useDispatch();
+  const dispatcher = (casesKey:string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
+    dispatch({
+      type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+      id: index,
+      key: 'cases-edit',
+      casesId: subindex,
+      casesKey,
+      value: ev.currentTarget.value,
+    });
+  };
+  return (
+    <tr>
+      {
+        index === -1 && (
+          <>
+            <td>
+              <input
+                value={subcases.time || ''}
+                onChange={dispatcher('time')}
+                className="textbox"
+              />
+            </td>
+            <td>
+              <input
+                value={subcases.memory || ''}
+                onChange={dispatcher('memory')}
+                className="textbox"
+              />
+            </td>
+          </>
+        )
+      }
+      <td>
+        <input
+          value={subcases.input || ''}
+          onChange={dispatcher('input')}
+          className="textbox"
+        />
+      </td>
+      <td>
+        <input
+          value={subcases.output || ''}
+          onChange={dispatcher('output')}
+          className="textbox"
+        />
+      </td>
+      <td>
+        <a
+          onClick={() => dispatch({
+            type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: subindex,
+          })}
+        ><span className="icon icon-close"></span>
+        </a>
+      </td>
+    </tr>
+  );
+}
+
 function CasesTable({ index }) {
   const [time, setTime] = useState('');
   const [memory, setMemory] = useState('');
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
-  console.log(cases);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
   return (
@@ -238,7 +300,7 @@ function CasesTable({ index }) {
               onChange={setOutput}
             />
           </th>
-          <th>
+          <th className="col--operation">
             <span className="icon icon-wrench"></span><br />
             <a
               onClick={() => {
@@ -255,34 +317,13 @@ function CasesTable({ index }) {
                   } : { input, output },
                 });
               }}
-            ><span className="icon icon-add">{i18n('Add')}</span>
+            ><span className="icon icon-add" />
             </a>
           </th>
         </tr>
       </thead>
       <tbody>
-        {cases && cases.map((k, v) => (
-          <tr key={JSON.stringify(k)}>
-            {
-              index === -1 && (
-                <>
-                  <td>{k.time}</td>
-                  <td>{k.memory}</td>
-                </>
-              )
-            }
-            <td>{k.input}</td>
-            <td>{k.output}</td>
-            <td>
-              <a
-                onClick={() => dispatch({
-                  type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE', id: index, key: 'cases-delete', value: v,
-                })}
-              ><span className="icon icon-close"></span>
-              </a>
-            </td>
-          </tr>
-        ))}
+        {cases && cases.map((k, v) => <CasesSubCasesTable index={index} subindex={v} />)}
       </tbody>
     </table>
   );
