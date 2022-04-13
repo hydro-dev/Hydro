@@ -102,6 +102,16 @@ export class StorageModel {
 }
 
 async function cleanFiles() {
+    const submissionKeepDate = system.get('submission.saveDays');
+    if (submissionKeepDate) {
+        const shouldDelete = moment().subtract(submissionKeepDate, 'day').toDate();
+        const res = await StorageModel.coll.find({
+            path: /^submission\//g,
+            lastModified: { $lt: shouldDelete },
+        }).toArray();
+        const paths = res.map((i) => i.path);
+        await StorageModel.del(paths);
+    }
     if (system.get('server.keepFiles')) return;
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     while (res.value) {
@@ -122,7 +132,7 @@ bus.once('app/started', async () => {
         await TaskModel.add({
             type: 'schedule',
             subType: 'storage.prune',
-            executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
+            executeAfter: moment().startOf('hour').toDate(),
             interval: [1, 'hour'],
         });
     }

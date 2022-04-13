@@ -519,7 +519,7 @@ export class Handler extends HandlerCommon {
 
     async init({ domainId }) {
         let error;
-        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 10, 88);
+        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 5, 88);
         const [absoluteDomain, inferDomain, bdoc] = await Promise.all([
             domain.get(domainId),
             domain.getByHost(this.request.host),
