@@ -214,7 +214,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                     return 'retry';
                 }
                 setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
-                const shell = __env.SHELL.split('/');
+                const shell = __env.SHELL ? __env.SHELL.split('/') : ['bash'];
                 const rc = `/root/.${shell[shell.length - 1]}rc`;
                 if (!fs.exist(rc)) fs.writefile(rc, source_nvm);
                 else {
