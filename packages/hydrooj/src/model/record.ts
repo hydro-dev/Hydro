@@ -1,6 +1,6 @@
 /* eslint-disable object-curly-newline */
 import { omit, sum } from 'lodash';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import {
     Collection, FilterQuery, MatchKeysAndValues,
     ObjectID, OnlyFieldsOfType, PushOperator,
