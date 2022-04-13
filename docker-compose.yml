@@ -19,6 +19,7 @@ services:
     volumes:
       - /root/.cache/hydro/judge:/root/.cache/hydro/judge
       - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
+      - ./packages/hydrojudge/vendor/testlib:/root/Hydro/packages/hydrojudge/vendor/testlib
     environment:
       - TZ=Asia/Shanghai
 
