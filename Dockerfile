@@ -1,11 +1,10 @@
-FROM node:14
+FROM node
 
 WORKDIR /root/Hydro
 
 COPY ./ /root/Hydro/
 
-RUN yarn install \
-	&& yarn build:ui:production
+RUN yarn install && yarn build:ui:production
 
 EXPOSE 8888
 
