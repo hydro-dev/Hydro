@@ -57,7 +57,7 @@ function judgeCase(c: Case, sid: string) {
         );
         const { code, time_usage_ms, memory_usage_kb } = res;
         let { status } = res;
-        let stdout: CmdFile = { fileId: res.fileIds[filename ? 'stdout' : `${filename}.out`] };
+        let stdout: CmdFile = { fileId: res.fileIds[filename ? `${filename}.out` : 'stdout'] };
         const stderr = { fileId: res.fileIds['stderr'] };
         if (!stdout.fileId) stdout = { content: '' };
         let message: any = '';
