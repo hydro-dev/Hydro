@@ -497,7 +497,7 @@ const cf = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: '#{0} ({1})'.format(65 + i - 1, tdoc.fullScore[i - 1]),
+                    value: '#{0}\n({1})'.format(String.fromCharCode(64 + i), tdoc.fullScore[i - 1]),
                     raw: pid,
                 });
             }
