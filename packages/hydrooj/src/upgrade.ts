@@ -703,6 +703,18 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _61_62() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const priv = +system.get('default.priv');
+        if (priv & PRIV.PRIV_REGISTER_USER) {
+            const udocs = await user.getMulti({ priv }).project({ _id: 1 }).toArray();
+            for (const udoc of udocs) {
+                await user.setById(udoc._id, { priv: priv - PRIV.PRIV_REGISTER_USER });
+            }
+            await system.set('default.priv', priv - PRIV.PRIV_REGISTER_USER);
+        }
+        return true;
+    },
 ];
 
 export default scripts;

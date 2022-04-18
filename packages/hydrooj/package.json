@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.11.15",
+    "version": "3.11.19",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -45,7 +45,7 @@
         "notp": "^2.0.3",
         "p-queue": "^7.2.0",
         "require-resolve-hook": "^1.1.0",
-        "semver": "^7.3.5",
+        "semver": "^7.3.6",
         "serialize-javascript": "^6.0.0",
         "sockjs": "^0.3.24",
         "source-map-support": "^0.5.21",
@@ -73,7 +73,7 @@
         "@types/sockjs": "^0.3.33",
         "@types/source-map-support": "^0.5.4",
         "@types/superagent": "^4.1.15",
-        "moment": "^2.29.1",
+        "moment": "^2.29.2",
         "pm2": "^5.2.0"
     },
     "peerDependencies": {

@@ -72,7 +72,6 @@ async function callback({ state, code }) {
     }
     await token.del(s._id, token.TYPE_OAUTH);
     if (!ret.email) throw new ForbiddenError("You don't have a verified email.");
-    this.response.redirect = (s.redirect || '').endsWith('/login') ? '/' : s.redirect;
     return ret;
 }
 
