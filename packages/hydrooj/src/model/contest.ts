@@ -190,7 +190,7 @@ const oi = buildContestRule({
         const detail = {};
         let score = 0;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            if ((detail[j.pid]?.score || 0) < j.score || this.submitAfterAccept) detail[j.pid] = j;
+            if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) detail[j.pid] = j;
         }
         for (const i in detail) score += detail[i].score;
         return { score, detail };
@@ -248,7 +248,7 @@ const oi = buildContestRule({
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
             for (const item of tsdoc.journal || []) {
-                if ((tsddict[item.pid]?.score || 0) < item.score || this.submitAfterAccept) tsddict[item.pid] = item;
+                if (!tsddict[item.pid] || tsddict[item.pid].score < item.score || this.submitAfterAccept) tsddict[item.pid] = item;
             }
             const row: ScoreboardNode[] = [
                 { type: 'string', value: rank.toString() },
@@ -388,7 +388,7 @@ const homework = buildContestRule({
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
             for (const item of tsdoc.detail || []) {
-                if ((tsddict[item.pid]?.score || 0) <= item.score) tsddict[item.pid] = item;
+                if (!tsddict[item.pid] || tsddict[item.pid].score <= item.score) tsddict[item.pid] = item;
             }
             const row: ScoreboardRow = [
                 { type: 'string', value: rank },
