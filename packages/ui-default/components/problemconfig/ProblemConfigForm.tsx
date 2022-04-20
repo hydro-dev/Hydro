@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
@@ -189,8 +189,9 @@ function ExtraFilesConfig() {
 function CasesSubCasesTable({ index, subindex }) {
   const subcases = useSelector((state: RootState) => (index === -1
     ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq1);
+  const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
-  const dispatcher = (casesKey:string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
+  const dispatcher = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
     dispatch({
       type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
       id: index,
@@ -198,6 +199,16 @@ function CasesSubCasesTable({ index, subindex }) {
       casesId: subindex,
       casesKey,
       value: ev.currentTarget.value,
+    });
+  };
+  const dispatcher1 = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (val) => {
+    dispatch({
+      type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+      id: index,
+      key: 'cases-edit',
+      casesId: subindex,
+      casesKey,
+      value: val,
     });
   };
   return (
@@ -223,17 +234,19 @@ function CasesSubCasesTable({ index, subindex }) {
         )
       }
       <td>
-        <input
-          value={subcases.input || ''}
-          onChange={dispatcher('input')}
-          className="textbox"
+        <CustomSelectAutoComplete
+          width="100%"
+          data={Files}
+          selectedKeys={[subcases.input]}
+          onChange={dispatcher1('input')}
         />
       </td>
       <td>
-        <input
-          value={subcases.output || ''}
-          onChange={dispatcher('output')}
-          className="textbox"
+        <CustomSelectAutoComplete
+          width="100%"
+          data={Files}
+          selectedKeys={[subcases.output]}
+          onChange={dispatcher1('output')}
         />
       </td>
       <td>
@@ -255,6 +268,8 @@ function CasesTable({ index }) {
   const [output, setOutput] = useState('');
   const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
   const Files = useSelector((state: RootState) => state.testdata);
+  const inputRef = useRef(null);
+  const outputRef = useRef(null);
   const dispatch = useDispatch();
   return (
     <table className="data-table">
@@ -285,18 +300,18 @@ function CasesTable({ index }) {
           <th>
             {i18n('Input')}<br />
             <CustomSelectAutoComplete
+              ref={inputRef}
               width="100%"
               data={Files}
-              selectedKeys={[input]}
               onChange={setInput}
             />
           </th>
           <th>
             {i18n('Output')}<br />
             <CustomSelectAutoComplete
+              ref={outputRef}
               width="100%"
               data={Files}
-              selectedKeys={[output]}
               onChange={setOutput}
             />
           </th>
@@ -306,8 +321,8 @@ function CasesTable({ index }) {
               onClick={() => {
                 setTime('');
                 setMemory('');
-                setInput('');
-                setOutput('');
+                inputRef?.current.setQuery('');
+                outputRef?.current.setQuery('');
                 dispatch({
                   type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
                   id: index,
@@ -339,7 +354,7 @@ function SubtasksTable({ data, index }) {
   };
   return (
     <div key={index}>
-      <span>Subtasks #{index} </span>
+      <span>Subtasks #{index + 1} </span>
       <a onClick={() => { dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'add' }); }}><span className="icon icon-add"></span></a>
       <a
         style={index === 0 ? { display: 'none' } : {}}
