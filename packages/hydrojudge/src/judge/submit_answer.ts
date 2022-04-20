@@ -35,7 +35,9 @@ function judgeCase(c: Case, sid: string) {
             return;
         }
         const chars = /[a-zA-Z0-9_.-]/;
-        const name = await readFile(c.input, 'utf-8').then((res) => res.trim().split('').filter((i) => chars.test(i)).join(''));
+        const name = (ctx.config.filename && /^[a-zA-Z0-9-_#.]+$/.test(ctx.config.filename))
+            ? ctx.config.filename.replace('#', c.id.toString())
+            : await readFile(c.input, 'utf-8').then((res) => res.trim().split('').filter((i) => chars.test(i)).join(''));
         let file = ctx.code;
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
