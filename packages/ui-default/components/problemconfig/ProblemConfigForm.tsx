@@ -338,7 +338,7 @@ function CasesTable({ index }) {
         </tr>
       </thead>
       <tbody>
-        {cases && cases.map((k, v) => <CasesSubCasesTable index={index} subindex={v} />)}
+        {cases && cases.map((k, v) => <CasesSubCasesTable index={index} subindex={v} key={JSON.stringify(k)} />)}
       </tbody>
     </table>
   );
