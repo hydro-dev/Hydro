@@ -319,7 +319,7 @@ function SubtasksIds({ index }) {
   const subtasks = useSelector((state: RootState) => state.config.subtasks, eqId);
   const subtaskIf = useSelector((state: RootState) => state.config.subtasks[index].if);
   const dispatch = useDispatch();
-  const subtasksIds = subtasks.map((i) => i.id && i.id).filter((i) => i !== undefined);
+  const subtasksIds = subtasks.map((i) => i.id).filter((i) => i !== undefined);
   return (
     <tr>
       <td>if</td>
