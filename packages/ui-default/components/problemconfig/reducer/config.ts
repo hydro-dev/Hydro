@@ -10,18 +10,13 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_FORM_UPDATE': {
     const next = { ...state, [action.key]: action.value };
+    if (action.key === 'score' && action.value) next.score = +next.score;
     if (!action.value || (typeof action.value === 'object' && !action.value.join(''))) delete next[action.key];
-    if (action.key === 'type' && action.value !== 'default') {
-      delete next.checker_type;
-      delete next.checker;
-    }
-    if (action.key === 'type' && action.value !== 'interactive') delete next.interactor;
-    if (action.key === 'checker_type' && ['default', 'strict'].includes(action.value)) delete next.checker;
     return next;
   }
   case 'CONFIG_CODE_UPDATE': {
     try {
-      return yaml.load(action.payload);
+      return { ...state, ...yaml.load(action.payload) as object };
     } catch {
       return state;
     }
@@ -44,39 +39,44 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
   }
   case 'CONFIG_SUBTASKS_SWITCH': {
     const next = { ...state };
-    next.subtasks = next.cases;
+    next.subtasks = next.cases.map((k, v) => ({
+      id: v, time: k.time, memory: k.memory, cases: [{ input: k.input, output: k.output }],
+    }));
     if (!next.subtasks.length) next.subtasks.push({ id: 0 });
     delete next.cases;
     return next;
   }
   case 'CONFIG_CASES_UPDATE': {
+    if (['time', 'memory'].includes(action.casesKey) && action.value !== '') action.value = +action.value;
     if (action.key === 'cases-add') return { ...state, cases: [...state.cases, action.value] };
-    if (action.key === 'cases-edit') {
-      const cases = cloneDeep(state.cases);
-      cases[action.casesId][action.casesKey] = action.value;
-      return { ...state, cases };
-    } if (action.key === 'cases-delete') {
+    if (action.key === 'cases-delete') {
       return { ...state, cases: state.cases.filter((k, v) => v !== action.value) };
     }
-    return state;
+    const cases = cloneDeep(state.cases);
+    cases[action.casesId][action.casesKey] = action.value;
+    return { ...state, cases };
   }
   case 'CONFIG_SUBTASK_UPDATE': {
+    const subtasks = cloneDeep(state.subtasks);
+    const subsubtasks = cloneDeep(state.subtasks[action.id]);
+    if (action.value !== ''
+     && ['time', 'memory'].includes(action.casesKey) || ['time', 'memory', 'score', 'id'].includes(action.key)
+    ) action.value = +action.value;
+    if (action.key === 'if' && action.value.join('') !== '') action.value = action.value.map((i) => +i);
     if (action.key.split('-')[0] === 'cases') {
-      const subtasks = cloneDeep(state.subtasks);
-      const subsubtasks = cloneDeep(state.subtasks[action.id]);
       if (action.key === 'cases-add') subsubtasks.cases.push(action.value);
       else if (action.key === 'cases-edit') subsubtasks.cases[action.casesId][action.casesKey] = action.value;
       else if (action.key === 'cases-delete') {
         subsubtasks.cases = subsubtasks[action.id].cases.filter((k, v) => v !== action.value);
       }
-      subtasks[action.id] = subsubtasks;
-      return { ...state, subtasks };
+    } else if (action.key === 'add') subtasks.splice(action.id, 0, { id: 0 });
+    else if (action.key === 'delete') delete subtasks[action.key];
+    else {
+      if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];
+      else subsubtasks[action.key] = action.value;
     }
-    const next = { ...state };
-    if (action.key === 'add') next.subtasks.splice(action.id, 0, { id: 0 });
-    else if (action.key === 'delete') delete next.subtasks[action.key];
-    else next.subtasks[action.id][action.key] = action.value;
-    return next;
+    if (action.key !== 'delete') subtasks[action.id] = subsubtasks;
+    return { ...state, subtasks };
   }
   default:
     return state;
