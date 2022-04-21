@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
 import Editor from 'vj/components/editor';
 import yaml from 'js-yaml';
+import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
 
 const mapStateToProps = (state) => ({
   config: state.config,
@@ -22,10 +23,62 @@ interface Props {
   handleUpdateCode: Function;
 }
 
+const configKey = [
+  'type', 'subType', 'target', 'score', 'time',
+  'memory', 'filename', 'checker_type', 'checker', 'interactor',
+  'user_extra_files', 'judge_extra_files', 'detail', 'outputs', 'redirect',
+  'cases', 'subtasks', 'langs',
+];
+
+const subtasksKey = [
+  'time', 'memory', 'score', 'if', 'id',
+  'type', 'cases',
+];
+
+const casesKey = ['time', 'memory', 'input', 'output'];
+
+function configYamlFormat(config: ProblemConfigFile) {
+  const formatConfig: ProblemConfigFile = {};
+  configKey.forEach((key) => {
+    if (config[key] !== undefined) {
+      if (key === 'checker_type' && config.type !== 'default') return;
+      if (key === 'checker'
+      && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
+      if (key === 'interactor' && config.type !== 'interactive') return;
+      if (key === 'subtasks') {
+        formatConfig[key] = [];
+        config[key].forEach((subtask) => {
+          const formatSubtask: object = {};
+          subtasksKey.forEach((subtaskKey) => {
+            if (subtask[subtaskKey] !== undefined) {
+              formatSubtask[subtaskKey] = subtask[subtaskKey];
+            }
+          });
+          formatConfig[key].push(formatSubtask);
+        });
+      } else if (key === 'cases') {
+        formatConfig[key] = [];
+        config[key].forEach((caseItem) => {
+          const formatCase: TestCaseConfig = {
+            time: 1000, memory: 256, input: '', output: '',
+          };
+          casesKey.forEach((caseKey) => {
+            if (caseItem[caseKey] !== undefined) formatCase[caseKey] = caseItem[caseKey];
+            else delete formatCase[caseKey];
+          });
+          formatConfig[key].push(formatCase);
+        });
+      } else formatConfig[key] = config[key];
+    }
+  });
+  return formatConfig;
+}
+
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent<Props> {
   disposable = [];
   containerElement: HTMLElement;
   private __preventUpdate = false;
+  private __preventFormat = false;
 
   editor: editor.IStandaloneCodeEditor;
   model: editor.ITextModel;
@@ -40,7 +93,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       model: this.model,
       onChange: (value: string) => {
         this.__preventUpdate = true;
-        this.props.handleUpdateCode(value);
+        if (!this.__preventFormat) this.props.handleUpdateCode(value);
         this.__preventUpdate = false;
       },
     }) as Editor;
@@ -50,14 +103,16 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   componentDidUpdate(prevProps) {
     if (this.__preventUpdate) return;
     if (yaml.dump(prevProps.config) !== yaml.dump(this.props.config)) {
+      this.__preventFormat = true;
       this.model?.pushEditOperations(
         [],
         [{
           range: this.model.getFullModelRange(),
-          text: yaml.dump(this.props.config),
+          text: yaml.dump(configYamlFormat(this.props.config)),
         }],
         undefined,
       );
+      this.__preventFormat = false;
     }
   }
 

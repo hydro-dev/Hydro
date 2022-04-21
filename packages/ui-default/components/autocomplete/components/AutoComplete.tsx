@@ -128,8 +128,10 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     else onChange(selectedKeys.join(','));
   };
 
+  let first = !multi;
   useEffect(() => {
-    dispatchChange();
+    if (first) first = false;
+    else dispatchChange();
     const ids = [];
     for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
     if (!ids.length) return;

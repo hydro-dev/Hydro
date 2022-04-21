@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import { isEqual } from 'lodash';
@@ -13,8 +13,14 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: SubtaskConfig[], b: SubtaskConfig[]) => isEqual(a, b);
-const eq1 = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
+const eq = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
+const eqId = (a: SubtaskConfig[], b: SubtaskConfig[]) => {
+  if (a.length !== b.length) return true;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id) return true;
+  }
+  return false;
+};
 
 function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props
@@ -120,7 +126,7 @@ function BasicInfo() {
                       ? (
                         <Switch
                           checked={checkerType === 'strict'}
-                          label="Don't ignore space and enter."
+                          label={i18n('Don\'t ignore space and enter.')}
                           onChange={
                             () => {
                               dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type', value: checkerType === 'strict' ? 'default' : 'strict' });
@@ -153,12 +159,12 @@ function ExtraFilesConfig() {
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="ExtraFilesTabs" disableLabel>
-      <Switch checked={showTab} label="Extra Files Config" onChange={() => setshowTab(!showTab)} />
+      <Switch checked={showTab} label={i18n('Extra Files Config')} onChange={() => setshowTab(!showTab)} />
       <div style={!showTab ? { display: 'none' } : {}}>
         <Tabs id="ExtraFilesTabs">
           <Tab
             id="user_extra_files"
-            title="user_extra_files"
+            title={i18n('user_extra_files')}
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
@@ -170,7 +176,7 @@ function ExtraFilesConfig() {
           />
           <Tab
             id="judge_extra_files"
-            title="judge_extra_files"
+            title={i18n('judge_extra_files')}
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
@@ -188,7 +194,7 @@ function ExtraFilesConfig() {
 
 function CasesSubCasesTable({ index, subindex }) {
   const subcases = useSelector((state: RootState) => (index === -1
-    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq1);
+    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
   const dispatcher = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
@@ -262,14 +268,7 @@ function CasesSubCasesTable({ index, subindex }) {
 }
 
 function CasesTable({ index }) {
-  const [time, setTime] = useState('');
-  const [memory, setMemory] = useState('');
-  const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const cases = useSelector((state: RootState) => (index === -1 ? state.config.cases : state.config.subtasks[index].cases), eq);
-  const Files = useSelector((state: RootState) => state.testdata);
-  const inputRef = useRef(null);
-  const outputRef = useRef(null);
+  const casesLength = useSelector((state: RootState) => (index === -1 ? state.config.cases?.length : state.config.subtasks[index].cases?.length));
   const dispatch = useDispatch();
   return (
     <table className="data-table">
@@ -279,73 +278,67 @@ function CasesTable({ index }) {
             index === -1 && (
               <>
                 <th>
-                  {i18n('Time')}<br />
-                  <input
-                    value={time || ''}
-                    onChange={(ev) => setTime(ev.currentTarget.value)}
-                    className="textbox"
-                  />
+                  {i18n('Time')}
                 </th>
                 <th>
-                  {i18n('Memory')}<br />
-                  <input
-                    value={memory || ''}
-                    onChange={(ev) => setMemory(ev.currentTarget.value)}
-                    className="textbox"
-                  />
+                  {i18n('Memory')}
                 </th>
               </>
             )
           }
           <th>
-            {i18n('Input')}<br />
-            <CustomSelectAutoComplete
-              ref={inputRef}
-              width="100%"
-              data={Files}
-              onChange={setInput}
-            />
+            {i18n('Input')}
           </th>
           <th>
-            {i18n('Output')}<br />
-            <CustomSelectAutoComplete
-              ref={outputRef}
-              width="100%"
-              data={Files}
-              onChange={setOutput}
-            />
+            {i18n('Output')}
           </th>
           <th className="col--operation">
-            <span className="icon icon-wrench"></span><br />
             <a
-              onClick={() => {
-                setTime('');
-                setMemory('');
-                inputRef?.current.setQuery('');
-                outputRef?.current.setQuery('');
-                dispatch({
-                  type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
-                  id: index,
-                  key: 'cases-add',
-                  value: index === -1 ? {
-                    time, memory, input, output,
-                  } : { input, output },
-                });
-              }}
+              onClick={() => dispatch({
+                type: index === -1 ? 'CONFIG_CASES_UPDATE' : 'CONFIG_SUBTASK_UPDATE',
+                id: index,
+                key: 'cases-add',
+                value: index === -1 ? {
+                  time: 1000, memory: 256, input: '', output: '',
+                } : { input: '', output: '' },
+              })}
             ><span className="icon icon-add" />
             </a>
           </th>
         </tr>
       </thead>
       <tbody>
-        {cases && cases.map((k, v) => <CasesSubCasesTable index={index} subindex={v} key={JSON.stringify(k)} />)}
+        {casesLength && [...Array(casesLength).keys()].map((i) => <CasesSubCasesTable index={index} subindex={i} key={i} />)}
       </tbody>
     </table>
   );
 }
 
-function SubtasksTable({ data, index }) {
-  const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
+function SubtasksIds({ index }) {
+  const subtasks = useSelector((state: RootState) => state.config.subtasks, eqId);
+  const subtaskIf = useSelector((state: RootState) => state.config.subtasks[index].if);
+  const dispatch = useDispatch();
+  const subtasksIds = subtasks.map((i) => i.id).filter((i) => i !== undefined);
+  return (
+    <tr>
+      <td>if</td>
+      <td colSpan={4}>
+        <CustomSelectAutoComplete
+          data={subtasksIds}
+          selectedKeys={subtaskIf?.join(',').split(',') || []}
+          itemKey={(item) => `${item}`}
+          onChange={(val) => dispatch({
+            type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'if', value: val.split(','),
+          })}
+          multi
+        />
+      </td>
+    </tr>
+  );
+}
+
+function SubtasksTable({ index }) {
+  const subtask = (key: string) => useSelector((state: RootState) => state.config.subtasks[index][key]);
   const dispatch = useDispatch();
   const dispatcher = (key: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
     dispatch({
@@ -353,7 +346,7 @@ function SubtasksTable({ data, index }) {
     });
   };
   return (
-    <div key={index}>
+    <>
       <span>Subtasks #{index + 1} </span>
       <a onClick={() => { dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'add' }); }}><span className="icon icon-add"></span></a>
       <a
@@ -375,21 +368,21 @@ function SubtasksTable({ data, index }) {
           <tr>
             <td>
               <input
-                value={data.id}
+                value={subtask('id')?.toString() || ''}
                 onChange={dispatcher('id')}
                 className="textbox"
               />
             </td>
             <td>
               <input
-                value={data.score || ''}
+                value={subtask('score') || ''}
                 onChange={dispatcher('score')}
                 className="textbox"
               />
             </td>
             <td>
               <select
-                value={data.type}
+                value={subtask('type') || ''}
                 onChange={dispatcher('type')}
                 className="select"
               >
@@ -399,42 +392,30 @@ function SubtasksTable({ data, index }) {
             </td>
             <td>
               <input
-                value={data.time || ''}
+                value={subtask('time') || ''}
                 onChange={dispatcher('time')}
                 className="textbox"
               />
             </td>
             <td>
               <input
-                value={data.memory || ''}
+                value={subtask('memory') || ''}
                 onChange={dispatcher('memory')}
                 className="textbox"
               />
             </td>
           </tr>
-          <tr>
-            <td>if</td>
-            <td colSpan={4}>
-              <CustomSelectAutoComplete
-                data={subtasks}
-                selectedKeys={data.if || []}
-                onChange={(val) => dispatch({
-                  type: 'CONFIG_SUBTASK_UPDATE', id: index, key: 'if', value: val.split(','),
-                })}
-                multi
-              />
-            </td>
-          </tr>
+          <SubtasksIds index={index} />
         </tbody>
       </table>
       <CasesTable index={index} />
-    </div>
+    </>
   );
 }
 
 function TaskConfig({ onAutoLoad }) {
-  const subtasks = useSelector((state: RootState) => state.config.subtasks, eq);
-  const cases = useSelector((state: RootState) => state.config.cases, eq);
+  const subtasksLength = useSelector((state: RootState) => state.config.subtasks?.length);
+  const casesLength = useSelector((state: RootState) => state.config.cases?.length);
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="Task Settings">
@@ -449,11 +430,11 @@ function TaskConfig({ onAutoLoad }) {
           <ManagedInput placeholder="Score" formKey="score" />
         </FormItem>
         <FormItem columns={12} label="Cases Settings" disableLabel>
-          {cases && <Switch label="Use Subtasks" onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
+          {casesLength && <Switch label={i18n('Use Subtasks Mode')} onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
           {
-            subtasks || cases
-              ? subtasks && <ul>{subtasks.map((k, v) => <SubtasksTable data={k} index={v} key={k.id} />)}</ul>
-              || cases && (<CasesTable index={-1} />)
+            subtasksLength || casesLength
+              ? subtasksLength && [...Array(subtasksLength).keys()].map((i) => <SubtasksTable index={i} key={i} />)
+              || casesLength && (<CasesTable index={-1} />)
               : (
                 <a onClick={() => onAutoLoad()}>
                   <span className="icon icon-settings"> {i18n('Auto Read Tasks')}</span>
@@ -480,7 +461,7 @@ function LangConfig() {
   }, [JSON.stringify(selectedKeys)]);
   return (
     <FormItem columns={12} label="LangsTabs" disableLabel>
-      <Switch checked={showTab} label="Langs Config" onChange={() => setshowTab(!showTab)} />
+      <Switch checked={showTab} label={i18n('Langs Config')} onChange={() => setshowTab(!showTab)} />
       <FormItem columns={12} label="langs" style={!showTab ? { display: 'none' } : {}}>
         <CustomSelectAutoComplete
           ref={ref}
