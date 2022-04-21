@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
 import Editor from 'vj/components/editor';
 import yaml from 'js-yaml';
+import type { ProblemConfigFile } from 'hydrooj/src/interface';
 
 const mapStateToProps = (state) => ({
   config: state.config,
@@ -20,6 +21,27 @@ const mapDispatchToProps = (dispatch) => ({
 interface Props {
   config: object;
   handleUpdateCode: Function;
+}
+
+const configKey = [
+  'type', 'subType', 'target', 'score', 'time',
+  'memory', 'filename', 'checker_type', 'checker', 'interactor',
+  'user_extra_files', 'judge_extra_files', 'detail', 'outputs', 'redirect',
+  'cases', 'subtasks', 'langs',
+];
+
+function configYamlFormat(config: ProblemConfigFile) {
+  const formatConfig: ProblemConfigFile = {};
+  configKey.forEach((key) => {
+    if (config[key] !== undefined) {
+      if (key === 'checker_type' && config.type !== 'default') return;
+      if (key === 'checker'
+      && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
+      if (key === 'interactor' && config.type !== 'interactive') return;
+      formatConfig[key] = config[key];
+    }
+  });
+  return formatConfig;
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent<Props> {
@@ -54,7 +76,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
         [],
         [{
           range: this.model.getFullModelRange(),
-          text: yaml.dump(this.props.config),
+          text: yaml.dump(configYamlFormat(this.props.config)),
         }],
         undefined,
       );
