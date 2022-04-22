@@ -54,22 +54,23 @@ export default function reducer(state = { type: 'default' } as ProblemConfigFile
     }
     const cases = cloneDeep(state.cases);
     cases[action.casesId][action.casesKey] = action.value;
+    if (action.value === '') delete cases[action.casesId][action.casesKey];
     return { ...state, cases };
   }
   case 'CONFIG_SUBTASK_UPDATE': {
     const subtasks = cloneDeep(state.subtasks);
     const subsubtasks = cloneDeep(state.subtasks[action.id]);
     if (action.value !== ''
-     && ['time', 'memory'].includes(action.casesKey) || ['time', 'memory', 'score', 'id'].includes(action.key)
+     && (['time', 'memory'].includes(action.casesKey) || ['time', 'memory', 'score', 'id'].includes(action.key))
     ) action.value = +action.value;
     if (action.key === 'if' && action.value.join('') !== '') action.value = action.value.map((i) => +i);
     if (action.key.split('-')[0] === 'cases') {
       if (action.key === 'cases-add') subsubtasks.cases.push(action.value);
       else if (action.key === 'cases-edit') subsubtasks.cases[action.casesId][action.casesKey] = action.value;
       else if (action.key === 'cases-delete') {
-        subsubtasks.cases = subsubtasks[action.id].cases.filter((k, v) => v !== action.value);
+        subsubtasks.cases = subsubtasks.cases.filter((k, v) => v !== action.value);
       }
-    } else if (action.key === 'add') subtasks.splice(action.id, 0, { id: 0 });
+    } else if (action.key === 'add') subtasks.push({ time: 1000, memory: 256, cases: [] });
     else if (action.key === 'delete') delete subtasks[action.key];
     else {
       if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];

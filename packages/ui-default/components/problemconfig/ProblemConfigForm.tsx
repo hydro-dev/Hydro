@@ -13,8 +13,7 @@ const SelectValue = {
   task_type: ['min', 'max', 'sum'],
 };
 
-const eq = (a: SubtaskConfig, b: SubtaskConfig) => isEqual(a, b) && !isEqual(a.cases, b.cases);
-const eq1 = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
+const eq = (a: TestCaseConfig, b: TestCaseConfig) => isEqual(a, b);
 const eqId = (a: SubtaskConfig[], b: SubtaskConfig[]) => {
   if (a.length !== b.length) return true;
   for (let i = 0; i < a.length; i++) {
@@ -195,7 +194,7 @@ function ExtraFilesConfig() {
 
 function CasesSubCasesTable({ index, subindex }) {
   const subcases = useSelector((state: RootState) => (index === -1
-    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq1);
+    ? state.config.cases[subindex] : state.config.subtasks[index].cases[subindex]), eq);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
   const dispatcher = (casesKey: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
@@ -339,7 +338,7 @@ function SubtasksIds({ index }) {
 }
 
 function SubtasksTable({ index }) {
-  const subtask = useSelector((state: RootState) => state.config.subtasks[index], eq);
+  const subtask = (key: string) => useSelector((state: RootState) => state.config.subtasks[index][key]);
   const dispatch = useDispatch();
   const dispatcher = (key: string): React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => (ev) => {
     dispatch({
@@ -369,21 +368,21 @@ function SubtasksTable({ index }) {
           <tr>
             <td>
               <input
-                value={subtask.id || ''}
+                value={subtask('id')?.toString() || ''}
                 onChange={dispatcher('id')}
                 className="textbox"
               />
             </td>
             <td>
               <input
-                value={subtask.score || ''}
+                value={subtask('score') || ''}
                 onChange={dispatcher('score')}
                 className="textbox"
               />
             </td>
             <td>
               <select
-                value={subtask.type}
+                value={subtask('type') || ''}
                 onChange={dispatcher('type')}
                 className="select"
               >
@@ -393,14 +392,14 @@ function SubtasksTable({ index }) {
             </td>
             <td>
               <input
-                value={subtask.time || ''}
+                value={subtask('time') || ''}
                 onChange={dispatcher('time')}
                 className="textbox"
               />
             </td>
             <td>
               <input
-                value={subtask.memory || ''}
+                value={subtask('memory') || ''}
                 onChange={dispatcher('memory')}
                 className="textbox"
               />
