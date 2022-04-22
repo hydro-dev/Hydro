@@ -126,7 +126,7 @@ function BasicInfo() {
                       ? (
                         <Switch
                           checked={checkerType === 'strict'}
-                          label="Don't ignore space and enter."
+                          label={i18n('Don\'t ignore space and enter.')}
                           onChange={
                             () => {
                               dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type', value: checkerType === 'strict' ? 'default' : 'strict' });
@@ -159,12 +159,12 @@ function ExtraFilesConfig() {
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="ExtraFilesTabs" disableLabel>
-      <Switch checked={showTab} label="Extra Files Config" onChange={() => setshowTab(!showTab)} />
+      <Switch checked={showTab} label={i18n('Extra Files Config')} onChange={() => setshowTab(!showTab)} />
       <div style={!showTab ? { display: 'none' } : {}}>
         <Tabs id="ExtraFilesTabs">
           <Tab
             id="user_extra_files"
-            title="user_extra_files"
+            title={i18n('user_extra_files')}
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
@@ -176,7 +176,7 @@ function ExtraFilesConfig() {
           />
           <Tab
             id="judge_extra_files"
-            title="judge_extra_files"
+            title={i18n('judge_extra_files')}
             panel={(
               <CustomSelectAutoComplete
                 data={Files}
@@ -430,7 +430,7 @@ function TaskConfig({ onAutoLoad }) {
           <ManagedInput placeholder="Score" formKey="score" />
         </FormItem>
         <FormItem columns={12} label="Cases Settings" disableLabel>
-          {casesLength && <Switch label="Use Subtasks" onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
+          {casesLength && <Switch label={i18n('Use Subtasks Mode')} onChange={() => dispatch({ type: 'CONFIG_SUBTASKS_SWITCH', value: true })} />}
           {
             subtasksLength || casesLength
               ? subtasksLength && [...Array(subtasksLength).keys()].map((i) => <SubtasksTable index={i} key={i} />)
@@ -461,7 +461,7 @@ function LangConfig() {
   }, [JSON.stringify(selectedKeys)]);
   return (
     <FormItem columns={12} label="LangsTabs" disableLabel>
-      <Switch checked={showTab} label="Langs Config" onChange={() => setshowTab(!showTab)} />
+      <Switch checked={showTab} label={i18n('Langs Config')} onChange={() => setshowTab(!showTab)} />
       <FormItem columns={12} label="langs" style={!showTab ? { display: 'none' } : {}}>
         <CustomSelectAutoComplete
           ref={ref}
