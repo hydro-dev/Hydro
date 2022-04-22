@@ -84,6 +84,7 @@ Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
+Auto Read Tasks: 自动识别任务
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -114,6 +115,8 @@ Change Email: 修改电子邮件
 Change Password: 修改密码
 Change Theme: 切换主题
 Check In: 签到
+CheckerType: 比较器类型
+Checker: 比较器
 Chinese: 中文
 Choose the background image in your profile page.: 选择您资料页面的背景图片。
 Claim homework: 认领作业
@@ -264,6 +267,7 @@ domain_user: 管理用户
 domain: 域
 Domain: 域
 Don't have an account?: 还没有账户？
+Don't ignore space and enter.: 不忽略行末回车与空格。
 Done: 已结束
 Download All: 下载全部
 Download Dataset: 下载数据集
@@ -316,6 +320,7 @@ Export as CSV: 导出为 CSV
 Export as HTML: 导出为 HTML
 Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
+Extra Files Config: 额外文件设置
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
@@ -397,6 +402,7 @@ Information: 信息
 Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
+Input: 输入
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -414,11 +420,14 @@ Join: 加入
 Judge Config: 评测设置
 Judge Status: 评测状态
 judge_playground: 评测游乐场
+judge_extra_files: 评测额外文件
 Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
+langs: 语言
 Language: 语言
+Langs Config: 语言设置
 last active at: 最后活动于
 last login at: 最后登录于
 Last Submit At: 最后递交于
@@ -529,6 +538,7 @@ Or, with automatically filled invitation code: 或者，这是可以自动填写
 Ordered List: 有序列表
 Original Score: 原始分数
 OS Info: 系统信息
+Output: 输出
 Over {0} problems: 超过 {0} 道题目
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
@@ -581,6 +591,7 @@ Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
 Problem Tags: 题目标签
 problem_create: 创建题目
+problem_config: 评测设置
 problem_edit: 编辑题目
 problem_import: 导入题目
 problem_main: 题库
@@ -754,6 +765,7 @@ Support: 支持
 Switch account: 切换账户
 Tags: 标签
 tasks_list: 任务列表
+Task Settings: 任务设置
 Technical Information: 技术信息
 Temporary session: 临时会话
 Terms of Service: 服务条款
@@ -828,12 +840,14 @@ Usage exceeded.: 用量超限。
 Use admin specificed: 由管理员指定
 Use algorithm calculated: 使用算法计算
 Use average of above: 使用上面的平均值
+Use Subtasks Mode: 使用子任务模式
 User {0} already exists.: 用户 {0} 已存在。
 User {0} not found.: 用户 {0} 不存在。
 User can join this domain by visiting the following URL: 用户可以访问此链接来加入此域
 User ID: 用户 ID
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户
+user_extra_files: 编译额外文件
 user_login: 登录
 user_logout: 登出
 user_lostpass: 忘记密码
