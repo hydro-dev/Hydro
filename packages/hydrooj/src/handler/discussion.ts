@@ -61,7 +61,7 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
         this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this.user._id);
-        if (this.vnode.assign?.length) {
+        if (this.vnode.assign?.length && !this.user.own(this.vnode)) {
             if (!Set.intersection(this.vnode.assign, this.user.group).size) {
                 throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
             }
