@@ -89,6 +89,7 @@ async function load() {
   await delay(500);
   for (const { $element } of sections) $element.trigger('vjLayout');
   $(document).trigger('vjPageFullyInitialized');
+  if (window.Notification?.permission !== 'denied') window.Notification.requestPermission();
 }
 
 load();

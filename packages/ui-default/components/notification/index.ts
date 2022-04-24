@@ -1,4 +1,6 @@
-import { Position, Toaster, Intent } from '@blueprintjs/core';
+import {
+  Position, Toaster, Intent, ToasterPosition,
+} from '@blueprintjs/core';
 import tpl from 'vj/utils/tpl';
 import zIndexManager from 'vj/utils/zIndexManager';
 
@@ -10,11 +12,17 @@ document.body.append(ToasterContainer);
 
 export const AppToaster = Toaster.create({
   className: 'recipe-toaster',
-  position: Position.LEFT_BOTTOM,
+  position: Position.LEFT_BOTTOM as ToasterPosition,
   usePortal: true,
 }, ToasterContainer);
 
 export default class Notification {
+  type: string;
+  action: any;
+  $dom: JQuery<HTMLElement>;
+  $n: JQuery<HTMLElement>;
+  duration: number;
+  autoHideTimer: any;
   constructor({
     avatar, title, message, type = '', duration = 3000, action,
   }) {
@@ -33,6 +41,14 @@ export default class Notification {
       .appendTo(document.body);
     this.$n.width(); // force reflow
     this.duration = duration;
+    if (document.hidden && window.Notification?.permission === 'granted') {
+      // eslint-disable-next-line no-new
+      new window.Notification(title || 'Hydro Notification',
+        {
+          icon: avatar || '/android-chrome-192x192.png',
+          body: message,
+        });
+    }
   }
 
   handleClick() {
