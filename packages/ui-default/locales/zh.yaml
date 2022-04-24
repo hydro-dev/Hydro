@@ -337,7 +337,7 @@ fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
 Gravatar URL Prefix: Gravatar地址前缀
-Group: 小组
+Group / UID: 小组或 UID
 Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列
