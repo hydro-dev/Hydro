@@ -45,7 +45,7 @@ class HomeworkDetailHandler extends Handler {
     async prepare(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        if (tdoc.assign?.length) {
+        if (tdoc.assign?.length && !this.user.own(tdoc)) {
             if (!Set.intersection(tdoc.assign, this.user.group).size) {
                 throw new ForbiddenError('You are not assigned.');
             }
