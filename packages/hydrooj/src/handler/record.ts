@@ -25,12 +25,14 @@ class RecordListHandler extends Handler {
     @param('pid', Types.Name, true)
     @param('tid', Types.ObjectID, true)
     @param('uidOrName', Types.Name, true)
+    @param('lang', Types.String, true)
     @param('status', Types.Int, true)
     @param('fullStatus', Types.Boolean)
     @param('allDomain', Types.Boolean, true)
     async get(
         domainId: string, page = 1, pid?: string, tid?: ObjectID,
-        uidOrName?: string, status?: number, full = false, all = false,
+        uidOrName?: string, lang?: string, status?: number, full = false,
+        all = false,
     ) {
         let tdoc = null;
         let invalid = false;
@@ -60,6 +62,7 @@ class RecordListHandler extends Handler {
             if (pdoc) q.pid = pdoc.docId;
             else invalid = true;
         }
+        if (lang) q.lang = lang;
         if (status) q.status = status;
         if (all) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
@@ -90,6 +93,7 @@ class RecordListHandler extends Handler {
             filterPid: pid,
             filterTid: tid,
             filterUidOrName: uidOrName,
+            filterLang: lang,
             filterStatus: status,
         };
         if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && !full) {
