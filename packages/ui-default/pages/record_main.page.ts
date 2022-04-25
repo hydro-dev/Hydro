@@ -2,6 +2,7 @@ import { NamedPage } from 'vj/misc/Page';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import tpl from 'vj/utils/tpl';
+import getAvaliableLangs from 'vj/utils/avaliableLangs';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: SockJs }, { DiffDOM }] = await Promise.all([
@@ -37,9 +38,9 @@ const page = new NamedPage('record_main', async () => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pid"]'), {
     clearDefaultValue: false,
   });
-  const prefixes = new Set(Object.keys(LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-  Object.keys(LANGS).filter((i) => !prefixes.has(i))
-    .map((i) => ($('select[name="lang"]').append(tpl`<option value="${i}">${LANGS[i].display}</option>`)));
+  const avaliableLangs = getAvaliableLangs(UiContext.domain.langs?.split(','));
+  Object.keys(avaliableLangs).map(
+    (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${avaliableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');
   if (lang) $('select[name="lang"]').val(lang);
   const status = new URL(window.location.href).searchParams.get('status');
