@@ -16,6 +16,7 @@ import type { Handler } from '../service/server';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
+import record from '../model/record';
 import user from './user';
 
 interface AcmJournal {
@@ -196,7 +197,7 @@ const oi = buildContestRule({
         return { score, detail };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
-    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
+    showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
         const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
@@ -441,7 +442,7 @@ const homework = buildContestRule({
 const cf = buildContestRule({
     TEXT: 'Codeforces',
     check: () => { },
-    submitAfterAccept: false,
+    submitAfterAccept: true,
     statusSort: { score: -1 },
     showScoreboard: () => true,
     showSelfRecord: () => true,
@@ -451,11 +452,10 @@ const cf = buildContestRule({
         const effective: Record<number, AcmJournal> = {};
         const detail: AcmDetail[] = [];
         let score = 0;
-        for (const j of journal) {
-            if (tdoc.pids.includes(j.pid) && effective[j.pid]?.status !== STATUS.STATUS_ACCEPTED) {
-                effective[j.pid] = j;
-                if (j.score > 0) naccept[j.pid] = (naccept[j.pid] || 0) + 1;
-            }
+        for (const j of filterEffective(tdoc, journal)) {
+            if (j.status !== STATUS.STATUS_ACCEPTED && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            effective[j.pid] = j;
+            if (j.score > 0) naccept[j.pid]++;
         }
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const j = effective[tdoc.pids[i - 1]];
@@ -591,6 +591,24 @@ export async function del(domainId: string, tid: ObjectID) {
         document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
         document.deleteMulti(domainId, document.TYPE_DISCUSSION, { parentType: document.TYPE_CONTEST, parentId: tid }),
     ]);
+}
+
+export async function rejudgeAll(domainId: string, tid: ObjectID, isAccepted: Boolean) {
+    const [tdoc, tsdocs] = await Promise.all([
+        document.get(domainId, document.TYPE_CONTEST, tid),
+        document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
+    ]);
+    for (const tsdoc of tsdocs) {
+        for (const pid in tsdoc.detail) {
+            const rid = tsdoc.detail[pid].rid;
+            const rdoc = await record.get(domainId, rid);
+            if (rdoc) {
+                if (rdoc.status !== STATUS.STATUS_ACCEPTED && isAccepted) continue;
+                await record.reset(domainId, rid, true);
+                await record.judge(domainId, rid);
+            }
+        }
+    }
 }
 
 export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
@@ -803,6 +821,7 @@ global.Hydro.model.contest = {
     attend,
     edit,
     del,
+    rejudgeAll,
     get,
     getRelated,
     updateStatus,

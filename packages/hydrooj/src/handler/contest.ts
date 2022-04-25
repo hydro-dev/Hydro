@@ -1,10 +1,11 @@
 import AdmZip from 'adm-zip';
+import fs from 'fs-extra';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import { Time } from '@hydrooj/utils/lib/utils';
+import { Time, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
-    PermissionError, ValidationError,
+    PermissionError, RemoteOnlineJudgeError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -13,6 +14,7 @@ import * as contest from '../model/contest';
 import message from '../model/message';
 import problem from '../model/problem';
 import record from '../model/record';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
@@ -58,6 +60,20 @@ TaskModel.Worker.addHandler('contest', async (doc) => {
                 tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
             }
         } else if (op === 'unlock') tasks.push(contest.recalcStatus(doc.domainId, doc.tid));
+        else if (op == 'systemtest') {
+            for (const pid of tdoc.pids) {
+                try {
+                    const pdoc = await problem.get(doc.domainId, pid);
+                    const pretestcfg = (pdoc.data || []).filter((i) => i.name.toLowerCase() === 'systemtest.yaml');
+                    const str = (await streamToBuffer(
+                        await
+                            storage.get(`problem/${doc.domainId}/${pdoc.docId}/testdata/${pretestcfg[0].name}`),
+                    )).toString()
+                    problem.addTestdata(doc.domainId, pid, 'config.yaml', Buffer.from(str));
+                } catch (e) { /* ignore */ }
+            }
+            contest.rejudgeAll(doc.domainId, doc.tid, true);
+        }
     }
     await Promise.all(tasks);
 });
@@ -276,7 +292,7 @@ export class ContestEditHandler extends Handler {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const fullScore = _fullScore.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
-        if (rule === 'Codeforces' && fullScore.length !== 1 && fullScore.length !== pids.length) throw new ValidationError('fullScore');
+        if (rule === 'cf' && fullScore.length !== 1 && fullScore.length !== pids.length) throw new ValidationError('fullScore');
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
@@ -301,6 +317,24 @@ export class ContestEditHandler extends Handler {
             type: 'schedule', subType: 'contest', domainId, tid,
         };
         await TaskModel.deleteMany(task);
+        if (rule === 'cf' || rule === 'oi') {
+            for (const pid of pids) {
+                try {
+                    const pdoc = await problem.get(domainId, pid);
+                    const pretestcfg = (pdoc.data || []).filter((i) => i.name.toLowerCase() === 'pretest.yaml');
+                    const str = (await streamToBuffer(
+                        await
+                            storage.get(`problem/${domainId}/${pdoc.docId}/testdata/${pretestcfg[0].name}`),
+                    )).toString()
+                    problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(str));
+                } catch (e) { throw new ContestNotFoundError('Pretest Config'); }
+            }
+            await TaskModel.add({
+                ...task,
+                operation: ['systemtest'],
+                executeAfter: endAt,
+            });
+        }
         if (Date.now() <= endAt.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
