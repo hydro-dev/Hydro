@@ -43,8 +43,6 @@ const page = new NamedPage('record_main', async () => {
     (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${avaliableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');
   if (lang) $('select[name="lang"]').val(lang);
-  const status = new URL(window.location.href).searchParams.get('status');
-  if (status) $('select[name="status"]').val(status);
 });
 
 export default page;
