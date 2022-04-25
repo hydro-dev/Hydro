@@ -79,6 +79,7 @@ Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
+Assign: 分配给
 At least 4 characters: 至少 4 个字符
 Attend Contest: 参加比赛
 Attend contests: 参加比赛
@@ -343,6 +344,7 @@ fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
 Gravatar URL Prefix: Gravatar地址前缀
+Group / UID: 小组或 UID
 Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列

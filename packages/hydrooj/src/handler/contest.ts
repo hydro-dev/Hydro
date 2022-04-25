@@ -100,7 +100,7 @@ export class ContestDetailHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async prepare(domainId: string, tid: ObjectID) {
         const tdoc = await contest.get(domainId, tid);
-        if (tdoc.assign?.length) {
+        if (tdoc.assign?.length && !this.user.own(tdoc)) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(tdoc.assign, groups.map((i) => i.name)).size) {
                 throw new ForbiddenError('You are not assigned.');

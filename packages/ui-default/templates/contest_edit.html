@@ -67,11 +67,12 @@
             row:false
             }) }}
             {{ form.form_text({
-            columns:4,
-            label:'Assign',
-            name:'assign',
-            value:tdoc.assign|default(''),
-            row:false
+              columns:4,
+              label:'Assign',
+              name:'assign',
+              placeholder:_('Group / UID'),
+              value:tdoc.assign|default(''),
+              row:false
             }) }}
           </div>
           <div class="row">
