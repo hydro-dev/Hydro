@@ -8,6 +8,7 @@ export function parse(output: string, fullscore: number) {
     let builder = (msg: string) => msg;
     let message = output.substring(0, 1024);
     if (output.startsWith('ok ')) {
+        message = output.split('ok ')[1] || '';
         status = STATUS.STATUS_ACCEPTED;
         score = fullscore;
     } else if (output.startsWith('wrong answer ')) {
@@ -17,12 +18,13 @@ export function parse(output: string, fullscore: number) {
         builder = (msg) => `PE ${msg}`;
     } else if (output.startsWith('partially correct ')) {
         let p = +output.split('partially correct (')[1].split(')')[0] || 0;
+        status = STATUS.STATUS_PART_CORRECT;
         if (p > 1) p /= 100;
         score = Math.floor(fullscore * p);
         const res = message.split(')');
         res.shift();
         message = res.join(')').trim();
-        builder = (msg) => `PC ${msg}`;
+        builder = (msg) => `{0} Score(s). ${msg}`.format(score);
     } else if (output.startsWith('points ')) {
         let p = +output.split('points ')[1].split(' ')[0] || 0;
         if (p > 1) p /= 100;
@@ -31,7 +33,13 @@ export function parse(output: string, fullscore: number) {
             score = fullscore;
             const base = output.split('points ')[1] || '';
             message = base.substring(base.indexOf(' '), 1024);
-        } else score = Math.floor(fullscore * p);
+        } else {
+            score = Math.floor(fullscore * p);
+            if (score > 0) status = STATUS.STATUS_PART_CORRECT;
+            const base = output.split('points ')[1] || '';
+            message = base.substring(base.indexOf(' '), 1024);
+            builder = (msg) => `{0} Score(s). ${msg}`.format(score);
+        }
     }
     while (operation.test(message)) {
         const [, op, val, rest] = message.match(operation);

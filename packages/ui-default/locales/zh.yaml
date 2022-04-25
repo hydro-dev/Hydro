@@ -403,7 +403,6 @@ Information: 信息
 Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
-Input: 输入
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -684,7 +683,6 @@ Sample Input: 输入数据
 Sample Output: 输出数据
 Sample: 样例
 Input: 输入
-Output: 输出
 Save All Changes: 保存所有修改
 Saved session: 已保存的会话
 Saving file...: 正在保存文件...

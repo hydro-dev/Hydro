@@ -12,6 +12,7 @@ export const STATUS_COMPILE_ERROR = 7;
 export const STATUS_SYSTEM_ERROR = 8;
 export const STATUS_CANCELED = 9;
 export const STATUS_ETC = 10;
+export const STATUS_PART_CORRECT = 12;
 export const STATUS_JUDGING = 20;
 export const STATUS_COMPILING = 21;
 export const STATUS_FETCHED = 22;
@@ -29,6 +30,7 @@ export const STATUS_TEXTS = {
   [STATUS_SYSTEM_ERROR]: 'System Error',
   [STATUS_CANCELED]: 'Cancelled',
   [STATUS_ETC]: 'Unknown Error',
+  [STATUS_PART_CORRECT]: 'Partially Correct',
   [STATUS_JUDGING]: 'Running',
   [STATUS_COMPILING]: 'Compiling',
   [STATUS_FETCHED]: 'Fetched',
@@ -40,14 +42,15 @@ export const STATUS_CODES = {
   [STATUS_WAITING]: 'pending',
   [STATUS_ACCEPTED]: 'pass',
   [STATUS_WRONG_ANSWER]: 'fail',
-  [STATUS_TIME_LIMIT_EXCEEDED]: 'fail',
-  [STATUS_MEMORY_LIMIT_EXCEEDED]: 'fail',
+  [STATUS_TIME_LIMIT_EXCEEDED]: 'timeexceed',
+  [STATUS_MEMORY_LIMIT_EXCEEDED]: 'memoryexceed',
   [STATUS_OUTPUT_LIMIT_EXCEEDED]: 'fail',
-  [STATUS_RUNTIME_ERROR]: 'fail',
-  [STATUS_COMPILE_ERROR]: 'fail',
-  [STATUS_SYSTEM_ERROR]: 'fail',
+  [STATUS_RUNTIME_ERROR]: 'runtimeerror',
+  [STATUS_COMPILE_ERROR]: 'compileerror',
+  [STATUS_SYSTEM_ERROR]: 'systemerror',
   [STATUS_CANCELED]: 'ignored',
   [STATUS_ETC]: 'fail',
+  [STATUS_PART_CORRECT]: 'partcorrect',
   [STATUS_JUDGING]: 'progress',
   [STATUS_COMPILING]: 'progress',
   [STATUS_FETCHED]: 'progress',
@@ -69,6 +72,7 @@ export const STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS = {
   [STATUS_SYSTEM_ERROR]: false,
   [STATUS_CANCELED]: false,
   [STATUS_ETC]: false,
+  [STATUS_PART_CORRECT]: true,
   [STATUS_JUDGING]: false,
   [STATUS_COMPILING]: false,
   [STATUS_FETCHED]: false,

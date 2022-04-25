@@ -86,6 +86,7 @@ export async function pdoc(report) {
                 SE: sumStatus(STATUS.STATUS_SYSTEM_ERROR),
                 IGN: sumStatus(STATUS.STATUS_CANCELED),
                 CE: sumStatus(STATUS.STATUS_COMPILE_ERROR),
+                PC: sumStatus(STATUS.STATUS_PART_CORRECT),
             },
         },
         {
@@ -101,6 +102,7 @@ export async function pdoc(report) {
                 SE: { $sum: '$SE' },
                 IGN: { $sum: '$IGN' },
                 CE: { $sum: '$CE' },
+                PC: { $sum: '$PC' },
             },
         },
     ];

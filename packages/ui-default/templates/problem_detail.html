@@ -31,8 +31,8 @@
           {% if rdoc %}
             <a href="{{ url('record_detail', {rid:rdoc._id}) }}">
               <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
-              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">{{ rdoc.score }}</span>
-            </a>
+              <span style="color: {{ utils.status.getScoreColor(rdoc.score|default(0)) }}">{{ rdoc.score|default(0) }}</span>
+              </a>
           {% endif %}
           {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) and not tdoc %}
             <form class="form--inline" action="{{ url('problem_main') }}" method="post">

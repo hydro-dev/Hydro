@@ -30,7 +30,14 @@ $immersive-header-color = #ffffff
 $success-color = #25ad40
 $fail-color = #fb5555
 $progress-color = #f39800
+$systemerror-color = #9fa0a0
 $invalid-color = #9fa0a0
+$compileerror-color = #297ada
+$pending-color = #66ccff
+$ignored-color = #6770d0
+$exceeded-color = #ff9840
+$runtimeerror-color = #bc35ff
+$partcorrect-color = #01bab2
 
 // sizes
 $font-size = 16px             // main content
@@ -207,14 +214,26 @@ $badge-bg-color = {
 $record-status-color = {
   'pass': $success-color,
   'fail': $fail-color,
-  'progress': $progress-color,
-  'ignored': $invalid-color,
-  'pending': $invalid-color,
+  'timeexceed': $exceeded-color,
+  'memoryexceed': $exceeded-color,
+  'runtimeerror': $runtimeerror-color,
+  'compileerror': $compileerror-color,
+  'partcorrect': $partcorrect-color,
+  'systemerror': $systemerror-color,
+  'progress': $pending-color,
+  'ignored': $ignored-color,
+  'pending': $pending-color,
 }
 
 $record-status-icon = {
   'pass': $icon-check,
   'fail': $icon-close,
+  'timeexceed': $icon-stopwatch,
+  'memoryexceed': $icon-comparison,
+  'partcorrect': $icon-minus,
+  'runtimeerror': $icon-boom,
+  'compileerror': $icon-code,
+  'systemerror': $icon-server,
   'progress': $icon-hourglass,
   'ignored': $icon-close,
   'pending': $icon-schedule,

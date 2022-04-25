@@ -660,7 +660,7 @@ export function getScore(tdoc: Tdoc, pid: number) {
             break;
         }
     }
-    return '{0}'.format(score - time * Math.floor(score / 250));
+    return '{0}'.format(Math.max(Math.floor(score * 0.3), score - time * Math.floor(score / 250)));
 }
 export function isNew(tdoc: Tdoc, days = 1) {
     const now = new Date().getTime();

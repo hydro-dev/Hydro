@@ -36,6 +36,6 @@ services:
       - ./data/oj:/root/.hydro
       - /root/.cache/hydro/judge:/root/.cache/hydro/judge
     ports:
-      - "0.0.0.0:8888:8888"
+      - "8888:8888"
     environment:
       - TZ=Asia/Shanghai

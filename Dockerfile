@@ -1,4 +1,4 @@
-FROM node
+FROM node:14
 
 WORKDIR /root/Hydro
 

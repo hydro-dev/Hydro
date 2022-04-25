@@ -98,6 +98,11 @@ function judgeCase(c: Case, sid: string) {
         if (ctxSubtask.score === 0) ctx.failed[sid] = true;
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
+        if (ctxSubtask.subtask.type === 'min' && ctx.config.subtasks.length > 1) {
+            const nowId = parseInt(sid);
+            const base = 'Subtask {0}. '.format(nowId + 1);
+            message = base + message;
+        }
         ctx.next({
             case: {
                 status,
