@@ -72,7 +72,7 @@ TaskModel.Worker.addHandler('contest', async (doc) => {
                     problem.addTestdata(doc.domainId, pid, 'config.yaml', Buffer.from(str));
                 } catch (e) { /* ignore */ }
             }
-            contest.rejudgeAll(doc.domainId, doc.tid, true);
+            contest.rejudgeAll(doc.domainId, doc.tid, tdoc.rule === 'cf');
         }
     }
     await Promise.all(tasks);
