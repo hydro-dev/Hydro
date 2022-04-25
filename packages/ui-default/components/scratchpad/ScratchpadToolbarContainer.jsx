@@ -80,7 +80,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     if (!avaliableLangs[this.props.editorLang]) {
       // preference not allowed
       const key = keys.find((i) => avaliableLangs[i].pretest === this.props.editorLang);
-      this.props.setEditorLanguage(key || Object.keys(avaliableLangs)[0]);
+      this.props.setEditorLanguage(key || keys[0]);
     }
   }
 
