@@ -1,4 +1,6 @@
 # Built Files & Log
+Dockerfile
+docker-compose.yml
 .build/
 dist/
 *.cache
