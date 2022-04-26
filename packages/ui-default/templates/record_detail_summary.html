@@ -1,8 +1,19 @@
 <dl class="large horizontal" id="summary">
+  <dt>{{ _('Status') }}</dt>
+  <dd>
+    <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
+    <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
+      {{ model.builtin.STATUS_TEXTS[rdoc['status']] }}
+    </span>
+  </dd>
   <dt>{{ _('Score') }}</dt>
-  <dd>{{ rdoc['score'] }}</dd>
+  <dd><span style="color: {{ utils.status.getScoreColor(rdoc['score']|default(0)) }}">{{ rdoc['score']|default(0) }}</span></dd>
   <dt>{{ _('Total Time') }}</dt>
   <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</dd>
   <dt>{{ _('Peak Memory') }}</dt>
   <dd>{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</dd>
+  {% if rdoc['code'].startsWith('@@hydro_submission_file@@') === false %}
+  <dt>{{ _('Code Size') }}</dt>
+  <dd>{{ size(rdoc['code'].length / 1024, 1024) }}</dd>
+  {% endif %}
 </dl>

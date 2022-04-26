@@ -150,10 +150,13 @@ class RecordDetailHandler extends Handler {
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
-
+        let subtaskSum = 0;
+        for (const rcdoc of rdoc.testCases)
+            if (rcdoc.message.startsWith('Subtask'))
+                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.'))) || 0);
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc, pdoc, tdoc,
+            udoc, rdoc, pdoc, tdoc, subtaskSum
         };
     }
 
@@ -287,6 +290,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
+    subtaskSum: number = 0;
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
@@ -303,7 +307,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             problem.get(rdoc.domainId, rdoc.pid),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
-
+        for (const rcdoc of rdoc.testCases)
+            if (rcdoc.message.startsWith('Subtask'))
+                this.subtaskSum = Math.max(this.subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.'))) || 0);
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
@@ -329,14 +335,13 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             clearTimeout(this.disconnectTimeout);
             this.disconnectTimeout = null;
         }
-        let subtaskSum = 0;
-        for (const rcdoc of rdoc.testCases)
-            if (rcdoc.message.startsWith('Subtask'))
-                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.'))) || 0);
+        const subtaskSum = this.subtaskSum;
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         this.send({
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc, subtaskSum }),
+            status_html: subtaskSum === 0 ?
+                await this.renderHTML('record_detail_status.html', { rdoc })
+                : await this.renderHTML('record_detail_status_subtask.html', { rdoc, subtaskSum }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
         });
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {

@@ -33,7 +33,7 @@ function judgeCase(c: Case, sid: string) {
                     score: 0,
                     time_ms: 0,
                     memory_kb: 0,
-                    message: '',
+                    message: 'Subtask {0}. '.format(parseInt(sid) + 1),
                 },
                 addProgress: 100 / ctx.config.count,
             }, c.id);
@@ -98,11 +98,8 @@ function judgeCase(c: Case, sid: string) {
         if (ctxSubtask.score === 0) ctx.failed[sid] = true;
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
-        if (ctxSubtask.subtask.type === 'min' && ctx.config.subtasks.length > 1) {
-            const nowId = parseInt(sid);
-            const base = 'Subtask {0}. '.format(nowId + 1);
-            message = base + message;
-        }
+        if (ctxSubtask.subtask.type === 'min' && ctx.config.subtasks.length > 1)
+            message = 'Subtask {0}. '.format(parseInt(sid) + 1) + message;
         ctx.next({
             case: {
                 status,
