@@ -81,7 +81,7 @@ module.exports = {
     indent: [
       'error',
       2,
-      { SwitchCase: 0 },
+      { SwitchCase: 1 },
     ],
     'max-len': ['error', 150],
     quotes: 'warn',
@@ -115,6 +115,7 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'no-await-in-loop': 'off',
     'no-lonely-if': 'off',
+    'no-nested-ternary': 'off',
     'no-param-reassign': 'off',
     'no-script-url': 'off',
     'no-bitwise': 'off',

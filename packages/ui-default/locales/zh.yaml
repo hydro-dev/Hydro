@@ -118,8 +118,8 @@ Change Email: 修改电子邮件
 Change Password: 修改密码
 Change Theme: 切换主题
 Check In: 签到
-CheckerType: 比较器类型
 Checker: 比较器
+CheckerType: 比较器类型
 Chinese: 中文
 Choose the background image in your profile page.: 选择您资料页面的背景图片。
 Claim homework: 认领作业
@@ -270,7 +270,6 @@ domain_user: 管理用户
 domain: 域
 Domain: 域
 Don't have an account?: 还没有账户？
-Don't ignore space and enter.: 不忽略行末回车与空格。
 Done: 已结束
 Download All: 下载全部
 Download Dataset: 下载数据集
@@ -388,6 +387,7 @@ Host: 主持人
 hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
+Ignore trailing space and enter.: 忽略行末空格与文件尾回车。
 Images With Size: 指定大小的图片
 Images: 图片
 Import from: 导入自
@@ -423,15 +423,15 @@ Italic: 斜体
 Join: 加入
 Judge Config: 评测设置
 Judge Status: 评测状态
-judge_playground: 评测游乐场
 judge_extra_files: 评测额外文件
+judge_playground: 评测游乐场
 Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
+Langs Config: 语言设置
 langs: 语言
 Language: 语言
-Langs Config: 语言设置
 last active at: 最后活动于
 last login at: 最后登录于
 Last Submit At: 最后递交于
@@ -594,8 +594,8 @@ Problem Solution List: 题解列表
 Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
 Problem Tags: 题目标签
-problem_create: 创建题目
 problem_config: 评测设置
+problem_create: 创建题目
 problem_edit: 编辑题目
 problem_import: 导入题目
 problem_main: 题库
@@ -768,8 +768,8 @@ SuperUser: 超级管理员
 Support: 支持
 Switch account: 切换账户
 Tags: 标签
-tasks_list: 任务列表
 Task Settings: 任务设置
+tasks_list: 任务列表
 Technical Information: 技术信息
 Temporary session: 临时会话
 Terms of Service: 服务条款

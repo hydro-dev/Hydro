@@ -25,7 +25,7 @@
         "debug": "node --trace-warnings --async-stack-traces --trace-deprecation node_modules/hydrooj/bin/hydrooj --debug --template",
         "start:all": "node build/start",
         "start": "node_modules/.bin/hydrooj",
-        "postinstall": "node build/hack && node build/prepare.js && rm -rf node_modules/esbuild-loader/node_modules/esbuild"
+        "postinstall": "node build/hack && node build/prepare.js"
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
@@ -64,5 +64,8 @@
         "supertest": "^6.2.2",
         "typedoc": "^0.22.13",
         "typescript": "4.6.2"
+    },
+    "resolutions": {
+        "esbuild": "0.14.3"
     }
 }
