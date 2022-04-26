@@ -21,14 +21,14 @@ function scrollToViewport() {
 
 export default function reducer(state = null, action) {
   switch (action.type) {
-  case 'DIALOGUES_SWITCH_TO': {
-    scrollToViewport();
-    return action.payload;
-  }
-  case 'DIALOGUES_POST_SEND_FULFILLED': {
-    return action.meta.dialogueId;
-  }
-  default:
-    return state;
+    case 'DIALOGUES_SWITCH_TO': {
+      scrollToViewport();
+      return action.payload;
+    }
+    case 'DIALOGUES_POST_SEND_FULFILLED': {
+      return action.meta.dialogueId;
+    }
+    default:
+      return state;
   }
 }

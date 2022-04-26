@@ -127,10 +127,11 @@ export interface FileInfo {
 }
 
 export interface TestCaseConfig {
-    input: string,
-    output: string,
-    time?: number,
-    memory?: number,
+    input: string;
+    output: string;
+    time?: number;
+    memory?: number;
+    score?: number;
 }
 
 export enum ProblemType {

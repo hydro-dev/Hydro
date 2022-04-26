@@ -5,36 +5,36 @@ export default function reducer(state = {
   items: {},
 }, action) {
   switch (action.type) {
-  case 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS_FULFILLED': {
-    const { rdocs } = action.payload;
-    return {
-      ...state,
-      rows: _.map(rdocs, '_id'),
-      items: _.keyBy(rdocs, '_id'),
-    };
-  }
-  case 'SCRATCHPAD_RECORDS_PUSH': {
-    const { rdoc } = action.payload;
-    const rows = [...state.rows];
-    if (!rows.includes(rdoc._id)) {
+    case 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS_FULFILLED': {
+      const { rdocs } = action.payload;
       return {
         ...state,
-        rows: [rdoc._id, ...state.rows],
+        rows: _.map(rdocs, '_id'),
+        items: _.keyBy(rdocs, '_id'),
+      };
+    }
+    case 'SCRATCHPAD_RECORDS_PUSH': {
+      const { rdoc } = action.payload;
+      const rows = [...state.rows];
+      if (!rows.includes(rdoc._id)) {
+        return {
+          ...state,
+          rows: [rdoc._id, ...state.rows],
+          items: {
+            ...state.items,
+            [rdoc._id]: rdoc,
+          },
+        };
+      }
+      return {
+        ...state,
         items: {
           ...state.items,
           [rdoc._id]: rdoc,
         },
       };
     }
-    return {
-      ...state,
-      items: {
-        ...state.items,
-        [rdoc._id]: rdoc,
-      },
-    };
-  }
-  default:
-    return state;
+    default:
+      return state;
   }
 }

@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { max, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
-import { readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
@@ -28,8 +28,7 @@ async function readAutoCases(folder: string, { next }, cfg, rst) {
             const outputs = await fs.readdir(path.resolve(folder, 'output'));
             files.push(...outputs.map((i) => `output/${i}`));
         }
-        let result = await readCasesFromFiles(files, checkFile, cfg);
-        if (!result.count) result = await readSubtasksFromFiles(files, checkFile, cfg, rst);
+        const result = readSubtasksFromFiles(files, checkFile, cfg, rst);
         Object.assign(config, result);
         if (cfg.isSelfSubmission) next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
     } catch (e) {
@@ -42,11 +41,11 @@ function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
-    const time = sum(config.subtasks.map((subtask) => subtask.time * subtask.cases.length));
+    const time = sum(config.subtasks.map((subtask) => sum(subtask.cases.map((c) => c.time))));
     if (time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
-    const memMax = max(config.subtasks.map((subtask) => subtask.memory));
+    const memMax = max(config.subtasks.map((subtask) => max(subtask.cases.map((c) => c.memory))));
     if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
     if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
         throw new FormatError('You did not specify a checker.');
@@ -57,18 +56,18 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     const iniConfig = path.resolve(folder, 'config.ini');
     const yamlConfig = path.resolve(folder, 'config.yaml');
     const ymlConfig = path.resolve(folder, 'config.yml');
-    let config;
+    const config = { ...cfg };
     if (fs.existsSync(yamlConfig)) {
-        config = { ...cfg, ...yaml.load(fs.readFileSync(yamlConfig).toString()) as object };
+        Object.assign(config, yaml.load(fs.readFileSync(yamlConfig).toString()));
     } else if (fs.existsSync(ymlConfig)) {
-        config = { ...cfg, ...yaml.load(fs.readFileSync(ymlConfig).toString()) as object };
+        Object.assign(config, yaml.load(fs.readFileSync(ymlConfig).toString()));
     } else if (fs.existsSync(iniConfig)) {
         try {
-            config = { ...cfg, ...convertIniConfig(fs.readFileSync(iniConfig).toString()) };
+            Object.assign(config, convertIniConfig(fs.readFileSync(iniConfig).toString()));
         } catch (e) {
             throw changeErrorType(e, FormatError);
         }
-    } else config = cfg;
+    }
     let result;
     try {
         result = await readYamlCases(config, ensureFile(folder));

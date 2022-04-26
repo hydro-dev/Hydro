@@ -137,14 +137,14 @@ const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
 const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 
 export function parseTimeMS(str: string | number) {
-    if (typeof str === 'number') return str;
+    if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
     const match = TIME_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing time`);
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
 }
 
 export function parseMemoryMB(str: string | number) {
-    if (typeof str === 'number') return str;
+    if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
     return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
@@ -161,19 +161,17 @@ export function size(s: number, base = 1) {
     return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
-interface Re0 {
-    reg: RegExp,
-    output: ((a: RegExpExecArray) => string)[],
-    id: (a: RegExpExecArray) => number,
+interface MatchRule {
+    regex: RegExp;
+    output: ((a: RegExpExecArray) => string)[];
+    id: (a: RegExpExecArray) => number;
+    subtask: (a: RegExpExecArray) => number;
+    preferredScorerType: 'min' | 'max' | 'sum';
 }
 
-interface Re1 extends Re0 {
-    subtask: (a: RegExpExecArray) => number,
-}
-
-const RE0: Re0[] = [
+const SubtaskMatcher: MatchRule[] = [
     {
-        reg: /^([^\d]*)(\d+).(in|txt)$/,
+        regex: /^([^\d]*)(\d+).(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -181,108 +179,52 @@ const RE0: Re0[] = [
             (a) => (a[1].includes('input') ? `${a[1] + a[2]}.txt`.replace(/input/g, 'output') : null),
         ],
         id: (a) => +a[2],
+        subtask: () => 0,
+        preferredScorerType: 'sum',
     },
     {
-        reg: /^([^\d]*)\.in(\d+)$/,
+        regex: /^([^\d]*)\.in(\d+)$/,
         output: [
             (a) => `${a[1]}.ou${a[2]}`,
             (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
         ],
         id: (a) => +a[2],
+        subtask: () => 0,
+        preferredScorerType: 'sum',
     },
-];
-const RE1: Re1[] = [
     {
-        reg: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
+        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
         output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
-        subtask: (a) => +a[2],
         id: (a) => +a[4],
+        subtask: (a) => +a[2],
+        preferredScorerType: 'min',
     },
 ];
 
-export async function readCasesFromFiles(files: string[], checkFile, cfg) {
-    const cases = [];
-    for (const file of files) {
-        for (const REG of RE0) {
-            if (REG.reg.test(file)) {
-                const data = REG.reg.exec(file);
-                const c = { input: file, output: '', id: REG.id(data) };
-                for (const func of REG.output) {
-                    if (cfg.noOutputFile) c.output = '/dev/null';
-                    else c.output = func(data);
-                    if (c.output && (c.output === '/dev/null' || checkFile(c.output))) {
-                        cases.push(c);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    cases.sort((a, b) => (a.id - b.id));
-    const extra = cases.length - (100 % cases.length);
-    const config = {
-        count: 0,
-        subtasks: [{
-            time: parseTimeMS(cfg.time || '1s'),
-            memory: parseMemoryMB(cfg.memory || '256m'),
-            type: 'sum',
-            cases: [],
-            score: Math.floor(100 / cases.length),
-        }],
-    };
-    for (let i = 0; i < extra; i++) {
-        config.count++;
-        config.subtasks[0].cases.push({
-            id: config.count,
-            input: checkFile(cases[i].input),
-            output: checkFile(cases[i].output),
-        });
-    }
-    if (extra < cases.length) {
-        config.subtasks.push({
-            time: parseTimeMS(cfg.time || '1s'),
-            memory: parseMemoryMB(cfg.memory || '256m'),
-            type: 'sum',
-            cases: [],
-            score: Math.floor(100 / cases.length) + 1,
-        });
-        for (let i = extra; i < cases.length; i++) {
-            config.count++;
-            config.subtasks[1].cases.push({
-                id: config.count,
-                input: checkFile(cases[i].input),
-                output: checkFile(cases[i].output),
-            });
-        }
-    }
-    return config;
-}
-
-export async function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
+export function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
     const subtask = {};
-    for (const s of rst.subtasks) if (s.id) subtask[s.id] = s;
+    for (const s of rst.subtasks || []) if (s.id) subtask[s.id] = s;
     const subtasks = [];
     for (const file of files) {
-        for (const REG of RE1) {
-            if (REG.reg.test(file)) {
-                const data = REG.reg.exec(file);
-                const sid = REG.subtask(data);
-                const c = { input: file, output: '', id: REG.id(data) };
-                for (const func of REG.output) {
-                    if (cfg.noOutputFile) c.output = '/dev/null';
-                    else c.output = func(data);
-                    if (c.output === '/dev/null' || checkFile(c.output)) {
-                        if (!subtask[sid]) {
-                            subtask[sid] = {
-                                time: parseTimeMS(cfg.time || '1s'),
-                                memory: parseMemoryMB(cfg.memory || '256m'),
-                                type: 'min',
-                                cases: [c],
-                            };
-                        } else if (!subtask[sid].cases) subtask[sid].cases = [c];
-                        else subtask[sid].cases.push(c);
-                        break;
-                    }
+        for (const rule of SubtaskMatcher) {
+            const data = rule.regex.exec(file);
+            if (!data) continue;
+            const sid = rule.subtask(data);
+            const c = { input: file, output: '', id: rule.id(data) };
+            for (const func of rule.output) {
+                if (cfg.noOutputFile) c.output = '/dev/null';
+                else c.output = func(data);
+                if (c.output === '/dev/null' || checkFile(c.output)) {
+                    if (!subtask[sid]) {
+                        subtask[sid] = {
+                            time: parseTimeMS(cfg.time || '1s'),
+                            memory: parseMemoryMB(cfg.memory || '256m'),
+                            type: rule.preferredScorerType,
+                            cases: [c],
+                        };
+                    } else if (!subtask[sid].cases) subtask[sid].cases = [c];
+                    else subtask[sid].cases.push(c);
+                    break;
                 }
             }
         }
@@ -291,6 +233,7 @@ export async function readSubtasksFromFiles(files: string[], checkFile, cfg, rst
         subtask[i].cases.sort((a, b) => (a.id - b.id));
         subtasks.push(subtask[i]);
     }
+    subtasks.sort((a, b) => (a.id - b.id));
     const base = Math.floor(100 / subtasks.length);
     const extra = subtasks.length - (100 % subtasks.length);
     const config = { count: 0, subtasks };

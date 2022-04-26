@@ -38,15 +38,15 @@ function testElementHotkey(hotkey, $element, attr) {
       const [defStr, trigger] = singleDef.split(':');
       if (isHotkeyMatch(hotkey, defStr)) {
         switch (trigger) {
-        case 'submit':
-          $element.closest('form').trigger('submit');
-          break;
-        case undefined:
-          $element.trigger('click');
-          break;
-        default:
-          $element.trigger(trigger);
-          break;
+          case 'submit':
+            $element.closest('form').trigger('submit');
+            break;
+          case undefined:
+            $element.trigger('click');
+            break;
+          default:
+            $element.trigger(trigger);
+            break;
         }
       }
     });
