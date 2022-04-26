@@ -1,4 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
+import { parse } from 'path';
 import {
     ContestNotAttendedError, ContestNotFoundError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
@@ -328,10 +329,14 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             clearTimeout(this.disconnectTimeout);
             this.disconnectTimeout = null;
         }
+        let subtaskSum = 0;
+        for (const rcdoc of rdoc.testCases)
+            if (rcdoc.message.startsWith('Subtask'))
+                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.'))) || 0);
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         this.send({
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
+            status_html: await this.renderHTML('record_detail_status.html', { rdoc, subtaskSum }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
         });
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {

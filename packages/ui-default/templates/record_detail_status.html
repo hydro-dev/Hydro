@@ -19,41 +19,86 @@
   </div>
 {% endif %}
 {% if rdoc.testCases.length %}
-  <div class="section__body no-padding">
-    <table class="data-table record_detail__table">
-      <colgroup>
-        <col class="col--case">
-        <col class="col--status">
-        <col class="col--time">
-        <col class="col--memory">
-      </colgroup>
-      <thead>
-        <tr>
-          <th class="col--case record-status--border">#</th>
-          <th class="col--status">{{ _('Status') }}</th>
-          <th class="col--time">{{ _('Time Cost') }}</th>
-          <th class="col--memory">{{ _('Memory Cost') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-      {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
-        <tr>
-          <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-            #{{ rcdoc.id or loop.index }}
-          </td>
-          <td class="col--status">
-            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
-            <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-              {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
-            </span>
-            <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
-          </td>
-          <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
-          <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
-        </tr>
-      {%- endfor -%}
-      </tbody>
-    </table>
-  </div>
+  {% if subtaskSum > 1 %}
+    {% for subtask in range(1, subtaskSum + 1) %}
+      {% set subtaskName = 'Subtask {0}'.format(subtask) %}
+        <div class="section__header">
+          <h1 class="section__title">{{ _(subtaskName) }}</h1>
+        <table class="data-table record_detail__table">
+          <colgroup>
+            <col class="col--case">
+            <col class="col--status">
+            <col class="col--time">
+            <col class="col--memory">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--case record-status--border">#</th>
+              <th class="col--status">{{ _('Status') }}</th>
+              <th class="col--time">{{ _('Time Cost') }}</th>
+              <th class="col--memory">{{ _('Memory Cost') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
+            {% if rcdoc.message.startsWith(subtaskName) %}
+              <tr>
+                <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+                  #{{ rcdoc.id or loop.index }}
+                </td>
+                <td class="col--status">
+                  <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+                  <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+                    {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
+                  </span>
+                  <span>{{ formatJudgeTexts([rcdoc.message.slice(rcdoc.message.indexOf('.') + 1)]) if rcdoc.message.slice(rcdoc.message.indexOf('.') + 1) else '' }}</span>
+                </td>
+                <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
+                <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+              </tr>
+            {% endif %}
+          {%- endfor -%}
+          </tbody>
+        </table>
+        </div>
+    {% endfor %}
+  {% else %}
+    <div class="section__body no-padding">
+      <table class="data-table record_detail__table">
+        <colgroup>
+          <col class="col--case">
+          <col class="col--status">
+          <col class="col--time">
+          <col class="col--memory">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col--case record-status--border">#</th>
+            <th class="col--status">{{ _('Status') }}</th>
+            <th class="col--time">{{ _('Time Cost') }}</th>
+            <th class="col--memory">{{ _('Memory Cost') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
+          <tr>
+            <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+              #{{ rcdoc.id or loop.index }}
+            </td>
+            <td class="col--status">
+              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+              <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+                {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
+              </span>
+              <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+            </td>
+            <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
+            <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+          </tr>
+        {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
 {% endif %}
 </div>
