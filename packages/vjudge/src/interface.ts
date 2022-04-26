@@ -27,6 +27,7 @@ export interface IBasicProvider {
         files: Record<string, any>;
         tag: string[];
         content: string;
+        difficulty?: number;
     }>;
     listProblem(page: number, resync: boolean): Promise<string[]>;
     submitProblem(id: string, lang: string, code: string, info: any, next: any, end: any): Promise<string>;
