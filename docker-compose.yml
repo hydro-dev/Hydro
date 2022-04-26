@@ -10,8 +10,6 @@ services:
       - ./data/db:/data/db
     environment:
       - TZ=Asia/Shanghai
-    ports:
-      - "27017:27017"
 
   oj-judge:
     image: executorserver
@@ -24,22 +22,20 @@ services:
       - ./packages/hydrojudge/vendor/testlib:/root/Hydro/packages/hydrojudge/vendor/testlib
     environment:
       - TZ=Asia/Shanghai
-    ports:
-      - "5050:5050"
 
-  # oj-main:
-  #   build: ./
-  #   container_name: oj-main
-  #   restart: always
-  #   privileged: true
-  #   depends_on:
-  #     - oj-db
-  #     - oj-judge
-  #   volumes:
-  #     - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
-  #     - ./data/oj:/root/.hydro
-  #     - /root/.cache/hydro/judge:/root/.cache/hydro/judge
-  #   ports:
-  #     - "8888:8888"
-  #   environment:
-  #     - TZ=Asia/Shanghai
+  oj-main:
+    build: ./
+    container_name: oj-main
+    restart: always
+    privileged: true
+    depends_on:
+      - oj-db
+      - oj-judge
+    volumes:
+      - /tmp/hydro/judge.tmp:/tmp/hydro/judge.tmp
+      - ./data/oj:/root/.hydro
+      - /root/.cache/hydro/judge:/root/.cache/hydro/judge
+    ports:
+      - "8888:8888"
+    environment:
+      - TZ=Asia/Shanghai
