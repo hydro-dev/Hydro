@@ -42,6 +42,7 @@ function configYamlFormat(config: ProblemConfigFile) {
   const formatConfig: ProblemConfigFile = {};
   configKey.forEach((key) => {
     if (config[key] !== undefined) {
+      if (key === 'subType' && ['single', 'multi'].includes(config[key]) && config.type !== 'submit_answer') return;
       if (key === 'checker_type' && config.type !== 'default') return;
       if (key === 'checker'
         && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
@@ -72,6 +73,10 @@ function configYamlFormat(config: ProblemConfigFile) {
       } else formatConfig[key] = config[key];
     }
   });
+  if (formatConfig.type === 'objective') {
+    Object.keys(formatConfig).filter((i) => !['type', 'outputs'].includes(i)).forEach((i) => delete formatConfig[i]);
+    formatConfig.outputs = formatConfig.outputs || [];
+  }
   Object.keys(formatConfig).filter((i) => i.startsWith('__')).forEach((i) => delete formatConfig[i]);
   return formatConfig;
 }

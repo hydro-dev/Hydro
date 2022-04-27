@@ -21,9 +21,9 @@ function FileIOConfig() {
           <FormItem columns={6} label="FileIO">
             <InputGroup
               rightElement={<Tag minimal>.in/.out</Tag>}
-              value={filename}
-              onChange={(value) => {
-                dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'filename', value });
+              value={filename || ''}
+              onChange={(ev) => {
+                dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'filename', value: ev.currentTarget.value });
               }}
               fill
             />

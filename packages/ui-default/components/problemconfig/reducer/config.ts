@@ -12,6 +12,7 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     case 'CONFIG_FORM_UPDATE': {
       const next = { ...state, [action.key]: action.value };
       if (action.key === 'score' && action.value) next.score = +next.score;
+      if (action.key === 'checker_type' && action.value === 'other') next.checker_type = 'syzoj';
       if (!action.value || (typeof action.value === 'object' && !action.value.join(''))) delete next[action.key];
       return next;
     }
@@ -54,13 +55,13 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
         } else if (action.key === 'cases-delete') {
           subsubtasks.cases = subsubtasks.cases.filter((k, v) => v !== action.value);
         }
-      } else if (action.key === 'add') subtasks.push({ time: '1000ms', memory: '256mb', cases: [] });
-      else if (action.key === 'delete') delete subtasks[action.key];
+      } else if (action.key === 'add') subtasks.push({ cases: [] });
+      else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
       else {
         if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];
         else subsubtasks[action.key] = action.value;
       }
-      if (action.key !== 'delete') subtasks[action.id] = subsubtasks;
+      subtasks[action.id] = subsubtasks;
       return { ...state, subtasks };
     }
     default:

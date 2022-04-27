@@ -32,10 +32,12 @@ export default function ProblemType() {
             panel={(
               <Tabs
                 id="CheckerTypeTabs"
-                selectedTabId={['strict', 'default'].includes(checkerType) ? 'default' : (checkerType !== 'testlib' ? 'other' : 'testlib')}
+                selectedTabId={
+                  ['strict', 'default'].includes(checkerType) || !checkerType
+                    ? 'default' : (checkerType !== 'testlib' ? 'other' : 'testlib')
+                }
                 onChange={dispatcher({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type' })}
                 renderActiveTabPanelOnly
-                defaultSelectedTabId="default"
               >
                 <span className="bp4-tab">{i18n('CheckerType')}</span>
                 <Tabs.Expander />
@@ -105,11 +107,10 @@ export default function ProblemType() {
                 </FormItem>
                 <FormItem columns={6} label="Filename">
                   <input
-                    defaultValue="#.txt"
+                    defaultValue={filename || '#.txt'}
                     placeholder="#.txt"
-                    value={filename}
                     disabled={subType !== 'multi'}
-                    onChange={dispatcher('filename')}
+                    onChange={(ev) => dispatch(({ type: 'CONFIG_FORM_UPDATE', key: 'filename', value: ev.currentTarget.value }))}
                     className="textbox"
                   />
                 </FormItem>
