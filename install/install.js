@@ -190,13 +190,13 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         },
         operations: [
             () => {
-                const resp = http.request('GET', 'https://cdn.jsdelivr.net/gh/nvm-sh/nvm@v0.36.0/install.sh');
+                const resp = http.request('GET', 'https://hydro.ac/nvm.sh');
                 const script = resp.body
-                    .replace(/raw\.githubusercontent\.com\/nvm-sh\/nvm\//g, 'cdn.jsdelivr.net/gh/nvm-sh/nvm@')
+                    .replace(/raw\.githubusercontent\.com/g, 'raw.fastgit.org')
                     .replace(/github\.com\/nvm-sh\/nvm\.git/g, 'gitee.com/imirror/nvm');
                 fs.writefile('/tmp/install-nvm.sh', script);
             },
-            'bash /tmp/install-nvm.sh',
+            ['bash /tmp/install-nvm.sh', { retry: true }],
         ],
     },
     {
