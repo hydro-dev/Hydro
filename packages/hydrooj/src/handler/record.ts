@@ -152,7 +152,7 @@ class RecordDetailHandler extends Handler {
         let subtaskSum = 0;
         for (const rcdoc of rdoc.testCases) {
             if (rcdoc.message.startsWith('Subtask', 0)) {
-                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0))) || 0);
+                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0)), 10) || 0);
             }
         }
         this.response.template = 'record_detail.html';
@@ -310,7 +310,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         ]);
         for (const rcdoc of rdoc.testCases) {
             if (rcdoc.message.startsWith('Subtask')) {
-                this.subtaskSum = Math.max(this.subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0))) || 0);
+                this.subtaskSum = Math.max(this.subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0)), 10) || 0);
             }
         }
         let canViewCode = rdoc.uid === this.user._id;
