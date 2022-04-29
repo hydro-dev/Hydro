@@ -16,7 +16,6 @@ import type { Handler } from '../service/server';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
-import record from '../model/record';
 import user from './user';
 
 interface AcmJournal {
