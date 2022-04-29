@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import Icon from 'vj/components/react/IconComponent';
-import getAvaliableLangs from 'vj/utils/avaliableLangs';
+import getAvailableLangs from 'vj/utils/availableLangs';
 import Toolbar, {
   ToolbarItemComponent as ToolbarItem,
   ToolbarButtonComponent as ToolbarButton,
@@ -67,8 +67,8 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
-const avaliableLangs = getAvaliableLangs(UiContext.pdoc.config.langs);
-const keys = Object.keys(avaliableLangs);
+const availableLangs = getAvailableLangs(UiContext.pdoc.config.langs);
+const keys = Object.keys(availableLangs);
 
 export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadToolbarContainer extends React.PureComponent {
   static contextTypes = {
@@ -77,9 +77,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
 
   constructor(props) {
     super(props);
-    if (!avaliableLangs[this.props.editorLang]) {
+    if (!availableLangs[this.props.editorLang]) {
       // preference not allowed
-      const key = keys.find((i) => avaliableLangs[i].pretest === this.props.editorLang);
+      const key = keys.find((i) => availableLangs[i].pretest === this.props.editorLang);
       this.props.setEditorLanguage(key || keys[0]);
     }
   }
@@ -91,9 +91,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   render() {
     let canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
     if (UiContext.pdoc.config?.type === 'remote_judge') {
-      if (avaliableLangs[this.props.editorLang].pretest) canUsePretest = true;
+      if (availableLangs[this.props.editorLang].pretest) canUsePretest = true;
     }
-    if (avaliableLangs[this.props.editorLang].pretest === false) canUsePretest = false;
+    if (availableLangs[this.props.editorLang].pretest === false) canUsePretest = false;
     return (
       <Toolbar>
         {canUsePretest && (
@@ -142,7 +142,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             value={this.props.editorLang}
             onChange={(ev) => this.props.setEditorLanguage(ev.target.value)}
           >
-            {_.map(LANGS, (val, key) => (
+            {_.map(availableLangs, (val, key) => (
               <option value={key} key={key}>{val.display}</option>
             ))}
           </select>
