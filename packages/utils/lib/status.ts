@@ -74,7 +74,7 @@ export const STATUS_CODES = {
     21: 'progress',
     22: 'progress',
     30: 'ignored',
-    31: 'ignored',
+    31: 'formaterror',
 };
 
 export function getScoreColor(score: number | string): string {

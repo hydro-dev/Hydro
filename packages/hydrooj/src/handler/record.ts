@@ -151,9 +151,11 @@ class RecordDetailHandler extends Handler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         let subtaskSum = 0;
-        for (const rcdoc of rdoc.testCases)
-            if (rcdoc.message.startsWith('Subtask'))
+        for (const rcdoc of rdoc.testCases) {
+            if (rcdoc.message.startsWith('Subtask', 0)) {
                 subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.'))) || 0);
+            }
+        }
         this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc, pdoc, tdoc, subtaskSum
@@ -339,8 +341,8 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         this.send({
-            status_html: subtaskSum === 0 ?
-                await this.renderHTML('record_detail_status.html', { rdoc })
+            status_html: subtaskSum === 0
+                ? await this.renderHTML('record_detail_status.html', { rdoc })
                 : await this.renderHTML('record_detail_status_subtask.html', { rdoc, subtaskSum }),
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
         });

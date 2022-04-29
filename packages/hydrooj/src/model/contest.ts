@@ -593,20 +593,13 @@ export async function del(domainId: string, tid: ObjectID) {
     ]);
 }
 
-export async function rejudgeAll(domainId: string, tid: ObjectID, isAccepted: Boolean) {
-    const [tdoc, tsdocs] = await Promise.all([
-        document.get(domainId, document.TYPE_CONTEST, tid),
-        document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
-    ]);
+export async function rejudgeAll(domainId: string, tid: ObjectID) {
+    const tsdocs = await document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray();
     for (const tsdoc of tsdocs) {
         for (const pid in tsdoc.detail) {
             const rid = tsdoc.detail[pid].rid;
-            const rdoc = await record.get(domainId, rid);
-            if (rdoc) {
-                if (rdoc.status !== STATUS.STATUS_ACCEPTED && isAccepted) continue;
-                await record.reset(domainId, rid, true);
-                await record.judge(domainId, rid);
-            }
+            this.reset(domainId, rid, true);
+            this.judge(domainId, rid);
         }
     }
 }

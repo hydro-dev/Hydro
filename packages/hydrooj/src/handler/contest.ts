@@ -1,11 +1,10 @@
 import AdmZip from 'adm-zip';
-import fs from 'fs-extra';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import { Time, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
-    PermissionError, RemoteOnlineJudgeError, ValidationError,
+    PermissionError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -14,7 +13,6 @@ import * as contest from '../model/contest';
 import message from '../model/message';
 import problem from '../model/problem';
 import record from '../model/record';
-import storage from '../model/storage';
 import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
@@ -60,19 +58,11 @@ TaskModel.Worker.addHandler('contest', async (doc) => {
                 tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
             }
         } else if (op === 'unlock') tasks.push(contest.recalcStatus(doc.domainId, doc.tid));
-        else if (op == 'systemtest') {
+        else if (op === 'systemtest') {
             for (const pid of tdoc.pids) {
-                try {
-                    const pdoc = await problem.get(doc.domainId, pid);
-                    const pretestcfg = (pdoc.data || []).filter((i) => i.name.toLowerCase() === 'systemtest.yaml');
-                    const str = (await streamToBuffer(
-                        await
-                            storage.get(`problem/${doc.domainId}/${pdoc.docId}/testdata/${pretestcfg[0].name}`),
-                    )).toString()
-                    problem.addTestdata(doc.domainId, pid, 'config.yaml', Buffer.from(str));
-                } catch (e) { /* ignore */ }
+                tasks.push(problem.replaceConfig(doc.domainId, pid, 'systemtest.yaml'));
             }
-            contest.rejudgeAll(doc.domainId, doc.tid, tdoc.rule === 'cf');
+            tasks.push(contest.rejudgeAll(doc.domainId, doc.tid));
         }
     }
     await Promise.all(tasks);
@@ -319,15 +309,7 @@ export class ContestEditHandler extends Handler {
         await TaskModel.deleteMany(task);
         if (rule === 'cf' || rule === 'oi') {
             for (const pid of pids) {
-                try {
-                    const pdoc = await problem.get(domainId, pid);
-                    const pretestcfg = (pdoc.data || []).filter((i) => i.name.toLowerCase() === 'pretest.yaml');
-                    const str = (await streamToBuffer(
-                        await
-                            storage.get(`problem/${domainId}/${pdoc.docId}/testdata/${pretestcfg[0].name}`),
-                    )).toString()
-                    problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(str));
-                } catch (e) { throw new ContestNotFoundError('Pretest Config'); }
+                problem.replaceConfig(domainId, pid, 'pretest.yaml');
             }
             await TaskModel.add({
                 ...task,
