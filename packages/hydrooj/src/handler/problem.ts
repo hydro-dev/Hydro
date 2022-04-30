@@ -402,9 +402,9 @@ export class ProblemDetailHandler extends ProblemHandler {
         }
         if (!this.response.body.tdoc) {
             if (this.psdoc?.rid) {
-                this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
+                this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
+            this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
         }
     }
 
@@ -436,7 +436,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        const tdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
+        const tdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
         if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
@@ -500,7 +500,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
+                problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
                 problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),

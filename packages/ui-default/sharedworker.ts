@@ -1,63 +1,54 @@
 import ReconnectingWebsocket from 'reconnecting-websocket';
 
 console.log('SharedWorker init');
+const ports: MessagePort[] = [];
+let conn: ReconnectingWebsocket;
 
-const sharedConnections: Record<string, [ReconnectingWebsocket, MessagePort[]]> = {};
-interface RequestInitSharedConnPayload {
-  type: 'sharedConn';
-  cookie: any;
-  path: string;
-}
-interface RequestSendMessagePayload {
-  type: 'message';
-  path: string;
-  payload: string;
-}
-type RequestPayload = RequestInitSharedConnPayload | RequestSendMessagePayload;
-
-function broadcastMsg(ports: MessagePort[], message: any) {
-  for (const p of ports) p.postMessage(message);
-}
-function closeSharedConn(path: string) {
-  sharedConnections[path][0].close();
-  delete sharedConnections[path];
-}
-function initSharedConn(path: string, port: MessagePort, cookie: any) {
-  if (!sharedConnections[path]) {
-    console.log('Init connection for', path);
-    const sock = new ReconnectingWebsocket(path);
-    const ports: MessagePort[] = [];
-    sharedConnections[path] = [sock, ports];
-
-    sock.onopen = () => sock.send(cookie);
-    sock.onmessage = (message) => {
-      if (process.env.NODE_ENV !== 'production') console.log('SharedWorker.port.onmessage: ', message);
-      const payload = JSON.parse(message.data);
-      if (payload.event === 'auth') {
-        if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
-          broadcastMsg(ports, { type: 'close', path, error: payload.error });
-          closeSharedConn(path);
-        } else {
-          console.log('Connected to', path);
-          broadcastMsg(ports, { type: 'open', path });
-        }
-      } else broadcastMsg(ports, { type: 'message', path, payload: message.data });
-    };
-    sock.onerror = () => broadcastMsg(ports, { type: 'error', path });
-    sock.onclose = (ev) => broadcastMsg(ports, { type: 'close', path, error: ev.reason });
-  }
-
-  sharedConnections[path][1].push(port);
+function initSharedConn(path: string, sid: string) {
+  if (conn) return;
+  console.log('Init connection for', path);
+  const url = new URL(path);
+  url.protocol = url.protocol.replace('http', 'ws');
+  url.searchParams.append('sid', sid);
+  const sock = new ReconnectingWebsocket(url.toString());
+  conn = sock;
+  sock.onopen = () => console.log('Connected');
+  sock.onerror = console.error;
+  sock.onclose = (...args) => console.log('Closed', ...args);
+  sock.onmessage = async (message) => {
+    if (process.env.NODE_ENV !== 'production') console.log('SharedWorker.port.onmessage: ', message);
+    const payload = JSON.parse(message.data);
+    if (payload.event === 'auth') {
+      if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
+        conn?.close();
+        conn = null;
+      }
+      return;
+    }
+    for (const port of ports) {
+      port.postMessage({ type: 'message', payload: message.data });
+      const success = await new Promise((resolve) => {
+        const handle = (msg) => {
+          if (['success', 'fail'].includes(msg.data.type)) {
+            port.removeEventListener('message', handle);
+            resolve(msg.data.type === 'success');
+          }
+        };
+        port.addEventListener('message', handle);
+      });
+      if (success) return;
+    }
+    console.log('Failed to push notification');
+    // TODO try system notification
+  };
 }
 
 // @ts-ignore
 onconnect = function (e) { // eslint-disable-line no-undef
   const port: MessagePort = e.ports[0];
-
-  port.addEventListener('message', (msg: { data: RequestPayload }) => {
-    if (msg.data.type === 'sharedConn') initSharedConn(msg.data.path, port, msg.data.cookie);
-    if (msg.data.type === 'message') sharedConnections[msg.data.path]?.[0].send(msg.data.payload);
+  port.addEventListener('message', (msg) => {
+    initSharedConn(msg.data.path, msg.data.cookie);
   });
-
   port.start();
+  ports.push(port);
 };
