@@ -134,9 +134,9 @@ class HomeworkEditHandler extends Handler {
         this.response.body = {
             tdoc,
             dateBeginText: beginAt.format('YYYY-M-D'),
-            timeBeginText: beginAt.format('hh:mm'),
+            timeBeginText: beginAt.format('H:mm'),
             datePenaltyText: penaltySince.format('YYYY-M-D'),
-            timePenaltyText: penaltySince.format('hh:mm'),
+            timePenaltyText: penaltySince.format('H:mm'),
             extensionDays,
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
             pids: tid ? tdoc.pids.join(',') : '',
