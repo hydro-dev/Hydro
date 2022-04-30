@@ -1,11 +1,9 @@
 import { IncomingMessage } from 'http';
-import KoaRouter from '@koa/router';
-import { Context } from '@koishijs/core';
-import { MaybeArray, remove } from '@koishijs/utils';
+import KoaRouter from 'koa-router';
 import parseUrl from 'parseurl';
 import { pathToRegexp } from 'path-to-regexp';
 import tx2 from 'tx2';
-import WebSocket from 'ws';
+import type WebSocket from 'ws';
 import type { KoaContext } from './server';
 
 type WebSocketCallback = (socket: WebSocket, request: IncomingMessage, ctx: KoaContext) => void;
@@ -15,7 +13,7 @@ export class WebSocketLayer {
     clients = new Set<WebSocket>();
     regexp: RegExp;
 
-    constructor(private router: Router, path: MaybeArray<string | RegExp>, public callback?: WebSocketCallback) {
+    constructor(private router: Router, path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
         this.regexp = pathToRegexp(path);
     }
 
@@ -32,7 +30,6 @@ export class WebSocketLayer {
     }
 
     close() {
-        remove(this.router.wsStack, this);
         for (const socket of this.clients) {
             socket.close();
         }
@@ -47,20 +44,14 @@ export class Router extends KoaRouter {
      */
     register(...args: Parameters<KoaRouter['register']>) {
         const layer = super.register(...args);
-        const context: Context = this[Context.current];
-        context?.state.disposables.push(() => {
-            remove(this.stack, layer);
-        });
+        // TODO handle unregister
         return layer;
     }
 
-    ws(path: MaybeArray<string | RegExp>, callback?: WebSocketCallback) {
+    ws(path: Parameters<typeof pathToRegexp>[0], callback?: WebSocketCallback) {
         const layer = new WebSocketLayer(this, path, callback);
         this.wsStack.push(layer);
-        const context: Context = this[Context.current];
-        context?.state.disposables.push(() => {
-            remove(this.wsStack, layer);
-        });
+        // TODO handle unregistry
         return layer;
     }
 }

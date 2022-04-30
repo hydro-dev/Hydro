@@ -155,6 +155,7 @@ export class HandlerCommon {
     renderHTML: (name: string, args?: any) => Promise<string>;
     url: (name: string, args?: any) => string;
     translate: (key: string) => string;
+    session: Record<string, any>;
 
     constructor(
         public ctx: KoaContext, public args: Record<string, any>,
@@ -165,6 +166,7 @@ export class HandlerCommon {
         this.renderHTML = ctx.renderHTML.bind(ctx);
         this.url = ctx.getUrl.bind(ctx);
         this.translate = ctx.translate.bind(ctx);
+        this.session = ctx.session;
     }
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {

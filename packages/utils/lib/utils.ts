@@ -3,8 +3,8 @@ import path from 'path';
 import { Duplex } from 'stream';
 import { inspect } from 'util';
 import fs from 'fs-extra';
-import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';
+import { isMoment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 
 declare global {

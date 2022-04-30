@@ -150,7 +150,7 @@ export class ProblemMainHandler extends ProblemHandler {
         let pcountRelation = 'eq';
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (q) category.push(q);
-        if (category.length) this.extraTitleContent = category.join(',');
+        if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (q) {
             if (search) {
@@ -360,7 +360,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             tsdoc: this.tsdoc,
         };
         this.response.template = 'problem_detail.html';
-        this.extraTitleContent = this.pdoc.title;
+        this.UiContext.extraTitleContent = this.pdoc.title;
     }
 
     @query('tid', Types.ObjectID, true)
