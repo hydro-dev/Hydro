@@ -27,6 +27,25 @@ puppeteer.use(StealthPlugin()).use(PortalPlugin({
     },
 }));
 
+export function getDifficulty(tags: string[]) {
+    const d = tags.find((i) => /^\*\d+$/.test(i))?.split('*')[1];
+    if (!(d && +d)) return null;
+    const map = [
+        [500, 1],
+        [800, 2],
+        [1200, 3],
+        [1500, 4],
+        [1800, 5],
+        [2000, 6],
+        [2200, 7],
+        [2400, 8],
+        [2600, 9],
+        [2800, 10],
+    ];
+    for (const [i, j] of map) if (+d < i) return j;
+    return 10;
+}
+
 export default class CodeforcesProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
@@ -269,6 +288,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             },
             files,
             tag,
+            difficulty: getDifficulty(tag),
             content: buildContent([
                 {
                     type: 'Text', sectionTitle: 'Description', subType: 'markdown', text: description,

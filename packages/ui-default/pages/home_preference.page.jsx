@@ -52,7 +52,7 @@ function initCodeLangHelper() {
   }
   const main = {};
   for (const key in window.LANGS) {
-    if (!key.includes('.')) main[key] = window.LANGS[key].display;
+    if (!key.includes('.') && !window.LANGS[key].hidden) main[key] = window.LANGS[key].display;
   }
   setOptions($('#codelang-main-select'), main);
   const current = $('[name="codeLang"]').val();

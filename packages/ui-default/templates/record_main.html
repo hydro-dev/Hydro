@@ -22,37 +22,41 @@
         </div>
         <div class="section__body">
           <div class="row">
-            <div class="medium-3 columns">
+            <div class="medium-2 columns">
               <label class="filter-user">
                 {{ _('By Username / UID') }}
                 <input name="uidOrName" type="text" class="textbox" value="{{ filterUidOrName }}" autocomplete="off" data-autofocus>
               </label>
             </div>
-            <div class="medium-3 columns">
+            <div class="medium-2 columns">
               <label>
                 {{ _('By Problem') }}
                 <input name="pid" type="text" class="textbox" value="{{ filterPid }}">
               </label>
             </div>
-            <div class="medium-3 columns">
+            <div class="medium-2 columns">
               <label>
                 {{ _('By Contest') }}
                 <input name="tid" type="text" class="textbox" value="{{ filterTid }}">
               </label>
+            </div>
+            <div class="medium-3 columns nojs-hide">
+              <label>
+                {{ _('By Language') }}
+              </label>
+              <select class="compact select" name="lang">
+                <option value="">{{ _('All Languages') }}</option>
+              </select>
             </div>
             <div class="medium-3 columns">
               <label>
                 {{ _('By Status') }}
               </label>
               <select class="compact select" name="status">
-                <option value="">{{ _('All Submissions') }}</option>
-                <option value="1">Accepted</option>
-                <option value="2">Wrong Answer</option>
-                <option value="3">Time Limit Exceeded</option>
-                <option value="4">Memory Limit Exceeded</option>
-                <option value="6">Runtime Error</option>
-                <option value="7">Compile Error</option>
-                <option value="8">System Error</option>
+                <option value="" {% if not filterStatus %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
+                {%- for k,v in utils.status.STATUS_TEXTS -%}
+                <option value="{{k}}" {% if filterStatus == k %}selected{% else %}{% endif %}>{{v}}</option>
+                {%- endfor -%}
               </select>
             </div>
           </div>
@@ -61,12 +65,12 @@
     </form>
     <div class="section">
       <div class="section__body no-padding">
-      {% if not rdocs %}
+      {% if not rdocs.length %}
         {% if not filterUidOrName and not filterPid and not filterTid %}
         {{ nothing.render('Oh, there is no task in the queue!') }}
         {% else %}
         {{ nothing.render('Oh, there is no task that matches the filter!') }}
-        {% endif%}
+        {% endif %}
       {% else %}
         <table class="data-table record_main__table">
           <colgroup>
@@ -103,6 +107,7 @@
             <a class="pager__item next link" href="?page={{ page + 1 }}{{
               (('&tid=' + filterTid) if filterTid else '')
               + (('&uidOrName=' + filterUidOrName) if filterUidOrName else '')
+              + (('&language=' + filterLanguage) if filterLanguage else '')
               + (('&status=' + filterStatus) if filterStatus else '')
               + (('&pid=' + filterPid) if filterPid else '')
               + ('&allDomain=1' if all else '') }}">{{ _('pager_next') }}</a>

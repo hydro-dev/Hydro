@@ -1,4 +1,5 @@
 import { NamedPage } from 'vj/misc/Page';
+import getAvailableLangs from 'vj/utils/availableLangs';
 
 function setOptions($el, options) {
   $el.empty();
@@ -9,13 +10,12 @@ function setOptions($el, options) {
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
   const { config } = UiContext.pdoc;
+  const availableLangs = getAvailableLangs(config.langs);
 
   function onChangeMain(update = true) {
     const options = {};
-    for (const key in window.LANGS) {
-      if (config.langs && !config.langs.includes(key)) continue;
-      if (window.LANGS[key].hidden && !config.langs?.includes(key)) continue;
-      if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
+    for (const key in availableLangs) {
+      if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = availableLangs[key].display;
     }
     setOptions($('#codelang-sub-select'), options);
     if (Object.keys(options).length) {
@@ -28,9 +28,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     return Object.keys(options)[0];
   }
   const main = {};
-  for (const key in window.LANGS) {
+  for (const key in availableLangs) {
     if (config.langs && !config.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
-    if (window.LANGS[key].hidden && !config.langs?.includes(key)) continue;
     if (!key.includes('.')) main[key] = window.LANGS[key].display;
     else {
       const a = key.split('.')[0];

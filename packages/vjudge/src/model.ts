@@ -9,6 +9,7 @@ import TaskModel from 'hydrooj/src/model/task';
 import * as bus from 'hydrooj/src/service/bus';
 import db from 'hydrooj/src/service/db';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
+import { getDifficulty } from './providers/codeforces';
 import providers from './providers/index';
 
 const coll = db.collection('vjudge');
@@ -53,6 +54,7 @@ class Service {
                     const res = await this.api.getProblem(pid);
                     if (!res) continue;
                     const id = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
+                    if (res.difficulty) await ProblemModel.edit(domainId, id, { difficulty: res.difficulty });
                     for (const key in res.files) {
                         await ProblemModel.addAdditionalFile(domainId, id, key, res.files[key]);
                     }
@@ -103,5 +105,23 @@ async function loadAccounts() {
         Pool[`${account.type}/${account.handle}`] = new Service(providers[account.type], account);
     }
 }
+
+declare module 'hydrooj/src/interface' {
+    interface Model {
+        vjudge: VJudgeModel;
+    }
+}
+
+class VJudgeModel {
+    static async fixCodeforcesDifficulty(domainId = 'codeforces') {
+        const pdocs = await ProblemModel.getMulti(domainId, {}).toArray();
+        for (const pdoc of pdocs) {
+            await ProblemModel.edit(domainId, pdoc.docId, { difficulty: getDifficulty(pdoc.tag) });
+        }
+        return true;
+    }
+}
+
+global.Hydro.model.vjudge = VJudgeModel;
 
 bus.on('app/started', loadAccounts);
