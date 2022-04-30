@@ -71,25 +71,25 @@ registerResolver(
 );
 
 registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
-    if (arg.id) return user.getById(ctx.domainId, arg.id);
-    if (arg.mail) return user.getByEmail(ctx.domainId, arg.mail);
-    if (arg.uname) return user.getByUname(ctx.domainId, arg.uname);
+    if (arg.id) return user.getById(ctx.args.domainId, arg.id);
+    if (arg.mail) return user.getByEmail(ctx.args.domainId, arg.mail);
+    if (arg.uname) return user.getByUname(ctx.args.domainId, arg.uname);
     return ctx.user;
 }, `Get a user by id, uname, or mail.
 Returns current user if no argument is provided.`);
 
 registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, ctx) => {
     if (arg.ids?.length) {
-        const res = await user.getList(ctx.domainId, arg.ids);
+        const res = await user.getList(ctx.args.domainId, arg.ids);
         return Object.keys(res).map((id) => res[+id]);
     }
     if (!arg.search) return [];
-    const udoc = await user.getById(ctx.domainId, +arg.search)
-        || await user.getByUname(ctx.domainId, arg.search)
-        || await user.getByEmail(ctx.domainId, arg.search);
+    const udoc = await user.getById(ctx.args.domainId, +arg.search)
+        || await user.getByUname(ctx.args.domainId, arg.search)
+        || await user.getByEmail(ctx.args.domainId, arg.search);
     const udocs: User[] = arg.exact
         ? []
-        : await user.getPrefixList(ctx.domainId, arg.search, Math.min(arg.limit || 10, 10));
+        : await user.getPrefixList(ctx.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
     if (udoc && !udocs.find((i) => i._id === udoc._id)) {
         udocs.pop();
         udocs.unshift(udoc);

@@ -138,7 +138,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         },
     }));
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(router), userLayer];
-    app.use(domainLayer);
+    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     layers.forEach((layer) => router.use(layer));
     wsServer.on('connection', async (socket, request) => {
         const ctx: any = app.createContext(request, {} as any);
@@ -156,6 +156,8 @@ export class HandlerCommon {
     url: (name: string, args?: any) => string;
     translate: (key: string) => string;
     session: Record<string, any>;
+    /** @deprecated */
+    domainId: string;
 
     constructor(
         public ctx: KoaContext, public args: Record<string, any>,
@@ -167,6 +169,7 @@ export class HandlerCommon {
         this.url = ctx.getUrl.bind(ctx);
         this.translate = ctx.translate.bind(ctx);
         this.session = ctx.session;
+        this.domainId = args.domainId;
     }
 
     async limitRate(op: string, periodSecs: number, maxOperations: number) {

@@ -7,8 +7,8 @@ export default async (ctx, next) => {
     const forceDomain = /^\/d\/([^/]+)\//.exec(ctx.request.path);
     ctx.path = ctx.request.path = ctx.request.path.replace(/^\/d\/[^/]+\//, '/');
     const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
-    const ip = ctx.request.headers[xff.toLowerCase() || ''] as string || ctx.request.ip;
-    const host = ctx.request.headers[xhost.toLowerCase() || ''] as string || ctx.request.host;
+    const ip = ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip;
+    const host = ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host;
     const header = ctx.request.headers.authorization;
     const sid = header
         ? header.split(' ')[1] // Accept bearer token

@@ -40,8 +40,8 @@ registerResolver(
     'Query', 'contest(id: ObjectID!)', 'Contest',
     async (arg, ctx) => {
         arg.id = new ObjectID(arg.id);
-        ctx.tdoc = await contest.get(ctx.domainId, new ObjectID(arg.id));
-        if (!ctx.tdoc) throw new ContestNotFoundError(ctx.domainId, arg.id);
+        ctx.tdoc = await contest.get(ctx.args.domainId, new ObjectID(arg.id));
+        if (!ctx.tdoc) throw new ContestNotFoundError(ctx.args.domainId, arg.id);
         return ctx.tdoc;
     },
     'Get a contest by ID',

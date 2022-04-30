@@ -68,7 +68,7 @@ registerValue('Problem', [
 registerResolver(
     'Query', 'problem(id: Int, pid: String)', 'Problem',
     async (arg, ctx) => {
-        const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
+        const pdoc = await problem.get(ctx.args.domainId, arg.pid || arg.id);
         if (!pdoc) return null;
         if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (pdoc.assign.length && !ctx.user.own(pdoc)) {
@@ -90,14 +90,14 @@ registerResolver(
 registerResolver(
     'ProblemManage', 'delete', 'Boolean!',
     async (arg, ctx) => {
-        const tdocs = await contest.getRelated(ctx.domainId, ctx.pdoc.docId);
+        const tdocs = await contest.getRelated(ctx.args.domainId, ctx.pdoc.docId);
         if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
         return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
     },
 );
 registerResolver(
     'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean, assign: [String])', 'Problem!',
-    (arg, ctx) => problem.edit(ctx.domainId, ctx.pdoc.docId, arg),
+    (arg, ctx) => problem.edit(ctx.args.domainId, ctx.pdoc.docId, arg),
 );
 
 function buildQuery(udoc: User) {

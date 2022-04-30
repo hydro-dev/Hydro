@@ -9,11 +9,11 @@ function serializer(k: string, v: any) {
 }
 
 export default (logger) => async (ctx: KoaContext, next) => {
-    await next();
     const {
         request, response, UiContext, user, args,
     } = ctx.HydroContext;
     try {
+        await next();
         if (response.redirect) {
             response.body ||= {};
             response.body.url = response.redirect;
@@ -40,6 +40,11 @@ export default (logger) => async (ctx: KoaContext, next) => {
                 await ctx.render(templateName, response.body || {});
             }
         }
+        if (response.disposition) ctx.set('Content-Disposition', response.disposition);
+        if (response.etag) {
+            ctx.set('ETag', response.etag);
+            ctx.set('Cache-Control', 'public');
+        }
     } catch (err) {
         const error = errorMessage(err);
         response.status = error instanceof UserFacingError ? error.code : 500;
@@ -52,20 +57,14 @@ export default (logger) => async (ctx: KoaContext, next) => {
                 // this.response.body.error = {};
             }
         }
-    }
-    if (response.disposition) ctx.set('Content-Disposition', response.disposition);
-    if (response.body) {
-        if (response.etag) {
-            ctx.set('ETag', response.etag);
-            ctx.set('Cache-Control', 'public');
-        }
+    } finally {
         if (response.etag && request.headers['if-none-match'] === response.etag) {
             ctx.response.status = 304;
         } else if (response.redirect && !request.json) {
             ctx.response.type = 'application/octet-stream';
             ctx.response.status = 302;
             ctx.redirect(response.redirect);
-        } else {
+        } else if (response.body) {
             ctx.body = response.body;
             ctx.response.status = response.status || 200;
             ctx.response.type = response.type
