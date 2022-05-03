@@ -384,7 +384,7 @@ class UserModel {
     }
 
     static async listGroup(domainId: string, uid?: number) {
-        const groups = await collGroup.find(uid ? { domainId, uids: uid } : { domainId }).toArray();
+        const groups = await collGroup.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
         if (uid) {
             groups.push({
                 _id: new ObjectID(), domainId, uids: [uid], name: uid.toString(),
