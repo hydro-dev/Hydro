@@ -37,8 +37,8 @@ export default class VjEditor extends DOMAttachedObject {
     super($dom);
     $dom.hide();
     const root = $('<div class="row editor-root" style="width: 100%;"></div>');
-    const left = $('<div class="medium-6 columns textbox"></div>');
-    const right = $('<div class="medium-6 columns textbox typo"></div>');
+    const left = $('<div class="medium-6 columns textbox" style="padding-left:0px;padding-right:0px;"></div>');
+    const right = $('<div class="medium-6 columns textbox typo" style="padding-left:0px;padding-right:0px;"></div>');
     root.append(left, right);
     $($dom).parent().append(root);
     this.initMonaco(left.get(0));
@@ -241,7 +241,7 @@ export default class VjEditor extends DOMAttachedObject {
       view?.destroy();
     };
     await this.milkdown.create();
-    $('.editor-root').prepend($('<div class="editor-menu columns"></div>'));
+    $('.editor-root').prepend($('<div class="editor-menu columns" style="padding-left:0px;padding-right:0px;"></div>'));
     $('.editor-menu').prepend($('.milkdown-menu'));
     this.isValid = true;
   }
