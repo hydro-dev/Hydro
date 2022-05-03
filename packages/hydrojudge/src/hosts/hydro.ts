@@ -280,7 +280,7 @@ export default class Hydro {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
             headers: {
-                Cookie: `sid=${this.config.cookie}`,
+                Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
         global.onDestroy.push(() => this.ws.close());
