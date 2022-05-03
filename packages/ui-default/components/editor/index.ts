@@ -1,11 +1,8 @@
 import _ from 'lodash';
-import Notification from 'vj/components/notification';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import type { Node } from 'prosemirror-model';
 import { nanoid } from 'nanoid';
-import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
 
 interface MonacoOptions {
   language?: string;
@@ -183,14 +180,16 @@ export default class VjEditor extends DOMAttachedObject {
       }
       const nodes: Node[] = await Promise.all(
         images.map(async (image) => {
-          console.log(image);
-          // TODO
-          return null;
-          const src = await YourUploadAPI(image);
-          const alt = image.name;
+          const filename = `${nanoid()}.${image.name.split('.').pop()}`;
+          const data = new FormData();
+          data.append('filename', filename);
+          data.append('file', image);
+          data.append('operation', 'upload_file');
+          if (isProblemEdit) data.append('type', 'additional_file');
+          await request.postFile(isProblemEdit ? './files' : '/file', data);
           return schema.nodes.image.createAndFill({
-            src,
-            alt,
+            src: `${isProblemPage ? 'file://' : `/file/${UserContext._id}/`}${filename}`,
+            alt: filename,
           }) as Node;
         }),
       );
@@ -217,7 +216,7 @@ export default class VjEditor extends DOMAttachedObject {
           this.options?.onChange?.(markdown);
           this.lock = false;
         });
-        ctx.get(listenerCtx).updated((c) => {
+        ctx.get(listenerCtx).updated(() => {
           this.height = $(ele).height();
         });
       });

@@ -69,17 +69,15 @@ const pagename = document.documentElement.getAttribute('data-page');
 const isProblemPage = ['problem_create', 'problem_edit'].includes(pagename);
 const isProblemEdit = pagename === 'problem_edit';
 function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
-  window.addEventListener('paste', (ev: ClipboardEvent) => {
-    if (!editor.hasTextFocus()) return;
+  function handlePaste(file: DataTransferItem | File) {
     const selection = editor.getSelection();
-    const { items } = ev.clipboardData;
     let wrapper = ['', ''];
     let ext;
-    const matches = items[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
+    const matches = file.type.match(/^image\/(png|jpg|jpeg|gif)$/i);
     if (matches) {
       wrapper = ['![image](', ')'];
       [, ext] = matches;
-    } else if (items[0].type === 'application/x-zip-compressed') {
+    } else if (file.type === 'application/x-zip-compressed') {
       wrapper = ['[file](', ')'];
       ext = 'zip';
     }
@@ -87,7 +85,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
     const filename = `${nanoid()}.${ext}`;
     const data = new FormData();
     data.append('filename', filename);
-    data.append('file', items[0].getAsFile());
+    data.append('file', ('getAsFile' in file) ? file.getAsFile() : file);
     data.append('operation', 'upload_file');
     if (isProblemEdit) data.append('type', 'additional_file');
     let range: monaco.Range = null;
@@ -128,6 +126,11 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
         console.error(e);
         updateText(`${i18n('Upload Failed')}: ${e.message}`);
       });
+  }
+  window.addEventListener('paste', (ev: ClipboardEvent) => {
+    if (!editor.hasTextFocus()) return;
+    const { items } = ev.clipboardData;
+    handlePaste(items[0]);
   });
 }
 
