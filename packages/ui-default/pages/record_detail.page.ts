@@ -2,12 +2,12 @@ import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('record_detail', async () => {
   if (!UiContext.socketUrl) return;
-  const [{ default: SockJs }, { DiffDOM }] = await Promise.all([
+  const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
     import('../components/socket'),
     import('diff-dom'),
   ]);
 
-  const sock = new SockJs(UiContext.socketUrl);
+  const sock = new WebSocket(UiContext.socketUrl);
   const dd = new DiffDOM();
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);

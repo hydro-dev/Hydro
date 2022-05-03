@@ -1,9 +1,9 @@
 import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('manage_dashboard', async () => {
-  const { default: SockJs } = await import('../components/socket');
+  const { default: WebSocket } = await import('../components/socket');
 
-  const sock = new SockJs('/manage/check-conn');
+  const sock = new WebSocket('/manage/check-conn');
   sock.onopen = () => {
     $('<blockquote class="blue"><p>Connection opened.</p></blockquote>').appendTo('#messages');
   };

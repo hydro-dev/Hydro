@@ -1,4 +1,4 @@
-import moment from 'moment';
+import moment from 'moment-timezone';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';

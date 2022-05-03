@@ -250,14 +250,14 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     async message(msg: { rids: string[] }) {
         if (!(msg.rids instanceof Array)) return;
         const rids = msg.rids.map((id) => new ObjectID(id));
-        const rdocs = await record.getMulti(this.domainId, { _id: { $in: rids } }).project(buildProjection(record.PROJECTION_LIST)).toArray();
+        const rdocs = await record.getMulti(this.args.domainId, { _id: { $in: rids } }).project(buildProjection(record.PROJECTION_LIST)).toArray();
         for (const rdoc of rdocs) this.onRecordChange(rdoc);
     }
 
     async onRecordChange(rdoc: RecordDoc) {
         if (!this.all) {
             if (!this.pretest && rdoc.input) return;
-            if (rdoc.domainId !== this.domainId) return;
+            if (rdoc.domainId !== this.args.domainId) return;
             if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
             if (this.tid && contest.isLocked(this.tdoc)) return;
             if (this.tid && !contest.canShowSelfRecord.call(this, this.tdoc, true)) return;
@@ -267,7 +267,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
-            user.getById(this.domainId, rdoc.uid),
+            user.getById(this.args.domainId, rdoc.uid),
             problem.get(rdoc.domainId, rdoc.pid),
         ]);
         const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;

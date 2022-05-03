@@ -129,14 +129,14 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     if (reactLoaded) return;
     $('.loader-container').show();
 
-    const { default: SockJs } = await import('../components/socket');
+    const { default: WebSocket } = await import('../components/socket');
     const { default: ScratchpadApp } = await import('../components/scratchpad');
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const {
       React, render, unmountComponentAtNode, Provider, store,
     } = await loadReactRedux(ScratchpadReducer);
 
-    const sock = new SockJs(UiContext.pretestConnUrl);
+    const sock = new WebSocket(UiContext.pretestConnUrl);
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       store.dispatch({

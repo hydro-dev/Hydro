@@ -422,7 +422,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 
     async onMessageReceived(uid: number, mdoc: MessageDoc) {
         if (uid !== this.user._id) return;
-        const udoc = (await user.getById(this.domainId, mdoc.from))!;
+        const udoc = (await user.getById(this.args.domainId, mdoc.from))!;
         udoc.avatarUrl = avatar(udoc.avatar, 64);
         this.send({ udoc, mdoc });
     }

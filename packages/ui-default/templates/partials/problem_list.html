@@ -49,7 +49,7 @@
         <td class="col--pid display-mode-hide">{{ pdoc.docId }}</td>
         {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           {% if psdoc['rid'] %}
-            {{ record.render_status_td(psdoc, rid_key='rid', class="edit-mode-hide", allDomain=pdoc.domainId!==handler.domainId) }}
+            {{ record.render_status_td(psdoc, rid_key='rid', class="edit-mode-hide", allDomain=pdoc.domainId!==handler.args.domainId) }}
           {% else %}
             <td class="col--status record-status--border edit-mode-hide"></td>
           {% endif %}
