@@ -98,13 +98,6 @@ async function main() {
     if (fs.existsSync('public/default.theme.css')) {
       fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
     }
-    if (argv.options.production) {
-      fs.removeSync('public/vditor/dist/js/mathjax');
-      fs.removeSync('public/vditor/dist/js/echarts');
-      fs.removeSync('public/vditor/dist/js/graphviz');
-      fs.removeSync('public/vditor/dist/js/mermaid');
-      fs.removeSync('public/vditor/dist/js/abcjs');
-    }
   }
   process.chdir(dir);
 }

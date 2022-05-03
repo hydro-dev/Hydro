@@ -1,32 +1,11 @@
 import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
+import type { Node } from 'prosemirror-model';
 import { nanoid } from 'nanoid';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
-
-export const config = {
-  toolbar: [
-    'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
-    'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
-    'quote', 'line', 'code', 'inline-code', 'table', '|',
-    'upload', 'edit-mode', 'fullscreen', 'export',
-  ],
-  mode: UserContext.preferredEditorType || 'ir',
-  toolbarConfig: {
-    pin: true,
-  },
-  cdn: `${UiContext.cdn_prefix}vditor`,
-  counter: {
-    enable: true,
-    max: 65536,
-  },
-  preview: {
-    math: {
-      inlineDigit: true,
-    },
-  },
-};
+import tpl from 'vj/utils/tpl';
 
 interface MonacoOptions {
   language?: string;
@@ -38,26 +17,35 @@ interface MonacoOptions {
   value?: string;
   hide?: string[];
 }
-interface VditorOptions {
-  theme?: 'classic' | 'dark'
-}
-type Options = MonacoOptions & VditorOptions;
+type Options = MonacoOptions;
 
-export default class Editor extends DOMAttachedObject {
+export default class VjEditor extends DOMAttachedObject {
   static DOMAttachKey = 'vjEditorInstance';
+  isValid: boolean;
+  private lock: boolean;
   model: import('../monaco').default.editor.IModel;
   editor: import('../monaco').default.editor.IStandaloneCodeEditor;
-  vditor: import('vditor').default;
-  isValid: boolean;
+  milkdown: import('@milkdown/core').Editor & {
+    setValue?: (val: string) => void;
+    getValue?: () => string;
+    dispose?: () => void;
+  };
+
+  height = 0;
 
   constructor($dom, public options: Options = {}) {
     super($dom);
-    if (UserContext.preferredEditorType === 'monaco') this.initMonaco();
-    else if (options.language && options.language !== 'markdown') this.initMonaco();
-    else this.initVditor();
+    $dom.hide();
+    const root = $('<div class="row editor-root" style="width: 100%;"></div>');
+    const left = $('<div class="medium-6 columns textbox"></div>');
+    const right = $('<div class="medium-6 columns textbox typo"></div>');
+    root.append(left, right);
+    $($dom).parent().append(root);
+    this.initMonaco(left.get(0));
+    if ((options?.language || 'markdown') === 'markdown') this.initMilkdown(right.get(0));
   }
 
-  async initMonaco() {
+  async initMonaco(ele) {
     const { load } = await import('vj/components/monaco/loader');
     const {
       onChange, language = 'markdown',
@@ -67,16 +55,9 @@ export default class Editor extends DOMAttachedObject {
       hide = [],
     } = this.options;
     const { monaco, registerAction } = await load([language]);
-    const { $dom } = this;
-    const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
-    const origin = $dom.get(0);
-    const ele = document.createElement('div');
-    $(ele).width('100%').addClass('textbox');
-    if (!autoResize && $dom.height()) $(ele).height($dom.height());
-    $dom.hide();
-    origin.parentElement.appendChild(ele);
-    const value = this.options.value || $dom.val();
-    // eslint-disable-next-line no-nested-ternary
+    const hasFocus = this.$dom.is(':focus') || this.$dom.hasClass('autofocus');
+    if (!autoResize && this.$dom.height()) $(ele).height(this.$dom.height());
+    const value = this.options.value || this.$dom.val();
     this.model = typeof model === 'string'
       ? monaco.editor.getModel(monaco.Uri.parse(model))
       || monaco.editor.createModel(value, language === 'auto' ? undefined : language, monaco.Uri.parse(model))
@@ -100,7 +81,7 @@ export default class Editor extends DOMAttachedObject {
       if (!editorElement) return;
       const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
       const lineCount = this.editor.getModel()?.getLineCount() || 1;
-      let height = this.editor.getTopForLineNumber(lineCount + 1) + lineHeight;
+      let height = Math.max(this.editor.getTopForLineNumber(lineCount + 1) + lineHeight, this.height);
       if (prevHeight !== height) {
         if (window.innerHeight * 1.5 < height) {
           height = window.innerHeight;
@@ -147,9 +128,13 @@ export default class Editor extends DOMAttachedObject {
     }
     this.editor.onDidChangeModelContent(() => {
       const val = this.editor.getValue({ lineEnding: '\n', preserveBOM: false });
-      $dom.val(val);
-      $dom.text(val);
-      if (onChange) onChange(val);
+      this.$dom.val(val);
+      this.$dom.text(val);
+      if (this.lock) return;
+      this.lock = true;
+      this.milkdown?.setValue(val);
+      onChange?.(val);
+      this.lock = false;
     });
     this.isValid = true;
     if (hasFocus) this.focus();
@@ -160,97 +145,111 @@ export default class Editor extends DOMAttachedObject {
     window.editor = this.editor;
   }
 
-  async initVditor() {
+  async initMilkdown(ele) {
     const pagename = document.documentElement.getAttribute('data-page');
     const isProblemPage = ['problem_create', 'problem_edit'].includes(pagename);
     const isProblemEdit = pagename === 'problem_edit';
-    const { default: Vditor } = await import('vditor');
-    const { $dom } = this;
-    const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
-    const origin = $dom.get(0);
-    const ele = document.createElement('div');
-    const value = $dom.val();
-    const { onChange } = this.options;
-    await new Promise((resolve) => {
-      this.vditor = new Vditor(ele, {
-        ...config,
-        upload: {
-          multiple: false,
-          handler: (files) => {
-            let wrapper = ['', ''];
-            let ext: string;
-            const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
-            if (matches) {
-              wrapper = ['![image](', ')'];
-              [, ext] = matches;
-            } else if (files[0].type === 'application/x-zip-compressed') {
-              wrapper = ['[file](', ')'];
-              ext = 'zip';
-            }
-            if (!ext) return i18n('No Supported file type.');
-            const filename = `${nanoid()}.${ext}`;
-            const data = new FormData();
-            data.append('filename', filename);
-            data.append('file', files[0]);
-            data.append('operation', 'upload_file');
-            if (isProblemEdit) data.append('type', 'additional_file');
-            let progress = 0;
-            request.postFile(isProblemEdit ? './files' : '/file', data, {
-              xhr: () => {
-                const xhr = new XMLHttpRequest();
-                xhr.upload.addEventListener('loadstart', () => this.vditor.vditor.tip.show(i18n('Uploading...'), 0));
-                xhr.upload.addEventListener('progress', (e) => {
-                  if (!e.lengthComputable) return;
-                  const percentComplete = Math.round((e.loaded / e.total) * 100);
-                  if (percentComplete === progress) return;
-                  progress = percentComplete;
-                  this.vditor.vditor.tip.show(`${i18n('Uploading...')} ${percentComplete}%`, 0);
-                }, false);
-                return xhr;
-              },
-            })
-              .then(() => {
-                this.vditor.insertValue(`${wrapper.join(`${isProblemPage ? 'file://' : `/file/${UserContext._id}/`}${filename}`)} `);
-                this.vditor.vditor.tip.hide();
-              })
-              .catch((e: { message: string; }) => {
-                console.error(e);
-                return `${i18n('Upload Failed')}: ${e.message}`;
-              });
-            return null;
-          },
-        },
-        ...this.options,
-        after: () => {
-          const pos = $(ele).find('button[data-mode="sv"]').get();
-          const button = $('<button data-mode="monaco">Monaco Editor</button>');
-          button.on('click', (e) => {
-            Notification.info('You can select this in PreferenceSettings');
-            e.preventDefault();
-          });
-          button.insertAfter(pos);
-          resolve(null);
-        },
-        input(v) {
-          $dom.val(v);
-          $dom.text(v);
-          if (onChange) onChange(v);
-        },
-        value,
-        cache: { id: Math.random().toString() },
+    const [
+      {
+        Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx, serializerCtx,
+      },
+      { nord }, { Slice }, { gfm }, { listener, listenerCtx },
+      { math }, { history }, { clipboard }, { tooltip }, { slash },
+      { emoji }, { upload, uploadPlugin }, { diagram }, { prism }, { cursor },
+      { menu },
+    ] = await Promise.all([
+      import('@milkdown/core'), import('./theme'), import('@milkdown/prose'),
+      import('@milkdown/preset-gfm'), import('@milkdown/plugin-listener'),
+      import('@milkdown/plugin-math'),
+      import('@milkdown/plugin-history'),
+      import('@milkdown/plugin-clipboard'),
+      import('@milkdown/plugin-tooltip'),
+      import('@milkdown/plugin-slash'),
+      import('@milkdown/plugin-emoji'),
+      import('@milkdown/plugin-upload'),
+      import('@milkdown/plugin-diagram'),
+      import('@milkdown/plugin-prism'),
+      import('@milkdown/plugin-cursor'),
+      import('@milkdown/plugin-menu'),
+    ]);
+
+    const uploader: import('@milkdown/plugin-upload').Uploader = async (files, schema) => {
+      const images: File[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files.item(i);
+        if (!file) continue;
+        if (!file.type.includes('image')) continue;
+        images.push(file);
+      }
+      const nodes: Node[] = await Promise.all(
+        images.map(async (image) => {
+          console.log(image);
+          // TODO
+          return null;
+          const src = await YourUploadAPI(image);
+          const alt = image.name;
+          return schema.nodes.image.createAndFill({
+            src,
+            alt,
+          }) as Node;
+        }),
+      );
+      return nodes;
+    };
+
+    this.milkdown = Editor.make()
+      .use(nord).use(listener).use(gfm)
+      .use(math).use(history).use(clipboard).use(tooltip).use(slash)
+      .use(emoji).use(diagram).use(prism).use(cursor).use(menu)
+      .use(upload.configure(uploadPlugin, { uploader }))
+      .config((ctx) => {
+        ctx.set(defaultValueCtx, this.$dom.val());
+        ctx.set(rootCtx, ele);
+        ctx.get(listenerCtx).markdownUpdated((c, markdown) => {
+          this.$dom.val(markdown);
+          this.$dom.text(markdown);
+          if (this.lock) return;
+          this.lock = true;
+          if (this.model) {
+            const range = this.model.getFullModelRange();
+            this.model.pushEditOperations([], [{ range, text: markdown }], undefined);
+          } else this.editor?.setValue?.(markdown);
+          this.options?.onChange?.(markdown);
+          this.lock = false;
+        });
+        ctx.get(listenerCtx).updated((c) => {
+          this.height = $(ele).height();
+        });
       });
+    this.milkdown.setValue = (val) => {
+      this.milkdown.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const doc = ctx.get(parserCtx)(val);
+        if (!doc) return;
+        view.dispatch(view.state.tr.replace(0, view.state.doc.content.size, new Slice(doc.content, 0, 0)));
+      });
+    };
+    this.milkdown.getValue = () => this.milkdown.action((ctx) => {
+      const editorView = ctx.get(editorViewCtx);
+      const serializer = ctx.get(serializerCtx);
+      return serializer(editorView.state.doc);
     });
-    $(ele).addClass('textbox');
-    $dom.hide();
-    origin.parentElement.appendChild(ele);
+    this.milkdown.dispose = () => {
+      const view = this.milkdown.action((ctx) => ctx.get(editorViewCtx));
+      const root = this.milkdown.action((ctx) => ctx.get(rootCtx)) as HTMLElement;
+      root?.firstChild?.remove();
+      view?.destroy();
+    };
+    await this.milkdown.create();
+    $('.editor-root').prepend($('<div class="editor-menu columns"></div>'));
+    $('.editor-menu').prepend($('.milkdown-menu'));
     this.isValid = true;
-    if (hasFocus) this.focus();
   }
 
   destory() {
     this.detach();
-    if (this.vditor?.destroy) this.vditor.destroy();
-    else if (this.editor?.dispose) this.editor.dispose();
+    this.editor?.dispose();
+    this.milkdown?.dispose();
   }
 
   ensureValid() {
@@ -259,8 +258,12 @@ export default class Editor extends DOMAttachedObject {
 
   value(val?: string) {
     this.ensureValid();
-    if (typeof val === 'string') return (this.editor || this.vditor).setValue(val);
-    return (this.editor || this.vditor).getValue({ lineEnding: '\n', preserveBOM: false });
+    if (typeof val === 'string') {
+      this.editor?.setValue(val);
+      this.milkdown?.setValue(val);
+      return val;
+    }
+    return (this.editor || this.milkdown)?.getValue({ lineEnding: '\n', preserveBOM: false });
   }
 
   focus() {
@@ -271,4 +274,4 @@ export default class Editor extends DOMAttachedObject {
   }
 }
 
-_.assign(Editor, DOMAttachedObject);
+_.assign(VjEditor, DOMAttachedObject);

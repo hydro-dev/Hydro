@@ -204,7 +204,6 @@ export default function (env = {}) {
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
-          { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
           { from: root('.build/sharedworker.js'), to: 'sharedworker.js' },
         ],
