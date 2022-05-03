@@ -388,13 +388,11 @@ export function Connection(
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             if (h.message) {
-                conn.on('data', (data) => {
-                    h.message(JSON.parse(data));
-                });
+                conn.onmessage = (e) => {
+                    h.message(JSON.parse(e.data.toString()));
+                };
             }
-            conn.on('close', async () => {
-                if (h.cleanup) await h.cleanup(args);
-            });
+            conn.onclose = () => h.cleanup?.(args);
         } catch (e) {
             await h.onerror(e);
         }
