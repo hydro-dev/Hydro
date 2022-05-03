@@ -2,8 +2,8 @@ import os from 'os';
 import path from 'path';
 import { Duplex } from 'stream';
 import fs from 'fs-extra';
-import { isMoment } from 'moment';
 import type { Moment } from 'moment-timezone';
+import { isMoment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 
 export function folderSize(folderPath: string) {

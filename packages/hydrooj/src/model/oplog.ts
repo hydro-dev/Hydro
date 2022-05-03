@@ -25,7 +25,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
         _id: new ObjectID(),
         type,
         time: new Date(),
-        domainId: handler.domainId,
+        domainId: handler.args.domainId,
         ua: handler.request.headers?.['user-agent'],
         referer: handler.request.headers?.referer,
         args,

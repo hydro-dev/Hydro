@@ -278,16 +278,16 @@ export default class Hydro {
 
     async consume(queue: Queue<any>) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
-        const res = await this.axios.get('judge/conn/info');
-        this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn/websocket?t=${res.data.entropy}`);
-        this.ws.on('open', () => {
-            this.ws.send(this.config.cookie);
-            global.onDestroy.push(() => this.ws.close());
-            const content = this.config.minPriority !== undefined
-                ? `{"key":"prio","prio":${this.config.minPriority}}`
-                : '{"key":"ping"}';
-            setInterval(() => this.ws.send(content), 30000);
+        this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
+            headers: {
+                Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
+            },
         });
+        global.onDestroy.push(() => this.ws.close());
+        const content = this.config.minPriority !== undefined
+            ? `{"key":"prio","prio":${this.config.minPriority}}`
+            : '{"key":"ping"}';
+        setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;

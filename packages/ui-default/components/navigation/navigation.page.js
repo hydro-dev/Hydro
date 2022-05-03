@@ -35,7 +35,6 @@ function handlerSwitchAccount(ev) {
       </div>
     `,
     onDispatch(action) {
-      console.log(action, userSelector.value());
       if (action === 'ok' && userSelector.value() === null) {
         userSelector.focus();
         return false;

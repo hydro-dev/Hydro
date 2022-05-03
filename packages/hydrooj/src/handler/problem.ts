@@ -68,7 +68,7 @@ registerValue('Problem', [
 registerResolver(
     'Query', 'problem(id: Int, pid: String)', 'Problem',
     async (arg, ctx) => {
-        const pdoc = await problem.get(ctx.domainId, arg.pid || arg.id);
+        const pdoc = await problem.get(ctx.args.domainId, arg.pid || arg.id);
         if (!pdoc) return null;
         if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (pdoc.assign.length && !ctx.user.own(pdoc)) {
@@ -90,14 +90,14 @@ registerResolver(
 registerResolver(
     'ProblemManage', 'delete', 'Boolean!',
     async (arg, ctx) => {
-        const tdocs = await contest.getRelated(ctx.domainId, ctx.pdoc.docId);
+        const tdocs = await contest.getRelated(ctx.args.domainId, ctx.pdoc.docId);
         if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
         return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
     },
 );
 registerResolver(
     'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean, assign: [String])', 'Problem!',
-    (arg, ctx) => problem.edit(ctx.domainId, ctx.pdoc.docId, arg),
+    (arg, ctx) => problem.edit(ctx.args.domainId, ctx.pdoc.docId, arg),
 );
 
 function buildQuery(udoc: User) {
@@ -150,7 +150,7 @@ export class ProblemMainHandler extends ProblemHandler {
         let pcountRelation = 'eq';
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (q) category.push(q);
-        if (category.length) this.extraTitleContent = category.join(',');
+        if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (q) {
             if (search) {
@@ -360,7 +360,7 @@ export class ProblemDetailHandler extends ProblemHandler {
             tsdoc: this.tsdoc,
         };
         this.response.template = 'problem_detail.html';
-        this.extraTitleContent = this.pdoc.title;
+        this.UiContext.extraTitleContent = this.pdoc.title;
     }
 
     @query('tid', Types.ObjectID, true)
@@ -402,9 +402,9 @@ export class ProblemDetailHandler extends ProblemHandler {
         }
         if (!this.response.body.tdoc) {
             if (this.psdoc?.rid) {
-                this.response.body.rdoc = await record.get(this.domainId, this.psdoc.rid);
+                this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            this.response.body.ctdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
+            this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
         }
     }
 
@@ -436,7 +436,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        const tdocs = await contest.getRelated(this.domainId, this.pdoc.docId);
+        const tdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
         if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
@@ -500,7 +500,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
-                problem.inc(this.domainId, this.pdoc.docId, 'nSubmit', 1),
+                problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
                 problem.incStatus(domainId, this.pdoc.docId, this.user._id, 'nSubmit', 1),
                 domain.incUserInDomain(domainId, this.user._id, 'nSubmit'),
                 tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),

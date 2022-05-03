@@ -5,12 +5,12 @@ import tpl from 'vj/utils/tpl';
 import getAvailableLangs from 'vj/utils/availableLangs';
 
 const page = new NamedPage('record_main', async () => {
-  const [{ default: SockJs }, { DiffDOM }] = await Promise.all([
+  const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
     import('../components/socket'),
     import('diff-dom'),
   ]);
 
-  const sock = new SockJs(UiContext.socketUrl);
+  const sock = new WebSocket(UiContext.socketUrl);
   const dd = new DiffDOM();
 
   let firstLoad = true;

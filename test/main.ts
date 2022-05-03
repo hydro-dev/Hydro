@@ -17,7 +17,7 @@ describe('App', () => {
         let timeout;
         const resolve = () => setTimeout(() => {
             clearTimeout(timeout);
-            agent = supertest.agent(require('hydrooj/src/service/server').server);
+            agent = supertest.agent(require('hydrooj/src/service/server').httpServer);
             done();
         }, 2000);
         bus.on('app/started', resolve);
