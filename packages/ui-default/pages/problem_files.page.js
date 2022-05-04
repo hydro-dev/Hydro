@@ -100,6 +100,7 @@ const page = new NamedPage('problem_files', () => {
       Notification.success(i18n('File uploaded successfully.'));
       await pjax.request({ push: false });
     } catch (e) {
+      window.captureException?.(e);
       console.error(e);
       Notification.error(i18n('File upload failed: {0}', e.toString()));
     } finally {
@@ -238,6 +239,7 @@ const page = new NamedPage('problem_files', () => {
         const res = await request.get(link);
         content = await request.get(res.url, undefined, { dataType: 'text' });
       } catch (e) {
+        window.captureException?.(e);
         Notification.error(i18n('Failed to load file: {0}', e.message));
         throw e;
       }

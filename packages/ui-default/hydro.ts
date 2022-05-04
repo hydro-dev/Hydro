@@ -64,6 +64,7 @@ async function load() {
     try {
       await func(currentPageName, loadPage(1, type));
     } catch (e) {
+      (window as any).captureException?.(e);
       Notification.warn(`Failed to call '${type}Loading' of ${page.name}`);
       console.error(`Failed to call '${type}Loading' of ${page.name}\n${e.stack}`);
       console.error(e);
