@@ -20,6 +20,9 @@ export default class VjEditor extends DOMAttachedObject {
   static DOMAttachKey = 'vjEditorInstance';
   isValid: boolean;
   private lock: boolean;
+  height = 0;
+  menu: JQuery<HTMLDivElement>;
+  root: JQuery<HTMLDivElement>;
   model: import('../monaco').default.editor.IModel;
   editor: import('../monaco').default.editor.IStandaloneCodeEditor;
   milkdown: import('@milkdown/core').Editor & {
@@ -28,16 +31,17 @@ export default class VjEditor extends DOMAttachedObject {
     dispose?: () => void;
   };
 
-  height = 0;
-
   constructor($dom, public options: Options = {}) {
     super($dom);
     $dom.hide();
-    const root = $('<div class="row editor-root" style="width: 100%;"></div>');
-    const left = $('<div class="medium-6 columns textbox" style="padding-left:0px;padding-right:0px;"></div>');
-    const right = $('<div class="medium-6 columns textbox typo" style="padding-left:0px;padding-right:0px;"></div>');
-    root.append(left, right);
-    $($dom).parent().append(root);
+    this.root = $('<div class="editor-root"></div>');
+    this.menu = $('<div class="editor-menu"></div>');
+    const editor = $('<div class="editor-main"></div>');
+    const left = $('<div class="editor-col textbox" style="height:100%"></div>');
+    const right = $('<div class="editor-col textbox typo" style="display:none;height:100%"></div>');
+    this.root.append(this.menu, editor);
+    editor.append(left, right);
+    $($dom).parent().append(this.root);
     this.initMonaco(left.get(0));
     if ((options?.language || 'markdown') === 'markdown') this.initMilkdown(right.get(0));
   }
@@ -53,7 +57,6 @@ export default class VjEditor extends DOMAttachedObject {
     } = this.options;
     const { monaco, registerAction } = await load([language]);
     const hasFocus = this.$dom.is(':focus') || this.$dom.hasClass('autofocus');
-    if (!autoResize && this.$dom.height()) $(ele).height(this.$dom.height());
     const value = this.options.value || this.$dom.val();
     this.model = typeof model === 'string'
       ? monaco.editor.getModel(monaco.Uri.parse(model))
@@ -240,8 +243,9 @@ export default class VjEditor extends DOMAttachedObject {
       view?.destroy();
     };
     await this.milkdown.create();
-    $('.editor-root').prepend($('<div class="editor-menu columns" style="padding-left:0px;padding-right:0px;"></div>'));
-    $('.editor-menu').prepend($('.milkdown-menu'));
+    $(ele).show();
+    this.menu.children().remove();
+    this.menu.prepend(this.root.find('.milkdown-menu'));
     this.isValid = true;
   }
 
@@ -249,6 +253,7 @@ export default class VjEditor extends DOMAttachedObject {
     this.detach();
     this.editor?.dispose();
     this.milkdown?.dispose();
+    this.root?.remove();
   }
 
   ensureValid() {
