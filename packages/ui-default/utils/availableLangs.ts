@@ -5,7 +5,7 @@ export default function getAvailableLangs(langsList?: string[]) {
   for (const key in LANGS) {
     if (prefixes.has(key)) continue;
     if (langsList && langsList.join('') && !langsList.includes(key)) continue;
-    if (LANGS[key].hidden && langsList.join('') && !langsList?.includes(key)) continue;
+    if (LANGS[key].hidden && langsList?.join('') && !langsList?.includes(key)) continue;
     Langs[key] = LANGS[key];
   }
   return Langs;
