@@ -3,39 +3,11 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { max, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
-import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import { changeErrorType } from '@hydrooj/utils/lib/utils';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { ensureFile, parseMemoryMB } from './utils';
-
-async function readAutoCases(folder: string, { next }, cfg, rst) {
-    const config = {
-        checker_type: 'default',
-        count: 0,
-        subtasks: [],
-        judge_extra_files: [],
-        user_extra_files: [],
-    };
-    const checkFile = ensureFile(folder);
-    try {
-        const files = await fs.readdir(folder);
-        if (await fs.pathExists(path.resolve(folder, 'input'))) {
-            const inputs = await fs.readdir(path.resolve(folder, 'input'));
-            files.push(...inputs.map((i) => `input/${i}`));
-        }
-        if (await fs.pathExists(path.resolve(folder, 'output'))) {
-            const outputs = await fs.readdir(path.resolve(folder, 'output'));
-            files.push(...outputs.map((i) => `output/${i}`));
-        }
-        const result = readSubtasksFromFiles(files, checkFile, cfg, rst);
-        Object.assign(config, result);
-        if (cfg.isSelfSubmission) next({ message: { message: 'Found {0} testcases.', params: [config.count] } });
-    } catch (e) {
-        throw new SystemError('Cannot parse testdata.', [e.message, ...e.params]);
-    }
-    return config;
-}
 
 function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
@@ -52,35 +24,54 @@ function isValidConfig(config) {
     }
 }
 
+async function collectFiles(folder: string) {
+    const files = await fs.readdir(folder);
+    await Promise.all(['input', 'output'].map(async (t) => {
+        if (await fs.pathExists(path.resolve(folder, t))) {
+            const f = await fs.readdir(path.resolve(folder, t));
+            files.push(...f.map((i) => `${t}/${i}`));
+        }
+    }));
+    return files;
+}
+
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
     const iniConfig = path.resolve(folder, 'config.ini');
     const yamlConfig = path.resolve(folder, 'config.yaml');
     const ymlConfig = path.resolve(folder, 'config.yml');
-    const config = { ...cfg };
-    if (fs.existsSync(yamlConfig)) {
-        Object.assign(config, yaml.load(fs.readFileSync(yamlConfig).toString()));
-    } else if (fs.existsSync(ymlConfig)) {
-        Object.assign(config, yaml.load(fs.readFileSync(ymlConfig).toString()));
-    } else if (fs.existsSync(iniConfig)) {
-        try {
-            Object.assign(config, convertIniConfig(fs.readFileSync(iniConfig).toString()));
-        } catch (e) {
-            throw changeErrorType(e, FormatError);
-        }
-    }
-    let result;
+    const config: Record<string, any> = {
+        checker_type: 'default',
+        count: 0,
+        subtasks: [],
+        judge_extra_files: [],
+        user_extra_files: [],
+        ...cfg,
+    };
     try {
-        result = await readYamlCases(config, ensureFile(folder));
+        if (fs.existsSync(yamlConfig)) {
+            Object.assign(config, yaml.load(fs.readFileSync(yamlConfig).toString()));
+        } else if (fs.existsSync(ymlConfig)) {
+            Object.assign(config, yaml.load(fs.readFileSync(ymlConfig).toString()));
+        } else if (fs.existsSync(iniConfig)) {
+            Object.assign(config, convertIniConfig(fs.readFileSync(iniConfig).toString()));
+        }
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
-    let cases = result.outputs?.length || 0;
-    cases += Math.sum((result.subtasks || []).map((subtask) => subtask.cases.length));
-    if (!cases) {
-        const c = await readAutoCases(folder, args, config, result);
-        result.subtasks = c.subtasks;
-        result.count = c.count;
+    const checkFile = ensureFile(folder);
+    const result = await readYamlCases(config, checkFile)
+        .catch((e) => { throw changeErrorType(e, FormatError); });
+    result.count = result.outputs?.length || Math.sum((result.subtasks || []).map((s) => s.cases.length));
+    if (!result.count) {
+        try {
+            result.subtasks = readSubtasksFromFiles(await collectFiles(folder), checkFile, cfg);
+            result.count = Math.sum(result.subtasks.map((i) => i.cases.length));
+            if (cfg.isSelfSubmission) args.next?.({ message: { message: 'Found {0} testcases.', params: [result.count] } });
+        } catch (e) {
+            throw new SystemError('Cannot parse testdata.', [e.message, ...e.params]);
+        }
     }
+    result.subtasks = normalizeSubtasks(result.subtasks || [], checkFile, config.time, config.memory);
     if (result.key && args.key !== result.key) throw new FormatError('Incorrect secret key');
     if (!result.key) isValidConfig(result);
     return result;

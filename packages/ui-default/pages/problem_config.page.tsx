@@ -183,8 +183,8 @@ const page = new NamedPage('problem_config', () => {
       const testdata = (state.testdata || []).map((i) => i.name);
       const checkFile = (file: string) => (testdata.includes(file) ? file : null);
       unsubscribe();
-      const value = readSubtasksFromFiles(testdata, checkFile, state.config, {});
-      for (const subtask of value.subtasks) {
+      const subtasks = readSubtasksFromFiles(testdata, checkFile, state.config);
+      for (const subtask of subtasks) {
         if (subtask.time === parseTimeMS(state.config.time || '1s')) delete subtask.time;
         if (subtask.memory === parseMemoryMB(state.config.memory || '256m')) delete subtask.memory;
         if (subtask.time) subtask.time += 'ms';
@@ -192,7 +192,7 @@ const page = new NamedPage('problem_config', () => {
       }
       store.dispatch({
         type: 'CONFIG_AUTOCASES_UPDATE',
-        value,
+        subtasks,
       });
     });
     render(

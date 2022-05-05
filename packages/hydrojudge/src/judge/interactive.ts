@@ -50,7 +50,7 @@ function judgeCase(c: Case) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         } else {
-            const result = parse(resInteractor.stderr, ctxSubtask.subtask.score);
+            const result = parse(resInteractor.stderr, c.score);
             status = result.status;
             score = result.score;
             message = result.message;

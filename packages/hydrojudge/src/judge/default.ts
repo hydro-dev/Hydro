@@ -76,7 +76,7 @@ function judgeCase(c: Case, sid: string) {
                     user_stdout: stdout,
                     user_stderr: stderr,
                     checker_type: ctx.config.checker_type,
-                    score: ctxSubtask.subtask.score,
+                    score: c.score,
                     detail: ctx.config.detail ?? true,
                     env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
                 });
