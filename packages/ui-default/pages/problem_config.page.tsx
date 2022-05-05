@@ -11,6 +11,8 @@ import {
   size, readSubtasksFromFiles, parseTimeMS, parseMemoryMB,
 } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
+import { SubtaskType } from 'hydrooj/src/interface';
+import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
 
 async function handleSection(ev: JQuery.ClickEvent<Document, undefined, any, any>, type: string) {
   const $section = $(ev.currentTarget).closest('.section--problem-sidebar-testdata');
@@ -146,7 +148,7 @@ const page = new NamedPage('problem_config', () => {
   }
 
   async function uploadConfig(config: object) {
-    const configYaml = yaml.dump(config);
+    const configYaml = yaml.dump(configYamlFormat(config));
     Notification.info(i18n('Saving file...'));
     const data = new FormData();
     data.append('filename', 'config.yaml');
@@ -179,7 +181,12 @@ const page = new NamedPage('problem_config', () => {
       // TODO set yaml schema
       const state = store.getState();
       if (!state.config.__loaded) return;
-      if (state.config.subtasks || state.config.cases) return;
+      if (state.config.cases) {
+        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: 100, cases: state.config.cases }];
+        delete state.config.cases;
+        delete state.config.score;
+      }
+      if (state.config.subtasks) return;
       const testdata = (state.testdata || []).map((i) => i.name);
       const checkFile = (file: string) => (testdata.includes(file) ? file : null);
       unsubscribe();

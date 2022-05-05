@@ -129,8 +129,8 @@ export interface FileInfo {
 export interface TestCaseConfig {
     input: string;
     output: string;
-    time?: number;
-    memory?: number;
+    time?: string;
+    memory?: string;
     score?: number;
 }
 
@@ -148,8 +148,8 @@ export enum SubtaskType {
 }
 
 export interface SubtaskConfig {
-    time?: number;
-    memory?: number;
+    time?: string;
+    memory?: string;
     score?: number;
     if?: number[];
     id?: number;

@@ -25,21 +25,12 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     }
     case 'CONFIG_AUTOCASES_UPDATE': {
       const next = { ...state };
-      const autocases = action.value;
-      if (autocases.subtasks.length === 0) next.subtasks = [];
+      const { subtasks } = action;
+      if (subtasks.length === 0) next.subtasks = [];
       else {
-        next.subtasks = autocases.subtasks.map((subtask) => (
+        next.subtasks = subtasks.map((subtask) => (
           { ...subtask, ...{ cases: subtask.cases.map((i) => ({ input: i.input, output: i.output })) } }));
       }
-      return next;
-    }
-    case 'CONFIG_SUBTASKS_SWITCH': {
-      const next = { ...state };
-      next.subtasks = next.cases.map((k, v) => ({
-        id: v, time: k.time, memory: k.memory, cases: [{ input: k.input, output: k.output }],
-      }));
-      if (!next.subtasks.length) next.subtasks.push({ id: 0 });
-      delete next.cases;
       return next;
     }
     case 'CONFIG_SUBTASK_UPDATE': {

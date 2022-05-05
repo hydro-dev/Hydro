@@ -38,7 +38,7 @@ const subtasksKey = [
 
 const casesKey = ['time', 'memory', 'input', 'output'];
 
-function configYamlFormat(config: ProblemConfigFile) {
+export function configYamlFormat(config: ProblemConfigFile) {
   const formatConfig: ProblemConfigFile = {};
   configKey.forEach((key) => {
     if (config[key] !== undefined) {
@@ -62,7 +62,7 @@ function configYamlFormat(config: ProblemConfigFile) {
         formatConfig[key] = [];
         config[key].forEach((caseItem) => {
           const formatCase: TestCaseConfig = {
-            time: 1000, memory: 256, input: '', output: '',
+            time: '1000ms', memory: '256MB', input: '', output: '',
           };
           casesKey.forEach((caseKey) => {
             if (caseItem[caseKey] !== undefined) formatCase[caseKey] = caseItem[caseKey];
