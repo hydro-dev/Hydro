@@ -201,10 +201,45 @@ const SubtaskMatcher: MatchRule[] = [
     },
 ];
 
-export function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
-    const subtask = {};
-    for (const s of rst.subtasks || []) if (s.id) subtask[s.id] = s;
-    const subtasks = [];
+function* getScore(totalScore: number, count: number) {
+    const base = Math.floor(totalScore / count);
+    const extra = count - (100 % count);
+    for (let i = 0; i < count; i++) {
+        if (i >= extra) yield base + 1;
+        else yield base;
+    }
+}
+
+interface CaseInput {
+    id?: number;
+    time?: number | string;
+    memory?: number | string;
+    score?: number;
+    input?: string;
+    output?: string;
+}
+interface SubtaskInput {
+    cases: CaseInput[];
+    type: 'min' | 'max' | 'sum';
+    time?: number | string;
+    memory?: number | string;
+    score?: number;
+    id?: number;
+    if?: number[];
+}
+interface ParsedCase extends CaseInput {
+    time?: number;
+    memory?: number;
+}
+interface ParsedSubtask extends SubtaskInput {
+    cases: ParsedCase[];
+    time?: number;
+    memory?: number;
+}
+
+export function readSubtasksFromFiles(files: string[], checkFile, config) {
+    const subtask: Record<number, ParsedSubtask> = {};
+    for (const s of config.subtasks || []) if (s.id) subtask[s.id] = s;
     for (const file of files) {
         for (const rule of SubtaskMatcher) {
             const data = rule.regex.exec(file);
@@ -212,13 +247,13 @@ export function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
             const sid = rule.subtask(data);
             const c = { input: file, output: '', id: rule.id(data) };
             for (const func of rule.output) {
-                if (cfg.noOutputFile) c.output = '/dev/null';
+                if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
                 if (c.output === '/dev/null' || checkFile(c.output)) {
                     if (!subtask[sid]) {
                         subtask[sid] = {
-                            time: parseTimeMS(cfg.time || '1s'),
-                            memory: parseMemoryMB(cfg.memory || '256m'),
+                            time: parseTimeMS(config.time || '1s'),
+                            memory: parseMemoryMB(config.memory || '256m'),
                             type: rule.preferredScorerType,
                             cases: [c],
                         };
@@ -229,24 +264,50 @@ export function readSubtasksFromFiles(files: string[], checkFile, cfg, rst) {
             }
         }
     }
-    for (const i in subtask) {
-        subtask[i].cases.sort((a, b) => (a.id - b.id));
-        subtasks.push(subtask[i]);
-    }
+    const subtaskScore = getScore(100, Object.keys(subtask).length);
+    return Object.keys(subtask).map((i) =>
+        ({ ...subtask[i], score: subtaskScore.next().value as number }),
+    );
+}
+
+type NormalizedCase = Required<ParsedCase>;
+interface NormalizedSubtask extends Required<ParsedSubtask> {
+    cases: NormalizedCase[];
+}
+
+export function normalizeSubtasks(
+    subtasks: SubtaskInput[], checkFile: (name: string, errMsg: string) => string,
+    time: number | string, memory: number | string,
+): NormalizedSubtask[] {
     subtasks.sort((a, b) => (a.id - b.id));
-    const base = Math.floor(100 / subtasks.length);
-    const extra = subtasks.length - (100 % subtasks.length);
-    const config = { count: 0, subtasks };
-    const keys = Object.keys(subtask);
-    for (let i = 0; i < keys.length; i++) {
-        if (i >= extra) subtask[keys[i]].score = base + 1;
-        else subtask[keys[i]].score = base;
-        for (const j of subtask[keys[i]].cases) {
-            config.count++;
-            j.input = checkFile(j.input);
-            j.output = checkFile(j.output);
-            j.id = config.count;
-        }
-    }
-    return config;
+    const subtaskScore = getScore(100, subtasks.length);
+    let id = 0;
+    let count = 0;
+    return subtasks.map((s) => {
+        id++;
+        s.cases.sort((a, b) => (a.id - b.id));
+        const score = subtaskScore.next().value as number;
+        const caseScore = getScore(score, s.cases.length);
+        return {
+            id,
+            score,
+            type: 'min',
+            if: [],
+            ...s,
+            time: parseTimeMS(s.time || time),
+            memory: parseMemoryMB(s.memory || memory),
+            cases: s.cases.map((c) => {
+                count++;
+                return {
+                    id: count,
+                    score: s.type === 'sum' ? caseScore.next().value as number : score,
+                    ...c,
+                    time: parseTimeMS(c.time || s.time || time),
+                    memory: parseMemoryMB(c.memory || s.memory || memory),
+                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
+                };
+            }) as NormalizedCase[],
+        };
+    });
 }

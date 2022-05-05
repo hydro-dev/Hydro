@@ -38,14 +38,14 @@ const subtasksKey = [
 
 const casesKey = ['time', 'memory', 'input', 'output'];
 
-function configYamlFormat(config: ProblemConfigFile) {
+export function configYamlFormat(config: ProblemConfigFile) {
   const formatConfig: ProblemConfigFile = {};
   configKey.forEach((key) => {
     if (config[key] !== undefined) {
       if (key === 'subType' && ['single', 'multi'].includes(config[key]) && config.type !== 'submit_answer') return;
       if (key === 'checker_type' && config.type !== 'default') return;
       if (key === 'checker'
-        && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
+        && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
       if (key === 'subtasks') {
         formatConfig[key] = [];
@@ -62,7 +62,7 @@ function configYamlFormat(config: ProblemConfigFile) {
         formatConfig[key] = [];
         config[key].forEach((caseItem) => {
           const formatCase: TestCaseConfig = {
-            time: 1000, memory: 256, input: '', output: '',
+            time: '1000ms', memory: '256MB', input: '', output: '',
           };
           casesKey.forEach((caseKey) => {
             if (caseItem[caseKey] !== undefined) formatCase[caseKey] = caseItem[caseKey];

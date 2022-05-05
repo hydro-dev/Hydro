@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import type { ProblemConfigFile } from 'hydrooj/src/interface';
 import { cloneDeep } from 'lodash';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 
 type State = ProblemConfigFile & { __loaded: boolean };
 
@@ -25,21 +26,18 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     }
     case 'CONFIG_AUTOCASES_UPDATE': {
       const next = { ...state };
-      const autocases = action.value;
-      if (autocases.subtasks.length === 0) next.subtasks = [];
+      const { subtasks } = action;
+      for (const subtask of subtasks) {
+        if (subtask.time === parseTimeMS(state.time || '1s')) delete subtask.time;
+        if (subtask.memory === parseMemoryMB(state.memory || '256m')) delete subtask.memory;
+        if (subtask.time) subtask.time += 'ms';
+        if (subtask.memory) subtask.memory += 'MB';
+      }
+      if (subtasks.length === 0) next.subtasks = [];
       else {
-        next.subtasks = autocases.subtasks.map((subtask) => (
+        next.subtasks = subtasks.map((subtask) => (
           { ...subtask, ...{ cases: subtask.cases.map((i) => ({ input: i.input, output: i.output })) } }));
       }
-      return next;
-    }
-    case 'CONFIG_SUBTASKS_SWITCH': {
-      const next = { ...state };
-      next.subtasks = next.cases.map((k, v) => ({
-        id: v, time: k.time, memory: k.memory, cases: [{ input: k.input, output: k.output }],
-      }));
-      if (!next.subtasks.length) next.subtasks.push({ id: 0 });
-      delete next.cases;
       return next;
     }
     case 'CONFIG_SUBTASK_UPDATE': {

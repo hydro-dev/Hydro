@@ -7,10 +7,10 @@ import yaml from 'js-yaml';
 import Notification from 'vj/components/notification';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
-import {
-  size, readSubtasksFromFiles, parseTimeMS, parseMemoryMB,
-} from '@hydrooj/utils/lib/common';
+import { size, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
+import { SubtaskType } from 'hydrooj/src/interface';
+import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
 
 async function handleSection(ev: JQuery.ClickEvent<Document, undefined, any, any>, type: string) {
   const $section = $(ev.currentTarget).closest('.section--problem-sidebar-testdata');
@@ -146,7 +146,7 @@ const page = new NamedPage('problem_config', () => {
   }
 
   async function uploadConfig(config: object) {
-    const configYaml = yaml.dump(config);
+    const configYaml = yaml.dump(configYamlFormat(config));
     Notification.info(i18n('Saving file...'));
     const data = new FormData();
     data.append('filename', 'config.yaml');
@@ -179,20 +179,20 @@ const page = new NamedPage('problem_config', () => {
       // TODO set yaml schema
       const state = store.getState();
       if (!state.config.__loaded) return;
-      if (state.config.subtasks || state.config.cases) return;
+      if (state.config.cases) {
+        const score = state.config.score * state.config.cases.length;
+        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: score && score < 100 ? score : 100, cases: state.config.cases }];
+        delete state.config.cases;
+        delete state.config.score;
+      }
+      if (state.config.subtasks) return;
       const testdata = (state.testdata || []).map((i) => i.name);
       const checkFile = (file: string) => (testdata.includes(file) ? file : null);
       unsubscribe();
-      const value = readSubtasksFromFiles(testdata, checkFile, state.config, {});
-      for (const subtask of value.subtasks) {
-        if (subtask.time === parseTimeMS(state.config.time || '1s')) delete subtask.time;
-        if (subtask.memory === parseMemoryMB(state.config.memory || '256m')) delete subtask.memory;
-        if (subtask.time) subtask.time += 'ms';
-        if (subtask.memory) subtask.memory += 'MB';
-      }
+      const subtasks = readSubtasksFromFiles(testdata, checkFile, state.config);
       store.dispatch({
         type: 'CONFIG_AUTOCASES_UPDATE',
-        value,
+        subtasks,
       });
     });
     render(

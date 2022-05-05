@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SubtaskConfig } from 'hydrooj/src/interface';
 import { parseTimeMS, parseMemoryMB } from '@hydrooj/utils/lib/common';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
-import { FormItem, ManagedInput } from './BasicForm';
+import { FormItem } from './BasicForm';
 import { RootState } from './reducer';
 import { CasesTable } from './TestCasesTable';
 
@@ -71,7 +71,7 @@ export function SubtasksTable({ index }) {
             {['id', 'score'].map((key) => (
               <td key={key}>
                 <input
-                  value={subtask[key] || ''}
+                  value={subtask[key] ?? ''}
                   onChange={dispatcher(key)}
                   type="number"
                   className="textbox"
@@ -80,7 +80,7 @@ export function SubtasksTable({ index }) {
             ))}
             <td>
               <select
-                value={subtask.type || ''}
+                value={subtask.type ?? 'min'}
                 onChange={dispatcher('type')}
                 className="select"
               >
@@ -116,20 +116,48 @@ export function SubtasksTable({ index }) {
   );
 }
 
+function GlobalTaskConfig() {
+  const time = useSelector((state: RootState) => state.config.time);
+  const memory = useSelector((state: RootState) => state.config.memory);
+  const dispatch = useDispatch();
+  const dispatcher = (key: string, suffix = '') => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | number) => {
+    let value = typeof ev !== 'object' ? ev : ev.currentTarget?.value;
+    if (value === 0) value = '';
+    if (value && suffix) value += suffix;
+    dispatch({ type: 'CONFIG_FORM_UPDATE', key, value });
+  };
+  return (
+    <>
+      <FormItem columns={6} label="Time">
+        <NumericInput
+          rightElement={<Tag minimal>ms</Tag>}
+          value={time ? parseTimeMS(time).toString() : ''}
+          placeholder={parseTimeMS('1000ms').toString()}
+          onValueChange={dispatcher('time', 'ms')}
+          buttonPosition="none"
+          fill
+        />
+      </FormItem>
+      <FormItem columns={6} label="Memory">
+        <NumericInput
+          rightElement={<Tag minimal>MB</Tag>}
+          value={memory ? parseMemoryMB(memory).toString() : ''}
+          placeholder={parseMemoryMB('256m').toString()}
+          onValueChange={dispatcher('memory', 'MB')}
+          buttonPosition="none"
+          fill
+        />
+      </FormItem>
+    </>
+  );
+}
+
 export function TaskConfig() {
   const len = useSelector((state: RootState) => state.config.subtasks?.length);
   return (
     <FormItem columns={12} label="Task Settings">
       <div className="row">
-        <FormItem columns={4} label="Time">
-          <ManagedInput placeholder="Time" formKey="time" />
-        </FormItem>
-        <FormItem columns={4} label="Memory">
-          <ManagedInput placeholder="Memory" formKey="memory" />
-        </FormItem>
-        <FormItem columns={4} label="Score">
-          <ManagedInput placeholder="Score" formKey="score" />
-        </FormItem>
+        <GlobalTaskConfig />
         <FormItem columns={12} label="TestCases" disableLabel>
           {len && [...Array(len).keys()].map((i) => <SubtasksTable index={i} key={i} />)}
         </FormItem>
