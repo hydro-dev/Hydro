@@ -94,6 +94,8 @@ async function main() {
       fs.removeSync('public/vditor/dist/js/graphviz');
       fs.removeSync('public/vditor/dist/js/mermaid');
       fs.removeSync('public/vditor/dist/js/abcjs');
+      const files = fs.readdirSync('public');
+      files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }
   }
   process.chdir(dir);
