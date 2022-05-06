@@ -8,4 +8,4 @@ RUN yarn install && yarn build:ui:production
 
 EXPOSE 8888
 
-ENTRYPOINT ["yarn","start","--port=8888"]
+ENTRYPOINT ["yarn","debug","--port=8888"]
