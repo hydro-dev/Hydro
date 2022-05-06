@@ -1,6 +1,7 @@
 import { load } from 'js-yaml';
 import readYamlCases from '@hydrooj/utils/lib/cases';
 import type { ProblemConfig, ProblemConfigFile } from '../interface';
+import { parseMemoryMB, parseTimeMS } from '../utils';
 
 export async function parseConfig(config: string | ProblemConfigFile = {}) {
     let cfg: ProblemConfigFile = {};
@@ -20,10 +21,10 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
     if (cfg.target) result.target = cfg.target;
     if (cfg.subtasks.length) {
         for (const subtask of cfg.subtasks) {
-            result.memoryMax = Math.max(result.memoryMax, subtask.memory);
-            result.memoryMin = Math.min(result.memoryMin, subtask.memory);
-            result.timeMax = Math.max(result.timeMax, subtask.time);
-            result.timeMin = Math.min(result.timeMin, subtask.time);
+            result.memoryMax = Math.max(result.memoryMax, parseMemoryMB(subtask.memory));
+            result.memoryMin = Math.min(result.memoryMin, parseMemoryMB(subtask.memory));
+            result.timeMax = Math.max(result.timeMax, parseTimeMS(subtask.time));
+            result.timeMin = Math.min(result.timeMin, parseTimeMS(subtask.time));
         }
     } else if (cfg.time || cfg.memory) {
         if (cfg.time) result.timeMax = result.timeMin = cfg.time as unknown as number;
