@@ -3,7 +3,6 @@
 import cac from 'cac';
 import fs from 'fs-extra';
 import webpack from 'webpack';
-import esbuild from 'esbuild';
 import WebpackDevServer from 'webpack-dev-server';
 import gulp from 'gulp';
 import log from 'fancy-log';
@@ -18,15 +17,6 @@ const argv = cac().parse();
 async function runWebpack({
   watch, production, measure, dev,
 }) {
-  const result = esbuild.build({
-    bundle: true,
-    format: 'iife',
-    entryPoints: [root('sharedworker.ts')],
-    outfile: root('.build/sharedworker.js'),
-    watch: dev || watch,
-    minify: production,
-  });
-  if (!dev && !watch) await result;
   const compiler = webpack(webpackConfig({ watch, production, measure }));
   if (dev) {
     const server = new WebpackDevServer(compiler, {
@@ -36,7 +26,7 @@ async function runWebpack({
       stats: 'none',
       index: root('public'),
       proxy: {
-        context: (path) => !path.includes('sharedworker.js'),
+        context: (path) => !path.includes('sockjs-node'),
         target: 'http://localhost:2333',
         ws: true,
       },
@@ -104,6 +94,8 @@ async function main() {
       fs.removeSync('public/vditor/dist/js/graphviz');
       fs.removeSync('public/vditor/dist/js/mermaid');
       fs.removeSync('public/vditor/dist/js/abcjs');
+      const files = fs.readdirSync('public');
+      files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }
   }
   process.chdir(dir);

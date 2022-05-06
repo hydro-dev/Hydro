@@ -4,6 +4,7 @@ window.Hydro = {
   components: {},
   utils: {},
   node_modules: {},
+  version: process.env.VERSION,
 };
 window.externalModules = {};
 

@@ -31,7 +31,7 @@ export function parse(output: string, fullscore: number) {
         if (p === 1) {
             status = STATUS.STATUS_ACCEPTED;
             score = fullscore;
-            const base = output.split('points ')[1] || '';
+            const base = output.replace('points ', '') || '';
             message = base.substring(base.indexOf(' '), 1024);
         } else {
             score = Math.floor(fullscore * p);

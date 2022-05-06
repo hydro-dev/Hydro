@@ -1,6 +1,7 @@
 import React from 'react';
 import { sortBy } from 'lodash';
 import request from 'vj/utils/request';
+import Notification from 'vj/components/notification';
 
 export default class ObjectiveContainer extends React.PureComponent {
   constructor(args) {

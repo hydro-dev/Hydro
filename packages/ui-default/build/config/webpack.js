@@ -81,6 +81,7 @@ export default function (env = {}) {
     mode: (env.production || env.measure) ? 'production' : 'development',
     profile: true,
     context: root(),
+    devtool: env.production ? 'source-map' : 'eval-source-map',
     entry: {
       hydro: './entry.js',
       polyfill: './polyfill.ts',
@@ -206,12 +207,12 @@ export default function (env = {}) {
           { from: root('static') },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
-          { from: root('.build/sharedworker.js'), to: 'sharedworker.js' },
         ],
       }),
       new webpack.DefinePlugin({
         'process.env': {
           NODE_ENV: env.production ? '"production"' : '"debug"',
+          VERSION: JSON.stringify(require('@hydrooj/ui-default/package.json').version),
         },
       }),
       new webpack.LoaderOptionsPlugin({
