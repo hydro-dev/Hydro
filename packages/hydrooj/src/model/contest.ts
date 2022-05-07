@@ -50,7 +50,7 @@ const acm = buildContestRule({
     check: () => { },
     statusSort: { accept: -1, time: 1 },
     submitAfterAccept: false,
-    showScoreboard: () => true,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
@@ -297,7 +297,7 @@ const ioi = buildContestRule({
     submitAfterAccept: false,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: () => true,
-    showScoreboard: () => true,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
 const homework = buildContestRule({
