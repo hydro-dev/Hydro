@@ -42,7 +42,7 @@ jobs:
     - name: Build And Lint
       run: |
         yarn build:ui:gulp
-        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
+        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci
     - name: Log in to Docker Hub
       uses: docker/login-action@v1
       with:
