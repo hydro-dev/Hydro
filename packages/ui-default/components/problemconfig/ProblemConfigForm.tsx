@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import {
-  Card, Switch, Tab, Tabs, InputGroup, Tag,
+  Card, Tab, Tabs, InputGroup, Tag,
 } from '@blueprintjs/core';
 import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
@@ -35,48 +35,43 @@ function FileIOConfig() {
 }
 
 function ExtraFilesConfig() {
-  const [showTab, setshowTab] = useState(false);
   const Files = useSelector((state: RootState) => state.testdata);
   const userExtraFiles = useSelector((state: RootState) => state.config.user_extra_files);
   const judgeExtraFiles = useSelector((state: RootState) => state.config.judge_extra_files);
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="ExtraFilesTabs" disableLabel>
-      <Switch checked={showTab} label={i18n('Extra Files Config')} onChange={() => setshowTab(!showTab)} />
-      <div style={!showTab ? { display: 'none' } : {}}>
-        <Tabs id="ExtraFilesTabs">
-          <Tab
-            id="user_extra_files"
-            title={i18n('user_extra_files')}
-            panel={(
-              <FileSelectAutoComplete
-                data={Files}
-                selectedKeys={userExtraFiles || []}
-                onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'user_extra_files', value: val.split(',') })}
-                multi
-              />
-            )}
-          />
-          <Tab
-            id="judge_extra_files"
-            title={i18n('judge_extra_files')}
-            panel={(
-              <FileSelectAutoComplete
-                data={Files}
-                selectedKeys={judgeExtraFiles || []}
-                onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'judge_extra_files', value: val.split(',') })}
-                multi
-              />
-            )}
-          />
-        </Tabs>
-      </div>
+      <Tabs id="ExtraFilesTabs">
+        <Tab
+          id="user_extra_files"
+          title={i18n('user_extra_files')}
+          panel={(
+            <FileSelectAutoComplete
+              data={Files}
+              selectedKeys={userExtraFiles || []}
+              onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'user_extra_files', value: val.split(',') })}
+              multi
+            />
+          )}
+        />
+        <Tab
+          id="judge_extra_files"
+          title={i18n('judge_extra_files')}
+          panel={(
+            <FileSelectAutoComplete
+              data={Files}
+              selectedKeys={judgeExtraFiles || []}
+              onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'judge_extra_files', value: val.split(',') })}
+              multi
+            />
+          )}
+        />
+      </Tabs>
     </FormItem>
   );
 }
 
 function LangConfig() {
-  const [showTab, setshowTab] = useState(false);
   const langs = useSelector((state: RootState) => state.config.langs) || [];
   const prefixes = new Set(Object.keys(LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
   const data = Object.keys(LANGS).filter((i) => !prefixes.has(i))
@@ -88,21 +83,19 @@ function LangConfig() {
     ref.current.setSelectedKeys(selectedKeys);
   }, [JSON.stringify(selectedKeys)]);
   return (
-    <FormItem columns={12} label="LangsTabs" disableLabel>
-      <Switch checked={showTab} label={i18n('Langs Config')} onChange={() => setshowTab(!showTab)} />
-      <FormItem columns={12} label="langs" style={!showTab ? { display: 'none' } : {}}>
-        <CustomSelectAutoComplete
-          ref={ref}
-          data={data}
-          selectedKeys={selectedKeys}
-          onChange={(val) => {
-            const value = val.split(',');
-            value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]))));
-            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value });
-          }}
-          multi
-        />
-      </FormItem>
+    <FormItem columns={12} label="langs">
+      <CustomSelectAutoComplete
+        ref={ref}
+        data={data}
+        placeholder={i18n('Unlimited')}
+        selectedKeys={selectedKeys}
+        onChange={(val) => {
+          const value = val.split(',');
+          value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]))));
+          dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value });
+        }}
+        multi
+      />
     </FormItem>
   );
 }

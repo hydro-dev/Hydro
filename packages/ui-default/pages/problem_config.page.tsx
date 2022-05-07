@@ -1,5 +1,4 @@
 import { NamedPage } from 'vj/misc/Page';
-import { slideDown, slideUp } from 'vj/utils/slide';
 import request from 'vj/utils/request';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import i18n from 'vj/utils/i18n';
@@ -11,21 +10,6 @@ import { size, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
 import { SubtaskType } from 'hydrooj/src/interface';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
-
-async function handleSection(ev: JQuery.ClickEvent<Document, undefined, any, any>, type: string) {
-  const $section = $(ev.currentTarget).closest('.section--problem-sidebar-testdata');
-  if ($section.is(`.${type}d, .animating`)) return;
-  $section.addClass('animating');
-  const $detail = $section.find('.problem-sidebar-testdata__detail');
-  if (type === 'expand') {
-    await slideDown($detail, 300, { opacity: 0 }, { opacity: 1 });
-  } else {
-    await slideUp($detail, 300, { opacity: 1 }, { opacity: 0 });
-  }
-  $section.addClass(type === 'expand' ? 'expanded' : 'collapsed');
-  $section.removeClass(type === 'expand' ? 'collapsed' : 'expanded');
-  $section.removeClass('animating');
-}
 
 function onBeforeUnload(e) {
   e.returnValue = '';
@@ -216,8 +200,6 @@ const page = new NamedPage('problem_config', () => {
   $(document).on('click', '[name="testdata__upload"]', () => handleClickUpload());
   $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="testdata__download__all"]', () => handleClickDownloadAll());
-  $(document).on('click', '[name="testdata__section__expand"]', (ev) => handleSection(ev, 'expand'));
-  $(document).on('click', '[name="testdata__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
 });
 
 export default page;

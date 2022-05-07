@@ -92,17 +92,9 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    <div class="section side visiable nojs--hide section--problem-sidebar-tags {{ 'collapsed' if page_name == 'problem_edit' else 'expanded'}}">
+    <div class="section side visiable nojs--hide section--problem-sidebar-tags">
       <div class="section__header">
         <h1 class="section__title">{{ _('Categories') }} ({{ _('click to add') }})</h1>
-        <div class="section__tools">
-          <a class="expanded--hidden" href="javascript:;" name="tags__section__expand">
-            <span class="icon icon-expand_more"></span>
-          </a>
-          <a class="collapsed--hidden" href="javascript:;" name="tags__section__collapse">
-            <span class="icon icon-expand_less"></span>
-          </a>
-        </div>
       </div>
       <div class="section__body problem-sidebar-tags__detail">
         {% include "partials/category.html" %}
