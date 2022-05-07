@@ -4,7 +4,6 @@ import { findFileSync, parseMemoryMB, parseTimeMS } from './utils';
 export default async function readYamlCases(cfg: Record<string, any> = {}, checkFile = (s: string, errMsg: string) => s) {
     const config: any = {
         checker_type: cfg.checker_type || 'default',
-        subtasks: [],
         judge_extra_files: [],
         user_extra_files: [],
     };

@@ -210,22 +210,31 @@ function* getScore(totalScore: number, count: number) {
     }
 }
 
-interface ParsedCase {
-    id: number;
-    time?: number;
-    memory?: number;
+interface CaseInput {
+    id?: number;
+    time?: number | string;
+    memory?: number | string;
     score?: number;
     input?: string;
     output?: string;
 }
-interface ParsedSubtask {
-    cases: ParsedCase[];
+interface SubtaskInput {
+    cases: CaseInput[];
     type: 'min' | 'max' | 'sum';
-    time?: number;
-    memory?: number;
+    time?: number | string;
+    memory?: number | string;
     score?: number;
     id?: number;
     if?: number[];
+}
+interface ParsedCase extends CaseInput {
+    time?: number;
+    memory?: number;
+}
+interface ParsedSubtask extends SubtaskInput {
+    cases: ParsedCase[];
+    time?: number;
+    memory?: number;
 }
 
 export function readSubtasksFromFiles(files: string[], checkFile, config) {
@@ -264,7 +273,7 @@ interface NormalizedSubtask extends Required<ParsedSubtask> {
 }
 
 export function normalizeSubtasks(
-    subtasks: ParsedSubtask[], checkFile: (name: string, errMsg: string) => string,
+    subtasks: SubtaskInput[], checkFile: (name: string, errMsg: string) => string,
     time: number | string, memory: number | string,
 ): NormalizedSubtask[] {
     subtasks.sort((a, b) => (a.id - b.id));
