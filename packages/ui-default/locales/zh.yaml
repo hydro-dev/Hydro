@@ -325,6 +325,8 @@ Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Extra Files Config: 额外文件设置
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
+Failed to parse subtask.: 无法解析子任务信息。
+Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
@@ -595,6 +597,7 @@ Problem Solution List: 题解列表
 Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
 Problem Tags: 题目标签
+Problem Type: 题目类型
 problem_config: 评测设置
 problem_create: 创建题目
 problem_edit: 编辑题目
@@ -830,6 +833,7 @@ Unlimited: 无限制
 Unordered List: 无序列表
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
+Unsupported configure this type of problem. Please refer to the documentation.: 暂不支持快捷配置此类题目。请参照文档操作。
 Update Permission: 更新权限
 Update Settings: 更新设置
 Update: 更新

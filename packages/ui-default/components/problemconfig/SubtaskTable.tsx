@@ -4,6 +4,7 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { SubtaskConfig } from 'hydrooj/src/interface';
 import { parseTimeMS, parseMemoryMB } from '@hydrooj/utils/lib/common';
+import i18n from 'vj/utils/i18n';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 import { FormItem } from './BasicForm';
 import { RootState } from './reducer';
@@ -12,7 +13,7 @@ import { CasesTable } from './TestCasesTable';
 const eq = (a: SubtaskConfig, b: SubtaskConfig) => isEqual(a, b);
 
 export function SubtasksIds({ index }) {
-  const ids = useSelector((state: RootState) => state.config.subtasks.map((i) => i.id).filter((i) => i !== undefined).join(','));
+  const ids = useSelector((state: RootState) => state.config.subtasks.map((i) => (i ? i.id : undefined)).filter((i) => i !== undefined).join(','));
   const subtaskIf = useSelector((state: RootState) => state.config.subtasks[index].if);
   const dispatch = useDispatch();
   return (
@@ -46,6 +47,14 @@ export function SubtasksTable({ index }) {
       type: 'CONFIG_SUBTASK_UPDATE', id: index, key, value,
     });
   };
+  if (!subtask || Object.keys(subtask).length === 0) {
+    return (
+      <Card style={{ padding: 0 }}>
+        <span>Subtasks #{index + 1} </span>
+        <p>{i18n('Failed to parse subtask.')}</p>
+      </Card>
+    );
+  }
   return (
     <Card style={{ padding: 0 }}>
       <span>Subtasks #{index + 1} </span>
@@ -90,8 +99,8 @@ export function SubtasksTable({ index }) {
             <td>
               <NumericInput
                 rightElement={<Tag minimal>ms</Tag>}
-                value={subtask.time ? parseTimeMS(subtask.time).toString() : ''}
-                placeholder={parseTimeMS(defaultTime || '1000ms').toString()}
+                value={subtask.time ? parseTimeMS(subtask.time, false).toString() : ''}
+                placeholder={parseTimeMS(defaultTime || '1000ms', false).toString()}
                 onValueChange={dispatcher('time', 'ms')}
                 buttonPosition="none"
                 fill
@@ -100,8 +109,8 @@ export function SubtasksTable({ index }) {
             <td>
               <NumericInput
                 rightElement={<Tag minimal>MB</Tag>}
-                value={subtask.memory ? parseMemoryMB(subtask.memory).toString() : ''}
-                placeholder={parseMemoryMB(defaultMemory || '256m').toString()}
+                value={subtask.memory ? parseMemoryMB(subtask.memory, false).toString() : ''}
+                placeholder={parseMemoryMB(defaultMemory || '256m', false).toString()}
                 onValueChange={dispatcher('memory', 'MB')}
                 buttonPosition="none"
                 fill
@@ -131,7 +140,7 @@ function GlobalTaskConfig() {
       <FormItem columns={6} label="Time">
         <NumericInput
           rightElement={<Tag minimal>ms</Tag>}
-          value={time ? parseTimeMS(time).toString() : ''}
+          value={time ? parseTimeMS(time, false).toString() : ''}
           placeholder={parseTimeMS('1000ms').toString()}
           onValueChange={dispatcher('time', 'ms')}
           buttonPosition="none"
@@ -141,7 +150,7 @@ function GlobalTaskConfig() {
       <FormItem columns={6} label="Memory">
         <NumericInput
           rightElement={<Tag minimal>MB</Tag>}
-          value={memory ? parseMemoryMB(memory).toString() : ''}
+          value={memory ? parseMemoryMB(memory, false).toString() : ''}
           placeholder={parseMemoryMB('256m').toString()}
           onValueChange={dispatcher('memory', 'MB')}
           buttonPosition="none"

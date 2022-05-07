@@ -6,7 +6,7 @@ import yaml from 'js-yaml';
 import Notification from 'vj/components/notification';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
-import { size, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { size, readSubtasksFromFiles, normalizeSubtasks } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
 import { SubtaskType } from 'hydrooj/src/interface';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
@@ -176,7 +176,7 @@ const page = new NamedPage('problem_config', () => {
       const subtasks = readSubtasksFromFiles(testdata, checkFile, state.config);
       store.dispatch({
         type: 'CONFIG_AUTOCASES_UPDATE',
-        subtasks,
+        subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
       });
     });
     render(

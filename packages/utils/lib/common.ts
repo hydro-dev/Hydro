@@ -136,17 +136,19 @@ const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
 const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 
-export function parseTimeMS(str: string | number) {
+export function parseTimeMS(str: string | number, throwOnError = true) {
     if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
     const match = TIME_RE.exec(str);
-    if (!match) throw new Error(`${str} error parsing time`);
+    if (!match && throwOnError) throw new Error(`${str} error parsing time`);
+    if (!match) return 1000;
     return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
 }
 
-export function parseMemoryMB(str: string | number) {
+export function parseMemoryMB(str: string | number, throwOnError = true) {
     if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
     const match = MEMORY_RE.exec(str);
-    if (!match) throw new Error(`${str} error parsing memory`);
+    if (!match && throwOnError) throw new Error(`${str} error parsing memory`);
+    if (!match) return 256;
     return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
 }
 
@@ -210,7 +212,7 @@ function* getScore(totalScore: number, count: number) {
     }
 }
 
-interface CaseInput {
+interface ParsedCase {
     id?: number;
     time?: number | string;
     memory?: number | string;
@@ -218,23 +220,14 @@ interface CaseInput {
     input?: string;
     output?: string;
 }
-interface SubtaskInput {
-    cases: CaseInput[];
+interface ParsedSubtask {
+    cases: ParsedCase[];
     type: 'min' | 'max' | 'sum';
     time?: number | string;
     memory?: number | string;
     score?: number;
     id?: number;
     if?: number[];
-}
-interface ParsedCase extends CaseInput {
-    time?: number;
-    memory?: number;
-}
-interface ParsedSubtask extends SubtaskInput {
-    cases: ParsedCase[];
-    time?: number;
-    memory?: number;
 }
 
 export function readSubtasksFromFiles(files: string[], checkFile, config) {
@@ -252,8 +245,8 @@ export function readSubtasksFromFiles(files: string[], checkFile, config) {
                 if (c.output === '/dev/null' || checkFile(c.output)) {
                     if (!subtask[sid]) {
                         subtask[sid] = {
-                            time: parseTimeMS(config.time || '1s'),
-                            memory: parseMemoryMB(config.memory || '256m'),
+                            time: config.time,
+                            memory: config.memory,
                             type: rule.preferredScorerType,
                             cases: [c],
                         };
@@ -264,10 +257,7 @@ export function readSubtasksFromFiles(files: string[], checkFile, config) {
             }
         }
     }
-    const subtaskScore = getScore(100, Object.keys(subtask).length);
-    return Object.keys(subtask).map((i) =>
-        ({ ...subtask[i], score: subtaskScore.next().value as number }),
-    );
+    return Object.values(subtask);
 }
 
 type NormalizedCase = Required<ParsedCase>;
@@ -276,34 +266,40 @@ interface NormalizedSubtask extends Required<ParsedSubtask> {
 }
 
 export function normalizeSubtasks(
-    subtasks: SubtaskInput[], checkFile: (name: string, errMsg: string) => string,
-    time: number | string, memory: number | string,
+    subtasks: ParsedSubtask[], checkFile: (name: string, errMsg: string) => string,
+    time: number | string, memory: number | string, ignoreParseError = false,
 ): NormalizedSubtask[] {
     subtasks.sort((a, b) => (a.id - b.id));
-    const subtaskScore = getScore(100, subtasks.length);
+    const subtaskScore = getScore(
+        Math.max(100 - Math.sum(subtasks.map((i) => i.score || 0)), 0),
+        subtasks.filter((i) => !i.score).length,
+    );
     let id = 0;
     let count = 0;
     return subtasks.map((s) => {
         id++;
         s.cases.sort((a, b) => (a.id - b.id));
         const score = subtaskScore.next().value as number;
-        const caseScore = getScore(score, s.cases.length);
+        const caseScore = getScore(
+            Math.max(score - Math.sum(s.cases.map((i) => i.score || 0)), 0),
+            s.cases.filter((i) => !i.score).length,
+        );
         return {
             id,
             score,
             type: 'min',
             if: [],
             ...s,
-            time: parseTimeMS(s.time || time),
-            memory: parseMemoryMB(s.memory || memory),
+            time: parseTimeMS(s.time || time, !ignoreParseError),
+            memory: parseMemoryMB(s.memory || memory, !ignoreParseError),
             cases: s.cases.map((c) => {
                 count++;
                 return {
                     id: count,
                     score: s.type === 'sum' ? caseScore.next().value as number : score,
                     ...c,
-                    time: parseTimeMS(c.time || s.time || time),
-                    memory: parseMemoryMB(c.memory || s.memory || memory),
+                    time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
+                    memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
                     input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
                     output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
                 };

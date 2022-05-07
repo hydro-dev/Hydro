@@ -120,7 +120,7 @@ export default function ProblemType() {
           <Tab
             id="objective"
             title={i18n('problem_type.objective')}
-            panel={(<p>暂不支持快捷配置此类题目。请参照文档操作。</p>)}
+            panel={(<p>{i18n('Unsupported configure this type of problem. Please refer to the documentation.')}</p>)}
           />
         </Tabs>
       </Card>

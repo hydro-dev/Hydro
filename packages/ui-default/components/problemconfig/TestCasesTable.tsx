@@ -30,13 +30,18 @@ export function TestCaseEntry({ index, subindex }) {
       value,
     });
   };
+  if (!testcase || Object.keys(testcase).length === 0) {
+    return (
+      <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
+    );
+  }
   return (
     <tr>
       <td>
         <NumericInput
           rightElement={<Tag minimal>ms</Tag>}
-          value={testcase.time ? parseTimeMS(testcase.time).toString() : ''}
-          placeholder={parseTimeMS(defaultTime || '1000ms').toString()}
+          value={testcase.time ? parseTimeMS(testcase.time, false).toString() : ''}
+          placeholder={parseTimeMS(defaultTime || '1000ms', false).toString()}
           onValueChange={dispatcher('time', 'ms')}
           buttonPosition="none"
           fill
@@ -45,8 +50,8 @@ export function TestCaseEntry({ index, subindex }) {
       <td>
         <NumericInput
           rightElement={<Tag minimal>MB</Tag>}
-          value={testcase.memory ? parseMemoryMB(testcase.memory).toString() : ''}
-          placeholder={parseMemoryMB(defaultMemory || '256m').toString()}
+          value={testcase.memory ? parseMemoryMB(testcase.memory, false).toString() : ''}
+          placeholder={parseMemoryMB(defaultMemory || '256m', false).toString()}
           onValueChange={dispatcher('memory', 'MB')}
           buttonPosition="none"
           fill
@@ -116,7 +121,7 @@ export function CasesTable({ index }) {
             </a>
           </td>
         </tr>
-        {[...Array(len).keys()].map((i) => <TestCaseEntry index={index} subindex={i} key={i} />)}
+        {len && [...Array(len).keys()].map((i) => <TestCaseEntry index={index} subindex={i} key={i} />)}
       </tbody>
     </table>
   );
