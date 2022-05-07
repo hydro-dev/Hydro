@@ -52,7 +52,7 @@ export function configYamlFormat(config: ProblemConfigFile) {
         config[key].forEach((subtask) => {
           const formatSubtask: object = {};
           subtasksKey.forEach((subtaskKey) => {
-            if (subtask[subtaskKey] !== undefined) {
+            if (subtask && subtask[subtaskKey] !== undefined) {
               formatSubtask[subtaskKey] = subtask[subtaskKey];
             }
           });

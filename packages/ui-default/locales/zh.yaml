@@ -596,6 +596,7 @@ Problem Solution List: 题解列表
 Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
 Problem Tags: 题目标签
+Problem Type: 题目类型
 problem_config: 评测设置
 problem_create: 创建题目
 problem_edit: 编辑题目
@@ -831,6 +832,7 @@ Unlimited: 无限制
 Unordered List: 无序列表
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
+Unsupported configure this type of problem. Please refer to the documentation.: 暂不支持快捷配置此类题目。请参照文档操作。
 Update Permission: 更新权限
 Update Settings: 更新设置
 Update: 更新
