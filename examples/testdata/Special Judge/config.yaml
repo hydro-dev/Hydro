@@ -1,3 +1,0 @@
-type: default
-checker_type: testlib
-checker: chk.cc

@@ -1,6 +1,0 @@
-hydro.ac {
-  reverse_proxy http://localhost:8888 {
-    header_up x-real-ip {remote_host}
-    header_up x-real-host {hostport}
-  }
-}
