@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import type { ProblemConfigFile } from 'hydrooj/src/interface';
 import { cloneDeep } from 'lodash';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 
 type State = ProblemConfigFile & { __loaded: boolean };
 
@@ -26,6 +27,12 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     case 'CONFIG_AUTOCASES_UPDATE': {
       const next = { ...state };
       const { subtasks } = action;
+      for (const subtask of subtasks) {
+        if (subtask.time === parseTimeMS(state.time || '1s')) delete subtask.time;
+        if (subtask.memory === parseMemoryMB(state.memory || '256m')) delete subtask.memory;
+        if (subtask.time) subtask.time += 'ms';
+        if (subtask.memory) subtask.memory += 'MB';
+      }
       if (subtasks.length === 0) next.subtasks = [];
       else {
         next.subtasks = subtasks.map((subtask) => (

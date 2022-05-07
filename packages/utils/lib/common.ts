@@ -264,7 +264,10 @@ export function readSubtasksFromFiles(files: string[], checkFile, config) {
             }
         }
     }
-    return Object.values(subtask);
+    const subtaskScore = getScore(100, Object.keys(subtask).length);
+    return Object.keys(subtask).map((i) =>
+        ({ ...subtask[i], score: subtaskScore.next().value as number }),
+    );
 }
 
 type NormalizedCase = Required<ParsedCase>;

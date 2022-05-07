@@ -45,7 +45,7 @@ export function configYamlFormat(config: ProblemConfigFile) {
       if (key === 'subType' && ['single', 'multi'].includes(config[key]) && config.type !== 'submit_answer') return;
       if (key === 'checker_type' && config.type !== 'default') return;
       if (key === 'checker'
-        && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
+        && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
       if (key === 'subtasks') {
         formatConfig[key] = [];

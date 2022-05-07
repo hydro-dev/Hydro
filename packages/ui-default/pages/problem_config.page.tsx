@@ -7,9 +7,7 @@ import yaml from 'js-yaml';
 import Notification from 'vj/components/notification';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
-import {
-  size, readSubtasksFromFiles, parseTimeMS, parseMemoryMB,
-} from '@hydrooj/utils/lib/common';
+import { size, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
 import { SubtaskType } from 'hydrooj/src/interface';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
@@ -182,7 +180,8 @@ const page = new NamedPage('problem_config', () => {
       const state = store.getState();
       if (!state.config.__loaded) return;
       if (state.config.cases) {
-        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: 100, cases: state.config.cases }];
+        const score = state.config.score * state.config.cases.length;
+        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: score && score < 100 ? score : 100, cases: state.config.cases }];
         delete state.config.cases;
         delete state.config.score;
       }
@@ -191,12 +190,6 @@ const page = new NamedPage('problem_config', () => {
       const checkFile = (file: string) => (testdata.includes(file) ? file : null);
       unsubscribe();
       const subtasks = readSubtasksFromFiles(testdata, checkFile, state.config);
-      for (const subtask of subtasks) {
-        if (subtask.time === parseTimeMS(state.config.time || '1s')) delete subtask.time;
-        if (subtask.memory === parseMemoryMB(state.config.memory || '256m')) delete subtask.memory;
-        if (subtask.time) subtask.time += 'ms';
-        if (subtask.memory) subtask.memory += 'MB';
-      }
       store.dispatch({
         type: 'CONFIG_AUTOCASES_UPDATE',
         subtasks,
