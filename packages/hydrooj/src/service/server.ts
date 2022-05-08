@@ -139,7 +139,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     }));
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(router), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
-    layers.forEach((layer) => router.use(layer));
+    layers.forEach((layer) => router.use(layer as any));
     wsServer.on('connection', async (socket, request) => {
         const ctx: any = app.createContext(request, {} as any);
         await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
