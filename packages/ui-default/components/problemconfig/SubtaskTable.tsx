@@ -51,7 +51,7 @@ export function SubtasksTable({ index }) {
     return (
       <Card style={{ padding: 0 }}>
         <span>Subtasks #{index + 1} </span>
-        <p>{i18n('It seems to has some error, you need to edit it in editor.')}</p>
+        <p>{i18n('Failed to parse subtask.')}</p>
       </Card>
     );
   }

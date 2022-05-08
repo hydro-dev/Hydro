@@ -32,7 +32,7 @@ export function TestCaseEntry({ index, subindex }) {
   };
   if (!testcase || Object.keys(testcase).length === 0) {
     return (
-      <tr><td colSpan={5}>{i18n('It seems to has some error, you need to edit it in editor.')}</td></tr>
+      <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
     );
   }
   return (
