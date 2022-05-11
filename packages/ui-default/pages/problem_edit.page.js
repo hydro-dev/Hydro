@@ -3,10 +3,13 @@ import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
-import { ConfirmDialog } from 'vj/components/dialog';
+import Dialog, { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
+import { slideDown, slideUp } from 'vj/utils/slide';
+import download from 'vj/components/zipDownloader';
+import { size } from '@hydrooj/utils/lib/common';
 
 const categories = {};
 const dirtyCategories = [];
@@ -16,6 +19,10 @@ const tags = [];
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
   else $dom.removeClass('selected');
+}
+
+function onBeforeUnload(e) {
+  e.returnValue = '';
 }
 
 async function updateSelection() {
@@ -143,6 +150,21 @@ function buildCategoryFilter() {
   });
 }
 
+async function handleSection(ev, sidebar, type) {
+  const $section = $(ev.currentTarget).closest(`.section--problem-sidebar-${sidebar}`);
+  if ($section.is(`.${type}d, .animating`)) return;
+  $section.addClass('animating');
+  const $detail = $section.find(`.section--problem-sidebar-${sidebar}__detail`);
+  if (type === 'expand') {
+    await slideDown($detail, 300, { opacity: 0 }, { opacity: 1 });
+  } else {
+    await slideUp($detail, 300, { opacity: 1 }, { opacity: 0 });
+  }
+  $section.addClass(type === 'expand' ? 'expanded' : 'collapsed');
+  $section.removeClass(type === 'expand' ? 'collapsed' : 'expanded');
+  $section.removeClass('animating');
+}
+
 export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   let confirmed = false;
   $(document).on('click', '[name="operation"]', (ev) => {
@@ -169,6 +191,105 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   $(document).on('change', '[name="tag"]', parseCategorySelection);
   buildCategoryFilter();
   parseCategorySelection();
+
+  async function handleClickUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.click();
+    await new Promise((resolve) => { input.onchange = resolve; });
+    const { files } = input;
+    const dialog = new Dialog({
+      $body: `
+        <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
+        </div>
+        <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
+        </div>`,
+    });
+    try {
+      Notification.info(i18n('Uploading files...'));
+      window.addEventListener('beforeunload', onBeforeUnload);
+      dialog.open();
+      const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
+      const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
+      const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
+      const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
+      for (const i in files) {
+        if (Number.isNaN(+i)) continue;
+        const file = files[i];
+        const data = new FormData();
+        data.append('filename', file.name);
+        data.append('file', file);
+        data.append('type', 'additional_file');
+        data.append('operation', 'upload_file');
+        await request.postFile('./files', data, {
+          xhr() {
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('loadstart', () => {
+              $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name}`);
+              $fileProgress.width(`${Math.round((+i + 1) / files.length * 100)}%`);
+              $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
+              $uploadProgress.width(0);
+            });
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                if (percentComplete === 100) $uploadLabel.text(i18n('Processing...'));
+                else $uploadLabel.text(i18n('Uploading... ({0}%)', percentComplete));
+                $uploadProgress.width(`${percentComplete}%`);
+              }
+            }, false);
+            return xhr;
+          },
+        });
+        $('.additionalfile-table tbody').append(
+          $(tpl`<tr data-filename="${file.name}" data-size="${file.size.toString()}">
+            <td class="col--name" title="${file.name}"><a href="./file/${file.name}?type=testdata">${file.name}</a></td>
+            <td class="col--size">${size(file.size)}</td>
+            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
+          </tr>`),
+        );
+      }
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      Notification.success(i18n('File uploaded successfully.'));
+    } catch (e) {
+      console.error(e);
+      Notification.error(i18n('File upload failed: {0}', e.toString()));
+    } finally {
+      dialog.close();
+    }
+  }
+
+  async function handleClickRemove(ev) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    const action = await new ConfirmDialog({
+      $body: tpl.typoMsg(i18n('Confirm to delete the file?')),
+    }).open();
+    if (action !== 'yes') return;
+    try {
+      await request.post('./files', {
+        operation: 'delete_files',
+        files: file,
+        type: 'testdata',
+      });
+      Notification.success(i18n('File have been deleted.'));
+      $(ev.currentTarget).parent().parent().remove();
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
+  async function handleClickDownloadAll() {
+    const files = $('.additionalfile-table tr').map(function () { return $(this).attr('data-filename'); }).get();
+    const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'additional_file' });
+    const targets = [];
+    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+    await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
+  }
 
   setInterval(() => {
     $('img').each(function () {
@@ -232,4 +353,11 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
       ev.preventDefault();
     }
   });
+  $(document).on('click', '[name="additional_file__upload"]', () => handleClickUpload());
+  $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev));
+  $(document).on('click', '[name="additional_file__download"]', () => handleClickDownloadAll());
+  $(document).on('click', '[name="additional_file__section__expand"]', (ev) => handleSection(ev, 'additional_file', 'expand'));
+  $(document).on('click', '[name="additional_file__section__collapse"]', (ev) => handleSection(ev, 'additional_file', 'collapse'));
+  $(document).on('click', '[name="tags__section__expand"]', (ev) => handleSection(ev, 'tags', 'expand'));
+  $(document).on('click', '[name="tags__section__collapse"]', (ev) => handleSection(ev, 'tags', 'collapse'));
 });

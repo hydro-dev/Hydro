@@ -105,4 +105,5 @@ export interface Case {
     id: number;
     input: string;
     output: string;
+    score: number;
 }
