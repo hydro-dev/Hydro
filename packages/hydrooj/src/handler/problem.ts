@@ -1,7 +1,7 @@
 import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
-import { intersection, isSafeInteger } from 'lodash';
+import { flattenDeep, intersection, isSafeInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
@@ -125,7 +125,7 @@ export class ProblemHandler extends Handler {
                         page, ppcount, pcount, pdocs, psdict, qs,
                     }),
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
-                    this.renderHTML('partials/problem_lucky.html', { category }),
+                    this.renderHTML('partials/problem_lucky.html', { qs }),
                 ])).map((i) => ({ html: i })),
                 raw: {
                     page, pcount, ppcount, pdocs, psdict, category,
@@ -138,8 +138,7 @@ export class ProblemHandler extends Handler {
 export class ProblemMainHandler extends ProblemHandler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
-    @param('category', Types.Name, true, null, parseCategory)
-    async get(domainId: string, page = 1, q = '', category = []) {
+    async get(domainId: string, page = 1, q = '') {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
@@ -148,11 +147,15 @@ export class ProblemMainHandler extends ProblemHandler {
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
+        const category = flattenDeep(decodeURIComponent(q).split(' ')
+            .filter((i) => i.startsWith('category:'))
+            .map((i) => i.split(':')[1]?.split(',')));
+        const text = q.split(' ').filter((i) => !i.startsWith('category:')).join(' ');
         if (category.length) query.$and = category.map((tag) => ({ tag }));
-        if (q) category.push(q);
+        if (text) category.push(text);
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
-        if (q) {
+        if (text) {
             if (search) {
                 const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
                 total = result.total;
@@ -166,7 +169,7 @@ export class ProblemMainHandler extends ProblemHandler {
                     }),
                 });
                 sort = result.hits;
-            } else query.$text = { $search: q };
+            } else query.$text = { $search: text };
         }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
@@ -209,7 +212,7 @@ export class ProblemMainHandler extends ProblemHandler {
             pdocs,
             psdict,
             category: category.join(','),
-            qs: q ? `q=${encodeURIComponent(q)}` : '',
+            qs: q,
         };
     }
 
@@ -281,8 +284,12 @@ export class ProblemMainHandler extends ProblemHandler {
 }
 
 export class ProblemRandomHandler extends ProblemHandler {
-    @param('category', Types.Name, true, null, parseCategory)
-    async get(domainId: string, category: string[] = []) {
+    @param('q', Types.Content, true)
+    async get(domainId: string, qs = '') {
+        const category = flattenDeep(decodeURIComponent(qs).split(' ')
+            .filter((i) => i.startsWith('category:'))
+            .map((i) => i.split(':')[1]?.split(',')));
+        console.log(qs, category);
         const q = buildQuery(this.user);
         if (category.length) q.$and = category.map((tag) => ({ tag }));
         await bus.serial('problem/list', q, this);
@@ -906,7 +913,6 @@ export class ProblemPrefixListHandler extends Handler {
 
 export async function apply() {
     Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
-    Route('problem_category', '/p/category/:category', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
