@@ -267,7 +267,7 @@ interface NormalizedSubtask extends Required<ParsedSubtask> {
 
 export function normalizeSubtasks(
     subtasks: ParsedSubtask[], checkFile: (name: string, errMsg: string) => string,
-    time: number | string, memory: number | string, ignoreParseError = false,
+    time: number | string = '1000ms', memory: number | string = '256m', ignoreParseError = false,
 ): NormalizedSubtask[] {
     subtasks.sort((a, b) => (a.id - b.id));
     const subtaskScore = getScore(
