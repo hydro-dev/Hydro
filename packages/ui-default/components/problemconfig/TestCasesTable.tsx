@@ -121,7 +121,7 @@ export function CasesTable({ index }) {
             </a>
           </td>
         </tr>
-        {len && [...Array(len).keys()].map((i) => <TestCaseEntry index={index} subindex={i} key={i} />)}
+        {len > 0 && [...Array(len).keys()].map((i) => <TestCaseEntry index={index} subindex={i} key={i} />)}
       </tbody>
     </table>
   );
