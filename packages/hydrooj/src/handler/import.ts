@@ -37,7 +37,7 @@ class ProblemImportHydroHandler extends Handler {
         if (keepUser) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         if (!this.request.files.file) throw new ValidationError('file');
         const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
-        const zip = new AdmZip(this.request.files.file.path);
+        const zip = new AdmZip(this.request.files.file.filepath);
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(tmpdir, true, (err) => {
                 if (err) reject(err);

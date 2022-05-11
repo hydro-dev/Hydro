@@ -119,9 +119,9 @@ class ImportQduojHandler extends Handler {
 
     async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
-        const stat = await fs.stat(this.request.files.file.path);
+        const stat = await fs.stat(this.request.files.file.filepath);
         if (stat.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
-        await this.fromFile(domainId, this.request.files.file.path);
+        await this.fromFile(domainId, this.request.files.file.filepath);
         this.response.redirect = this.url('problem_main');
     }
 }

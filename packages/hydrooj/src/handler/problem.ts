@@ -493,13 +493,13 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (typeof config !== 'object' || config === null) throw new BadRequestError('Incorrect problem config');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
             if (file.size > sizeLimit) throw new ValidationError('file');
-            if (file.size > 65535 || await isBinaryFile(file.path, file.size)) {
+            if (file.size > 65535 || await isBinaryFile(file.filepath, file.size)) {
                 const id = nanoid();
-                await storage.put(`submission/${this.user._id}/${id}`, file.path, this.user._id);
-                code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.name}`;
+                await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
+                code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.originalFilename}`;
             } else {
                 // TODO auto detect & convert encoding
-                code = await readFile(file.path, 'utf-8');
+                code = await readFile(file.filepath, 'utf-8');
             }
         } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
@@ -633,12 +633,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (this.pdoc.reference) throw new ForbiddenError('Cannot edit files of a referenced problem.');
         if (!this.request.files.file) throw new ValidationError('file');
-        if (!filename) filename = this.request.files.file.name || String.random(16);
+        if (!filename) filename = this.request.files.file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
         if (filename.endsWith('.zip')) {
-            const zip = new AdmZip(this.request.files.file.path);
+            const zip = new AdmZip(this.request.files.file.filepath);
             const entries = zip.getEntries();
             for (const entry of entries) {
                 if (!entry.name) continue;
@@ -653,8 +653,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             files.push({
                 type,
                 name: filename,
-                size: statSync(this.request.files.file.path).size,
-                data: () => this.request.files.file.path,
+                size: statSync(this.request.files.file.filepath).size,
+                data: () => this.request.files.file.filepath,
             });
         }
         if (!this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
