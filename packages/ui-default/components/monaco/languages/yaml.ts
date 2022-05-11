@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { setDiagnosticsOptions } from 'monaco-yaml';
 
 /** @type {Record<string, import('json-schema').JSONSchema7Definition>} */
 const problemConfigSchemaDef = {
@@ -78,8 +78,7 @@ const problemConfigSchema = {
   additionalProperties: false,
 };
 
-// @ts-ignore
-monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
+setDiagnosticsOptions({
   validate: true,
   enableSchemaRequest: true,
   hover: true,
@@ -89,7 +88,7 @@ monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
     {
       uri: 'https://hydro.js.org/schema/problemConfig.json',
       fileMatch: ['hydro://problem/file/config.yaml'],
-      schema: problemConfigSchema,
+      schema: problemConfigSchema as any,
     },
     {
       uri: `${UiContext.cdn_prefix}manage/setting/schema.json`,

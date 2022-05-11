@@ -1,5 +1,7 @@
 import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import i18n from 'vj/utils/i18n';
 import yaml from 'js-yaml';
@@ -149,9 +151,7 @@ const page = new NamedPage('problem_config', () => {
       import('vj/components/problemconfig/reducer'),
     ]);
 
-    const {
-      React, render, Provider, store,
-    } = await loadReactRedux(ProblemConfigReducer);
+    const { Provider, store } = await loadReactRedux(ProblemConfigReducer);
 
     reduxStore = store;
 
@@ -179,7 +179,7 @@ const page = new NamedPage('problem_config', () => {
         subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
       });
     });
-    render(
+    createRoot($('#ProblemConfig').get(0)).render(
       <Provider store={store}>
         <div className="row">
           <div className="medium-5 columns">
@@ -191,7 +191,6 @@ const page = new NamedPage('problem_config', () => {
         </div>
         <button className="rounded primary button" onClick={() => uploadConfig(store.getState().config)}>{i18n('Submit')}</button>
       </Provider>,
-      $('#ProblemConfig').get(0),
     );
   }
 
