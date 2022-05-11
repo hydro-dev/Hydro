@@ -53,8 +53,9 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
         } else if (action.key === 'cases-delete') {
           subsubtasks.cases = subsubtasks.cases.filter((k, v) => v !== action.value);
         }
-      } else if (action.key === 'add') subtasks.push({ cases: [] });
-      else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
+      } else if (action.key === 'add') {
+        return { ...state, subtasks: [...subtasks, { time: state.time || '1s', memory: state.memory || '256m', cases: [] }] };
+      } else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
       else {
         if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];
         else subsubtasks[action.key] = action.value;

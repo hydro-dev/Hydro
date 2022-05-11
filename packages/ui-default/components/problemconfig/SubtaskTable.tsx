@@ -163,12 +163,22 @@ function GlobalTaskConfig() {
 
 export function TaskConfig() {
   const len = useSelector((state: RootState) => state.config.subtasks?.length);
+  const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="Task Settings">
       <div className="row">
         <GlobalTaskConfig />
         <FormItem columns={12} label="TestCases" disableLabel>
-          {len && [...Array(len).keys()].map((i) => <SubtasksTable index={i} key={i} />)}
+          {len > 0
+            ? [...Array(len).keys()].map((i) => <SubtasksTable index={i} key={i} />)
+            : (
+              <>
+                <span>Subtasks # </span>
+                <a onClick={() => dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: 0, key: 'add' })}>
+                  <span className="icon icon-add"></span>
+                </a>
+              </>
+            )}
         </FormItem>
       </div>
     </FormItem>

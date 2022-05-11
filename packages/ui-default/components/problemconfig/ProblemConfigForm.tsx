@@ -36,9 +36,17 @@ function FileIOConfig() {
 
 function ExtraFilesConfig() {
   const Files = useSelector((state: RootState) => state.testdata);
-  const userExtraFiles = useSelector((state: RootState) => state.config.user_extra_files);
-  const judgeExtraFiles = useSelector((state: RootState) => state.config.judge_extra_files);
+  const userExtraFiles = useSelector((state: RootState) => state.config.user_extra_files) || [];
+  const judgeExtraFiles = useSelector((state: RootState) => state.config.judge_extra_files) || [];
   const dispatch = useDispatch();
+  const userRef = React.useRef<any>();
+  const judgeRef = React.useRef<any>();
+  React.useEffect(() => {
+    userRef.current.setSelectedKeys(userExtraFiles);
+  }, [JSON.stringify(userExtraFiles)]);
+  React.useEffect(() => {
+    judgeRef.current.setSelectedKeys(judgeExtraFiles);
+  }, [JSON.stringify(judgeExtraFiles)]);
   return (
     <FormItem columns={12} label="ExtraFilesTabs" disableLabel>
       <Tabs id="ExtraFilesTabs">
@@ -47,8 +55,9 @@ function ExtraFilesConfig() {
           title={i18n('user_extra_files')}
           panel={(
             <FileSelectAutoComplete
+              ref={userRef}
               data={Files}
-              selectedKeys={userExtraFiles || []}
+              selectedKeys={userExtraFiles}
               onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'user_extra_files', value: val.split(',') })}
               multi
             />
@@ -59,8 +68,9 @@ function ExtraFilesConfig() {
           title={i18n('judge_extra_files')}
           panel={(
             <FileSelectAutoComplete
+              ref={judgeRef}
               data={Files}
-              selectedKeys={judgeExtraFiles || []}
+              selectedKeys={judgeExtraFiles}
               onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'judge_extra_files', value: val.split(',') })}
               multi
             />
