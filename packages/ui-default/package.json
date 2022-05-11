@@ -7,7 +7,7 @@
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "preferUnplugged": true,
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint"
   },
   "devDependencies": {
     "@blueprintjs/core": "^4.3.0",
