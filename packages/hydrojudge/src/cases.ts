@@ -64,7 +64,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     result.count = result.outputs?.length || Math.sum((result.subtasks || []).map((s) => s.cases.length));
     if (!result.count) {
         try {
-            result.subtasks = readSubtasksFromFiles(await collectFiles(folder), checkFile, cfg);
+            result.subtasks = readSubtasksFromFiles(await collectFiles(folder), cfg);
             result.count = Math.sum(result.subtasks.map((i) => i.cases.length));
             if (cfg.isSelfSubmission) args.next?.({ message: { message: 'Found {0} testcases.', params: [result.count] } });
         } catch (e) {

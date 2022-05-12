@@ -230,7 +230,7 @@ interface ParsedSubtask {
     if?: number[];
 }
 
-export function readSubtasksFromFiles(files: string[], checkFile, config) {
+export function readSubtasksFromFiles(files: string[], config) {
     const subtask: Record<number, ParsedSubtask> = {};
     for (const s of config.subtasks || []) if (s.id) subtask[s.id] = s;
     for (const file of files) {
@@ -242,7 +242,7 @@ export function readSubtasksFromFiles(files: string[], checkFile, config) {
             for (const func of rule.output) {
                 if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
-                if (c.output === '/dev/null' || checkFile(c.output)) {
+                if (c.output === '/dev/null' || files.includes(c.output)) {
                     if (!subtask[sid]) {
                         subtask[sid] = {
                             time: config.time,

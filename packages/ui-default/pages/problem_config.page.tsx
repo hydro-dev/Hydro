@@ -171,9 +171,8 @@ const page = new NamedPage('problem_config', () => {
       }
       if (state.config.subtasks) return;
       const testdata = (state.testdata || []).map((i) => i.name);
-      const checkFile = (file: string) => (testdata.includes(file) ? file : null);
       unsubscribe();
-      const subtasks = readSubtasksFromFiles(testdata, checkFile, state.config);
+      const subtasks = readSubtasksFromFiles(testdata, state.config);
       store.dispatch({
         type: 'CONFIG_AUTOCASES_UPDATE',
         subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
