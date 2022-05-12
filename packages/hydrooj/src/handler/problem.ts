@@ -149,7 +149,7 @@ export class ProblemMainHandler extends ProblemHandler {
         let pcountRelation = 'eq';
         const category = flattenDeep(decodeURIComponent(q).split(' ')
             .filter((i) => i.startsWith('category:'))
-            .map((i) => i.split(':')[1]?.split(',')));
+            .map((i) => i.split('category:')[1]?.split(',')));
         const text = q.split(' ').filter((i) => !i.startsWith('category:')).join(' ');
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (text) category.push(text);
@@ -288,7 +288,7 @@ export class ProblemRandomHandler extends ProblemHandler {
     async get(domainId: string, qs = '') {
         const category = flattenDeep(decodeURIComponent(qs).split(' ')
             .filter((i) => i.startsWith('category:'))
-            .map((i) => i.split(':')[1]?.split(',')));
+            .map((i) => i.split('category:')[1]?.split(',')));
         console.log(qs, category);
         const q = buildQuery(this.user);
         if (category.length) q.$and = category.map((tag) => ({ tag }));
