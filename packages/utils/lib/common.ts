@@ -173,7 +173,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^([^\d]*)(\d+).(in|txt)$/,
+        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+).(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -260,9 +260,14 @@ export function readSubtasksFromFiles(files: string[], config) {
     return Object.values(subtask);
 }
 
-type NormalizedCase = Required<ParsedCase>;
-interface NormalizedSubtask extends Required<ParsedSubtask> {
+export interface NormalizedCase extends Required<ParsedCase> {
+    time: number;
+    memory: number;
+}
+export interface NormalizedSubtask extends Required<ParsedSubtask> {
     cases: NormalizedCase[];
+    time: number;
+    memory: number;
 }
 
 export function normalizeSubtasks(

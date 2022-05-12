@@ -5,10 +5,10 @@ import { getConfig } from '../config';
 import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
-import { findFileSync, parseFilename } from '../utils';
 import {
-    Case, Context, ContextSubTask, SubTask,
-} from './interface';
+    findFileSync, NormalizedCase, NormalizedSubtask, parseFilename,
+} from '../utils';
+import { Context, ContextSubTask } from './interface';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
 const Score = {
@@ -17,7 +17,7 @@ const Score = {
     min: Math.min,
 };
 
-function judgeCase(c: Case) {
+function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
@@ -63,10 +63,11 @@ function judgeCase(c: Case) {
         ctx.next({
             status: STATUS.STATUS_JUDGING,
             case: {
+                subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
-                time_ms: time_usage_ms,
-                memory_kb: memory_usage_kb,
+                time: time_usage_ms,
+                memory: memory_usage_kb,
                 message,
             },
             progress: Math.floor((c.id * 100) / ctx.config.count),
@@ -74,7 +75,7 @@ function judgeCase(c: Case) {
     };
 }
 
-function judgeSubtask(subtask: SubTask) {
+function judgeSubtask(subtask: NormalizedSubtask) {
     return async (ctx: Context) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
@@ -134,7 +135,7 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,
-        time_ms: ctx.total_time_usage_ms,
-        memory_kb: ctx.total_memory_usage_kb,
+        time: ctx.total_time_usage_ms,
+        memory: ctx.total_memory_usage_kb,
     });
 };

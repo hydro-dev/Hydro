@@ -289,7 +289,6 @@ export class ProblemRandomHandler extends ProblemHandler {
         const category = flattenDeep(decodeURIComponent(qs).split(' ')
             .filter((i) => i.startsWith('category:'))
             .map((i) => i.split('category:')[1]?.split(',')));
-        console.log(qs, category);
         const q = buildQuery(this.user);
         if (category.length) q.$and = category.map((tag) => ({ tag }));
         await bus.serial('problem/list', q, this);

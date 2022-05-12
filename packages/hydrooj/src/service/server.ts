@@ -95,7 +95,7 @@ app.on('error', (error) => {
     }
 });
 wsServer.on('error', (error) => {
-    console.log(123, error);
+    console.log('Websocket server error:', error);
 });
 
 const ignoredLimit = `,${argv.options.ignoredLimit},`;

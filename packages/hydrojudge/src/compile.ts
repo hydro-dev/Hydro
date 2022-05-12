@@ -25,7 +25,7 @@ export = async function compile(
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
-        if (next) next({ compiler_text: compilerText(stdout, stderr) });
+        if (next) next({ compilerText: compilerText(stdout, stderr) });
         return {
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },

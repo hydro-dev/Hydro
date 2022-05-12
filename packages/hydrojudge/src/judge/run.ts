@@ -12,8 +12,8 @@ import { Context } from './interface';
 const failure = (status: number, message?: string) => ({
     status,
     score: 0,
-    time_ms: 0,
-    memory_kb: 0,
+    time: 0,
+    memory: 0,
     message,
 });
 
@@ -88,9 +88,11 @@ export const judge = async (ctx: Context) => {
     ctx.next({
         status,
         case: {
+            subtaskId: 0,
             status,
-            time_ms: time_usage_ms,
-            memory_kb: memory_usage_kb,
+            score: 100,
+            time: time_usage_ms,
+            memory: memory_usage_kb,
             message: message.join('\n').substring(0, 102400),
         },
     });
@@ -115,7 +117,7 @@ export const judge = async (ctx: Context) => {
                     memory: 256,
                 });
                 const out = r.stdout.toString();
-                if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
+                if (out.length) ctx.next({ compilerText: out.substring(0, 1024) });
                 if (process.env.DEV) console.log(r);
             } catch (e) {
                 logger.info('Failed to run analysis');
@@ -128,7 +130,7 @@ export const judge = async (ctx: Context) => {
     ctx.end({
         status,
         score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-        time_ms: Math.floor(time_usage_ms * 1000000) / 1000000,
-        memory_kb: memory_usage_kb,
+        time: Math.floor(time_usage_ms * 1000000) / 1000000,
+        memory: memory_usage_kb,
     });
 };

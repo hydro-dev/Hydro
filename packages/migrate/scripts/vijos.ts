@@ -200,9 +200,13 @@ const tasks = {
     },
     record: async (doc) => {
         if (doc.hidden) return null;
-        const testCases: TestCase[] = [];
+        const testCases: Required<TestCase>[] = [];
+        let i = 1;
         for (const c of doc.cases || []) {
             testCases.push({
+                id: i++,
+                subtaskId: 0,
+                score: 0,
                 status: c.status,
                 time: c.time_ms || c.time,
                 memory: c.memory_kb || c.memory,
