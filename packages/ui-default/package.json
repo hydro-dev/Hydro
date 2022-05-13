@@ -109,7 +109,7 @@
     "webpackbar": "^5.0.2"
   },
   "dependencies": {
-    "esbuild": "0.14.39",
+    "esbuild": "0.14.3",
     "fs-extra": "^10.1.0",
     "js-yaml": "^4.1.0",
     "jsesc": "^3.0.2",
