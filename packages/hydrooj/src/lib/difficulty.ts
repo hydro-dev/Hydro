@@ -6,7 +6,7 @@ const _CACHE_INFO = {
 
 function _LOGP(x: number) {
     const sqrtPi = 2.506628274631; // Sqrt[Pi]
-    return (2 * Math.exp(-1.0 * (Math.log(x) ** 2) * 2)) / x / sqrtPi;
+    return (2 * Math.exp(-2.0 * (Math.log(x) ** 2))) / x / sqrtPi;
 }
 
 function _intergrateEnsureCache(y: number) {
@@ -27,7 +27,7 @@ function _intergrateEnsureCache(y: number) {
     return _CACHE_INFO;
 }
 
-_intergrateEnsureCache(1000000);
+_intergrateEnsureCache(10000);
 
 function _integrate(y: number) {
     _intergrateEnsureCache(y);
@@ -38,7 +38,7 @@ function difficultyAlgorithm(nSubmit: number, nAccept: number) {
     if (!nSubmit) return null;
     const s = _integrate(nSubmit);
     const acRate = nAccept / nSubmit;
-    const ans = Math.round(10.0 - 1.30 * s * 10.0 * acRate);
+    const ans = Math.round(10 - 13 * s * acRate);
     return Math.max(ans, 1);
 }
 

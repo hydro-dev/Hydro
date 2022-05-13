@@ -9,12 +9,13 @@ import PQueue from 'p-queue';
 import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import type { JudgeResultBody } from 'hydrooj';
 import readCases from '../cases';
 import { getConfig } from '../config';
 import { CompileError, FormatError, SystemError } from '../error';
 import judge from '../judge';
 import log from '../log';
-import { CopyInFile } from '../sandbox/interface';
+import type { CopyInFile } from '../sandbox/interface';
 import * as sysinfo from '../sysinfo';
 import * as tmpfs from '../tmpfs';
 import {
@@ -82,21 +83,21 @@ class JudgeTask {
             await this.doSubmission(startPromise);
         } catch (e) {
             if (e instanceof CompileError) {
-                this.next({ compiler_text: compilerText(e.stdout, e.stderr) });
+                this.next({ compilerText: compilerText(e.stdout, e.stderr) });
                 this.end({
-                    status: STATUS.STATUS_COMPILE_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_COMPILE_ERROR, score: 0, time: 0, memory: 0,
                 });
             } else if (e instanceof FormatError) {
-                this.next({ judge_text: 'Testdata configuration incorrect.' });
-                this.next({ judge_text: { message: e.message, params: e.params } });
+                this.next({ message: 'Testdata configuration incorrect.' });
+                this.next({ message: { message: e.message, params: e.params } });
                 this.end({
-                    status: STATUS.STATUS_FORMAT_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_FORMAT_ERROR, score: 0, time: 0, memory: 0,
                 });
             } else {
                 log.error(e);
                 this.next({ message: { message: e.message, params: e.params || [], ...argv.options.debug ? { stack: e.stack } : {} } });
                 this.end({
-                    status: STATUS.STATUS_SYSTEM_ERROR, score: 0, time_ms: 0, memory_kb: 0,
+                    status: STATUS.STATUS_SYSTEM_ERROR, score: 0, time: 0, memory: 0,
                 });
             }
         } finally {
@@ -132,38 +133,21 @@ class JudgeTask {
         await judge[type].judge(this, startPromise);
     }
 
-    next(data, id?: number) {
+    next(data: Partial<JudgeResultBody>, id?: number) {
         log.debug('Next: %d %o', id, data);
         data.key = 'next';
         data.rid = new ObjectID(this.rid);
-        if (data.time_ms) data.time = data.time_ms;
-        if (data.memory_kb) data.memory = data.memory_kb;
-        if (data.compiler_text) data.compilerText = data.compiler_text;
-        if (data.judge_text) data.message = data.judge_text;
-        delete data.time_ms;
-        delete data.memory_kb;
-        delete data.compiler_text;
-        delete data.judge_text;
         if (data.case) {
-            data.case = {
-                id,
-                status: data.case.status,
-                time: data.case.time_ms || data.case.time,
-                memory: data.case.memory_kb || data.case.memory,
-                message: data.case.message || data.case.judgeText || data.case.judge_text || '',
-            };
+            data.case.id ||= id;
+            data.case.message ||= '';
         }
         this.ws.send(JSON.stringify(data));
     }
 
-    end(data) {
+    end(data: Partial<JudgeResultBody>) {
         log.info('End: %o', data);
         data.key = 'end';
-        data.rid = new ObjectID(this.request.rid);
-        data.time = data.time_ms ?? data.time;
-        delete data.time_ms;
-        data.memory = data.memory_kb ?? data.memory;
-        delete data.memory_kb;
+        data.rid = this.request.rid;
         this.ws.send(JSON.stringify(data));
     }
 }
@@ -221,7 +205,7 @@ export default class Hydro {
         }
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
-            if (next) next({ judge_text: 'Syncing testdata, please wait...' });
+            if (next) next({ message: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
             const res = await this.axios.post(`/d/${domainId}/judge/files`, {
                 pid: +pid,

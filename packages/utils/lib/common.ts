@@ -136,6 +136,7 @@ const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
 const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
 
+<<<<<<< HEAD
 export function parseTimeMS(str: string | number) {
     if (typeof str === 'number') return str;
     const match = TIME_RE.exec(str);
@@ -147,6 +148,21 @@ export function parseMemoryMB(str: string | number) {
     if (typeof str === 'number') return str;
     const match = MEMORY_RE.exec(str);
     if (!match) throw new Error(`${str} error parsing memory`);
+=======
+export function parseTimeMS(str: string | number, throwOnError = true) {
+    if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
+    const match = TIME_RE.exec(str);
+    if (!match && throwOnError) throw new Error(`${str} error parsing time`);
+    if (!match) return 1000;
+    return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
+}
+
+export function parseMemoryMB(str: string | number, throwOnError = true) {
+    if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
+    const match = MEMORY_RE.exec(str);
+    if (!match && throwOnError) throw new Error(`${str} error parsing memory`);
+    if (!match) return 256;
+>>>>>>> upstream/master
     return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
 }
 
@@ -161,6 +177,7 @@ export function size(s: number, base = 1) {
     return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
+<<<<<<< HEAD
 interface Re0 {
     reg: RegExp,
     output: ((a: RegExpExecArray) => string)[],
@@ -174,6 +191,19 @@ interface Re1 extends Re0 {
 const RE0: Re0[] = [
     {
         reg: /^([^\d]*)(\d+).(in|txt)$/,
+=======
+interface MatchRule {
+    regex: RegExp;
+    output: ((a: RegExpExecArray) => string)[];
+    id: (a: RegExpExecArray) => number;
+    subtask: (a: RegExpExecArray) => number;
+    preferredScorerType: 'min' | 'max' | 'sum';
+}
+
+const SubtaskMatcher: MatchRule[] = [
+    {
+        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+).(in|txt)$/,
+>>>>>>> upstream/master
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -181,14 +211,23 @@ const RE0: Re0[] = [
             (a) => (a[1].includes('input') ? `${a[1] + a[2]}.txt`.replace(/input/g, 'output') : null),
         ],
         id: (a) => +a[2],
+<<<<<<< HEAD
     },
     {
         reg: /^([^\d]*)\.in(\d+)$/,
+=======
+        subtask: () => 0,
+        preferredScorerType: 'sum',
+    },
+    {
+        regex: /^([^\d]*)\.in(\d+)$/,
+>>>>>>> upstream/master
         output: [
             (a) => `${a[1]}.ou${a[2]}`,
             (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
         ],
         id: (a) => +a[2],
+<<<<<<< HEAD
     },
 ];
 const RE1: Re1[] = [
@@ -283,10 +322,75 @@ export async function readSubtasksFromFiles(files: string[], checkFile, cfg, rst
                         else subtask[sid].cases.push(c);
                         break;
                     }
+=======
+        subtask: () => 0,
+        preferredScorerType: 'sum',
+    },
+    {
+        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
+        output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
+        id: (a) => +a[4],
+        subtask: (a) => +a[2],
+        preferredScorerType: 'min',
+    },
+];
+
+function* getScore(totalScore: number, count: number) {
+    const base = Math.floor(totalScore / count);
+    const extra = count - (100 % count);
+    for (let i = 0; i < count; i++) {
+        if (i >= extra) yield base + 1;
+        else yield base;
+    }
+}
+
+interface ParsedCase {
+    id?: number;
+    time?: number | string;
+    memory?: number | string;
+    score?: number;
+    input?: string;
+    output?: string;
+}
+interface ParsedSubtask {
+    cases: ParsedCase[];
+    type: 'min' | 'max' | 'sum';
+    time?: number | string;
+    memory?: number | string;
+    score?: number;
+    id?: number;
+    if?: number[];
+}
+
+export function readSubtasksFromFiles(files: string[], config) {
+    const subtask: Record<number, ParsedSubtask> = {};
+    for (const s of config.subtasks || []) if (s.id) subtask[s.id] = s;
+    for (const file of files) {
+        for (const rule of SubtaskMatcher) {
+            const data = rule.regex.exec(file);
+            if (!data) continue;
+            const sid = rule.subtask(data);
+            const c = { input: file, output: '', id: rule.id(data) };
+            for (const func of rule.output) {
+                if (config.noOutputFile) c.output = '/dev/null';
+                else c.output = func(data);
+                if (c.output === '/dev/null' || files.includes(c.output)) {
+                    if (!subtask[sid]) {
+                        subtask[sid] = {
+                            time: config.time,
+                            memory: config.memory,
+                            type: rule.preferredScorerType,
+                            cases: [c],
+                        };
+                    } else if (!subtask[sid].cases) subtask[sid].cases = [c];
+                    else subtask[sid].cases.push(c);
+                    break;
+>>>>>>> upstream/master
                 }
             }
         }
     }
+<<<<<<< HEAD
     for (const i in subtask) {
         subtask[i].cases.sort((a, b) => (a.id - b.id));
         subtasks.push(subtask[i]);
@@ -306,4 +410,60 @@ export async function readSubtasksFromFiles(files: string[], checkFile, cfg, rst
         }
     }
     return config;
+=======
+    return Object.values(subtask);
+}
+
+export interface NormalizedCase extends Required<ParsedCase> {
+    time: number;
+    memory: number;
+}
+export interface NormalizedSubtask extends Required<ParsedSubtask> {
+    cases: NormalizedCase[];
+    time: number;
+    memory: number;
+}
+
+export function normalizeSubtasks(
+    subtasks: ParsedSubtask[], checkFile: (name: string, errMsg: string) => string,
+    time: number | string = '1000ms', memory: number | string = '256m', ignoreParseError = false,
+): NormalizedSubtask[] {
+    subtasks.sort((a, b) => (a.id - b.id));
+    const subtaskScore = getScore(
+        Math.max(100 - Math.sum(subtasks.map((i) => i.score || 0)), 0),
+        subtasks.filter((i) => !i.score).length,
+    );
+    let id = 0;
+    let count = 0;
+    return subtasks.map((s) => {
+        id++;
+        s.cases.sort((a, b) => (a.id - b.id));
+        const score = s.score || subtaskScore.next().value as number;
+        const caseScore = getScore(
+            Math.max(score - Math.sum(s.cases.map((i) => i.score || 0)), 0),
+            s.cases.filter((i) => !i.score).length,
+        );
+        return {
+            id,
+            type: 'min',
+            if: [],
+            ...s,
+            score,
+            time: parseTimeMS(s.time || time, !ignoreParseError),
+            memory: parseMemoryMB(s.memory || memory, !ignoreParseError),
+            cases: s.cases.map((c) => {
+                count++;
+                return {
+                    id: count,
+                    ...c,
+                    score: c.score || (s.type === 'sum' ? caseScore.next().value as number : score),
+                    time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
+                    memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
+                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
+                };
+            }) as NormalizedCase[],
+        };
+    });
+>>>>>>> upstream/master
 }

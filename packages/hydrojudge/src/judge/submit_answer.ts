@@ -5,10 +5,8 @@ import { check, compileChecker } from '../check';
 import { getConfig } from '../config';
 import { FormatError } from '../error';
 import { del, run } from '../sandbox';
-import { parseFilename } from '../utils';
-import {
-    Case, Context, ContextSubTask, SubTask,
-} from './interface';
+import { NormalizedCase, NormalizedSubtask, parseFilename } from '../utils';
+import { Context, ContextSubTask } from './interface';
 
 const Score = {
     sum: (a: number, b: number) => (a + b),
@@ -16,18 +14,18 @@ const Score = {
     min: Math.min,
 };
 
-function judgeCase(c: Case, sid: string) {
+function judgeCase(c: NormalizedCase, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
+            || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
         ) {
             ctx.next({
                 case: {
                     status: STATUS.STATUS_CANCELED,
                     score: 0,
-                    time_ms: 0,
-                    memory_kb: 0,
+                    time: 0,
+                    memory: 0,
                     message: '',
                 },
                 addProgress: 100 / ctx.config.count,
@@ -74,7 +72,7 @@ function judgeCase(c: Case, sid: string) {
                 user_stdout: file,
                 user_stderr: { content: '' },
                 checker_type: ctx.config.checker_type,
-                score: ctxSubtask.subtask.score,
+                score: c.score,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             });
@@ -87,8 +85,8 @@ function judgeCase(c: Case, sid: string) {
             case: {
                 status,
                 score: 0,
-                time_ms: 0,
-                memory_kb: 0,
+                time: 0,
+                memory: 0,
                 message,
             },
             addProgress: 100 / ctx.config.count,
@@ -96,7 +94,7 @@ function judgeCase(c: Case, sid: string) {
     };
 }
 
-function judgeSubtask(subtask: SubTask, sid: string) {
+function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
     return async (ctx: Context) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
@@ -160,7 +158,7 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,
-        time_ms: 0,
-        memory_kb: 0,
+        time: 0,
+        memory: 0,
     });
 };

@@ -202,12 +202,12 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     const dialog = new Dialog({
       $body: `
         <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
         </div>
         <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
         </div>`,
     });
     try {

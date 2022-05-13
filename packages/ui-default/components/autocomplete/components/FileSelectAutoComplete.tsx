@@ -7,7 +7,7 @@ type DefaultProps = {
   name: string;
 } & string;
 
-const CustomSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
+const FileSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
   <AutoComplete<DefaultProps>
     ref={ref as any}
     fetchItems={(keys) => props.data.filter((i) => (i._id ? keys.includes(i._id) : keys.includes(i)))}
@@ -17,13 +17,13 @@ const CustomSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
     ))}
     itemText={(item) => `${item.name || item}`}
     itemKey={(item) => `${item._id?.toString() || item.name || item}`}
-    renderItem={(item) => `${item.name || item}`}
+    renderItem={(item) => item.name || item._id || item} // TODO icon
     allowEmptyQuery
     {...props}
   />
 ));
 
-CustomSelectAutoComplete.propTypes = {
+FileSelectAutoComplete.propTypes = {
   width: PropTypes.string,
   height: PropTypes.string,
   listStyle: PropTypes.object,
@@ -36,9 +36,9 @@ CustomSelectAutoComplete.propTypes = {
   data: PropTypes.arrayOf(PropTypes.any),
 };
 
-CustomSelectAutoComplete.displayName = 'CustomSelectAutoComplete';
+FileSelectAutoComplete.displayName = 'FileSelectAutoComplete';
 
-CustomSelectAutoComplete.defaultProps = {
+FileSelectAutoComplete.defaultProps = {
   width: '100%',
   height: 'auto',
   listStyle: {},
@@ -48,4 +48,4 @@ CustomSelectAutoComplete.defaultProps = {
   freeSoloConverter: (input) => input,
 };
 
-export default CustomSelectAutoComplete;
+export default FileSelectAutoComplete;

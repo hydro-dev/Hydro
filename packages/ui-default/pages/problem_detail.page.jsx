@@ -1,4 +1,6 @@
 import yaml from 'js-yaml';
+import ReactDOM, { createRoot } from 'react-dom/client';
+import React from 'react';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
 import { NamedPage } from 'vj/misc/Page';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
@@ -132,9 +134,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const { default: WebSocket } = await import('../components/socket');
     const { default: ScratchpadApp } = await import('../components/scratchpad');
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
-    const {
-      React, render, unmountComponentAtNode, Provider, store,
-    } = await loadReactRedux(ScratchpadReducer);
+    const { Provider, store } = await loadReactRedux(ScratchpadReducer);
 
     const sock = new WebSocket(UiContext.pretestConnUrl);
     sock.onmessage = (message) => {
@@ -145,17 +145,15 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       });
     };
 
+    const root = createRoot($('#scratchpad').get(0));
     renderReact = () => {
-      render(
+      root.render(
         <Provider store={store}>
           <ScratchpadApp />
         </Provider>,
-        $('#scratchpad').get(0),
       );
     };
-    unmountReact = () => {
-      unmountComponentAtNode($('#scratchpad').get(0));
-    };
+    unmountReact = () => root.unmount();
     reactLoaded = true;
     $('.loader-container').hide();
   }
@@ -192,17 +190,12 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       const props = yaml.load(s);
       if (!(props instanceof Array)) return;
       $('.outer-loader-container').show();
-      const [{ default: Objective }, React, ReactDOM] = await Promise.all([
-        import('vj/components/objective-question/index'),
-        import('react'),
-        import('react-dom'),
-      ]);
+      const { default: Objective } = await import('vj/components/objective-question/index');
 
-      ReactDOM.render(
+      ReactDOM.createRoot($('.problem-content').get(0)).render(
         <div className="section__body typo">
           <Objective panel={props} target={UiContext.postSubmitUrl}></Objective>
         </div>,
-        $('.problem-content').get(0),
       );
       $('.outer-loader-container').hide();
     } catch (e) { }

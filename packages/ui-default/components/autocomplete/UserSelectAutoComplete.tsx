@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete, { AutoCompleteOptions } from '.';
@@ -38,14 +38,13 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.render(
+    ReactDOM.createRoot(this.container).render(
       <Component
         ref={(ref) => { this.ref = ref; }}
         value={value}
         multi={this.options.multi}
         onChange={this.onChange}
       />,
-      this.container,
     );
   }
 }

@@ -1,6 +1,6 @@
 {% import "components/nothing.html" as nothing with context %}
 {% import "components/problem.html" as problem with context %}
-<div class="section side section--problem-sidebar-testdata collapsed">
+<div class="section side section--problem-sidebar-testdata">
   <div class="section__header">
     <h1 class="section__title">{{ testdata.length if testdata.length else 0 }} {{_('Testdata')}}</h1>
   </div>
@@ -14,14 +14,6 @@
       </a>
     </li>
     <li class="menu__seperator"></li>
-    <li class="menu__item flex-row">
-      <a class="menu__link expanded--hidden" href="javascript:;" name="testdata__section__expand">
-        <span class="icon icon-expand_more"></span> {{ _('expand') }}
-      </a>
-      <a class="menu__link collapsed--hidden" href="javascript:;" name="testdata__section__collapse">
-        <span class="icon icon-expand_less"></span> {{ _('collapse') }}
-      </a>
-    </li>
   </ol>
   <div class="section__body no-padding problem-sidebar-testdata__detail" data-fragment-id="problem-sidebar-testdata">
     {% if testdata.length %}
@@ -49,7 +41,7 @@
         </tbody>
       </table>
     {% else %}
-      {{ nothing.render('No testdata at current.',compact = true) }}
+      {{ nothing.render('No testdata at current.', compact = true) }}
     {% endif %}
   </div>
 </div>

@@ -1,15 +1,17 @@
 {
-    "name": "@hydrooj/migrate-vijos",
-    "version": "1.5.1",
+    "name": "@hydrooj/migrate",
+    "version": "0.1.0",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
-    "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
-        "@types/mongodb": "^3.6.20"
+        "@types/mongodb": "^3.6.20",
+        "@types/mysql": "^2.15.21"
     },
     "dependencies": {
-        "mongodb": "^3.7.3"
+        "@hydrooj/utils": "workspace:*",
+        "mongodb": "^3.7.3",
+        "mysql": "^2.18.1"
     }
 }

@@ -1,8 +1,8 @@
 {% import "components/nothing.html" as nothing with context %}
 {% import "components/problem.html" as problem with context %}
-<div class="section side section--problem-sidebar-additional_file {{ 'expanded' if page_name == 'problem_edit' else 'collapsed'}}">
+<div class="section side section--problem-sidebar-additional_file">
   <div class="section__header">
-    <h1 class="section__title">{{ additional_file.length if additional_file.length else 0 }} {{_('Additional File')}}</h1>
+    <h1 class="section__title">{{ additional_file.length|default(0) }} {{_('Additional File')}}</h1>
   </div>
   <ol class="menu">
     <li class="menu__item flex-row">
@@ -11,15 +11,6 @@
       </a>
       <a class="menu__link half" href="javascript:;" name="additional_file__download">
         <span class="icon icon-download"></span> {{ _('Download All') }}
-      </a>
-    </li>
-    <li class="menu__seperator"></li>
-    <li class="menu__item">
-      <a class="menu__link expanded--hidden" href="javascript:;" name="additional_file__section__expand">
-        <span class="icon icon-expand_more"></span> {{ _('expand') }}
-      </a>
-      <a class="menu__link collapsed--hidden" href="javascript:;" name="additional_file__section__collapse">
-        <span class="icon icon-expand_less"></span> {{ _('collapse') }}
       </a>
     </li>
   </ol>

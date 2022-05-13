@@ -2,7 +2,6 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
-import type { Readable, Writable } from 'stream';
 import type { ProblemDoc } from './model/problem';
 
 type document = typeof import('./model/document');
@@ -127,10 +126,11 @@ export interface FileInfo {
 }
 
 export interface TestCaseConfig {
-    input: string,
-    output: string,
-    time?: number,
-    memory?: number,
+    input: string;
+    output: string;
+    time?: string;
+    memory?: string;
+    score?: number;
 }
 
 export enum ProblemType {
@@ -147,8 +147,8 @@ export enum SubtaskType {
 }
 
 export interface SubtaskConfig {
-    time?: number;
-    memory?: number;
+    time?: string;
+    memory?: string;
     score?: number;
     if?: number[];
     id?: number;
@@ -207,6 +207,7 @@ export interface SampleContentNode {
     sectionTitle: string,
     payload: [string, string],
 }
+// TODO drop contentNode support
 export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
 export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
 
@@ -271,6 +272,8 @@ export interface ProblemStatusDoc extends StatusDoc {
 
 export interface TestCase {
     id?: number;
+    subtaskId?: number;
+    score?: number;
     time: number;
     memory: number;
     status: number;
@@ -287,9 +290,9 @@ export interface RecordDoc {
     score: number;
     memory: number;
     time: number;
-    judgeTexts: string[];
+    judgeTexts: (string | JudgeMessage)[];
     compilerTexts: string[];
-    testCases: TestCase[];
+    testCases: Required<TestCase>[];
     rejudged: boolean;
     source?: string;
     /** judge uid */
@@ -497,24 +500,25 @@ export interface Script {
     validate: any,
 }
 
+export interface JudgeMessage {
+    message: string;
+    params?: string[];
+    stack?: string;
+}
+
 export interface JudgeResultBody {
+    key: string;
     domainId: string;
     rid: ObjectID;
     judger?: number;
     progress?: number;
     addProgress?: number;
-    case?: {
-        id?: number;
-        status: number;
-        time: number;
-        memory: number;
-        message?: string;
-    },
+    case?: TestCase,
     status?: number;
     score?: number;
     time?: number;
     memory?: number;
-    message?: string;
+    message?: string | JudgeMessage;
     compilerText?: string,
 }
 
@@ -526,19 +530,6 @@ export interface Task {
     priority: number;
     [key: string]: any;
 }
-
-export interface UploadStream extends Writable {
-    id: ObjectID;
-}
-
-export interface HydroFileSystem {
-    openUploadStream: (filename: string) => UploadStream
-    openDownloadStream: (_id: ObjectID) => Readable
-    // TODO
-    find: (...args: any[]) => any
-}
-
-export type PathComponent = [string, string, Dictionary<any>?, boolean?];
 
 export interface BaseService {
     started: boolean;
@@ -637,7 +628,6 @@ export interface Model {
 export interface Service {
     bus: typeof import('./service/bus'),
     db: typeof import('./service/db'),
-    fs: HydroFileSystem,
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
     storage: typeof import('./service/storage'),

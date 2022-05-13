@@ -188,7 +188,7 @@ class RecordDetailHandler extends Handler {
                 time: 0,
                 memory: 0,
                 testCases: [{
-                    status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
+                    id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
                 }],
             };
             const [latest] = await Promise.all([

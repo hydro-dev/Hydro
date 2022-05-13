@@ -7,8 +7,9 @@
         <h1 class="section__title">{{ _('Testdata') }}</h1>
         <div class="section__tools">
           {% if not reference and (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) %}
-            <button class="primary rounded button" name="create_testdata">{{ _('Create File') }}</button>
-            <button class="primary rounded button" name="upload_testdata">{{ _('Upload File') }}</button>
+            <a href="{{ url('problem_config', pid=pdoc.docId) }}" class="primary rounded button">{{ _('Config') }}</a>
+            <button class="primary rounded button" name="create_testdata">{{ _('Create') }}</button>
+            <button class="primary rounded button" name="upload_testdata">{{ _('Upload') }}</button>
           {% endif %}
         </div>
       </div>

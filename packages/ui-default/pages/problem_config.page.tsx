@@ -1,36 +1,20 @@
 import { NamedPage } from 'vj/misc/Page';
-import { slideDown, slideUp } from 'vj/utils/slide';
 import request from 'vj/utils/request';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import i18n from 'vj/utils/i18n';
 import yaml from 'js-yaml';
 import Notification from 'vj/components/notification';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
 import download from 'vj/components/zipDownloader';
-import { size, readCasesFromFiles, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { size, readSubtasksFromFiles, normalizeSubtasks } from '@hydrooj/utils/lib/common';
 import tpl from 'vj/utils/tpl';
-
-async function handleSection(ev: JQuery.ClickEvent<Document, undefined, any, any>, type: string) {
-  const $section = $(ev.currentTarget).closest('.section--problem-sidebar-testdata');
-  if ($section.is(`.${type}d, .animating`)) return;
-  $section.addClass('animating');
-  const $detail = $section.find('.problem-sidebar-testdata__detail');
-  if (type === 'expand') {
-    await slideDown($detail, 300, { opacity: 0 }, { opacity: 1 });
-  } else {
-    await slideUp($detail, 300, { opacity: 1 }, { opacity: 0 });
-  }
-  $section.addClass(type === 'expand' ? 'expanded' : 'collapsed');
-  $section.removeClass(type === 'expand' ? 'collapsed' : 'expanded');
-  $section.removeClass('animating');
-}
+import { SubtaskType } from 'hydrooj/src/interface';
+import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
 
 function onBeforeUnload(e) {
   e.returnValue = '';
-}
-
-function ensureFile(testdata) {
-  return (file: string) => testdata.filter((i) => i === file)[0];
 }
 
 const page = new NamedPage('problem_config', () => {
@@ -46,12 +30,12 @@ const page = new NamedPage('problem_config', () => {
     const dialog = new Dialog({
       $body: `
         <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
         </div>
         <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
         </div>`,
     });
     try {
@@ -147,8 +131,8 @@ const page = new NamedPage('problem_config', () => {
     await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
   }
 
-  async function uploadConfig(config:object) {
-    const configYaml = yaml.dump(config);
+  async function uploadConfig(config: object) {
+    const configYaml = yaml.dump(configYamlFormat(config));
     Notification.info(i18n('Saving file...'));
     const data = new FormData();
     data.append('filename', 'config.yaml');
@@ -161,13 +145,13 @@ const page = new NamedPage('problem_config', () => {
   }
 
   async function mountComponent() {
-    const { default: ProblemConfigEditor } = await import('vj/components/problemconfig/ProblemConfigEditor');
-    const { default: ProblemConfigForm } = await import('vj/components/problemconfig/ProblemConfigForm');
-    const { default: ProblemConfigReducer } = await import('vj/components/problemconfig/reducer');
+    const [{ default: ProblemConfigEditor }, { default: ProblemConfigForm }, { default: ProblemConfigReducer }] = await Promise.all([
+      import('vj/components/problemconfig/ProblemConfigEditor'),
+      import('vj/components/problemconfig/ProblemConfigForm'),
+      import('vj/components/problemconfig/reducer'),
+    ]);
 
-    const {
-      React, render, Provider, store,
-    } = await loadReactRedux(ProblemConfigReducer);
+    const { Provider, store } = await loadReactRedux(ProblemConfigReducer);
 
     reduxStore = store;
 
@@ -175,32 +159,37 @@ const page = new NamedPage('problem_config', () => {
       type: 'CONFIG_LOAD',
       payload: request.get(),
     });
-    render(
+    const unsubscribe = store.subscribe(() => {
+      // TODO set yaml schema
+      const state = store.getState();
+      if (!state.config.__loaded) return;
+      if (state.config.cases) {
+        const score = state.config.score * state.config.cases.length;
+        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: score && score < 100 ? score : 100, cases: state.config.cases }];
+        delete state.config.cases;
+        delete state.config.score;
+      }
+      if (state.config.subtasks) return;
+      const testdata = (state.testdata || []).map((i) => i.name);
+      unsubscribe();
+      const subtasks = readSubtasksFromFiles(testdata, state.config);
+      store.dispatch({
+        type: 'CONFIG_AUTOCASES_UPDATE',
+        subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
+      });
+    });
+    createRoot($('#ProblemConfig').get(0)).render(
       <Provider store={store}>
         <div className="row">
           <div className="medium-5 columns">
             <ProblemConfigEditor />
           </div>
           <div className="medium-7 columns">
-            <ProblemConfigForm
-              onAutoLoad={async () => {
-                const testdata = (reduxStore.getState().testdata || []).map((i) => i.name);
-                const checkFile = ensureFile(testdata);
-                let autocases = await readCasesFromFiles(testdata, checkFile, {});
-                if (!autocases.count) {
-                  autocases = await readSubtasksFromFiles(testdata, checkFile, {}, { subtasks: [] });
-                }
-                reduxStore.dispatch({
-                  type: 'CONFIG_AUTOCASES_UPDATE',
-                  value: autocases,
-                });
-              }}
-            />
+            <ProblemConfigForm />
           </div>
         </div>
         <button className="rounded primary button" onClick={() => uploadConfig(store.getState().config)}>{i18n('Submit')}</button>
       </Provider>,
-      $('#ProblemConfig').get(0),
     );
   }
 
@@ -209,8 +198,6 @@ const page = new NamedPage('problem_config', () => {
   $(document).on('click', '[name="testdata__upload"]', () => handleClickUpload());
   $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="testdata__download__all"]', () => handleClickDownloadAll());
-  $(document).on('click', '[name="testdata__section__expand"]', (ev) => handleSection(ev, 'expand'));
-  $(document).on('click', '[name="testdata__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
 });
 
 export default page;

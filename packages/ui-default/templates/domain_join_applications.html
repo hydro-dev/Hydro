@@ -7,10 +7,10 @@
   </div>
   <div class="section__body typo">
     <p>{{ _('User can join this domain by visiting the following URL') }}:</p>
-    <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}</code></pre>
+    <pre><code class="language-data">{{ url_prefix|safe }}d/{{ handler.args.domainId }}/domain/join</code></pre>
     {% if joinSettings['method'] == model.domain.JOIN_METHOD_CODE %}
       <p>{{ _('Or, with automatically filled invitation code') }}:</p>
-      <pre><code class="language-data">{{ url_prefix|safe }}domain/join?domainId={{ handler.args.domainId }}&code={{ joinSettings.code|urlencode }}</code></pre>
+      <pre><code class="language-data">{{ url_prefix|safe }}d/{{ handler.args.domainId }}/domain/join?code={{ joinSettings.code|urlencode }}</code></pre>
     {% endif %}
     {% if joinSettings.expire %}
       <br/>

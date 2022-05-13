@@ -118,8 +118,8 @@ Change Email: 修改电子邮件
 Change Password: 修改密码
 Change Theme: 切换主题
 Check In: 签到
-CheckerType: 比较器类型
 Checker: 比较器
+CheckerType: 比较器类型
 Chinese: 中文
 Choose the background image in your profile page.: 选择您资料页面的背景图片。
 Claim homework: 认领作业
@@ -142,6 +142,7 @@ Compile Error: 编译错误
 Compilers' Version and Parameters: 编译器版本及参数
 Complete: 完成
 Completed: 已完成
+Config: 配置
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this reply?: 确认删除这个回复吗？
@@ -327,6 +328,8 @@ Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Extra Files Config: 额外文件设置
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
+Failed to parse subtask.: 无法解析子任务信息。
+Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
@@ -390,6 +393,7 @@ Host: 主持人
 hour(s): 小时
 If enabled, source code will be emailed to you after the submission is accepted.: 如果启用，在您通过题目后，源代码会以 Email 的形式发送给您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，则将使用对应语言的内置代码模板。
+Ignore trailing space and enter.: 忽略行末空格与文件尾回车。
 Images With Size: 指定大小的图片
 Images: 图片
 Import from: 导入自
@@ -408,6 +412,7 @@ Information: 信息
 Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
+Input: 输入
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -424,12 +429,14 @@ Italic: 斜体
 Join: 加入
 Judge Config: 评测设置
 Judge Status: 评测状态
+judge_extra_files: 评测额外文件
 judge_playground: 评测游乐场
 judge_extra_files: 评测额外文件
 Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
+Langs Config: 语言设置
 langs: 语言
 Language: 语言
 Langs Config: 语言设置
@@ -595,6 +602,8 @@ Problem Solution List: 题解列表
 Problem Solution: 题解列表
 Problem Tags Visibility: 题目标签可见性
 Problem Tags: 题目标签
+Problem Type: 题目类型
+problem_config: 评测设置
 problem_create: 创建题目
 problem_config: 评测设置
 problem_edit: 编辑题目
@@ -771,6 +780,7 @@ SuperUser: 超级管理员
 Support: 支持
 Switch account: 切换账户
 Tags: 标签
+Task Settings: 任务设置
 tasks_list: 任务列表
 Task Settings: 任务设置
 Technical Information: 技术信息
@@ -828,9 +838,11 @@ Uncompleted: 未完成
 Unique: 唯一
 Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
+Unlimited: 无限制
 Unordered List: 无序列表
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
+Unsupported configure this type of problem. Please refer to the documentation.: 暂不支持快捷配置此类题目。请参照文档操作。
 Update Permission: 更新权限
 Update Settings: 更新设置
 Update: 更新

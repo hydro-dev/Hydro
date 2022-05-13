@@ -3,6 +3,7 @@ import type { editor } from 'monaco-editor';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
 import Editor from 'vj/components/editor';
+import { diffLines } from 'diff';
 import yaml from 'js-yaml';
 import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
 
@@ -37,20 +38,21 @@ const subtasksKey = [
 
 const casesKey = ['time', 'memory', 'input', 'output'];
 
-function configYamlFormat(config: ProblemConfigFile) {
+export function configYamlFormat(config: ProblemConfigFile) {
   const formatConfig: ProblemConfigFile = {};
   configKey.forEach((key) => {
     if (config[key] !== undefined) {
+      if (key === 'subType' && ['single', 'multi'].includes(config[key]) && config.type !== 'submit_answer') return;
       if (key === 'checker_type' && config.type !== 'default') return;
       if (key === 'checker'
-      && (['default', 'strict'].includes(formatConfig.checker_type) || formatConfig.checker_type === undefined)) return;
+        && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
       if (key === 'subtasks') {
         formatConfig[key] = [];
         config[key].forEach((subtask) => {
           const formatSubtask: object = {};
           subtasksKey.forEach((subtaskKey) => {
-            if (subtask[subtaskKey] !== undefined) {
+            if (subtask && subtask[subtaskKey] !== undefined) {
               formatSubtask[subtaskKey] = subtask[subtaskKey];
             }
           });
@@ -60,7 +62,7 @@ function configYamlFormat(config: ProblemConfigFile) {
         formatConfig[key] = [];
         config[key].forEach((caseItem) => {
           const formatCase: TestCaseConfig = {
-            time: 1000, memory: 256, input: '', output: '',
+            time: '1000ms', memory: '256MB', input: '', output: '',
           };
           casesKey.forEach((caseKey) => {
             if (caseItem[caseKey] !== undefined) formatCase[caseKey] = caseItem[caseKey];
@@ -71,6 +73,11 @@ function configYamlFormat(config: ProblemConfigFile) {
       } else formatConfig[key] = config[key];
     }
   });
+  if (formatConfig.type === 'objective') {
+    Object.keys(formatConfig).filter((i) => !['type', 'outputs'].includes(i)).forEach((i) => delete formatConfig[i]);
+    formatConfig.outputs = formatConfig.outputs || [];
+  }
+  Object.keys(formatConfig).filter((i) => i.startsWith('__')).forEach((i) => delete formatConfig[i]);
   return formatConfig;
 }
 
@@ -87,7 +94,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   async componentDidMount() {
     const { monaco } = await load(['yaml']);
     const uri = monaco.Uri.parse('hydro://problem/file/config.yaml');
-    this.model = monaco.editor.createModel(yaml.dump(this.props.config), 'yaml', uri);
+    this.model = monaco.editor.createModel(yaml.dump(configYamlFormat(this.props.config)), 'yaml', uri);
     this.vjEditor = Editor.getOrConstruct($(this.containerElement), {
       language: 'yaml',
       model: this.model,
@@ -101,17 +108,28 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
   }
 
   componentDidUpdate(prevProps) {
-    if (this.__preventUpdate) return;
+    if (this.__preventUpdate || !this.model) return;
     if (yaml.dump(prevProps.config) !== yaml.dump(this.props.config)) {
       this.__preventFormat = true;
-      this.model?.pushEditOperations(
-        [],
-        [{
-          range: this.model.getFullModelRange(),
-          text: yaml.dump(configYamlFormat(this.props.config)),
-        }],
-        undefined,
-      );
+      const curValue = this.model.getValue();
+      const diff = diffLines(curValue, yaml.dump(configYamlFormat(this.props.config)));
+      const ops = [];
+      let cursor = 1;
+      for (const line of diff) {
+        if (line.added) {
+          let range = this.model.getFullModelRange();
+          range = range.setStartPosition(cursor, 0);
+          range = range.setEndPosition(cursor, 0);
+          ops.push({ range, text: line.value });
+        } else if (line.removed) {
+          let range = this.model.getFullModelRange();
+          range = range.setStartPosition(cursor, 0);
+          cursor += line.count;
+          range = range.setEndPosition(cursor, 0);
+          ops.push({ range, text: '' });
+        } else cursor += line.count;
+      }
+      this.model.pushEditOperations([], ops, undefined);
       this.__preventFormat = false;
     }
   }

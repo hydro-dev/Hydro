@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoCompleteFC from './components/AutoComplete';
@@ -64,7 +64,7 @@ export default class AutoComplete extends DOMAttachedObject {
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.render(
+    ReactDOM.createRoot(this.container).render(
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
         height="34px"
@@ -76,7 +76,6 @@ export default class AutoComplete extends DOMAttachedObject {
         multi={this.options.multi}
         freeSolo={this.options.multi}
       />,
-      this.container,
     );
   }
 

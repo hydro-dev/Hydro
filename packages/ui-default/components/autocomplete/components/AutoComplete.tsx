@@ -17,6 +17,7 @@ export interface AutoCompleteProps<Item> {
    */
   height?: string;
   disabled?: boolean;
+  placeholder?: string;
   disabledHint?: string;
   listStyle?: React.CSSProperties;
   cacheKey?: string;
@@ -295,6 +296,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               if (allowEmptyQuery) handleInputChange();
               setFocused(true);
             }}
+            placeholder={props.placeholder}
             onBlur={() => setFocused(false)}
             onKeyDown={handleInputKeyDown}
             defaultValue={multi ? '' : selectedKeys.join(',')}
@@ -344,6 +346,7 @@ AutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
+  placeholder: PropTypes.string,
 };
 
 AutoComplete.defaultProps = {

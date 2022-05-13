@@ -104,15 +104,15 @@ class FpsProblemImportHandler extends Handler {
         if (!this.request.files.file) throw new ValidationError('file');
         const tasks = [];
         try {
-            const file = await fs.stat(this.request.files.file.path);
+            const file = await fs.stat(this.request.files.file.filepath);
             if (file.size > 64 * 1024 * 1024) throw new FileTooLargeError('64m');
-            const content = fs.readFileSync(this.request.files.file.path, 'utf-8');
+            const content = fs.readFileSync(this.request.files.file.filepath, 'utf-8');
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {
             if (e instanceof FileTooLargeError) throw e;
             console.log(e);
-            const zip = new AdmZip(this.request.files.file.path);
+            const zip = new AdmZip(this.request.files.file.filepath);
             for (const entry of zip.getEntries()) {
                 try {
                     const buf = entry.getData();
