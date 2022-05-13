@@ -56,6 +56,7 @@ async function updateSelection(sendRequest = true) {
     const url = new URL(window.location.href);
     if (!q) url.searchParams.delete('q');
     else url.searchParams.set('q', q);
+    url.searchParams.delete('page');
     pjax.request({ url: url.toString() });
     $('[name="q"]').val(q);
   }
