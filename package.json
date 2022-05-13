@@ -42,7 +42,7 @@
         "cac": "^6.7.12",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
-        "esbuild": "0.14.3",
+        "esbuild": "0.14.39",
         "eslint": "^8.15.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-airbnb-typescript": "^17.0.0",
@@ -65,6 +65,6 @@
         "typescript": "^4.6.4"
     },
     "resolutions": {
-        "esbuild": "0.14.3"
+        "esbuild": "0.14.39"
     }
 }
