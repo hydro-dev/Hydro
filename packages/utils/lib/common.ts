@@ -301,8 +301,8 @@ export function normalizeSubtasks(
                 count++;
                 return {
                     id: count,
-                    score: s.type === 'sum' ? caseScore.next().value as number : score,
                     ...c,
+                    score: c.score || (s.type === 'sum' ? caseScore.next().value as number : score),
                     time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
                     memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
                     input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
