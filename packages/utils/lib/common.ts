@@ -284,17 +284,17 @@ export function normalizeSubtasks(
     return subtasks.map((s) => {
         id++;
         s.cases.sort((a, b) => (a.id - b.id));
-        const score = subtaskScore.next().value as number;
+        const score = s.score || subtaskScore.next().value as number;
         const caseScore = getScore(
             Math.max(score - Math.sum(s.cases.map((i) => i.score || 0)), 0),
             s.cases.filter((i) => !i.score).length,
         );
         return {
             id,
-            score,
             type: 'min',
             if: [],
             ...s,
+            score,
             time: parseTimeMS(s.time || time, !ignoreParseError),
             memory: parseMemoryMB(s.memory || memory, !ignoreParseError),
             cases: s.cases.map((c) => {
