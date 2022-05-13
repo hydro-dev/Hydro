@@ -4,7 +4,7 @@ WORKDIR /root/Hydro
 
 COPY ./ /root/Hydro/
 
-RUN yarn install && yarn build:ui
+RUN yarn install && yarn build:ui:production
 
 EXPOSE 8888
 
