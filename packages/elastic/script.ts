@@ -32,8 +32,9 @@ bus.on('problem/del', async (domainId, docId) => {
 });
 
 global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
+    const allowedSize = system.get('elasic.indexSize');
     const size = opts?.limit || system.get('pagination.problem');
-    const from = opts?.skip || 0;
+    const from = Math.min(allowedSize - size, opts?.skip || 0);
     const union = await DomainModel.getUnion(domainId);
     const domainIds = [domainId, ...(union?.union || [])];
     const res = await client.search({
