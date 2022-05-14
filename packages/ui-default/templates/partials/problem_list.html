@@ -73,6 +73,6 @@
     {%- endfor -%}
     </tbody>
   </table>
-  {{ paginator.render(page, ppcount, add_qs=qs) }}
+  {{ paginator.render(page, ppcount, add_qs=('q=' + qs if qs else '')) }}
 {% endif %}
 </div>
