@@ -10,7 +10,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import type { JudgeResultBody } from 'hydrooj';
 import { Logger } from 'hydrooj/src/logger';
 import * as monitor from 'hydrooj/src/service/monitor';
-import readCases from './cases';
+import readCases, { processTestdata } from './cases';
 import { getConfig } from './config';
 import { CompileError, FormatError, SystemError } from './error';
 import { CopyInFile } from './sandbox/interface';
@@ -23,7 +23,6 @@ declare module 'hydrooj/src/interface' {
         'hydrojudge.cache_dir': string;
         'hydrojudge.tmp_dir': string;
         'hydrojudge.tmpfs_size': string;
-        'hydrojudge.retry_delay_sec': number;
         'hydrojudge.sandbox_host': string;
         'hydrojudge.memoryMax': string;
         'hydrojudge.testcases_max': number;
@@ -54,28 +53,6 @@ async function postInit() {
         monitor.updateJudge({ mid, ...inf });
     }, 1200000);
 
-    async function processData(folder: string) {
-        let files = await fs.readdir(folder);
-        let ini = false;
-        for (const i of files) {
-            if (i.toLowerCase() === 'config.ini') {
-                ini = true;
-                await fs.rename(`${folder}/${i}`, `${folder}/config.ini`);
-                break;
-            }
-        }
-        if (ini) {
-            for (const i of files) {
-                if (i.toLowerCase() === 'input') await fs.rename(`${folder}/${i}`, `${folder}/input`);
-                else if (i.toLowerCase() === 'output') await fs.rename(`${folder}/${i}`, `${folder}/output`);
-            }
-            files = await fs.readdir(`${folder}/input`);
-            for (const i of files) await fs.rename(`${folder}/input/${i}`, `${folder}/input/${i.toLowerCase()}`);
-            files = await fs.readdir(`${folder}/output`);
-            for (const i of files) await fs.rename(`${folder}/output/${i}`, `${folder}/output/${i.toLowerCase()}`);
-        }
-    }
-
     async function fetchCodeFile(name: string) {
         const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
         await storage.get(`submission/${name}`, target);
@@ -104,7 +81,7 @@ async function postInit() {
         }
         fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
         fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
-        await processData(filePath).catch(noop);
+        await processTestdata(filePath);
         return filePath;
     }
 

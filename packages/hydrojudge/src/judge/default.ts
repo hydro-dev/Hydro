@@ -177,21 +177,17 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
             ),
             ctx.next,
         ),
-        (() => {
-            if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
-                return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-            }
-            const copyIn = { user_code: ctx.code };
-            for (const file of ctx.config.judge_extra_files) {
-                copyIn[parseFilename(file)] = { src: file };
-            }
-            return compileChecker(
-                ctx.getLang,
-                ctx.config.checker_type,
-                ctx.config.checker,
-                copyIn,
-            );
-        })(),
+        compileChecker(
+            ctx.getLang,
+            ctx.config.checker_type,
+            ctx.config.checker,
+            {
+                user_code: ctx.code,
+                ...Object.fromEntries(
+                    (ctx.config.judge_extra_files || []).map((i) => [parseFilename(i), { src: i }]),
+                ),
+            },
+        ),
     ]);
     ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
     await startPromise;
@@ -202,7 +198,7 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
     ctx.rerun = getConfig('rerun') || 0;
-    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
+    ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
     ctx.failed = {};
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));
     const scores = await Promise.all(tasks);

@@ -37,11 +37,6 @@ memoryMax:
   type: text
   name: memoryMax
   default: 512m
-retry_delay_sec:
-  type: number
-  name: retry_delay_sec
-  desc: Retry delay sec
-  default: 15
 cache_dir:
   type: text
   name: cache_dir

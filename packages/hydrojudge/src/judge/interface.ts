@@ -52,8 +52,8 @@ export interface Config {
     detail?: boolean;
     filename?: string;
 
-    judge_extra_files?: string[];
-    user_extra_files?: string[];
+    judge_extra_files: string[];
+    user_extra_files: string[];
     template?: Record<string, [string, string]>;
 
     checker?: string;

@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
@@ -9,19 +8,19 @@ const argv = cac().parse();
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let CONFIG_FILE = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
 
-let config = {
+const config = {
     cache_dir: path.resolve(os.homedir(), '.cache', 'hydro', 'judge'),
     tmp_dir: path.resolve(os.tmpdir(), 'hydro', 'judge'),
     tmpfs_size: '256m',
     stdio_size: '32m',
     memoryMax: '512m',
     strict_memory: false,
-    retry_delay_sec: 15,
     sandbox_host: 'http://localhost:5050',
     testcases_max: 100,
     total_time_limit: 60,
     processLimit: 32,
     parallelism: 2,
+    singleTaskParallelism: 2,
     rerun: 0,
     rate: 1,
     config: null,
@@ -29,10 +28,11 @@ let config = {
     env: `\
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 HOME=/w`,
+    hosts: {},
     secret: String.random(32),
 };
 
-export function getConfig(key: string) {
+export function getConfig(key: keyof typeof config) {
     return global.Hydro ? global.Hydro.model.system.get(`hydrojudge.${key}`) : config[key];
 }
 
@@ -61,5 +61,5 @@ if (!global.Hydro) {
         config.sandbox_host = path.resolve(process.env.EXECUTION_HOST || argv.options.sandbox);
     }
     const configFile = fs.readFileSync(CONFIG_FILE).toString();
-    config = { ...config, ...yaml.load(configFile) as any };
+    Object.assign(config, yaml.load(configFile) as any);
 }

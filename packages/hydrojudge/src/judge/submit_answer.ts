@@ -122,9 +122,6 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
     startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
     ctx.checker = await (() => {
-        if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
-            return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-        }
         const copyIn = { user_code: ctx.code };
         for (const file of ctx.config.judge_extra_files) {
             copyIn[parseFilename(file)] = { src: file };

@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
@@ -33,6 +34,32 @@ async function collectFiles(folder: string) {
         }
     }));
     return files;
+}
+
+export async function processTestdata(folder: string) {
+    let files = await fs.readdir(folder);
+    if (files.length <= 2) {
+        if (files.length === 2) files.splice(files.indexOf('version'), 1);
+        if (fs.statSync(path.resolve(folder, files[0])).isDirectory()) {
+            folder = path.resolve(folder, files[0]);
+            files = await fs.readdir(folder);
+        }
+    }
+    const ini = files.filter((i) => i.toLowerCase() === 'config.ini')[0];
+    if (!ini) return;
+    const t = fs.readFileSync(path.resolve(folder, ini), 'utf8');
+    await fs.writeFile(path.resolve(folder, 'config.ini'), t.toLowerCase());
+    for (const i of files) {
+        if (i.toLowerCase() === 'input') await fs.rename(`${folder}/${i}`, `${folder}/input`);
+        if (i.toLowerCase() === 'output') await fs.rename(`${folder}/${i}`, `${folder}/output`);
+    }
+    await Promise.all(['input', 'output'].flatMap(async (f) => {
+        const dir = path.resolve(folder, f);
+        const sf = await fs.readdir(dir);
+        return sf
+            .filter((i) => i !== i.toLowerCase())
+            .map((i) => fs.rename(`${dir}/${i}`, `${dir}/${i.toLowerCase()}`));
+    }));
 }
 
 export default async function readCases(folder: string, cfg: Record<string, any> = {}, args) {
