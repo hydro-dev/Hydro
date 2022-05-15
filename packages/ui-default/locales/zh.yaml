@@ -431,7 +431,6 @@ Judge Config: 评测设置
 Judge Status: 评测状态
 judge_extra_files: 评测额外文件
 judge_playground: 评测游乐场
-judge_extra_files: 评测额外文件
 Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
