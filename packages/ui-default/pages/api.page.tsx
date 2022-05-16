@@ -2,7 +2,7 @@
 import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 import React from 'react';
-import { render } from 'react-dom';
+import ReactDOM from 'react-dom/client';
 
 const Logo = () => <span>Hydro API Console </span>;
 const defaultQuery = `\
@@ -43,7 +43,7 @@ const page = new NamedPage('api', async () => {
     />
   );
 
-  render(<App />, document.getElementById('graphiql'));
+  ReactDOM.createRoot(document.getElementById('graphiql')).render(<App />);
 });
 
 export default page;

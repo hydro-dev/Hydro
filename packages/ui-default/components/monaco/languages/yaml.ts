@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { setDiagnosticsOptions } from 'monaco-yaml';
 
 /** @type {Record<string, import('json-schema').JSONSchema7Definition>} */
 const problemConfigSchemaDef = {
@@ -8,6 +8,9 @@ const problemConfigSchemaDef = {
     properties: {
       input: { type: 'string' },
       output: { type: 'string' },
+      time: { $ref: '#/def/time' },
+      memory: { $ref: '#/def/memory' },
+      score: { $ref: '#/def/score', description: 'score' },
     },
     required: ['input'],
     additionalProperties: false,
@@ -28,7 +31,7 @@ const problemConfigSchemaDef = {
     additionalProperties: false,
   },
   time: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([mu]?)s?$' },
-  memory: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([kmg])b?$' },
+  memory: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([kKmMgG])[bB]?$' },
   score: { type: 'integer', maximum: 100, minimum: 1 },
 };
 
@@ -37,7 +40,7 @@ const problemConfigSchema = {
   type: 'object',
   def: problemConfigSchemaDef,
   properties: {
-    redirect: { type: 'string', pattern: '[0-9a-z_-]+\\/[0-9]+' },
+    redirect: { type: 'string', pattern: '[0-9a-zA-Z_-]+\\/[0-9]+' },
     key: { type: 'string', pattern: '[0-9a-f]{32}' },
     type: { enum: ['default', 'interactive', 'submit_answer', 'objective', 'remote_judge'] },
     subType: { type: 'string' },
@@ -75,8 +78,7 @@ const problemConfigSchema = {
   additionalProperties: false,
 };
 
-// @ts-ignore
-monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
+setDiagnosticsOptions({
   validate: true,
   enableSchemaRequest: true,
   hover: true,
@@ -86,7 +88,7 @@ monaco.languages.yaml.yamlDefaults.setDiagnosticsOptions({
     {
       uri: 'https://hydro.js.org/schema/problemConfig.json',
       fileMatch: ['hydro://problem/file/config.yaml'],
-      schema: problemConfigSchema,
+      schema: problemConfigSchema as any,
     },
     {
       uri: `${UiContext.cdn_prefix}manage/setting/schema.json`,

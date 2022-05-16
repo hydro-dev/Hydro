@@ -1,31 +1,15 @@
 import PQueue from 'p-queue';
-import { LangConfig } from '@hydrooj/utils/lib/lang';
+import type { NormalizedSubtask } from '@hydrooj/utils/lib/common';
+import type { LangConfig } from '@hydrooj/utils/lib/lang';
+import type { JudgeResultBody } from 'hydrooj';
 import { Execute } from '../interface';
 import { CopyInFile } from '../sandbox/interface';
 
 export type Context = JudgeTaskInterface & RuntimeContext;
 
 export interface JudgeTaskInterface {
-    next(arg0: {
-        compiler_text?: string;
-        status?: number;
-        message?: string;
-        progress?: number;
-        addProgress?: number;
-        case?: {
-            status: number;
-            score?: number;
-            time_ms: number;
-            memory_kb: number;
-            message: string;
-        };
-    }, arg1?: number): void;
-    end(arg0: {
-        status: number;
-        score: number;
-        time_ms: number;
-        memory_kb: number;
-    }): void;
+    next(data: Partial<JudgeResultBody>, id?: number): void;
+    end(data: Partial<JudgeResultBody>): void;
     getLang: (name: string) => LangConfig;
 
     stat: Record<string, Date>;
@@ -56,22 +40,20 @@ export interface RuntimeContext {
     executeUser?: Execute;
 }
 
-type ExtraFile = string[];
-
 export interface Config {
     type: string;
     subType?: string;
     time: string;
     memory: string;
 
-    subtasks?: SubTask[];
+    subtasks?: NormalizedSubtask[];
     count?: number;
     checker_type?: string;
     detail?: boolean;
     filename?: string;
 
-    judge_extra_files?: ExtraFile;
-    user_extra_files?: ExtraFile;
+    judge_extra_files: string[];
+    user_extra_files: string[];
     template?: Record<string, [string, string]>;
 
     checker?: string;
@@ -86,23 +68,8 @@ export interface Config {
     }[];
 }
 
-export interface SubTask {
-    time: number;
-    memory: number;
-    type: 'sum' | 'max' | 'min';
-    score: number;
-    cases: Record<string, Case>;
-    if: string[];
-}
-
 export interface ContextSubTask {
-    subtask: SubTask;
+    subtask: NormalizedSubtask;
     score: number;
     status: number;
-}
-
-export interface Case {
-    id: number;
-    input: string;
-    output: string;
 }

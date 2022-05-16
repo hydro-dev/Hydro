@@ -29,11 +29,11 @@ export async function judge({
             status: totalStatus,
             progress: (100 * (+i + 1)) / config.outputs.length,
             case: {
-                status, score, time_ms: 0, memory_kb: 0, message: '',
+                status, score, time: 0, memory: 0, message: '',
             },
         }, +i + 1);
     }
     return end({
-        status: totalStatus, score: totalScore, time_ms: 0, memory_kb: 0,
+        status: totalStatus, score: totalScore, time: 0, memory: 0,
     });
 }

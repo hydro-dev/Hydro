@@ -21,7 +21,7 @@
 {%- if pdoc.tag|length > 0 %}
   {%- if not inline %}<ul class="problem__tags">{% endif -%}
   {%- for tag in pdoc['tag'] %}
-    <li class="problem__tag"><a class="problem__tag-link" href="{{ url('problem_category', category=tag) }}">{{ tag }}</a></li>
+    <li class="problem__tag"><a class="problem__tag-link" href="{{ url('problem_main', query={q:'category:'+tag}) }}">{{ tag }}</a></li>
   {%- endfor -%}
   {%- if not inline %}</ul>{% endif -%}
 {%- else -%}

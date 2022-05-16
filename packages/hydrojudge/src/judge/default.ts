@@ -8,10 +8,8 @@ import { Logger } from '../log';
 import { del, run } from '../sandbox';
 import { CmdFile } from '../sandbox/interface';
 import signals from '../signals';
-import { parseFilename } from '../utils';
-import {
-    Case, Context, ContextSubTask, SubTask,
-} from './interface';
+import { NormalizedCase, NormalizedSubtask, parseFilename } from '../utils';
+import { Context, ContextSubTask } from './interface';
 
 const Score = {
     sum: (a: number, b: number) => (a + b),
@@ -21,18 +19,18 @@ const Score = {
 
 const logger = new Logger('judge/default');
 
-function judgeCase(c: Case, sid: string) {
+function judgeCase(c: NormalizedCase, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || ((ctxSubtask.subtask.if || []).filter((i: string) => ctx.failed[i]).length)
+            || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
         ) {
             ctx.next({
                 case: {
                     status: STATUS.STATUS_CANCELED,
                     score: 0,
-                    time_ms: 0,
-                    memory_kb: 0,
+                    time: 0,
+                    memory: 0,
                     message: '',
                 },
                 addProgress: 100 / ctx.config.count,
@@ -76,7 +74,7 @@ function judgeCase(c: Case, sid: string) {
                     user_stdout: stdout,
                     user_stderr: stderr,
                     checker_type: ctx.config.checker_type,
-                    score: ctxSubtask.subtask.score,
+                    score: c.score,
                     detail: ctx.config.detail ?? true,
                     env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
                 });
@@ -100,10 +98,11 @@ function judgeCase(c: Case, sid: string) {
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({
             case: {
+                subtaskId: ctxSubtask.subtask.id,
                 status,
-                score: 0,
-                time_ms: time_usage_ms,
-                memory_kb: memory_usage_kb,
+                score,
+                time: time_usage_ms,
+                memory: memory_usage_kb,
                 message,
             },
             addProgress: 100 / ctx.config.count,
@@ -126,7 +125,7 @@ function judgeCase(c: Case, sid: string) {
                         env: ctx.env,
                     });
                     const out = r.stdout.toString();
-                    if (out.length) ctx.next({ compiler_text: out.substring(0, 1024) });
+                    if (out.length) ctx.next({ compilerText: out.substring(0, 1024) });
                     if (process.env.DEV) console.log(r);
                 } catch (e) {
                     logger.info('Failed to run analysis');
@@ -137,7 +136,7 @@ function judgeCase(c: Case, sid: string) {
     };
 }
 
-function judgeSubtask(subtask: SubTask, sid: string) {
+function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
     return async (ctx: Context) => {
         subtask.type = subtask.type || 'min';
         const ctxSubtask = {
@@ -178,21 +177,17 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
             ),
             ctx.next,
         ),
-        (() => {
-            if (['default', 'strict'].includes(ctx.config.checker_type || 'default')) {
-                return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-            }
-            const copyIn = { user_code: ctx.code };
-            for (const file of ctx.config.judge_extra_files) {
-                copyIn[parseFilename(file)] = { src: file };
-            }
-            return compileChecker(
-                ctx.getLang,
-                ctx.config.checker_type,
-                ctx.config.checker,
-                copyIn,
-            );
-        })(),
+        compileChecker(
+            ctx.getLang,
+            ctx.config.checker_type,
+            ctx.config.checker,
+            {
+                user_code: ctx.code,
+                ...Object.fromEntries(
+                    (ctx.config.judge_extra_files || []).map((i) => [parseFilename(i), { src: i }]),
+                ),
+            },
+        ),
     ]);
     ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
     await startPromise;
@@ -203,7 +198,7 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     ctx.total_memory_usage_kb = 0;
     ctx.total_time_usage_ms = 0;
     ctx.rerun = getConfig('rerun') || 0;
-    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
+    ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
     ctx.failed = {};
     for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));
     const scores = await Promise.all(tasks);
@@ -219,7 +214,7 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,
-        time_ms: Math.floor(ctx.total_time_usage_ms * 1000000) / 1000000,
-        memory_kb: ctx.total_memory_usage_kb,
+        time: Math.floor(ctx.total_time_usage_ms * 1000000) / 1000000,
+        memory: ctx.total_memory_usage_kb,
     });
 };

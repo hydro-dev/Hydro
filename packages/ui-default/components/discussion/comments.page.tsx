@@ -1,7 +1,7 @@
 import 'jquery.easing';
 
 import * as React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { Popover } from '@blueprintjs/core';
 import { AutoloadPage } from 'vj/misc/Page';
 import CommentBox from 'vj/components/discussion/CommentBox';
@@ -256,7 +256,7 @@ const commentsPage = new AutoloadPage('commentsPage', () => {
 
   const canUseReaction = $('[data-op="react"]').length > 0;
   $('[data-op="react"]').each((i, e) => {
-    ReactDOM.render(<Reaction payload={$(e).data('form')} ele={$(e).closest('.media__body').find('.reactions')} />, e);
+    ReactDOM.createRoot(e).render(<Reaction payload={$(e).data('form')} ele={$(e).closest('.media__body').find('.reactions')} />);
   });
   $(document).on('click', '.reaction', async (e) => {
     if (!canUseReaction) {

@@ -3,8 +3,6 @@
 {% extends "layout/basic.html" %}
 {% block content %}
   {{ set(UiContext, {
-      getProblemUrlWithCategory: url('problem_category', category='{category}'),
-      getProblemUrlWithoutCategory: url('problem_main'),
       currentCategory: category
   }) }}
   <div class="row">
@@ -13,7 +11,7 @@
         <div class="section__body no-padding">
           <form method="get" id="searchForm" action="{{ url('problem_main') }}">
             <div class="search">
-              <input name="q" type="text" value="{{ category }}" placeholder="{{ _('Search') }}">
+              <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('Search') }}">
               {% include "partials/problem_stat.html" %}
               <button type="submit">
                 <span class="icon icon-search"></span>

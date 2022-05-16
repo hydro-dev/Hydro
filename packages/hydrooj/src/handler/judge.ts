@@ -41,19 +41,19 @@ export async function postJudge(rdoc: RecordDoc) {
     await bus.serial('record/judge', rdoc, updated);
 }
 
-export async function next(body: JudgeResultBody) {
+export async function next(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     if (body.case) {
-        const c: TestCase = {
+        const c: Required<TestCase> = {
+            ...body.case,
             id: body.case.id || 0,
-            memory: body.case.memory,
-            time: body.case.time,
+            subtaskId: body.case.subtaskId || 0,
+            score: body.case.score || 0,
             message: body.case.message || '',
-            status: body.case.status,
         };
         rdoc.testCases.push(c);
         $push.testCases = c;
@@ -75,7 +75,7 @@ export async function next(body: JudgeResultBody) {
     bus.broadcast('record/change', rdoc!, $set, $push);
 }
 
-export async function end(body: JudgeResultBody) {
+export async function end(body: Partial<JudgeResultBody>) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;

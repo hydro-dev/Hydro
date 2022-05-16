@@ -1,5 +1,6 @@
 import cac from 'cac';
 import fs from 'fs-extra';
+import PQueue from 'p-queue';
 import { ParseEntry } from 'shell-quote';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { getConfig } from './config';
@@ -190,4 +191,10 @@ export async function run(execute: string, params?: Parameter): Promise<SandboxA
         throw new SystemError('Sandbox Error', e.message);
     }
     return await adaptResult(result, params);
+}
+
+const queue = new PQueue({ concurrency: getConfig('parallelism') });
+
+export function runQueued(execute: string, params?: Parameter, priority = 0) {
+    return queue.add(() => run(execute, params), { priority });
 }

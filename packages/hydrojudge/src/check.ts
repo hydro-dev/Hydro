@@ -16,6 +16,9 @@ export async function check(config: CheckConfig): Promise<[number, number, strin
 }
 
 export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
+    if (['default', 'strict'].includes(checkerType)) {
+        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+    }
     if (!checkers[checkerType]) throw new SystemError('Unknown checker type {0}.', [checkerType]);
     if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
     const s = checker.replace('@', '.').split('.');

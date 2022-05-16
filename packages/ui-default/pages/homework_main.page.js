@@ -19,16 +19,16 @@ const page = new NamedPage('homework_main', () => {
     calendar.getDom().appendTo('[name="calendar_entry"]');
     $('[name="homework_display"]').change((ev) => {
       switch (ev.currentTarget.value) {
-      case 'calendar':
-        $('.homework__list').hide();
-        $('[name="calendar_entry"]').show();
-        break;
-      case 'list':
-        $('.homework__list').show();
-        $('[name="calendar_entry"]').hide();
-        break;
-      default:
-        throw new Error('Unexpected display parameter');
+        case 'calendar':
+          $('.homework__list').hide();
+          $('[name="calendar_entry"]').show();
+          break;
+        case 'list':
+          $('.homework__list').show();
+          $('[name="calendar_entry"]').hide();
+          break;
+        default:
+          throw new Error('Unexpected display parameter');
       }
     });
   }

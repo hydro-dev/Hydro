@@ -5,7 +5,6 @@ export default class Sock {
     const i = new URL(url, window.location.href);
     i.protocol = i.protocol.replace('http', 'ws');
     this.url = i.toString();
-    this.closed = false;
     this.sock = new ReconnectingWebSocket(this.url);
     this.sock.onopen = () => {
       console.log('Connected');
@@ -13,17 +12,14 @@ export default class Sock {
     };
     this.sock.onclose = ({ code, reason }) => {
       console.warn('Connection closed, ', code, reason);
-      if (code >= 4000) this.closed = true;
+      if (code >= 4000) this.close();
       this.onclose?.(code, reason);
     };
     this.sock.onmessage = (message) => {
       if (process.env.NODE_ENV !== 'production') console.log('Sock.onmessage: ', message);
       const msg = JSON.parse(message.data);
-      if (msg.event === 'auth') {
-        if (msg.error === 'PermissionError' || msg.error === 'PrivilegeError') {
-          this.close();
-        }
-      } else this.onmessage?.(message);
+      if (msg.error === 'PermissionError' || msg.error === 'PrivilegeError') this.close();
+      else this.onmessage?.(message);
     };
   }
 
@@ -32,7 +28,6 @@ export default class Sock {
   }
 
   close() {
-    this.closed = true;
     this.sock?.close?.();
   }
 }

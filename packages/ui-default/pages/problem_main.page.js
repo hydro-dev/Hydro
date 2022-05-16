@@ -7,7 +7,6 @@ import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import pjax from 'vj/utils/pjax';
-import substitute from 'vj/utils/substitute';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
 import delay from 'vj/utils/delay';
@@ -52,19 +51,14 @@ async function updateSelection(sendRequest = true) {
       .map((s) => s.split(',')[0]));
     // drop the category if its subcategory is selected
     const requestTags = _.uniq(_.pullAll(selections, requestCategoryTags));
-    let url;
-    if (requestTags.length === 0) {
-      url = UiContext.getProblemUrlWithoutCategory;
-    } else {
-      url = substitute(decodeURIComponent(UiContext.getProblemUrlWithCategory), {
-        category: requestTags
-          .map((tag) => tag.split(',').map(encodeURIComponent).join(','))
-          .join(','), // build a beautiful URL
-      });
-    }
-    const q = $('[name="q"]').val();
-    if (q) url += `?q=${q}`;
-    pjax.request({ url });
+    let q = $('[name="q"]').val().split(' ').filter((i) => !i.startsWith('category:')).join(' ');
+    if (requestTags.length) q = requestTags.map((i) => `category:${i}`).join(' ') + (q ? ` ${q}` : '');
+    const url = new URL(window.location.href);
+    if (!q) url.searchParams.delete('q');
+    else url.searchParams.set('q', q);
+    url.searchParams.delete('page');
+    pjax.request({ url: url.toString() });
+    $('[name="q"]').val(q);
   }
 }
 
@@ -230,7 +224,7 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
-const page = new NamedPage(['problem_main', 'problem_category'], () => {
+const page = new NamedPage(['problem_main'], () => {
   const doc = document.body;
   doc.className += ' display-mode';
   $('.section.display-mode').removeClass('display-mode');

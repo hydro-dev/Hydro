@@ -2,7 +2,7 @@ import { Action, AnyAction, Reducer } from 'redux';
 
 export default async function loadReactRedux<S, A extends Action = AnyAction>(storeReducer: Reducer<S, A>) {
   const React = await import('react');
-  const { render, unmountComponentAtNode } = await import('react-dom');
+  const { createRoot } = await import('react-dom/client');
   const { Provider } = await import('react-redux');
   const { createStore, applyMiddleware } = await import('redux');
   const { default: reduxThunk } = await import('redux-thunk');
@@ -24,8 +24,7 @@ export default async function loadReactRedux<S, A extends Action = AnyAction>(st
 
   return {
     React,
-    render,
-    unmountComponentAtNode,
+    createRoot,
     Provider,
     store,
   };

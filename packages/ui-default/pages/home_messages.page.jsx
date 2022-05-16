@@ -1,4 +1,6 @@
 import { NamedPage } from 'vj/misc/Page';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import api, { gql } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import parseQueryString from 'vj/utils/parseQueryString';
@@ -26,9 +28,7 @@ const page = new NamedPage('home_messages', () => {
     const { default: WebSocket } = await import('../components/socket');
     const { default: MessagePadApp } = await import('../components/messagepad');
     const { default: MessagePadReducer } = await import('../components/messagepad/reducers');
-    const {
-      React, render, Provider, store,
-    } = await loadReactRedux(MessagePadReducer);
+    const { Provider, store } = await loadReactRedux(MessagePadReducer);
 
     reduxStore = store;
 
@@ -71,7 +71,7 @@ const page = new NamedPage('home_messages', () => {
       return this;
     };
 
-    render(
+    createRoot($('#messagePad').get(0)).render(
       <Provider store={store}>
         <MessagePadApp
           onAdd={async () => {
@@ -84,7 +84,6 @@ const page = new NamedPage('home_messages', () => {
           }}
         />
       </Provider>,
-      $('#messagePad').get(0),
     );
   }
 

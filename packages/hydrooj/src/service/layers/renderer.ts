@@ -40,7 +40,7 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
         }
         for (const key in kwargs.query || {}) {
             if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = encodeURIComponent(kwargs.query[key].toString());
+            else query[key] = kwargs.query[key].toString();
         }
         try {
             const { anchor } = args;
@@ -52,7 +52,7 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
                 || (host instanceof Array
                     ? (!host.includes(request.host))
                     : request.host !== host)
-            )) withDomainId = domainId;
+            )) withDomainId ||= domainId;
             res = router.url(name, args, { query }).toString();
             if (anchor) res = `${res}#${anchor}`;
             if (withDomainId) res = `/d/${withDomainId}${res}`;

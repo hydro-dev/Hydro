@@ -81,6 +81,7 @@ export default function (env = {}) {
     mode: (env.production || env.measure) ? 'production' : 'development',
     profile: true,
     context: root(),
+    devtool: env.production ? 'source-map' : false,
     entry: {
       hydro: './entry.js',
       polyfill: './polyfill.ts',
@@ -100,8 +101,6 @@ export default function (env = {}) {
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       alias: {
         vj: root(),
-        'js-yaml': root('utils/yamlCompact'),
-        'real-js-yaml': require.resolve('js-yaml'),
       },
     },
     module: {
@@ -205,12 +204,12 @@ export default function (env = {}) {
         patterns: [
           { from: root('static') },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
-          { from: root('.build/sharedworker.js'), to: 'sharedworker.js' },
         ],
       }),
       new webpack.DefinePlugin({
         'process.env': {
           NODE_ENV: env.production ? '"production"' : '"debug"',
+          VERSION: JSON.stringify(require('@hydrooj/ui-default/package.json').version),
         },
       }),
       new webpack.LoaderOptionsPlugin({
@@ -224,10 +223,10 @@ export default function (env = {}) {
         filename: '[name].[hash:10].worker.js',
         customLanguages: [{
           label: 'yaml',
-          entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/monaco.contribution'),
+          entry: require.resolve('monaco-yaml/index.js'),
           worker: {
             id: 'vs/language/yaml/yamlWorker',
-            entry: require.resolve('@undefined-moe/monaco-yaml/lib/esm/yaml.worker.js'),
+            entry: require.resolve('monaco-yaml/yaml.worker.js'),
           },
         }],
       }),

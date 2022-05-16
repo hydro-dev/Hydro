@@ -5,7 +5,7 @@ export class CompileError extends Error {
     stdout: string;
     stderr: string;
     status: string;
-    type: string;
+    type = 'CompileError';
 
     constructor(obj: string | CompileErrorInfo) {
         super('Compile Error');
@@ -17,48 +17,29 @@ export class CompileError extends Error {
             this.stderr = obj.stderr || '';
             this.status = obj.status ? STATUS_TEXTS[obj.status] || '' : '';
         }
-        this.type = 'CompileError';
     }
 }
 
 export class FormatError extends Error {
-    type: string;
-    params: any[];
+    type = 'FormatError';
 
-    constructor(message: string, params = []) {
+    constructor(message: string, public params = []) {
         super(message);
-        this.type = 'FormatError';
-        this.params = params;
     }
 }
 
 export class RuntimeError extends Error {
-    type: string;
-    detail: any;
+    type = 'RuntimeError';
 
-    constructor(detail: string, message: string) {
+    constructor(public detail: string, message: string) {
         super(message);
-        this.type = 'RuntimeError';
-        this.detail = detail;
     }
 }
 
 export class SystemError extends Error {
-    type: string;
-    params: any[];
+    type = 'SystemError';
 
-    constructor(message: string, params = []) {
+    constructor(message: string, public params = []) {
         super(message);
-        this.type = 'SystemError';
-        this.params = params;
-    }
-}
-
-export class TooFrequentError extends Error {
-    type: string;
-
-    constructor(message: string) {
-        super(message);
-        this.type = 'TooFrequentError';
     }
 }

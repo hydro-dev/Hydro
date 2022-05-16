@@ -92,14 +92,15 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    <div class="section side visiable nojs--hide">
+    <div class="section side visiable nojs--hide section--problem-sidebar-tags">
       <div class="section__header">
         <h1 class="section__title">{{ _('Categories') }} ({{ _('click to add') }})</h1>
       </div>
-      <div class="section__body">
+      <div class="section__body problem-sidebar-tags__detail">
         {% include "partials/category.html" %}
       </div>
     </div>
+    {% include "partials/problem_sidebar_additional_file.html" %}
     {% if page_name == 'problem_edit' %}
       {% set owner_udoc = udoc %}
       {% include "partials/problem_sidebar.html" %}

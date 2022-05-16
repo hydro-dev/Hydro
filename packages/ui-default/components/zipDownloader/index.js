@@ -51,6 +51,7 @@ export default async function download(filename, targets) {
         stream,
       };
     } catch (e) {
+      window.captureException?.(e);
       stopDownload();
       Notification.error(i18n('Download Error', [target.filename, e.toString()]));
     }
@@ -144,6 +145,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
     }
     await download(`${name}.zip`, targets);
   } catch (e) {
+    window.captureException?.(e);
     Notification.error(`${e.message} ${e.params?.[0]}`);
   }
 }

@@ -1,0 +1,66 @@
+.page--problem_config
+  .section--problem-sidebar-testdata
+    .problem-sidebar-testdata__detail
+      max-height: 270px
+      overflow-y: auto
+
+  .col--size
+    width: 80px
+  .col--operation
+    width: 40px
+    text-align: center
+
+  .textbox,.select
+    margin: 0
+  
+  .bp4-tab-panel
+    margin-top: 5px
+
+  .problem-config-form
+    font-family: var(--code-font-family)
+  
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button
+      -webkit-appearance: none !important
+    input[type="number"]
+      -moz-appearance: textfield
+
+    .bp4-tag.bp4-minimal
+      background: transparent
+    .bp4-input-action
+      pointer-events: none
+    .bp4-input-group
+      input
+        appearance: none
+        display: block
+        width: 100%
+        font-size: 0.875rem
+        height: 2.1875rem
+        line-height: 1.2
+        padding: 0.3125rem;
+        border: 1px solid #ddd
+        color: inherit
+        border-radius: 0
+        background-color: transparent
+        outline: 2px solid transparent
+        transition: outline-color 0.2s, border-color 0.2s
+        transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1)
+        box-shadow: none
+      
+
+    .data-table
+      tr
+        border-top: 0
+        border-bottom: 0
+        height: auto
+      td
+        padding: 0
+      .thead td
+        text-align: center
+      td input, td div
+        background: transparent
+
+  .hover-row.status-bar
+    display: none
+  
+  input::placeholder
+    color: rgba(95,107,124,.6)!important

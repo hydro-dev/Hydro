@@ -240,7 +240,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
         const msg = JSON.stringify({
             message: 'User {0} mentioned you in {1:link}',
-            params: [this.user.uname, this.request.path],
+            params: [this.user.uname, `/d/${domainId}${this.request.path}`],
         });
         for (const uid of uids) {
             message.send(1, uid, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
@@ -259,7 +259,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const uids = Object.keys(await user.getList(domainId, Array.from(targets))).map((i) => +i);
         const msg = JSON.stringify({
             message: 'User {0} mentioned you in {1:link}',
-            params: [this.user.uname, this.request.path],
+            params: [this.user.uname, `/d/${domainId}${this.request.path}`],
         });
         for (const uid of uids) {
             message.send(1, uid, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);

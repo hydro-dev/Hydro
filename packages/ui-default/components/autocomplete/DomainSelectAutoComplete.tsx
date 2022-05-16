@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
@@ -33,15 +33,12 @@ export default class DomainSelectAutoComplete extends AutoComplete {
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.render(
-      <Component
-        ref={(ref) => { this.ref = ref; }}
-        value={value}
-        onChange={this.onChange}
-        multi={this.options.multi}
-      />,
-      this.container,
-    );
+    ReactDOM.createRoot(this.container).render(<Component
+      ref={(ref) => { this.ref = ref; }}
+      value={value}
+      onChange={this.onChange}
+      multi={this.options.multi}
+    />);
   }
 }
 

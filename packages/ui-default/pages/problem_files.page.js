@@ -51,12 +51,12 @@ const page = new NamedPage('problem_files', () => {
     const dialog = new Dialog({
       $body: `
         <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="file-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
         </div>
         <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-        <div class="bp3-progress-bar bp3-intent-primary bp3-no-stripes">
-          <div class="upload-progress bp3-progress-meter" style="width: 0"></div>
+        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
+          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
         </div>`,
     });
     try {
@@ -100,6 +100,7 @@ const page = new NamedPage('problem_files', () => {
       Notification.success(i18n('File uploaded successfully.'));
       await pjax.request({ push: false });
     } catch (e) {
+      window.captureException?.(e);
       console.error(e);
       Notification.error(i18n('File upload failed: {0}', e.toString()));
     } finally {
@@ -238,6 +239,7 @@ const page = new NamedPage('problem_files', () => {
         const res = await request.get(link);
         content = await request.get(res.url, undefined, { dataType: 'text' });
       } catch (e) {
+        window.captureException?.(e);
         Notification.error(i18n('Failed to load file: {0}', e.message));
         throw e;
       }

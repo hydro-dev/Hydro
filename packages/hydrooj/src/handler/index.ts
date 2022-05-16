@@ -14,3 +14,4 @@ import './domain';
 import './status';
 import './api';
 import './blog';
+import './compat';

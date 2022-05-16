@@ -33,7 +33,7 @@ CustomSelectAutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
-  data: PropTypes.any,
+  data: PropTypes.arrayOf(PropTypes.any),
 };
 
 CustomSelectAutoComplete.displayName = 'CustomSelectAutoComplete';
