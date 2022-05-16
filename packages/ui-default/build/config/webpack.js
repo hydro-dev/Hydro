@@ -100,6 +100,7 @@ export default function (env = {}) {
       modules: [root('node_modules'), root('../../node_modules')],
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       alias: {
+        '@milkdown/prose': '@milkdown/prose/lib',
         vj: root(),
       },
     },

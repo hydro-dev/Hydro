@@ -65,6 +65,7 @@
         "typescript": "^4.6.4"
     },
     "resolutions": {
+        "@milkdown/prose": "^6.1.0",
         "esbuild": "0.14.3"
     }
 }

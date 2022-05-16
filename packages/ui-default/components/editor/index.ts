@@ -151,14 +151,14 @@ export default class VjEditor extends DOMAttachedObject {
     const isProblemEdit = pagename === 'problem_edit';
     const [
       {
-        Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx, serializerCtx,
+        Editor, rootCtx, defaultValueCtx, editorViewCtx, serializerCtx,
       },
-      { nord }, { Slice }, { gfm }, { listener, listenerCtx },
+      { nord }, { replaceAll }, { gfm }, { listener, listenerCtx },
       { math }, { history }, { clipboard }, { tooltip }, { slash },
       { emoji }, { upload, uploadPlugin }, { diagram }, { prism }, { cursor },
       { menu },
     ] = await Promise.all([
-      import('@milkdown/core'), import('./theme'), import('@milkdown/prose'),
+      import('@milkdown/core'), import('./theme'), import('@milkdown/utils'),
       import('@milkdown/preset-gfm'), import('@milkdown/plugin-listener'),
       import('@milkdown/plugin-math'),
       import('@milkdown/plugin-history'),
@@ -223,14 +223,7 @@ export default class VjEditor extends DOMAttachedObject {
           this.height = $(ele).height();
         });
       });
-    this.milkdown.setValue = (val) => {
-      this.milkdown.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const doc = ctx.get(parserCtx)(val);
-        if (!doc) return;
-        view.dispatch(view.state.tr.replace(0, view.state.doc.content.size, new Slice(doc.content, 0, 0)));
-      });
-    };
+    this.milkdown.setValue = (val) => this.milkdown.action(replaceAll(val));
     this.milkdown.getValue = () => this.milkdown.action((ctx) => {
       const editorView = ctx.get(editorViewCtx);
       const serializer = ctx.get(serializerCtx);
