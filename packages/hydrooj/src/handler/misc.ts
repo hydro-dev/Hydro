@@ -91,7 +91,7 @@ export class FSDownloadHandler extends Handler {
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
         const targetUser = await user.getById('system', uid);
-        if (!targetUser.hasPriv(PRIV.PRIV_CREATE_FILE)) throw new ForbiddenError('Access denied');
+        if (this.user._id !== uid && !targetUser.hasPriv(PRIV.PRIV_CREATE_FILE)) throw new ForbiddenError('Access denied');
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
