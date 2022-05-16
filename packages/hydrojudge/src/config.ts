@@ -33,7 +33,7 @@ HOME=/w`,
 };
 
 export function getConfig(key: keyof typeof config) {
-    return global.Hydro ? global.Hydro.model.system.get(`hydrojudge.${key}`) : config[key];
+    return global.Hydro ? global.Hydro.model.system.get(`hydrojudge.${key}`) ?? config[key] : config[key];
 }
 
 if (fs.existsSync(path.resolve(process.cwd(), '.env'))) {
