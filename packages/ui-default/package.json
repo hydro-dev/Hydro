@@ -46,7 +46,7 @@
     "fancy-log": "^2.0.0",
     "file-loader": "^6.2.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
-    "graphiql": "^1.8.10",
+    "graphiql": "1.8.9",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.3.0",
     "gulp-iconfont": "^11.0.1",
