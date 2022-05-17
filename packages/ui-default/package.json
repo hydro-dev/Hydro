@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.37.6",
+  "version": "4.37.7",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -10,7 +10,7 @@
     "lint": "eslint"
   },
   "devDependencies": {
-    "@blueprintjs/core": "^4.3.0",
+    "@blueprintjs/core": "^4.3.1",
     "@fontsource/dm-mono": "^4.5.8",
     "@fontsource/fira-code": "^4.5.9",
     "@fontsource/inconsolata": "^4.5.6",
@@ -25,7 +25,7 @@
     "@types/json-schema": "^7.0.11",
     "@types/katex": "^0.14.0",
     "@types/qrcode": "^1.4.2",
-    "@types/react-dom": "^18.0.3",
+    "@types/react-dom": "^18.0.4",
     "@types/redux-logger": "^3.0.9",
     "ansi_up": "^5.1.0",
     "autoprefixer": "^9.8.8",
@@ -46,7 +46,7 @@
     "fancy-log": "^2.0.0",
     "file-loader": "^6.2.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
-    "graphiql": "^1.8.9",
+    "graphiql": "^1.8.10",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.3.0",
     "gulp-iconfont": "^11.0.1",
@@ -100,7 +100,7 @@
     "through2": "^4.0.2",
     "timeago-react": "^3.0.4",
     "timeago.js": "^4.0.2",
-    "vditor": "^3.8.13",
+    "vditor": "^3.8.14",
     "vinyl-buffer": "^1.0.1",
     "web-streams-polyfill": "^3.2.1",
     "webpack": "^4.46.0",
