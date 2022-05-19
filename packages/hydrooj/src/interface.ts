@@ -307,7 +307,7 @@ export interface RecordDoc {
 }
 
 export interface ScoreboardNode {
-    type: 'string' | 'rank' | 'user' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
+    type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
     value: string;
     raw?: any;
     score?: number;
