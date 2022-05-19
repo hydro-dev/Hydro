@@ -18,7 +18,7 @@ import './utils';
 import { getConfig } from './config';
 import * as Session from './hosts/index';
 import log from './log';
-import { Queue, sleep } from './utils';
+import { Queue } from './utils';
 
 declare global {
     namespace NodeJS {
@@ -28,8 +28,8 @@ declare global {
         }
     }
 }
-if (!global.onDestroy) global.onDestroy = [];
-if (!global.hosts) global.hosts = [];
+global.onDestroy ||= [];
+global.hosts ||= [];
 let exit = false;
 
 const terminate = async () => {
@@ -60,28 +60,16 @@ async function worker(queue: Queue<any>) {
 
 async function daemon() {
     const _hosts = getConfig('hosts');
-    const delay = getConfig('retry_delay_sec');
     const hosts = {};
     const queue = new Queue<any>();
+    worker(queue).catch((e) => log.error(e));
     for (const i in _hosts) {
         _hosts[i].host = _hosts[i].host || i;
-        hosts[i] = new Session[_hosts[i].type || 'vj4'](_hosts[i]);
+        hosts[i] = new Session[_hosts[i].type || 'hydro'](_hosts[i]);
         await hosts[i].init();
     }
+    for (const i in hosts) hosts[i].consume(queue);
     global.hosts = hosts;
-    worker(queue);
-    for (const i in hosts) {
-        while ('Orz twd2') {
-            try {
-                await hosts[i].consume(queue);
-                break;
-            } catch (e) {
-                log.error(e, e.stack);
-                log.info(`在 ${delay} 秒后重试`);
-                await sleep(delay * 1000);
-            }
-        }
-    }
 }
 
 if (require.main === module) daemon();

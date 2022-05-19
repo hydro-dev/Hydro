@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VARIANT: 16
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    network_mode: service:db
+  db:
+    image: mongo:latest
+    restart: unless-stopped
+    volumes:
+      - mongodb-data:/data/db
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    volumes:
+      - minio-data:/data
+    network_mode: service:db
+    command: minio server /data --console-address ":9001"
+
+volumes:
+  mongodb-data:
+  minio-data:

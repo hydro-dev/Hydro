@@ -1,28 +1,8 @@
 import { format, inspect, InspectOptions } from 'util';
 import cac from 'cac';
+import { Time } from '@hydrooj/utils/lib/utils';
 
 const argv = cac().parse();
-
-namespace Time {
-    export const second = 1000;
-    export const minute = second * 60;
-    export const hour = minute * 60;
-    export const day = hour * 24;
-    export const week = day * 7;
-    export function formatTimeShort(ms: number) {
-        const abs = Math.abs(ms);
-        if (abs >= day - hour / 2) {
-            return `${Math.round(ms / day)}d`;
-        } if (abs >= hour - minute / 2) {
-            return `${Math.round(ms / hour)}h`;
-        } if (abs >= minute - second / 2) {
-            return `${Math.round(ms / minute)}m`;
-        } if (abs >= second) {
-            return `${Math.round(ms / second)}s`;
-        }
-        return `${ms}ms`;
-    }
-}
 
 const colors = [
     20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62,

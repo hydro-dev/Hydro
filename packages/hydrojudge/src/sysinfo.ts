@@ -1,3 +1,4 @@
+// TODO this should be moved into web
 import path from 'path';
 import fs from 'fs-extra';
 import { noop } from 'lodash';
@@ -30,6 +31,8 @@ int main(){
                 type: 'default',
                 time: '3s',
                 memory: '256m',
+                user_extra_files: [],
+                judge_extra_files: [],
             },
             stat: {},
             clean: [],

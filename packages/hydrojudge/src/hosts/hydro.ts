@@ -10,7 +10,7 @@ import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type { JudgeResultBody } from 'hydrooj';
-import readCases from '../cases';
+import readCases, { processTestdata } from '../cases';
 import { getConfig } from '../config';
 import { CompileError, FormatError, SystemError } from '../error';
 import judge from '../judge';
@@ -232,7 +232,7 @@ export default class Hydro {
             queue.start();
             await Promise.all(tasks);
             fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
-            await this.processData(filePath).catch(noop);
+            await processTestdata(filePath);
         }
         fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
@@ -329,34 +329,6 @@ export default class Hydro {
             if (res.data.url) await this.login();
         } catch (e) {
             await this.login();
-        }
-    }
-
-    async processData(folder: string) { // eslint-disable-line class-methods-use-this
-        let files = await fs.readdir(folder);
-        let ini = false;
-        if (files.length <= 2) {
-            if (files.length === 2) files.splice(files.indexOf('version'), 1);
-            const s = fs.statSync(path.resolve(folder, files[0]));
-            if (s.isDirectory()) folder = path.resolve(folder, files[0]);
-        }
-        files = await fs.readdir(folder);
-        for (const i of files) {
-            if (i.toLowerCase() === 'config.ini') {
-                ini = true;
-                await fs.rename(`${folder}/${i}`, `${folder}/config.ini`);
-                break;
-            }
-        }
-        if (ini) {
-            for (const i of files) {
-                if (i.toLowerCase() === 'input') await fs.rename(`${folder}/${i}`, `${folder}/input`);
-                else if (i.toLowerCase() === 'output') await fs.rename(`${folder}/${i}`, `${folder}/output`);
-            }
-            files = await fs.readdir(`${folder}/input`);
-            for (const i of files) await fs.rename(`${folder}/input/${i}`, `${folder}/input/${i.toLowerCase()}`);
-            files = await fs.readdir(`${folder}/output`);
-            for (const i of files) await fs.rename(`${folder}/output/${i}`, `${folder}/output/${i.toLowerCase()}`);
         }
     }
 
