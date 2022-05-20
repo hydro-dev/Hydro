@@ -3,6 +3,7 @@
 import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
 import mysql from 'mysql';
+import TurndownService from 'turndown';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { noop, Time } from '@hydrooj/utils/lib/utils';
 import { NotFoundError } from 'hydrooj/src/error';
@@ -13,8 +14,14 @@ import * as contest from 'hydrooj/src/model/contest';
 import domain from 'hydrooj/src/model/domain';
 import problem from 'hydrooj/src/model/problem';
 import record from 'hydrooj/src/model/record';
+import SolutionModel from 'hydrooj/src/model/solution';
 import * as system from 'hydrooj/src/model/system';
 import user from 'hydrooj/src/model/user';
+
+const turndown = new TurndownService({
+    codeBlockStyle: 'fenced',
+    bulletListMarker: '-',
+});
 
 const statusMap = {
     4: STATUS.STATUS_ACCEPTED,
@@ -145,6 +152,8 @@ export async function run({
         accepted	int	11	Y	总ac次数
         submit	int	11	Y	总提交次数
         solved	int	11	Y	解答（未用）
+
+        solution #optional
     */
     const pidMap: Record<string, number> = {};
     const [[{ 'count(*)': pcount }]] = await query('SELECT count(*) FROM `problem`');
@@ -183,6 +192,10 @@ export async function run({
                 maintainer,
                 html: true,
             });
+            if (pdoc.solution) {
+                const md = turndown.turndown(pdoc.solution);
+                await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
+            }
         }
     }
 
