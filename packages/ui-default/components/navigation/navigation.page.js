@@ -120,19 +120,6 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
   $(document).on('click', '[name="nav_logout"]', handleNavLogoutClick);
   $(document).on('click', '[name="nav_switch_account"]', handlerSwitchAccount);
 
-  $trigger = $(tpl`
-    <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more">
-      <a href="javascript:;" class="nav__item">
-        ${i18n('More')} <span class="icon icon-expand_more"></span>
-      </a>
-    </li>
-  `);
-  $menu = $('<ol class="dropdown-target menu menu_more" id="menu-nav-more">');
-  $trigger.append($menu);
-  $('.nav__list--main').append($trigger);
-
-  handleNavbar();
-
   const slideout = new Slideout({
     panel: document.getElementById('panel'),
     menu: document.getElementById('menu'),
@@ -151,6 +138,19 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
 
   $('.header__hamburger').on('click', () => slideout.toggle());
   $(window).on('resize', handleNavbar);
-}, () => { });
+}, () => {
+  $trigger = $(tpl`
+    <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more">
+      <a href="javascript:;" class="nav__item">
+        ${i18n('More')} <span class="icon icon-expand_more"></span>
+      </a>
+    </li>
+  `);
+  $menu = $('<ol class="dropdown-target menu menu_more" id="menu-nav-more">');
+  $trigger.append($menu);
+  $('.nav__list--main').append($trigger);
+
+  handleNavbar();
+});
 
 export default navigationPage;
