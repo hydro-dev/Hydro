@@ -58,19 +58,22 @@ function handlerSwitchAccount(ev) {
   ev.preventDefault();
 }
 
-let trigger;
-let menu;
+let $trigger;
+let $menu;
 
 function handleNavbar() {
   let fromHide = false;
   if ($(document).width() <= 600) {
-    for (const ele of menu.children()) {
-      ele.insertBefore(trigger, null);
-    }
-    trigger.hide();
+    $menu.children().each(function () {
+      const $ele = $(this);
+      $ele.addClass('nav__list-item').removeClass('menu__item');
+      $ele.children('a').addClass('nav__item').removeClass('menu__link');
+      $ele.insertBefore($trigger, null);
+    });
+    $trigger.hide();
     return;
   }
-  trigger.show();
+  $trigger.show();
 
   const base = 70;
 
@@ -80,18 +83,18 @@ function handleNavbar() {
     if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
       $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
       $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
-      $(menu).prepend($(navItems[navItem]));
+      $menu.prepend($(navItems[navItem]));
     }
     navItem--;
     fromHide = true;
   }
 
-  if (!fromHide && menu.children().length) {
-    while ($('#menu').children('div').height() <= base && menu.children().length) {
-      const ele = menu.children(0);
-      $(ele).addClass('nav__list-item').removeClass('menu__item');
-      $(ele).children('a').addClass('nav__item').removeClass('menu__link');
-      ele.insertBefore(trigger, null);
+  if (!fromHide && $menu.children().length) {
+    while ($('#menu').children('div').height() <= base && $menu.children().length) {
+      const $ele = $menu.children().first();
+      $ele.addClass('nav__list-item').removeClass('menu__item');
+      $ele.children('a').addClass('nav__item').removeClass('menu__link');
+      $ele.insertBefore($trigger, null);
     }
   }
 
@@ -102,14 +105,13 @@ function handleNavbar() {
       if (!$(navItems[navItem]).children('a').hasClass('nav--active')) {
         $(navItems[navItem]).removeClass('nav__list-item').addClass('menu__item');
         $(navItems[navItem]).children('a').removeClass('nav__item').addClass('menu__link');
-        $(menu).prepend($(navItems[navItem]));
-        break;
+        $menu.prepend($(navItems[navItem]));
       }
       navItem--;
     }
   }
 
-  if (!menu.children().length) trigger.hide();
+  if (!$menu.children().length) $trigger.hide();
 }
 
 const navigationPage = new AutoloadPage('navigationPage', () => {
@@ -130,23 +132,24 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
   });
 
   const $slideoutOverlay = $('.slideout-overlay');
-  $slideoutOverlay.click(() => slideout.close());
+  $slideoutOverlay.on('click', () => slideout.close());
   slideout.on('beforeopen', () => $slideoutOverlay.show());
   slideout.on('beforeclose', () => $slideoutOverlay.hide());
 
-  $('.header__hamburger').click(() => slideout.toggle());
+  $('.header__hamburger').on('click', () => slideout.toggle());
   $(window).on('resize', handleNavbar);
 }, () => {
-  trigger = $(tpl`
+  $trigger = $(tpl`
     <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more">
       <a href="javascript:;" class="nav__item">
         ${i18n('More')} <span class="icon icon-expand_more"></span>
       </a>
     </li>
   `);
-  menu = $('<ol class="dropdown-target menu menu_more" id="menu-nav-more">');
-  trigger.append(menu);
-  $('.nav__list--main').append(trigger);
+  $menu = $('<ol class="dropdown-target menu menu_more" id="menu-nav-more">');
+  $trigger.append($menu);
+  $('.nav__list--main').append($trigger);
+
   handleNavbar();
 });
 
