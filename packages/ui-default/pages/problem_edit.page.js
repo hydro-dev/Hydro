@@ -274,7 +274,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
       await request.post('./files', {
         operation: 'delete_files',
         files: file,
-        type: 'testdata',
+        type: 'additional_file',
       });
       Notification.success(i18n('File have been deleted.'));
       $(ev.currentTarget).parent().parent().remove();
