@@ -265,6 +265,8 @@ export default class Editor extends DOMAttachedObject {
 
   focus() {
     this.ensureValid();
+    this.vditor?.focus();
+    if (!this.editor || !this.model) return;
     this.editor.focus();
     const range = this.model.getFullModelRange();
     this.editor.setPosition({ lineNumber: range.endLineNumber, column: range.endColumn });

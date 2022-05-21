@@ -42,7 +42,7 @@
       var _htmlNode = document.documentElement;
       _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
       try {
-        import('data:text/javascript,');Object.fromEntries([])
+        import('data:text/javascript,');Object.fromEntries([]);window.matchMedia('all').addEventListener('change',()=>{});
       } catch(e) {
         const s = document.createElement('script');
         s.async = false;
