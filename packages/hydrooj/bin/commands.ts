@@ -87,41 +87,34 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         fs.removeSync(dir);
         console.log('Successfully restored.');
     });
-    cli.command('addon add <name>').action((name) => {
-        for (let i = 0; i < addons.length; i++) {
-            if (addons[i] === name) {
-                addons.splice(i, 1);
-                break;
+    cli.command('addon [operation] [name]').action((operation, name) => {
+        if (operation && !['add', 'remove', 'create'].includes(operation)) {
+            console.log('Unknown operation.');
+            return;
+        }
+        if (operation === 'create') {
+            name ||= '/root/addon';
+            fs.mkdirSync(name);
+            child.execSync('yarn init -y', { cwd: name });
+            fs.mkdirSync(`${name}/templates`);
+            fs.mkdirSync(`${name}/locales`);
+            fs.mkdirSync(`${name}/public`);
+            addons.push(name);
+            console.log(`Addon created at ${name}`);
+            return;
+        }
+        if (operation && name) {
+            for (let i = 0; i < addons.length; i++) {
+                if (addons[i] === name) {
+                    addons.splice(i, 1);
+                    break;
+                }
             }
         }
-        addons.push(name);
+        if (operation === 'add' && name) addons.push(name);
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
-    });
-    cli.command('addon remove <name>').action((name) => {
-        for (let i = 0; i < addons.length; i++) {
-            if (addons[i] === name) {
-                addons.splice(i, 1);
-                break;
-            }
-        }
-        addons = Array.from(new Set(addons));
-        console.log('Current Addons: ', addons);
-        fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
-    });
-    cli.command('addon create [name]').action((name) => {
-        name ||= '/root/addon';
-        fs.mkdirSync(name);
-        child.execSync('yarn init -y', { cwd: name });
-        fs.mkdirSync(`${name}/templates`);
-        fs.mkdirSync(`${name}/locales`);
-        fs.mkdirSync(`${name}/public`);
-        addons.push(name);
-        console.log(`Addon created at ${name}`);
-    });
-    cli.command('addon').action(() => {
-        console.log('Current Addons: ', addons);
     });
     cli.help();
     cli.parse();
