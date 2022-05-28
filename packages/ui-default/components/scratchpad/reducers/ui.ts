@@ -17,6 +17,7 @@ export default function reducer(state = {
     isLoading: false,
   },
   isPosting: false,
+  isWaiting: false,
 }, action) {
   switch (action.type) {
     case 'SCRATCHPAD_UI_CHANGE_SIZE': {
@@ -67,6 +68,7 @@ export default function reducer(state = {
       return {
         ...state,
         isPosting: false,
+        isWaiting: true,
       };
     }
     case 'SCRATCHPAD_POST_PRETEST_REJECTED':
@@ -75,6 +77,7 @@ export default function reducer(state = {
       return {
         ...state,
         isPosting: false,
+        isWaiting: true,
       };
     }
     case 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS_PENDING': {
@@ -103,6 +106,12 @@ export default function reducer(state = {
           ...state.records,
           isLoading: false,
         },
+      };
+    }
+    case 'SCRATCHPAD_WAITING_END': {
+      return {
+        ...state,
+        isWaiting: false,
       };
     }
     default:
