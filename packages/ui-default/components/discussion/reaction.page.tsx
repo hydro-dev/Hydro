@@ -4,7 +4,6 @@ import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Popover } from '@blueprintjs/core';
 import { AutoloadPage } from 'vj/misc/Page';
-import Notification from 'vj/components/notification';
 
 import request from 'vj/utils/request';
 import { chunk } from 'lodash';
@@ -20,11 +19,8 @@ function renderReactions(reactions, self, rootEle) {
 
 async function handleEmojiClick(payload, emoji, ele) {
   const res = await request.post('', { ...payload, emoji });
-  if (!res.sdoc) {
-    Notification.error('You are already reacted this emoji to this post.');
-    return;
-  }
-  renderReactions(res.doc?.react, res.sdoc?.react, ele);
+  if (!res.sdoc) return;
+  renderReactions(res.doc?.react, res.sdoc.react, ele);
 }
 
 function getRow(count) {
