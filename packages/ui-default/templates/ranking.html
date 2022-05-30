@@ -40,12 +40,12 @@
             <tbody>
               {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <tr>
-                <td class="col--rank">{{ handler.user.rank|default('/') }}</td>
+                <td class="col--rank">{{ handler.user.rank|default('-') }}</td>
                 <td class="col--user">{{ user.render_inline(handler.user) }}</td>
                 <td class="col--rp">{{ handler.user.rp|default(0)|round(0) }}</td>
                 {% for key, def in model.rp %}
                   {% if not def.hidden %}
-                    <td class="col--detail rp-{{ key }}">{{ handler.user.rpInfo[key]|round if handler.user.rpInfo[key] else '-' }}</td>
+                    <td class="col--detail rp-{{ key }}">{{ handler.user.rpInfo[key]|round if (handler.user.rpInfo|default({}))[key] else '-' }}</td>
                   {% endif %}
                 {% endfor %}
                 <td class="col--ac">{{ handler.user.nAccept|default(0) }}</td>

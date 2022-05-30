@@ -102,7 +102,7 @@
     "through2": "^4.0.2",
     "timeago-react": "^3.0.4",
     "timeago.js": "^4.0.2",
-    "vditor": "^3.8.14",
+    "vditor": "^3.8.15",
     "vinyl-buffer": "^1.0.1",
     "web-streams-polyfill": "^3.2.1",
     "webpack": "^4.46.0",
