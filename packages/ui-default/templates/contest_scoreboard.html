@@ -35,7 +35,7 @@
                 {{ column.value }}<br />{{ pdict[column.raw].nAccept }}/{{ pdict[column.raw].nSubmit }}
               </a>
             {% else %}
-              {{ column.value|replaceBr|safe }}
+              {{ column.value|nl2br|safe }}
             {% endif %}
             </th>
           {%- endfor -%}
@@ -52,21 +52,21 @@
                 {{ user.render_inline(udict[column.raw], badge=false) }}
               {% elif column.type == 'record' and column.raw %}
                 <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}" data-tooltip="{{ column.hover }}">
-                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|replaceBr|safe }}</span>
+                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|nl2br|safe }}</span>
                 </a>
               {% elif column.type == 'records' %}
                 {%- for record in column.raw -%}
                   {% if loop.index0 %}/{% endif %}
                   {% if record.raw %}
                     <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
-                      <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|replaceBr|safe }}</span>
+                      <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|nl2br|safe }}</span>
                     </a>
                   {% else %}
-                    {{ record.value|replaceBr|safe }}
+                    {{ record.value|nl2br|safe }}
                   {% endif %}
                 {%- endfor -%}
               {% else %}
-                {{ column.value|replaceBr|safe }}
+                {{ column.value|nl2br|safe }}
               {% endif %}
               </td>
             {%- endfor -%}

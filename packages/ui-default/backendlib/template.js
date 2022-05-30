@@ -77,7 +77,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
     this.addFilter('jsesc', (self) => jsesc(self, { isScriptContext: true }));
     this.addFilter('bitand', (self, val) => self & val);
-    this.addFilter('replaceBr', (self) => self.toString().replace(/\n/g, '<br>'));
     this.addFilter('toString', (self) => (typeof self === 'string' ? self : JSON.stringify(self, replacer)));
     this.addFilter('content', (content, language, html) => {
       let s = '';

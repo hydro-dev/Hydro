@@ -47,21 +47,21 @@ Exported from <a href="{{ model.system.get('server.url') }}">{{ model.system.get
         <td>
           {% if column.type == 'record' and column.raw %}
             <a href="{{ model.system.get('server.url') }}{{ url('record_detail', rid=column.raw).substr(1,9999) }}">
-              <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|replaceBr|safe }}</span>
+              <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|nl2br|safe }}</span>
             </a>
           {% elif column.type == 'records' %}
             {%- for record in column.raw -%}
               {% if loop.index0 %}/{% endif %}
               {% if record.raw %}
                 <a href="{{ model.system.get('server.url') }}{{ url('record_detail', rid=record.raw).substr(1,9999) }}">
-                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|replaceBr|safe }}</span>
+                  <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|nl2br|safe }}</span>
                 </a>
               {% else %}
-                {{ record.value|replaceBr|safe }}
+                {{ record.value|nl2br|safe }}
               {% endif %}
             {%- endfor -%}
           {% else %}
-            {{ column.value|replaceBr|safe }}
+            {{ column.value|nl2br|safe }}
           {% endif %}
         </td>
       {%- endfor -%}
