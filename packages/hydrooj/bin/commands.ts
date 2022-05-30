@@ -88,7 +88,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         console.log('Successfully restored.');
     });
     cli.command('addon [operation] [name]').action((operation, name) => {
-        if (operation && !['add', 'remove', 'create'].includes(operation)) {
+        if (operation && !['add', 'remove', 'create', 'list'].includes(operation)) {
             console.log('Unknown operation.');
             return;
         }
