@@ -28,13 +28,6 @@
         <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
           {{ ddoc['content']|markdown|safe }}
         </div>
-        <div class="reactions list" data-type="did" data-did="{{ ddoc._id }}">
-          {% for key in Object.keys(ddoc.react or {}) %}
-            {% if ddoc.react[key] %}
-              <div class="reaction{% if reactions[ddoc.docId][key] %} active{% endif %}"><span class="emoji">{{ key }}</span> {{ ddoc.react[key] }}</div>
-            {% endif %}
-          {% endfor %}
-        </div>
       </div>
       <ul class="section__footer supplementary dot list">
       {% if handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION) or (handler.user.own(ddoc) and handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION_SELF)) %}
@@ -71,6 +64,11 @@
           <span class="icon icon-emoji"></span>
         </a></li>
       {% endif %}
+      <div class="reactions list" data-type="did" data-did="{{ ddoc._id }}">
+        {% for e in Object.entries(ddoc.react or {})|sort(true, false, 1)|selectattr(1) %}
+          <div class="reaction{% if reactions[ddoc.docId][e[0]] %} active{% endif %}"><span class="emoji">{{ e[0] }}</span> {{ e[1] }}</div>
+        {% endfor %}
+      </div>
       </ul>
     </div>
     <div class="section">

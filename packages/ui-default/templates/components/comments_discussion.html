@@ -113,10 +113,8 @@
       <div class="typo" data-emoji-enabled data-drid="{{ doc.docId }}" data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
         <div class="reactions list" data-type="drid" data-drid="{{ doc._id }}">
-          {% for key in Object.keys(doc.react or {}) %}
-            {% if doc.react[key] %}
-              <div class="reaction{% if reactions[doc.docId][key] %} active{% endif %}"><span class="emoji">{{ key }}</span> {{ doc.react[key] }}</div>
-            {% endif %}
+          {% for e in Object.entries(doc.react or {})|sort(true, false, 1)|selectattr(1) %}
+            <div class="reaction{% if reactions[doc.docId][e[0]] %} active{% endif %}"><span class="emoji">{{ e[0] }}</span> {{ e[1] }}</div>
           {% endfor %}
         </div>
       </div>
