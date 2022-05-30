@@ -1,8 +1,5 @@
 import 'jquery.easing';
 
-import * as React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Popover } from '@blueprintjs/core';
 import { AutoloadPage } from 'vj/misc/Page';
 import CommentBox from 'vj/components/discussion/CommentBox';
 import { ConfirmDialog } from 'vj/components/dialog';
@@ -12,7 +9,6 @@ import { slideDown, slideUp } from 'vj/utils/slide';
 import request from 'vj/utils/request';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
-import { chunk } from 'lodash';
 
 const $replyTemplate = $('.commentbox-container').eq(0).clone();
 
@@ -189,62 +185,6 @@ function onCommentClickDeleteReply(ev) {
   onCommentClickDelete('reply', ev);
 }
 
-function renderReactions(reactions, self, rootEle) {
-  let html = '';
-  for (const key in reactions) {
-    if (!reactions[key]) continue;
-    html += `<div class="reaction${self[key] ? ' active' : ''}"><span class="emoji">${key}</span> ${reactions[key]}</div>\n`;
-  }
-  rootEle.html(html);
-}
-
-async function handleEmojiClick(payload, emoji, ele) {
-  const res = await request.post('', { ...payload, emoji });
-  renderReactions(res.doc?.react, res.sdoc?.react, ele);
-}
-
-function getRow(count) {
-  if (count <= 2) return 2;
-  if (count <= 3) return 3;
-  if (count <= 4) return 4;
-  if (count <= 6) return 6;
-  return 12;
-}
-
-function Reaction({ payload, ele }) {
-  const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤣').split(' ');
-  const elesPerRow = getRow(Math.sqrt(emojiList.length));
-  const [focus, updateFocus] = React.useState(false);
-  const [finish, updateFinish] = React.useState(false);
-  if (finish) setTimeout(() => updateFinish(false), 1000);
-  return (
-    // eslint-disable-next-line no-nested-ternary
-    <Popover usePortal interactionKind="hover" isOpen={finish ? false : (focus ? true : undefined)}>
-      <span className="icon icon-emoji"></span>
-      <div>
-        {chunk(emojiList, elesPerRow).map((line, i) => (
-          <div className="row" key={+i} style={{ paddingBottom: 4, paddingTop: 4 }}>
-            {line.map((emoji) => (
-              <div
-                key={emoji}
-                className={`medium-${12 / elesPerRow} small-${12 / elesPerRow} columns`}
-                onClick={() => handleEmojiClick(payload, emoji, ele).then(() => updateFinish(true))}
-              >
-                {emoji}
-              </div>
-            ))}
-          </div>
-        ))}
-        <div className="row" style={{ paddingTop: 7, paddingBottom: 4 }}>
-          <div className="medium-12 columns">
-            <input name="emojiSuggest" onFocus={() => updateFocus(true)} onBlur={() => updateFocus(false)}></input>
-          </div>
-        </div>
-      </div>
-    </Popover>
-  );
-}
-
 const commentsPage = new AutoloadPage('commentsPage', () => {
   $(document).on('click', '[name="dczcomments__dummy-box"]', onClickDummyBox);
   $(document).on('click', '[data-op="reply"][data-type="comment"]', onCommentClickReplyComment);
@@ -253,26 +193,6 @@ const commentsPage = new AutoloadPage('commentsPage', () => {
   $(document).on('click', '[data-op="edit"][data-type="reply"]', onCommentClickEditReply);
   $(document).on('click', '[data-op="delete"][data-type="comment"]', onCommentClickDeleteComment);
   $(document).on('click', '[data-op="delete"][data-type="reply"]', onCommentClickDeleteReply);
-
-  const canUseReaction = $('[data-op="react"]').length > 0;
-  $('[data-op="react"]').each((i, e) => {
-    ReactDOM.createRoot(e).render(<Reaction payload={$(e).data('form')} ele={$(e).closest('.media__body').find('.reactions')} />);
-  });
-  $(document).on('click', '.reaction', async (e) => {
-    if (!canUseReaction) {
-      (window as any).showSignInDialog();
-      return;
-    }
-    const target = $(e.currentTarget);
-    const res = await request.post('', {
-      operation: 'reaction',
-      type: 'drid',
-      id: target.parent().parent().data('drid'),
-      emoji: target.text().trim().split(' ')[0],
-      reverse: target.hasClass('active'),
-    });
-    renderReactions(res.doc?.react, res.sdoc?.react, target.parent());
-  });
 });
 
 export default commentsPage;

@@ -1,0 +1,30 @@
+.reactions
+  display: inline
+
+  .reaction
+    white-space: nowrap
+    width: auto
+    border-radius: 1.75rem
+    overflow: visible
+    font-size: rem($font-size-small)
+    display: inline-block
+    line-height: rem(22px)
+    padding: rem(0 10px)
+    vertical-align: middle
+    border-radius: rem(12px)
+    border: 1px solid $supplementary-border-color
+    cursor: pointer
+    &.active, &:hover
+      text-decoration: none
+      border-color: $primary-color
+      color: #FFF !important
+    &.active
+      background-color: lighten($primary-color, 10%) !important
+    &:hover
+      background-color: lighten($primary-color, 30%) !important
+    .emoji
+      margin-right: rem(5px)
+
+.popover-reaction-item
+  &:hover
+    background-color: $toolbar-bg-hover
