@@ -39,7 +39,7 @@
       {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
         <tr>
           <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-            #{{ rcdoc.id or loop.index }}
+            #{{ rcdoc.id|default(loop.index) }}
           </td>
           <td class="col--status">
             <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
