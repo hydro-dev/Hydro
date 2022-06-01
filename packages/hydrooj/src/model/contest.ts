@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { Counter } from '@hydrooj/utils/lib/utils';
+import { Counter, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
@@ -542,13 +542,13 @@ export function getMultiStatus(domainId: string, query: any) {
 export function isNew(tdoc: Tdoc, days = 1) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
-    return (now < readyAt - days * 24 * 3600 * 1000);
+    return (now < readyAt - days * Time.day);
 }
 
 export function isUpcoming(tdoc: Tdoc, days = 7) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt.getTime());
+    return (now > readyAt - days * Time.day && now < tdoc.beginAt.getTime());
 }
 
 export function isNotStarted(tdoc: Tdoc) {
@@ -560,8 +560,10 @@ export function isOngoing(tdoc: Tdoc) {
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 
-export function isDone(tdoc: Tdoc) {
-    return tdoc.endAt <= new Date();
+export function isDone(tdoc: Tdoc, tsdoc?: any) {
+    if (tdoc.endAt <= new Date()) return true;
+    if (tsdoc?.startAt <= new Date(Date.now() + tdoc.duration * Time.hour)) return true;
+    return false;
 }
 
 export function isLocked(tdoc: Tdoc) {

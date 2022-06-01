@@ -108,18 +108,18 @@ export class ContestDetailHandler extends Handler {
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
+            if (tsdoc.attend && !tsdoc.startAt) {
+                await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
+                tsdoc.startAt = new Date();
+            }
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
             if (contest.canShowSelfRecord.call(this, tdoc)) {
-                const q = [];
-                for (const i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(domainId, q);
+                rdict = await record.getList(domainId, Object.values(psdict).map((i: any) => i.rid));
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         }
-        this.response.body.pdict = pdict;
-        this.response.body.psdict = psdict;
-        this.response.body.rdict = rdict;
+        Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
     @param('tid', Types.ObjectID)
@@ -238,7 +238,7 @@ export class ContestEditHandler extends Handler {
         this.response.template = 'contest_edit.html';
         const rules = {};
         for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
-        let ts = new Date().getTime();
+        let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const dt = this.tdoc?.beginAt || new Date(ts);
         this.response.body = {
@@ -246,8 +246,7 @@ export class ContestEditHandler extends Handler {
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
-            date_text: dt.format('%Y-%m-%d'),
-            time_text: dt.format('%H:%M'),
+            startAt: dt,
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }

@@ -32,7 +32,7 @@
       {% endif %}
       </div>
     </div>
-  {% if model.contest.isOngoing(tdoc) or model.contest.isDone(tdoc) %}
+  {% if model.contest.isOngoing(tdoc) or model.contest.isDone(tdoc, tsdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
