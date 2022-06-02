@@ -501,6 +501,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 code = await readFile(file.filepath, 'utf-8');
             }
         } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
+        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);
         const rdoc = await record.get(domainId, rid);

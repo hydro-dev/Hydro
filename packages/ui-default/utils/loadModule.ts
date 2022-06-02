@@ -1,4 +1,7 @@
+const loaded = {};
+
 export default async function loadExternalModule(target: string) {
+  if (loaded[target]) return loaded[target];
   const ele = document.createElement('script');
   ele.src = target;
   await new Promise((resolve, reject) => {
@@ -6,5 +9,6 @@ export default async function loadExternalModule(target: string) {
     ele.onerror = reject;
     document.head.appendChild(ele);
   });
-  return window.exports;
+  loaded[target] = window.exports;
+  return loaded[target];
 }
