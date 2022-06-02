@@ -98,7 +98,7 @@
     <dl class="large horizontal">
       <dt>{{ _('Status') }}</dt>
       <dd>
-        {{ _(model.contest.statusText(tdoc)) }}
+        {{ _(model.contest.statusText(tdoc, tsdoc)) }}
         {% if tsdoc.attend %}
           ({{ _('Attended') }})
         {% endif %}

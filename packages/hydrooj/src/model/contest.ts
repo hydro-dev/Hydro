@@ -546,23 +546,24 @@ export function isNew(tdoc: Tdoc, days = 1) {
 }
 
 export function isUpcoming(tdoc: Tdoc, days = 7) {
-    const now = new Date().getTime();
+    const now = Date.now();
     const readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt - days * Time.day && now < tdoc.beginAt.getTime());
+    return (now > readyAt - days * Time.day && now < readyAt);
 }
 
 export function isNotStarted(tdoc: Tdoc) {
     return (new Date()) < tdoc.beginAt;
 }
 
-export function isOngoing(tdoc: Tdoc) {
+export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
     const now = new Date();
+    if (tsdoc && tsdoc?.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 
 export function isDone(tdoc: Tdoc, tsdoc?: any) {
     if (tdoc.endAt <= new Date()) return true;
-    if (tsdoc?.startAt <= new Date(Date.now() + tdoc.duration * Time.hour)) return true;
+    if (tsdoc && tsdoc?.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
     return false;
 }
 
@@ -658,21 +659,14 @@ export async function getScoreboard(
     return [tdoc, rows, udict, pdict, nPages];
 }
 
-export const statusText = (tdoc: Tdoc) => (
+export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
     isNew(tdoc)
         ? 'New'
         : isUpcoming(tdoc)
             ? 'Ready (☆▽☆)'
-            : isOngoing(tdoc)
+            : isOngoing(tdoc, tsdoc)
                 ? 'Live...'
                 : 'Done');
-
-export const getStatusText = (tdoc: Tdoc) => (
-    isNotStarted(tdoc)
-        ? 'not_started'
-        : isOngoing(tdoc)
-            ? 'ongoing'
-            : 'finished');
 
 global.Hydro.model.contest = {
     RULES,
@@ -704,5 +698,4 @@ global.Hydro.model.contest = {
     isLocked,
     isExtended,
     statusText,
-    getStatusText,
 };

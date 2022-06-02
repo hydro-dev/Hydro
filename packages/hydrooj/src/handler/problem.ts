@@ -452,7 +452,7 @@ export class ProblemDetailHandler extends ProblemHandler {
 export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid?: ObjectID) {
-        if (tid && !contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
     }
 
     async get() {

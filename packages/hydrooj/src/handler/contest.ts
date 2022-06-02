@@ -108,7 +108,7 @@ export class ContestDetailHandler extends Handler {
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
-            if (tsdoc.attend && !tsdoc.startAt) {
+            if (tsdoc.attend && !tsdoc.startAt && contest.isOngoing(tdoc)) {
                 await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
                 tsdoc.startAt = new Date();
             }
@@ -240,13 +240,12 @@ export class ContestEditHandler extends Handler {
         for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
-        const dt = this.tdoc?.beginAt || new Date(ts);
         this.response.body = {
             rules,
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
-            startAt: dt,
+            beginAt: this.tdoc?.beginAt || new Date(ts),
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
@@ -261,13 +260,15 @@ export class ContestEditHandler extends Handler {
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
-    @param('autoHide', Types.String, true)
+    @param('autoHide', Types.Boolean, true)
     @param('assign', Types.CommaSeperatedArray, true)
     @param('lock', Types.UnsignedInt, true)
+    @param('contestDuration', Types.Float, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
+        contestDuration?: number,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -277,10 +278,11 @@ export class ContestEditHandler extends Handler {
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
+        contestDuration ||= duration;
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated,
+                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
                 || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
@@ -288,7 +290,7 @@ export class ContestEditHandler extends Handler {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated);
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,

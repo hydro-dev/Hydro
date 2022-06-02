@@ -25,6 +25,7 @@
     "@types/json-schema": "^7.0.11",
     "@types/katex": "^0.14.0",
     "@types/markdown-it": "^12.2.3",
+    "@types/pickadate": "^3.5.32",
     "@types/qrcode": "^1.4.2",
     "@types/react-dom": "^18.0.4",
     "@types/redux-logger": "^3.0.9",

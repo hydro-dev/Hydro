@@ -53,11 +53,13 @@
 {% set extra_attr = args.extra_attr %}
 {% set date = args.date or false %}
 {% set time = args.time or false %}
+{% set datetime = args.datetime or false %}
   class="{{ form_class }}{% if extra_class %} {{ extra_class }}{% endif %}"
   {% if disabled %}disabled{% endif %}
   {% if required %}required{% endif %}
   {% if autofocus %}autofocus data-autofocus{% endif %}
   {% if noAutocomplete %}autocomplete="off"{% endif %}
+  {% if datetime %}data-pick-datetime{% endif %}
   {% if date %}data-pick-date{% endif %}
   {% if time %}data-pick-time{% endif %}
   {% if extra_attr %}{{ extra_attr }}{% endif %}

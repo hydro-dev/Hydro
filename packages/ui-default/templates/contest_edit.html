@@ -46,7 +46,7 @@
               label:'Begin Date',
               name:'beginAtDate',
               placeholder:'YYYY-mm-dd',
-              value:date_text,
+              value:beginAt.format('%Y-%m-%d'),
               date:true,
               row:false
             }) }}
@@ -55,7 +55,7 @@
               label:'Begin Time',
               name:'beginAtTime',
               placeholder:'HH:MM',
-              value:time_text,
+              value:beginAt.format('%H:%M'),
               time:true,
               row:false
             }) }}

@@ -48,7 +48,7 @@
 <div class="row">
   <div class="medium-9 columns">
   {%- for tdoc in tdocs -%}
-    {% if model.contest.isOngoing(tdoc) %}
+    {% if model.contest.isOngoing(tdoc, tsdoc) %}
       {{ render_important_contest('live', 'Live...', tdoc) }}
     {% elif model.contest.isUpcoming(tdoc) %}
       {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
