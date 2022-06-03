@@ -16,7 +16,7 @@
           </li>
           <li>
             <span class="icon icon-calendar"></span>
-            {{ _('Start at') }}: {{ contest.render_time(tdoc.beginAt) }}
+            {{ _('Start at') }}: {{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}
           </li>
           <li>
             <span class="icon icon-schedule--fill"></span>
