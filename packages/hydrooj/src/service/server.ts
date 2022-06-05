@@ -172,12 +172,14 @@ export class HandlerCommon {
         this.domainId = args.domainId;
     }
 
-    async limitRate(op: string, periodSecs: number, maxOperations: number) {
+    async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = false) {
         if (ignoredLimit.includes(op)) return;
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
         const overrideLimit = system.get(`limit.${op}`);
         if (overrideLimit) maxOperations = overrideLimit;
-        await opcount.inc(op, this.request.ip, periodSecs, maxOperations);
+        let id = this.request.ip;
+        if (withUserId) id += `@${this.user._id}`;
+        await opcount.inc(op, id, periodSecs, maxOperations);
     }
 
     renderTitle(str: string) {

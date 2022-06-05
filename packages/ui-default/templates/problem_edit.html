@@ -108,8 +108,8 @@
         {% include "partials/category.html" %}
       </div>
     </div>
-    {% include "partials/problem_sidebar_additional_file.html" %}
     {% if page_name == 'problem_edit' %}
+      {% include "partials/problem_sidebar_additional_file.html" %}
       {% set owner_udoc = udoc %}
       {% include "partials/problem_sidebar.html" %}
     {% else %}

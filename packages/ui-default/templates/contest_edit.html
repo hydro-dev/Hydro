@@ -42,22 +42,22 @@
           </div>
           <div class="row">
             {{ form.form_text({
-            columns:3,
-            label:'Begin Date',
-            name:'beginAtDate',
-            placeholder:'YYYY-mm-dd',
-            value:date_text,
-            date:true,
-            row:false
+              columns:3,
+              label:'Begin Date',
+              name:'beginAtDate',
+              placeholder:'YYYY-mm-dd',
+              value:beginAt.format('%Y-%m-%d'),
+              date:true,
+              row:false
             }) }}
             {{ form.form_text({
-            columns:3,
-            label:'Begin Time',
-            name:'beginAtTime',
-            placeholder:'HH:MM',
-            value:time_text,
-            time:true,
-            row:false
+              columns:3,
+              label:'Begin Time',
+              name:'beginAtTime',
+              placeholder:'HH:MM',
+              value:beginAt.format('%H:%M'),
+              time:true,
+              row:false
             }) }}
             {{ form.form_text({
             columns:2,

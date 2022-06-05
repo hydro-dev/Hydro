@@ -28,14 +28,6 @@
           <col class="col--time">
           <col class="col--memory">
         </colgroup>
-        <!-- <thead>
-          <tr>
-            <th class="col--case record-status--border">#</th>
-            <th class="col--status">{{ _('Status') }}</th>
-            <th class="col--time">{{ _('Time Cost') }}</th>
-            <th class="col--memory">{{ _('Memory Cost') }}</th>
-          </tr>
-        </thead> -->
         <tbody>
         {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
           <tr>

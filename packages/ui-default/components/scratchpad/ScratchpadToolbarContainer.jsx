@@ -19,6 +19,7 @@ const mapStateToProps = (state) => ({
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
   isRunning: state.pretest.isRunning,
+  isWaiting: state.ui.isWaiting,
   editorLang: state.editor.lang,
   editorCode: state.editor.code,
   pretestInput: state.pretest.input,
@@ -65,6 +66,12 @@ const mapDispatchToProps = (dispatch) => ({
       payload: request.get(UiContext.getSubmissionsUrl),
     });
   },
+  endWaiting() {
+    dispatch({
+      type: 'SCRATCHPAD_WAITING_END',
+      payload: 0,
+    });
+  },
 });
 
 const availableLangs = getAvailableLangs(UiContext.pdoc.config.langs);
@@ -77,6 +84,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
 
   constructor(props) {
     super(props);
+    this.state = { waitSec: -1 };
     if (!availableLangs[this.props.editorLang]) {
       // preference not allowed
       const key = keys.find((i) => availableLangs[i].pretest === this.props.editorLang);
@@ -86,6 +94,21 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
 
   componentDidMount() {
     if (this.props.recordsVisible) this.props.loadSubmissions();
+  }
+
+  componentDidUpdate() {
+    if (this.props.isWaiting) {
+      const { waitSec } = this.state;
+      if (waitSec < 0) this.setState({ waitSec: 5 });
+      if (waitSec === 0) {
+        this.setState({ waitSec: waitSec - 1 });
+        this.props.endWaiting();
+      } else {
+        setTimeout(() => {
+          this.setState({ waitSec: waitSec - 1 });
+        }, 1000);
+      }
+    }
   }
 
   render() {
@@ -98,7 +121,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
       <Toolbar>
         {canUsePretest && (
           <ToolbarButton
-            disabled={this.props.isPosting || this.props.isRunning}
+            disabled={this.props.isPosting || this.props.isRunning || this.props.isWaiting}
             className="scratchpad__toolbar__pretest"
             onClick={() => this.props.postPretest(this.props)}
             data-global-hotkey="f9"
@@ -109,10 +132,12 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             {i18n('Run Pretest')}
             {' '}
             (F9)
+            {' '}
+            {this.props.isWaiting && `(${this.state.waitSec}s)`}
           </ToolbarButton>
         )}
         <ToolbarButton
-          disabled={this.props.isPosting}
+          disabled={this.props.isPosting || this.props.isWaiting}
           className="scratchpad__toolbar__submit"
           onClick={() => this.props.postSubmit(this.props)}
           data-global-hotkey="f10"
@@ -123,6 +148,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           {i18n('Submit Solution')}
           {' '}
           (F10)
+          {' '}
+          {this.props.isWaiting && `(${this.state.waitSec}s)`}
         </ToolbarButton>
         <ToolbarButton
           data-global-hotkey="alt+q"

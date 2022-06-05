@@ -78,6 +78,10 @@ class HomeworkDetailHandler extends Handler {
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
+            if (tsdoc.attend && !tsdoc.startAt && contest.isOngoing(tdoc)) {
+                await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
+                tsdoc.startAt = new Date();
+            }
             for (const pdetail of tsdoc.journal || []) {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };

@@ -1,17 +1,19 @@
 {
     "name": "@hydrooj/migrate",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "main": "package.json",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
         "@types/mongodb": "^3.6.20",
-        "@types/mysql": "^2.15.21"
+        "@types/mysql": "^2.15.21",
+        "@types/turndown": "^5.0.1"
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "mongodb": "^3.7.3",
-        "mysql": "^2.18.1"
+        "mysql": "^2.18.1",
+        "turndown": "^7.1.1"
     }
 }

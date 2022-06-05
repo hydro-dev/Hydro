@@ -59,6 +59,16 @@
         <li><a href="{{ url('wiki_help', anchor='contact') }}">
           <span class="icon icon-warning"></span> {{ _('Report') }}
         </a></li>
+      {% if handler.user.hasPerm(perm.PERM_ADD_REACTION) %}
+        <li><a href="javascript:;" data-op="react" data-type="discuss" data-form="{{ {operation: 'reaction', type:'did', id: ddoc._id }|json }}">
+          <span class="icon icon-emoji"></span>
+        </a></li>
+      {% endif %}
+      <div class="reactions list" data-type="did" data-did="{{ ddoc._id }}">
+        {% for e in Object.entries(ddoc.react or {})|sort(true, false, 1)|selectattr(1) %}
+          <div class="reaction{% if reactions[ddoc.docId][e[0]] %} active{% endif %}"><span class="emoji">{{ e[0] }}</span> {{ e[1] }}</div>
+        {% endfor %}
+      </div>
       </ul>
     </div>
     <div class="section">

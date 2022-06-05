@@ -16,7 +16,7 @@
           </li>
           <li>
             <span class="icon icon-calendar"></span>
-            {{ _('Start at') }}: {{ contest.render_time(tdoc.beginAt) }}
+            {{ _('Start at') }}: {{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}
           </li>
           <li>
             <span class="icon icon-schedule--fill"></span>
@@ -47,9 +47,9 @@
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
-    {%- for tdoc in tdocs -%}
-    {% if model.contest.isOngoing(tdoc) %}
-    {{ render_important_contest('live', 'Live...', tdoc) }}
+  {%- for tdoc in tdocs -%}
+    {% if model.contest.isOngoing(tdoc, tsdoc) %}
+      {{ render_important_contest('live', 'Live...', tdoc) }}
     {% elif model.contest.isUpcoming(tdoc) %}
     {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
     {% endif %}

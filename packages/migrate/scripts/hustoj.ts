@@ -3,6 +3,7 @@
 import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
 import mysql from 'mysql';
+import TurndownService from 'turndown';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { noop, Time } from '@hydrooj/utils/lib/utils';
 import { NotFoundError } from 'hydrooj/src/error';
@@ -13,8 +14,14 @@ import * as contest from 'hydrooj/src/model/contest';
 import domain from 'hydrooj/src/model/domain';
 import problem from 'hydrooj/src/model/problem';
 import record from 'hydrooj/src/model/record';
+import SolutionModel from 'hydrooj/src/model/solution';
 import * as system from 'hydrooj/src/model/system';
 import user from 'hydrooj/src/model/user';
+
+const turndown = new TurndownService({
+    codeBlockStyle: 'fenced',
+    bulletListMarker: '-',
+});
 
 const statusMap = {
     4: STATUS.STATUS_ACCEPTED,
@@ -52,11 +59,10 @@ const nameMap = {
     'test.in': 'test0.in',
     'test.out': 'test0.out',
 };
-
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
-    dataDir, rerun = false,
+    dataDir, rerun = true, randomMail = false,
 }, report: Function) {
     const src = mysql.createConnection({
         host,
@@ -97,7 +103,9 @@ export async function run({
     const precheck = await user.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
-        const current = await user.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
+        if (randomMail) delete udoc.email;
+        let current = await user.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
+        if (!current) current = await user.getByUname(domainId, udoc.user_id);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.user_id}` });
             uidMap[udoc.user_id] = current._id;
@@ -112,6 +120,7 @@ export async function run({
                 regat: udoc.reg_time,
                 hash: udoc.password,
                 salt: udoc.password,
+                school: udoc.school || '',
                 hashType: 'hust',
             });
             await domain.setUserInDomain(domainId, uid, {
@@ -126,6 +135,7 @@ export async function run({
     const [admins] = await query("SELECT * FROM `privilege` WHERE `rightstr` = 'administrator'");
     for (const admin of admins) await domain.setUserRole(domainId, uidMap[admin.user_id], 'root');
     const adminUids = admins.map((admin) => uidMap[admin.user_id]);
+    report({ message: 'user finished' });
 
     /*
         problem_id	int	11	N	题目编号，主键
@@ -145,6 +155,8 @@ export async function run({
         accepted	int	11	Y	总ac次数
         submit	int	11	Y	总提交次数
         solved	int	11	Y	解答（未用）
+
+        solution #optional
     */
     const pidMap: Record<string, number> = {};
     const [[{ 'count(*)': pcount }]] = await query('SELECT count(*) FROM `problem`');
@@ -183,8 +195,13 @@ export async function run({
                 maintainer,
                 html: true,
             });
+            if (pdoc.solution) {
+                const md = turndown.turndown(pdoc.solution);
+                await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
+            }
         }
     }
+    report({ message: 'problem finished' });
 
     /*
         contest_id	int	11	N	竞赛id（主键）
@@ -202,7 +219,7 @@ export async function run({
     const [tdocs] = await query('SELECT * FROM `contest`');
     for (const tdoc of tdocs) {
         const [pdocs] = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
-        const pids = pdocs.map((i) => pidMap[i.problem_id]);
+        const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const tid = await contest.add(
             domainId, tdoc.title, tdoc.description || 'Description',
             adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, [100], true,
@@ -210,6 +227,7 @@ export async function run({
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
     }
+    report({ message: 'contest finished' });
 
     /*
         solution	程序运行结果记录
@@ -238,16 +256,16 @@ export async function run({
         const [rdocs] = await query(`SELECT * FROM \`solution\` LIMIT ${pageId * step}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
-                status: statusMap[rdoc.result],
+                status: statusMap[rdoc.result] || 0,
                 _id: Time.getObjectID(rdoc.in_date, false),
-                uid: uidMap[rdoc.user_id],
+                uid: uidMap[rdoc.user_id] || 0,
                 code: "HustOJ didn't provide user code",
-                lang: langMap[rdoc.language],
-                pid: pidMap[rdoc.problem_id],
+                lang: langMap[rdoc.language] || '',
+                pid: pidMap[rdoc.problem_id] || 0,
                 domainId,
                 score: rdoc.pass_rate ? Math.ceil(rdoc.pass_rate * 100) : rdoc.result === 4 ? 100 : 0,
-                time: rdoc.time,
-                memory: rdoc.memory,
+                time: rdoc.time || 0,
+                memory: rdoc.memory || 0,
                 judgeTexts: [],
                 compilerTexts: [],
                 testCases: [],
@@ -266,9 +284,10 @@ export async function run({
                 await contest.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
             await record.coll.insertOne(data);
-            await postJudge(data);
+            await postJudge(data).catch((err) => report({ message: err.message }));
         }
     }
+    report({ message: 'record finished' });
 
     src.end();
 
@@ -277,13 +296,14 @@ export async function run({
     const files = await fs.readdir(dataDir, { withFileTypes: true });
     for (const file of files) {
         if (!file.isDirectory()) continue;
-        const datas = await fs.readdir(`${dataDir}/${file.name}`);
+        const datas = await fs.readdir(`${dataDir}/${file.name}`, { withFileTypes: true });
         const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
-            const filename = nameMap[data] || data;
-            await problem.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data}`);
+            if (data.isDirectory()) continue;
+            const filename = nameMap[data.name] || data;
+            await problem.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
         await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
     }

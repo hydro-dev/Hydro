@@ -4,5 +4,5 @@
 {% endmacro %}
 
 {% macro render_duration(tdoc) %}
-{{ ((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) /1000 / 3600)|round(1) }}
+{{ tdoc.duration|round(1) if tdoc.duration else ((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) /1000 / 3600)|round(1) }}
 {% endmacro %}

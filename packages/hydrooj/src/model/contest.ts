@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { Counter } from '@hydrooj/utils/lib/utils';
+import { Counter, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
@@ -88,7 +88,7 @@ const acm = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'string', value: _('Email') });
+        if (isExport) columns.push({ type: 'email', value: _('Email') });
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
@@ -139,7 +139,7 @@ const acm = buildContestRule({
                 { type: 'rank', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
             ];
-            if (isExport) row.push({ type: 'string', value: udict[tsdoc.uid].mail });
+            if (isExport) row.push({ type: 'email', value: udict[tsdoc.uid].mail });
             row.push({
                 type: 'time',
                 value: `${tsdoc.accept || 0}\n${misc.formatSeconds(tsdoc.time || 0.0, false)}`,
@@ -206,7 +206,7 @@ const oi = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'string', value: _('Email') });
+        if (isExport) columns.push({ type: 'email', value: _('Email') });
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             if (isExport) {
@@ -254,7 +254,7 @@ const oi = buildContestRule({
                 { type: 'string', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
             ];
-            if (isExport) row.push({ type: 'string', value: udict[tsdoc.uid].mail });
+            if (isExport) row.push({ type: 'email', value: udict[tsdoc.uid].mail });
             row.push({ type: 'total_score', value: tsdoc.score || 0 });
             for (const pid of tdoc.pids) {
                 const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
@@ -675,26 +675,29 @@ export function getScore(tdoc: Tdoc, pid: number) {
 export function isNew(tdoc: Tdoc, days = 1) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
-    return (now < readyAt - days * 24 * 3600 * 1000);
+    return (now < readyAt - days * Time.day);
 }
 
 export function isUpcoming(tdoc: Tdoc, days = 7) {
-    const now = new Date().getTime();
+    const now = Date.now();
     const readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt - days * 24 * 3600 * 1000 && now < tdoc.beginAt.getTime());
+    return (now > readyAt - days * Time.day && now < readyAt);
 }
 
 export function isNotStarted(tdoc: Tdoc) {
     return (new Date()) < tdoc.beginAt;
 }
 
-export function isOngoing(tdoc: Tdoc) {
+export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
     const now = new Date();
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 
-export function isDone(tdoc: Tdoc) {
-    return tdoc.endAt <= new Date();
+export function isDone(tdoc: Tdoc, tsdoc?: any) {
+    if (tdoc.endAt <= new Date()) return true;
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
+    return false;
 }
 
 export function isLocked(tdoc: Tdoc) {
@@ -789,21 +792,14 @@ export async function getScoreboard(
     return [tdoc, rows, udict, pdict, nPages];
 }
 
-export const statusText = (tdoc: Tdoc) => (
+export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
     isNew(tdoc)
         ? 'New'
         : isUpcoming(tdoc)
             ? 'Ready (☆▽☆)'
-            : isOngoing(tdoc)
+            : isOngoing(tdoc, tsdoc)
                 ? 'Live...'
                 : 'Done');
-
-export const getStatusText = (tdoc: Tdoc) => (
-    isNotStarted(tdoc)
-        ? 'not_started'
-        : isOngoing(tdoc)
-            ? 'ongoing'
-            : 'finished');
 
 global.Hydro.model.contest = {
     RULES,
@@ -837,5 +833,4 @@ global.Hydro.model.contest = {
     isLocked,
     isExtended,
     statusText,
-    getStatusText,
 };

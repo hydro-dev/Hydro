@@ -1,0 +1,15 @@
+{
+    "files.autoGuessEncoding": false,
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "editor.detectIndentation": true,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "[json]": {
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": false
+    },
+    "search.exclude": {
+        "**/.yarn": true,
+        "**/.pnp.*": true
+    }
+}

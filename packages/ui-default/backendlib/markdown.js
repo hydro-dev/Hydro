@@ -22,7 +22,7 @@ const MergeCells = require('markdown-it-merge-cells');
 // @[url](videourl)
 // @[youtube](https://youtube.com/watch?v=xxx)
 // @[pdf](https://foo.com/bar.pdf)
-const Media = require('./markdown-it-media');
+const { Media } = require('./markdown-it-media');
 const Katex = require('./markdown-it-katex');
 const { xssProtector } = require('./markdown-it-xss');
 

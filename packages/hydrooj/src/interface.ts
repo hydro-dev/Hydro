@@ -307,7 +307,7 @@ export interface RecordDoc {
 }
 
 export interface ScoreboardNode {
-    type: 'string' | 'rank' | 'user' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
+    type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
     value: string;
     raw?: any;
     score?: number;
@@ -342,6 +342,11 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
 
     // For contest
     lockAt?: Date;
+    /**
+     * In hours
+     * 在比赛有效时间内选择特定的 X 小时参加比赛（从首次打开比赛算起）
+     */
+    duration: number;
 
     // For homework
     penaltySince?: Date;

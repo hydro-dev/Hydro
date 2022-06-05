@@ -115,18 +115,18 @@ export class ContestDetailHandler extends Handler {
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
+            if (tsdoc.attend && !tsdoc.startAt && contest.isOngoing(tdoc)) {
+                await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
+                tsdoc.startAt = new Date();
+            }
             for (const pdetail of tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
             if (contest.canShowSelfRecord.call(this, tdoc)) {
-                const q = [];
-                for (const i in psdict) q.push(psdict[i].rid);
-                rdict = await record.getList(domainId, q);
+                rdict = await record.getList(domainId, Object.values(psdict).map((i: any) => i.rid));
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
             }
         }
-        this.response.body.pdict = pdict;
-        this.response.body.psdict = psdict;
-        this.response.body.rdict = rdict;
+        Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
     @param('tid', Types.ObjectID)
@@ -245,17 +245,20 @@ export class ContestEditHandler extends Handler {
         this.response.template = 'contest_edit.html';
         const rules = {};
         for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
-        let ts = new Date().getTime();
+        let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
-        const dt = this.tdoc?.beginAt || new Date(ts);
         this.response.body = {
             rules,
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
+<<<<<<< HEAD
             fullScore: tid ? this.tdoc.fullScore ? this.tdoc.fullScore.join(',') : '' : '',
             date_text: dt.format('%Y-%m-%d'),
             time_text: dt.format('%H:%M'),
+=======
+            beginAt: this.tdoc?.beginAt || new Date(ts),
+>>>>>>> upstream/master
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
@@ -271,13 +274,15 @@ export class ContestEditHandler extends Handler {
     @param('fullScore', Types.String, true)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
-    @param('autoHide', Types.String, true)
+    @param('autoHide', Types.Boolean, true)
     @param('assign', Types.CommaSeperatedArray, true)
     @param('lock', Types.UnsignedInt, true)
+    @param('contestDuration', Types.Float, true)
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, _fullScore: string = '100', rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
+        contestDuration?: number,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -289,10 +294,15 @@ export class ContestEditHandler extends Handler {
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
+        contestDuration ||= duration;
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
+<<<<<<< HEAD
                 title, content, rule, beginAt, endAt, pids, fullScore, rated,
+=======
+                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
+>>>>>>> upstream/master
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
                 || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
@@ -301,7 +311,11 @@ export class ContestEditHandler extends Handler {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
+<<<<<<< HEAD
             tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, fullScore, rated);
+=======
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
+>>>>>>> upstream/master
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
