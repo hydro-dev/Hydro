@@ -252,13 +252,8 @@ export class ContestEditHandler extends Handler {
             tdoc: this.tdoc,
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
-<<<<<<< HEAD
             fullScore: tid ? this.tdoc.fullScore ? this.tdoc.fullScore.join(',') : '' : '',
-            date_text: dt.format('%Y-%m-%d'),
-            time_text: dt.format('%H:%M'),
-=======
             beginAt: this.tdoc?.beginAt || new Date(ts),
->>>>>>> upstream/master
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
@@ -298,11 +293,7 @@ export class ContestEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-<<<<<<< HEAD
-                title, content, rule, beginAt, endAt, pids, fullScore, rated,
-=======
-                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
->>>>>>> upstream/master
+                title, content, rule, beginAt, endAt, pids, fullScore, rated, duration: contestDuration,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
                 || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
@@ -311,11 +302,7 @@ export class ContestEditHandler extends Handler {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-<<<<<<< HEAD
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, fullScore, rated);
-=======
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
->>>>>>> upstream/master
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, fullScore, rated, { duration: contestDuration });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
