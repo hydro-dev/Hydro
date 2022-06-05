@@ -557,13 +557,13 @@ export function isNotStarted(tdoc: Tdoc) {
 
 export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
     const now = new Date();
-    if (tsdoc && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 
 export function isDone(tdoc: Tdoc, tsdoc?: any) {
     if (tdoc.endAt <= new Date()) return true;
-    if (tsdoc && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
     return false;
 }
 
