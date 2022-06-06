@@ -18,8 +18,8 @@
     <pre class="judge-text">{{ formatJudgeTexts(rdoc.judgeTexts)|ansi|safe }}</pre>
   </div>
 {% endif %}
-{% for subtask in range(1, subtaskSum + 1) %}
-  {% set subtaskName = 'Subtask {0}'.format(subtask) %}
+{% for subtask in range(0, subtaskSum + 1) %}
+  {% set subtaskName = `Subtask ${subtask + 1}` %}
     <div class="section__header">
       <h1 class="section__title">{{ _(subtaskName) }}</h1>
     <br>
@@ -27,20 +27,13 @@
       <colgroup>
         <col class="col--case">
         <col class="col--status">
+        <col class="col--score">
         <col class="col--time">
         <col class="col--memory">
       </colgroup>
-      <!-- <thead>
-        <tr>
-          <th class="col--case record-status--border">#</th>
-          <th class="col--status">{{ _('Status') }}</th>
-          <th class="col--time">{{ _('Time Cost') }}</th>
-          <th class="col--memory">{{ _('Memory Cost') }}</th>
-        </tr>
-      </thead> -->
       <tbody>
       {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
-        {% if rcdoc.message.startsWith(subtaskName) %}
+        {% if rcdoc.subtaskId === subtask %}
           <tr>
             <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
               #{{ rcdoc.id or loop.index }}
@@ -50,7 +43,11 @@
               <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
                 {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
               </span>
-              <span>{{ formatJudgeTexts([rcdoc.message.slice(rcdoc.message.indexOf('.') + 1)]) if rcdoc.message.slice(rcdoc.message.indexOf('.') + 1) else '' }}</span>
+              <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+            </td>
+            <td class="col--score">
+              <span class="icon icon-clipboard--check"></span>
+              <span>{{ rcdoc.score }}pts</span>
             </td>
             <td class="col--time">
               <span class="icon icon-stopwatch"></span>

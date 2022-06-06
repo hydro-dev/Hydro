@@ -96,9 +96,6 @@ function judgeCase(c: NormalizedCase, sid: string) {
         if (ctxSubtask.score === 0) ctx.failed[sid] = true;
         ctx.total_time_usage_ms += time_usage_ms;
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
-        if (ctxSubtask.subtask.type === 'min' && ctx.config.subtasks.length > 1) {
-            message = `Subtask ${parseInt(sid, 10) + 1}. ${message}`;
-        }
         ctx.next({
             case: {
                 subtaskId: ctxSubtask.subtask.id,

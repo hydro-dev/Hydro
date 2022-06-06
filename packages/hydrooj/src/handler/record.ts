@@ -154,11 +154,7 @@ class RecordDetailHandler extends Handler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
         let subtaskSum = 0;
-        for (const rcdoc of rdoc.testCases) {
-            if (rcdoc.message.startsWith('Subtask', 0)) {
-                subtaskSum = Math.max(subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0)), 10) || 0);
-            }
-        }
+        for (const rcdoc of rdoc.testCases) subtaskSum = Math.max(subtaskSum, rcdoc.subtaskId);
         this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc, pdoc, tdoc, subtaskSum,
@@ -312,11 +308,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             problem.get(rdoc.domainId, rdoc.pid),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
-        for (const rcdoc of rdoc.testCases) {
-            if (rcdoc.message.startsWith('Subtask')) {
-                this.subtaskSum = Math.max(this.subtaskSum, parseInt(rcdoc.message.slice(8, rcdoc.message.indexOf('.', 0)), 10) || 0);
-            }
-        }
+        for (const rcdoc of rdoc.testCases) this.subtaskSum = Math.max(this.subtaskSum, rcdoc.subtaskId);
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
