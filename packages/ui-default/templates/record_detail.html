@@ -4,7 +4,7 @@
 {{ set(UiContext, 'socketUrl', "/record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
 <div class="row">
   <div class="medium-9 columns">
-    {%if subtaskSum === 0 %}
+    {% if subtaskSum === 0 %}
       {% include 'record_detail_status.html' %}
     {% else %}
       {% include 'record_detail_status_subtask.html' %}

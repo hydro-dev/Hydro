@@ -19,7 +19,7 @@
   </div>
 {% endif %}
 {% for subtask in range(0, subtaskSum + 1) %}
-  {% set subtaskName = `Subtask ${subtask + 1}` %}
+  {% set subtaskName = 'Subtask {0}'.format(subtask) %}
     <div class="section__header">
       <h1 class="section__title">{{ _(subtaskName) }}</h1>
     <br>
