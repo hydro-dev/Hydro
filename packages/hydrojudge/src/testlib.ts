@@ -24,7 +24,6 @@ export function parse(output: string, fullscore: number) {
         const res = message.split(')');
         res.shift();
         message = res.join(')').trim();
-        builder = (msg) => `{0} Score(s). ${msg}`.format(score);
     } else if (output.startsWith('points ')) {
         let p = +output.split('points ')[1].split(' ')[0] || 0;
         if (p > 1) p /= 100;
@@ -38,7 +37,6 @@ export function parse(output: string, fullscore: number) {
             if (score > 0) status = STATUS.STATUS_PART_CORRECT;
             const base = output.split('points ')[1] || '';
             message = base.substring(base.indexOf(' '), 1024);
-            builder = (msg) => `{0} Score(s). ${msg}`.format(score);
         }
     }
     while (operation.test(message)) {
