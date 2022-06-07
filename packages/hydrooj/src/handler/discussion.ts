@@ -282,14 +282,25 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     @param('drid', Types.ObjectID)
     async postDeleteReply(domainId: string, drid: ObjectID) {
+        let deleteBy = this.user.own(this.ddoc) ? 'DiscussionOwner' : 'self';
         if (!(this.user.own(this.ddoc)
             && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
             if (!this.user.own(this.drdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+                deleteBy = 'Admin';
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
+        const msg = JSON.stringify({
+            message: '{0} {1} delete your discussion reply {2} in {3}({4:link}).',
+            params: [deleteBy,
+                this.user.uname,
+                this.drdoc.content.length > 10 ? `${this.drdoc.content.substring(0, 10)}...` : `${this.drdoc.content}`,
+                this.ddoc.title,
+                `/d/${domainId}${this.request.path}`],
+        });
         await Promise.all([
             discussion.delReply(domainId, drid),
+            deleteBy !== 'self' && message.send(1, this.drdoc.owner, msg),
             oplog.log(this, 'discussion.reply.delete', this.drdoc),
         ]);
         this.back();
@@ -311,9 +322,19 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID)
     @param('drrid', Types.ObjectID)
     async postDeleteTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
+        const deleteBy = this.user.own(this.drrdoc) ? 'self' : 'Admin';
         if (!this.user.own(this.drrdoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+        const msg = JSON.stringify({
+            message: '{0} {1} delete your discussion tail reply {2} in {3}({4:link}).',
+            params: [deleteBy,
+                this.user.uname,
+                this.drrdoc.content.length > 10 ? `${this.drrdoc.content.substring(0, 10)}...` : this.drrdoc.content,
+                this.ddoc.title,
+                `/d/${domainId}${this.request.path}`],
+        });
         await Promise.all([
             discussion.delTailReply(domainId, drid, drrid),
+            deleteBy !== 'self' && message.send(1, this.drrdoc.owner, msg),
             oplog.log(this, 'discussion.tailReply.delete', this.drrdoc),
         ]);
         this.back();
@@ -379,10 +400,18 @@ class DiscussionEditHandler extends DiscussionHandler {
 
     @param('did', Types.ObjectID)
     async postDelete(domainId: string, did: ObjectID) {
+        const deleteBy = this.user.own(this.ddoc) ? 'self' : 'Admin';
         if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
+        const msg = JSON.stringify({
+            message: '{0} {1} delete your discussion {2}.',
+            params: [deleteBy,
+                this.user.uname,
+                this.ddoc.title],
+        });
         await Promise.all([
             oplog.log(this, 'discussion.delete', this.ddoc),
+            deleteBy !== 'self' && message.send(1, this.ddoc.owner, msg),
             discussion.del(domainId, did),
         ]);
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
