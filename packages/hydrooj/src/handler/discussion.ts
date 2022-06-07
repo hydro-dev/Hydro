@@ -292,11 +292,13 @@ class DiscussionDetailHandler extends DiscussionHandler {
         }
         const msg = JSON.stringify({
             message: '{0} {1} delete your discussion reply {2} in {3}({4:link}).',
-            params: [deleteBy,
+            params: [
+                deleteBy,
                 this.user.uname,
                 this.drdoc.content.length > 10 ? `${this.drdoc.content.substring(0, 10)}...` : `${this.drdoc.content}`,
                 this.ddoc.title,
-                `/d/${domainId}${this.request.path}`],
+                `/d/${domainId}${this.request.path}`,
+            ],
         });
         await Promise.all([
             discussion.delReply(domainId, drid),
@@ -326,11 +328,13 @@ class DiscussionDetailHandler extends DiscussionHandler {
         if (!this.user.own(this.drrdoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         const msg = JSON.stringify({
             message: '{0} {1} delete your discussion tail reply {2} in {3}({4:link}).',
-            params: [deleteBy,
+            params: [
+                deleteBy,
                 this.user.uname,
                 this.drrdoc.content.length > 10 ? `${this.drrdoc.content.substring(0, 10)}...` : this.drrdoc.content,
                 this.ddoc.title,
-                `/d/${domainId}${this.request.path}`],
+                `/d/${domainId}${this.request.path}`,
+            ],
         });
         await Promise.all([
             discussion.delTailReply(domainId, drid, drrid),
@@ -405,9 +409,11 @@ class DiscussionEditHandler extends DiscussionHandler {
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         const msg = JSON.stringify({
             message: '{0} {1} delete your discussion {2}.',
-            params: [deleteBy,
+            params: [
+                deleteBy,
                 this.user.uname,
-                this.ddoc.title],
+                this.ddoc.title,
+            ],
         });
         await Promise.all([
             oplog.log(this, 'discussion.delete', this.ddoc),
