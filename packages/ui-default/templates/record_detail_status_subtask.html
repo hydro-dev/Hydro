@@ -18,7 +18,7 @@
     <pre class="judge-text">{{ formatJudgeTexts(rdoc.judgeTexts)|ansi|safe }}</pre>
   </div>
 {% endif %}
-{% for subtask in range(0, subtaskSum + 1) %}
+{% for subtask in range(1, subtaskSum + 1) %}
   {% set subtaskName = 'Subtask {0}'.format(subtask) %}
     <div class="section__header">
       <h1 class="section__title">{{ _(subtaskName) }}</h1>
@@ -47,11 +47,11 @@
             </td>
             <td class="col--score">
               <span class="icon icon-clipboard--check"></span>
-              <span>{{ rcdoc.score }}pts</span>
+              <span>{{ rcdoc.score }} pts</span>
             </td>
             <td class="col--time">
               <span class="icon icon-stopwatch"></span>
-              {% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms
+              {% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }} ms
             </td>
             <td class="col--memory">
               <span class="icon icon-comparison"></span>
