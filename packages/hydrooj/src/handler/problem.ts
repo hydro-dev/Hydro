@@ -313,7 +313,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
-            if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
+            if (!this.tdoc?.pids?.includes(this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
             this.tsdoc = await contest.getStatus(domainId, tid, this.user._id);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
