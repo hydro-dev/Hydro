@@ -14,10 +14,13 @@
 
   .col--case, .col--status
     border-right: 1px solid $table-border-color
+  
+  .case .col--case
+    padding-left: rem(35px) !important
 
   +mobile()
     .col--case
-      display: none
+      width: rem(75px)
 
     .col--time
       width: rem(70px)

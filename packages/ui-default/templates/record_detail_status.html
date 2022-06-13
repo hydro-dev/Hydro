@@ -36,8 +36,14 @@
         </tr>
       </thead>
       <tbody>
-      {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
-        <tr>
+      {%- for subtaskId,rcdocs in rdoc.testCases|sort(false,false,'id')|groupby('subtaskId') -%}
+        <tr class="subtask">
+          <td class="col--case">
+            Sub#{{ subtaskId|int|default(0) }}
+          </td>
+        </tr>
+        {% for rcdoc in rcdocs %}
+        <tr class="case">
           <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
             #{{ rcdoc.id|default(loop.index) }}
           </td>
@@ -51,6 +57,7 @@
           <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
           <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
         </tr>
+        {%- endfor %}
       {%- endfor -%}
       </tbody>
     </table>
