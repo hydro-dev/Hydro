@@ -15,13 +15,16 @@
   .col--case, .col--status
     border-right: 1px solid $table-border-color
   
-  .case .col--case
-    padding-left: rem(35px) !important
+  .subtask, .subtask-case
+    background-color: #fff !important
+    
+  .subtask
+    height: 30px
+    td
+      padding-top: 0 
+      padding-bottom: 0 
 
   +mobile()
-    .col--case
-      width: rem(75px)
-
     .col--time
       width: rem(70px)
 
