@@ -290,7 +290,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
         const msg = JSON.stringify({
-            message: '{0} {1} delete your discussion reply {2} in {3}({4:link}).',
+            message: '{0} {1} delete your discussion reply {2} in "{3}"({4:link}).',
             params: [
                 deleteBy,
                 this.user.uname,
@@ -326,9 +326,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
         const deleteBy = this.user.own(this.drrdoc) ? 'self' : 'Admin';
         if (!this.user.own(this.drrdoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         const msg = JSON.stringify({
-            message: '{0} {1} delete your discussion tail reply {2} in {3}({4:link}).',
+            message: 'Admin {0} delete your discussion tail reply {1} in "{2}"({3:link}).',
             params: [
-                deleteBy,
                 this.user.uname,
                 this.drrdoc.content.length > 10 ? `${this.drrdoc.content.substring(0, 10)}...` : this.drrdoc.content,
                 this.ddoc.title,
@@ -407,9 +406,8 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_DELETE_DISCUSSION);
         else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         const msg = JSON.stringify({
-            message: '{0} {1} delete your discussion {2}.',
+            message: 'Admin {0} delete your discussion "{1}".',
             params: [
-                deleteBy,
                 this.user.uname,
                 this.ddoc.title,
             ],
