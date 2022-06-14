@@ -282,12 +282,11 @@ class DiscussionDetailHandler extends DiscussionHandler {
 
     @param('drid', Types.ObjectID)
     async postDeleteReply(domainId: string, drid: ObjectID) {
-        let deleteBy = this.user.own(this.ddoc) ? 'DiscussionOwner' : 'self';
+        const deleteBy = this.user.own(this.drdoc) ? 'self' : this.user.own(this.ddoc) ? 'DiscussionOwner' : 'Admin';
         if (!(this.user.own(this.ddoc)
             && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
             if (!this.user.own(this.drdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
-                deleteBy = 'Admin';
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
         }
         const msg = JSON.stringify({
