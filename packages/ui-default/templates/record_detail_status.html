@@ -36,21 +36,37 @@
         </tr>
       </thead>
       <tbody>
-      {%- for rcdoc in rdoc.testCases|sort(false,false,'id') -%}
-        <tr>
-          <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-            #{{ rcdoc.id|default(loop.index) }}
+      {%- for subtaskId,rcdocs in rdoc.testCases|sort(false,false,'id')|groupby('subtaskId') -%}
+        {% if rcdocs.length != 1 and rcdocs.length != rdoc.testCases.length %}
+        <tr class="subtask">
+          <td class="col--case">
+            #{{ subtaskId|int|default(0) }}
           </td>
-          <td class="col--status">
-            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
-            <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-              {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
-            </span>
-            <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
-          </td>
-          <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
-          <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
         </tr>
+        {% endif %}
+        {%- for rcdoc in rcdocs -%}
+          {% if rcdocs.length != 1 %}
+          <tr class="case">
+            <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+              #{% if rcdocs.length != rdoc.testCases.length %}{{ rcdoc.subtaskId|int|default(0) }}-{% endif %}{{ rcdoc.id|default(loop.index) }}
+            </td>
+          {% else %}
+          <tr class="subtask-case">
+            <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+              #{{ rcdoc.subtaskId|int|default(0) }}
+            </td>
+          {% endif %}
+            <td class="col--status">
+              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+              <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+                {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
+              </span>
+              <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+            </td>
+            <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
+            <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+          </tr>
+        {%- endfor -%}
       {%- endfor -%}
       </tbody>
     </table>
