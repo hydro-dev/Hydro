@@ -148,7 +148,7 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
         };
         const cases = [];
         for (const cid in subtask.cases) {
-            const runner = judgeCase(subtask.cases[cid], sid);
+            const runner = judgeCase(subtask.cases[cid], subtask.id.toString() ?? sid);
             cases.push(ctx.queue.add(() => runner(ctx, ctxSubtask, runner)));
         }
         await Promise.all(cases).catch((e) => {
