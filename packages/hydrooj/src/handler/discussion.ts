@@ -302,7 +302,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         });
         await Promise.all([
             discussion.delReply(domainId, drid),
-            deleteBy !== 'self' && message.send(1, this.drdoc.owner, msg),
+            deleteBy !== 'self' && message.send(1, this.drdoc.owner, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD),
             oplog.log(this, 'discussion.reply.delete', this.drdoc),
         ]);
         this.back();
@@ -338,7 +338,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         });
         await Promise.all([
             discussion.delTailReply(domainId, drid, drrid),
-            deleteBy !== 'self' && message.send(1, this.drrdoc.owner, msg),
+            deleteBy !== 'self' && message.send(1, this.drrdoc.owner, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD),
             oplog.log(this, 'discussion.tailReply.delete', this.drrdoc),
         ]);
         this.back();
@@ -417,7 +417,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         });
         await Promise.all([
             oplog.log(this, 'discussion.delete', this.ddoc),
-            deleteBy !== 'self' && message.send(1, this.ddoc.owner, msg),
+            deleteBy !== 'self' && message.send(1, this.ddoc.owner, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD),
             discussion.del(domainId, did),
         ]);
         this.response.body = { type: this.ddoc.parentType, parent: this.ddoc.parentId };
