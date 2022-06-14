@@ -37,7 +37,7 @@
       </thead>
       <tbody>
       {%- for subtaskId,rcdocs in rdoc.testCases|sort(false,false,'id')|groupby('subtaskId') -%}
-        {% if rcdocs.length != 1 %}
+        {% if rcdocs.length != 1 and rcdocs.length != rdoc.testCases.length %}
         <tr class="subtask">
           <td class="col--case">
             #{{ subtaskId|int|default(0) }}
@@ -48,7 +48,11 @@
         {% if rcdocs.length != 1 %}
         <tr class="case">
           <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+            {% if rcdocs.length != rdoc.testCases.length %}
             #{{ rcdoc.subtaskId|int|default(0) }}-{{ rcdoc.id|default(loop.index) }}
+            {% else %}
+            #{{ rcdoc.id|default(loop.index) }}
+            {% endif %}
           </td>
         {% else %}
         <tr class="subtask-case">
