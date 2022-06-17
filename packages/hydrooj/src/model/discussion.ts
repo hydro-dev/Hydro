@@ -1,6 +1,6 @@
 import { omit } from 'lodash';
 import moment from 'moment';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { FilterQuery, ObjectID, PushOperator } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
@@ -39,6 +39,7 @@ export async function add(
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean, pin: boolean,
 ): Promise<ObjectID> {
+    const time = new Date();
     const payload: Partial<DiscussionDoc> = {
         domainId,
         content,
@@ -49,8 +50,9 @@ export async function add(
         ip,
         nReply: 0,
         highlight,
+        history: [{ content, time }],
         pin,
-        updateAt: new Date(),
+        updateAt: time,
         views: 0,
         sort: 100,
     };
@@ -70,8 +72,13 @@ export async function get<T extends Field>(
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
-export function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
-    return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
+export function edit(
+    domainId: string,
+    did: ObjectID,
+    $set: Partial<DiscussionDoc>,
+    $push?: PushOperator<DiscussionDoc>,
+) {
+    return document.set(domainId, document.TYPE_DISCUSSION, did, $set, null, $push);
 }
 
 export function inc(
@@ -104,12 +111,13 @@ export async function addReply(
     domainId: string, did: ObjectID, owner: number,
     content: string, ip: string,
 ): Promise<ObjectID> {
+    const time = new Date();
     const [drid] = await Promise.all([
         document.add(
             domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
-            null, document.TYPE_DISCUSSION, did, { ip },
+            null, document.TYPE_DISCUSSION, did, { ip, history: [{ content, time }] },
         ),
-        document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: new Date() }),
+        document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: time }),
     ]);
     return drid;
 }
@@ -121,7 +129,12 @@ export function getReply(domainId: string, drid: ObjectID): Promise<DiscussionRe
 export async function editReply(
     domainId: string, drid: ObjectID, content: string,
 ): Promise<DiscussionReplyDoc | null> {
-    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content });
+    const { content: lastContent } = await document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid, ['content']);
+    if (content !== lastContent) {
+        return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content }, null,
+            { history: { content, time: new Date() } });
+    }
+    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content }, null);
 }
 
 export async function delReply(domainId: string, drid: ObjectID) {
@@ -161,13 +174,14 @@ export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
 ): Promise<[DiscussionReplyDoc, ObjectID]> {
+    const time = new Date();
     const [drdoc, subId] = await document.push(
         domainId, document.TYPE_DISCUSSION_REPLY, drid,
-        'reply', content, owner, { ip },
+        'reply', content, owner, { ip, history: [{ content, time }] },
     );
     await document.set(
         domainId, document.TYPE_DISCUSSION, drdoc.parentId,
-        { updateAt: new Date() },
+        { updateAt: time },
     );
     return [drdoc, subId];
 }
@@ -178,10 +192,16 @@ export function getTailReply(
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
-export function editTailReply(
+export async function editTailReply(
     domainId: string, drid: ObjectID, drrid: ObjectID, content: string,
 ): Promise<DiscussionTailReplyDoc> {
-    return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid, { content });
+    const [, { content: lastContent }] = await getTailReply(domainId, drid, drrid);
+    if (content !== lastContent) {
+        return document.setAndPushSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
+            'reply', drrid, { content }, { history: { content, time: new Date() } });
+    }
+    return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
+        'reply', drrid, { content });
 }
 
 export async function delTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {

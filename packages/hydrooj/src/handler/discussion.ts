@@ -388,10 +388,17 @@ class DiscussionEditHandler extends DiscussionHandler {
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
+        const { content: lastContent } = await discussion.get(domainId, did, ['content']);
+        const $set: Partial<DiscussionDoc> = {
+            title, highlight, pin,
+        };
+        let $push = null;
+        if (content !== lastContent) {
+            $set.content = content;
+            $push = { history: { content, time: new Date() } };
+        }
         await Promise.all([
-            discussion.edit(domainId, did, {
-                title, content, highlight, pin,
-            }),
+            discussion.edit(domainId, did, $set, $push),
             oplog.log(this, 'discussion.edit', this.ddoc),
         ]);
         this.response.body = { did };
