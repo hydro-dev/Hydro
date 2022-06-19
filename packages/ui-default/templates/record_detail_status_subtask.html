@@ -21,9 +21,14 @@
 {% for subtask in range(1, subtaskSum + 1) %}
   {% set subtaskName = 'Subtask {0}'.format(subtask) %}
     <div class="section__header">
-      <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
+      <li class="nav__list-item" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
         <a href="javascript:;" class="nav__item">
-          <span class="icon icon-global"></span>{{ _(subtaskName) }}<span class="icon icon-expand_more"></span>
+          <span class="icon icon-expand_more"></span>
+          <tr class="subtask">
+            <td class="col--case">
+              #{{ subtask }}
+            </td>
+          </tr>
         </a>
         <ol class="dropdown-target menu" id="menu-nav-user">
           <table class="data-table record_detail__table">
@@ -68,6 +73,7 @@
         </ol>
       </li>
     </div>
+    <br>
 {% endfor %}
 <br>
 </div>

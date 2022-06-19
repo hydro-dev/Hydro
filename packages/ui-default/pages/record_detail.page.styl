@@ -14,11 +14,15 @@
 
   .col--case, .col--status
     border-right: 1px solid $table-border-color
+  
+  .subtask
+    background-color: #fff !important
+    height: rem(30px)
+    td
+      padding-top: 0 
+      padding-bottom: 0 
 
   +mobile()
-    .col--case
-      display: none
-
     .col--time
       width: rem(70px)
 
