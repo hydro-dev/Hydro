@@ -28,6 +28,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
             ctx.next({
                 case: {
                     status: STATUS.STATUS_CANCELED,
+                    subtaskId: ctxSubtask.subtask.id,
                     score: 0,
                     time: 0,
                     memory: 0,
