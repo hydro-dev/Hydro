@@ -1,6 +1,7 @@
 __id: zh
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
+'{0} {1} delete your discussion reply {2} in "{3}"({4}).' : '{0} {1} 从讨论 {3}({4}) 删除了你的回复 {2}。'
 '{0} comments': '{0} 条评论'
 '{0} discussions': '{0} 条讨论'
 '{0} is a moderator of this domain.': '{}是这个域的管理者之一。'
@@ -59,6 +60,8 @@ Add new data: 添加新数据
 Add User: 添加用户
 Add: 添加
 Additional File: 附加文件
+Admin {0} delete your discussion "{1}". : 管理员 {0} 删除了你的讨论 "{1}"。
+Admin {0} delete your discussion tail reply {1} in "{2}"({3}). : 管理员 {0} 从讨论 {2}({3}) 中删除了你的楼中楼回复 {1}。
 All {0} Contests: 所有 {0} 比赛
 All Contests: 所有比赛
 All Homeworks: 所有作业
