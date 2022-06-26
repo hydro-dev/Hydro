@@ -7,6 +7,7 @@ import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import pjax from 'vj/utils/pjax';
+import request from 'vj/utils/request';
 
 class ProblemPageExtender {
   constructor() {
@@ -201,6 +202,56 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     } catch (e) { }
   }
 
+  async function loadObjectiveNew() {
+    $('.outer-loader-container').show();
+    const ans = {};
+    let objectiveNum = 0;
+    $('.problem-content .typo').children().each((i, e) => {
+      if (e.innerText.includes('{{ input }}')) {
+        objectiveNum++;
+        $(e).text($(e).text().replace(/{{ input }}/g, '?'));
+        $(e).after(`<div class="objective_${objectiveNum} medium-7">
+        <input type="text" placeholder="${objectiveNum}. ?" name="${objectiveNum}" class="textbox objective-input">
+        </div>`);
+      }
+      if (e.innerText.includes('{{ select }}')) {
+        objectiveNum++;
+        $(e).text($(e).text().replace(/{{ select }}/g, ''));
+        $(e).next('ul').children().each((j, ele) => {
+          $(ele).after(`<div class="objective_${objectiveNum} radiobox">
+            ${String.fromCharCode(65 + j)}.
+            <input type="radio" name="${objectiveNum}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+            ${ele.innerHTML}
+          </div>`);
+          $(ele).remove();
+        });
+      }
+    });
+    if (objectiveNum) {
+      $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
+        ? '<input type="submit" disabled class="button rounded primary" value="登录后提交" />'
+        : '<input type="submit" class="button rounded primary" value="提交" />');
+      $('input.objective-input').on('input', (e) => {
+        ans[e.target.name] = e.target.value;
+      });
+      $('input[type="submit"]').on('click', (e) => {
+        e.preventDefault();
+        request
+          .post(`${window.location.href}/submit`, {
+            lang: '_',
+            code: yaml.dump(ans),
+          })
+          .then((res) => {
+            window.location.href = res.url;
+          })
+          .catch((err) => {
+            Notification.error(err.message);
+          });
+      });
+    }
+    $('.outer-loader-container').hide();
+  }
+
   async function initChart() {
     if (!Object.keys(UiContext.pdoc.stats || {}).length) {
       $('#submission-status-placeholder').parent().hide();
@@ -273,7 +324,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
-  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
+  const { type } = UiContext.pdoc.config || {};
+  if (type === 'objective') loadObjective();
+  if (type === 'objectiveNew') loadObjectiveNew();
   if (pagename !== 'contest_detail_problem') initChart();
 });
 
