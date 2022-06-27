@@ -205,29 +205,48 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   async function loadObjectiveNew() {
     $('.outer-loader-container').show();
     const ans = {};
-    let objectiveNum = 0;
+    let objNum = 0;
+    const reg = /{{ (input|select|multiselect)\([a-zA-Z0-9]+\) }}/g;
     $('.problem-content .typo').children().each((i, e) => {
-      if (e.innerText.includes('{{ input }}')) {
-        objectiveNum++;
-        $(e).text($(e).text().replace(/{{ input }}/g, '?'));
-        $(e).after(`<div class="objective_${objectiveNum} medium-7">
-        <input type="text" placeholder="${objectiveNum}. ?" name="${objectiveNum}" class="textbox objective-input">
-        </div>`);
+      if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
+      const objQuestions = [];
+      let objQuestion = reg.exec(e.innerText);
+      while (objQuestion != null) {
+        objQuestions.push(objQuestion);
+        objQuestion = reg.exec(e.innerText);
       }
-      if (e.innerText.includes('{{ select }}')) {
-        objectiveNum++;
-        $(e).text($(e).text().replace(/{{ select }}/g, ''));
-        $(e).next('ul').children().each((j, ele) => {
-          $(ele).after(`<div class="objective_${objectiveNum} radiobox">
+      objQuestions.forEach((obj) => {
+        objNum++;
+        const [objData, objType] = obj;
+        const objID = objData.replace(/{{ (input|select|multiselect)\(([a-zA-Z0-9]+)\) }}/, '$2');
+        if (objType === 'input') {
+          $(e).html($(e).html().replace(objData, `<div class="objective_${objID} medium-3" style="display: inline-block;">
+          <input type="text" placeholder="Question${objNum} ${objID}" name="${objID}" class="textbox objective-input">
+          </div>`));
+        } else if (objType === 'select') {
+          $(e).html($(e).html().replace(objData, `Question${objNum}_${objID}:`));
+          $(e).next('ul').children().each((j, ele) => {
+            $(ele).after(`<div class="objective_${objID} radiobox">
+              ${String.fromCharCode(65 + j)}.
+              <input type="radio" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+              ${ele.innerHTML}
+            </div>`);
+            $(ele).remove();
+          });
+        } else if (objType === 'multiselect') {
+          $(e).html($(e).html().replace(objData, `Question${objNum}_${objID}:`));
+          $(e).next('ul').children().each((j, ele) => {
+            $(ele).after(`<div class="objective_${objID} radiobox">
             ${String.fromCharCode(65 + j)}.
-            <input type="radio" name="${objectiveNum}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+            <input type="checkbox" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
             ${ele.innerHTML}
           </div>`);
-          $(ele).remove();
-        });
-      }
+            $(ele).remove();
+          });
+        }
+      });
     });
-    if (objectiveNum) {
+    if (objNum) {
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? '<input type="submit" disabled class="button rounded primary" value="登录后提交" />'
         : '<input type="submit" class="button rounded primary" value="提交" />');
