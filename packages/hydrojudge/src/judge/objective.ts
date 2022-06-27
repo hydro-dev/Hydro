@@ -13,9 +13,9 @@ export async function judge({
         : ('content' in code)
             ? code.content.toString().replace(/\r/g, '')
             : '';
-    let answers;
+    let answers: { [x: string]: string | string[] } = {};
     try {
-        answers = yaml.load(answer);
+        answers = yaml.load(answer) as { [x: string]: string | string[] };
         assert(typeof answers === 'object');
     } catch (e) {
         return end({
@@ -39,7 +39,7 @@ export async function judge({
             memory: 0,
         };
         if (typeof ansInfo[0] === 'string') {
-            if (ansInfo[0].trim() === answers[key].trim()) {
+            if (ansInfo[0].trim() === (answers[key] as string).trim()) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
