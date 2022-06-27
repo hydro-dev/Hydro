@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import ReactDOM, { createRoot } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import React from 'react';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
 import { NamedPage } from 'vj/misc/Page';
@@ -174,39 +174,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function loadObjective() {
-    try {
-      let s = '';
-      try {
-        s = JSON.parse(UiContext.pdoc.content);
-      } catch {
-        s = UiContext.pdoc.content;
-      }
-      if (typeof s === 'object') {
-        const langs = Object.keys(s);
-        const f = langs.filter((i) => i.startsWith(UserContext.viewLang));
-        if (s[UserContext.viewLang]) s = s[UserContext.viewLang];
-        else if (f.length) s = s[f[0]];
-        else s = s[langs[0]];
-      }
-      const props = yaml.load(s);
-      if (!(props instanceof Array)) return;
-      $('.outer-loader-container').show();
-      const { default: Objective } = await import('vj/components/objective-question/index');
-
-      ReactDOM.createRoot($('.problem-content').get(0)).render(
-        <div className="section__body typo">
-          <Objective panel={props} target={UiContext.postSubmitUrl}></Objective>
-        </div>,
-      );
-      $('.outer-loader-container').hide();
-    } catch (e) { }
-  }
-
-  async function loadObjectiveNew() {
     $('.outer-loader-container').show();
     const ans = {};
     let objNum = 0;
-    const reg = /{{ (input|select|multiselect)\([a-zA-Z0-9]+\) }}/g;
+    const reg = /{{ (input|select|multiselect)\(\d+(-\d+)?\) }}/g;
     $('.problem-content .typo').children().each((i, e) => {
       if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
       const objQuestions = [];
@@ -218,29 +189,32 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       objQuestions.forEach((obj) => {
         objNum++;
         const [objData, objType] = obj;
-        const objID = objData.replace(/{{ (input|select|multiselect)\(([a-zA-Z0-9]+)\) }}/, '$2');
+        const objID = objData.replace(/{{ (input|select|multiselect)\((\d+(-\d+)?)\) }}/, '$2');
         if (objType === 'input') {
-          $(e).html($(e).html().replace(objData, `<div class="objective_${objID} medium-3" style="display: inline-block;">
-          <input type="text" placeholder="Question${objNum} ${objID}" name="${objID}" class="textbox objective-input">
-          </div>`));
+          $(e).html($(e).html().replace(objData, `
+            <div class="objective_${objID} medium-3" style="display: inline-block;">
+              <input type="text" placeholder="Question${objNum} ${objID}" name="${objID}" class="textbox objective-input">
+            </div>
+          `));
         } else if (objType === 'select') {
           $(e).html($(e).html().replace(objData, `Question${objNum}_${objID}:`));
           $(e).next('ul').children().each((j, ele) => {
-            $(ele).after(`<div class="objective_${objID} radiobox">
-              ${String.fromCharCode(65 + j)}.
-              <input type="radio" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
-              ${ele.innerHTML}
-            </div>`);
+            $(ele).after(`
+              <div class="objective_${objID} radiobox">
+                <input type="radio" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+                ${String.fromCharCode(65 + j)}. ${ele.innerHTML}
+              </div>`);
             $(ele).remove();
           });
         } else if (objType === 'multiselect') {
           $(e).html($(e).html().replace(objData, `Question${objNum}_${objID}:`));
           $(e).next('ul').children().each((j, ele) => {
-            $(ele).after(`<div class="objective_${objID} radiobox">
-            ${String.fromCharCode(65 + j)}.
-            <input type="checkbox" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
-            ${ele.innerHTML}
-          </div>`);
+            $(ele).after(`
+              <div class="objective_${objID} radiobox">
+                <input type="checkbox" name="${objID}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+                ${String.fromCharCode(65 + j)}. ${ele.innerHTML}
+              </div>
+            `);
             $(ele).remove();
           });
         }
@@ -345,7 +319,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
   const { type } = UiContext.pdoc.config || {};
   if (type === 'objective') loadObjective();
-  if (type === 'objectiveNew') loadObjectiveNew();
   if (pagename !== 'contest_detail_problem') initChart();
 });
 
