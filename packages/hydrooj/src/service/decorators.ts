@@ -33,6 +33,7 @@ export interface Types {
     Boolean: Type,
     Date: Type,
     Time: Type,
+    DateTime: Type,
     Range: (range: Array<string | number> | Record<string, any>) => Type,
     Array: Type,
     NumericArray: Type,
@@ -77,6 +78,10 @@ export const Types: Types = {
             assert(t.length === 2);
             return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
         },
+    ],
+    DateTime: [
+        (v) => v.toString(),
+        (v) => moment(v).isValid(),
     ],
     Range: (range) => [
         (v) => {

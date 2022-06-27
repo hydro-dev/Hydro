@@ -6,16 +6,8 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            {{ form.form_select({
-              columns:3,
-              label:'Rule',
-              name:'rule',
-              options:rules,
-              value:tdoc['rule']|default(''),
-              row:false
-            }) }}
             {{ form.form_text({
-              columns:4,
+              columns:7,
               label:'Title',
               name:'title',
               placeholder:_('title'),
@@ -41,29 +33,12 @@
             }) }}
           </div>
           <div class="row">
-            {{ form.form_text({
-              columns:3,
-              label:'Begin Date',
-              name:'beginAtDate',
-              placeholder:'YYYY-mm-dd',
-              value:beginAt.format('%Y-%m-%d'),
-              date:true,
-              row:false
-            }) }}
-            {{ form.form_text({
-              columns:3,
-              label:'Begin Time',
-              name:'beginAtTime',
-              placeholder:'HH:MM',
-              value:beginAt.format('%H:%M'),
-              time:true,
-              row:false
-            }) }}
-            {{ form.form_text({
-              columns:2,
-              label:'Duration (hours)',
-              name:'duration',
-              value:duration|default('3'),
+            {{ form.form_select({
+              columns:4,
+              label:'Rule',
+              name:'rule',
+              options:rules,
+              value:tdoc['rule']|default(''),
               row:false
             }) }}
             {{ form.form_text({
@@ -74,23 +49,51 @@
               value:tdoc.assign|default(''),
               row:false
             }) }}
+            {{ form.form_checkbox({
+              columns:3,
+              label:'Auto hide-and show',
+              name:'autoHide',
+              placeholder:'',
+              value:handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) and (tdoc.autoHide|default(true)),
+              disabled:not handler.user.hasPerm(perm.PERM_EDIT_PROBLEM),
+              row:false
+            }) }}
+          </div>
+          <div class="row">
+            {{ form.form_text({
+              columns:4,
+              label:'Begin Time',
+              name:'beginAt',
+              placeholder:'YYYY-mm-dd HH:MM',
+              value:beginAt.format('%Y-%m-%d %H:%M'),
+              datetime:true,
+              row:false
+            }) }}
+            {{ form.form_text({
+              columns:4,
+              label:'End Time',
+              name:'endAt',
+              placeholder:'YYYY-mm-dd HH:MM',
+              value:endAt.format('%Y-%m-%d %H:%M'),
+              datetime:true,
+              row:false
+            }) }}
+            {{ form.form_text({
+              columns:3,
+              label:'Duration (hours)',
+              name:'contestDuration',
+              value:contestDuration|default(''),
+              placeholder:_("Set to open flexible time"),
+              row:false
+            }) }}
           </div>
           <div class="row">
           {{ form.form_text({
-            columns:9,
+            columns:12,
             label:'Problems',
             name:'pids',
             value:pids,
             placeholder:_("Seperated with ','"),
-            row:false
-          }) }}
-          {{ form.form_checkbox({
-            columns:3,
-            label:'Auto hide-and show',
-            name:'autoHide',
-            placeholder:'',
-            value:handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) and (tdoc.autoHide|default(true)),
-            disabled:not handler.user.hasPerm(perm.PERM_EDIT_PROBLEM),
             row:false
           }) }}
           {% if tdoc.lockAt %}

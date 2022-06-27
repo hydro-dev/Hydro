@@ -243,17 +243,17 @@ export class ContestEditHandler extends Handler {
         this.response.body = {
             rules,
             tdoc: this.tdoc,
-            duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
+            contestDuration: tid ? this.tdoc.duration : '',
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt: this.tdoc?.beginAt || new Date(ts),
+            endAt: this.tdoc?.endAt || new Date(ts + 2 * Time.hour),
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
 
     @param('tid', Types.ObjectID, true)
-    @param('beginAtDate', Types.Date)
-    @param('beginAtTime', Types.Time)
-    @param('duration', Types.Float)
+    @param('beginAt', Types.DateTime)
+    @param('endAt', Types.DateTime)
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
@@ -265,51 +265,52 @@ export class ContestEditHandler extends Handler {
     @param('lock', Types.UnsignedInt, true)
     @param('contestDuration', Types.Float, true)
     async post(
-        domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false,
-        _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration?: number,
+        domainId: string, tid: ObjectID, beginAt: string, endAt: string, title: string,
+        content: string, rule: string, _pids: string, rated = false, _code = '',
+        autoHide = false, assign: string[] = null, lock: number = null, contestDuration?: number,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
-        const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
-        if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
-        const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
-        if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
-        const beginAt = beginAtMoment.toDate();
+        const beginAtMoment = moment.tz(beginAt, this.user.timeZone);
+        if (!beginAtMoment.isValid()) throw new ValidationError('beginAt');
+        const endAtMoment = moment.tz(endAt, this.user.timeZone);
+        if (!endAtMoment.isValid()) throw new ValidationError('endAt');
+        if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('beginAt', 'endAt');
+        const beginAtDate = beginAtMoment.toDate();
+        const endAtDate = endAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
-        contestDuration ||= duration;
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
+                title, content, rule, beginAt: beginAtDate, endAt: endAtDate, pids, rated, duration: contestDuration,
             });
-            if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
+            if (this.tdoc.beginAt !== beginAtDate || this.tdoc.endAt !== endAtDate
                 || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
                 || lockAt !== this.tdoc.lockAt) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAtDate,
+                endAtDate, pids, rated, { duration: contestDuration });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
         };
         await TaskModel.deleteMany(task);
-        if (Date.now() <= endAt.getTime() && autoHide) {
+        if (Date.now() <= endAtDate.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
             await TaskModel.add({
                 ...task,
                 operation: ['unhide'],
-                executeAfter: endAt,
+                executeAfter: endAtDate,
             });
         }
-        if (lock && lockAt <= endAt) {
+        if (lock && lockAt <= endAtDate) {
             await TaskModel.add({
                 ...task,
                 operation: ['unlock'],
-                executeAfter: endAt,
+                executeAfter: endAtDate,
             });
         }
         await contest.edit(domainId, tid, {
