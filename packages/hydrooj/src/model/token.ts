@@ -13,6 +13,7 @@ class TokenModel {
     static TYPE_LOSTPASS = 5;
     static TYPE_EXPORT = 6;
     static TYPE_IMPORT = 7;
+    static TYPE_CHALLENGE = 8;
 
     static async add(
         tokenType: number, expireSeconds: number, data: any, id = String.random(32),

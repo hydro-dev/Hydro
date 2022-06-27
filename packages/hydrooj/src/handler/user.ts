@@ -1,6 +1,8 @@
+import base64url from 'base64url';
 import moment from 'moment-timezone';
 import notp from 'notp';
 import b32 from 'thirty-two';
+import webauthn from 'webauthn-lib';
 import {
     BlacklistedError, InvalidTokenError, LoginError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -42,11 +44,16 @@ registerValue('User', [
     ['priv', 'Int!', 'User Privilege'],
     ['avatarUrl', 'String'],
     ['tfa', 'Boolean!'],
+    ['webauthn', 'Boolean!'],
 ]);
 
 registerResolver(
     'User', 'TFA', 'TFAContext', () => ({}),
     'Two Factor Authentication Config',
+);
+registerResolver(
+    'User', 'WebAuthn', 'WebAuthnContext', () => ({}),
+    'WebAuthn Authentication Config',
 );
 registerResolver(
     'TFAContext', 'enable(secret: String!, code: String!)', 'Boolean!',
@@ -68,6 +75,89 @@ registerResolver(
         return true;
     },
     'Disable Two Factor Authentication for current user',
+);
+
+registerResolver(
+    'WebAuthnContext', 'register(_: String!)', 'String!',
+    async (arg, ctx) => {
+        if (ctx.user.webauthn) throw new Error('WebAuthn is already enabled');
+        const makeCredential = webauthn.generateServerMakeCredRequest(ctx.user.uname, '', webauthn.randomBase64URLBuffer());
+        const [t] = await token.add(
+            token.TYPE_CHALLENGE,
+            9000,
+            {
+                id: ctx.user._id,
+                challenge: makeCredential.challenge,
+            },
+        );
+        return JSON.stringify({ token: t, makeCredential });
+    },
+    'Register WebAuthn Authentication for current user',
+);
+
+registerResolver(
+    'WebAuthnContext', 'login(uname: String!)', 'String!',
+    async (arg, ctx) => {
+        const udoc = await user.getByUname(ctx.args.domainId, arg.uname);
+        if (!udoc) throw new Error('User not found');
+
+        const getAssertion = webauthn.generateServerGetAssertion([udoc._authenticators]);
+
+        const [t] = await token.add(
+            token.TYPE_CHALLENGE,
+            90,
+            {
+                id: udoc._id,
+                challenge: getAssertion.challenge,
+            },
+        );
+        return JSON.stringify({ token: t, getAssertion });
+    },
+    'Register WebAuthn Authentication for current user',
+);
+
+registerResolver(
+    'WebAuthnContext', 'response(token: String!, data: String!)', 'Boolean!',
+    async (arg, ctx) => {
+        const tok = await token.get(arg.token, token.TYPE_CHALLENGE);
+        const data = JSON.parse(arg.data);
+        const clientData = JSON.parse(base64url.decode(data.response.clientDataJSON));
+
+        if (clientData.challenge !== tok.challenge) {
+            return false;
+        }
+        if (clientData.origin !== ctx.request.headers.origin) {
+            return false;
+        }
+        let result;
+        if (data.response.attestationObject !== undefined) {
+            result = webauthn.verifyAuthenticatorAttestationResponse(data);
+
+            if (result.verified) {
+                result.authrInfo.registerTime = new Date();
+                await user.setById(tok.id, { authenticators: result.authrInfo });
+                return true;
+            }
+        } else if (data.response.authenticatorsData !== undefined) {
+            result = webauthn.verifyAuthenticatorAssertionResponse(data, user.getById(ctx.args.domainId, tok.id, 'authenticators'));
+
+            if (result.verified) {
+                return true;
+            }
+        }
+        return false;
+    },
+    'Response WebAuthn Authentication for current user',
+);
+
+registerResolver(
+    'WebAuthnContext', 'delete(_: String!)', 'Boolean!',
+    async (arg, ctx) => {
+        if (!ctx.user.webauthn) throw new Error('WebAuthn is already disabled');
+        user.setById(ctx.user._id, undefined, { authenticators: '' });
+        return true;
+    },
+    'Register WebAuthn Authentication for current user',
 );
 
 registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
@@ -113,7 +203,10 @@ class UserLoginHandler extends Handler {
     @param('rememberme', Types.Boolean)
     @param('redirect', Types.String, true)
     @param('tfa', Types.String, true)
-    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '', tfa = '') {
+    @param('webauthnResponse', Types.String, true)
+    @param('webauthnToken', Types.String, true)
+    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '', tfa = '',
+        webauthnResponse = '', webauthnToken = '') {
         if (!system.get('server.login')) throw new LoginError('Builtin login disabled.');
         let udoc = await user.getByEmail(domainId, uname);
         if (!udoc) udoc = await user.getByUname(domainId, uname);
@@ -122,8 +215,21 @@ class UserLoginHandler extends Handler {
             this.limitRate('user_login', 60, 5),
             oplog.log(this, 'user.login', { redirect }),
         ]);
-        if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
-        udoc.checkPassword(password);
+        if (webauthnResponse !== '') {
+            const data = JSON.parse(webauthnResponse);
+            const clientData = JSON.parse(base64url.decode(data.response.clientDataJSON));
+            const tok = await token.get(webauthnToken, token.TYPE_CHALLENGE);
+            if (clientData.challenge !== tok.challenge) {
+                throw new LoginError(uname);
+            }
+            const result = webauthn.verifyAuthenticatorAssertionResponse(data, [udoc._authenticators]);
+            if (!result.verified) {
+                throw new LoginError(uname);
+            }
+        } else {
+            if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
+            udoc.checkPassword(password);
+        }
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname);
         this.session.viewLang = '';

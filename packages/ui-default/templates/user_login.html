@@ -11,13 +11,13 @@
           <input name="uname" type="text" autofocus>
         </label>
       </div></div>
-      <div class="row"><div class="columns">
+      <div class="row pass_div"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Password') }}
           <input name="password" type="password">
         </label>
       </div></div>
-      <div class="row" style="display: none" id="tfa_div"><div class="columns">
+      <div class="row tfa_div" style="display: none"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Two Factor Authentication Code') }}
           <input name="tfa" type="number">
@@ -31,7 +31,11 @@
       <div class="row"><div class="columns">
         <div class="text-center">
           <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-          <input type="submit" value="{{ _('Login') }}" class="inverse expanded rounded primary button">
+          <input type="hidden" name="webauthnResponse">
+          <input type="hidden" name="webauthnToken">
+          <input type="button" style="display: none;" value="{{ _('Verify') }}" class="inverse expanded primary button webauthn_btn">
+          <input type="button" value="{{ _('Use Password') }}" style="display: none;" class="inverse expanded primary button use_password_btn">
+          <input type="submit" value="{{ _('Login') }}" class="inverse expanded primary button login_submit">
         </div>
       </div></div>
       {% endif %}

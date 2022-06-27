@@ -55,6 +55,7 @@ export class User {
     _regip: string;
     _loginip: string;
     _tfa: string;
+    _authenticators: string;
 
     mail: string;
     uname: string;
@@ -67,6 +68,7 @@ export class User {
     scope: bigint;
     _files: FileInfo[];
     tfa: boolean;
+    webauthn: boolean;
     group?: string[];
     [key: string]: any;
 
@@ -81,6 +83,7 @@ export class User {
         this._loginip = udoc.loginip;
         this._files = udoc._files || [];
         this._tfa = udoc.tfa;
+        this._authenticators = udoc.authenticators;
 
         this.mail = udoc.mail;
         this.uname = udoc.uname;
@@ -92,6 +95,8 @@ export class User {
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
         this.tfa = !!udoc.tfa;
+        this.webauthn = !!udoc.authenticators;
+
         if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
 
         for (const key in setting.SETTINGS_BY_KEY) {

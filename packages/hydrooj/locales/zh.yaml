@@ -21,15 +21,18 @@ __langname: 简体中文
 '↓ # Stars': '↓ 收藏数'
 '↓ Create Time': '↓ 创建时间'
 '↓ Update Time': '↓ 更新时间'
+'6-Digit Code': 6位代码
 'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
 'Copy "{data}" failed :(': '复制“{data}”失败 :('
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
+'Click to show secret': 点击以显示 Secret
 'Discussion: Terms Of Service': 讨论区服务条款
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
+'Please use your two factor authentication app to scan the qrcode below:': 请使用你的两步验证 App 扫描下面的二维码
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'

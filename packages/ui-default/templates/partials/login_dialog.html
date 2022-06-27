@@ -21,13 +21,13 @@
             <input name="uname" type="text" data-autofocus>
           </label>
         </div></div>
-        <div class="row"><div class="columns">
+        <div class="row pass_div"><div class="columns">
           <label class="material textbox">
             {{ _('Password') }}
             <input name="password" type="password">
           </label>
         </div></div>
-        <div class="row" style="display: none" id="tfa_div"><div class="columns">
+        <div class="row tfa_div" style="display: none"><div class="columns">
           <label class="material textbox">
             {{ _('Two Factor Authentication Code') }}
             <input name="tfa" type="number">
@@ -40,7 +40,11 @@
         </div></div>
         <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <div class="row"><div class="columns">
-          <input type="submit" value="{{ _('Sign In') }}" class="expanded rounded primary button">
+          <input type="hidden" name="webauthnResponse">
+          <input type="hidden" name="webauthnToken">
+          <input type="button" style="display: none;" value="{{ _('Verify') }}" class="inverse expanded primary button webauthn_btn">
+          <input type="button" value="{{ _('Use Password') }}" style="display: none;" class="inverse expanded primary button use_password_btn">
+          <input type="submit" value="{{ _('Sign In') }}" class="expanded rounded primary button login_submit">
         </div></div>
         {% endif %}
         {%- for v in handler.loginMethods -%}

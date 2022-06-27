@@ -1,6 +1,7 @@
 import { NamedPage } from 'vj/misc/Page';
 import QRCode from 'qrcode';
 import b32 from 'thirty-two';
+import base64url from 'base64url';
 import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
@@ -90,5 +91,72 @@ export default new NamedPage('home_security', () => {
     } catch (e) {
       Notification.error(e.message);
     }
+  });
+
+  function publicKeyCredentialToJSON(pubKeyCred) {
+    if (pubKeyCred instanceof Array) {
+      const arr = [];
+      for (const i of pubKeyCred) { arr.push(publicKeyCredentialToJSON(i)); }
+
+      return arr;
+    }
+
+    if (pubKeyCred instanceof ArrayBuffer) {
+      return base64url.encode(pubKeyCred);
+    }
+
+    if (pubKeyCred instanceof Object) {
+      const obj = {};
+
+      for (const key in pubKeyCred) {
+        obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+      }
+
+      return obj;
+    }
+
+    return pubKeyCred;
+  }
+
+  $('#delete_authenticators').off('click').on('click', async () => {
+    await api(gql`
+    user {
+      WebAuthn {
+        delete(_: "")
+      }
+    }
+    `, ['data', 'user', 'WebAuthn', 'delete']);
+    Notification.success(i18n('Successfully deleted.'));
+    await delay(2000);
+    window.location.reload();
+  });
+
+  $('#register_authenticators').off('click').on('click', async () => {
+    let t = await api(gql`
+    user {
+      WebAuthn {
+        register(_: "")
+      }
+    }
+    `, ['data', 'user', 'WebAuthn', 'register']);
+    const { token, makeCredential } = JSON.parse(t);
+
+    makeCredential.challenge = base64url.toBuffer(makeCredential.challenge);
+    makeCredential.user.id = base64url.toBuffer(makeCredential.user.id);
+
+    const n = await navigator.credentials.create({ publicKey: makeCredential });
+    const response = JSON.stringify(publicKeyCredentialToJSON(n));
+
+    t = await api(gql`
+    user {
+      WebAuthn {
+        response(token: ${token}, data: ${response})
+      }
+    }
+    `, ['data', 'user', 'WebAuthn', 'response']);
+
+    Notification.success(i18n('Successfully add.'));
+    await delay(2000);
+    window.location.reload();
   });
 });
