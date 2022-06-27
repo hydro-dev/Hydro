@@ -54,7 +54,7 @@
         "eslint-plugin-simple-import-sort": "7.0.0",
         "fs-extra": "^10.1.0",
         "globby": "11.1.0",
-        "latest-version": "^7.0.0",
+        "latest-version": "6.0.0",
         "mocha": "^10.0.0",
         "mongodb": "^3.7.3",
         "mongodb-memory-server": "^8.7.1",
