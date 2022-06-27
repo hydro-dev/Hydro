@@ -224,8 +224,17 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? '<input type="submit" disabled class="button rounded primary" value="登录后提交" />'
         : '<input type="submit" class="button rounded primary" value="提交" />');
-      $('input.objective-input').on('input', (e) => {
+      $('input.objective-input[type!=checkbox]').on('input', (e) => {
         ans[e.target.name] = e.target.value;
+      });
+      $('input.objective-input[type=checkbox]').on('input', (e) => {
+        if (e.target.checked) {
+          if (ans[e.target.name] === undefined) ans[e.target.name] = [];
+          ans[e.target.name].push(e.target.value);
+        } else {
+          ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
+        }
+        console.log(ans);
       });
       $('input[type="submit"]').on('click', (e) => {
         e.preventDefault();

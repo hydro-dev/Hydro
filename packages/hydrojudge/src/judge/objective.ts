@@ -39,7 +39,7 @@ export async function judge({
             memory: 0,
         };
         if (typeof ansInfo[0] === 'string') {
-            if (answer[0].trim() === answers[key].trim()) {
+            if (ansInfo[0].trim() === answers[key].trim()) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
