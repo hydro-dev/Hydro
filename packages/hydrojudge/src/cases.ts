@@ -88,7 +88,7 @@ export default async function readCases(folder: string, cfg: Record<string, any>
     const checkFile = ensureFile(folder);
     const result = await readYamlCases(config, checkFile)
         .catch((e) => { throw changeErrorType(e, FormatError); });
-    result.count = result.outputs?.length || Math.sum((result.subtasks || []).map((s) => s.cases.length));
+    result.count = Object.keys(result.answers || {}).length || Math.sum((result.subtasks || []).map((s) => s.cases.length));
     if (!result.count) {
         try {
             result.subtasks = readSubtasksFromFiles(await collectFiles(folder), cfg);

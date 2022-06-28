@@ -1,4 +1,6 @@
+import assert from 'assert';
 import { readFile } from 'fs-extra';
+import yaml from 'js-yaml';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { Context } from './interface';
 
@@ -11,27 +13,98 @@ export async function judge({
         : ('content' in code)
             ? code.content.toString().replace(/\r/g, '')
             : '';
-    const outputs = answer.split('\n');
+    let answers: { [x: string]: string | string[] } = {};
+    try {
+        answers = yaml.load(answer) as any;
+        assert(typeof answers === 'object');
+    } catch (e) {
+        return end({
+            status: STATUS.STATUS_WRONG_ANSWER,
+            score: 0,
+            message: 'Unable to parse answer.',
+            time: 0,
+            memory: 0,
+        });
+    }
     let totalScore = 0;
     let totalStatus = 0;
-    for (const i in config.outputs) {
-        const c = config.outputs[i];
-        outputs[i] = outputs[i] || '';
-        let status = STATUS.STATUS_WRONG_ANSWER;
-        let score = 0;
-        if (outputs[i].trim() === (c.output || c[0]).trim()) {
-            score = c.score || c[1];
-            status = STATUS.STATUS_ACCEPTED;
+    for (const key in config.answers) {
+        const [subtaskId, caseId] = key.split('-').map(Number);
+        const ansInfo = config.answers[key] as [string | string[], number];
+        const score = ansInfo[1];
+        const baseInfo = {
+            subtaskId,
+            id: caseId,
+            time: 0,
+            memory: 0,
+        };
+        if (typeof ansInfo[0] === 'string') {
+            if (ansInfo[0].trim() === (answers[key] as any).trim()) {
+                totalScore += score;
+                totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
+                next({
+                    status: totalStatus,
+                    case: {
+                        ...baseInfo,
+                        status: STATUS.STATUS_ACCEPTED,
+                        score,
+                        message: 'Correct',
+                    },
+                }, +caseId);
+            } else {
+                totalStatus = STATUS.STATUS_WRONG_ANSWER;
+                next({
+                    status: totalStatus,
+                    case: {
+                        ...baseInfo,
+                        status: STATUS.STATUS_WRONG_ANSWER,
+                        score: 0,
+                        message: 'Incorrect',
+                    },
+                }, +caseId);
+            }
+        } else {
+            const stdAns = new Set(ansInfo[0]);
+            const ans = new Set(answers[key]);
+            const correct = stdAns.size === ans.size && [...stdAns].every((x) => ans.has(x));
+            const partialCorrect = [...stdAns].some((x) => ans.has(x)) && [...ans].every((x) => stdAns.has(x));
+            if (correct) {
+                totalScore += score;
+                totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
+                next({
+                    status: totalStatus,
+                    case: {
+                        ...baseInfo,
+                        status: STATUS.STATUS_ACCEPTED,
+                        score,
+                        message: 'Correct',
+                    },
+                }, +caseId);
+            } else if (partialCorrect) {
+                totalScore += Math.floor(score / 2);
+                totalStatus = STATUS.STATUS_WRONG_ANSWER;
+                next({
+                    status: totalStatus,
+                    case: {
+                        ...baseInfo,
+                        status: STATUS.STATUS_WRONG_ANSWER,
+                        score: Math.floor(score / 2),
+                        message: 'Partially Correct',
+                    },
+                }, +caseId);
+            } else {
+                totalStatus = STATUS.STATUS_WRONG_ANSWER;
+                next({
+                    status: totalStatus,
+                    case: {
+                        ...baseInfo,
+                        status: STATUS.STATUS_WRONG_ANSWER,
+                        score: 0,
+                        message: 'Incorrect',
+                    },
+                }, +caseId);
+            }
         }
-        totalScore += score;
-        totalStatus = Math.max(status, totalStatus);
-        next({
-            status: totalStatus,
-            progress: (100 * (+i + 1)) / config.outputs.length,
-            case: {
-                status, score, time: 0, memory: 0, message: '',
-            },
-        }, +i + 1);
     }
     return end({
         status: totalStatus, score: totalScore, time: 0, memory: 0,
