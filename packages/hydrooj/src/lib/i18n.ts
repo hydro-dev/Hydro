@@ -7,7 +7,7 @@ declare global {
 }
 
 String.prototype.translate = function translate(...languages: string[]) {
-    if (languages[0].startsWith('en')) {
+    if (languages[0]?.startsWith('en')) {
         // For most use cases, source text equals to translated text in English.
         // So if it doesn't exist, we should use the original text instead of fallback.
         return locales[languages[0]]?.[this] || locales['en']?.[this] || this;
