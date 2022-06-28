@@ -236,7 +236,11 @@ export class Handler extends HandlerCommon {
             if (error.stack) logger.error(error.stack);
         }
         if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.ctx.getUrl('user_login', { query: { redirect: this.request.path + this.ctx.search } });
+            this.response.redirect = this.ctx.getUrl('user_login', {
+                query: {
+                    redirect: (this.ctx.originalPath || this.request.path) + this.ctx.search,
+                },
+            });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
