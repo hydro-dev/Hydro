@@ -9,6 +9,7 @@ import delay from 'vj/utils/delay';
 import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
+import i18n from 'vj/utils/i18n';
 
 class ProblemPageExtender {
   constructor() {
@@ -213,8 +214,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     });
     if (cnt) {
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
-        ? '<input type="submit" disabled class="button rounded primary" value="登录后提交" />'
-        : '<input type="submit" class="button rounded primary" value="提交" />');
+        ? `<input type="submit" disabled class="button rounded primary" value="${i18n('Submit')}" />`
+        : `<input type="submit" class="button rounded primary" value="${i18n('Login to Submit')}" />`);
       $('input.objective-input[type!=checkbox]').on('input', (e) => {
         ans[e.target.name] = e.target.value;
       });
@@ -225,12 +226,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         } else {
           ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
         }
-        console.log(ans);
       });
       $('input[type="submit"]').on('click', (e) => {
         e.preventDefault();
         request
-          .post(`${window.location.href}/submit`, {
+          .post(UiContext.postSubmitUrl, {
             lang: '_',
             code: yaml.dump(ans),
           })
