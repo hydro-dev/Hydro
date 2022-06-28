@@ -767,15 +767,14 @@ const scripts: UpgradeScript[] = [
                                 if (typeof langs[lang] !== 'string') continue;
                                 langs[lang] = processSingleLanguage(langs[lang]);
                             }
-                            delete config.outputs;
                             await problem.edit(ddoc._id, pdoc.docId, { content: JSON.stringify(langs) });
                         }
                     } catch (e) {
                         const content = processSingleLanguage(pdoc.content);
-                        delete config.outputs;
                         await problem.edit(ddoc._id, pdoc.docId, { content });
                     }
                     uids.add(pdoc.owner);
+                    delete config.outputs;
                     await problem.addTestdata(ddoc._id, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
                 } catch (e) { console.error(e); }
             }
