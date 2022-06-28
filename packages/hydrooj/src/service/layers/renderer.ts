@@ -1,6 +1,5 @@
 import { ObjectID } from 'mongodb';
 import avatar from 'hydrooj/src/lib/avatar';
-import * as system from 'hydrooj/src/model/system';
 import type { KoaContext } from '../server';
 
 function serializer(k: string, v: any) {
@@ -66,7 +65,7 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
     ctx.translate = (str: string) => {
         if (!str) return '';
         const lang = ctx.HydroContext.user?.viewLang || ctx.session?.viewLang;
-        return str.toString().translate(lang, ...ctx.acceptsLanguages(), system.get('server.language'));
+        return str.toString().translate(lang, ...ctx.acceptsLanguages());
     };
     await next();
 };
