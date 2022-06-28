@@ -727,7 +727,7 @@ const scripts: UpgradeScript[] = [
             for (const pdoc of pdocs) {
                 try {
                     const config = yaml.load(pdoc.config as string) as any;
-                    if (config.type !== 'objective') continue;
+                    if (config.type !== 'objective' || !config.outputs) continue;
                     config.answers = {};
                     let cnt = 0;
                     for (const l of config.outputs) {
@@ -756,7 +756,7 @@ const scripts: UpgradeScript[] = [
                                 } else text += `{{ input(${scnt}) }}\n`;
                                 text += '\n';
                             }
-                        } catch (e) { console.error(e); }
+                        } catch (e) { console.error(e); return content; }
                         return text;
                     }
 
@@ -772,6 +772,7 @@ const scripts: UpgradeScript[] = [
                         }
                     } catch (e) {
                         const content = processSingleLanguage(pdoc.content);
+                        delete config.outputs;
                         await problem.edit(ddoc._id, pdoc.docId, { content });
                     }
                     uids.add(pdoc.owner);
