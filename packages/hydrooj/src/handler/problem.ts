@@ -2,6 +2,7 @@ import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
 import { flattenDeep, intersection, isSafeInteger } from 'lodash';
+import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
@@ -323,6 +324,9 @@ export class ProblemDetailHandler extends ProblemHandler {
                 delete this.pdoc.nSubmit;
                 delete this.pdoc.difficulty;
                 delete this.pdoc.stats;
+            }
+            if (this.tdoc.duration && this.tdoc && this.tdoc.attend) {
+                this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'h').tz(this.user.timezone).format('YYYY-MM-DD HH:mm:ss');
             }
         } else if (!problem.canViewBy(this.pdoc, this.user)) {
             throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
