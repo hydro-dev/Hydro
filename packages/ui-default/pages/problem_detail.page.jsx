@@ -8,6 +8,7 @@ import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 class ProblemPageExtender {
   constructor() {
@@ -187,7 +188,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         cnt++;
         const id = info.replace(/{{ (input|select|multiselect)\((\d+(-\d+)?)\) }}/, '$2');
         if (type === 'input') {
-          $(e).html($(e).html().replace(info, `
+          $(e).html($(e).html().replace(info, tpl`
             <div class="objective_${id} medium-3" style="display: inline-block;">
               <input type="text" name="${id}" class="textbox objective-input">
             </div>
@@ -199,7 +200,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           }
           $(e).html($(e).html().replace(info, ''));
           $(e).next('ul').children().each((j, ele) => {
-            $(ele).after(`
+            $(ele).after(tpl`
               <div class="objective_${id} radiobox">
                 <input type="${type === 'select' ? 'radio' : 'checkbox'}" name="${id}" class="objective-input" value="${String.fromCharCode(65 + j)}">
                 ${String.fromCharCode(65 + j)}. ${ele.innerHTML}

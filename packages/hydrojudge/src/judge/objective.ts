@@ -15,7 +15,7 @@ export async function judge({
             : '';
     let answers: { [x: string]: string | string[] } = {};
     try {
-        answers = yaml.load(answer) as { [x: string]: string | string[] };
+        answers = yaml.load(answer) as any;
         assert(typeof answers === 'object');
     } catch (e) {
         return end({
@@ -39,7 +39,7 @@ export async function judge({
             memory: 0,
         };
         if (typeof ansInfo[0] === 'string') {
-            if (ansInfo[0].trim() === (answers[key] as string).trim()) {
+            if (ansInfo[0].trim() === (answers[key] as any).trim()) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
