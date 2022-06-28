@@ -325,7 +325,7 @@ export class ProblemDetailHandler extends ProblemHandler {
                 delete this.pdoc.difficulty;
                 delete this.pdoc.stats;
             }
-            if (this.tdoc.duration && this.tdoc && this.tdoc.attend) {
+            if (this.tdoc.duration && this.tsdoc?.attend) {
                 this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'h').tz(this.user.timezone).format('YYYY-MM-DD HH:mm:ss');
             }
         } else if (!problem.canViewBy(this.pdoc, this.user)) {

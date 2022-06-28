@@ -98,9 +98,6 @@ export class ContestDetailHandler extends Handler {
             contest.get(domainId, tid),
             contest.getStatus(domainId, tid, this.user._id),
         ]);
-        if (tdoc.duration && tsdoc && tsdoc.attend) {
-            tsdoc.endAt = moment(tsdoc.startAt).add(tdoc.duration, 'h').tz(this.user.timezone).format('YYYY-MM-DD HH:mm:ss');
-        }
         this.response.template = 'contest_detail.html';
         const udict = await user.getList(domainId, [tdoc.owner]);
         this.response.body = {
@@ -120,6 +117,9 @@ export class ContestDetailHandler extends Handler {
                 rdict = await record.getList(domainId, Object.values(psdict).map((i: any) => i.rid));
             } else {
                 for (const i in psdict) rdict[psdict[i].rid] = { _id: psdict[i].rid };
+            }
+            if (tdoc.duration && tsdoc.attend) {
+                tsdoc.endAt = moment(tsdoc.startAt).add(tdoc.duration, 'h').tz(this.user.timezone).format('YYYY-MM-DD HH:mm:ss');
             }
         }
         Object.assign(this.response.body, { pdict, psdict, rdict });
