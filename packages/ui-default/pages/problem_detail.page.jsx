@@ -242,6 +242,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           });
       });
     }
+    $('.scratchpad--hide').hide();
+    $('.non-scratchpad--hide').hide();
     $('.outer-loader-container').hide();
   }
 
@@ -317,8 +319,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
-  const { type } = UiContext.pdoc.config || {};
-  if (type === 'objective') loadObjective();
+  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
   if (pagename !== 'contest_detail_problem') initChart();
 });
 
