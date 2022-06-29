@@ -202,10 +202,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           $(e).html($(e).html().replace(info, ''));
           $(e).next('ul').children().each((j, ele) => {
             $(ele).after(tpl`
-              <div class="objective_${id} radiobox">
+              <label class="objective_${id} radiobox">
                 <input type="${type === 'select' ? 'radio' : 'checkbox'}" name="${id}" class="objective-input" value="${String.fromCharCode(65 + j)}">
-                ${String.fromCharCode(65 + j)}. ${ele.innerHTML}
-              </div>
+                ${String.fromCharCode(65 + j)}. ${{ templateRaw: true, html: ele.innerHTML }}
+              </label>
             `);
             $(ele).remove();
           });
