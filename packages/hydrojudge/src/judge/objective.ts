@@ -39,7 +39,7 @@ export async function judge({
             memory: 0,
         };
         if (typeof ansInfo[0] === 'string') {
-            if (ansInfo[0].trim() === (answers[key] as any).trim()) {
+            if (ansInfo[0]?.trim() === (answers[key] as any)?.trim()) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
@@ -64,8 +64,8 @@ export async function judge({
                 }, +caseId);
             }
         } else {
-            const stdAns = new Set(ansInfo[0]);
-            const ans = new Set(answers[key]);
+            const stdAns = new Set(ansInfo[0] || []);
+            const ans = new Set(answers[key] || []);
             const correct = stdAns.size === ans.size && [...stdAns].every((x) => ans.has(x));
             const partialCorrect = [...stdAns].some((x) => ans.has(x)) && [...ans].every((x) => stdAns.has(x));
             if (correct) {
