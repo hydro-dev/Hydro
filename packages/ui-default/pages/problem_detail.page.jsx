@@ -195,7 +195,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             </div>
           `));
         } else {
-          if ($(e).next()[0].tagName !== 'UL') {
+          if ($(e).next()[0]?.tagName !== 'UL') {
             cnt--;
             return;
           }
