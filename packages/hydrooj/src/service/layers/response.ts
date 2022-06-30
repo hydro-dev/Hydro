@@ -8,7 +8,7 @@ function serializer(k: string, v: any) {
     return v;
 }
 
-export default () => async (ctx: KoaContext, next) => {
+export default async (ctx: KoaContext, next) => {
     const {
         request, response, UiContext, user, args,
     } = ctx.HydroContext;

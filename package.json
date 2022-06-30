@@ -62,7 +62,7 @@
         "semver": "^7.3.7",
         "supertest": "^6.2.3",
         "typedoc": "^0.22.18",
-        "typescript": "4.6.4"
+        "typescript": "4.6.3"
     },
     "resolutions": {
         "esbuild": "0.14.3"

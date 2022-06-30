@@ -137,7 +137,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
             maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
         },
     }));
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
+    const layers = [baseLayer, rendererLayer(router, logger), responseLayer, userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     layers.forEach((layer) => router.use(layer as any));
     wsServer.on('connection', async (socket, request) => {
