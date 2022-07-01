@@ -20,6 +20,7 @@
     "@fontsource/source-code-pro": "^4.5.10",
     "@fontsource/ubuntu-mono": "^4.5.10",
     "@hydrooj/utils": "workspace:*",
+    "@packtracker/webpack-plugin": "^2.3.0",
     "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.14",
     "@types/json-schema": "^7.0.11",

@@ -11,6 +11,7 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
 import WebpackBar from 'webpackbar';
+import PacktrackerPlugin from '@packtracker/webpack-plugin';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import root from '../utils/root';
 
@@ -232,6 +233,11 @@ export default function (env = {}) {
         }],
       }),
       ...env.measure ? [new BundleAnalyzerPlugin({ analyzerPort: 'auto' })] : [],
+      ...process.env.PT_PROJECT_TOKEN ? [new PacktrackerPlugin({
+        project_token: process.env.PT_PROJECT_TOKEN,
+        upload: true,
+        fail_build: false,
+      })] : [],
     ],
   };
 

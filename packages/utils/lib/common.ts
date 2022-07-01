@@ -2,7 +2,7 @@ import { inspect } from 'util';
 
 declare global {
     interface StringConstructor {
-        random: (digit?: number) => string;
+        random: (digit?: number, dict?: string) => string;
     }
     interface String {
         format: (...args: Array<any>) => string;
