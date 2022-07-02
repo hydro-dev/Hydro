@@ -369,6 +369,8 @@ export default class CodeforcesProvider implements IBasicProvider {
                 await next({
                     status: STATUS.STATUS_JUDGING,
                     case: {
+                        id: +i,
+                        subtaskId: 1,
                         status,
                         time: +body[`timeConsumed#${i}`],
                         memory: +body[`memoryConsumed#${i}`] / 1024,
