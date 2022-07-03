@@ -286,6 +286,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             throw new MethodNotAllowedError(method);
         }
 
+        await h.init();
         await bail('handler/init', h);
         await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before-prepare', h);
