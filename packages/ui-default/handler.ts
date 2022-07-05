@@ -25,7 +25,7 @@ declare module 'hydrooj/src/interface' {
   }
 }
 
-const pageFiles = Object.keys(global.Hydro.ui.manifest).filter(/\.page\.[jt]sx?$/.test);
+const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
 const build = esbuild.buildSync({
   format: 'iife',
   entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
