@@ -25,28 +25,27 @@ declare module 'hydrooj/src/interface' {
   }
 }
 
-const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
-const build = esbuild.buildSync({
-  format: 'iife',
-  entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
-  bundle: true,
-  outdir: tmpdir(),
-  splitting: false,
-  write: false,
-  target: [
-    'chrome60',
-  ],
-  plugins: global.Hydro.ui.esbuildPlugins || [],
-  minify: !process.env.DEV,
-});
-if (build.errors.length) console.error(build.errors);
-if (build.warnings.length) console.warn(build.warnings);
-const pages = build.outputFiles.map((i) => i.text);
-
 let constant = '';
 let hash = '';
 
-function run() {
+async function run() {
+  const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
+  const build = await esbuild.build({
+    format: 'iife',
+    entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
+    bundle: true,
+    outdir: tmpdir(),
+    splitting: false,
+    write: false,
+    target: [
+      'chrome60',
+    ],
+    plugins: global.Hydro.ui.esbuildPlugins || [],
+    minify: !process.env.DEV,
+  });
+  if (build.errors.length) console.error(build.errors);
+  if (build.warnings.length) console.warn(build.warnings);
+  const pages = build.outputFiles.map((i) => i.text);
   const payload = [...pages];
   const [logo, logo2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
