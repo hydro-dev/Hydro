@@ -303,8 +303,11 @@ class UserModel {
                 avatar: `gravatar:${mail}`,
             });
         } catch (e) {
-            logger.warn('%o', e);
-            throw new UserAlreadyExistError([uid, uname, mail]);
+            if (e?.code === 11000) {
+                // Duplicate Key Error
+                throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
+            }
+            throw e;
         }
         return uid;
     }
