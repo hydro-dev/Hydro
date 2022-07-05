@@ -6,16 +6,26 @@ import { ObjectID } from 'mongodb';
 import * as bus from 'hydrooj/src/service/bus';
 import { Route, Handler } from 'hydrooj/src/service/server';
 import { PERM, PRIV } from 'hydrooj/src/model/builtin';
+import * as system from 'hydrooj/src/model/system';
+import user from 'hydrooj/src/model/user';
+import * as contest from 'hydrooj/src/model/contest';
+import problem from 'hydrooj/src/model/problem';
+import * as setting from 'hydrooj/src/model/setting';
 import esbuild from 'esbuild';
 import { tmpdir } from 'os';
 import markdown from './backendlib/markdown';
 
-const {
-  system, user, setting, problem, contest,
-} = global.Hydro.model;
+declare module 'hydrooj/src/interface' {
+  interface UI {
+    esbuildPlugins?: esbuild.Plugin[]
+  }
+  interface SystemKeys {
+    'ui-default.nav_logo_dark': string;
+    'ui-default.nav_logo_dark_2x': string;
+  }
+}
 
-const pageFiles = Object.keys(global.Hydro.ui.manifest)
-  .filter((file) => file.endsWith('.page.js') || file.endsWith('.page.ts'));
+const pageFiles = Object.keys(global.Hydro.ui.manifest).filter(/\.page\.[jt]sx?$/.test);
 const build = esbuild.buildSync({
   format: 'iife',
   entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
@@ -26,6 +36,7 @@ const build = esbuild.buildSync({
   target: [
     'chrome60',
   ],
+  plugins: global.Hydro.ui.esbuildPlugins || [],
   minify: !process.env.DEV,
 });
 if (build.errors.length) console.error(build.errors);
