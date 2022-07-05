@@ -7,7 +7,6 @@ import {
     Udict, Udoc, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
-import { Logger } from '../logger';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
@@ -22,7 +21,6 @@ export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
-const logger = new Logger('model/user');
 const cache = new LRU<string, User>({ max: 500, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
