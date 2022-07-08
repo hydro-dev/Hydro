@@ -175,7 +175,7 @@ async function render(name, state) {
       perm: global.Hydro.model.builtin.PERM,
       PRIV: global.Hydro.model.builtin.PRIV,
       STATUS: global.Hydro.model.builtin.STATUS,
-      UiContext: state.handler.UiContext,
+      UiContext: state.handler?.UiContext || {},
     }, (err, res) => {
       if (err) reject(err);
       else resolve(res);

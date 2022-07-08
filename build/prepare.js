@@ -88,3 +88,6 @@ for (const package of packages) {
     }
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
+if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
+    fs.mkdirSync(path.resolve(process.cwd(), 'plugins'));
+}

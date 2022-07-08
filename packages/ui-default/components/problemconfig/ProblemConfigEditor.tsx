@@ -74,8 +74,8 @@ export function configYamlFormat(config: ProblemConfigFile) {
     }
   });
   if (formatConfig.type === 'objective') {
-    Object.keys(formatConfig).filter((i) => !['type', 'outputs'].includes(i)).forEach((i) => delete formatConfig[i]);
-    formatConfig.outputs = formatConfig.outputs || [];
+    Object.keys(formatConfig).filter((i) => !['type', 'answers'].includes(i)).forEach((i) => delete formatConfig[i]);
+    formatConfig.answers = config.answers || {};
   }
   Object.keys(formatConfig).filter((i) => i.startsWith('__')).forEach((i) => delete formatConfig[i]);
   return formatConfig;

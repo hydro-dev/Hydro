@@ -20,7 +20,10 @@ describe('App', () => {
             agent = supertest.agent(require('hydrooj/src/service/server').httpServer);
             done();
         }, 2000);
-        bus.on('app/started', resolve);
+        process.send = ((send) => (data) => {
+            if (data === 'ready') resolve();
+            return send?.(data) || false;
+        })(process.send);
         timeout = setTimeout(resolve, 20000);
     });
 

@@ -17,6 +17,7 @@ import * as contest from './model/contest';
 import * as discussion from './model/discussion';
 import * as document from './model/document';
 import domain from './model/domain';
+import MessageModel from './model/message';
 import problem from './model/problem';
 import RecordModel from './model/record';
 import StorageModel from './model/storage';
@@ -712,6 +713,74 @@ const scripts: UpgradeScript[] = [
                 await user.setById(udoc._id, { priv: priv - PRIV.PRIV_REGISTER_USER });
             }
             await system.set('default.priv', priv - PRIV.PRIV_REGISTER_USER);
+        }
+        return true;
+    },
+    async function _62_63() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        const uids = new Set<number>();
+        await iterateAllDomain(async (ddoc) => {
+            const pdocs = await problem.getMulti(ddoc._id, { config: /type: objective/ })
+                .project({
+                    config: 1, content: 1, docId: 1, owner: 1,
+                }).toArray();
+            for (const pdoc of pdocs) {
+                try {
+                    const config = yaml.load(pdoc.config as string) as any;
+                    if (config.type !== 'objective' || !config.outputs) continue;
+                    config.answers = {};
+                    let cnt = 0;
+                    for (const l of config.outputs) {
+                        cnt++;
+                        config.answers[cnt] = l;
+                    }
+
+                    function processSingleLanguage(content: string) { // eslint-disable-line no-inner-declarations
+                        let text = '';
+                        try {
+                            let scnt = 0;
+                            const doc = yaml.load(content);
+                            if (!(doc instanceof Array)) return content;
+                            for (const s of doc) {
+                                scnt++;
+                                text += `${scnt}. ${s.desc}\n`;
+                                if (s.choices) {
+                                    text += `{{ select(${scnt}) }}\n`;
+                                    const isPrefixed = s.choices.every((c) => /^[A-Z]\./.test(c));
+                                    let selectionId = 64;
+                                    for (const c of s.choices) {
+                                        selectionId++;
+                                        text += `- ${isPrefixed ? c.replace(/^[A-Z]\./, '') : c}\n`;
+                                        if (config.answers[scnt][0] === c) config.answers[scnt][0] = String.fromCharCode(selectionId);
+                                    }
+                                } else text += `{{ input(${scnt}) }}\n`;
+                                text += '\n';
+                            }
+                        } catch (e) { console.error(e); return content; }
+                        return text;
+                    }
+
+                    try {
+                        const langs = JSON.parse(pdoc.content);
+                        if (typeof langs === 'object' && !(langs instanceof Array)) {
+                            for (const lang in langs) {
+                                if (typeof langs[lang] !== 'string') continue;
+                                langs[lang] = processSingleLanguage(langs[lang]);
+                            }
+                            await problem.edit(ddoc._id, pdoc.docId, { content: JSON.stringify(langs) });
+                        }
+                    } catch (e) {
+                        const content = processSingleLanguage(pdoc.content);
+                        await problem.edit(ddoc._id, pdoc.docId, { content });
+                    }
+                    uids.add(pdoc.owner);
+                    delete config.outputs;
+                    await problem.addTestdata(ddoc._id, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+                } catch (e) { console.error(e); }
+            }
+        });
+        for (const uid of uids) {
+            await MessageModel.send(1, uid, '我们更新了客观题的配置格式，已有题目已自动转换，查看文档获得更多信息。', MessageModel.FLAG_UNREAD);
         }
         return true;
     },

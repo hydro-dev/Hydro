@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import ReactDOM, { createRoot } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import React from 'react';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
 import { NamedPage } from 'vj/misc/Page';
@@ -7,6 +7,9 @@ import { downloadProblemSet } from 'vj/components/zipDownloader';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import pjax from 'vj/utils/pjax';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
+import i18n from 'vj/utils/i18n';
 
 class ProblemPageExtender {
   constructor() {
@@ -173,32 +176,75 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function loadObjective() {
-    try {
-      let s = '';
-      try {
-        s = JSON.parse(UiContext.pdoc.content);
-      } catch {
-        s = UiContext.pdoc.content;
+    $('.outer-loader-container').show();
+    const ans = {};
+    let cnt = 0;
+    const reg = /{{ (input|select|multiselect)\(\d+(-\d+)?\) }}/g;
+    $('.problem-content .typo').children().each((i, e) => {
+      if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
+      const questions = [];
+      let q;
+      while (q = reg.exec(e.innerText)) questions.push(q); // eslint-disable-line no-cond-assign
+      for (const [info, type] of questions) {
+        cnt++;
+        const id = info.replace(/{{ (input|select|multiselect)\((\d+(-\d+)?)\) }}/, '$2');
+        if (type === 'input') {
+          $(e).html($(e).html().replace(info, tpl`
+            <div class="objective_${id} medium-3" style="display: inline-block;">
+              <input type="text" name="${id}" class="textbox objective-input">
+            </div>
+          `));
+        } else {
+          if ($(e).next()[0]?.tagName !== 'UL') {
+            cnt--;
+            return;
+          }
+          $(e).html($(e).html().replace(info, ''));
+          $(e).next('ul').children().each((j, ele) => {
+            $(ele).after(tpl`
+              <label class="objective_${id} radiobox">
+                <input type="${type === 'select' ? 'radio' : 'checkbox'}" name="${id}" class="objective-input" value="${String.fromCharCode(65 + j)}">
+                ${String.fromCharCode(65 + j)}. ${{ templateRaw: true, html: ele.innerHTML }}
+              </label>
+            `);
+            $(ele).remove();
+          });
+        }
       }
-      if (typeof s === 'object') {
-        const langs = Object.keys(s);
-        const f = langs.filter((i) => i.startsWith(UserContext.viewLang));
-        if (s[UserContext.viewLang]) s = s[UserContext.viewLang];
-        else if (f.length) s = s[f[0]];
-        else s = s[langs[0]];
-      }
-      const props = yaml.load(s);
-      if (!(props instanceof Array)) return;
-      $('.outer-loader-container').show();
-      const { default: Objective } = await import('vj/components/objective-question/index');
-
-      ReactDOM.createRoot($('.problem-content').get(0)).render(
-        <div className="section__body typo">
-          <Objective panel={props} target={UiContext.postSubmitUrl}></Objective>
-        </div>,
-      );
-      $('.outer-loader-container').hide();
-    } catch (e) { }
+    });
+    if (cnt) {
+      $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
+        ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
+        : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
+      $('input.objective-input[type!=checkbox]').on('input', (e) => {
+        ans[e.target.name] = e.target.value;
+      });
+      $('input.objective-input[type=checkbox]').on('input', (e) => {
+        if (e.target.checked) {
+          if (ans[e.target.name] === undefined) ans[e.target.name] = [];
+          ans[e.target.name].push(e.target.value);
+        } else {
+          ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
+        }
+      });
+      $('input[type="submit"]').on('click', (e) => {
+        e.preventDefault();
+        request
+          .post(UiContext.postSubmitUrl, {
+            lang: '_',
+            code: yaml.dump(ans),
+          })
+          .then((res) => {
+            window.location.href = res.url;
+          })
+          .catch((err) => {
+            Notification.error(err.message);
+          });
+      });
+    }
+    $('.scratchpad--hide').hide();
+    $('.non-scratchpad--hide').hide();
+    $('.outer-loader-container').hide();
   }
 
   async function initChart() {

@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.13.19",
+    "version": "3.14.5",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -44,6 +44,7 @@
         "nodemailer": "^6.7.5",
         "notp": "^2.0.3",
         "p-queue": "^7.2.0",
+        "path-to-regexp": "^6.2.1",
         "require-resolve-hook": "^1.1.0",
         "semver": "^7.3.7",
         "serialize-javascript": "^6.0.0",
@@ -68,6 +69,7 @@
         "@types/mongodb": "^3.6.20",
         "@types/nodemailer": "^6.4.4",
         "@types/notp": "^2.0.2",
+        "@types/path-to-regexp": "^1.7.0",
         "@types/semver": "^7.3.10",
         "@types/serialize-javascript": "^5.0.2",
         "@types/source-map-support": "^0.5.4",

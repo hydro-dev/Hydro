@@ -62,10 +62,7 @@ export interface Config {
     hack?: string;
     interactor?: string;
 
-    outputs?: {
-        output: string,
-        score: number,
-    }[];
+    answers?: Record<string, [answer: string | string[], score: number]>;
 }
 
 export interface ContextSubTask {

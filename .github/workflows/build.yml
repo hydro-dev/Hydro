@@ -19,6 +19,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 2
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
@@ -42,10 +43,25 @@ jobs:
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
         yarn
+    - name: Get specific changed files
+      id: ui-changed-files
+      uses: tj-actions/changed-files@v23.1
+      with:
+        files: |
+          /package.json
+          .eslint*
+          packages/ui-default/**
+          packages/utils/**
     - name: Build And Lint
       run: |
-        yarn build:ui:gulp
-        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
+        if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]]
+        then
+          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production test
+        else
+          parallel --tty -j+0 yarn ::: lint:ci build test
+        fi
+      env:
+        PT_PROJECT_TOKEN: ${{ secrets.PT_PROJECT_TOKEN }}
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js

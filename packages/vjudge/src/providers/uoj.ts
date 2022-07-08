@@ -218,6 +218,8 @@ export default class UOJProvider implements IBasicProvider {
                     await next({
                         status: STATUS.STATUS_JUDGING,
                         case: {
+                            id: i,
+                            subtaskId: 1,
                             status: VERDICT[info.children[2]?.innerHTML?.trim().toUpperCase()] || STATUS.STATUS_WRONG_ANSWER,
                             time: parseTimeMS(info.children[3]?.innerHTML?.split('time: ')?.[1] || 0),
                             memory: parseMemoryMB(info.children[4]?.innerHTML?.split('memory: ')?.[1] || 0) * 1024,
@@ -240,6 +242,8 @@ export default class UOJProvider implements IBasicProvider {
                         await next({
                             status: STATUS.STATUS_JUDGING,
                             case: {
+                                id: i,
+                                subtaskId,
                                 status: VERDICT[info.children[2]?.innerHTML?.trim().toUpperCase()] || STATUS.STATUS_WRONG_ANSWER,
                                 time: parseTimeMS(info.children[3]?.innerHTML?.split('time: ')?.[1] || 0),
                                 memory: parseMemoryMB(info.children[4]?.innerHTML?.split('memory: ')?.[1] || 0) * 1024,

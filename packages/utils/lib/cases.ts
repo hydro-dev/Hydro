@@ -7,21 +7,24 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         judge_extra_files: [],
         user_extra_files: [],
     };
-    if (cfg.checker) {
-        if (!cfg.checker.includes('.')) {
-            config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
+    if (cfg.type === 'objective') {
+        if (cfg.checker || cfg.interactor) throw new Error('You cannot use checker or interactor for objective questions');
+    } else {
+        if (cfg.checker) {
+            if (!cfg.checker.includes('.')) {
+                config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
+            }
+            if (!config.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
         }
-        if (!config.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
+        if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
+        ['judge', 'user'].forEach((n) => {
+            const conf = cfg[`${n}_extra_files`];
+            if (!conf) return;
+            if (conf instanceof Array) {
+                config[`${n}_extra_files`] = conf.map((file) => checkFile(file, `Cannot find ${n} extra file {0}.`));
+            } else throw new Error(`Invalid ${n}_extra_files config.`);
+        });
     }
-    if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
-    ['judge', 'user'].forEach((n) => {
-        const conf = cfg[`${n}_extra_files`];
-        if (!conf) return;
-        if (conf instanceof Array) {
-            config[`${n}_extra_files`] = conf.map((file) => checkFile(file, `Cannot find ${n} extra file {0}.`));
-        } else throw new Error(`Invalid ${n}_extra_files config.`);
-    });
-    if (cfg.outputs) config.type = cfg.type || 'objective';
     if (cfg.cases?.length) {
         config.subtasks = [{
             cases: cfg.cases,
@@ -30,7 +33,6 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     }
     if (cfg.time) config.time = parseTimeMS(cfg.time);
     if (cfg.memory) config.memory = parseMemoryMB(cfg.memory);
-    if (config.type === 'objective' && !cfg.outputs?.length) throw new Error('outputs config not found');
     return Object.assign(cfg, config);
 }
 
