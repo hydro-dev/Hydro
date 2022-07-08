@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import findChrome from 'chrome-finder';
+import yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
 import type { Browser, Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
@@ -224,29 +225,40 @@ export default class CodeforcesProvider implements IBasicProvider {
         return false;
     }
 
-    async getPdfProblem(id: string) {
-        const [, contestId, problemId] = id.startsWith('P921')
+    async getPdfProblem(id: string, meta: Record<string, any>) {
+        const [, , contestId, problemId] = id.startsWith('P921')
             ? ['', '921', '01']
-            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
+            : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
         const file = new PassThrough();
-        this.get(`/problemset/problem/${contestId}/${problemId}`).pipe(file);
+        this.get(id.startsWith('GYM')
+            ? `/gym/${contestId}/problem/${problemId}`
+            : `/problemset/problem/${contestId}/${problemId}`).pipe(file);
         return {
-            title: '__NO_TITLE__',
-            data: { 'config.yaml': Buffer.from(`type: remote_judge\nsubType: codeforces\ntarget: ${id}`) },
+            title: meta.title || '__NO_TITLE__',
+            data: {
+                'config.yaml': Buffer.from(yaml.dump({
+                    ...meta,
+                    type: 'remote_judge',
+                    subType: 'codeforces',
+                    target: id,
+                })),
+            },
             files: { 'problem.pdf': file },
             tag: [],
-            content: '@[pdf](file://problem.pdf)',
+            content: '@[pdf](file://problem.pdf?noDisposition=1)',
         };
     }
 
-    async getProblem(id: string) {
+    async getProblem(id: string, meta: Record<string, any>) {
         logger.info(id);
         if (id === 'P936E') return null; // Problem Missing
-        const [, contestId, problemId] = id.startsWith('P921')
+        const [, , contestId, problemId] = id.startsWith('P921')
             ? ['', '921', '01']
-            : /^P(\d+)([A-Z][0-9]*)$/.exec(id);
-        const res = await this.get(`/problemset/problem/${contestId}/${problemId}`);
-        if (!res.text) return await this.getPdfProblem(id);
+            : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
+        const res = await this.get(id.startsWith('GYM')
+            ? `/gym/${contestId}/problem/${problemId}`
+            : `/problemset/problem/${contestId}/${problemId}`);
+        if (!res.text) return await this.getPdfProblem(id, meta);
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
         const tag = Array.from($dom.window.document.querySelectorAll('.tag-box')).map((i) => i.textContent.trim());
         const text = $dom.window.document.querySelector('.problem-statement').innerHTML;
@@ -309,13 +321,38 @@ export default class CodeforcesProvider implements IBasicProvider {
         };
     }
 
-    async listProblem(page: number, resync = false) {
+    // TL;DR; add `gym` to this list to enable codeforces gym
+    entryProblemLists = ['main'];
+    async listProblem(page: number, resync = false, listName: string) {
         if (resync && page > 1) return [];
-        const res = await this.get(`/problemset/page/${page}`);
-        const $dom = new JSDOM(res.text);
-        const index = $dom.window.document.querySelector('.page-index.active').getAttribute('pageindex');
-        if (index !== page.toString()) return [];
-        return Array.from($dom.window.document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
+        if (resync && listName.startsWith('GYM')) return [];
+        if (listName.startsWith('GYM') && page > 1) return [];
+        const res = await this.get(listName === 'main'
+            ? `/problemset/page/${page}`
+            : listName === 'gym'
+                ? `/gyms/page/${page}`
+                : `/gym/${listName.split('GYM')[1]}`,
+        );
+        const { window: { document } } = new JSDOM(res.text);
+        if (['gym', 'main'].includes(listName)) {
+            const index = document.querySelector('.page-index.active').getAttribute('pageindex');
+            if (index !== page.toString()) return [];
+        }
+        if (listName === 'main') {
+            return Array.from(document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
+        }
+        if (listName === 'gym') {
+            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${i.getAttribute('data-contestId')}`);
+        }
+        return Array.from(document.querySelectorAll('.id a')).map((i) => {
+            const detail = i.parentElement.parentElement.children[1].children[0];
+            return `${listName}${i.textContent.trim()}#${JSON.stringify({
+                title: detail.children[0].children[0].textContent.trim(),
+                time: `${/(\d+m?) *s/.exec(detail.children[1].childNodes[2].textContent)[1]}s`,
+                memory: `${/(\d+) *MB/.exec(detail.children[1].childNodes[2].textContent)[1]}m`,
+                filename: /(\w+)\.in/.exec(detail.children[1].textContent)?.[1],
+            })}`;
+        });
     }
 
     async submitProblem(id: string, lang: string, code: string, info) {
@@ -326,25 +363,35 @@ export default class CodeforcesProvider implements IBasicProvider {
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/problemset/submit');
+        const contestId = /(\d+)/.exec(id)?.[1];
+        const [csrf, ftaa, bfaa] = await this.getCsrfToken((+contestId) < 100000
+            ? '/problemset/submit'
+            : `/gym/${contestId}/submit`);
         // TODO check submit time to ensure submission
-        await this.post(`/problemset/submit?csrf_token=${csrf}`).send({
+        await this.post(`/${(+contestId) < 100000 ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
-            submittedProblemCode: id.split('P')[1],
             source: code,
             tabsize: 4,
             sourceFile: '',
             ftaa,
             bfaa,
             _tta: this.tta(this.getCookie('39ce7')),
-            sourceCodeConfirmed: true,
+            ...(+contestId < 100000)
+                ? {
+                    submittedProblemCode: id.split('P')[1],
+                    sourceCodeConfirmed: true,
+                } : {
+                    submittedProblemIndex: /([A-Z])$/.exec(id)?.[1],
+                },
         });
-        const { text: status } = await this.get('/problemset/status?my=on');
-        const $dom = new JSDOM(status);
-        this.csrf = $dom.window.document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        return $dom.window.document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        const { text: status } = await this.get((+contestId) < 100000
+            ? '/problemset/status?my=on'
+            : `/gym/${contestId}/my`);
+        const { window: { document } } = new JSDOM(status);
+        this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
+        return document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
     }
 
     async waitForSubmission(id: string, next, end) {

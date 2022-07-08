@@ -19,12 +19,23 @@ const syncing = {};
 
 class Service {
     api: IBasicProvider;
+    problemLists: Set<string>;
+    listUpdated = false;
 
     constructor(public Provider: BasicProvider, public account: RemoteAccount) {
         this.api = new Provider(account, async (data) => {
             await coll.updateOne({ _id: account._id }, { $set: data });
         });
+        this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
         this.main().catch((e) => logger.error(`Error occured in ${account.type}/${account.handle}`, e));
+    }
+
+    async addProblemList(name: string) {
+        if (this.problemLists.has(name)) return;
+        this.problemLists.add(name);
+        this.listUpdated = true;
+        logger.info(`Discovered new problem list: ${name}`);
+        await coll.updateOne({ _id: this.account._id }, { $push: { problemLists: name } });
     }
 
     async judge(task) {
@@ -42,33 +53,39 @@ class Service {
         }
     }
 
-    async sync(domainId: string, resync = false) {
+    async sync(domainId: string, resync = false, list: string) {
         let page = 1;
-        let pids = await this.api.listProblem(page, resync);
+        let pids = await this.api.listProblem(page, resync, list);
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);
-            for (const pid of pids) {
+            for (const id of pids) {
+                if (id.startsWith('LIST::')) {
+                    await this.addProblemList(id.split('::')[1]);
+                    continue;
+                }
+                const [pid, metastr = '{}'] = id.split('#');
+                const meta = JSON.parse(metastr);
                 if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
-                    const res = await this.api.getProblem(pid);
+                    const res = await this.api.getProblem(pid, meta);
                     if (!res) continue;
-                    const id = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
-                    if (res.difficulty) await ProblemModel.edit(domainId, id, { difficulty: res.difficulty });
+                    const docId = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
+                    if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
                     for (const key in res.files) {
-                        await ProblemModel.addAdditionalFile(domainId, id, key, res.files[key]);
+                        await ProblemModel.addAdditionalFile(domainId, docId, key, res.files[key]);
                     }
                     for (const key in res.data) {
-                        await ProblemModel.addTestdata(domainId, id, key, res.data[key]);
+                        await ProblemModel.addTestdata(domainId, docId, key, res.data[key]);
                     }
-                    logger.info(`${domainId}: problem ${id} sync done`);
+                    logger.info(`${domainId}: problem ${docId}(${pid}) sync done`);
                 } finally {
                     delete syncing[`${domainId}/${pid}`];
                 }
                 await sleep(5000);
             }
             page++;
-            pids = await this.api.listProblem(page, resync);
+            pids = await this.api.listProblem(page, resync, list);
         }
     }
 
@@ -88,11 +105,22 @@ class Service {
         setInterval(() => this.login(), 1 * 3600 * 1000);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this), false);
         const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
-        for (const ddoc of ddocs) {
-            if (!ddoc.syncDone) await this.sync(ddoc._id, false);
-            else await this.sync(ddoc._id, true);
-            await DomainModel.edit(ddoc._id, { syncDone: true });
-        }
+        do {
+            this.listUpdated = false;
+            for (const listName of this.problemLists) {
+                for (const ddoc of ddocs) {
+                    if (ddoc.syncDone === true) {
+                        await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
+                        ddoc.syncDone = { main: true };
+                    }
+                    if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
+                    else await this.sync(ddoc._id, true, listName);
+                    await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
+                    ddoc.syncDone ||= {};
+                    ddoc.syncDone[listName] = true;
+                }
+            }
+        } while (this.listUpdated);
     }
 }
 
