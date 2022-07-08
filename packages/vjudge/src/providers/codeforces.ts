@@ -28,6 +28,16 @@ puppeteer.use(StealthPlugin()).use(PortalPlugin({
     },
 }));
 
+function parseProblemId(id: string) {
+    const [, type, contestId, problemId] = id.startsWith('P921')
+        ? ['', '921', '01']
+        : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
+    if (type === 'GYM' && (+contestId) < 100000) {
+        return [type, ((+contestId) + 100000).toString(), problemId];
+    }
+    return [type, contestId, problemId];
+}
+
 export function getDifficulty(tags: string[]) {
     const d = tags.find((i) => /^\*\d+$/.test(i))?.split('*')[1];
     if (!(d && +d)) return null;
@@ -226,9 +236,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async getPdfProblem(id: string, meta: Record<string, any>) {
-        const [, , contestId, problemId] = id.startsWith('P921')
-            ? ['', '921', '01']
-            : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
+        const [, contestId, problemId] = parseProblemId(id);
         const file = new PassThrough();
         this.get(id.startsWith('GYM')
             ? `/gym/${contestId}/problem/${problemId}`
@@ -252,9 +260,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     async getProblem(id: string, meta: Record<string, any>) {
         logger.info(id);
         if (id === 'P936E') return null; // Problem Missing
-        const [, , contestId, problemId] = id.startsWith('P921')
-            ? ['', '921', '01']
-            : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
+        const [, contestId, problemId] = parseProblemId(id);
         const res = await this.get(id.startsWith('GYM')
             ? `/gym/${contestId}/problem/${problemId}`
             : `/problemset/problem/${contestId}/${problemId}`);
@@ -342,7 +348,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             return Array.from(document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
         }
         if (listName === 'gym') {
-            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${i.getAttribute('data-contestId')}`);
+            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${(+i.getAttribute('data-contestId')) - 100000}`);
         }
         return Array.from(document.querySelectorAll('.id a')).map((i) => {
             const detail = i.parentElement.parentElement.children[1].children[0];
@@ -363,12 +369,12 @@ export default class CodeforcesProvider implements IBasicProvider {
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
-        const contestId = /(\d+)/.exec(id)?.[1];
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken((+contestId) < 100000
+        const [type, contestId, problemId] = parseProblemId(id);
+        const [csrf, ftaa, bfaa] = await this.getCsrfToken(type !== 'GYM'
             ? '/problemset/submit'
             : `/gym/${contestId}/submit`);
         // TODO check submit time to ensure submission
-        await this.post(`/${(+contestId) < 100000 ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
+        await this.post(`/${type !== 'GYM' ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
@@ -378,15 +384,15 @@ export default class CodeforcesProvider implements IBasicProvider {
             ftaa,
             bfaa,
             _tta: this.tta(this.getCookie('39ce7')),
-            ...(+contestId < 100000)
+            ...(type !== 'GYM')
                 ? {
-                    submittedProblemCode: id.split('P')[1],
+                    submittedProblemCode: contestId + problemId,
                     sourceCodeConfirmed: true,
                 } : {
-                    submittedProblemIndex: /([A-Z])$/.exec(id)?.[1],
+                    submittedProblemIndex: problemId,
                 },
         });
-        const { text: status } = await this.get((+contestId) < 100000
+        const { text: status } = await this.get(type !== 'GYM'
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
         const { window: { document } } = new JSDOM(status);
