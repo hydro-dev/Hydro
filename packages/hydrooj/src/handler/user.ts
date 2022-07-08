@@ -1,4 +1,3 @@
-import base64url from 'base64url';
 import moment from 'moment-timezone';
 import notp from 'notp';
 import b32 from 'thirty-two';
@@ -78,7 +77,7 @@ registerResolver(
 );
 
 registerResolver(
-    'WebAuthnContext', 'register(_: String!)', 'String!',
+    'WebAuthnContext', 'register', 'String!',
     async (arg, ctx) => {
         if (ctx.user.webauthn) throw new Error('WebAuthn is already enabled');
         const makeCredential = webauthn.generateServerMakeCredRequest(ctx.user.uname, '', webauthn.randomBase64URLBuffer());
@@ -121,7 +120,7 @@ registerResolver(
     async (arg, ctx) => {
         const tok = await token.get(arg.token, token.TYPE_CHALLENGE);
         const data = JSON.parse(arg.data);
-        const clientData = JSON.parse(base64url.decode(data.response.clientDataJSON));
+        const clientData = JSON.parse(Buffer.from(data.response.clientDataJSON, 'base64').toString());
 
         if (clientData.challenge !== tok.challenge) {
             return false;
@@ -151,7 +150,7 @@ registerResolver(
 );
 
 registerResolver(
-    'WebAuthnContext', 'delete(_: String!)', 'Boolean!',
+    'WebAuthnContext', 'delete', 'Boolean!',
     async (arg, ctx) => {
         if (!ctx.user.webauthn) throw new Error('WebAuthn is already disabled');
         user.setById(ctx.user._id, undefined, { authenticators: '' });
@@ -217,7 +216,7 @@ class UserLoginHandler extends Handler {
         ]);
         if (webauthnResponse !== '') {
             const data = JSON.parse(webauthnResponse);
-            const clientData = JSON.parse(base64url.decode(data.response.clientDataJSON));
+            const clientData = JSON.parse(Buffer.from(data.response.clientDataJSON, 'base64').toString());
             const tok = await token.get(webauthnToken, token.TYPE_CHALLENGE);
             if (clientData.challenge !== tok.challenge) {
                 throw new LoginError(uname);

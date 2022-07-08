@@ -39,7 +39,6 @@
         "@typescript-eslint/eslint-plugin": "^5.29.0",
         "@typescript-eslint/parser": "^5.29.0",
         "autocannon": "^7.9.0",
-        "base64url": "^3.0.1",
         "cac": "^6.7.12",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
@@ -63,8 +62,7 @@
         "semver": "^7.3.7",
         "supertest": "^6.2.3",
         "typedoc": "^0.22.18",
-        "typescript": "4.6.4",
-        "webauthn-lib": "^1.0.0"
+        "typescript": "4.6.4"
     },
     "resolutions": {
         "esbuild": "0.14.3"

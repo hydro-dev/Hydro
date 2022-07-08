@@ -2,7 +2,6 @@ import { AutoloadPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
-import base64url from 'base64url';
 
 let getAssertion;
 let token = '';
@@ -16,14 +15,16 @@ function publicKeyCredentialToJSON(pubKeyCred) {
   }
 
   if (pubKeyCred instanceof ArrayBuffer) {
-    return base64url.encode(pubKeyCred);
+    return Buffer.from(pubKeyCred).toString('base64');
   }
 
   if (pubKeyCred instanceof Object) {
     const obj = {};
 
     for (const key in pubKeyCred) {
-      obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+      if (Object.prototype.hasOwnProperty.call(pubKeyCred, key)) {
+        obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+      }
     }
 
     return obj;
@@ -77,8 +78,8 @@ export default new AutoloadPage('user_login', (pagename) => {
       $('.login_submit').show();
     });
     $('.webauthn_btn').off('click').on('click', async () => {
-      getAssertion.challenge = base64url.toBuffer(getAssertion.challenge);
-      getAssertion.allowCredentials[0].id = base64url.toBuffer(getAssertion.allowCredentials[0].id);
+      getAssertion.challenge = Buffer.from(getAssertion.challenge, 'base64');
+      getAssertion.allowCredentials[0].id = Buffer.from(getAssertion.allowCredentials[0].id, 'base64');
 
       try {
         const n = await navigator.credentials.get({ publicKey: getAssertion });

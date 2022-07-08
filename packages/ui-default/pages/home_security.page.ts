@@ -1,7 +1,6 @@
 import { NamedPage } from 'vj/misc/Page';
 import QRCode from 'qrcode';
 import b32 from 'thirty-two';
-import base64url from 'base64url';
 import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
@@ -102,14 +101,16 @@ export default new NamedPage('home_security', () => {
     }
 
     if (pubKeyCred instanceof ArrayBuffer) {
-      return base64url.encode(pubKeyCred);
+      return Buffer.from(pubKeyCred).toString('base64');
     }
 
     if (pubKeyCred instanceof Object) {
       const obj = {};
 
       for (const key in pubKeyCred) {
-        obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+        if (Object.prototype.hasOwnProperty.call(pubKeyCred, key)) {
+          obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+        }
       }
 
       return obj;
@@ -122,7 +123,7 @@ export default new NamedPage('home_security', () => {
     await api(gql`
     user {
       WebAuthn {
-        delete(_: "")
+        delete
       }
     }
     `, ['data', 'user', 'WebAuthn', 'delete']);
@@ -135,19 +136,19 @@ export default new NamedPage('home_security', () => {
     let t = await api(gql`
     user {
       WebAuthn {
-        register(_: "")
+        register
       }
     }
     `, ['data', 'user', 'WebAuthn', 'register']);
     const { token, makeCredential } = JSON.parse(t);
 
-    makeCredential.challenge = base64url.toBuffer(makeCredential.challenge);
-    makeCredential.user.id = base64url.toBuffer(makeCredential.user.id);
+    makeCredential.challenge = Buffer.from(makeCredential.challenge, 'base64');
+    makeCredential.user.id = Buffer.from(makeCredential.user.id, 'base64');
 
     const n = await navigator.credentials.create({ publicKey: makeCredential });
     const response = JSON.stringify(publicKeyCredentialToJSON(n));
 
-    t = await api(gql`
+    await api(gql`
     user {
       WebAuthn {
         response(token: ${token}, data: ${response})

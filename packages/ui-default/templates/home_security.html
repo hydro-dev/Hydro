@@ -1,8 +1,8 @@
 {% extends "layout/home_base.html" %}
 {% block home_content %}
 <div data-heading-extract-to="#menu-item-home_security">
-  <div class="row">
-    {% if handler.user.mail.endsWith('.local') %}
+<div class="row">
+  {% if handler.user.mail.endsWith('.local') %}
     <div class="medium-12 columns">
       <div class="section">
         <div class="section__body">
@@ -10,177 +10,168 @@
         </div>
       </div>
     </div>
-    {% endif %}
-    <div class="medium-6 columns">
-      <div class="section">
-        <div class="section__header">
-          <h1 class="section__title" id="email" data-heading>{{ _('Change Email') }}</h1>
-        </div>
-        <div class="section__body">
-          <form method="post">
-            {{ form.form_text({
-            type:'password',
-            label:'Current Password',
-            columns:10,
-            name:'password',
-            required:true
-            }) }}
-            {{ form.form_text({
-            type:'text',
-            label:'Current Email',
-            columns:10,
-            name:'currentEmail',
-            value:handler.user.mail,
-            disabled:true
-            }) }}
-            {{ form.form_text({
-            type:'text',
-            label:'New Email',
-            columns:10,
-            name:'mail',
-            required:true
-            }) }}
-            <div class="row">
-              <div class="columns">
-                <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-                <input type="hidden" name="operation" value="change_mail">
-                <input type="submit" class="rounded primary button" value="{{ _('Change Email') }}">
-              </div>
-            </div>
-          </form>
-        </div>
+  {% endif %}
+  <div class="medium-6 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="email" data-heading>{{ _('Change Email') }}</h1>
       </div>
-    </div>
-    <div class="medium-6 columns">
-      <div class="section">
-        <div class="section__header">
-          <h1 class="section__title" id="password" data-heading>{{ _('Change Password') }}</h1>
-        </div>
-        <div class="section__body">
-          <form method="post">
-            {{ form.form_text({
-            type:'password',
-            label:'Current Password',
-            columns:10,
-            name:'current',
-            required:true
-            }) }}
-            {{ form.form_text({
-            type:'password',
-            label:'New Password',
-            columns:10,
-            name:'password',
-            required:true
-            }) }}
-            {{ form.form_text({
-            type:'password',
-            label:'Repeat Password',
-            columns:10,
-            name:'verifyPassword',
-            required:true
-            }) }}
-            <div class="row">
-              <div class="columns">
-                <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-                <input type="hidden" name="operation" value="change_password">
-                <input type="submit" class="rounded primary button" value="{{ _('Change Password') }}">
-              </div>
-            </div>
-          </form>
-        </div>
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_text({
+               type:'password',
+               label:'Current Password',
+               columns:10,
+               name:'password',
+               required:true
+             }) }}
+          {{ form.form_text({
+               type:'text',
+               label:'Current Email',
+               columns:10,
+               name:'currentEmail',
+               value:handler.user.mail,
+               disabled:true
+             }) }}
+          {{ form.form_text({
+               type:'text',
+               label:'New Email',
+               columns:10,
+               name:'mail',
+               required:true
+             }) }}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+            <input type="hidden" name="operation" value="change_mail">
+            <input type="submit" class="rounded primary button" value="{{ _('Change Email') }}">
+          </div></div>
+        </form>
       </div>
     </div>
   </div>
-  <div class="row nojs--hide">
-    <div class="columns">
-      <div class="section">
-        <div class="section__header">
-          <h1 class="section__title" id="tfa" data-heading>{{ _('Two Factor Authentication') }}</h1>
-          <div class="section__tools">
-            {% if handler.user.tfa %}
-            <button class="primary rounded button" name="tfa_enabled"><span class="icon icon-check"></span> {{
-              _('Enabled') }}</button>
-            {% else %}
-            <button class="primary rounded button" name="tfa_enable"><span class="icon icon-wrench"></span> {{
-              _('Enable') }}</button>
-            {% endif %}
-          </div>
+  <div class="medium-6 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="password" data-heading>{{ _('Change Password') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_text({
+               type:'password',
+               label:'Current Password',
+               columns:10,
+               name:'current',
+               required:true
+             }) }}
+          {{ form.form_text({
+               type:'password',
+               label:'New Password',
+               columns:10,
+               name:'password',
+               required:true
+             }) }}
+          {{ form.form_text({
+               type:'password',
+               label:'Repeat Password',
+               columns:10,
+               name:'verifyPassword',
+               required:true
+             }) }}
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+            <input type="hidden" name="operation" value="change_password">
+            <input type="submit" class="rounded primary button" value="{{ _('Change Password') }}">
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row nojs--hide">
+  <div class="columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="tfa" data-heading>{{ _('Two Factor Authentication') }}</h1>
+        <div class="section__tools">
+          {% if handler.user.tfa %}
+            <button class="primary rounded button" name="tfa_enabled"><span class="icon icon-check"></span> {{ _('Enabled') }}</button>
+          {% else %}
+            <button class="primary rounded button" name="tfa_enable"><span class="icon icon-wrench"></span> {{ _('Enable') }}</button>
+          {% endif %}
         </div>
-        <div class="section__body">
+      </div>
+      <div class="section__body">
         {% if handler.user.tfa %}
           {% if handler.user.webauthn %}
-          <p>{{ _('Authenticator')}}:</p>
-          <p>{{ _('Register at') }}: {{ datetimeSpan(handler.user._authenticators.registerTime)|safe }}</p>
-          <br />
-          <input type="button" id="delete_authenticators" value="{{ _('Delete your Authenticator') }}"
-            class="primary rounded button">
+            <p>{{ _('Authenticator')}}:</p>
+            <p>{{ _('Register at') }}: {{ datetimeSpan(handler.user._authenticators.registerTime)|safe }}</p>
+            <br />
+            <input type="button" id="delete_authenticators" value="{{ _('Delete your Authenticator') }}" class="primary rounded button">
           {% else %}
-          <p>{{ _('You Don\'t have a registered authenticator.') }}</p>
-          <br />
-          <input type="button" id="register_authenticators" value="{{ _('Register a Authenticator') }}"
-            class="primary rounded button">
+            <p>{{ _('You Don\'t have a registered authenticator.') }}</p>
+            <br />
+            <input type="button" id="register_authenticators" value="{{ _('Register a Authenticator') }}" class="primary rounded button">
           {% endif %}
         {% endif %}
       </div>
-      </div>
     </div>
   </div>
-  <div class="row">
-    <div class="columns">
-      <div class="section">
-        <div class="section__header">
-          <h1 class="section__title" id="session" data-heading>{{ _('Active Sessions') }}</h1>
-        </div>
-        <div class="section__body">
-          <ul class="sessionlist">
-            {%- for session in sessions -%}
-            <li class="sessionlist__item">
-              <div class="media">
-                <div class="media__left medium">
-                  <span class="sessionlist__icon icon icon-platform--{{ icon(session.updateUa.os) }}"></span>
-                </div>
-                <div class="media__body medium typo">
-                  <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
-                  {% if session.createHost %}
+</div>
+<div class="row">
+  <div class="columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="session" data-heading>{{ _('Active Sessions') }}</h1>
+      </div>
+      <div class="section__body">
+        <ul class="sessionlist">
+          {%- for session in sessions -%}
+          <li class="sessionlist__item">
+            <div class="media">
+              <div class="media__left medium">
+                <span class="sessionlist__icon icon icon-platform--{{ icon(session.updateUa.os) }}"></span>
+              </div>
+              <div class="media__body medium typo">
+                <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
+                {% if session.createHost %}
                   <p>{{ _('Hostname') }}: {{ session.createHost }}</p>
-                  {% endif %}
-                  <p>{{ _('Location') }}: {{ _(session.updateGeoip.display) }} ({{ session.updateIp }})</p>
-                  <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
-                  <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
-                  {% if session.isCurrent %}
-                  <p class="sessionlist__current-session"><span class="icon icon-check"></span> {{ _('This is the
-                    current session') }}</p>
-                  {% endif %}
-                </div>
-                {% if not session.isCurrent %}
-                <div class="media__right medium">
-                  <form method="post">
-                    <input type="hidden" name="operation" value="delete_token">
-                    <input type="hidden" name="tokenDigest" value="{{ session._id }}">
-                    <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-                    <input type="submit" value="{{ _('Logout This Session') }}" class="rounded button">
-                  </form>
-                </div>
+                {% endif %}
+                <p>{{ _('Location') }}: {{ _(session.updateGeoip.display) }} ({{ session.updateIp }})</p>
+                <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
+                <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
+                {% if session.isCurrent %}
+                <p class="sessionlist__current-session"><span class="icon icon-check"></span> {{ _('This is the current session') }}</p>
                 {% endif %}
               </div>
-            </li>
-            {%- endfor -%}
-          </ul>
+              {% if not session.isCurrent %}
+              <div class="media__right medium">
+                <form method="post">
+                  <input type="hidden" name="operation" value="delete_token">
+                  <input type="hidden" name="tokenDigest" value="{{ session._id }}">
+                  <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+                  <input type="submit" value="{{ _('Logout This Session') }}" class="rounded button">
+                </form>
+              </div>
+              {% endif %}
+            </div>
+          </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+      <div class="section__body">
+        <form method="post">
+          <input type="hidden" name="operation" value="delete_all_tokens">
+          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+          <input type="submit" value="{{ _('Logout All Sessions') }}" class="primary rounded button">
+        </form>
+        {% if geoipProvider %}
+        <div class="typo">
+          <p><small>IP geo-location data is provided by {{ geoipProvider|safe }}.</small></p>
         </div>
-        <div class="section__body">
-          <form method="post">
-            <input type="hidden" name="operation" value="delete_all_tokens">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-            <input type="submit" value="{{ _('Logout All Sessions') }}" class="primary rounded button">
-          </form>
-          {% if geoipProvider %}
-          <div class="typo">
-            <p><small>IP geo-location data is provided by {{ geoipProvider|safe }}.</small></p>
-          </div>
-          {% endif %}
-        </div>
+        {% endif %}
       </div>
     </div>
   </div>
+</div>
 </div>
 {% endblock %}

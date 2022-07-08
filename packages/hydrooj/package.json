@@ -50,7 +50,8 @@
         "source-map-support": "^0.5.21",
         "superagent": "^7.1.5",
         "thirty-two": "^1.0.2",
-        "tx2": "^1.0.5"
+        "tx2": "^1.0.5",
+        "webauthn-lib": "^1.0.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
