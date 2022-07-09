@@ -157,6 +157,7 @@ contest_detail_problem_submit: 递交比赛题目
 contest_detail_problem: 题目详情
 contest_detail: 比赛详情
 contest_edit: 编辑比赛
+contest_files: 比赛文件
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
 Contest: 比赛

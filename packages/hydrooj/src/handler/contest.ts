@@ -1,7 +1,9 @@
 import AdmZip from 'adm-zip';
+import { statSync } from 'fs-extra';
+import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import { Time } from '@hydrooj/utils/lib/utils';
+import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
     PermissionError, ValidationError,
@@ -11,13 +13,15 @@ import paginate from '../lib/paginate';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
 import message from '../model/message';
+import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
 import {
-    Handler, param, Route, Types,
+    Handler, param, post, Route, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
@@ -363,6 +367,93 @@ export class ContestCodeHandler extends Handler {
     }
 }
 
+export class ContestFilesHandler extends ContestDetailHandler {
+    @param('tid', Types.ObjectID)
+    @param('pjax', Types.Boolean)
+    // @ts-ignore
+    async get(domainId: string, tid: ObjectID, pjax = false) {
+        const tdoc = await contest.get(domainId, tid);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        const body = {
+            tdoc,
+            owner_udoc: await user.getById(domainId, tdoc.owner),
+            files: sortFiles(tdoc.files || []),
+            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
+        };
+        if (pjax) {
+            this.response.body = {
+                fragments: (await Promise.all([
+                    this.renderHTML('partials/files.html', body),
+                ])).map((i) => ({ html: i })),
+            };
+            this.response.template = '';
+        } else {
+            this.response.template = 'contest_files.html';
+            this.response.body = body;
+        }
+    }
+
+    @param('tid', Types.ObjectID)
+    async post(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+    }
+
+    @param('tid', Types.ObjectID)
+    @post('filename', Types.Name, true)
+    async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
+        const tdoc = await contest.get(domainId, tid);
+        if ((tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
+            throw new ForbiddenError('File limit exceeded.');
+        }
+        const file = this.request.files?.file;
+        if (!file) throw new ValidationError('file');
+        const f = statSync(file.filepath);
+        const size = Math.sum((tdoc.files || []).map((i) => i.size)) + f.size;
+        if (size >= system.get('limit.contest_files_size')) {
+            throw new ForbiddenError('File size limit exceeded.');
+        }
+        if (!filename) filename = file.originalFilename || String.random(16);
+        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
+        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
+        if (!meta) throw new Error('Upload failed');
+        await contest.edit(domainId, tid, { files: [...(tdoc.files || []), payload] });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectID)
+    @post('files', Types.Array)
+    async postDeleteFiles(domainId: string, tid: ObjectID, files: string[]) {
+        const tdoc = await contest.get(domainId, tid);
+        await Promise.all([
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            contest.edit(domainId, tid, { files: tdoc.files.filter((i) => !files.includes(i.name)) }),
+        ]);
+        this.back();
+    }
+}
+
+export class ContestFileDownloadHandler extends ContestDetailHandler {
+    @param('tid', Types.ObjectID)
+    @param('filename', Types.Name)
+    @param('noDisposition', Types.Boolean)
+    // @ts-ignore
+    async get(domainId: string, tid: ObjectID, filename: string, noDisposition = false) {
+        this.response.addHeader('Cache-Control', 'public');
+        const target = `contest/${domainId}/${tid}/${filename}`;
+        const file = await storage.getMeta(target);
+        await oplog.log(this, 'download.file.contest', {
+            target,
+            size: file?.size || 0,
+        });
+        this.response.redirect = await storage.signDownloadLink(
+            target, noDisposition ? undefined : filename, false, 'user',
+        );
+    }
+}
+
 export async function apply() {
     Route('contest_create', '/contest/create', ContestEditHandler);
     Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
@@ -372,6 +463,8 @@ export async function apply() {
     Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardDownloadHandler, PERM.PERM_VIEW_CONTEST);
     Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_files', '/contest/:tid/file', ContestFilesHandler, PERM.PERM_VIEW_CONTEST);
+    Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
 }
 
 global.Hydro.handler.contest = apply;
