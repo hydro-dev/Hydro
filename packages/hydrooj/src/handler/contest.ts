@@ -237,7 +237,11 @@ export class ContestEditHandler extends Handler {
     async get(domainId: string, tid: ObjectID) {
         this.response.template = 'contest_edit.html';
         const rules = {};
-        for (const i in contest.RULES) rules[i] = contest.RULES[i].TEXT;
+        for (const i in contest.RULES) {
+            if (!contest.RULES[i].hidden) {
+                rules[i] = contest.RULES[i].TEXT;
+            }
+        }
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         this.response.body = {
@@ -256,7 +260,7 @@ export class ContestEditHandler extends Handler {
     @param('duration', Types.Float)
     @param('title', Types.Title)
     @param('content', Types.Content)
-    @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => i !== 'homework')))
+    @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden)))
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)

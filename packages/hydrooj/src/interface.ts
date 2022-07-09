@@ -481,6 +481,7 @@ export interface ContestStat extends Record<string, any> {
 export interface ContestRule<T = any> {
     _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
+    hidden?: boolean;
     check: (args: any) => any;
     statusSort: any;
     submitAfterAccept: boolean;
