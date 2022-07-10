@@ -20,6 +20,7 @@ const mapStateToProps = (state) => ({
   isPosting: state.ui.isPosting,
   isRunning: state.pretest.isRunning,
   isWaiting: state.ui.isWaiting,
+  waitSec: state.ui.waitSec,
   editorLang: state.editor.lang,
   editorCode: state.editor.code,
   pretestInput: state.pretest.input,
@@ -66,10 +67,9 @@ const mapDispatchToProps = (dispatch) => ({
       payload: request.get(UiContext.getSubmissionsUrl),
     });
   },
-  endWaiting() {
+  tick() {
     dispatch({
-      type: 'SCRATCHPAD_WAITING_END',
-      payload: 0,
+      type: 'SCRATCHPAD_WAITING_TICK',
     });
   },
 });
@@ -84,7 +84,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
 
   constructor(props) {
     super(props);
-    this.state = { waitSec: -1 };
     if (!availableLangs[this.props.editorLang]) {
       // preference not allowed
       const key = keys.find((i) => availableLangs[i].pretest === this.props.editorLang);
@@ -97,18 +96,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   }
 
   componentDidUpdate() {
-    if (this.props.isWaiting) {
-      const { waitSec } = this.state;
-      if (waitSec < 0) this.setState({ waitSec: 5 });
-      if (waitSec === 0) {
-        this.setState({ waitSec: waitSec - 1 });
-        this.props.endWaiting();
-      } else {
-        setTimeout(() => {
-          this.setState({ waitSec: waitSec - 1 });
-        }, 1000);
-      }
-    }
+    if (this.props.waitSec > 0) setTimeout(() => this.props.tick(), 1000);
   }
 
   render() {
@@ -131,9 +119,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             {' '}
             {i18n('Run Pretest')}
             {' '}
-            (F9)
-            {' '}
-            {this.props.isWaiting && `(${this.state.waitSec}s)`}
+            {this.props.isWaiting ? `(${this.props.waitSec}s)` : '(F9)'}
           </ToolbarButton>
         )}
         <ToolbarButton
@@ -147,9 +133,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           {' '}
           {i18n('Submit Solution')}
           {' '}
-          (F10)
-          {' '}
-          {this.props.isWaiting && `(${this.state.waitSec}s)`}
+          {this.props.isWaiting ? `(${this.props.waitSec}s)` : '(F10)'}
         </ToolbarButton>
         <ToolbarButton
           data-global-hotkey="alt+q"

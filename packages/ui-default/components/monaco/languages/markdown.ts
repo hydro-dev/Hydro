@@ -168,8 +168,8 @@ function qqEmoji(range) {
   return qqEmojies.map((i, index) => ({
     label: `/${i}`,
     kind: monaco.languages.CompletionItemKind.Keyword,
-    documentation: { value: `![${i}](//qq-face.vercel.app/gif/s${idMap[index]}.gif)`, isTrusted: true },
-    insertText: `![${i}](//qq-face.vercel.app/gif/s${idMap[index]}.gif =32x32) `,
+    documentation: { value: `![${i}](https://qq-face.vercel.app/gif/s${idMap[index]}.gif)`, isTrusted: true },
+    insertText: `![${i}](https://qq-face.vercel.app/gif/s${idMap[index]}.gif =32x32) `,
     range,
   }));
 }

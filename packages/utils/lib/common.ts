@@ -2,7 +2,7 @@ import { inspect } from 'util';
 
 declare global {
     interface StringConstructor {
-        random: (digit?: number) => string;
+        random: (digit?: number, dict?: string) => string;
     }
     interface String {
         format: (...args: Array<any>) => string;
@@ -205,7 +205,7 @@ const SubtaskMatcher: MatchRule[] = [
 
 function* getScore(totalScore: number, count: number) {
     const base = Math.floor(totalScore / count);
-    const extra = count - (100 % count);
+    const extra = count - (totalScore % count);
     for (let i = 0; i < count; i++) {
         if (i >= extra) yield base + 1;
         else yield base;

@@ -11,6 +11,7 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
 import WebpackBar from 'webpackbar';
+import PacktrackerPlugin from '@packtracker/webpack-plugin';
 import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import root from '../utils/root';
 
@@ -18,6 +19,7 @@ const beautifyOutputUrl = mapWebpackUrlPrefix([
   { prefix: 'misc/.iconfont', replace: './ui/iconfont' },
 ]);
 const smp = new SpeedMeasurePlugin();
+const event = process.env.GITHUB_EVENT_PATH ? require(process.env.GITHUB_EVENT_PATH) : {};
 
 export default function (env = {}) {
   function esbuildLoader() {
@@ -232,6 +234,17 @@ export default function (env = {}) {
         }],
       }),
       ...env.measure ? [new BundleAnalyzerPlugin({ analyzerPort: 'auto' })] : [],
+      ...process.env.PT_PROJECT_TOKEN ? [new PacktrackerPlugin({
+        project_token: process.env.PT_PROJECT_TOKEN,
+        upload: true,
+        fail_build: false,
+        branch: event.ref.replace('refs/heads/', ''),
+        author: event.head_commit.author.email,
+        message: event.head_commit.message,
+        commit: process.env.GITHUB_SHA,
+        committed_at: parseInt(+new Date(event.head_commit.timestamp) / 1000, 10),
+        prior_commit: event.before,
+      })] : [],
     ],
   };
 

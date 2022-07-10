@@ -66,7 +66,9 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
     ctx.translate = (str: string) => {
         if (!str) return '';
         const lang = ctx.HydroContext.user?.viewLang || ctx.session?.viewLang;
-        return str.toString().translate(lang, ...ctx.acceptsLanguages(), system.get('server.language'));
+        return lang
+            ? str.toString().translate(lang, ...ctx.acceptsLanguages())
+            : str.toString().translate(...ctx.acceptsLanguages(), system.get('server.language'));
     };
     await next();
 };

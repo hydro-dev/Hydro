@@ -152,6 +152,8 @@ export default class LuoguProvider implements IBasicProvider {
                         await next({
                             status: STATUS.STATUS_JUDGING,
                             case: {
+                                id: +cid || 0,
+                                subtaskId: +subtask.id || 0,
                                 status: STATUS_MAP[testcase.status],
                                 time: testcase.time,
                                 memory: testcase.memory,

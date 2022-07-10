@@ -70,9 +70,16 @@ const problemConfigSchema = {
       },
       additionalProperties: false,
     },
-    outputs: {
-      type: 'array',
-      minLength: 1,
+    answers: {
+      type: 'object',
+      patternProperties: {
+        '^\\d+(-\\d+)?$': {
+          type: 'array',
+          minLength: 2,
+          maxLength: 2,
+        },
+      },
+      additionalProperties: false,
     },
   },
   additionalProperties: false,

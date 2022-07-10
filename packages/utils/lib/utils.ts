@@ -250,7 +250,7 @@ export function sortFiles(files: { _id: string }[] | string[]) {
     if (!files?.length) return [];
     const isString = typeof files[0] === 'string';
     const result = files
-        .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: i._id.match(fSortR) }))
+        .map((i) => (isString ? { name: i, weights: i.match(fSortR) } : { ...i, weights: (i._id || i.name).match(fSortR) }))
         .sort((a, b) => {
             let pos = 0;
             const weightsA = a.weights;

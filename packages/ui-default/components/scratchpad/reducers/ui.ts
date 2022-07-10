@@ -17,6 +17,7 @@ export default function reducer(state = {
     isLoading: false,
   },
   isPosting: false,
+  waitSec: 0,
   isWaiting: false,
 }, action) {
   switch (action.type) {
@@ -68,6 +69,7 @@ export default function reducer(state = {
       return {
         ...state,
         isPosting: false,
+        waitSec: 5,
         isWaiting: true,
       };
     }
@@ -77,7 +79,15 @@ export default function reducer(state = {
       return {
         ...state,
         isPosting: false,
+        waitSec: 5,
         isWaiting: true,
+      };
+    }
+    case 'SCRATCHPAD_WAITING_TICK': {
+      return {
+        ...state,
+        waitSec: state.waitSec - 1,
+        isWaiting: state.waitSec > 1,
       };
     }
     case 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS_PENDING': {
@@ -106,12 +116,6 @@ export default function reducer(state = {
           ...state.records,
           isLoading: false,
         },
-      };
-    }
-    case 'SCRATCHPAD_WAITING_END': {
-      return {
-        ...state,
-        isWaiting: false,
       };
     }
     default:

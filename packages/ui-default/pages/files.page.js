@@ -14,7 +14,7 @@ function onBeforeUnload(e) {
 
 function ensureAndGetSelectedFiles() {
   const files = _.map(
-    $('.home-files tbody [data-checkbox-group="user_files"]:checked'),
+    $('.files tbody [data-checkbox-group="files"]:checked'),
     (ch) => $(ch).closest('tr').attr('data-filename'),
   );
   if (files.length === 0) {
@@ -152,12 +152,9 @@ function handleDrop(ev) {
   handleClickUpload(files);
 }
 
-const page = new NamedPage('home_files', () => {
-  const clip = new Clipboard('.home-files .col--name', {
-    text: (trigger) => {
-      const filename = trigger.closest('[data-filename]').getAttribute('data-filename');
-      return new URL(`/file/${UserContext._id}/${filename}`, window.location.href).toString();
-    },
+const page = new NamedPage(['home_files', 'contest_files'], () => {
+  const clip = new Clipboard('.files .col--name', {
+    text: (trigger) => new URL(trigger.children[0].href, window.location.href).toString(),
   });
   clip.on('success', () => {
     Notification.success(i18n('Download link copied to clipboard!'), 1000);
@@ -165,11 +162,11 @@ const page = new NamedPage('home_files', () => {
   clip.on('error', () => {
     Notification.error(i18n('Copy failed :('));
   });
-  $(document).on('click', '.home-files .col--name', (ev) => ev.preventDefault());
+  $(document).on('click', '.files .col--name', (ev) => ev.preventDefault());
   $(document).on('click', '[name="upload_file"]', () => handleClickUpload());
   $(document).on('click', '[name="remove_selected"]', () => handleClickRemoveSelected());
-  $(document).on('dragover', '.home-files', (ev) => handleDragOver(ev));
-  $(document).on('drop', '.home-files', (ev) => handleDrop(ev));
+  $(document).on('dragover', '.files', (ev) => handleDragOver(ev));
+  $(document).on('drop', '.files', (ev) => handleDrop(ev));
 });
 
 export default page;

@@ -302,6 +302,7 @@ const ioi = buildContestRule({
 
 const homework = buildContestRule({
     TEXT: 'Assignment',
+    hidden: true,
     check: () => { },
     submitAfterAccept: false,
     statusSort: { penaltyScore: -1, time: 1 },

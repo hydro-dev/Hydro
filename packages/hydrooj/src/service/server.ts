@@ -137,7 +137,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
             maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
         },
     }));
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(router), userLayer];
+    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     layers.forEach((layer) => router.use(layer as any));
     wsServer.on('connection', async (socket, request) => {
@@ -232,11 +232,16 @@ export class Handler extends HandlerCommon {
         if (!error.msg) error.msg = () => error.message;
         if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
         if (!(error instanceof NotFoundError)) {
-            logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: ${this.request.path}`, error.msg(), error.params);
+            // eslint-disable-next-line max-len
+            logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
         }
         if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.ctx.getUrl('user_login', { query: { redirect: this.request.path + this.ctx.search } });
+            this.response.redirect = this.ctx.getUrl('user_login', {
+                query: {
+                    redirect: (this.ctx.originalPath || this.request.path) + this.ctx.search,
+                },
+            });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
@@ -281,6 +286,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             throw new MethodNotAllowedError(method);
         }
 
+        await h.init();
         await bail('handler/init', h);
         await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before-prepare', h);

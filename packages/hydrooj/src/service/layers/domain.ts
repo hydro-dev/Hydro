@@ -5,6 +5,7 @@ import token from 'hydrooj/src/model/token';
 
 export default async (ctx, next) => {
     const forceDomain = /^\/d\/([^/]+)\//.exec(ctx.request.path);
+    ctx.originalPath = ctx.request.path;
     ctx.path = ctx.request.path = ctx.request.path.replace(/^\/d\/[^/]+\//, '/');
     const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
     const ip = ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip;

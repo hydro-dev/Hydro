@@ -121,7 +121,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     if (!queryCache[query]) queryCache[query] = await queryItems(query);
     for (const item of queryCache[query]) valueCache[itemKey(item)] = item;
     setItemList(queryCache[query]);
-    setCurrentItem(null);
+    setCurrentItem((!freeSolo && queryCache[query].length > 0) ? 0 : null);
   };
 
   const dispatchChange = () => {
