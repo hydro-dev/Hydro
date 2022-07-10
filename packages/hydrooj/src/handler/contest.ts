@@ -108,6 +108,11 @@ export class ContestDetailHandler extends Handler {
             tdoc, tsdoc, udict, page,
         };
         if (contest.isNotStarted(tdoc)) return;
+        if (!this.request.json) {
+            this.response.body.tdoc.content = this.response.body.tdoc.content
+                .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
+                .replace(/="file:\/\//g, `="./${tdoc.docId}/file/`);
+        }
         const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
