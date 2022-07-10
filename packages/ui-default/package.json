@@ -29,7 +29,6 @@
     "@types/qrcode": "^1.4.2",
     "@types/react-dom": "^18.0.6",
     "@types/redux-logger": "^3.0.9",
-    "ansi_up": "^5.1.0",
     "autoprefixer": "^9.8.8",
     "browser-update": "^3.3.38",
     "chalk": "^5.0.1",
@@ -112,6 +111,7 @@
     "webpackbar": "^5.0.2"
   },
   "dependencies": {
+    "ansi_up": "^5.1.0",
     "esbuild": "0.14.3",
     "fs-extra": "^10.1.0",
     "js-yaml": "^4.1.0",

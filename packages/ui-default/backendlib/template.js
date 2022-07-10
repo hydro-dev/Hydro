@@ -9,8 +9,9 @@ const { findFileSync } = require('@hydrooj/utils/lib/utils');
 const status = require('@hydrooj/utils/lib/status');
 const markdown = require('./markdown');
 const { xss, ensureTag } = require('./markdown-it-xss');
+const misc = require('./misc');
 
-const { misc, buildContent, avatar } = global.Hydro.lib;
+const { buildContent, avatar } = global.Hydro.lib;
 
 let { template } = argv.options;
 if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
