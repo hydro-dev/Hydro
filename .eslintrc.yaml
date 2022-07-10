@@ -17,6 +17,8 @@ ignorePatterns:
   - public/
   - '*.spec.ts'
 rules:
+  '@typescript-eslint/no-shadow': 1
+
   function-call-argument-newline: 0
   react/function-component-definition: 0
   '@typescript-eslint/dot-notation': 0
@@ -106,6 +108,7 @@ rules:
   no-plusplus: 0
   no-restricted-syntax: 0
   no-return-await: 0
+  no-shadow: 0
   no-underscore-dangle: 0
   prefer-destructuring: 0
   function-paren-newline: 0

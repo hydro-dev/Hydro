@@ -53,6 +53,8 @@ module.exports = {
     '@typescript-eslint/no-implied-eval': 'off',
     '@typescript-eslint/no-throw-literal': 'off',
     '@typescript-eslint/return-await': 'off',
+    '@typescript-eslint/no-shadow': 'warn',
+    'no-shadow': 'off',
 
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
