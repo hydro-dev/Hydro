@@ -200,7 +200,7 @@ global.Hydro.handler.ui = async () => {
   Route('wiki_help', '/wiki/help', WikiHelpHandler);
   Route('wiki_about', '/wiki/about', WikiAboutHandler);
   Route('set_theme', '/set_theme/:theme', SetThemeHandler);
-  Route('constant', '/constant', UiConstantsHandler);
+  Route('constant', '/constant/:version', UiConstantsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
   Route('lang', '/l/:lang', LanguageHandler);
   Route('media', '/media', RichMediaHandler);
