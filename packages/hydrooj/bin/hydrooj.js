@@ -21,7 +21,7 @@ const vm = require('vm');
 const fs = require('fs-extra');
 const esbuild = require('esbuild');
 const { default: hook } = require('require-resolve-hook');
-const { bypass } = hook(/^hydrooj/, (id) => bypass(() => require.resolve(id)));
+const { bypass } = hook(/^(hydrooj|@hydrooj\/utils)/, (id) => bypass(() => require.resolve(id)));
 
 if (!process.env.NODE_APP_INSTANCE) process.env.NODE_APP_INSTANCE = '0';
 const major = +process.version.split('.')[0].split('v')[1];
