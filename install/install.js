@@ -8,7 +8,7 @@ const locales = {
         'install.start': '开始运行 Hydro 安装工具',
         'info.mirror': '将首选 %s 镜像。可以使用 MIRROR=tsinghua|tencent|official 更改。',
         'warn.avx2': '检测到您的 CPU 不支持 avx2 指令集，将使用 mongodb@v4.4',
-        'error.rootRequired': '请使用 root 用户运行该工具。',
+        'error.rootRequired': '请先使用 sudo su 切换到 root 用户后再运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
         'error.osreleaseNotFound': '无法获取系统版本信息（/etc/os-release 文件未找到），请尝试手动安装。',
         'error.unsupportedOS': '不支持的操作系统 %s ，请尝试手动安装，',
