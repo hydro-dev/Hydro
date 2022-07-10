@@ -52,6 +52,7 @@ jobs:
           .eslint*
           packages/ui-default/**
           packages/utils/**
+          .github/workflows/**
     - name: Build And Lint
       run: |
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]]
