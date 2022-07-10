@@ -56,7 +56,8 @@ jobs:
       run: |
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]]
         then
-          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production test
+          yarn build:ui:gulp
+          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi
