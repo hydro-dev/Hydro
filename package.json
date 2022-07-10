@@ -33,7 +33,7 @@
         "@types/autocannon": "^7.6.1",
         "@types/cross-spawn": "^6.0.2",
         "@types/mocha": "^9.1.1",
-        "@types/node": "^18.0.0",
+        "@types/node": "^18.0.3",
         "@types/semver": "^7.3.10",
         "@types/supertest": "^2.0.12",
         "@typescript-eslint/eslint-plugin": "^5.29.0",
@@ -57,11 +57,11 @@
         "latest-version": "6.0.0",
         "mocha": "^10.0.0",
         "mongodb": "^3.7.3",
-        "mongodb-memory-server": "^8.7.1",
+        "mongodb-memory-server": "^8.7.2",
         "ora": "5.4.1",
         "semver": "^7.3.7",
-        "supertest": "^6.2.3",
-        "typedoc": "^0.22.18",
+        "supertest": "^6.2.4",
+        "typedoc": "^0.23.7",
         "typescript": "4.6.4"
     },
     "resolutions": {
