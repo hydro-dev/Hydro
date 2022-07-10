@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.14.7",
+    "version": "3.14.8",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -68,7 +68,6 @@
         "@types/mongodb": "^3.6.20",
         "@types/nodemailer": "^6.4.4",
         "@types/notp": "^2.0.2",
-        "@types/path-to-regexp": "^1.7.0",
         "@types/semver": "^7.3.10",
         "@types/serialize-javascript": "^5.0.2",
         "@types/source-map-support": "^0.5.4",

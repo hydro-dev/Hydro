@@ -16,6 +16,7 @@
           </th>
           <th class="col--name">{{ _('Filename') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
+          <th class="col--operation"></th>
         </tr>
       </thead>
       <tbody>
@@ -30,6 +31,9 @@
             <a href="{{ urlForFile(file.name) }}">{{ file.name }}</a>
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
+          <td class="col--operation">
+            <a href="{{ urlForFile(file.name) }}" class="icon icon-download"></a>
+          </td>
         </tr>
         {%- endfor -%}
       </tbody>
