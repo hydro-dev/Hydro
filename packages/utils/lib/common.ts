@@ -279,10 +279,7 @@ export function normalizeSubtasks(
         Math.max(100 - Math.sum(subtasks.map((i) => i.score || 0)), 0),
         subtasks.filter((i) => !i.score).length,
     );
-    let id = 0;
-    let count = 0;
-    return subtasks.map((s) => {
-        id++;
+    return subtasks.map((s, id) => {
         s.cases.sort((a, b) => (a.id - b.id));
         const score = s.score || subtaskScore.next().value as number;
         const caseScore = getScore(
@@ -290,25 +287,22 @@ export function normalizeSubtasks(
             s.cases.filter((i) => !i.score).length,
         );
         return {
-            id,
+            id: id + 1,
             type: 'min',
             if: [],
             ...s,
             score,
             time: parseTimeMS(s.time || time, !ignoreParseError),
             memory: parseMemoryMB(s.memory || memory, !ignoreParseError),
-            cases: s.cases.map((c) => {
-                count++;
-                return {
-                    id: count,
-                    ...c,
-                    score: c.score || (s.type === 'sum' ? caseScore.next().value as number : score),
-                    time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
-                    memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
-                    input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
-                    output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
-                };
-            }) as NormalizedCase[],
+            cases: s.cases.map((c, index) => ({
+                id: index + 1,
+                ...c,
+                score: c.score || (s.type === 'sum' ? caseScore.next().value as number : score),
+                time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
+                memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
+                input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
+                output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
+            })) as NormalizedCase[],
         };
     });
 }

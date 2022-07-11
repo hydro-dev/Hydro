@@ -86,10 +86,10 @@ async function postInit() {
     }
 
     function getNext(that) {
-        return (data: Partial<JudgeResultBody>, id = 0) => {
-            logger.debug('Next: %d %o', id, data);
+        return (data: Partial<JudgeResultBody>) => {
+            logger.debug('Next: %d %o', data);
             data.rid = new ObjectID(that.rid);
-            if (data.case) data.case.id ||= id;
+            if (data.case) data.case.message ||= '';
             _judge.next(data);
         };
     }

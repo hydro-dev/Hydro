@@ -27,6 +27,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ) {
             ctx.next({
                 case: {
+                    id: c.id,
                     status: STATUS.STATUS_CANCELED,
                     subtaskId: ctxSubtask.subtask.id,
                     score: 0,
@@ -35,7 +36,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                     message: '',
                 },
                 addProgress: 100 / ctx.config.count,
-            }, c.id);
+            });
             return;
         }
         const { filename } = ctx.config;
@@ -99,6 +100,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({
             case: {
+                id: c.id,
                 subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
@@ -107,7 +109,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 message,
             },
             addProgress: 100 / ctx.config.count,
-        }, c.id);
+        });
         if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             const langConfig = ctx.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {

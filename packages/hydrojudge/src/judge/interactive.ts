@@ -63,6 +63,7 @@ function judgeCase(c: NormalizedCase) {
         ctx.next({
             status: STATUS.STATUS_JUDGING,
             case: {
+                id: c.id,
                 subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
@@ -70,8 +71,8 @@ function judgeCase(c: NormalizedCase) {
                 memory: memory_usage_kb,
                 message,
             },
-            progress: Math.floor((c.id * 100) / ctx.config.count),
-        }, c.id);
+            addProgress: 100 / ctx.config.count,
+        });
     };
 }
 

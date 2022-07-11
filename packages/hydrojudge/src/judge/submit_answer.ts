@@ -83,6 +83,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
         ctx.next({
             case: {
+                id: c.id,
                 status,
                 score: 0,
                 time: 0,
@@ -90,7 +91,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 message,
             },
             addProgress: 100 / ctx.config.count,
-        }, c.id);
+        });
     };
 }
 
