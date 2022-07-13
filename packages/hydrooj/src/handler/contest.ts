@@ -278,7 +278,7 @@ export class ContestEditHandler extends Handler {
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration?: number,
+        contestDuration: number = null,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -288,7 +288,6 @@ export class ContestEditHandler extends Handler {
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
-        contestDuration ||= duration;
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {
