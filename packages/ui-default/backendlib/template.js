@@ -134,6 +134,7 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
 };
 const env = new Nunjucks();
 env.addGlobal('static_url', (assetName) => {
+  // DEPRECATED
   const cdnPrefix = process.env.DEV ? '/' : global.Hydro.model.system.get('server.cdn');
   return `${cdnPrefix}${assetName}`;
 });
