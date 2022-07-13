@@ -59,8 +59,8 @@ export function validate(scheme: any, arg: any) {
     return _validate(scheme, arg, '');
 }
 
-export const isTitle = (s) => typeof s === 'string' && s.trim().length < 64;
-export const checkTitle = (s) => { if (!(typeof s === 'string' && s.trim().length < 64)) throw new ValidationError('title'); else return s; };
+export const isTitle = (s) => typeof s === 'string' && s.trim().length && s.trim().length < 64;
+export const checkTitle = (s) => { if (!(s?.trim()?.length && s.trim().length < 64)) throw new ValidationError('title'); else return s; };
 export const isDomainId = (s) => RE_DOMAINID.test(s);
 export const checkDomainId = (s) => { if (!isDomainId(s)) throw new ValidationError('domainId'); else return s; };
 export const isUid = (s) => RE_UID.test(s);
