@@ -8,8 +8,9 @@ import ScratchpadToolbar from './ScratchpadToolbarContainer';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
+import ScratchpadSidebar from './ScratchpadSidebar';
 
-function buildNestedPane([a, ...panes]) {
+function buildNestedPane([a, ...panes], mode = 'horizontal') {
   const elements = [
     a,
     ...panes.filter((p) => p.props.visible),
@@ -18,7 +19,7 @@ function buildNestedPane([a, ...panes]) {
   return elements
     .reduce((prev, curr) => (
       <SplitPane
-        split="horizontal"
+        split={mode}
         primary="second"
         defaultSize={curr.props.size}
         key={curr.element.key}
@@ -63,7 +64,15 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadCont
         primary="second"
         onChange={(size) => this.handleChangeSize('main', size)}
       >
-        <Dom className="scratchpad__problem" childDom={$('.problem-content').get(0)} />
+        <SplitPane
+          defaultSize={this.props.ui.sidebar.visible ? this.props.ui.sidebar.size : 0}
+          split="vertical"
+          primary="second"
+          onChange={(size) => this.handleChangeSize('sidebar', size)}
+        >
+          <Dom className="scratchpad__problem" childDom={$('.problem-content').get(0)} />
+          <ScratchpadSidebar name="debug" />
+        </SplitPane>
         {buildNestedPane([
           <SplitPaneFillOverlay key="editor" className="flex-col">
             <ScratchpadToolbar />

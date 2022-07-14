@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
+import React from 'react';
 
 import './utils/delay';
 import './utils/emulateAnchorClick';
@@ -23,6 +24,6 @@ import './components/notification';
 import './components/nprogress';
 import './components/monaco/loader';
 
-window.node_modules = { _, $ };
+window.node_modules = { _, $, React };
 window.$ = $;
 window.jQuery = $;
