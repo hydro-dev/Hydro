@@ -5,8 +5,9 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotFoundError, ContestNotLiveError, ForbiddenError, InvalidTokenError,
-    PermissionError, ValidationError,
+    BadRequestError, ContestNotFoundError, ContestNotLiveError,
+    ForbiddenError, InvalidTokenError, PermissionError,
+    ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -69,7 +70,9 @@ export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', page = 1) {
-        const cursor = contest.getMulti(domainId, rule ? { rule } : { rule: { $ne: 'homework' } });
+        if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
+        const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
+        const cursor = contest.getMulti(domainId, rule ? { rule } : { rule: { $in: rules } });
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const tids = [];
