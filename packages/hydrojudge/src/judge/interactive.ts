@@ -25,14 +25,14 @@ function judgeCase(c: NormalizedCase) {
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
-                time: ctxSubtask.subtask.time * ctx.executeUser.time,
-                memory: ctxSubtask.subtask.memory,
+                time: (c.time || ctxSubtask.subtask.time) * ctx.executeUser.time,
+                memory: (c.memory || ctxSubtask.subtask.memory),
             },
             {
                 execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
-                time: ctxSubtask.subtask.time * 2 * ctx.executeInteractor.time,
-                memory: ctxSubtask.subtask.memory * 2,
+                time: (c.time || ctxSubtask.subtask.time) * 2 * ctx.executeInteractor.time,
+                memory: (c.memory || ctxSubtask.subtask.memory) * 2,
                 copyOut: ['/w/tout?'],
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             },
@@ -41,9 +41,9 @@ function judgeCase(c: NormalizedCase) {
         let status: number;
         let score = 0;
         let message: any = '';
-        if (time_usage_ms > ctxSubtask.subtask.time * ctx.executeUser.time) {
+        if (time_usage_ms > (c.time || ctxSubtask.subtask.time) * ctx.executeUser.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > ctxSubtask.subtask.memory * 1024) {
+        } else if (memory_usage_kb > (c.memory || ctxSubtask.subtask.memory) * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else if ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code)) {
             status = STATUS.STATUS_RUNTIME_ERROR;
