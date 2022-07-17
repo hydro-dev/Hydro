@@ -81,12 +81,8 @@ registerResolver(
     },
 );
 registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
-    if (arg.ids?.length) {
-        const res = await problem.getList(ctx.args.domainId, arg.ids);
-        console.log(res);
-        return Object.keys(res).filter((id) => +id).map((id) => res[+id]);
-    }
-    return [];
+    const res = await problem.getList(ctx.args.domainId, arg.ids, undefined, undefined, undefined, undefined, true);
+    return Object.keys(res).map((id) => res[+id]);
 }, 'Get a list of problem by ids');
 registerResolver(
     'Problem', 'manage', 'ProblemManage',
