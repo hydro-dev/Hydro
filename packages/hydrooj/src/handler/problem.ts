@@ -403,7 +403,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
+            const ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
+            this.response.body.ctdocs = ctdocs.filter((i) => !contest.RULES[i.rule].hidden);
         }
     }
 
