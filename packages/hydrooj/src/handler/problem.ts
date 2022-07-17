@@ -80,6 +80,14 @@ registerResolver(
         return pdoc;
     },
 );
+registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
+    if (arg.ids?.length) {
+        const res = await problem.getList(ctx.args.domainId, arg.ids);
+        console.log(res);
+        return Object.keys(res).filter((id) => +id).map((id) => res[+id]);
+    }
+    return [];
+}, 'Get a list of problem by ids');
 registerResolver(
     'Problem', 'manage', 'ProblemManage',
     (arg, ctx) => {
