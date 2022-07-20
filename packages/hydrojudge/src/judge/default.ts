@@ -27,6 +27,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ) {
             ctx.next({
                 case: {
+                    id: c.id,
                     status: STATUS.STATUS_CANCELED,
                     subtaskId: ctxSubtask.subtask.id,
                     score: 0,
@@ -35,7 +36,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                     message: '',
                 },
                 addProgress: 100 / ctx.config.count,
-            }, c.id);
+            });
             return;
         }
         const { filename } = ctx.config;
@@ -49,8 +50,8 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 stdin,
                 copyIn,
                 copyOutCached,
-                time: ctxSubtask.subtask.time * ctx.execute.time,
-                memory: ctxSubtask.subtask.memory,
+                time: c.time * ctx.execute.time,
+                memory: c.memory,
                 cacheStdoutAndStderr: true,
             },
         );
@@ -62,9 +63,9 @@ function judgeCase(c: NormalizedCase, sid: string) {
         let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
-            if (time_usage_ms > ctxSubtask.subtask.time * ctx.execute.time) {
+            if (time_usage_ms > c.time * ctx.execute.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-            } else if (memory_usage_kb > ctxSubtask.subtask.memory * 1024) {
+            } else if (memory_usage_kb > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 [status, score, message] = await check({
@@ -99,6 +100,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
         ctx.next({
             case: {
+                id: c.id,
                 subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
@@ -107,7 +109,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 message,
             },
             addProgress: 100 / ctx.config.count,
-        }, c.id);
+        });
         if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             const langConfig = ctx.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {

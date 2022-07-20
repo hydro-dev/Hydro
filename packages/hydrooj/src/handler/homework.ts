@@ -1,4 +1,3 @@
-import AdmZip from 'adm-zip';
 import yaml from 'js-yaml';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
@@ -9,7 +8,7 @@ import {
 } from '../error';
 import { PenaltyRules } from '../interface';
 import paginate from '../lib/paginate';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import problem from '../model/problem';
@@ -19,6 +18,7 @@ import user from '../model/user';
 import {
     Handler, param, Route, Types,
 } from '../service/server';
+import { ContestCodeHandler, ContestScoreboardHandler } from './contest';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
@@ -207,80 +207,16 @@ class HomeworkEditHandler extends Handler {
     }
 }
 
-class HomeworkScoreboardHandler extends Handler {
-    @param('tid', Types.ObjectID)
-    @param('page', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, page = 1) {
-        const [tdoc, rows, udict, , nPages] = await contest.getScoreboard.call(
-            this, domainId, tid, false, page,
-        );
-        const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, false, [
-            // Problem statistics display is allowed as we can view submission info in scoreboard.
-            ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
-        ]);
-        const path = [
-            ['Hydro', 'homepage'],
-            ['homework_main', 'homework_main'],
-            [tdoc.title, 'homework_detail', { tid }, true],
-            ['homework_scoreboard', null],
-        ];
-        this.response.template = 'contest_scoreboard.html';
-        this.response.body = {
-            tdoc, rows, path, udict, pdict, page, nPages, page_name: 'homework_scoreboard',
-        };
-    }
-}
-
-class HomeworkScoreboardDownloadHandler extends Handler {
-    @param('tid', Types.ObjectID)
-    @param('ext', Types.Name)
-    async get(domainId: string, tid: ObjectID, ext: string) {
-        await this.limitRate('scoreboard_download', 120, 3);
-        const getContent = {
-            csv: (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value).join(','))).join('\n')}`,
-            html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows }),
-        };
-        if (!getContent[ext]) throw new ValidationError('ext', null, 'Unknown file extension');
-        const [tdoc, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0);
-        this.binary(await getContent[ext](rows), `${tdoc.title}.${ext}`);
-    }
-}
-
-class HomeworkCodeHandler extends Handler {
-    @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
-        await this.limitRate('contest_code', 3600, 60);
-        const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
-        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            this.checkPerm(PERM.PERM_READ_RECORD_CODE);
-        }
-        const rnames = {};
-        for (const tsdoc of tsdocs) {
-            for (const pid in tsdoc.detail || {}) {
-                rnames[tsdoc.detail[pid].rid] = `U${tsdoc.uid}_P${pid}_R${tsdoc.detail[pid].rid}`;
-            }
-        }
-        const zip = new AdmZip();
-        const rdocs = await record.getMulti(domainId, {
-            _id: { $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)) },
-        }).toArray();
-        for (const rdoc of rdocs) {
-            zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
-        }
-        this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
-    }
-}
-
 export async function apply() {
     Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_create', '/homework/create', HomeworkEditHandler);
     Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_scoreboard', '/homework/:tid/scoreboard', HomeworkScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
+    Route('homework_scoreboard', '/homework/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
     Route(
         'homework_scoreboard_download', '/homework/:tid/scoreboard/download/:ext',
-        HomeworkScoreboardDownloadHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
+        ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
     );
-    Route('homework_code', '/homework/:tid/code', HomeworkCodeHandler, PERM.PERM_VIEW_HOMEWORK);
+    Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }
 

@@ -28,7 +28,90 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
+<<<<<<< HEAD
         context: .
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+=======
+        files: |
+          /package.json
+          .eslint*
+          packages/ui-default/**
+          packages/utils/**
+          .github/workflows/**
+    - name: Build And Lint
+      run: |
+        if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]]
+        then
+          yarn build:ui:gulp
+          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
+        else
+          parallel --tty -j+0 yarn ::: lint:ci build test
+        fi
+      env:
+        PT_PROJECT_TOKEN: ${{ secrets.PT_PROJECT_TOKEN }}
+    - name: Publish
+      if: ${{ github.event_name == 'push' }}
+      run: node build/publish.js
+    # - name: Benchmark
+    #   run: yarn benchmark
+    # - name: Benchmark result
+    #   uses: benchmark-action/github-action-benchmark@v1
+    #   with:
+    #     name: Benchmark
+    #     tool: customBiggerIsBetter
+    #     output-file-path: benchmark.json
+  # web:
+  #   needs: build
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event_name == 'push' }}
+  #   steps:
+  #   - name: Check out
+  #     uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+  #   - name: Log in to GitHub Docker Registry
+  #     uses: docker/login-action@v1
+  #     with:
+  #       registry: docker.pkg.github.com
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Docker:Web
+  #     uses: docker/build-push-action@v2
+  #     with:
+  #       push: true
+  #       context: ./install/docker/backend
+  #       tags: |
+  #         docker.pkg.github.com/hydro-dev/web:${{ github.sha }}
+  #         docker.pkg.github.com/hydro-dev/web:${{ github.ref }}
+  # judge:
+  #   needs: build
+  #   if: ${{ github.event_name == 'push' }}
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check out
+  #     uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+  #   - name: Log in to GitHub Docker Registry
+  #     uses: docker/login-action@v1
+  #     with:
+  #       registry: docker.pkg.github.com
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Docker:Judge
+  #     uses: docker/build-push-action@v2
+  #     with:
+  #       push: true  
+  #       context: ./install/docker/judge
+  #       tags: |
+  #         docker.pkg.github.com/hydro-dev/judge:${{ github.sha }}
+  #         docker.pkg.github.com/hydro-dev/judge:${{ github.ref }}
+>>>>>>> upstream/master

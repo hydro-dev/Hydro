@@ -13,6 +13,7 @@ import problem from 'hydrooj/src/model/problem';
 import * as setting from 'hydrooj/src/model/setting';
 import esbuild from 'esbuild';
 import { tmpdir } from 'os';
+import { UiContextBase } from 'hydrooj/src/service/layers/base';
 import markdown from './backendlib/markdown';
 
 declare module 'hydrooj/src/interface' {
@@ -22,6 +23,13 @@ declare module 'hydrooj/src/interface' {
   interface SystemKeys {
     'ui-default.nav_logo_dark': string;
     'ui-default.nav_logo_dark_2x': string;
+  }
+}
+declare module 'hydrooj/src/service/layers/base' {
+  interface UiContextBase {
+    nav_logo_dark: string;
+    nav_logo_dark_2x: string;
+    constantVersion: string;
   }
 }
 
@@ -46,27 +54,18 @@ async function run() {
   if (build.errors.length) console.error(build.errors);
   if (build.warnings.length) console.warn(build.warnings);
   const pages = build.outputFiles.map((i) => i.text);
-  const payload = [...pages];
-  const [logo, logo2x] = system.getMany([
-    'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
-  ]);
-  const res = [];
-  res.push(`window.LANGS=${JSON.stringify(setting.langs)};`);
-  if (logo) res.push(`UiContext.nav_logo_dark="${logo}";`);
-  if (logo2x) res.push(`UiContext.nav_logo_dark_2x="${logo2x}";`);
-  payload.unshift(res.join('\n'));
+  const payload = [`window.LANGS=${JSON.stringify(setting.langs)};`, ...pages];
 
   const c = crypto.createHash('sha1');
   c.update(JSON.stringify(payload));
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
-  hash = version;
+  UiContextBase.constantVersion = hash = version;
+
+  [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
+    'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
+  ]);
 }
-const versionHandler = (that) => {
-  that.UiContext.constantVersion = hash;
-};
-bus.on('handler/after', versionHandler);
-bus.on('handler/error', versionHandler);
 bus.on('app/started', run);
 bus.on('system/setting', run);
 
@@ -200,7 +199,7 @@ global.Hydro.handler.ui = async () => {
   Route('wiki_help', '/wiki/help', WikiHelpHandler);
   Route('wiki_about', '/wiki/about', WikiAboutHandler);
   Route('set_theme', '/set_theme/:theme', SetThemeHandler);
-  Route('constant', '/constant', UiConstantsHandler);
+  Route('constant', '/constant/:version', UiConstantsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
   Route('lang', '/l/:lang', LanguageHandler);
   Route('media', '/media', RichMediaHandler);

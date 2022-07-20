@@ -12,17 +12,18 @@
   <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ static_url('apple-touch-icon-180x180.png') }}">
-  <link rel="icon" type="image/png" href="{{ static_url('favicon-32x32.png') }}" sizes="32x32">
-  <link rel="icon" type="image/png" href="{{ static_url('android-chrome-192x192.png') }}" sizes="192x192">
-  <link rel="icon" type="image/png" href="{{ static_url('favicon-96x96.png') }}" sizes="96x96">
-  <link rel="icon" type="image/png" href="{{ static_url('favicon-16x16.png') }}" sizes="16x16">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ UiContext.cdn_prefix }}apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="{{ UiContext.cdn_prefix }}favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="{{ UiContext.cdn_prefix }}android-chrome-192x192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="{{ UiContext.cdn_prefix }}favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="{{ UiContext.cdn_prefix }}favicon-16x16.png" sizes="16x16">
+  <link rel="canonical" href="{{ model.system.get('server.url') }}{{ handler.ctx.request.url.substring(1) }}">
   <meta name="theme-color" content="#56758f">
   {% block ogp %}
   <meta property="og:site_name" content="{{ (handler.domain|default({ui:[]})).ui.name|default(model.system.get('server.name')) }}" />
   <meta property="og:title" content="{{ handler.renderTitle(page_name) }}" />
   <meta property="og:url" content="{{ model.system.get('server.url') }}{{ handler.ctx.request.path.slice(1) }}" />
-  <meta property="og:image" content="{{ static_url('favicon-96x96.png') }}" />
+  <meta property="og:image" content="{{ UiContext.cdn_prefix }}favicon-96x96.png" />
   {% endblock %}
   <title>{{ handler.renderTitle(page_name) }}</title>
   <style>
@@ -35,7 +36,7 @@
   {% if process.env.DEV %}
     <link rel="stylesheet" media="all" href="/default.theme.css">
   {% else %}
-    <link rel="stylesheet" media="all" href="{{ static_url('default-' + global.Hydro.version['ui-default'] +'.theme.css') }}">
+    <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}default-{{ global.Hydro.version['ui-default'] }}.theme.css">
   {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script>
@@ -46,7 +47,7 @@
       } catch(e) {
         const s = document.createElement('script');
         s.async = false;
-        s.src = "{{ '/polyfill.js' if process.env.DEV else static_url('polyfill-' + global.Hydro.version['ui-default'] + '.js') }}";
+        s.src = "{{ '/polyfill.js' if process.env.DEV else (UiContext.cdn_prefix + 'polyfill-' + global.Hydro.version['ui-default'] + '.js') }}";
         document.head.appendChild(s);
       }
     </script>
@@ -59,7 +60,7 @@
       var UiContext = '{{ UiContext|json|jsesc|safe }}';
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
-    <script type="text/javascript" src="{{ static_url('l/'+_('__id')) }}"></script>
+    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}l/{{ _('__id') }}"></script>
     {% if process.env.DEV and vite %}
       <script type="module">
         import RefreshRuntime from 'http://localhost:3000/@react-refresh'
@@ -71,11 +72,11 @@
       <script type="module" src="http://localhost:3000/@vite/client"></script>
       <script type="module" src="http://localhost:3000/entry.js"></script>
     {% else %}
-      <script src="{{ static_url('default.theme.js') }}?version={{ global.Hydro.version['ui-default'] }}"></script>
+      <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
       {% if process.env.DEV %}
         <script type="text/javascript" src="/hydro.js"></script>
       {% else %}
-        <script type="text/javascript" src="{{ static_url('hydro-'+global.Hydro.version['ui-default']+'.js') }}"></script>
+        <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
       {% endif %}
     {% endif %}
   {% endif %}

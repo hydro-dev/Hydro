@@ -667,7 +667,6 @@ export interface Lib extends Record<string, any> {
     mail: typeof import('./lib/mail'),
     md5: typeof import('./lib/crypto').md5,
     sha1: typeof import('./lib/crypto').sha1,
-    misc: typeof import('./lib/misc'),
     paginate: typeof import('./lib/paginate'),
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),

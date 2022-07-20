@@ -12,10 +12,10 @@
         "chrome-finder": "^1.0.7",
         "jsdom": "^19.0.0",
         "lodash": "^4.17.21",
-        "puppeteer-core": "^15.1.1",
+        "puppeteer-core": "^15.3.2",
         "puppeteer-extra": "3.3.0",
-        "puppeteer-extra-plugin-portal": "^3.1.0",
-        "puppeteer-extra-plugin-stealth": "^2.10.1",
+        "puppeteer-extra-plugin-portal": "3.1.0",
+        "puppeteer-extra-plugin-stealth": "2.10.1",
         "superagent": "^7.1.5",
         "superagent-proxy": "^3.0.0"
     },

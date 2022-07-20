@@ -36,7 +36,7 @@ class MessageModel {
 
     @ArgMethod
     static async getByUser(uid: number): Promise<MessageDoc[]> {
-        return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', 1).limit(1000).toArray();
+        return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', -1).limit(1000).toArray();
     }
 
     static async getMany(query: FilterQuery<MessageDoc>, sort: any, page: number, limit: number): Promise<MessageDoc[]> {

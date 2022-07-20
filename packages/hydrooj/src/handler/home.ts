@@ -51,7 +51,8 @@ export class HomeHandler extends Handler {
 
     async getContest(domainId: string, limit = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) {
-            const tdocs = await contest.getMulti(domainId, { rule: { $ne: 'homework' } })
+            const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
+            const tdocs = await contest.getMulti(domainId, { rule: { $in: rules } })
                 .limit(limit).toArray();
             const tsdict = await contest.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),

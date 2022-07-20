@@ -26,6 +26,7 @@ export const TYPE_DISCUSSION: 21 = 21;
 export const TYPE_DISCUSSION_REPLY: 22 = 22;
 export const TYPE_CONTEST: 30 = 30;
 export const TYPE_TRAINING: 40 = 40;
+/** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
 export const TYPE_HOMEWORK: 60 = 60;
 export const TYPE_BLOG: 70 = 70;
 

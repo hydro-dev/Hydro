@@ -32,7 +32,7 @@
 {% else %}
   <span class="user-profile-link">
     {% if avatar %}
-      <img class="small user-profile-avatar v-center" src="{{ static_url('img/avatar.png') }}" width="20" height="20">
+      <img class="small user-profile-avatar v-center" src="{{ UiContext.cdn_prefix }}img/avatar.png" width="20" height="20">
     {% endif %}
     <a class="user-profile-name" href="#">
       {{ _('Unknown User') }}

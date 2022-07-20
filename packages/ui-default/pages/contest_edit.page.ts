@@ -25,6 +25,13 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
         ev.target.click();
       });
     });
+    setInterval(() => {
+      $('img').each(function () {
+        if ($(this).attr('src').startsWith('file://')) {
+          $(this).attr('src', $(this).attr('src').replace('file://', './file/'));
+        }
+      });
+    }, 500);
   }
 });
 

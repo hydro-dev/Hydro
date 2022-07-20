@@ -11,6 +11,10 @@ export default function reducer(state = {
       : false,
     size: 200,
   },
+  sidebar: {
+    visible: false,
+    size: 100,
+  },
   records: {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
     size: 100,

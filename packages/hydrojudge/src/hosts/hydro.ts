@@ -133,14 +133,11 @@ class JudgeTask {
         await judge[type].judge(this, startPromise);
     }
 
-    next(data: Partial<JudgeResultBody>, id?: number) {
-        log.debug('Next: %d %o', id, data);
+    next(data: Partial<JudgeResultBody>) {
+        log.debug('Next: %d %o', data);
         data.key = 'next';
         data.rid = new ObjectID(this.rid);
-        if (data.case) {
-            data.case.id ||= id;
-            data.case.message ||= '';
-        }
+        if (data.case) data.case.message ||= '';
         this.ws.send(JSON.stringify(data));
     }
 

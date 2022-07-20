@@ -39,11 +39,10 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDial
           <ListItem
             key={dialogue._id}
             userName={dialogue.udoc.uname}
-            // eslint-disable-next-line no-nested-ternary
-            summary={_.last(dialogue.messages)
-              ? (_.last(dialogue.messages).flag & 4)
+            summary={dialogue.messages.length
+              ? (_.maxBy(dialogue.messages, '_id').flag & 4)
                 ? i18n('[Richtext message]')
-                : _.last(dialogue.messages).content
+                : _.maxBy(dialogue.messages, '_id').content
               : ''}
             faceUrl={dialogue.udoc.avatarUrl}
             active={dialogue._id === this.props.activeId}
