@@ -56,19 +56,21 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
 
     return (
       <>
-        <div className="medium-5 columns form__item end">
-          <label>
-            {i18n('Code language')}
-            <div className="select-container">
-              <select value={main} onChange={(ev) => setMain(ev.target.value)} className="select">
-                {Object.keys(mainLangs).map((key) => (
-                  <option key={key} value={key}>{mainLangs[key]}</option>
-                ))}
-              </select>
-            </div>
-          </label>
-        </div>
-        {Object.keys(options).length > 1 && (
+        {Object.keys(mainLangs).length > 1 && (
+          <div className="medium-5 columns form__item end">
+            <label>
+              {i18n('Code language')}
+              <div className="select-container">
+                <select value={main} onChange={(ev) => setMain(ev.target.value)} className="select">
+                  {Object.keys(mainLangs).map((key) => (
+                    <option key={key} value={key}>{mainLangs[key]}</option>
+                  ))}
+                </select>
+              </div>
+            </label>
+          </div>
+        )}
+        {(Object.keys(options).length > 1 || Object.keys(mainLangs).length === 1) && (
           <div className="medium-5 columns form__item end">
             <label>
               {i18n('Code language')}
