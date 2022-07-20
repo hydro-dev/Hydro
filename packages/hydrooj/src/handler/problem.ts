@@ -81,7 +81,8 @@ registerResolver(
     },
 );
 registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
-    const res = await problem.getList(ctx.args.domainId, arg.ids, undefined, undefined, undefined, undefined, true);
+    const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
+        ctx.user.group, undefined, undefined, true);
     return Object.keys(res).map((id) => res[+id]);
 }, 'Get a list of problem by ids');
 registerResolver(
