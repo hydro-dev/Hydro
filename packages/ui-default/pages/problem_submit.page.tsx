@@ -33,7 +33,11 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
         return [preference, ''];
       }
     }
-    return [Object.keys(mainLangs)[0], ''];
+    const selected = Object.keys(mainLangs)[0];
+    for (const key in availableLangs) {
+      if (key.startsWith(`${selected}.`)) return [selected, key.split('.')[1]];
+    }
+    return [selected, ''];
   })();
 
   function LanguageSelect() {
@@ -56,7 +60,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
 
     return (
       <>
-        {Object.keys(mainLangs).length > 1 && (
+        {(Object.keys(mainLangs).length > 1 || Object.keys(options).length === 1) && (
           <div className="medium-5 columns form__item end">
             <label>
               {i18n('Code language')}
