@@ -784,6 +784,13 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _63_64() {
+        await db.collection('document').updateMany(
+            { rule: 'homework', penaltySince: { $exists: false } },
+            { $set: { penaltySince: new Date() } },
+        );
+        return true;
+    },
 ];
 
 export default scripts;
