@@ -80,6 +80,11 @@ registerResolver(
         return pdoc;
     },
 );
+registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
+    const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
+        ctx.user.group, undefined, undefined, true);
+    return Object.keys(res).map((id) => res[+id]);
+}, 'Get a list of problem by ids');
 registerResolver(
     'Problem', 'manage', 'ProblemManage',
     (arg, ctx) => {
@@ -324,16 +329,19 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             this.pdoc.config = pdoc.config;
         }
         if (typeof this.pdoc.config !== 'string') {
+            let baseLangs;
+            if (this.pdoc.config.type === 'remote_judge') {
+                const p = this.pdoc.config.subType;
+                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
+                baseLangs = dl;
+            } else {
+                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
+            }
             const t = [];
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.pdoc.config.type === 'remote_judge') {
-                const p = this.pdoc.config.subType;
-                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
-                t.push(dl);
-            }
-            if (t.length) this.pdoc.config.langs = intersection(...t);
+            if (t.length) this.pdoc.config.langs = intersection(baseLangs, ...t);
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([

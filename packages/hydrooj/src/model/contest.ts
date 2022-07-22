@@ -610,7 +610,8 @@ export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
 }
 
 export async function getRelated(domainId: string, pid: number) {
-    return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid }).toArray();
+    const rules = Object.keys(RULES).filter((i) => !RULES[i].hidden);
+    return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: { $in: rules } }).toArray();
 }
 
 export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
