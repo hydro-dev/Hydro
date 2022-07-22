@@ -69,7 +69,7 @@ async function waitForTask(id: number) {
     }
 }
 
-export async function run({ domainId }, report) {
+export async function run(_, report) {
     await index.addDocuments([{ id: '1' }]);
     let task = await index.deleteAllDocuments();
     await waitForTask(task.taskUid);
