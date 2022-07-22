@@ -1,0 +1,14 @@
+{
+    "name": "@hydrooj/meilisearch",
+    "version": "0.0.1",
+    "description": "meilisearch",
+    "main": "service.ts",
+    "preferUnplugged": true,
+    "repository": "https://github.com/hydro-dev/Hydro.git",
+    "author": "undefined <i@undefined.moe>",
+    "license": "AGPL-3.0-or-later",
+    "dependencies": {
+        "lodash": "^4.17.21",
+        "meilisearch": "^0.27.0"
+    }
+}
