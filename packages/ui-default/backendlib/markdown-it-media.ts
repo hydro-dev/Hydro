@@ -133,8 +133,12 @@ export function Media(md: MarkdownIt) {
     if (service === 'pdf') {
       if (src.startsWith('file://')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
       return `\
-        <iframe src=${src} width="100%" height="700px">
-        </iframe>`;
+        <object classid="clsid:${randomUUID().toUpperCase()}">
+          <param name="SRC" value="${src}" >
+          <embed width="100%" style="min-height: 100vh;border: none;" fullscreen="yes" src="${src}">
+            <noembed></noembed>
+          </embed>
+        </object>`;
     }
     if (['url', 'video'].includes(service)) {
       return `\
