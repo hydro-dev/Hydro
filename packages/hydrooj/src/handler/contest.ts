@@ -63,12 +63,6 @@ TaskModel.Worker.addHandler('contest', async (doc) => {
                 tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
             }
         } else if (op === 'unlock') tasks.push(contest.recalcStatus(doc.domainId, doc.tid));
-        else if (op === 'systemtest') {
-            for (const pid of tdoc.pids) {
-                tasks.push(problem.replaceConfig(doc.domainId, pid, 'systemtest.yaml'));
-            }
-            tasks.push(contest.rejudgeAll(doc.domainId, doc.tid));
-        }
     }
     await Promise.all(tasks);
 });
@@ -320,16 +314,6 @@ export class ContestEditHandler extends Handler {
             type: 'schedule', subType: 'contest', domainId, tid,
         };
         await TaskModel.deleteMany(task);
-        if (rule === 'cf' || rule === 'oi') {
-            for (const pid of pids) {
-                problem.replaceConfig(domainId, pid, 'pretest.yaml');
-            }
-            await TaskModel.add({
-                ...task,
-                operation: ['systemtest'],
-                executeAfter: endAt,
-            });
-        }
         if (Date.now() <= endAt.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));

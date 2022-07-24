@@ -13,6 +13,6 @@
         "**/.pnp.*": true
     },
     "files.associations": {
-        "*.html": "nunjucks"
+        "*.html": "html"
     }
 }

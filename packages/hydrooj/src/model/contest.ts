@@ -195,7 +195,7 @@ const oi = buildContestRule({
         return { score, detail };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
-    showSelfRecord: () => true,
+    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
         const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
@@ -592,16 +592,6 @@ export async function del(domainId: string, tid: ObjectID) {
     ]);
 }
 
-export async function rejudgeAll(domainId: string, tid: ObjectID) {
-    const tsdocs = await document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray();
-    for (const tsdoc of tsdocs) {
-        for (const pid in tsdoc.detail) {
-            const rid = tsdoc.detail[pid].rid;
-            this.reset(domainId, rid, true);
-            this.judge(domainId, rid);
-        }
-    }
-}
 
 export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
@@ -810,7 +800,6 @@ global.Hydro.model.contest = {
     attend,
     edit,
     del,
-    rejudgeAll,
     get,
     getRelated,
     updateStatus,

@@ -385,13 +385,6 @@ export class ProblemModel {
         if (!pdoc.assign.length) return true;
         return !!Set.intersection(pdoc.assign, udoc.group).size;
     }
-
-    static replaceConfig(domainId: string, pid: number, fileName: string) {
-        try {
-            const buf = storage.get(`problem/${domainId}/${pid}/testdata/${fileName}`);
-            this.addTestdata(domainId, pid, 'config.yaml', streamToBuffer(buf).toString());
-        } catch (e) { throw new ProblemNotFoundError(fileName); }
-    }
 }
 
 bus.on('problem/addTestdata', async (domainId, docId, name) => {
