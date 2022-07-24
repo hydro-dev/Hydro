@@ -101,9 +101,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
             fs.mkdirSync(`${name}/public`);
             addons.push(name);
             console.log(`Addon created at ${name}`);
-            return;
-        }
-        if (operation && name) {
+        } else if (operation && name) {
             for (let i = 0; i < addons.length; i++) {
                 if (addons[i] === name) {
                     addons.splice(i, 1);
@@ -111,6 +109,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
                 }
             }
         }
+
         if (operation === 'add' && name) addons.push(name);
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
