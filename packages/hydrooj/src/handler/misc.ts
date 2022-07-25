@@ -50,14 +50,14 @@ export class FilesHandler extends Handler {
     async postUploadFile(domainId: string, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
-            throw new ForbiddenError('File limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File limit exceeded.');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.user_files_size')) {
-            throw new ForbiddenError('File size limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File size limit exceeded.');
         }
         if (!filename) filename = file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
