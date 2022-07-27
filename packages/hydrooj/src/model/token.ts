@@ -82,8 +82,11 @@ class TokenModel {
     }
 
     @ArgMethod
-    static async getMostRecentSessionByUid(uid: number) {
-        return await TokenModel.coll.findOne({ uid, tokenType: TokenModel.TYPE_SESSION }, { sort: { updateAt: -1 } });
+    static async getMostRecentSessionByUid(uid: number, projection: string[]) {
+        return await TokenModel.coll.findOne(
+            { uid, tokenType: TokenModel.TYPE_SESSION },
+            { projection: { _id: 0, ...Object.fromEntries(projection.map((i) => [i, 1])) }, sort: { updateAt: -1 } },
+        );
     }
 
     @ArgMethod
