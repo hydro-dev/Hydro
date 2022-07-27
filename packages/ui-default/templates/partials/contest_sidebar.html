@@ -72,6 +72,9 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
       </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_files', tid=tdoc.docId) }}">
+        <span class="icon icon-file"></span> {{ _('Files') }}
+      </a></li>
     {% endif %}
     {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
       {% if model.contest.canShowRecord.call(handler, tdoc, true) %}
@@ -106,7 +109,7 @@
       <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
       <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</dd>
-      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tdoc.endAt) }}</dd>
+      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tsdoc.endAt or tdoc.endAt) }}</dd>
       <dt>{{ _('Duration') }}</dt><dd>{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</dd>
       <dt>{{ _('Host') }}</dt><dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
       <dt>{{ _('Partic.') }}</dt><dd>{{ tdoc['attend']|default(0) }}</dd>

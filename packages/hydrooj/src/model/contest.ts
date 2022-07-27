@@ -1,5 +1,5 @@
 import { FilterQuery, ObjectID } from 'mongodb';
-import { Counter, Time } from '@hydrooj/utils/lib/utils';
+import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
@@ -9,7 +9,6 @@ import {
     ScoreboardNode, ScoreboardRow, Tdoc,
     Udict,
 } from '../interface';
-import * as misc from '../lib/misc';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
@@ -142,13 +141,13 @@ const acm = buildContestRule({
             if (isExport) row.push({ type: 'email', value: udict[tsdoc.uid].mail });
             row.push({
                 type: 'time',
-                value: `${tsdoc.accept || 0}\n${misc.formatSeconds(tsdoc.time || 0.0, false)}`,
-                hover: misc.formatSeconds(tsdoc.time || 0.0),
+                value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
+                hover: formatSeconds(tsdoc.time || 0.0),
             });
             for (const pid of tdoc.pids) {
                 const doc = tsddict[pid] || {} as Partial<AcmDetail>;
                 const accept = doc.status === STATUS.STATUS_ACCEPTED;
-                const colTime = accept ? misc.formatSeconds(doc.real, false).toString() : '';
+                const colTime = accept ? formatSeconds(doc.real, false).toString() : '';
                 const colPenalty = doc.rid ? Math.ceil(doc.penalty / 60).toString() : '';
                 if (isExport) {
                     row.push(
@@ -164,7 +163,7 @@ const acm = buildContestRule({
                             : doc.rid
                                 ? `-${doc.naccept}`
                                 : '',
-                        hover: accept ? misc.formatSeconds(doc.time) : '',
+                        hover: accept ? formatSeconds(doc.time) : '',
                         raw: doc.rid,
                         style: accept && doc.rid.generationTime === first[pid]
                             ? 'background-color: rgb(217, 240, 199);'
@@ -302,6 +301,7 @@ const ioi = buildContestRule({
 
 const homework = buildContestRule({
     TEXT: 'Assignment',
+    hidden: true,
     check: () => { },
     submitAfterAccept: false,
     statusSort: { penaltyScore: -1, time: 1 },
@@ -405,13 +405,13 @@ const homework = buildContestRule({
             if (isExport) {
                 row.push({ type: 'string', value: tsdoc.score || 0 });
             }
-            row.push({ type: 'time', value: misc.formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
+            row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
             for (const pid of tdoc.pids) {
                 const rid = tsddict[pid]?.rid;
                 const colScore = tsddict[pid]?.penaltyScore || '';
                 const colOriginalScore = tsddict[pid]?.score || '';
                 const colTime = tsddict[pid]?.time || '';
-                const colTimeStr = colTime ? misc.formatSeconds(colTime, false) : '';
+                const colTimeStr = colTime ? formatSeconds(colTime, false) : '';
                 if (isExport) {
                     row.push(
                         { type: 'string', value: colScore },
@@ -488,7 +488,8 @@ export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
 }
 
 export async function getRelated(domainId: string, pid: number) {
-    return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid }).toArray();
+    const rules = Object.keys(RULES).filter((i) => !RULES[i].hidden);
+    return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: { $in: rules } }).toArray();
 }
 
 export async function getStatus(domainId: string, tid: ObjectID, uid: number) {

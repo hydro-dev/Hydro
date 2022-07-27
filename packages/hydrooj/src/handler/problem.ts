@@ -13,8 +13,7 @@ import {
     ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemStatusDoc, Tdoc,
-    User,
+    ProblemDoc, ProblemStatusDoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -35,6 +34,7 @@ import {
     Handler, param, post, query, Route, route, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
+import { ContestDetailBaseHandler } from './contest';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
 export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
@@ -80,6 +80,11 @@ registerResolver(
         return pdoc;
     },
 );
+registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
+    const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
+        ctx.user.group, undefined, undefined, true);
+    return Object.keys(res).map((id) => res[+id]);
+}, 'Get a list of problem by ids');
 registerResolver(
     'Problem', 'manage', 'ProblemManage',
     (arg, ctx) => {
@@ -112,30 +117,7 @@ function buildQuery(udoc: User) {
     return q;
 }
 
-export class ProblemHandler extends Handler {
-    async cleanup() {
-        if (this.response.template === 'problem_main.html' && this.request.json) {
-            const {
-                page, pcount, pcountRelation, ppcount, pdocs, psdict, category, qs,
-            } = this.response.body;
-            this.response.body = {
-                title: this.renderTitle(this.translate('problem_main')),
-                fragments: (await Promise.all([
-                    this.renderHTML('partials/problem_list.html', {
-                        page, ppcount, pcount, pdocs, psdict, qs,
-                    }),
-                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
-                    this.renderHTML('partials/problem_lucky.html', { qs }),
-                ])).map((i) => ({ html: i })),
-                raw: {
-                    page, pcount, ppcount, pdocs, psdict, category,
-                },
-            };
-        }
-    }
-}
-
-export class ProblemMainHandler extends ProblemHandler {
+export class ProblemMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
     async get(domainId: string, page = 1, q = '') {
@@ -204,16 +186,32 @@ export class ProblemMainHandler extends ProblemHandler {
                     ).then((res) => Object.assign(psdict, res))),
             );
         }
-        this.response.body = {
-            page,
-            pcount,
-            ppcount,
-            pcountRelation,
-            pdocs,
-            psdict,
-            category: category.join(','),
-            qs: q,
-        };
+        if (this.request.json) {
+            this.response.body = {
+                title: this.renderTitle(this.translate('problem_main')),
+                fragments: (await Promise.all([
+                    this.renderHTML('partials/problem_list.html', {
+                        page, ppcount, pcount, pdocs, psdict, qs: q,
+                    }),
+                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
+                    this.renderHTML('partials/problem_lucky.html', { qs: q }),
+                ])).map((i) => ({ html: i })),
+                raw: {
+                    page, pcount, ppcount, pdocs, psdict, category,
+                },
+            };
+        } else {
+            this.response.body = {
+                page,
+                pcount,
+                ppcount,
+                pcountRelation,
+                pdocs,
+                psdict,
+                category: category.join(','),
+                qs: q,
+            };
+        }
     }
 
     @param('pid', Types.UnsignedInt)
@@ -283,7 +281,7 @@ export class ProblemMainHandler extends ProblemHandler {
     }
 }
 
-export class ProblemRandomHandler extends ProblemHandler {
+export class ProblemRandomHandler extends Handler {
     @param('q', Types.Content, true)
     async get(domainId: string, qs = '') {
         const category = flattenDeep(decodeURIComponent(qs).split(' ')
@@ -299,10 +297,8 @@ export class ProblemRandomHandler extends ProblemHandler {
     }
 }
 
-export class ProblemDetailHandler extends ProblemHandler {
+export class ProblemDetailHandler extends ContestDetailBaseHandler {
     pdoc: ProblemDoc;
-    tdoc?: Tdoc<30>;
-    tsdoc?: any;
     udoc: User;
     psdoc: ProblemStatusDoc;
 
@@ -312,9 +308,7 @@ export class ProblemDetailHandler extends ProblemHandler {
         this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (tid) {
-            this.tdoc = await contest.get(domainId, tid);
             if (!this.tdoc?.pids?.includes(this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
-            this.tsdoc = await contest.getStatus(domainId, tid, this.user._id);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
             this.pdoc.tag.length = 0;
@@ -335,16 +329,19 @@ export class ProblemDetailHandler extends ProblemHandler {
             this.pdoc.config = pdoc.config;
         }
         if (typeof this.pdoc.config !== 'string') {
+            let baseLangs;
+            if (this.pdoc.config.type === 'remote_judge') {
+                const p = this.pdoc.config.subType;
+                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
+                baseLangs = dl;
+            } else {
+                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
+            }
             const t = [];
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.pdoc.config.type === 'remote_judge') {
-                const p = this.pdoc.config.subType;
-                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
-                t.push(dl);
-            }
-            if (t.length) this.pdoc.config.langs = intersection(...t);
+            if (t.length) this.pdoc.config.langs = intersection(baseLangs, ...t);
         }
         await bus.serial('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([

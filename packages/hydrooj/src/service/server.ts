@@ -291,6 +291,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
         await bail('handler/before-prepare', h);
         h.args.__prepare = Date.now();
+        if (h.__prepare) await h.__prepare(args);
         if (h._prepare) await h._prepare(args);
         if (h.prepare) await h.prepare(args);
         h.args.__prepareDone = Date.now();

@@ -50,7 +50,7 @@ export async function judge({
                         score,
                         message: 'Correct',
                     },
-                }, +caseId);
+                });
             } else {
                 totalStatus = STATUS.STATUS_WRONG_ANSWER;
                 next({
@@ -61,7 +61,7 @@ export async function judge({
                         score: 0,
                         message: 'Incorrect',
                     },
-                }, +caseId);
+                });
             }
         } else {
             const stdAns = new Set(ansInfo[0] || []);
@@ -79,7 +79,7 @@ export async function judge({
                         score,
                         message: 'Correct',
                     },
-                }, +caseId);
+                });
             } else if (partialCorrect) {
                 totalScore += Math.floor(score / 2);
                 totalStatus = STATUS.STATUS_WRONG_ANSWER;
@@ -91,7 +91,7 @@ export async function judge({
                         score: Math.floor(score / 2),
                         message: 'Partially Correct',
                     },
-                }, +caseId);
+                });
             } else {
                 totalStatus = STATUS.STATUS_WRONG_ANSWER;
                 next({
@@ -102,7 +102,7 @@ export async function judge({
                         score: 0,
                         message: 'Incorrect',
                     },
-                }, +caseId);
+                });
             }
         }
     }

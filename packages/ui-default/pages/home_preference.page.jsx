@@ -1,71 +1,31 @@
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
+import getAvailableLangs from 'vj/utils/availableLangs';
+import { renderLanguageSelect } from 'vj/components/languageselect';
+import delay from 'vj/utils/delay';
 
-function initCodeLangHelper() {
-  function setOptions($el, options) {
-    $el.empty();
-    $.each(options, (key, value) => {
-      $el.append($('<option></option>').attr('value', key).text(value));
-    });
-  }
-
-  const $el = $(tpl`\
-<div class="row">
-  <div class="medium-5 columns form__item end">
-    <label>
-      ${i18n('Code language')}
-      <div name="form_item_lang" class="select-container">
-        <select id="codelang-main-select" class="select"></select>
-      </div>
-    </label>
-  </div>
-  <div class="medium-5 columns form__item end" style="display: none" id="codelang-sub-container">
-    <label>
-      ${i18n('Code language')}
-      <div name="form_item_lang" class="select-container">
-        <select id="codelang-sub-select" class="select"></select>
-      </div>
-    </label>
-  </div>
-</div>
-`);
+async function initCodeLangHelper() {
+  const $el = $(tpl`<div class="row" id="codelang-select"></div>`);
   $('[name="codeLang"]')
     .parent().parent().parent()
     .parent()
     .hide()
     .after($el);
 
-  function onChangeMain(update = true) {
-    const options = {};
-    for (const key in window.LANGS) {
-      if (key.startsWith(`${this.value}.`) && key !== this.value) options[key] = window.LANGS[key].display;
-    }
-    if (Object.keys(options).length > 1) {
-      setOptions($('#codelang-sub-select'), options);
-      $('#codelang-sub-container').show();
-      if (update) $('[name="codeLang"]').val($('#codelang-sub-select').val());
-    } else {
-      $('#codelang-sub-container').hide();
-      if (update) $('[name="codeLang"]').val(this.value);
-    }
-  }
   const main = {};
   for (const key in window.LANGS) {
     if (!key.includes('.') && !window.LANGS[key].hidden) main[key] = window.LANGS[key].display;
   }
-  setOptions($('#codelang-main-select'), main);
-  const current = $('[name="codeLang"]').val();
-  if (current.includes('.')) {
-    const [m] = current.split('.');
-    $('#codelang-main-select').val(m);
-    onChangeMain.call({ value: m }, false);
-    $('#codelang-sub-select').val(current);
-  } else $('#codelang-main-select').val(current);
-  $('#codelang-main-select').on('change', onChangeMain);
-  $('#codelang-sub-select').on('change', function () {
-    $('[name="codeLang"]').val(this.value);
-  });
+
+  await delay(50);
+  renderLanguageSelect(
+    document.getElementById('codelang-select'),
+    $('[name="codeLang"]'),
+    getAvailableLangs(),
+    main,
+    [$('[name="codeLang"]').val()],
+  );
 }
 
 function supportFontFamily(f) {

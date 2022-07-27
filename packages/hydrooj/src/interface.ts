@@ -338,6 +338,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     rated?: boolean;
     _code?: string;
     assign?: string[];
+    files?: FileInfo[];
 
     // For contest
     lockAt?: Date;
@@ -481,6 +482,7 @@ export interface ContestStat extends Record<string, any> {
 export interface ContestRule<T = any> {
     _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
+    hidden?: boolean;
     check: (args: any) => any;
     statusSort: any;
     submitAfterAccept: boolean;
@@ -664,7 +666,6 @@ export interface Lib extends Record<string, any> {
     mail: typeof import('./lib/mail'),
     md5: typeof import('./lib/crypto').md5,
     sha1: typeof import('./lib/crypto').sha1,
-    misc: typeof import('./lib/misc'),
     paginate: typeof import('./lib/paginate'),
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),

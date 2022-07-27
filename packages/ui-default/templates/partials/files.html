@@ -1,5 +1,5 @@
 {% import "components/nothing.html" as nothing with context %}
-<div class="section__body no-padding home-files" data-fragment-id="home-files">
+<div class="section__body no-padding files" data-fragment-id="files">
   {% if files.length %}
     <table class="data-table">
       <colgroup>
@@ -11,11 +11,12 @@
         <tr>
           <th class="col--checkbox">
             <label class="compact checkbox">
-              <input type="checkbox" name="select_all" data-checkbox-toggle="user_files">
+              <input type="checkbox" name="select_all" data-checkbox-toggle="files">
             </label>
           </th>
           <th class="col--name">{{ _('Filename') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
+          <th class="col--operation"></th>
         </tr>
       </thead>
       <tbody>
@@ -23,13 +24,16 @@
         <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
           <td class="col--checkbox">
             <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="user_files" data-checkbox-range>
+              <input type="checkbox" data-checkbox-group="files" data-checkbox-range>
             </label>
           </td>
           <td class="col--name">
-            <a href="{{ url('fs_download', {uid: handler.user._id, filename: file.name}) }}">{{ file.name }}</a>
+            <a href="{{ urlForFile(file.name) }}">{{ file.name }}</a>
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
+          <td class="col--operation">
+            <a href="{{ urlForFile(file.name) }}" class="icon icon-download"></a>
+          </td>
         </tr>
         {%- endfor -%}
       </tbody>

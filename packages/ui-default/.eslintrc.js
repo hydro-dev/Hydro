@@ -53,6 +53,8 @@ module.exports = {
     '@typescript-eslint/no-implied-eval': 'off',
     '@typescript-eslint/no-throw-literal': 'off',
     '@typescript-eslint/return-await': 'off',
+    '@typescript-eslint/no-shadow': 'warn',
+    'no-shadow': 'off',
 
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
@@ -135,5 +137,6 @@ module.exports = {
     'jsx-a11y/no-static-element-interactions': 'off',
     'jsx-a11y/anchor-is-valid': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
+    'jsx-a11y/label-has-associated-control': 'off',
   },
 };

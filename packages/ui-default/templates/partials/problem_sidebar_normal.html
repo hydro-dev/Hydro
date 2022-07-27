@@ -83,9 +83,11 @@
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.pid|default(pdoc.docId)) }}">
         <span class="icon icon-edit"></span> {{ _('Edit') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_config' %} active{% endif %}" href="{{ url('problem_config', pid=pdoc.pid|default(pdoc.docId)) }}">
-        <span class="icon icon-settings"></span> {{ _('Judge Config') }}
-      </a></li>
+      {% if not pdoc.reference %}
+        <li class="menu__item"><a class="menu__link{% if page_name == 'problem_config' %} active{% endif %}" href="{{ url('problem_config', pid=pdoc.pid|default(pdoc.docId)) }}">
+          <span class="icon icon-settings"></span> {{ _('Judge Config') }}
+        </a></li>
+      {% endif %}
     {% endif %}
     {% if page_name == 'problem_detail' %}
       <li class="menu__seperator nojs--hide"></li>

@@ -29,17 +29,20 @@ export class FilesHandler extends Handler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, pjax = false) {
         if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
-        const files = sortFiles(this.user._files);
+        const body = {
+            files: sortFiles(this.user._files),
+            urlForFile: (filename: string) => this.url('fs_download', { uid: this.user._id, filename }),
+        };
         if (pjax) {
             this.response.body = {
                 fragments: (await Promise.all([
-                    this.renderHTML('partials/home_files.html', { files }),
+                    this.renderHTML('partials/files.html', body),
                 ])).map((i) => ({ html: i })),
             };
             this.response.template = '';
         } else {
             this.response.template = 'home_files.html';
-            this.response.body = { files };
+            this.response.body = body;
         }
     }
 
@@ -47,14 +50,14 @@ export class FilesHandler extends Handler {
     async postUploadFile(domainId: string, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
-            throw new ForbiddenError('File limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File limit exceeded.');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.user_files_size')) {
-            throw new ForbiddenError('File size limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File size limit exceeded.');
         }
         if (!filename) filename = file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -65,13 +68,6 @@ export class FilesHandler extends Handler {
         if (!meta) throw new Error('Upload failed');
         this.user._files.push({ _id: filename, ...payload });
         await user.setById(this.user._id, { _files: this.user._files });
-        this.back();
-    }
-
-    @post('from', Types.String)
-    @post('to', Types.String)
-    async postRename(domainId: string, from: string, to: string) {
-        await storage.rename(`user/${this.user._id}/${from}`, `user/${this.user._id}/${to}`, this.user._id);
         this.back();
     }
 
