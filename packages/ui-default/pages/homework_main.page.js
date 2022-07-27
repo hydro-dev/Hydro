@@ -17,6 +17,7 @@ const page = new NamedPage('homework_main', () => {
     }));
     const calendar = new Calendar(events);
     calendar.getDom().appendTo('[name="calendar_entry"]');
+    $('[name="calendar_entry"]').hide();
     $('[name="homework_display"]').change((ev) => {
       switch (ev.currentTarget.value) {
         case 'calendar':
