@@ -121,12 +121,16 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
         this.response.body = {
             tdoc: this.tdoc, tsdoc: this.tsdoc, udict,
         };
-        if (contest.isNotStarted(this.tdoc)) return;
         if (!this.request.json) {
             this.response.body.tdoc.content = this.response.body.tdoc.content
                 .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
                 .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
         }
+        if (
+            (contest.isNotStarted(this.tdoc) || !this.tsdoc?.attend)
+            && !this.user.own(this.tdoc)
+            && !this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
+        ) return;
         const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
