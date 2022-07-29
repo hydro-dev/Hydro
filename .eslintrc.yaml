@@ -112,7 +112,7 @@ rules:
   no-underscore-dangle: 0
   prefer-destructuring: 0
   function-paren-newline: 0
-  simple-import-sort/imports: 
+  simple-import-sort/imports:
    - warn
    - groups:
      - ["^\\u0000"]

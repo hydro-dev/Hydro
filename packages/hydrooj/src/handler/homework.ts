@@ -73,7 +73,11 @@ class HomeworkDetailHandler extends Handler {
         this.response.body = {
             tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
-        if (contest.isNotStarted(tdoc)) return;
+        if (
+            (contest.isNotStarted(tdoc) || !tsdoc?.attend)
+            && !this.user.own(tdoc)
+            && !this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
+        ) return;
         const pdict = await problem.getList(domainId, tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
@@ -93,9 +97,7 @@ class HomeworkDetailHandler extends Handler {
                 );
             }
         }
-        this.response.body.pdict = pdict;
-        this.response.body.psdict = psdict;
-        this.response.body.rdict = rdict;
+        Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
     @param('tid', Types.ObjectID)
