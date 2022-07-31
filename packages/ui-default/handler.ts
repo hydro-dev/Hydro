@@ -62,12 +62,14 @@ async function buildUI() {
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
 }
-bus.on('app/started', buildUI);
-bus.on('system/setting', () => {
+function updateLogo() {
   [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
-});
+}
+bus.on('app/started', buildUI);
+bus.on('app/started', updateLogo);
+bus.on('system/setting', updateLogo);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
