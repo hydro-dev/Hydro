@@ -196,7 +196,10 @@ const SubtaskMatcher: MatchRule[] = [
     },
     {
         regex: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
-        output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
+        output: [
+            (a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`,
+            (a) => `${a[1] + a[2]}${a[3]}${a[4]}.ans`,
+        ],
         id: (a) => +a[4],
         subtask: (a) => +a[2],
         preferredScorerType: 'min',
