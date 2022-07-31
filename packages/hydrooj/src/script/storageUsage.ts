@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
+import Schema from 'schemastery';
+import { addScript } from '../loader';
 import { STATUS } from '../model/builtin';
 import storage from '../model/storage';
 
-export const description = 'Calculate storage usage';
-
-export async function run(_: {}, report: Function) {
+export async function run(_, report) {
     const cursor = storage.coll.find({ path: { $regex: /^problem\//i } }).sort({ path: 1 });
     const count = await cursor.count();
     report({ message: `Total ${count} files` });
@@ -34,8 +34,9 @@ export async function run(_: {}, report: Function) {
         }
         memory += doc.size || 0;
     }
+    return true;
 }
 
-export const validate = {};
-
-global.Hydro.script.storageUsage = { run, description, validate };
+addScript('storageUsage', 'Calculate storage usage')
+    .args(Schema.any())
+    .action(run);

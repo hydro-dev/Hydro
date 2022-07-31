@@ -1,10 +1,9 @@
+import { addScript, Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
 import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
 import sonic from './service';
 
-export const description = 'Sonic problem search re-index';
-
-export async function run({ domainId }, report) {
+async function run({ domainId }, report) {
     if (domainId) await sonic.flushb('problem', domainId);
     else await sonic.flushc('problem');
     let i = 0;
@@ -29,11 +28,8 @@ export async function run({ domainId }, report) {
     return true;
 }
 
-export const validate = {
-    $or: [
-        { domainId: 'string' },
-        { domainId: 'undefined' },
-    ],
-};
-
-global.Hydro.script.ensureSonicSearch = { run, description, validate };
+addScript('ensureSonicSearch', 'Sonic problem search re-index')
+    .args(Schema.object({
+        domainId: Schema.string(),
+    }))
+    .action(run);

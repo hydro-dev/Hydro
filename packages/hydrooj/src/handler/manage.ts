@@ -105,12 +105,17 @@ class SystemScriptHandler extends SystemHandler {
     @param('args', Types.Content, true)
     async post(domainId: string, id: string, raw = '{}') {
         if (!global.Hydro.script[id]) throw new ValidationError('id');
-        const args = JSON.parse(raw);
-        validate(global.Hydro.script[id].validate, args);
+        let args = JSON.parse(raw);
+        if (typeof global.Hydro.script[id].validate === 'function') {
+            args = global.Hydro.script[id].validate(args);
+        } else {
+            logger.warn('You are using the legacy script validation API, which will be dropped in the future.');
+            validate(global.Hydro.script[id].validate, args);
+        }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, raw);
         const report = (data) => judge.next({ domainId, rid, ...data });
         report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
-        const start = new Date().getTime();
+        const start = Date.now();
         // Maybe async?
         global.Hydro.script[id].run(args, report)
             .then((ret: any) => {
