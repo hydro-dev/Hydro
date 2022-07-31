@@ -217,8 +217,8 @@ class SystemSettingHandler extends SystemHandler {
                 }
             }
         }
-        tasks.push(bus.parallel('system/setting', args));
         await Promise.all(tasks);
+        await bus.broadcast('system/setting', args);
         this.back();
     }
 }

@@ -36,7 +36,7 @@ declare module 'hydrooj/src/service/layers/base' {
 let constant = '';
 let hash = '';
 
-async function run() {
+async function buildUI() {
   const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
   const build = await esbuild.build({
     format: 'iife',
@@ -61,13 +61,13 @@ async function run() {
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
-
+}
+bus.on('app/started', buildUI);
+bus.on('system/setting', () => {
   [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
-}
-bus.on('app/started', run);
-bus.on('system/setting', run);
+});
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;

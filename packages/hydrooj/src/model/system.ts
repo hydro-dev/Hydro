@@ -69,7 +69,7 @@ export async function runConfig() {
 }
 
 bus.on('system/setting', (args) => {
-    for (const key in args) set(key, args[key], false);
+    for (const key in args) cache[key] = args[key];
 });
 
 global.Hydro.model.system = {
