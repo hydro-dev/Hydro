@@ -21,7 +21,7 @@ const loaders = {
   external: async (monaco, feat) => {
     const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
     for (const item of items) {
-      let apply = await loadExternalModule(window.externalModules[`monaco-${item}`]);
+      let apply = await loadExternalModule(window.externalModules[item]);
       if (typeof apply !== 'function') apply = apply.default || apply.apply;
       if (typeof apply === 'function') await apply(monaco);
     }
