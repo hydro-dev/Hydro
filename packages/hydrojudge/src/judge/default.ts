@@ -88,7 +88,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         await Promise.all(
             Object.values(res.fileIds).map((id) => del(id)),
         ).catch(() => { /* Ignore file doesn't exist */ });
-        if (runner && ctx.rerun && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
+        if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             await runner(ctx, ctxSubtask);
             return;
