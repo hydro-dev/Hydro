@@ -48,6 +48,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       );
       window.editor = this.editor;
       window.monaco = monaco;
+      window.Hydro.bus.emit('scratchpadEditorCreate', this.editor, monaco);
     }
   }
 

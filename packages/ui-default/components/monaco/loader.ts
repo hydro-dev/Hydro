@@ -39,7 +39,7 @@ export async function load(features = ['markdown']) {
   for (const feat of features) {
     if (loaded.includes(feat)) continue;
     if (!loaders[feat] && !window.externalModules[`monaco-${feat}`]) {
-      console.error('Unknown monaco feature:', feat);
+      console.warn('Unknown monaco feature:', feat);
       continue;
     }
     s = Date.now();

@@ -1,0 +1,24 @@
+.scratchpad__tablist
+  user-select: none
+
+  div
+    display: flex
+    width: 50px
+    height: 50px
+    font-size: 28px
+    flex-direction: row
+    align-items: center
+    justify-content: center
+    margin: rem(8px) 0
+    fill: #666
+    color: #666
+    cursor: pointer
+    &:hover
+      fill: #000
+      color: #000
+
+  div.scratchpad__tab-active
+    border-left: 4px solid #000
+    fill: #000
+    color: #000
+    cursor: default

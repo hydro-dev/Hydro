@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.38.29",
+  "version": "4.38.30",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -20,6 +20,7 @@
     "@fontsource/source-code-pro": "^4.5.10",
     "@fontsource/ubuntu-mono": "^4.5.10",
     "@hydrooj/utils": "workspace:*",
+    "@svgr/webpack": "^5",
     "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.14",
     "@types/json-schema": "^7.0.11",
@@ -111,6 +112,7 @@
     "webpackbar": "^5.0.2"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.31",
     "ansi_up": "^5.1.0",
     "esbuild": "0.14.3",
     "fs-extra": "^10.1.0",
