@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/elastic-search",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",

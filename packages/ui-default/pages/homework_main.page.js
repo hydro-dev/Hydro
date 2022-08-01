@@ -1,10 +1,10 @@
 import { NamedPage } from 'vj/misc/Page';
-import Calendar from 'vj/components/calendar';
 import i18n from 'vj/utils/i18n';
 import { parse as parseMongoId } from 'vj/utils/mongoId';
 
-const page = new NamedPage('homework_main', () => {
+const page = new NamedPage('homework_main', async () => {
   // Homework Calendar
+  const { default: Calendar } = await import('vj/components/calendar');
   if (UiContext.docs) {
     const events = UiContext.docs.map((doc) => ({
       beginAt: doc.beginAt,

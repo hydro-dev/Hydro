@@ -1,11 +1,11 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable no-await-in-loop */
 import { ObjectID } from 'mongodb';
+import Schema from 'schemastery';
+import { addScript } from '../loader';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
 import db from '../service/db';
-
-export const description = 'Recalculates nSubmit and nAccept in problem status.';
 
 const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
 const $match = { contest: { $ne: new ObjectID('000000000000000000000000') } };
@@ -146,17 +146,15 @@ export async function pdoc(report) {
     if (bulk.length) await bulk.execute();
 }
 
-export async function run(arg, report) {
-    if (arg.pdoc === undefined || arg.pdoc) await pdoc(report);
-    if (arg.udoc === undefined || arg.udoc) await udoc(report);
-    if (arg.psdoc === undefined || arg.psdoc) await psdoc(report);
-    return true;
-}
-
-export const validate = {
-    udoc: 'boolean?',
-    pdoc: 'boolean?',
-    psdoc: 'boolean?',
-};
-
-global.Hydro.script.problemStat = { run, description, validate };
+addScript('problemStat', 'Recalculates nSubmit and nAccept in problem status.')
+    .args(Schema.object({
+        udoc: Schema.boolean(),
+        pdoc: Schema.boolean(),
+        psdoc: Schema.boolean(),
+    }))
+    .action(async (arg, report) => {
+        if (arg.pdoc === undefined || arg.pdoc) await pdoc(report);
+        if (arg.udoc === undefined || arg.udoc) await udoc(report);
+        if (arg.psdoc === undefined || arg.psdoc) await psdoc(report);
+        return true;
+    });

@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.14.21",
+    "version": "3.15.0",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -45,6 +45,7 @@
         "p-queue": "^7.2.0",
         "path-to-regexp": "^6.2.1",
         "require-resolve-hook": "^1.1.0",
+        "schemastery": "^3.5.0",
         "semver": "^7.3.7",
         "serialize-javascript": "^6.0.0",
         "source-map-support": "^0.5.21",

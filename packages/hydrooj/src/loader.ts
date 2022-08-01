@@ -3,6 +3,7 @@
 /* eslint-disable no-eval */
 import './init';
 import './interface';
+import Schema from 'schemastery';
 import path from 'path';
 import fs from 'fs-extra';
 import './utils';
@@ -10,7 +11,10 @@ import cac from 'cac';
 import { Logger } from './logger';
 import './ui';
 
+// This is the main entry. So let's re-export some modules.
 export * from './interface';
+export { Schema, Logger };
+
 const argv = cac().parse();
 if (argv.options.debug) {
     console.log('Debug mode enabled');
@@ -51,6 +55,19 @@ export function addon(addonPath: string, prepend = false) {
             logger.error(e);
         }
     } else logger.error(`Addon not found: ${addonPath}`);
+}
+
+export function addScript(name: string, description: string) {
+    if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
+    return {
+        args: <K extends Schema>(validate: K) => ({
+            action: (run: (args: ReturnType<K>, report: any) => boolean | Promise<boolean>) => {
+                global.Hydro.script[name] = {
+                    description, validate, run,
+                };
+            },
+        }),
+    };
 }
 
 export async function load() {

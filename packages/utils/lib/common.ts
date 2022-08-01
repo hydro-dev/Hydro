@@ -173,7 +173,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+).(in|txt)$/,
+        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+)\.(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -195,8 +195,11 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: 'sum',
     },
     {
-        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
-        output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
+        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.in$/,
+        output: [
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.out`,
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.ans`,
+        ],
         id: (a) => +a[4],
         subtask: (a) => +a[2],
         preferredScorerType: 'min',
