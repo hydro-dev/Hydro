@@ -34,10 +34,7 @@ function buildNestedPane([a, ...panes], mode = 'horizontal') {
 const pages = {
   problem: {
     icon: () => <ProblemIcon />,
-    component: () => {
-      console.log($('.problem-content'));
-      return <Dom childDom={$('.problem-content').get(0)} id="problem-content" />;
-    },
+    component: () => <Dom childDom={$('.problem-content').get(0)} id="problem-content" />,
   },
 };
 
@@ -78,14 +75,16 @@ export default function ScratchpadContainer() {
     });
   };
 
+  const showSidebar = Object.keys(pages).length > 1;
+
   return (
     <SplitPane
       split="vertical"
       primary="first"
-      defaultSize={50}
+      size={showSidebar ? 50 : 0}
       allowResize={false}
     >
-      <div className="scratchpad__tablist">
+      <div className="scratchpad__tablist" style={{ display: showSidebar ? 'block' : 'none' }}>
         {Object.keys(pages).map((key) => {
           const Component = pages[key].icon;
           return (
