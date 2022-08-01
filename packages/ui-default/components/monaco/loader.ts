@@ -19,9 +19,12 @@ const loaders = {
   typescript: () => import('./languages/typescript'),
   yaml: () => import('./languages/yaml'),
   external: async (monaco, feat) => {
-    let apply = await loadExternalModule(window.externalModules[`monaco-${feat}`]);
-    if (typeof apply !== 'function') apply = apply.default || apply.apply;
-    if (typeof apply === 'function') await apply(monaco);
+    const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
+    for (const item of items) {
+      let apply = await loadExternalModule(window.externalModules[`monaco-${item}`]);
+      if (typeof apply !== 'function') apply = apply.default || apply.apply;
+      if (typeof apply === 'function') await apply(monaco);
+    }
   },
 };
 
@@ -38,9 +41,12 @@ export async function load(features = ['markdown']) {
   }
   for (const feat of features) {
     if (loaded.includes(feat)) continue;
-    if (!loaders[feat] && !window.externalModules[`monaco-${feat}`]) {
-      console.warn('Unknown monaco feature:', feat);
-      continue;
+    if (!loaders[feat]) {
+      const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
+      if (!items.length) {
+        console.warn('Unknown monaco feature:', feat);
+        continue;
+      }
     }
     s = Date.now();
     console.log('Loading monaco feature:', feat);
