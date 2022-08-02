@@ -11,10 +11,6 @@ export default function reducer(state = {
       : false,
     size: 200,
   },
-  sidebar: {
-    visible: false,
-    size: 100,
-  },
   records: {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
     size: 100,
@@ -23,6 +19,7 @@ export default function reducer(state = {
   isPosting: false,
   waitSec: 0,
   isWaiting: false,
+  activePage: 'problem',
 }, action) {
   switch (action.type) {
     case 'SCRATCHPAD_UI_CHANGE_SIZE': {
@@ -120,6 +117,12 @@ export default function reducer(state = {
           ...state.records,
           isLoading: false,
         },
+      };
+    }
+    case 'SCRATCHPAD_SWITCH_TO_PAGE': {
+      return {
+        ...state,
+        activePage: action.payload,
       };
     }
     default:

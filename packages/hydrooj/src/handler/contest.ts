@@ -103,7 +103,7 @@ export class ContestDetailBaseHandler extends Handler {
                 throw new ForbiddenError('You are not assigned.');
             }
         }
-        if (this.tdoc.duration && this.tsdoc?.attend) {
+        if (this.tdoc.duration && this.tsdoc?.startAt) {
             this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
         }
     }

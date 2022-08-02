@@ -27,9 +27,11 @@ class RecordModel {
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {
-        const pending = await task.count({ uid, rejudged: { $ne: true } });
         const timeRecent = await RecordModel.coll
-            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid }).project({ time: 1 }).toArray();
+            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid }).project({ time: 1, status: 1 }).toArray();
+        const pending = timeRecent.filter((i) => [
+            STATUS.STATUS_FETCHED, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING,
+        ].includes(i.status)).length;
         return base - ((pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000) + 1);
     }
 

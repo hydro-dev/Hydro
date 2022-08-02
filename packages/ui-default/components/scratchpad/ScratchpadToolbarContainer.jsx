@@ -16,7 +16,6 @@ import Toolbar, {
 
 const mapStateToProps = (state) => ({
   pretestVisible: state.ui.pretest.visible,
-  sidebarVisible: state.ui.sidebar.visible,
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
   isRunning: state.pretest.isRunning,
@@ -185,16 +184,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             {i18n('Records')}
           </ToolbarButton>
         )}
-        {/* <ToolbarButton
-          activated={this.props.sidebarVisible}
-          onClick={() => this.props.togglePanel('sidebar')}
-          data-global-hotkey="alt+w"
-          data-tooltip={`${i18n('Toggle Sidebar')} (Alt+L)`}
-        >
-          <Icon name="edit" />
-          {' '}
-          {i18n('Pretest')}
-        </ToolbarButton> */}
       </Toolbar>
     );
   }

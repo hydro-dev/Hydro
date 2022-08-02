@@ -15,8 +15,8 @@
               <div class="media">
                 <div class="media__left">
                   <div class="discussion__replies numbox">
-                    <div class="numbox__num large">{{ ddoc.nReply }}</div>
-                    <div class="numbox__text">{{ _('Comments') }}</div>
+                    <div class="numbox__num large">{{ datetimeSpan(ddoc._id, false, 'D')|safe }}</div>
+                    <div class="numbox__text">{{ datetimeSpan(ddoc._id, false, 'YYYY-M')|safe }}</div>
                   </div>
                 </div>
                 <div class="media__body top">
