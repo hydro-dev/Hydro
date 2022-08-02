@@ -61,8 +61,10 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}" data-no-instant>
         <span class="icon icon-download"></span> {{ _('Export All Code') }}
       </a></li>
-    {% endif %}
-    {% if tsdoc.attend %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
+        <span class="icon icon-flag"></span> {{ _('All Submissions') }}
+      </a></li>
+    {% elif tsdoc.attend %}
       <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={uidOrName:handler.user._id, tid:tdoc.docId}) }}">
         <span class="icon icon-flag"></span> {{ _('My Recent Submissions') }}
       </a></li>
