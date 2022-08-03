@@ -263,7 +263,7 @@ export class ContestEditHandler extends Handler {
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt: this.tdoc?.beginAt || new Date(ts),
-            lock: tid ? (this.tdoc.endAt.getTime() - this.tdoc.lockAt.getTime()) / Time.minute : 0,
+            lock: tid && this.tdoc.lockAt ? (this.tdoc.endAt.getTime() - this.tdoc.lockAt.getTime()) / Time.minute : 0,
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
