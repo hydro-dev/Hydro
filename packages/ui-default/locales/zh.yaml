@@ -307,6 +307,7 @@ Edit: 编辑
 Email Visibility: Email 可见性
 Email: 电子邮件
 Enabled: 开启
+Enabled Contest Duration (hours): 可参赛时间 (小时)
 End at: 结束于
 End Date: 结束日期
 End Time: 结束时间
@@ -450,7 +451,7 @@ Live...: 正在进行…
 Loading editor...: 正在加载编辑器...
 Loading file...: 正在加载文件内容...
 Location: 位置
-LockBoard (minutes): 封榜 (分钟)
+Lock Board (minutes): 封榜 (分钟)
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
