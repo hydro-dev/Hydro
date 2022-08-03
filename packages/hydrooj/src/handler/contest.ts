@@ -263,6 +263,7 @@ export class ContestEditHandler extends Handler {
             duration: tid ? (this.tdoc.endAt.getTime() - this.tdoc.beginAt.getTime()) / Time.hour : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt: this.tdoc?.beginAt || new Date(ts),
+            lock: tid ? (this.tdoc.endAt.getTime() - this.tdoc.lockAt.getTime()) / Time.minute : 0,
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
     }
@@ -284,7 +285,7 @@ export class ContestEditHandler extends Handler {
     async post(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
-        _code = '', autoHide = false, assign: string[] = null, lock: number = null,
+        _code = '', autoHide = false, assign: string[] = null, lock: number,
         contestDuration: number = null,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -294,7 +295,7 @@ export class ContestEditHandler extends Handler {
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
-        const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
+        const lockAt = moment(endAt).add(-lock, 'minutes').toDate();
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
         if (tid) {
             await contest.edit(domainId, tid, {

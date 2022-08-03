@@ -67,6 +67,16 @@
               row:false
             }) }}
             {{ form.form_text({
+              columns:3,
+              label:'LockBoard (minutes)',
+              name:'lock',
+              placeholder:_('(leave blank if none)'),
+              value:lock,
+              row:false
+            }) }}
+          </div>
+          <div class="row">
+            {{ form.form_text({
               columns:4,
               label:'Assign',
               name:'assign',
