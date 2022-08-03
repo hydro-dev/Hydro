@@ -408,6 +408,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
             this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
+            this.response.body.htdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework');
         }
     }
 
