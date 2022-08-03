@@ -487,7 +487,7 @@ export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
     return tdoc;
 }
 
-export async function getRelated(domainId: string, pid: number, rule = null) {
+export async function getRelated(domainId: string, pid: number, rule?: string) {
     const rules = Object.keys(RULES).filter((i) => !RULES[i].hidden);
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
