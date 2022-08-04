@@ -55,6 +55,29 @@ const locales = {
         'info.skip': 'Step skipped.',
     },
 };
+
+if (__user !== 'root') log.fatal('error.rootRequired');
+if (__arch !== 'amd64') log.fatal('error.unsupportedArch', __arch);
+const dev = !!cli.get('dev');
+if (!fs.exist('/etc/os-release')) log.fatal('error.osreleaseNotFound');
+const osinfoFile = fs.readfile('/etc/os-release');
+const lines = osinfoFile.split('\n');
+const values = {};
+for (const line of lines) {
+    if (!line.trim()) continue;
+    const d = line.split('=');
+    if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
+    else values[d[0].toLowerCase()] = d[1];
+}
+if (!['ubuntu', 'arch', 'debian'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
+const Arch = values.id === 'arch';
+const cpuInfoFile = fs.readfile('/proc/cpuinfo');
+let mongodbVersion = __env.MONGODB_VERSION || '5.0';
+if (!cpuInfoFile.includes('avx2')) {
+    log.warn('warn.avx2');
+    mongodbVersion = '4.4';
+}
+let migration;
 const preferredMirror = __env.MIRROR || 'tsinghua';
 const mirrors = {
     node: {
@@ -63,9 +86,9 @@ const mirrors = {
         official: 'https://nodejs.org/dist',
     },
     mongodb: {
-        tsinghua: 'https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/ubuntu',
-        tencent: 'https://mirrors.cloud.tencent.com/mongodb/apt/ubuntu',
-        official: 'https://repo.mongodb.org/apt/ubuntu',
+        tsinghua: `https://mirrors.tuna.tsinghua.edu.cn/mongodb/apt/${values.id}`,
+        tencent: `https://mirrors.cloud.tencent.com/mongodb/apt/${values.id}`,
+        official: `https://repo.mongodb.org/apt/${values.id}`,
     },
     minio: {
         hydro: 'https://kr.hydro.ac/download/minio',
@@ -104,28 +127,6 @@ const source_nvm = `
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 `;
-if (__user !== 'root') log.fatal('error.rootRequired');
-if (__arch !== 'amd64') log.fatal('error.unsupportedArch', __arch);
-const dev = !!cli.get('dev');
-if (!fs.exist('/etc/os-release')) log.fatal('error.osreleaseNotFound');
-const osinfoFile = fs.readfile('/etc/os-release');
-const lines = osinfoFile.split('\n');
-const values = {};
-for (const line of lines) {
-    if (!line.trim()) continue;
-    const d = line.split('=');
-    if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
-    else values[d[0].toLowerCase()] = d[1];
-}
-if (!['ubuntu', 'arch'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
-const Arch = values.id === 'arch';
-const cpuInfoFile = fs.readfile('/proc/cpuinfo');
-let mongodbVersion = __env.MONGODB_VERSION || '5.0';
-if (!cpuInfoFile.includes('avx2')) {
-    log.warn('warn.avx2');
-    mongodbVersion = '4.4';
-}
-let migration;
 
 const steps = [
     {
