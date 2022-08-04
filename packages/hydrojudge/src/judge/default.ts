@@ -21,7 +21,8 @@ const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
-        if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
+        if (ctx.errored
+            || (ctxSubtask.subtask.type === 'min' && ctxSubtask.score === 0)
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
         ) {
