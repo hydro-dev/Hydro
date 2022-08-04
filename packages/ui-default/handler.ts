@@ -184,6 +184,15 @@ class RichMediaHandler extends Handler {
     return '';
   }
 
+  async renderHomework(domainId, payload) {
+    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_HOMEWORK)
+      ? await contest.get(payload.domainId || domainId, new ObjectID(payload.id))
+      : null;
+    if (tdoc) return await this.renderHTML('partials/homework.html', { tdoc });
+    return '';
+  }
+
   async post({ domainId, items }) {
     const res = [];
     for (const item of items) {
@@ -191,6 +200,7 @@ class RichMediaHandler extends Handler {
       if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));
       else if (item.type === 'problem') res.push(this.renderProblem(domainId, item).catch(() => ''));
       else if (item.type === 'contest') res.push(this.renderContest(domainId, item).catch(() => ''));
+      else if (item.type === 'homework') res.push(this.renderHomework(domainId, item).catch(() => ''));
       else res.push('');
     }
     this.response.body = await Promise.all(res);

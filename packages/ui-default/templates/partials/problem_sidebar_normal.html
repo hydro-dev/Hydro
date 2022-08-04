@@ -121,7 +121,7 @@
   <div id="submission-score-placeholder" style="width: 100%; height:230px"></div>
 </div>
 {% endif %}
-{% if page_name == 'problem_detail' and (tdocs.length or ctdocs.length) %}
+{% if page_name == 'problem_detail' and (tdocs.length or ctdocs.length or htdocs.length) %}
 <div class="section side">
   <div class="section__header">
     <h1 class="section__title">{{ _('Related') }}</h1>
@@ -137,6 +137,12 @@
     <p>{{ _('In following contests') }}: </p>
     {%- for tdoc in ctdocs -%}
       <p><a href="{{ url('contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
+    {%- endfor -%}
+  {% endif %}
+  {% if htdocs.length %}
+    <p>{{ _('In following homework') }}: </p>
+    {%- for tdoc in htdocs -%}
+      <p><a href="{{ url('homework_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a></p>
     {%- endfor -%}
   {% endif %}
   </div>
