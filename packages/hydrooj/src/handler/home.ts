@@ -65,7 +65,7 @@ export class HomeHandler extends Handler {
     async getTraining(domainId: string, limit = 10) {
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING)) {
             const tdocs = await training.getMulti(domainId)
-                .sort('_id', 1).limit(limit).toArray();
+                .sort({ pin: -1, _id: 1 }).limit(limit).toArray();
             const tsdict = await training.getListStatus(
                 domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
             );
