@@ -1,16 +1,16 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable import/no-extraneous-dependencies */
 import cac from 'cac';
+import chalk from 'chalk';
+import log from 'fancy-log';
 import fs from 'fs-extra';
+import gulp from 'gulp';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import gulp from 'gulp';
-import log from 'fancy-log';
-import chalk from 'chalk';
 import pkg from '../package.json';
-import root from './utils/root';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
+import root from './utils/root';
 
 const argv = cac().parse();
 
@@ -24,7 +24,7 @@ async function runWebpack({
       compress: true,
       hot: true,
       proxy: {
-        context: (path) => path !== '/ws' && !path.startsWith('/vendors.js'),
+        context: (path) => path !== '/ws',
         target: 'http://localhost:2333',
         ws: true,
       },
@@ -82,6 +82,9 @@ async function main() {
     }
     if (fs.existsSync('public/polyfill.js')) {
       fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
+    }
+    if (fs.existsSync('public/default.theme.css')) {
+      fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
     }
     if (argv.options.production) {
       fs.removeSync('public/vditor/dist/js/echarts');
