@@ -35,10 +35,9 @@ jobs:
           yarn.lock
           .cache
           **/tsconfig.tsbuildinfo
-        key: ${{ github.ref }}
+        key: cache-${{ github.ref }}
         restore-keys: |
-          master
-          main
+          cache-
     - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml

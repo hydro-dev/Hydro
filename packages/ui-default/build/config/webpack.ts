@@ -82,6 +82,9 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       type: 'filesystem',
       cacheDirectory: root('../../.cache'),
       idleTimeout: 30000,
+      buildDependencies: {
+        config: [__filename],
+      },
     },
     output: {
       path: root('public'),
@@ -235,6 +238,9 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       }),
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
+      }),
+      new webpack.optimize.MinChunkSizePlugin({
+        minChunkSize: 128000,
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({
