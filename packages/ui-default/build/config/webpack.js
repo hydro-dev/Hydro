@@ -106,7 +106,20 @@ export default function (env = {}) {
     module: {
       rules: [
         {
-          test: /\.(svg|ttf|eot|woff|woff2|png|jpg|jpeg|gif)$/,
+          test: /\.svg$/i,
+          oneOf: [
+            {
+              issuer: /\.[jt]sx?$/,
+              resourceQuery: /react/,
+              use: { loader: '@svgr/webpack', options: { icon: true } },
+            },
+            {
+              use: [fileLoader()],
+            },
+          ],
+        },
+        {
+          test: /\.(ttf|eot|woff|woff2|png|jpg|jpeg|gif)$/,
           use: [fileLoader()],
         },
         {
