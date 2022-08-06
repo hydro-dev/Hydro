@@ -14,11 +14,7 @@ const page = new NamedPage('record_main', async () => {
   const sock = new WebSocket(UiContext.socketUrl);
   const dd = new DiffDOM();
 
-  let firstLoad = true;
-  sock.onopen = () => {
-    if (firstLoad) sock.send(JSON.stringify({ rids: UiContext.rids }));
-    firstLoad = false;
-  };
+  sock.onopen = () => sock.send(JSON.stringify({ rids: UiContext.rids }));
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
     const $newTr = $(msg.html);

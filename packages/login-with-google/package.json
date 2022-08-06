@@ -13,6 +13,6 @@
         "hydrooj": "*"
     },
     "dependencies": {
-        "superagent": "^7.1.5"
+        "superagent": "^8.0.0"
     }
 }

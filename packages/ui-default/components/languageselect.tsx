@@ -20,7 +20,7 @@ export default function LanguageSelect({
     const subselections = Object.keys(options).length;
     if (options[sub]) return;
     if (!subselections) setSub('');
-    if (subselections === 1) setSub(Object.keys(options)[0]);
+    setSub(Object.keys(options)[0]);
   }, [main]);
 
   return (

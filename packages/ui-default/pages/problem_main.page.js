@@ -249,11 +249,7 @@ const page = new NamedPage(['problem_main'], () => {
     updateSelection();
   });
   $('#searchForm').on('submit', updateSelection);
-  let update;
-  $('#searchForm').find('input').on('input', () => {
-    if (update) clearTimeout(update);
-    update = setTimeout(updateSelection, 500);
-  });
+  $('#searchForm').find('input').on('input', _.debounce(updateSelection, 500));
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
