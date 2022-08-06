@@ -1,5 +1,6 @@
-import tpl from 'vj/utils/tpl';
+import $ from 'jquery';
 import i18n from 'vj/utils/i18n';
+import tpl from 'vj/utils/tpl';
 import DomDialog, { DialogOptions } from './DomDialog';
 
 export class Dialog {

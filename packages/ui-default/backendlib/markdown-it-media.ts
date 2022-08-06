@@ -26,12 +26,6 @@ function preziParser(url: string) {
   const match = url.match(preziRegex);
   return match ? match[1] : url;
 }
-// TODO: Write regex for staging and local servers.
-const mfrRegex = /^http(?:s?):\/\/(?:www\.)?mfr\.osf\.io\/render\?url=http(?:s?):\/\/osf\.io\/([a-zA-Z0-9]{1,5})\/\?action=download/;
-function mfrParser(url: string) {
-  const match = url.match(mfrRegex);
-  return match ? match[1] : url;
-}
 const EMBED_REGEX = /@\[([a-zA-Z].+?)]\((.*?)[)]/im;
 function extractVideoParameters(url: string) {
   const parameterMap = new Map();
@@ -82,7 +76,6 @@ function resourceUrl(service: string, src: string, url: string, options) {
       + 'landing_data=bHVZZmNaNDBIWnNjdEVENDRhZDFNZGNIUE43MHdLNWpsdFJLb2ZHanI5N1lQVHkxSHFxazZ0UUNCRHloSXZROHh3PT0&amp;'
       + 'landing_sign=1kD6c0N6aYpMUS0wxnQjxzSqZlEB8qNFdxtdjYhwSuI';
   }
-  if (service === 'osf') return `https://mfr.osf.io/render?url=https://osf.io/${src}/?action=download`;
   return src;
 }
 
@@ -95,26 +88,11 @@ export function Media(md: MarkdownIt) {
     vimeo: { width: 500, height: 281 },
     vine: { width: 600, height: 600, embed: 'simple' },
     prezi: { width: 550, height: 400 },
-    osf: { width: '100%', height: '100%' },
     pdf: resourceUrl,
   };
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
     const service = md.utils.escapeHtml(tokens[idx].attrGet('service')).toLowerCase();
-    const checkUrl = /http(?:s?):\/\/(?:www\.)?[a-zA-Z0-9-:.]{1,}\/render(?:\/)?[a-zA-Z0-9.&;?=:%]{1,}url=http(?:s?):\/\/[a-zA-Z0-9 -:.]{1,}\/[a-zA-Z0-9]{1,5}\/\?[a-zA-Z0-9.=:%]{1,}/;
-    let num;
-    if (service === 'osf' && src) {
-      num = Math.random() * 0x10000;
-      if (src.match(checkUrl)) {
-        return `<div id="${num}" class="mfr mfr-file"></div><script>`
-          + `$(document).ready(function () {new mfr.Render("${num}", "${src}");`
-          + '    }); </script>';
-      }
-      return `<div id="${num}" class="mfr mfr-file"></div><script>`
-        + `$(document).ready(function () {new mfr.Render("${num}", "https://mfr.osf.io/`
-        + `render?url=https://osf.io/${src}/?action=download%26mode=render");`
-        + '    }); </script>';
-    }
     if (service === 'bilibili') {
       if (src.startsWith('http')) src = src.split('/').pop();
       if (src.toLowerCase().startsWith('av')) src = src.toLowerCase().split('av')[1];
@@ -171,7 +149,6 @@ export function Media(md: MarkdownIt) {
     else if (service === 'vimeo') src = vimeoParser(src);
     else if (service === 'vine') src = vineParser(src);
     else if (service === 'prezi') src = preziParser(src);
-    else if (service === 'osf') src = mfrParser(src);
     if (src === ')') src = '';
     const serviceStart = oldPos + 2;
     if (!silent) {

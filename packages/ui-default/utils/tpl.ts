@@ -30,4 +30,4 @@ export function rawHtml(html: string) {
   };
 }
 
-global.Hydro.utils.tpl = tpl;
+window.Hydro.utils.tpl = tpl;

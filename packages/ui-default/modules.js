@@ -1,9 +1,3 @@
-import $ from 'jquery';
-import _ from 'lodash';
-import React from 'react';
-import ReactDOM from 'react-dom';
-import * as redux from 'react-redux';
-
 import './utils/delay';
 import './utils/emulateAnchorClick';
 import './utils/i18n';
@@ -19,12 +13,17 @@ import './utils/substitute';
 import './utils/tpl';
 import './utils/zIndexManager';
 import './utils/zip';
-
 import './components/autocomplete';
 import './components/dialog';
 import './components/notification';
 import './components/nprogress';
 import './components/monaco/loader';
+
+import $ from 'jquery';
+import _ from 'lodash';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as redux from 'react-redux';
 
 const modules = {
   _, $, React, redux, ReactDOM,

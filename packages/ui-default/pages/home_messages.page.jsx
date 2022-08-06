@@ -1,12 +1,13 @@
-import { NamedPage } from 'vj/misc/Page';
+import $ from 'jquery';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import { ActionDialog } from 'vj/components/dialog';
+import VjNotification from 'vj/components/notification';
+import { NamedPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import parseQueryString from 'vj/utils/parseQueryString';
-import VjNotification from 'vj/components/notification';
-import { ActionDialog } from 'vj/components/dialog';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 
 const page = new NamedPage('home_messages', () => {
   let reduxStore;

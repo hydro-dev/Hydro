@@ -1,5 +1,7 @@
 import './modules';
 import 'jquery.transit';
+
+import $ from 'jquery';
 import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';

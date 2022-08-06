@@ -1,6 +1,7 @@
+import $ from 'jquery';
 import _ from 'lodash';
-import delay from 'vj/utils/delay';
 import Tooltip from 'vj/components/tooltip/Tooltip';
+import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
 
 const MARKER_ID = `marker_${Math.floor(Math.random() * 0xFFFFFF).toString(16)}`;

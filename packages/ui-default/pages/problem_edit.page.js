@@ -1,15 +1,16 @@
+import { size } from '@hydrooj/utils/lib/common';
+import $ from 'jquery';
 import _ from 'lodash';
-import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
-import i18n from 'vj/utils/i18n';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
-import { slideDown, slideUp } from 'vj/utils/slide';
 import download from 'vj/components/zipDownloader';
-import { size } from '@hydrooj/utils/lib/common';
+import { NamedPage } from 'vj/misc/Page';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
+import { slideDown, slideUp } from 'vj/utils/slide';
+import tpl from 'vj/utils/tpl';
 
 const categories = {};
 const dirtyCategories = [];

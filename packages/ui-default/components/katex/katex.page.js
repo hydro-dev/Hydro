@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 
 const katexPage = new AutoloadPage('katexPage', () => {

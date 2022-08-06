@@ -1,11 +1,13 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import './monaco.styl';
+
+import $ from 'jquery';
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import list from 'monaco-themes/themes/themelist.json';
 import { nanoid } from 'nanoid';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
-import './monaco.styl';
 
 export default monaco;
 export const customOptions: monaco.editor.IStandaloneDiffEditorConstructionOptions = JSON.parse(localStorage.getItem('editor.config') || '{}');

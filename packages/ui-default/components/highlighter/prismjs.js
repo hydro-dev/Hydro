@@ -1,11 +1,14 @@
-import Prism from 'prismjs';
-import components from 'prismjs/components';
-import getLoader from 'prismjs/dependencies';
+import Prism from 'prismjs'; // eslint-disable-line
+
 import 'prismjs/plugins/toolbar/prism-toolbar';
 import 'prismjs/plugins/toolbar/prism-toolbar.css';
 import 'prismjs/plugins/line-numbers/prism-line-numbers';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
+
 import Clipboard from 'clipboard';
+import $ from 'jquery';
+import components from 'prismjs/components';
+import getLoader from 'prismjs/dependencies';
 import Notification from 'vj/components/notification/index';
 import i18n from 'vj/utils/i18n';
 import languageMeta from './meta';

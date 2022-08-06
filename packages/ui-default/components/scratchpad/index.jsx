@@ -1,14 +1,15 @@
-import React from 'react';
-import SplitPane from 'react-split-pane';
-import { useDispatch, useSelector } from 'react-redux';
-import _ from 'lodash';
-import SplitPaneFillOverlay from 'vj/components/react-splitpane/SplitPaneFillOverlayComponent';
 import ProblemIcon from '@vscode/codicons/src/icons/file.svg?react';
+import $ from 'jquery';
+import _ from 'lodash';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import SplitPane from 'react-split-pane';
 import Dom from 'vj/components/react/DomComponent';
-import ScratchpadToolbar from './ScratchpadToolbarContainer';
+import SplitPaneFillOverlay from 'vj/components/react-splitpane/SplitPaneFillOverlayComponent';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
+import ScratchpadToolbar from './ScratchpadToolbarContainer';
 
 function buildNestedPane([a, ...panes], mode = 'horizontal') {
   const elements = [

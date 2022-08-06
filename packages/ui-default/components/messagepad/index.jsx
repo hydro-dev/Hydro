@@ -1,12 +1,11 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-
-import request from 'vj/utils/request';
-import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
-import MessagePadDialogueList from './MessagePadDialogueListContainer';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
 import MessagePadDialogueContent from './MessagePadDialogueContentContainer';
+import MessagePadDialogueList from './MessagePadDialogueListContainer';
 import MessagePadInput from './MessagePadInputContainer';
 
 const mapDispatchToProps = (dispatch) => ({

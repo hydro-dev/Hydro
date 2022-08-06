@@ -1,8 +1,8 @@
+import classNames from 'classnames';
 import React from 'react';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
-import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
+import i18n from 'vj/utils/i18n';
 import Panel from './PanelComponent';
 import ScratchpadRecordsRow from './ScratchpadRecordsRowContainer';
 

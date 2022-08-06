@@ -1,6 +1,7 @@
-import queueMicrotask from 'queue-microtask';
-import browserUpdate from 'browser-update';
 import 'matchmedia-polyfill';
+
+import browserUpdate from 'browser-update';
+import queueMicrotask from 'queue-microtask';
 
 window.queueMicrotask = queueMicrotask;
 browserUpdate({

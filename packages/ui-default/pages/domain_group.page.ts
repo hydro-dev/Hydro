@@ -1,14 +1,13 @@
+import $ from 'jquery';
 import _ from 'lodash';
-
-import { NamedPage } from 'vj/misc/Page';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog, ActionDialog } from 'vj/components/dialog';
-
-import tpl from 'vj/utils/tpl';
+import { NamedPage } from 'vj/misc/Page';
+import api, { gql } from 'vj/utils/api';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import api, { gql } from 'vj/utils/api';
+import tpl from 'vj/utils/tpl';
 
 function update(name: string, uids: number[]) {
   return api(gql`

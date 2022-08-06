@@ -1,9 +1,10 @@
-import { AutoloadPage } from 'vj/misc/Page';
+import $ from 'jquery';
+import responsiveCutoff from 'vj/breakpoints.json';
 import DomDialog from 'vj/components/dialog/DomDialog';
 import { InfoDialog } from 'vj/components/dialog/index';
-import responsiveCutoff from 'vj/breakpoints.json';
-import { isBelow } from 'vj/utils/mediaQuery';
+import { AutoloadPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
+import { isBelow } from 'vj/utils/mediaQuery';
 import tpl from 'vj/utils/tpl';
 
 const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {

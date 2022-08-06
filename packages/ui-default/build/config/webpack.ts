@@ -1,25 +1,21 @@
 /* eslint-disable global-require */
 /* eslint-disable import/no-extraneous-dependencies */
-import { dirname } from 'path';
-import webpack from 'webpack';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { ESBuildMinifyPlugin } from 'esbuild-loader';
+import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
-import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { dirname } from 'path';
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
+import webpack from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import WebpackBar from 'webpackbar';
-import mapWebpackUrlPrefix from '../utils/mapWebpackUrlPrefix';
 import root from '../utils/root';
 
-const beautifyOutputUrl = mapWebpackUrlPrefix([
-  { prefix: 'misc/.iconfont', replace: './ui/iconfont' },
-]);
 const smp = new SpeedMeasurePlugin();
 
-export default function (env = {}) {
+export default function (env: { production?: boolean, measure?: boolean } = {}) {
   function esbuildLoader() {
     return {
       loader: 'esbuild-loader',
@@ -41,28 +37,7 @@ export default function (env = {}) {
   function postcssLoader() {
     return {
       loader: 'postcss-loader',
-      options: { sourceMap: env.production, config: { path: root('postcss.config.js') } },
-    };
-  }
-
-  function fileLoader() {
-    return {
-      loader: 'file-loader',
-      options: {
-        name(resourcePath) {
-          if (resourcePath.includes('node_modules')) {
-            const extra = resourcePath.split('node_modules')[1];
-            const moduleName = extra.split('/')[0];
-            if (extra.includes('@fontsource')) {
-              return `fonts/${extra.substr(2).replace(/\\/g, '/')}?[contenthash]`;
-            }
-            if (['katex', 'monaco-editor'].includes(moduleName)) return `modules/${moduleName}/[name].[ext]?[contenthash]`;
-            return `modules/${extra.substr(1).replace(/\\/g, '/')}?[contenthash]`;
-          }
-          if (resourcePath.includes('misc/.iconfont')) return 'modules/icon/[name].[ext]?[contenthash]';
-          return '[path][name].[ext]?[contenthash]';
-        },
-      },
+      options: { postcssOptions: { sourceMap: env.production, config: root('postcss.config.js') } },
     };
   }
 
@@ -76,16 +51,37 @@ export default function (env = {}) {
     };
   }
 
-  const config = {
-    bail: true,
+  function stylusLoader() {
+    return {
+      loader: 'stylus-loader',
+      options: {
+        stylusOptions: {
+          preferPathResolver: 'webpack',
+          use: [require('rupture')()], // eslint-disable-line global-require
+          import: ['~vj/common/common.inc.styl'],
+        },
+      },
+    };
+  }
+
+  const config: import('webpack').Configuration = {
+    // bail: !env.production,
     mode: (env.production || env.measure) ? 'production' : 'development',
-    profile: true,
+    profile: env.measure,
     context: root(),
+    stats: {
+      preset: 'errors-warnings',
+    },
     devtool: env.production ? 'source-map' : false,
     entry: {
       hydro: './entry.js',
       polyfill: './polyfill.ts',
       'default.theme': './theme/default.js',
+    },
+    cache: {
+      type: 'filesystem',
+      cacheDirectory: root('../../.cache'),
+      idleTimeout: 30000,
     },
     output: {
       path: root('public'),
@@ -93,7 +89,7 @@ export default function (env = {}) {
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
-      filename: '[name].js?[hash]',
+      filename: '[name].js?[contenthash]',
       chunkFilename: '[name].[chunkhash].chunk.js',
     },
     resolve: {
@@ -114,32 +110,59 @@ export default function (env = {}) {
               use: { loader: '@svgr/webpack', options: { icon: true } },
             },
             {
-              use: [fileLoader()],
+              type: 'asset/resource',
             },
           ],
         },
         {
           test: /\.(ttf|eot|woff|woff2|png|jpg|jpeg|gif)$/,
-          use: [fileLoader()],
+          type: 'asset/resource',
+          generator: {
+            filename: (pathData) => {
+              const p = pathData.module.resource.replace(/\\/g, '/');
+              const filename = p.split('/').pop();
+              if (p.includes('node_modules')) {
+                const extra = p.split('node_modules')[1];
+                const moduleName = extra.split('/')[0];
+                if (extra.includes('@fontsource')) {
+                  return `fonts/${filename}?[hash]`;
+                }
+                if (['katex', 'monaco-editor'].includes(moduleName)) {
+                  return `modules/${moduleName}/${filename}?[hash]`;
+                }
+                return `modules/${extra.substr(1)}?[hash]`;
+              }
+              if (p.includes('.iconfont')) return `${filename}?[hash]`;
+              return `${p.split('ui-default')[1].substring(1)}?[hash]`;
+            },
+          },
+        },
+        {
+          test: /\.ts$/,
+          include: /@types\//,
+          type: 'asset/inline',
+          generator: {
+            dataUrl: (buf) => buf.toString(),
+          },
         },
         {
           test: /\.[jt]sx?$/,
+          exclude: /@types\//,
           use: [esbuildLoader()],
         },
         {
           test: /\.styl$/,
-          use: [extractCssLoader(), cssLoader(), postcssLoader(), 'stylus-loader'],
+          use: [extractCssLoader(), cssLoader(), postcssLoader(), stylusLoader()],
         },
         {
           test: /\.css$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader()],
         },
-        {
-          test: /\.wasm$/,
-          use: [fileLoader()],
-          type: 'javascript/auto',
-        },
       ],
+    },
+    experiments: {
+      asyncWebAssembly: true,
+      syncWebAssembly: true,
     },
     optimization: {
       splitChunks: {
@@ -149,7 +172,7 @@ export default function (env = {}) {
         automaticNameDelimiter: '-',
         cacheGroups: {
           style: {
-            test: /\.(css|styl|less|sass|scss)$/,
+            test: /\.(css|styl|less|s[ac]ss)$/,
             priority: 99,
             name: 'style',
           },
@@ -199,20 +222,10 @@ export default function (env = {}) {
         monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
-        filename: '[name].css?[hash:10]',
-      }),
-      new webpack.LoaderOptionsPlugin({
-        test: /\.styl$/,
-        stylus: {
-          default: {
-            preferPathResolver: 'webpack',
-            use: [require('rupture')()], // eslint-disable-line global-require
-            import: ['~vj/common/common.inc.styl'],
-          },
-        },
+        filename: '[name].css?[fullhash:10]',
       }),
       new FriendlyErrorsPlugin(),
-      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs)/ }),
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
@@ -221,16 +234,7 @@ export default function (env = {}) {
         ],
       }),
       new webpack.DefinePlugin({
-        'process.env': {
-          NODE_ENV: env.production ? '"production"' : '"debug"',
-          VERSION: JSON.stringify(require('@hydrooj/ui-default/package.json').version),
-        },
-      }),
-      new webpack.LoaderOptionsPlugin({
-        options: {
-          context: root(),
-          customInterpolateName: beautifyOutputUrl,
-        },
+        'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({

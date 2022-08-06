@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import * as bus from './bus';
 
 window.Hydro = {

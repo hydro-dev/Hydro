@@ -1,15 +1,17 @@
+import $ from 'jquery';
 import _ from 'lodash';
-import { NamedPage } from 'vj/misc/Page';
-import Notification from 'vj/components/notification';
 import {
-  ConfirmDialog, ActionDialog, InfoDialog, Dialog,
+  ActionDialog, ConfirmDialog, Dialog,
+  InfoDialog,
 } from 'vj/components/dialog/index';
-import download from 'vj/components/zipDownloader';
 import createHint from 'vj/components/hint';
-import request from 'vj/utils/request';
-import pjax from 'vj/utils/pjax';
-import tpl from 'vj/utils/tpl';
+import Notification from 'vj/components/notification';
+import download from 'vj/components/zipDownloader';
+import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
+import pjax from 'vj/utils/pjax';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 async function downloadProblemFilesAsArchive(type, files) {
   const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });

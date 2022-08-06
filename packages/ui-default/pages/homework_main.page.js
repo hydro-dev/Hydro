@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import { parse as parseMongoId } from 'vj/utils/mongoId';

@@ -1,8 +1,9 @@
-import { NamedPage } from 'vj/misc/Page';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import $ from 'jquery';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
-import tpl from 'vj/utils/tpl';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import { NamedPage } from 'vj/misc/Page';
 import getAvailableLangs from 'vj/utils/availableLangs';
+import tpl from 'vj/utils/tpl';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([

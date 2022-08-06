@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 
 const datepickerPage = new AutoloadPage('datepickerPage', async () => {

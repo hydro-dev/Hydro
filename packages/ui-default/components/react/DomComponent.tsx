@@ -1,5 +1,6 @@
-import React from 'react';
+import $ from 'jquery';
 import { omit } from 'lodash';
+import React from 'react';
 
 const tempDoms = {};
 

@@ -1,4 +1,6 @@
 import 'jquery.easing';
+
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 
 const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {

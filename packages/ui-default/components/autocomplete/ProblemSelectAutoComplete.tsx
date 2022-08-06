@@ -1,6 +1,6 @@
+import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { assign } from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete from '.';
 import ProblemSelectAutoCompleteFC from './components/ProblemSelectAutoComplete';

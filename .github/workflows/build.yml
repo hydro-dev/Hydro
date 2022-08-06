@@ -33,10 +33,12 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           yarn.lock
+          .cache
           **/tsconfig.tsbuildinfo
-        key: yarn-${{ hashFiles('**/package.json') }}
+        key: ${{ GITHUB_REF_NAME }}
         restore-keys: |
-          yarn-
+          master
+          main
     - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml

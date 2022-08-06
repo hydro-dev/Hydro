@@ -1,9 +1,9 @@
 import { Card, NumericInput, Tag } from '@blueprintjs/core';
-import { pick, isEqual } from 'lodash';
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import { SubtaskConfig } from 'hydrooj/src/interface';
-import { parseTimeMS, parseMemoryMB } from '@hydrooj/utils/lib/common';
+import { isEqual, pick } from 'lodash';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 import { FormItem } from './BasicForm';

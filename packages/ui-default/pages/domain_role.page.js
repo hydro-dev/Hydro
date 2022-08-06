@@ -1,13 +1,12 @@
+import $ from 'jquery';
 import _ from 'lodash';
-
-import { NamedPage } from 'vj/misc/Page';
+import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
-import { ConfirmDialog, ActionDialog } from 'vj/components/dialog';
-
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import { NamedPage } from 'vj/misc/Page';
 import delay from 'vj/utils/delay';
 import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 const page = new NamedPage('domain_role', () => {
   const createRoleDialog = new ActionDialog({

@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 import delay from 'vj/utils/delay';
 

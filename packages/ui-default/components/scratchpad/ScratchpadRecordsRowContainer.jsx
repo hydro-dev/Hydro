@@ -1,15 +1,14 @@
-import React from 'react';
 import classNames from 'classnames';
+import _ from 'lodash';
+import moment from 'moment';
+import React from 'react';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
-import moment from 'moment';
-import _ from 'lodash';
-
-import substitute from 'vj/utils/substitute';
-import emulateAnchorClick from 'vj/utils/emulateAnchorClick';
-import { parse as parseMongoId } from 'vj/utils/mongoId';
-import i18n from 'vj/utils/i18n';
 import * as recordEnum from 'vj/constant/record';
+import emulateAnchorClick from 'vj/utils/emulateAnchorClick';
+import i18n from 'vj/utils/i18n';
+import { parse as parseMongoId } from 'vj/utils/mongoId';
+import substitute from 'vj/utils/substitute';
 
 const shouldShowDetail = (data) => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status];
 

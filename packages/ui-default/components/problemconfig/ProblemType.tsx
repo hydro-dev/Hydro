@@ -1,11 +1,11 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import i18n from 'vj/utils/i18n';
 import {
   Card, Switch, Tab, Tabs,
 } from '@blueprintjs/core';
-import type { RootState } from './reducer/index';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import i18n from 'vj/utils/i18n';
 import { FormItem, ManagedSelect, SingleFileSelect } from './BasicForm';
+import type { RootState } from './reducer/index';
 
 export default function ProblemType() {
   const Type = useSelector((state: RootState) => state.config.type);

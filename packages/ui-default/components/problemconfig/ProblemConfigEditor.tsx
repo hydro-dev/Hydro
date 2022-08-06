@@ -1,11 +1,12 @@
-import React from 'react';
-import type { editor } from 'monaco-editor';
-import { connect } from 'react-redux';
-import { load } from 'vj/components/monaco/loader';
-import Editor from 'vj/components/editor';
 import { diffLines } from 'diff';
-import yaml from 'js-yaml';
 import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
+import $ from 'jquery';
+import yaml from 'js-yaml';
+import type { editor } from 'monaco-editor';
+import React from 'react';
+import { connect } from 'react-redux';
+import Editor from 'vj/components/editor';
+import { load } from 'vj/components/monaco/loader';
 
 const mapStateToProps = (state) => ({
   config: state.config,

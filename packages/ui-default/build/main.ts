@@ -19,19 +19,17 @@ async function runWebpack({
 }) {
   const compiler = webpack(webpackConfig({ watch, production, measure }));
   if (dev) {
-    const server = new WebpackDevServer(compiler, {
+    const server = new WebpackDevServer({
+      port: 8000,
       compress: true,
       hot: true,
-      disableHostCheck: true,
-      stats: 'none',
-      index: root('public'),
       proxy: {
-        context: (path) => !path.includes('sockjs-node'),
+        context: (path) => path !== '/ws' && !path.startsWith('/vendors.js'),
         target: 'http://localhost:2333',
         ws: true,
       },
-    });
-    return server.listen(8000);
+    }, compiler);
+    return server.start();
   }
   return new Promise((resolve, reject) => {
     function compilerCallback(err, stats) {
@@ -85,15 +83,10 @@ async function main() {
     if (fs.existsSync('public/polyfill.js')) {
       fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
     }
-    if (fs.existsSync('public/default.theme.css')) {
-      fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
-    }
     if (argv.options.production) {
-      fs.removeSync('public/vditor/dist/js/mathjax');
       fs.removeSync('public/vditor/dist/js/echarts');
       fs.removeSync('public/vditor/dist/js/graphviz');
       fs.removeSync('public/vditor/dist/js/mermaid');
-      fs.removeSync('public/vditor/dist/js/abcjs');
       const files = fs.readdirSync('public');
       files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }

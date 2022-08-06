@@ -1,8 +1,8 @@
-import React, { forwardRef } from 'react';
+import type { ProblemDoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
+import React, { forwardRef } from 'react';
 import api, { gql } from 'vj/utils/api';
 import request from 'vj/utils/request';
-import type { ProblemDoc } from 'hydrooj/src/interface';
 import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
 const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, AutoCompleteProps<ProblemDoc>>((props, ref) => (

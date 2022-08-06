@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'react'],
+  plugins: ['@typescript-eslint', 'react', 'simple-import-sort'],
   env: {
     browser: true,
     es6: true,
@@ -138,5 +138,16 @@ module.exports = {
     'jsx-a11y/anchor-is-valid': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
     'jsx-a11y/label-has-associated-control': 'off',
+
+    'simple-import-sort/imports': [
+      'warn',
+      {
+        groups: [
+          ['^\\u0000'],
+          ['^(?!vj)(@?\\w.+)', '^vj\\/', '^', '^\\.'],
+        ],
+      },
+    ],
+    'simple-import-sort/exports': 'off',
   },
 };

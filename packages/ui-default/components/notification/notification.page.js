@@ -1,5 +1,5 @@
-import { AutoloadPage } from 'vj/misc/Page';
 import Notification from 'vj/components/notification/index';
+import { AutoloadPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 
 export default new AutoloadPage('notificationPage', (pagename) => {

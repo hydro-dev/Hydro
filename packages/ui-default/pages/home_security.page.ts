@@ -1,12 +1,13 @@
-import { NamedPage } from 'vj/misc/Page';
+import $ from 'jquery';
 import QRCode from 'qrcode';
 import b32 from 'thirty-two';
-import Notification from 'vj/components/notification';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
 import { ActionDialog } from 'vj/components/dialog';
+import Notification from 'vj/components/notification';
+import { NamedPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import delay from 'vj/utils/delay';
+import i18n from 'vj/utils/i18n';
+import tpl from 'vj/utils/tpl';
 
 export default new NamedPage('home_security', () => {
   $(document).on('click', '[name="tfa_enable"]', async () => {

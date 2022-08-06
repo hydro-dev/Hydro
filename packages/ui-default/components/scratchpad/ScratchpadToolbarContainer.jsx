@@ -1,16 +1,15 @@
 /* eslint-disable react/static-property-placement */
 import _ from 'lodash';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
 import Icon from 'vj/components/react/IconComponent';
 import getAvailableLangs from 'vj/utils/availableLangs';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
 import Toolbar, {
-  ToolbarItemComponent as ToolbarItem,
   ToolbarButtonComponent as ToolbarButton,
+  ToolbarItemComponent as ToolbarItem,
   ToolbarSplitComponent as ToolbarSplit,
 } from './ToolbarComponent';
 

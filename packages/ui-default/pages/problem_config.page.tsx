@@ -1,17 +1,18 @@
-import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { normalizeSubtasks, readSubtasksFromFiles, size } from '@hydrooj/utils/lib/common';
+import { SubtaskType } from 'hydrooj/src/interface';
+import $ from 'jquery';
+import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import loadReactRedux from 'vj/utils/loadReactRedux';
-import i18n from 'vj/utils/i18n';
-import yaml from 'js-yaml';
-import Notification from 'vj/components/notification';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
-import download from 'vj/components/zipDownloader';
-import { size, readSubtasksFromFiles, normalizeSubtasks } from '@hydrooj/utils/lib/common';
-import tpl from 'vj/utils/tpl';
-import { SubtaskType } from 'hydrooj/src/interface';
+import Notification from 'vj/components/notification';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
+import download from 'vj/components/zipDownloader';
+import { NamedPage } from 'vj/misc/Page';
+import i18n from 'vj/utils/i18n';
+import loadReactRedux from 'vj/utils/loadReactRedux';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 function onBeforeUnload(e) {
   e.returnValue = '';

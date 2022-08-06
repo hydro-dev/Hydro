@@ -1,6 +1,7 @@
+import $ from 'jquery';
+import { renderLanguageSelect } from 'vj/components/languageselect';
 import { NamedPage } from 'vj/misc/Page';
 import getAvailableLangs from 'vj/utils/availableLangs';
-import { renderLanguageSelect } from 'vj/components/languageselect';
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
   const { config } = UiContext.pdoc;

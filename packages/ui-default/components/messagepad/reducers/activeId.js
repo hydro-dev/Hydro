@@ -1,5 +1,7 @@
 import 'jquery.easing';
 
+import $ from 'jquery';
+
 function scrollToViewport() {
   const BOUND_TOP = 60;
   const BOUND_BOTTOM = 20;

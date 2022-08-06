@@ -1,4 +1,5 @@
-import { Position, Toaster, Intent } from '@blueprintjs/core';
+import { Intent, Position, Toaster } from '@blueprintjs/core';
+import $ from 'jquery';
 import tpl from 'vj/utils/tpl';
 import zIndexManager from 'vj/utils/zIndexManager';
 

@@ -1,15 +1,16 @@
-import yaml from 'js-yaml';
-import { createRoot } from 'react-dom/client';
-import React from 'react';
 import { getScoreColor } from '@hydrooj/utils/lib/status';
-import { NamedPage } from 'vj/misc/Page';
+import $ from 'jquery';
+import yaml from 'js-yaml';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
-import loadReactRedux from 'vj/utils/loadReactRedux';
+import { NamedPage } from 'vj/misc/Page';
 import delay from 'vj/utils/delay';
+import i18n from 'vj/utils/i18n';
+import loadReactRedux from 'vj/utils/loadReactRedux';
 import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
-import i18n from 'vj/utils/i18n';
 
 class ProblemPageExtender {
   constructor() {
