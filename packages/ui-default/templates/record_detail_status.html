@@ -50,7 +50,7 @@
               <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
             </td>
             <td class="col--time"><span class="icon icon-stopwatch"></span>{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
-            <td class="col--memory"><span class="icon icon-stopwatch"></span>{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
+            <td class="col--memory"><span class="icon icon-comparison"></span>{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
           </tr>
         {%- endfor -%}
       {%- endfor -%}
