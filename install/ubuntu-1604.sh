@@ -2,7 +2,7 @@
 name=xenial
 echo "Running Hydro Installer for ubuntu 16.04"
 echo "此脚本已不再维护，推荐使用新版安装工具："
-echo "wget https://s3.undefined.moe/public/install -O install && chmod +x install && ./install"
+echo "LANG=zh bash <(curl https://hydro.ac/install.sh)"
 echo "详情请参阅文档 -> https://hydro.js.org"
 echo "使用 Ctrl-C 退出该脚本，或是等待十秒后继续。"
 echo "Will continue installation in 10 secs, press Ctrl-C to exit"
