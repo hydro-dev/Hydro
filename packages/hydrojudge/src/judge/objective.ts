@@ -39,9 +39,9 @@ export async function judge({
             memory: 0,
         };
         if (typeof answers[key] === 'string') {
-            const correct = (typeof ansInfo[0] === 'string'
-                ? [ansInfo[0]] : (ansInfo[0] || [])).map((i) => i.trim() === (answers[key] as any)?.trim());
-            if (new Set(correct).has(true)) {
+            const stdAns = typeof ansInfo[0] === 'string' ? [ansInfo[0]] : (ansInfo[0] || []);
+            const checker = (ans) => ans.trim() === (answers[key] as any)?.trim();
+            if (stdAns.some(checker)) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
