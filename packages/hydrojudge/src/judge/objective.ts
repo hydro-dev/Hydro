@@ -38,33 +38,9 @@ export async function judge({
             time: 0,
             memory: 0,
         };
-        if (typeof ansInfo[0] === 'string') {
-            if (ansInfo[0]?.trim() === (answers[key] as any)?.trim()) {
-                totalScore += score;
-                totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_ACCEPTED,
-                        score,
-                        message: 'Correct',
-                    },
-                });
-            } else {
-                totalStatus = STATUS.STATUS_WRONG_ANSWER;
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_WRONG_ANSWER,
-                        score: 0,
-                        message: 'Incorrect',
-                    },
-                });
-            }
-        } else if (typeof answers[key] === 'string') {
-            const correct = (ansInfo[0] || []).map((i) => i.trim() === (answers[key] as any)?.trim());
+        if (typeof answers[key] === 'string') {
+            const correct = (typeof ansInfo[0] === 'string'
+                ? [ansInfo[0]] : (ansInfo[0] || [])).map((i) => i.trim() === (answers[key] as any)?.trim());
             if (new Set(correct).has(true)) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
