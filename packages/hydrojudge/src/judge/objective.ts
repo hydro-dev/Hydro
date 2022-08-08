@@ -38,8 +38,9 @@ export async function judge({
             time: 0,
             memory: 0,
         };
-        if (typeof ansInfo[0] === 'string') {
-            if (ansInfo[0]?.trim() === (answers[key] as any)?.trim()) {
+        if (typeof answers[key] === 'string') {
+            const stdAns = typeof ansInfo[0] === 'string' ? [ansInfo[0]] : ansInfo[0];
+            if (stdAns.some((ans) => ans.trim() === (answers[key] as any)?.trim())) {
                 totalScore += score;
                 totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
                 next({
