@@ -1,17 +1,27 @@
 { pkgs ? import <nixpkgs> { system = "x86_64-linux"; } }:
 
 let
-  mongo = pkgs.callPackage ./mongo.nix {};
+  hydro = import (pkgs.fetchFromGitHub {
+    owner = "hydro-dev";
+    repo = "nix-channel";
+    rev = "master";
+    sha256 = "sha256-EqPU9n4H3EteJqFFv6Seeo9DZxFc3Mdu8Y1y/fjZJ80=";
+  }) {};
 in pkgs.dockerTools.buildImage {
   name = "hydrooj/web-base";
   tag = "latest";
 
-  contents = [
-    mongo
-    pkgs.minio
-    pkgs.nodejs
-    pkgs.yarn
-  ];
+  copyToRoot = pkgs.buildEnv {
+    name = "hydro-web";
+    paths = [
+      hydro.mongodb4
+      pkgs.minio
+      pkgs.nodejs
+      pkgs.yarn
+    ];
+    ignoreCollisions = true;
+    pathsToLink = [ "/bin" ];
+  };
 
   config = {
     WorkingDir = "/data";

@@ -55,6 +55,11 @@ const locales = {
         'info.skip': 'Step skipped.',
     },
 };
+let locale = __env.LANG?.includes('zh') ? 'zh' : 'en';
+if (__env.TERM === 'linux') locale = 'en';
+log.info = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.info);
+log.warn = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.warn);
+log.fatal = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.fatal);
 
 if (__user !== 'root') log.fatal('error.rootRequired');
 if (__arch !== 'amd64') log.fatal('error.unsupportedArch', __arch);
@@ -69,8 +74,7 @@ for (const line of lines) {
     if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
-if (!['ubuntu', 'arch', 'debian'].includes(values.id)) log.fatal('error.unsupportedOS', values.id);
-const Arch = values.id === 'arch';
+const apt = ['ubuntu', 'debian'].includes(values.id);
 const cpuInfoFile = fs.readfile('/proc/cpuinfo');
 let mongodbVersion = __env.MONGODB_VERSION || '5.0';
 if (!cpuInfoFile.includes('avx2')) {
@@ -111,12 +115,6 @@ function getMirror(target) {
     res.push(...Object.keys(mirrors[target]).map((i) => mirrors[target][i]));
     return res[retry % res.length];
 }
-let locale = __env.LANG?.includes('zh') ? 'zh' : 'en';
-if (__env.TERM === 'linux') locale = 'en';
-log.info = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.info);
-log.warn = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.warn);
-log.fatal = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...args) && 0)(log.fatal);
-
 log.info('install.start');
 const MINIO_ACCESS_KEY = randomstring(32);
 const MINIO_SECRET_KEY = randomstring(32);
@@ -131,13 +129,11 @@ export NVM_DIR="$HOME/.nvm"
 const steps = [
     {
         init: 'install.preparing',
-        operations: [
+        operations: apt ? [
             () => log.info('info.mirror', preferredMirror),
             'mkdir -p /data/db /data/file ~/.hydro',
-            Arch ? 'pacman --needed --quiet --noconfirm -Sy' : 'apt-get -qq update',
-            Arch
-                ? 'pacman --needed --quiet --noconfirm -S gnupg curl qrencode'
-                : 'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
+            'apt-get -qq update',
+            'apt-get install -qy unzip zip curl wget gnupg qrencode ca-certificates',
             () => {
                 if (locale === 'zh') {
                     log.info('扫码加入QQ群：');
@@ -159,35 +155,37 @@ const steps = [
                     if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
                 }
             },
+        ] : [
+            'mkdir -p /data/db /data/file ~/.hydro',
+            'bash -c "bash <(curl https://hydro.ac/nix.sh)"',
+            () => {
+                setenv('PATH', `/root/.nix-profile/bin:${__env.PATH}`);
+            },
+            'nix-env -iA nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
         ],
     },
     {
         init: 'install.mongodb',
-        skip: () => fs.exist('/usr/bin/mongo'),
-        operations: Arch
-            ? [
-                ['curl -fSLO https://s3.undefined.moe/hydro/arch/libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst', { retry: true }],
-                ['curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst', { retry: true }],
-                ['curl -fSLO https://s3.undefined.moe/hydro/arch/mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst', { retry: true }],
-                'pacman --noconfirm -U libcurl-openssl-1.0-7.76.0-1-x86_64.pkg.tar.zst'
-                + 'mongodb-bin-4.4.5-1-x86_64.pkg.tar.zst mongodb-tools-bin-100.3.1-1-x86_64.pkg.tar.zst',
-            ]
-            : [
-                // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
-                ['apt-get upgrade openssl ca-certificates -y', { retry: true }],
-                [`wget -qO - https://www.mongodb.org/static/pgp/server-${mongodbVersion}.asc | apt-key add -`, { retry: true }],
-                [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
+        skip: () => !exec('mongod --version').code,
+        operations: apt ? [
+            // https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
+            ['apt-get upgrade openssl ca-certificates -y', { retry: true }],
+            [`wget -qO - https://www.mongodb.org/static/pgp/server-${mongodbVersion}.asc | apt-key add -`, { retry: true }],
+            [`echo "deb ${getMirror('mongodb')} ${values.ubuntu_codename}\
 /mongodb-org/${mongodbVersion} multiverse" >/etc/apt/sources.list.d/mongodb-org-${mongodbVersion}.list && \
 apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
-            ],
+        ] : [
+            `nix-env -iA hydro.mongodb${mongodbVersion.split('.')[0]} hydro.mongosh${mongodbVersion.split('.')[0]}`,
+        ],
     },
     {
         init: 'install.nvm',
         skip: () => {
+            if (!apt) return true;
             const nvm = fs.exist('/root/.nvm');
             const node = !exec('node -v').code;
             if (node && !nvm) log.warn('error.nodeWithoutNVMDetected');
-            return nvm;
+            return nvm || node;
         },
         operations: [
             () => {
@@ -202,7 +200,8 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     },
     {
         init: 'install.nodejs',
-        operations: [
+        skip: () => !exec('node -v').code && !exec('yarn -v').code,
+        operations: apt ? [
             () => {
                 const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', {
                     NVM_NODEJS_ORG_MIRROR: getMirror('node'),
@@ -224,12 +223,55 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                 }
             },
             ['npm i yarn -g', { retry: true }],
+        ] : [
+            'nix-env -iA nixpkgs.nodejs nixpkgs.yarn',
         ],
     },
     {
         init: 'install.pm2',
-        skip: () => fs.exist('/usr/local/bin/pm2'),
+        skip: () => !exec('pm2 -v').code,
         operations: ['yarn global add pm2'],
+    },
+    {
+        init: 'install.minio',
+        skip: () => !exec('minio -v').code,
+        operations: apt ? [
+            [`curl -fSL ${getMirror('minio')} -o /usr/bin/minio`, { retry: true }],
+            'chmod +x /usr/bin/minio',
+        ] : [
+            'nix-env -iA nixpkgs.minio',
+        ],
+    },
+    {
+        init: 'install.compiler',
+        operations: apt ? [
+            'apt-get install -y g++ fp-compiler >/dev/null',
+        ] : [
+            'nix-env -iA nixpkgs.gcc nixpkgs.fpc',
+        ],
+    },
+    {
+        init: 'install.sandbox',
+        operations: apt ? [
+            [`curl -fSL ${getMirror('sandbox')} -o /usr/bin/hydro-sandbox`, { retry: true }],
+            'chmod +x /usr/bin/hydro-sandbox',
+        ] : [
+            'nix-env -iA hydro.sandbox',
+        ],
+    },
+    {
+        init: 'install.hydro',
+        operations: [
+            ...(dev
+                ? [
+                    ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
+                    ['cd /root/Hydro && yarn', { retry: true }],
+                    'cd /root/Hydro && yarn build:ui',
+                    ['yarn global add npx', { retry: true }],
+                ]
+                : [['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]]),
+            () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
+        ],
     },
     {
         init: 'install.createDatabaseUser',
@@ -253,41 +295,6 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
             })),
             'pm2 stop mongod',
             'pm2 del mongod',
-        ],
-    },
-    {
-        init: 'install.minio',
-        skip: () => __env.SKIP_MINIO || fs.exist('/root/.hydro/env'),
-        operations: [
-            [`curl -fSL ${getMirror('minio')} -o /usr/bin/minio`, { retry: true }],
-            'chmod +x /usr/bin/minio',
-        ],
-    },
-    {
-        init: 'install.compiler',
-        operations: [
-            Arch ? 'pacman --needed --quiet --noconfirm -S gcc fpc' : 'apt-get install -y g++ fp-compiler >/dev/null',
-        ],
-    },
-    {
-        init: 'install.sandbox',
-        operations: [
-            [`curl -fSL ${getMirror('sandbox')} -o /usr/bin/hydro-sandbox`, { retry: true }],
-            'chmod +x /usr/bin/hydro-sandbox',
-        ],
-    },
-    {
-        init: 'install.hydro',
-        operations: [
-            ...(dev
-                ? [
-                    ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
-                    ['cd /root/Hydro && yarn', { retry: true }],
-                    'cd /root/Hydro && yarn build:ui',
-                    ['yarn global add npx', { retry: true }],
-                ]
-                : [['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]]),
-            () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
     },
     {
