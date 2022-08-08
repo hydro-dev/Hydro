@@ -63,7 +63,7 @@ log.fatal = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...ar
 
 if (__user !== 'root') log.fatal('error.rootRequired');
 if (__arch !== 'amd64') log.fatal('error.unsupportedArch', __arch);
-const dev = !!cli.get('dev');
+if (!__env.HOME) log.fatal('$HOME not found');
 if (!fs.exist('/etc/os-release')) log.fatal('error.osreleaseNotFound');
 const osinfoFile = fs.readfile('/etc/os-release');
 const lines = osinfoFile.split('\n');
@@ -159,7 +159,7 @@ const steps = [
             'mkdir -p /data/db /data/file ~/.hydro',
             'bash -c "bash <(curl https://hydro.ac/nix.sh)"',
             () => {
-                setenv('PATH', `/root/.nix-profile/bin:${__env.PATH}`);
+                setenv('PATH', `${__env.HOME}/.nix-profile/bin:${__env.PATH}`);
             },
             'nix-env -iA nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
         ],
@@ -182,7 +182,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         init: 'install.nvm',
         skip: () => {
             if (!apt) return true;
-            const nvm = fs.exist('/root/.nvm');
+            const nvm = !exec('nvm -v').code;
             const node = !exec('node -v').code;
             if (node && !nvm) log.warn('error.nodeWithoutNVMDetected');
             return nvm || node;
@@ -203,7 +203,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         skip: () => !exec('node -v').code && !exec('yarn -v').code,
         operations: apt ? [
             () => {
-                const res = exec1('bash -c "source /root/.nvm/nvm.sh && nvm install 14"', {
+                const res = exec1(`bash -c "source ${__env.HOME}/.nvm/nvm.sh && nvm install 14"`, {
                     NVM_NODEJS_ORG_MIRROR: getMirror('node'),
                 });
                 let ver;
@@ -213,9 +213,9 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
                     log.error('error.nodeVersionParseFail');
                     return 'retry';
                 }
-                setenv('PATH', `/root/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
+                setenv('PATH', `${__env.HOME}/.nvm/versions/node/v${ver}/bin:${__env.PATH}`);
                 const shell = __env.SHELL ? __env.SHELL.split('/') : ['bash'];
-                const rc = `/root/.${shell[shell.length - 1]}rc`;
+                const rc = `${__env.HOME}/.${shell[shell.length - 1]}rc`;
                 if (!fs.exist(rc)) fs.writefile(rc, source_nvm);
                 else {
                     const file = fs.readfile(rc);
@@ -262,20 +262,13 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
     {
         init: 'install.hydro',
         operations: [
-            ...(dev
-                ? [
-                    ['rm -rf /root/Hydro && git clone https://github.com/hydro-dev/Hydro.git /root/Hydro', { retry: true }],
-                    ['cd /root/Hydro && yarn', { retry: true }],
-                    'cd /root/Hydro && yarn build:ui',
-                    ['yarn global add npx', { retry: true }],
-                ]
-                : [['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]]),
-            () => fs.writefile('/root/.hydro/addon.json', '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
+            ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }],
+            () => fs.writefile(`${__env.HOME}/.hydro/addon.json`, '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
     },
     {
         init: 'install.createDatabaseUser',
-        skip: () => fs.exist('/root/.hydro/config.json'),
+        skip: () => fs.exist(`${__env.HOME}/.hydro/config.json`),
         operations: [
             'pm2 start mongod',
             () => sleep(5000),
@@ -286,7 +279,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
               roles: [{ role: 'readWrite', db: 'hydro' }]
             })`),
             'mongo 127.0.0.1:27017/hydro /tmp/createUser.js',
-            () => fs.writefile('/root/.hydro/config.json', JSON.stringify({
+            () => fs.writefile(`${__env.HOME}/.hydro/config.json`, JSON.stringify({
                 host: '127.0.0.1',
                 port: 27017,
                 name: 'hydro',
@@ -337,7 +330,7 @@ apt-get -qq update && apt-get -q install -y mongodb-org`, { retry: true }],
         init: 'install.done',
         operations: [
             () => {
-                DATABASE_PASSWORD = loadconfig('/root/.hydro/config.json').password;
+                DATABASE_PASSWORD = loadconfig(`${__env.HOME}/.hydro/config.json`).password;
             },
             () => log.info('extra.restartTerm'),
             () => log.info('extra.dbUser'),
