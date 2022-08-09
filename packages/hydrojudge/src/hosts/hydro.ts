@@ -141,7 +141,7 @@ class JudgeTask {
         log.debug('Next: %d %o', data);
         data.key = 'next';
         data.rid = new ObjectID(this.rid);
-        if (data.case) data.case.message = removeNixPath(data.case.message || '');
+        if (data.case) data.case.message ||= '';
         if (typeof data.message === 'string') data.message = removeNixPath(data.message);
         if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
         this.ws.send(JSON.stringify(data));
