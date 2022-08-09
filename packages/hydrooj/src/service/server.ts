@@ -246,6 +246,7 @@ export class Handler extends HandlerCommon {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
             this.response.body = {
+                UserFacingError,
                 error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
             };
         }

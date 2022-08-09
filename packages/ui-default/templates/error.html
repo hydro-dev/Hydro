@@ -12,7 +12,11 @@
     <p>{{ _('Arguments') }}:
       <ol>
       {%- for param in error.params -%}
-        <li>{{ param }}</li>
+        {% if instanceof(param, UserFacingError) %}
+          <li>{{ _(param.message).formatFromArray(param.params)}}</li>
+        {% else %}
+          <li>{{ param }}</li>
+        {% endif %}
       {%- endfor -%}
       </ol>
     </p>
