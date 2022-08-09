@@ -33,7 +33,7 @@
         "@types/autocannon": "^7.6.1",
         "@types/cross-spawn": "^6.0.2",
         "@types/mocha": "^9.1.1",
-        "@types/node": "^18.6.4",
+        "@types/node": "^18.6.5",
         "@types/semver": "^7.3.10",
         "@types/supertest": "^2.0.12",
         "@typescript-eslint/eslint-plugin": "^5.29.0",
