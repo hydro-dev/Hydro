@@ -791,6 +791,10 @@ const scripts: UpgradeScript[] = [
         );
         return true;
     },
+    async function _64_65() {
+        await system.set('server.center', 'https://hydro.ac/center');
+        return true;
+    },
 ];
 
 export default scripts;

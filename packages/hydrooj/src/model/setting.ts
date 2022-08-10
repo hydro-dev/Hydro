@@ -198,7 +198,7 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.from', null, 'text', 'smtp.from', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', false, 'boolean', 'smtp.secure', 'SSL'),
     Setting('setting_smtp', 'smtp.verify', true, 'boolean', 'smtp.verify', 'Verify register email'),
-    Setting('setting_server', 'server.center', 'https://hydro.undefined.moe:8443/center', 'text', 'server.center', '', FLAG_HIDDEN),
+    Setting('setting_server', 'server.center', 'https://hydro.ac/center', 'text', 'server.center', '', FLAG_HIDDEN),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
     Setting('setting_server', 'server.displayName', 'Hydro', 'text', 'server.name', 'Server Name (Global Display)', FLAG_PRO),
     Setting('setting_server', 'server.url', '/', 'text', 'server.url', 'Server BaseURL'),
