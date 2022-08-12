@@ -97,10 +97,12 @@ export default function ScratchpadContainer() {
       </div>
       <SplitPane
         defaultSize={ui.main.size}
-        minSize={250}
+        size={ui.main.size}
+        minSize={ui.activePage !== null ? 250 : 0}
         split="vertical"
-        primary="second"
+        primary="first"
         onChange={(size) => handleChangeSize('main', size)}
+        allowResize={ui.activePage !== null}
       >
         <div className="scratchpad__problem">
           {Object.keys(pages).map((key) => {

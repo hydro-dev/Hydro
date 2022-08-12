@@ -4,6 +4,7 @@ import i18n from 'vj/utils/i18n';
 export default function reducer(state = {
   main: {
     size: '50%',
+    savedSize: '50%',
   },
   pretest: {
     visible: ['default', 'fileio'].includes(UiContext.pdoc.config?.type)
@@ -120,9 +121,22 @@ export default function reducer(state = {
       };
     }
     case 'SCRATCHPAD_SWITCH_TO_PAGE': {
+      let newPage = action.payload;
+      let { size } = state.main;
+      if (newPage === state.activePage) {
+        newPage = null;
+        (size as any) = 0;
+      } else if (state.activePage === null) {
+        size = state.main.savedSize;
+      }
       return {
         ...state,
-        activePage: action.payload,
+        main: {
+          ...state.main,
+          size,
+          savedSize: state.main.size,
+        },
+        activePage: newPage,
       };
     }
     default:
