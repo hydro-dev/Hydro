@@ -31,7 +31,7 @@ export async function judge({
     for (const key in config.answers) {
         const [subtaskId, caseId] = key.split('-').map(Number);
         const ansInfo = config.answers[key] as [string | string[], number];
-        const score = ansInfo[1];
+        const score = (+ansInfo[1]) || 0;
         const baseInfo = {
             subtaskId,
             id: caseId,
