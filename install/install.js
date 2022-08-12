@@ -140,7 +140,9 @@ To disable this feature, checkout our sourcecode.`);
             () => {
                 setenv('PATH', `${__env.HOME}/.nix-profile/bin:${__env.PATH}`);
             },
-            'nix-env -iA nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.qrencode',
+            'nix-env -iA nixpkgs.busybox',
+            'nix-env --set-flag priority 5 busybox',
+            'nix-env -iA nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.qrencode',
             () => {
                 return; // Not implemented yet
                 if (fs.exist('/home/judge/src')) {
