@@ -141,7 +141,7 @@ To disable this feature, checkout our sourcecode.`);
                 setenv('PATH', `${__env.HOME}/.nix-profile/bin:${__env.PATH}`);
             },
             'nix-env -iA nixpkgs.busybox',
-            'nix-env --set-flag priority 5 busybox',
+            'nix-env --set-flag priority 3 busybox',
             'nix-env -iA nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.qrencode',
             () => {
                 return; // Not implemented yet
@@ -238,7 +238,7 @@ To disable this feature, checkout our sourcecode.`);
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
             'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
             () => sleep(1000),
-            `pm2 start hydro-sandbox -- -mount-conf ${__env.HOME}/.hydro/mount.yaml`,
+            `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${__env.HOME}/.hydro/mount.yaml"`,
             'pm2 start hydrooj',
             'pm2 startup',
             'pm2 save',
