@@ -96,7 +96,6 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       chunkFilename: '[name].[chunkhash].chunk.js',
     },
     resolve: {
-      modules: [root('node_modules'), root('../../node_modules')],
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       alias: {
         vj: root(),
