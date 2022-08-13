@@ -86,6 +86,8 @@ log.info('install.start');
 const MINIO_ACCESS_KEY = randomstring(32);
 const MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
+// TODO read from args
+const CN = true;
 
 const nixBin = `${__env.HOME}/.nix-profile/bin`;
 const mount = `\
@@ -162,7 +164,14 @@ To disable this feature, checkout our sourcecode.`);
         init: 'install.mongodb',
         skip: () => !exec('mongod --version').code,
         operations: [
-            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4} hydro.mongosh${avx2 ? 5 : 4}`,
+            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
+        ],
+    },
+    {
+        init: 'install.mongo',
+        skip: () => !exec('mongo --version').code,
+        operations: [
+            `nix-env -iA hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
         ],
     },
     {
@@ -231,6 +240,7 @@ To disable this feature, checkout our sourcecode.`);
     {
         init: 'install.starting',
         operations: [
+            'pm2 stop all',
             () => fs.writefile(`${__env.HOME}/.hydro/mount.yaml`, mount),
             `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
