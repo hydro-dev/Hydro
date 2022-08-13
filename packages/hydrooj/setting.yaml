@@ -12,6 +12,7 @@ homepage:
     - width: 3
       hitokoto: true
       starred_problems: 50
+      recent_problems: 10
       problem_search: true
       discussion_nodes: true
       suggestion: true
