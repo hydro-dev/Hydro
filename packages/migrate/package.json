@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
+        "mariadb": "^3.0.0",
         "mongodb": "^3.7.3",
         "mysql": "^2.18.1",
         "turndown": "^7.1.1"
