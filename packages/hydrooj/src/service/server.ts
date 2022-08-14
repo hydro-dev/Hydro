@@ -66,7 +66,7 @@ interface HydroContext {
     args: Record<string, any>;
     UiContext: Record<string, any>;
 }
-export interface KoaContext extends Koa.DefaultContext {
+export interface KoaContext extends Koa.Context {
     HydroContext: HydroContext;
     handler: any;
     session: Record<string, any>;
