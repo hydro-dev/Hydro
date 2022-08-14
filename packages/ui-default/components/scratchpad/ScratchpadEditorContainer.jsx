@@ -56,10 +56,10 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
     const {
       value, language, mainSize, recordSize, pretestSize,
     } = this.props;
-    const { editor, model } = this;
     const { monaco } = await load([language]);
+    const { editor, model } = this;
     const { LF } = monaco.editor.EndOfLinePreference;
-    if (this.props.value != null && this.props.value !== model.getValue(LF, false)) {
+    if (model && editor && this.props.value != null && this.props.value !== model.getValue(LF, false)) {
       this.__prevent_trigger_change_event = true;
       editor.pushUndoStop();
       model.pushEditOperations(
@@ -74,7 +74,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;
     }
-    if (prevProps.language !== language) {
+    if (model && editor && prevProps.language !== language) {
       const val = model.getValue(LF, false);
       model.dispose();
       const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
