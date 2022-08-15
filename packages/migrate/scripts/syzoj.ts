@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import mariadb from 'mariadb';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
@@ -200,7 +201,9 @@ export async function run({
         `publicize_time` datetime NULL DEFAULT NULL, 公开时间
         `type` enum('traditional','submit-answer','interaction') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'traditional',
     */
+    const fileReg = /\[.*\]\((\/problem\/(\d+)\/testdata\/download\/(.*))\)/gm;
     const pidMap: Record<string, number> = {};
+    const problemAdditionalFile = {};
     const [[{ 'count(*)': pcount }]] = await query('SELECT count(*) FROM `problem`');
     const step = 50;
     const pageCount = Math.ceil(pcount / step);
@@ -212,15 +215,22 @@ export async function run({
                 if (opdoc) pidMap[pdoc.problem_id] = opdoc.docId;
             }
             if (!pidMap[pdoc.problem_id]) {
+                let content = buildContent({
+                    description: pdoc.description,
+                    input: pdoc.input_format,
+                    output: pdoc.output_format,
+                    samples: pdoc.example,
+                    hint: pdoc.limit_and_hint,
+                });
+                for (const match of content.matchAll(fileReg)) {
+                    const [,origialPath, pid, filename] = match;
+                    if (!problemAdditionalFile[pid]) problemAdditionalFile[pid] = [{ fromPid: pid, filename }];
+                    else problemAdditionalFile[`P${pdoc.problem_id}`].push({ fromPid: pid, filename });
+                    content = content.replace(origialPath, `file://${filename}`);
+                }
                 const pid = await problem.add(
                     domainId, `P${pdoc.problem_id}`,
-                    pdoc.title, buildContent({
-                        description: pdoc.description,
-                        input: pdoc.input_format,
-                        output: pdoc.output_format,
-                        samples: pdoc.example,
-                        hint: pdoc.limit_and_hint,
-                    }), uidMap[pdoc.user_id] || 1);
+                    pdoc.title, content, uidMap[pdoc.user_id] || 1);
                 pidMap[pdoc.problem_id] = pid;
             }
             await problem.edit(domainId, pidMap[pdoc.problem_id], {
@@ -272,7 +282,7 @@ export async function run({
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
         const tid = await contest.add(
-            domainId, tdoc.title, `${tdoc.subtitle}\n${tdoc.information}` || 'Description',
+            domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
             admin, contentTypeMap[tdoc.type], moment(tdoc.start_time).toDate(), moment(tdoc.end_time).toDate(), pids, ratedTids.includes(tdoc.id),
         );
         tidMap[tdoc.id] = tid.toHexString();
@@ -421,11 +431,65 @@ export async function run({
         const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
+        let needTransferConfig = false;
         for (const data of datas) {
             if (data.isDirectory()) continue;
             await problem.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/${file.name}/${data.name}`);
+            if (data.name === 'data.yml') needTransferConfig = true;
+            if (data.name.startsWith('spj_')) {
+                report({ message: `Syncing spj for ${file.name}` });
+                await problem.addTestdata(domainId, pdoc.docId,
+                    `spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`, `${dataDir}/${file.name}/${data.name}`);
+                pdoc.config += `\nchecker_type: syzoj\nchecker: spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`;
+            }
         }
-        await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
+        if (!needTransferConfig) await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
+        else {
+            report({ message: `Transfering data.yml for ${file.name}` });
+            const config = yaml.load(pdoc.config as string) as any;
+            const syzojConfig = yaml.load(fs.readFileSync(`${dataDir}/${file.name}/data.yml`, 'utf8').toString()) as any;
+            if (syzojConfig.specialJudge) {
+                report({ message: `Syncing spj config for ${file.name}` });
+                config.checker_type = 'syzoj';
+                await problem.addTestdata(domainId, pdoc.docId,
+                    `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/${file.name}/${syzojConfig.specialJudge.fileName}`);
+                config.checker = `spj.${langMap[syzojConfig.specialJudge.language]}`;
+            }
+            if (syzojConfig.subtasks) {
+                config.subtasks = syzojConfig.subtasks.map((subtask, index) => ({
+                    score: subtask.score,
+                    id: index + 1,
+                    type: subtask.type,
+                    cases: subtask.cases.map((caseItem) => ({
+                        input: syzojConfig.inputFile.replace('#', caseItem),
+                        output: syzojConfig.outputFile.replace('#', caseItem),
+                    })),
+                }));
+            }
+            if (syzojConfig.extraSourceFiles?.length === 1) {
+                for (const extraSourceFiles of syzojConfig.extraSourceFiles[0].files) {
+                    await problem.addTestdata(domainId, pdoc.docId, extraSourceFiles.dest, `${dataDir}/${file.name}/${extraSourceFiles.name}`);
+                }
+                config.extra_source_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
+            } else if (syzojConfig.extraSourceFiles?.length > 1) {
+                report({ message: `Multiple extra source files are not supported for ${file.name}` });
+            }
+            if (config.type === 'submit_answer') config.filename = syzojConfig.outputFile;
+            if (syzojConfig.interactor) {
+                report({ message: `Syncing interactor config for ${file.name}` });
+                config.type = 'interactive';
+                await problem.addTestdata(domainId, pdoc.docId,
+                    `spj.${langMap[syzojConfig.interactor.language]}`, `${dataDir}/${file.name}/${syzojConfig.interactor.fileName}`);
+                config.interactor = `spj.${langMap[syzojConfig.interactor.language]}`;
+            }
+            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(pdoc.config)));
+        }
+        if (problemAdditionalFile[`P${file.name}`]) {
+            report({ message: `Syncing additional_file for ${file.name}` });
+            for (const data of problemAdditionalFile[`P${file.name}`]) {
+                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename, `${dataDir}/${data.fromPid}/${data.filename}`);
+            }
+        }
     }
     return true;
 }
@@ -439,4 +503,4 @@ addScript('migrateSyzoj', 'migrate from syzoj')
         password: Schema.string().required(),
         domainId: Schema.string().required(),
         dataDir: Schema.string().required(),
-    }));
+    })).action(run);

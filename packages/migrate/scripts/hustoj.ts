@@ -321,4 +321,4 @@ addScript('migrateHustoj', 'mirate from hustoj')
         domainId: Schema.string().required(),
         contestType: Schema.string().required(),
         dataDir: Schema.string().required(),
-    }));
+    })).action(run);

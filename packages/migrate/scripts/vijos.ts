@@ -514,4 +514,4 @@ addScript('migrateVijos', 'mirate from vijos')
         name: Schema.string().required(),
         username: Schema.string().required(),
         password: Schema.string().required(),
-    }));
+    })).action(run);
