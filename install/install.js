@@ -240,7 +240,7 @@ To disable this feature, checkout our sourcecode.`);
     {
         init: 'install.starting',
         operations: [
-            'pm2 stop all',
+            ['pm2 stop all', { ignore: true }],
             () => fs.writefile(`${__env.HOME}/.hydro/mount.yaml`, mount),
             `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
             `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
@@ -300,7 +300,7 @@ for (let i = 0; i < steps.length; i++) {
             if (typeof op[0] === 'string') {
                 retry = 0;
                 exec(op[0], op[1]);
-                while (__code !== 0) {
+                while (__code !== 0 && op[1].ignore !== true) {
                     if (op[1].retry && retry < 30) {
                         log.warn('Retry... (%s)', op[0]);
                         exec(op[0], op[1]);
