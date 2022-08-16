@@ -245,7 +245,7 @@ export async function run({
                 tag: tagList,
             });
             configMap[`P${pdoc.id}`] = `type: ${({ traditional: 'default', 'submit-answer': 'submit_answer' })[pdoc.type] || pdoc.type}
-\ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`;
+\ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfilename: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`;
             if (pdoc.additional_file_id) {
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
@@ -393,11 +393,12 @@ export async function run({
             domainId,
             updateAt: new Date(ddoc.update_time * 1000),
             nReply: ddoc.comments_num,
+            views: 0,
             lock: ddoc.allow_comment === 0,
             pin: ddoc.is_notice === 1,
             highlight: ddoc.is_notice === 1,
             parentType: ddoc.problem_id ? document.TYPE_PROBLEM : document.TYPE_DISCUSSION_NODE,
-            parentId: pidMap[ddoc.problem_id] || 'syzoj',
+            parentId: pidMap[ddoc.problem_id] || 'Hydro',
             ip: '127.0.0.1',
         };
         await document.coll.insertOne(data);
@@ -450,7 +451,7 @@ export async function run({
             }
         }
         if (!(datas.find((i) => i.name === 'data.yml'))) {
-            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
+            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(configMap[`P${file.name}`]));
         } else {
             report({ message: `Transfering data.yml for ${file.name}` });
             const config = yaml.load(configMap[`P${file.name}`]) as any;
@@ -498,7 +499,9 @@ export async function run({
         if (problemAdditionalFile[`P${file.name}`]) {
             report({ message: `Syncing additional_file for ${file.name}` });
             for (const data of problemAdditionalFile[`P${file.name}`]) {
-                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename, `${dataDir}/testdata/${data.fromPid}/${data.filename}`);
+                if (!fs.existsSync(`${dataDir}/testdata/${data.fromPid}/${decodeURIComponent(data.filename)}`)) continue;
+                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename,
+                    `${dataDir}/testdata/${data.fromPid}/${decodeURIComponent(data.filename)}`);
             }
         }
     }
