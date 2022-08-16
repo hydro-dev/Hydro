@@ -1,7 +1,9 @@
 import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
-import { flattenDeep, intersection, isSafeInteger } from 'lodash';
+import {
+    escapeRegExp, flattenDeep, intersection, isSafeInteger,
+} from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
@@ -13,7 +15,7 @@ import {
     ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemStatusDoc, User,
+    ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -117,6 +119,23 @@ function buildQuery(udoc: User) {
     return q;
 }
 
+const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
+    const escaped = escapeRegExp(q.toLowerCase());
+    const $regex = new RegExp(q.length >= 3 ? escaped : `\\A${escaped}`, 'gmi');
+    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
+    const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
+        .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
+    if (!Number.isNaN(+q)) {
+        const pdoc = await problem.get(domainId, +q, ['domainId', 'docId', 'pid', 'title']);
+        if (pdoc) pdocs.unshift(pdoc);
+    }
+    return {
+        hits: pdocs.map((i) => `${i.domainId}/${i.docId}`),
+        total: await problem.count(domainId, filter),
+        countRelation: 'eq',
+    };
+};
+
 export class ProblemMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
@@ -125,7 +144,7 @@ export class ProblemMainHandler extends Handler {
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
         const psdict = {};
-        const search = global.Hydro.lib.problemSearch;
+        const search = global.Hydro.lib.problemSearch || defaultSearch;
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
@@ -138,20 +157,18 @@ export class ProblemMainHandler extends Handler {
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (text) {
-            if (search) {
-                const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
-                total = result.total;
-                pcountRelation = result.countRelation;
-                if (!result.hits.length) fail = true;
-                if (!query.$and) query.$and = [];
-                query.$and.push({
-                    $or: result.hits.map((i) => {
-                        const [did, docId] = i.split('/');
-                        return { domainId: did, docId: +docId };
-                    }),
-                });
-                sort = result.hits;
-            } else query.$text = { $search: text };
+            const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
+            total = result.total;
+            pcountRelation = result.countRelation;
+            if (!result.hits.length) fail = true;
+            if (!query.$and) query.$and = [];
+            query.$and.push({
+                $or: result.hits.map((i) => {
+                    const [did, docId] = i.split('/');
+                    return { domainId: did, docId: +docId };
+                }),
+            });
+            sort = result.hits;
         }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
