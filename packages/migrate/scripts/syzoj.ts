@@ -244,8 +244,7 @@ export async function run({
                 hidden: pdoc.is_public !== 1,
                 tag: tagList,
             });
-            configMap[`P${pdoc.id}`] = `${pdoc.type === 'traditional' ? 'type: default'
-                : `\ntype: ${pdoc.type === 'submit_answer' ? 'submit-answer' : 'interactive'}`}
+            configMap[`P${pdoc.id}`] = `type: ${({ traditional: 'default', 'submit-answer': 'submit_answer' })[pdoc.type] || pdoc.type}
 \ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`;
             if (pdoc.additional_file_id) {
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
@@ -483,7 +482,10 @@ export async function run({
             } else if (syzojConfig.extraSourceFiles?.length > 1) {
                 report({ message: `Multiple extra source files are not supported for ${file.name}` });
             }
-            if (config.type === 'submit_answer') config.filename = syzojConfig.outputFile;
+            if (config.type === 'submit_answer') {
+                config.subType = 'multi';
+                config.filename = syzojConfig.outputFile;
+            }
             if (syzojConfig.interactor) {
                 report({ message: `Syncing interactor config for ${file.name}` });
                 config.type = 'interactive';
