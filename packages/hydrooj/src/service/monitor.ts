@@ -61,6 +61,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
             return value;
         },
     }));
+    if (process.env.CI) return [mid, $update];
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })
         .then((res) => {
