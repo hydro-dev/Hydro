@@ -311,7 +311,7 @@ export async function run({
     return true;
 }
 
-addScript('migrateHustoj', 'mirate from hustoj')
+addScript('migrateHustoj', 'migrate from hustoj')
     .args(Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),

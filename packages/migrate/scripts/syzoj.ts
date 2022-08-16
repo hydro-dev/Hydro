@@ -97,11 +97,8 @@ export async function run({
         password,
         database: name,
     });
-    const query = (q: string) => new Promise<[values: any[], fields: mariadb.FieldInfo[]]>((res, rej) => {
-        src.query(q, (err, val, fields) => {
-            if (err) rej(err);
-            else res([val, fields]);
-        });
+    const query = (q: string) => new Promise<any[]>((res, rej) => {
+        src.query(q).then((r) => res(r)).catch((e) => rej(e));
     });
     const target = await domain.get(domainId);
     if (!target) throw new NotFoundError(domainId);
@@ -126,15 +123,16 @@ export async function run({
     */
     const uidMap: Record<string, number> = {};
     const superAdmin = [];
-    const [udocs] = await query('SELECT * FROM `users`');
-    const precheck = await user.getMulti({ unameLower: { $in: udocs.map((u) => u.id.toLowerCase()) } }).toArray();
+    const udocs = await query('SELECT * FROM `user`');
+    report({ message: udocs.map((u) => u.username.toLowerCase()) });
+    const precheck = await user.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
         if (randomMail) delete udoc.email;
-        let current = await user.getByEmail(domainId, udoc.email || `${udoc.id}@syzoj.local`);
-        if (!current) current = await user.getByUname(domainId, udoc.id);
+        let current = await user.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
+        if (!current) current = await user.getByUname(domainId, udoc.username);
         if (current) {
-            report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.id}` });
+            report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
             uidMap[udoc.id] = current._id;
         } else {
             const uid = await user.create(
@@ -165,15 +163,21 @@ export async function run({
         PERM.PERM_DEFAULT | PERM.PERM_CREATE_PROBLEM | PERM.PERM_EDIT_PROBLEM | PERM.PERM_VIEW_PROBLEM_HIDDEN | PERM.PERM_READ_PROBLEM_DATA
         | PERM.PERM_EDIT_PROBLEM_SOLUTION | PERM.PERM_DELETE_PROBLEM_SOLUTION | PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
     await domain.addRole(domainId, 'manage_user', PERM.PERM_DEFAULT | PERM.PERM_EDIT_DOMAIN);
-    const [privileges] = await query('SELECT * FROM `user_privilege`');
+    const privileges = await query('SELECT user_id,group_concat(privilege) as privilege FROM `user_privilege` group by user_id');
     for (const privilege of privileges) {
-        if (!superAdmin.includes(privilege.user_id) && ['manage_problem', 'manage_user'].includes(privilege.privilege)) {
-            await domain.setUserRole(domainId, uidMap[privilege.user_id], privilege.privilege);
+        if (!superAdmin.includes(privilege.user_id)) {
+            if (privilege.privilege.split(',').includes('manage_problem') && privilege.privilege.split(',').includes('manage_user')) {
+                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'root');
+            } else if (privilege.privilege.split(',').includes('manage_problem')) {
+                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'manage_problem');
+            } else if (privilege.privilege.split(',').includes('manage_user')) {
+                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'manage_user');
+            }
         }
     }
     report({ message: 'user finished' });
 
-    const [allTags] = await query('SELECT * FROM `problem_tag`');
+    const allTags = await query('SELECT * FROM `problem_tag`');
     const tagMap: Record<number, string> = {};
     for (const tag of allTags) tagMap[tag.id] = tag.name;
     report({ message: 'tag finished' });
@@ -204,55 +208,55 @@ export async function run({
     const fileReg = /\[.*\]\((\/problem\/(\d+)\/testdata\/download\/(.*))\)/gm;
     const pidMap: Record<string, number> = {};
     const problemAdditionalFile = {};
-    const [[{ 'count(*)': pcount }]] = await query('SELECT count(*) FROM `problem`');
+    const [{ 'count(*)': pcount }] = await query('SELECT count(*) FROM `problem`');
     const step = 50;
-    const pageCount = Math.ceil(pcount / step);
+    const pageCount = Math.ceil(Number(pcount) / step);
     for (let pageId = 0; pageId < pageCount; pageId++) {
-        const [pdocs] = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
+        const pdocs = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
         for (const pdoc of pdocs) {
             if (rerun) {
-                const opdoc = await problem.get(domainId, `P${pdoc.problem_id}`);
-                if (opdoc) pidMap[pdoc.problem_id] = opdoc.docId;
+                const opdoc = await problem.get(domainId, `P${pdoc.id}`);
+                if (opdoc) pidMap[pdoc.id] = opdoc.docId;
             }
-            if (!pidMap[pdoc.problem_id]) {
+            if (!pidMap[pdoc.id]) {
                 let content = buildContent({
                     description: pdoc.description,
                     input: pdoc.input_format,
-                    output: pdoc.output_format,
-                    samples: pdoc.example,
+                    output: `${pdoc.output_format}\n## Sample\n${pdoc.example}`,
+                    samples: [],
                     hint: pdoc.limit_and_hint,
                 });
                 for (const match of content.matchAll(fileReg)) {
                     const [,origialPath, pid, filename] = match;
-                    if (!problemAdditionalFile[pid]) problemAdditionalFile[pid] = [{ fromPid: pid, filename }];
-                    else problemAdditionalFile[`P${pdoc.problem_id}`].push({ fromPid: pid, filename });
+                    if (!problemAdditionalFile[`P${pdoc.id}`]) problemAdditionalFile[`P${pdoc.id}`] = [{ fromPid: pid, filename }];
+                    else problemAdditionalFile[`P${pdoc.id}`].push({ fromPid: pid, filename });
                     content = content.replace(origialPath, `file://${filename}`);
                 }
                 const pid = await problem.add(
-                    domainId, `P${pdoc.problem_id}`,
+                    domainId, `P${pdoc.id}`,
                     pdoc.title, content, uidMap[pdoc.user_id] || 1);
-                pidMap[pdoc.problem_id] = pid;
+                pidMap[pdoc.id] = pid;
             }
-            await problem.edit(domainId, pidMap[pdoc.problem_id], {
-                nAccept: pdoc.ac_num,
-                nSubmit: pdoc.submit_num,
-                config: `${pdoc.type === 'traditional' ? 'type:default'
+            await problem.edit(domainId, pidMap[pdoc.id], {
+                nAccept: pdoc.ac_num || 0,
+                nSubmit: pdoc.submit_num || 0,
+                config: `${pdoc.type === 'traditional' ? 'type: default'
                     : `\ntype: ${pdoc.type === 'submit_answer' ? 'submit-answer' : 'interactive'}`}
 \ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`,
-                hidden: pdoc.is_public === 1,
+                hidden: pdoc.is_public !== 1,
             });
             if (pdoc.additional_file_id) {
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
                     const [afdoc] = additionalFile;
                     await problem.addAdditionalFile(domainId, pdoc.docId,
-                        `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc[0].md5}`);
+                        `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }
-            const [tags] = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
+            const tags = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
             const tagList = [];
             for (const tag of tags) tagList.push(tagMap[tag.tag_id]);
-            await problem.edit(domainId, pidMap[pdoc.problem_id], { tag: tagList });
+            await problem.edit(domainId, pidMap[pdoc.id], { tag: tagList });
         }
     }
     report({ message: 'problem finished' });
@@ -274,16 +278,17 @@ export async function run({
         holder?: User;
         ranklist?: ContestRanklist;
     */
-    const ratedTids = (await query('SELECT `contest_id` FROM `rating_calculation`')).map(([{ contest_id: id }]) => id);
+    const ratedTids = (await query('SELECT `contest_id` FROM `rating_calculation`')).map(({ contest_id: id }) => id);
     const tidMap: Record<string, string> = {};
-    const [tdocs] = await query('SELECT * FROM `contest`');
+    const tdocs = await query('SELECT * FROM `contest`');
     for (const tdoc of tdocs) {
         const pdocs = tdoc.problems.split('|').map((i) => i.trim());
-        const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
+        const pids = pdocs.map((i) => pidMap[i]).filter((i) => i);
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
         const tid = await contest.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
-            admin, contentTypeMap[tdoc.type], moment(tdoc.start_time).toDate(), moment(tdoc.end_time).toDate(), pids, ratedTids.includes(tdoc.id),
+            admin, contentTypeMap[tdoc.type], moment(tdoc.start_time * 1000).toDate(), moment(tdoc.end_time * 1000).toDate(),
+            pids, ratedTids.includes(tdoc.id),
         );
         tidMap[tdoc.id] = tid.toHexString();
     }
@@ -313,14 +318,14 @@ export async function run({
 
         `is_public` tinyint NULL DEFAULT NULL,
     */
-    const [[{ 'count(*)': rcount }]] = await query('SELECT count(*) FROM `judge_state`');
-    const rpageCount = Math.ceil(rcount / step);
+    const [{ 'count(*)': rcount }] = await query('SELECT count(*) FROM `judge_state`');
+    const rpageCount = Math.ceil(Number(rcount) / step);
     for (let pageId = 0; pageId < rpageCount; pageId++) {
-        const [rdocs] = await query(`SELECT * FROM \`judge_state\` LIMIT ${pageId * step}, ${step}`);
+        const rdocs = await query(`SELECT * FROM \`judge_state\` LIMIT ${pageId * step}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
                 status: statusMap[rdoc.status] || 0,
-                _id: Time.getObjectID((rdoc.submit_time * 1000).toString(), false),
+                _id: Time.getObjectID(moment(rdoc.submit_time * 1000), false),
                 uid: uidMap[rdoc.user_id] || 0,
                 code: rdoc.code,
                 lang: langMap[rdoc.language] || '',
@@ -337,25 +342,27 @@ export async function run({
                 judger: 1,
             };
             const judgeState = JSON.parse(rdoc.result);
-            if (judgeState.compile?.message) data.compilerTexts.push(judgeState.compile.message.replaceAll(/<.+?>/g, ''));
-            if (judgeState.judge) {
-                judgeState.judge.subtasks.forEach((subtask, index) => {
-                    subtask.cases.forEach((curCase, caseIndex) => {
-                        data.testCases.push({
-                            subtaskId: index + 1,
-                            id: caseIndex + 1,
-                            score: Math.trunc(curCase.result.scoringRate * 100),
-                            time: curCase.result.time,
-                            memory: curCase.result.memory,
-                            message: curCase.result.spjMessage || curCase.result.systemMessage || curCase.result.userError,
-                            status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
+            if (judgeState) {
+                if (judgeState.compile?.message) data.compilerTexts.push(judgeState.compile.message.replace(/<.+?>/g, ''));
+                if (judgeState.judge) {
+                    judgeState.judge.subtasks.forEach((subtask, index) => {
+                        subtask.cases.forEach((curCase, caseIndex) => {
+                            data.testCases.push({
+                                subtaskId: index + 1,
+                                id: caseIndex + 1,
+                                score: Math.trunc((curCase.result?.scoringRate || 0) * 100),
+                                time: curCase.result?.time || 0,
+                                memory: curCase.result?.memory || 0,
+                                message: curCase.result?.spjMessage || curCase.result?.systemMessage || curCase.result?.userError || '',
+                                status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
+                            });
                         });
                     });
-                });
+                }
             }
             if (rdoc.type) {
                 data.contest = new ObjectID(tidMap[rdoc.type_info]);
-                await contest.attend(domainId, data.contest, uidMap[rdoc.id]).catch(noop);
+                await contest.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
             await record.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
@@ -376,12 +383,13 @@ export async function run({
        `allow_comment` tinyint(4) NOT NULL DEFAULT 1,
        `is_notice` tinyint(4) NULL DEFAULT NULL,
         */
-    const [ddocs] = await query('SELECT * FROM `articles`');
+    const ddocs = await query('SELECT * FROM `article`');
     const didMap = {};
     for (const ddoc of ddocs) {
         const data: Partial<DiscussionDoc> = {
-            _id: Time.getObjectID((ddoc.public_time * 1000).toString(), false),
-            docId: null,
+            _id: Time.getObjectID(moment(ddoc.public_time * 1000), false),
+            docType: document.TYPE_DISCUSSION,
+            docId: Time.getObjectID(moment(ddoc.public_time * 1000), false),
             owner: uidMap[ddoc.user_id] || 0,
             title: ddoc.title,
             content: ddoc.content,
@@ -391,7 +399,8 @@ export async function run({
             lock: ddoc.allow_comment === 0,
             pin: ddoc.is_notice === 1,
             parentType: ddoc.problem_id ? document.TYPE_PROBLEM : document.TYPE_DISCUSSION_NODE,
-            parentId: ddoc.problem_id ?? 'syzoj',
+            parentId: pidMap[ddoc.problem_id] || 'syzoj',
+            ip: '127.0.0.1',
         };
         await document.coll.insertOne(data);
         didMap[ddoc.id] = data._id;
@@ -404,11 +413,12 @@ export async function run({
        `user_id` int(11) NULL DEFAULT NULL,
        `public_time` int(11) NULL DEFAULT NULL,
     */
-    const [drdocs] = await query('SELECT * FROM `article_comment`');
+    const drdocs = await query('SELECT * FROM `article_comment`');
     for (const drdoc of drdocs) {
         const data: Partial<DiscussionReplyDoc> = {
-            _id: Time.getObjectID((drdoc.public_time * 1000).toString(), false),
-            docId: null,
+            _id: Time.getObjectID(moment(drdoc.public_time * 1000), false),
+            domainId,
+            docId: Time.getObjectID(moment(drdoc.public_time * 1000), false),
             docType: document.TYPE_DISCUSSION_REPLY,
             content: drdoc.content,
             owner: uidMap[drdoc.user_id],
@@ -424,22 +434,22 @@ export async function run({
 
     if (!dataDir) return true;
     if (dataDir.endsWith('/')) dataDir = dataDir.slice(0, -1);
-    const files = await fs.readdir(dataDir, { withFileTypes: true });
+    const files = await fs.readdir(`${dataDir}/testdata/`, { withFileTypes: true });
     for (const file of files) {
         if (!file.isDirectory()) continue;
-        const datas = await fs.readdir(`${dataDir}/${file.name}`, { withFileTypes: true });
+        const datas = await fs.readdir(`${dataDir}/testdata/${file.name}`, { withFileTypes: true });
         const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
         let needTransferConfig = false;
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            await problem.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/${file.name}/${data.name}`);
+            await problem.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/testdata/${file.name}/${data.name}`);
             if (data.name === 'data.yml') needTransferConfig = true;
             if (data.name.startsWith('spj_')) {
                 report({ message: `Syncing spj for ${file.name}` });
                 await problem.addTestdata(domainId, pdoc.docId,
-                    `spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`, `${dataDir}/${file.name}/${data.name}`);
+                    `spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`, `${dataDir}/testdata/${file.name}/${data.name}`);
                 pdoc.config += `\nchecker_type: syzoj\nchecker: spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`;
             }
         }
@@ -447,12 +457,12 @@ export async function run({
         else {
             report({ message: `Transfering data.yml for ${file.name}` });
             const config = yaml.load(pdoc.config as string) as any;
-            const syzojConfig = yaml.load(fs.readFileSync(`${dataDir}/${file.name}/data.yml`, 'utf8').toString()) as any;
+            const syzojConfig = yaml.load(fs.readFileSync(`${dataDir}/testdata/${file.name}/data.yml`, 'utf8').toString()) as any;
             if (syzojConfig.specialJudge) {
                 report({ message: `Syncing spj config for ${file.name}` });
                 config.checker_type = 'syzoj';
                 await problem.addTestdata(domainId, pdoc.docId,
-                    `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/${file.name}/${syzojConfig.specialJudge.fileName}`);
+                    `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.specialJudge.fileName}`);
                 config.checker = `spj.${langMap[syzojConfig.specialJudge.language]}`;
             }
             if (syzojConfig.subtasks) {
@@ -468,7 +478,8 @@ export async function run({
             }
             if (syzojConfig.extraSourceFiles?.length === 1) {
                 for (const extraSourceFiles of syzojConfig.extraSourceFiles[0].files) {
-                    await problem.addTestdata(domainId, pdoc.docId, extraSourceFiles.dest, `${dataDir}/${file.name}/${extraSourceFiles.name}`);
+                    await problem.addTestdata(domainId, pdoc.docId, extraSourceFiles.dest,
+                        `${dataDir}/testdata/${file.name}/${extraSourceFiles.name}`);
                 }
                 config.extra_source_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
             } else if (syzojConfig.extraSourceFiles?.length > 1) {
@@ -479,7 +490,7 @@ export async function run({
                 report({ message: `Syncing interactor config for ${file.name}` });
                 config.type = 'interactive';
                 await problem.addTestdata(domainId, pdoc.docId,
-                    `spj.${langMap[syzojConfig.interactor.language]}`, `${dataDir}/${file.name}/${syzojConfig.interactor.fileName}`);
+                    `spj.${langMap[syzojConfig.interactor.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.interactor.fileName}`);
                 config.interactor = `spj.${langMap[syzojConfig.interactor.language]}`;
             }
             await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(pdoc.config)));
@@ -487,7 +498,7 @@ export async function run({
         if (problemAdditionalFile[`P${file.name}`]) {
             report({ message: `Syncing additional_file for ${file.name}` });
             for (const data of problemAdditionalFile[`P${file.name}`]) {
-                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename, `${dataDir}/${data.fromPid}/${data.filename}`);
+                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename, `${dataDir}/testdata/${data.fromPid}/${data.filename}`);
             }
         }
     }

@@ -507,7 +507,7 @@ export async function run({
     return true;
 }
 
-addScript('migrateVijos', 'mirate from vijos')
+addScript('migrateVijos', 'migrate from vijos')
     .args(Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
