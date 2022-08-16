@@ -2,7 +2,6 @@
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import mariadb from 'mariadb';
-import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { noop, Time } from '@hydrooj/utils/lib/utils';
@@ -67,13 +66,13 @@ const sexMap = {
     [-1]: 2,
 };
 const langMap = {
-    cpp: 'cc',
-    cpp11: 'cc.std11',
-    cpp17: 'cc.std17',
-    'cpp-noilinux': 'cc.std98',
-    'cpp11-noilinux': 'cc.std11',
-    'cpp11-clang': 'cc.std11',
-    'cpp17-clang': 'cc.std17',
+    cpp: 'cc.cc98',
+    cpp11: 'cc.cc11',
+    cpp17: 'cc.cc17',
+    'cpp-noilinux': 'cc.cc98',
+    'cpp11-noilinux': 'cc.cc11',
+    'cpp11-clang': 'cc.cc11',
+    'cpp17-clang': 'cc.cc17',
     c: 'c',
     'c-noilinux': 'c',
     csharp: 'cs',
@@ -207,6 +206,7 @@ export async function run({
     */
     const fileReg = /\[.*\]\((\/problem\/(\d+)\/testdata\/download\/(.*))\)/gm;
     const pidMap: Record<string, number> = {};
+    const configMap: Record<string, string> = {};
     const problemAdditionalFile = {};
     const [{ 'count(*)': pcount }] = await query('SELECT count(*) FROM `problem`');
     const step = 50;
@@ -232,9 +232,7 @@ export async function run({
                     else problemAdditionalFile[`P${pdoc.id}`].push({ fromPid: pid, filename });
                     content = content.replace(origialPath, `file://${filename}`);
                 }
-                const pid = await problem.add(
-                    domainId, `P${pdoc.id}`,
-                    pdoc.title, content, uidMap[pdoc.user_id] || 1);
+                const pid = await problem.add(domainId, `P${pdoc.id}`, pdoc.title, content, uidMap[pdoc.user_id] || 1);
                 pidMap[pdoc.id] = pid;
             }
             const tags = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
@@ -243,12 +241,12 @@ export async function run({
             await problem.edit(domainId, pidMap[pdoc.id], {
                 nAccept: pdoc.ac_num || 0,
                 nSubmit: pdoc.submit_num || 0,
-                config: `${pdoc.type === 'traditional' ? 'type: default'
-                    : `\ntype: ${pdoc.type === 'submit_answer' ? 'submit-answer' : 'interactive'}`}
-\ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`,
                 hidden: pdoc.is_public !== 1,
                 tag: tagList,
             });
+            configMap[`P${pdoc.id}`] = `${pdoc.type === 'traditional' ? 'type: default'
+                : `\ntype: ${pdoc.type === 'submit_answer' ? 'submit-answer' : 'interactive'}`}
+\ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`;
             if (pdoc.additional_file_id) {
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
@@ -287,8 +285,8 @@ export async function run({
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
         const tid = await contest.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
-            admin, contentTypeMap[tdoc.type], moment(tdoc.start_time * 1000).toDate(), moment(tdoc.end_time * 1000).toDate(),
-            pids, ratedTids.includes(tdoc.id),
+            admin, contentTypeMap[tdoc.type], new Date(tdoc.start_time * 1000), new Date(tdoc.end_time * 1000),
+            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]) },
         );
         tidMap[tdoc.id] = tid.toHexString();
     }
@@ -325,7 +323,7 @@ export async function run({
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
                 status: statusMap[rdoc.status] || 0,
-                _id: Time.getObjectID(moment(rdoc.submit_time * 1000), false),
+                _id: Time.getObjectID(new Date(rdoc.submit_time * 1000), false),
                 uid: uidMap[rdoc.user_id] || 0,
                 code: rdoc.code,
                 lang: langMap[rdoc.language] || '',
@@ -387,9 +385,9 @@ export async function run({
     const didMap = {};
     for (const ddoc of ddocs) {
         const data: Partial<DiscussionDoc> = {
-            _id: Time.getObjectID(moment(ddoc.public_time * 1000), false),
+            _id: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
             docType: document.TYPE_DISCUSSION,
-            docId: Time.getObjectID(moment(ddoc.public_time * 1000), false),
+            docId: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
             owner: uidMap[ddoc.user_id] || 0,
             title: ddoc.title,
             content: ddoc.content,
@@ -398,6 +396,7 @@ export async function run({
             nReply: ddoc.comments_num,
             lock: ddoc.allow_comment === 0,
             pin: ddoc.is_notice === 1,
+            highlight: ddoc.is_notice === 1,
             parentType: ddoc.problem_id ? document.TYPE_PROBLEM : document.TYPE_DISCUSSION_NODE,
             parentId: pidMap[ddoc.problem_id] || 'syzoj',
             ip: '127.0.0.1',
@@ -416,9 +415,9 @@ export async function run({
     const drdocs = await query('SELECT * FROM `article_comment`');
     for (const drdoc of drdocs) {
         const data: Partial<DiscussionReplyDoc> = {
-            _id: Time.getObjectID(moment(drdoc.public_time * 1000), false),
+            _id: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
             domainId,
-            docId: Time.getObjectID(moment(drdoc.public_time * 1000), false),
+            docId: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
             docType: document.TYPE_DISCUSSION_REPLY,
             content: drdoc.content,
             owner: uidMap[drdoc.user_id],
@@ -441,11 +440,9 @@ export async function run({
         const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
-        let needTransferConfig = false;
         for (const data of datas) {
             if (data.isDirectory()) continue;
             await problem.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/testdata/${file.name}/${data.name}`);
-            if (data.name === 'data.yml') needTransferConfig = true;
             if (data.name.startsWith('spj_')) {
                 report({ message: `Syncing spj for ${file.name}` });
                 await problem.addTestdata(domainId, pdoc.docId,
@@ -453,10 +450,11 @@ export async function run({
                 pdoc.config += `\nchecker_type: syzoj\nchecker: spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`;
             }
         }
-        if (!needTransferConfig) await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
-        else {
+        if (!(datas.find((i) => i.name === 'data.yml'))) {
+            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
+        } else {
             report({ message: `Transfering data.yml for ${file.name}` });
-            const config = yaml.load(pdoc.config as string) as any;
+            const config = yaml.load(configMap[`P${file.name}`]) as any;
             const syzojConfig = yaml.load(fs.readFileSync(`${dataDir}/testdata/${file.name}/data.yml`, 'utf8').toString()) as any;
             if (syzojConfig.specialJudge) {
                 report({ message: `Syncing spj config for ${file.name}` });
@@ -477,9 +475,9 @@ export async function run({
                 }));
             }
             if (syzojConfig.extraSourceFiles?.length === 1) {
-                for (const extraSourceFiles of syzojConfig.extraSourceFiles[0].files) {
-                    await problem.addTestdata(domainId, pdoc.docId, extraSourceFiles.dest,
-                        `${dataDir}/testdata/${file.name}/${extraSourceFiles.name}`);
+                for (const { name: sourceName, dest } of syzojConfig.extraSourceFiles[0].files) {
+                    await problem.addTestdata(domainId, pdoc.docId, dest,
+                        `${dataDir}/testdata/${file.name}/${sourceName}`);
                 }
                 config.user_extra_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
             } else if (syzojConfig.extraSourceFiles?.length > 1) {
@@ -513,5 +511,5 @@ addScript('migrateSyzoj', 'migrate from syzoj')
         username: Schema.string().required(),
         password: Schema.string().required(),
         domainId: Schema.string().required(),
-        dataDir: Schema.string().required(),
+        dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
     })).action(run);
