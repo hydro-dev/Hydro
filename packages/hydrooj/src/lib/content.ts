@@ -60,7 +60,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
         : [
             ...source.description ? [`## ${_('Description')}`, source.description] : [],
             ...source.input ? [`## ${_('Input Format')}`, source.input] : [],
-            ...source.output ? [`## '${_('Output Format')}`, source.output] : [],
+            ...source.output ? [`## ${_('Output Format')}`, source.output] : [],
             ...(source.samples).map((sample, i) => [
                 `\`\`\`input${i + 1}`,
                 sample[0],
