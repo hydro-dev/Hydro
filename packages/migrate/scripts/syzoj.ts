@@ -237,6 +237,9 @@ export async function run({
                     pdoc.title, content, uidMap[pdoc.user_id] || 1);
                 pidMap[pdoc.id] = pid;
             }
+            const tags = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
+            const tagList = [];
+            for (const tag of tags) tagList.push(tagMap[tag.tag_id]);
             await problem.edit(domainId, pidMap[pdoc.id], {
                 nAccept: pdoc.ac_num || 0,
                 nSubmit: pdoc.submit_num || 0,
@@ -244,6 +247,7 @@ export async function run({
                     : `\ntype: ${pdoc.type === 'submit_answer' ? 'submit-answer' : 'interactive'}`}
 \ntime: ${pdoc.time_limit}ms\nmemory: ${pdoc.memory_limit}m${pdoc.file_io ? `\nfile: ${pdoc.file_io_input_name.split('.')[0]}` : ''}`,
                 hidden: pdoc.is_public !== 1,
+                tag: tagList,
             });
             if (pdoc.additional_file_id) {
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
@@ -253,10 +257,6 @@ export async function run({
                         `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }
-            const tags = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
-            const tagList = [];
-            for (const tag of tags) tagList.push(tagMap[tag.tag_id]);
-            await problem.edit(domainId, pidMap[pdoc.id], { tag: tagList });
         }
     }
     report({ message: 'problem finished' });
@@ -481,7 +481,7 @@ export async function run({
                     await problem.addTestdata(domainId, pdoc.docId, extraSourceFiles.dest,
                         `${dataDir}/testdata/${file.name}/${extraSourceFiles.name}`);
                 }
-                config.extra_source_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
+                config.user_extra_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
             } else if (syzojConfig.extraSourceFiles?.length > 1) {
                 report({ message: `Multiple extra source files are not supported for ${file.name}` });
             }
@@ -493,7 +493,7 @@ export async function run({
                     `spj.${langMap[syzojConfig.interactor.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.interactor.fileName}`);
                 config.interactor = `spj.${langMap[syzojConfig.interactor.language]}`;
             }
-            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(pdoc.config)));
+            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
         }
         if (problemAdditionalFile[`P${file.name}`]) {
             report({ message: `Syncing additional_file for ${file.name}` });
