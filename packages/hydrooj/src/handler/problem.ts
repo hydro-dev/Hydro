@@ -139,7 +139,8 @@ const defaultSearch = async (domainId: string, q: string, options?: ProblemSearc
 export class ProblemMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
-    async get(domainId: string, page = 1, q = '') {
+    @param('pjax', Types.Boolean)
+    async get(domainId: string, page = 1, q = '', pjax = false) {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
@@ -203,7 +204,7 @@ export class ProblemMainHandler extends Handler {
                     ).then((res) => Object.assign(psdict, res))),
             );
         }
-        if (this.request.json) {
+        if (pjax) {
             this.response.body = {
                 title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
@@ -213,9 +214,6 @@ export class ProblemMainHandler extends Handler {
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { qs: q }),
                 ])).map((i) => ({ html: i })),
-                raw: {
-                    page, pcount, ppcount, pdocs, psdict, category,
-                },
             };
         } else {
             this.response.body = {
