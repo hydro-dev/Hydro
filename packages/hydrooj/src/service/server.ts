@@ -256,6 +256,7 @@ export class Handler extends HandlerCommon {
 async function bail(name: string, ...args: any[]) {
     const r = await bus.bail(name, ...args);
     if (r instanceof Error) throw r;
+    return r;
 }
 
 async function handle(ctx: KoaContext, HandlerClass, checker) {
@@ -287,29 +288,38 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             throw new MethodNotAllowedError(method);
         }
 
-        await h.init();
-        await bail('handler/init', h);
-        await bail(`handler/before-prepare/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bail('handler/before-prepare', h);
-        h.args.__prepare = Date.now();
-        if (h.__prepare) await h.__prepare(args);
-        if (h._prepare) await h._prepare(args);
-        if (h.prepare) await h.prepare(args);
-        h.args.__prepareDone = Date.now();
-        await bail(`handler/before/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bail('handler/before', h);
-        h.args.__method = Date.now();
-        if (h.all) await h.all(args);
-        if (h[method]) await h[method](args);
-        h.args.__methodDone = Date.now();
-        await bail(`handler/before-operation/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bail('handler/before-operation', h);
-        if (operation) await h[`post${operation}`](args);
-        await bail(`handler/after/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bail('handler/after', h);
-        if (h.cleanup) await h.cleanup(args);
-        await bail(`handler/finish/${HandlerClass.name.replace(/Handler$/, '')}`, h);
-        await bail('handler/finish', h);
+        const name = HandlerClass.name.replace(/Handler$/, '');
+        const steps = [
+            'init', 'handler/init', `handler/before-prepare/${name}`, 'handler/before-prepare',
+            'log/__prepare', '__prepare', '_prepare', 'prepare',
+            'log/__prepareDone', `handler/before/${name}`, 'handler/before',
+            'log/__method', 'all', method, 'log/__methodDone',
+            ...operation ? [
+                `handler/before-operation/${name}`, 'handler/before-operation',
+                `post${operation}`, 'log/__operationDone',
+            ] : [],
+            `handler/after/${name}`, 'handler/after', 'cleanup',
+            `handler/finish/${name}`, 'handler/finish',
+        ];
+
+        let current = 0;
+        while (current < steps.length) {
+            const step = steps[current];
+            let control;
+            if (step.startsWith('log/')) h.args[step.slice(4)] = Date.now();
+            // eslint-disable-next-line no-await-in-loop
+            else if (step.startsWith('handler/')) control = await bail(step, h);
+            // eslint-disable-next-line no-await-in-loop
+            else if (typeof h[step] === 'function') control = await h[step](args);
+            if (control) {
+                const index = steps.findIndex((i) => control === i);
+                if (index === -1) throw new Error(`Invalid control: ${control}`);
+                if (index <= current) {
+                    logger.warn('Returning to previous step is not recommended:', step, '->', control);
+                }
+                current = index;
+            } else current++;
+        }
     } catch (e) {
         try {
             await bail(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
