@@ -14,11 +14,12 @@ import {
     NotFoundError, PermissionError, PrivilegeError,
     UserFacingError,
 } from '../error';
-import { DomainDoc, User } from '../interface';
+import { DomainDoc } from '../interface';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as system from '../model/system';
+import { User } from '../model/user';
 import { errorMessage } from '../utils';
 import * as bus from './bus';
 import * as decorators from './decorators';
@@ -99,10 +100,17 @@ wsServer.on('error', (error) => {
 });
 
 const ignoredLimit = `,${argv.options.ignoredLimit},`;
-function serializer(k: string, v: any) {
-    if (k.startsWith('_') && k !== '_id') return undefined;
-    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
-    return v;
+function serializer(showDisplayName: boolean) {
+    return (k: string, v: any) => {
+        if (k.startsWith('_') && k !== '_id') return undefined;
+        if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+        if (v instanceof User && !showDisplayName) delete v.displayName;
+        if (v instanceof Array && v.length > 0 && v[0] instanceof User && !showDisplayName) v = v.map((u) => delete u.displayName);
+        if (v instanceof Object && v[Object.keys(v)[0]] instanceof User && !showDisplayName) {
+            for (const key of Object.keys(v)) delete v[key].displayName;
+        }
+        return v;
+    };
 }
 
 export async function prepare() {
@@ -366,7 +374,7 @@ export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer));
+        this.conn.send(JSON.stringify(data, serializer(this.user.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
     }
 
     close(code: number, reason: string) {
