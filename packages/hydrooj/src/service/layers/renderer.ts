@@ -10,10 +10,6 @@ function serializer(showDisplayName: boolean) {
         if (k.startsWith('_') && k !== '_id') return undefined;
         if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
         if (v instanceof User && !showDisplayName) delete v.displayName;
-        if (v instanceof Array && v.length > 0 && v[0] instanceof User && !showDisplayName) v = v.map((u) => delete u.displayName);
-        if (v instanceof Object && v[Object.keys(v)[0]] instanceof User && !showDisplayName) {
-            for (const key of Object.keys(v)) delete v[key].displayName;
-        }
         return v;
     };
 }
