@@ -36,7 +36,7 @@ export interface HydroRequest {
     host: string;
     hostname: string;
     ip: string;
-    headers: any;
+    headers: Koa.Request['headers'];
     cookies: any;
     body: any;
     files: Record<string, import('formidable').File>;
