@@ -391,6 +391,7 @@ export function Connection(
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
         const h = new RouteConnHandler(ctx, args, request, response, user, domain, UiContext);
+        await bus.emit('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
         try {
@@ -402,7 +403,10 @@ export function Connection(
                     h.message(JSON.parse(e.data.toString()));
                 };
             }
-            conn.onclose = () => h.cleanup?.(args);
+            conn.onclose = () => {
+                h.cleanup?.(args);
+                bus.emit('connection/close', h);
+            };
         } catch (e) {
             await h.onerror(e);
         }

@@ -35,6 +35,16 @@ bus.on('handler/after/ProblemSubmit', (that) => {
     submissionCounter.inc({ lang: that.args.lang, domainId: that.args.domainId });
 });
 
+const connectionGauge = createMetric(Gauge, 'hydro_connection', 'connectioncount', {
+    labelNames: ['domainId'],
+});
+bus.on('connection/create', (h) => {
+    connectionGauge.inc({ domainId: h.args.domainId });
+});
+bus.on('connection/close', (h) => {
+    connectionGauge.inc({ domainId: h.args.domainId }, -1);
+});
+
 const taskColl = db.collection('task');
 createMetric(Gauge, 'hydro_task', 'taskcount', {
     async collect() {
