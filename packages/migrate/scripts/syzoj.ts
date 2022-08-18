@@ -515,6 +515,6 @@ addScript('migrateSyzoj', 'migrate from syzoj')
         name: Schema.string().required(),
         username: Schema.string().required(),
         password: Schema.string().required(),
-        domainId: Schema.string().required(),
+        domainId: Schema.string().default('system'),
         dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
     })).action(run);
