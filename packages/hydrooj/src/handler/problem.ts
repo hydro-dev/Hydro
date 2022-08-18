@@ -652,7 +652,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
-        if (filename.endsWith('.zip')) {
+        if (filename.endsWith('.zip') && type === 'testdata') {
             const zip = new AdmZip(this.request.files.file.filepath);
             const entries = zip.getEntries();
             for (const entry of entries) {
