@@ -311,7 +311,7 @@ export async function run({
     return true;
 }
 
-addScript('migrateHustoj', 'mirate from hustoj')
+addScript('migrateHustoj', 'migrate from hustoj')
     .args(Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
@@ -321,4 +321,4 @@ addScript('migrateHustoj', 'mirate from hustoj')
         domainId: Schema.string().required(),
         contestType: Schema.string().required(),
         dataDir: Schema.string().required(),
-    }));
+    })).action(run);

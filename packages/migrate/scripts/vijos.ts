@@ -507,11 +507,11 @@ export async function run({
     return true;
 }
 
-addScript('migrateVijos', 'mirate from vijos')
+addScript('migrateVijos', 'migrate from vijos')
     .args(Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
         username: Schema.string().required(),
         password: Schema.string().required(),
-    }));
+    })).action(run);
