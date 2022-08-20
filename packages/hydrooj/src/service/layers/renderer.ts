@@ -13,8 +13,9 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
 };
 
 export default (router, logger) => async (ctx: KoaContext, next) => {
-    const { request, response, user } = ctx.HydroContext;
+    const { request, response } = ctx.HydroContext;
     ctx.renderHTML = (templateName, args) => {
+        const user = ctx.HydroContext.user;
         const UserContext: any = {
             ...(user || {}),
             avatar: avatar(user?.avatar || '', 128),
