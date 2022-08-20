@@ -8,7 +8,7 @@ export const registry = new Registry();
 registry.setDefaultLabels({ instanceid: process.env.NODE_APP_INSTANCE });
 function createMetric<Q extends string, T extends (new (a: any) => Metric<Q>)>(
     C: T, name: string, help: string, extra?: T extends new (a: infer R) => any ? Partial<R> : never,
-): T extends new (a) => Counter<Q> ? Counter<Q> : T extends new (a) => Gauge<Q> ? Gauge<Q> : Metric<Q> {
+): T extends (new (a) => Gauge<Q>) ? Gauge<Q> : T extends (new (a) => Counter<Q>) ? Counter<Q> : Metric<Q> {
     const metric = new C({ name, help, ...(extra || {}) });
     registry.registerMetric(metric);
     return metric as any;
@@ -38,11 +38,11 @@ bus.on('handler/after/ProblemSubmit', (that) => {
 const connectionGauge = createMetric(Gauge, 'hydro_connection', 'connectioncount', {
     labelNames: ['domainId'],
 });
-bus.on('connection/create', (h) => {
+bus.on('connection/active', (h) => {
     connectionGauge.inc({ domainId: h.args.domainId });
 });
 bus.on('connection/close', (h) => {
-    connectionGauge.inc({ domainId: h.args.domainId }, -1);
+    connectionGauge.dec({ domainId: h.args.domainId });
 });
 
 const taskColl = db.collection('task');
