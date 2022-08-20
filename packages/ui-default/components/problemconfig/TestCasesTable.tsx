@@ -29,6 +29,29 @@ export function TestCaseEntry({ index, subindex }) {
       casesKey,
       value,
     });
+    if ((casesKey === 'input' && !testcase.output) || (casesKey === 'output' && !testcase.input)) {
+      const filename = (value as string).substring((value as string).lastIndexOf('.') + 1);
+      if (!testcase.output && (`${filename}.out` in Files.map((f) => f.name) || `${filename}.ans` in Files.map((f) => f.name))) {
+        dispatch({
+          type: 'CONFIG_SUBTASK_UPDATE',
+          id: index,
+          key: 'cases-edit',
+          casesId: subindex,
+          casesKey: 'output',
+          value: `${filename}.out` in Files.map((f) => f.name) ? `${filename}.out` : `${filename}.ans`,
+        });
+      }
+      if (!testcase.output && `${filename}.in` in Files.map((f) => f.name)) {
+        dispatch({
+          type: 'CONFIG_SUBTASK_UPDATE',
+          id: index,
+          key: 'cases-edit',
+          casesId: subindex,
+          casesKey: 'output',
+          value: `${filename}.in`,
+        });
+      }
+    }
   };
   if (!testcase || Object.keys(testcase).length === 0) {
     return (
