@@ -4,14 +4,12 @@ import { PERM } from 'hydrooj/src/model/builtin';
 import { User } from 'hydrooj/src/model/user';
 import type { KoaContext } from '../server';
 
-function serializer(showDisplayName: boolean) {
-    return (k: string, v: any) => {
-        if (k.startsWith('_') && k !== '_id') return undefined;
-        if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
-        if (v instanceof User && !showDisplayName) delete v.displayName;
-        return v;
-    };
-}
+const serializer = (showDisplayName = false) => (k: string, v: any) => {
+    if (k.startsWith('_') && k !== '_id') return undefined;
+    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+    if (v instanceof User && !showDisplayName) delete v.displayName;
+    return v;
+};
 
 export default (logger) => async (ctx: KoaContext, next) => {
     const {
@@ -33,7 +31,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                         response.body.UiContext = UiContext;
                         response.body.UserContext = user;
                     }
-                    response.body = JSON.stringify(response.body, serializer(user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME) || false));
+                    response.body = JSON.stringify(response.body, serializer(user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME)));
                 } catch (e) {
                     response.body = new SystemError('Serialize failure', e.message);
                 }

@@ -5,25 +5,23 @@ import * as system from 'hydrooj/src/model/system';
 import { User } from 'hydrooj/src/model/user';
 import type { KoaContext } from '../server';
 
-function serializer(showDisplayName: boolean) {
-    return (k: string, v: any) => {
-        if (k.startsWith('_') && k !== '_id') return undefined;
-        if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
-        if (v instanceof User && !showDisplayName) delete v.displayName;
-        return v;
-    };
-}
+const serializer = (showDisplayName = false) => (k: string, v: any) => {
+    if (k.startsWith('_') && k !== '_id') return undefined;
+    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+    if (v instanceof User && !showDisplayName) delete v.displayName;
+    return v;
+};
 
 export default (router, logger) => async (ctx: KoaContext, next) => {
-    const { request, response } = ctx.HydroContext;
+    const { request, response, user } = ctx.HydroContext;
     ctx.renderHTML = (templateName, args) => {
         const UserContext: any = {
-            ...(ctx.HydroContext.user || {}),
-            avatar: avatar(ctx.HydroContext.user?.avatar || '', 128),
+            ...(user || {}),
+            avatar: avatar(user?.avatar || '', 128),
             viewLang: ctx.translate('__id'),
         };
         const engine = global.Hydro.lib.template?.render
-        || (() => JSON.stringify(args, serializer(ctx.HydroContext.user.hasPerm(PERM.PREM_VIEW_DISPLAYNAME) || false)));
+            || (() => JSON.stringify(args, serializer(user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
         return engine(templateName, {
             handler: ctx.handler,
             UserContext,

@@ -100,14 +100,12 @@ wsServer.on('error', (error) => {
 });
 
 const ignoredLimit = `,${argv.options.ignoredLimit},`;
-function serializer(showDisplayName: boolean) {
-    return (k: string, v: any) => {
-        if (k.startsWith('_') && k !== '_id') return undefined;
-        if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
-        if (v instanceof User && !showDisplayName) delete v.displayName;
-        return v;
-    };
-}
+const serializer = (showDisplayName = false) => (k: string, v: any) => {
+    if (k.startsWith('_') && k !== '_id') return undefined;
+    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+    if (v instanceof User && !showDisplayName) delete v.displayName;
+    return v;
+};
 
 export async function prepare() {
     app.keys = system.get('session.keys') as unknown as string[];
@@ -370,7 +368,7 @@ export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer(this.user.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
+        this.conn.send(JSON.stringify(data, serializer(this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
     }
 
     close(code: number, reason: string) {
