@@ -2,7 +2,7 @@ import { NumericInput, Tag } from '@blueprintjs/core';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import type { SubtaskConfig } from 'hydrooj/src/interface';
 import { isEqual } from 'lodash';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
@@ -30,7 +30,7 @@ export function TestCaseEntry({ index, subindex }) {
       value,
     });
     if ((casesKey === 'input' && (value as string).endsWith('.in') && !testcase.output)
-    || (casesKey === 'output' && (value as string).endsWith('.out') && !testcase.input)) {
+      || (casesKey === 'output' && (value as string).endsWith('.out') && !testcase.input)) {
       const filename = (value as string).substring(0, (value as string).lastIndexOf('.'));
       if (!testcase.output && (Files.map((f) => f.name).includes(`${filename}.out`) || Files.map((f) => f.name).includes(`${filename}.ans`))) {
         dispatch({
@@ -59,6 +59,15 @@ export function TestCaseEntry({ index, subindex }) {
       <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
     );
   }
+  const refs = {
+    input: useRef(),
+    output: useRef(),
+  };
+  for (const type of ['input', 'output']) {
+    useEffect(() => {
+      refs[type].current?.setSelectedItems([testcase[type]]);
+    }, [testcase[type]]);
+  }
   return (
     <tr>
       <td>
@@ -84,6 +93,7 @@ export function TestCaseEntry({ index, subindex }) {
       {['input', 'output'].map((t) => (
         <td key={t}>
           <FileSelectAutoComplete
+            ref={refs[t]}
             width="100%"
             data={Files}
             selectedKeys={[testcase[t]]}
