@@ -29,25 +29,26 @@ export function TestCaseEntry({ index, subindex }) {
       casesKey,
       value,
     });
-    if ((casesKey === 'input' && !testcase.output) || (casesKey === 'output' && !testcase.input)) {
-      const filename = (value as string).substring((value as string).lastIndexOf('.') + 1);
-      if (!testcase.output && (`${filename}.out` in Files.map((f) => f.name) || `${filename}.ans` in Files.map((f) => f.name))) {
+    if ((casesKey === 'input' && (value as string).endsWith('.in') && !testcase.output)
+    || (casesKey === 'output' && (value as string).endsWith('.out') && !testcase.input)) {
+      const filename = (value as string).substring(0, (value as string).lastIndexOf('.'));
+      if (!testcase.output && (Files.map((f) => f.name).includes(`${filename}.out`) || Files.map((f) => f.name).includes(`${filename}.ans`))) {
         dispatch({
           type: 'CONFIG_SUBTASK_UPDATE',
           id: index,
           key: 'cases-edit',
           casesId: subindex,
           casesKey: 'output',
-          value: `${filename}.out` in Files.map((f) => f.name) ? `${filename}.out` : `${filename}.ans`,
+          value: Files.map((f) => f.name).includes(`${filename}.out`) ? `${filename}.out` : `${filename}.ans`,
         });
       }
-      if (!testcase.output && `${filename}.in` in Files.map((f) => f.name)) {
+      if (!testcase.input && Files.map((f) => f.name).includes(`${filename}.in`)) {
         dispatch({
           type: 'CONFIG_SUBTASK_UPDATE',
           id: index,
           key: 'cases-edit',
           casesId: subindex,
-          casesKey: 'output',
+          casesKey: 'input',
           value: `${filename}.in`,
         });
       }
