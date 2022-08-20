@@ -2,30 +2,6 @@
 import { Logger } from './logger';
 import * as bus from './service/bus';
 
-export namespace Progress {
-    export class Progress {
-        constructor(public args) {
-            console.log('progress start: ', args);
-        }
-
-        startItem(args) {
-            console.log('progress: ', this.args, args);
-        }
-
-        itemDone(args) {
-            console.log('done: ', this.args, args);
-        }
-
-        stop() {
-            console.log('stop', this.args);
-        }
-    }
-
-    export function create(args) {
-        return new Progress(args);
-    }
-}
-
 async function terminate() {
     let hasError = false;
     try {

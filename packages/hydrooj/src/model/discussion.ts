@@ -13,49 +13,14 @@ import TaskModel from './task';
 import * as training from './training';
 
 export interface DiscussionDoc extends Document { }
-export namespace DiscussionDoc {
-    export type Field = keyof DiscussionDoc;
-    export const fields: Field[] = [];
-    type Getter = () => Partial<DiscussionDoc>;
-    const getters: Getter[] = [];
-    export function extend(getter: Getter) {
-        getters.push(getter);
-        fields.push(...Object.keys(getter()) as any);
-    }
+export type Field = keyof DiscussionDoc;
 
-    extend(() => ({
-        _id: new ObjectID(),
-        domainId: 'system',
-        docType: document.TYPE_DISCUSSION,
-        docId: new ObjectID(),
-        owner: 1,
-        title: '*',
-        content: '',
-        parentId: new ObjectID(),
-        ip: '1.1.1.1',
-        pin: false,
-        highlight: false,
-        updateAt: new Date(),
-        nReply: 0,
-        views: 0,
-        history: [],
-    }));
-
-    export function create() {
-        const result = {} as DiscussionDoc;
-        for (const getter of getters) {
-            Object.assign(result, getter());
-        }
-        return result;
-    }
-}
-
-export const PROJECTION_LIST: DiscussionDoc.Field[] = [
+export const PROJECTION_LIST: Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'highlight',
     'nReply', 'views', 'pin', 'updateAt', 'owner',
     'parentId', 'parentType', 'title',
 ];
-export const PROJECTION_PUBLIC: DiscussionDoc.Field[] = [
+export const PROJECTION_PUBLIC: Field[] = [
     ...PROJECTION_LIST, 'content', 'history', 'react', 'maintainer',
     'lock',
 ];
@@ -98,7 +63,7 @@ export async function add(
     return payload.docId;
 }
 
-export async function get<T extends DiscussionDoc.Field>(
+export async function get<T extends Field>(
     domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any,
 ): Promise<Pick<DiscussionDoc, T>> {
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
@@ -339,7 +304,6 @@ bus.once('app/started', async () => {
 
 global.Hydro.model.discussion = {
     typeDisplay,
-    DiscussionDoc,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
 

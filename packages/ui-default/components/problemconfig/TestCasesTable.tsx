@@ -1,12 +1,12 @@
+import { NumericInput, Tag } from '@blueprintjs/core';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
+import type { SubtaskConfig } from 'hydrooj/src/interface';
+import { isEqual } from 'lodash';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
-import { isEqual } from 'lodash';
-import { Tag, NumericInput } from '@blueprintjs/core';
-import { parseTimeMS, parseMemoryMB } from '@hydrooj/utils/lib/common';
-import type { SubtaskConfig } from 'hydrooj/src/interface';
-import type { RootState } from './reducer/index';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
+import type { RootState } from './reducer/index';
 
 const eq = (a: SubtaskConfig, b: SubtaskConfig) => isEqual(a, b);
 const eqArr = (a: any[], b: any[]) => isEqual(a, b);

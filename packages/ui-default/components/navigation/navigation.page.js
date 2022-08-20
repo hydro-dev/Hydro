@@ -1,12 +1,13 @@
+import $ from 'jquery';
 import Slideout from 'slideout';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import { ActionDialog } from 'vj/components/dialog';
 import createHint from 'vj/components/hint';
-import tpl from 'vj/utils/tpl';
+import Notification from 'vj/components/notification';
+import { AutoloadPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
-import { ActionDialog } from 'vj/components/dialog';
-import Notification from 'vj/components/notification';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { AutoloadPage } from 'vj/misc/Page';
+import tpl from 'vj/utils/tpl';
 
 function handleNavLogoutClick(ev) {
   const $logoutLink = $(ev.currentTarget);

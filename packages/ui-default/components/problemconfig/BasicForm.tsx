@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
-import type { RootState } from './reducer/index';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
+import type { RootState } from './reducer/index';
 
 export function FormItem({
   columns, label, children, helpText = '', disableLabel = false, ...props

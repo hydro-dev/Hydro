@@ -1,12 +1,12 @@
 import 'jquery.easing';
 
+import { Popover } from '@blueprintjs/core';
+import $ from 'jquery';
+import { chunk } from 'lodash';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Popover } from '@blueprintjs/core';
 import { AutoloadPage } from 'vj/misc/Page';
-
 import request from 'vj/utils/request';
-import { chunk } from 'lodash';
 
 function renderReactions(reactions, self, rootEle) {
   let html = '';

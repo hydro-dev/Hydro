@@ -233,7 +233,7 @@ export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
     return [doc, null];
 }
 
-export async function setSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
+export async function setSub<T extends keyof DocType, K extends string & ArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
     key: K, subId: DocType[T][K][0]['_id'], args: Partial<DocType[T][K][0]>,
 ): Promise<DocType[T]> {
@@ -367,7 +367,7 @@ export async function incStatus<T extends keyof DocStatusType>(
 
 export async function revPushStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
-    key: ArrayKeys<DocStatusType[T]>, value: any, id = '_id',
+    key: string & ArrayKeys<DocStatusType[T]>, value: any, id = '_id',
 ): Promise<DocStatusType[T]> {
     let res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [`${key}.${id}`]: value[id] },

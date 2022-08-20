@@ -1,10 +1,16 @@
-import React from 'react';
+import $ from 'jquery';
 import { omit } from 'lodash';
+import React from 'react';
 
-export default function DomComponent(props: React.HTMLAttributes<HTMLDivElement> & { childDom: HTMLElement }) {
+const tempDoms = {};
+
+export default function DomComponent(props: React.HTMLAttributes<HTMLDivElement> & { id?: string, childDom: HTMLElement }) {
   const ref = React.useRef<HTMLDivElement>();
   React.useEffect(() => {
-    ref.current.appendChild(props.childDom);
+    let dom = props.childDom;
+    if (props.id && dom) tempDoms[props.id] = dom;
+    else if (props.id && !dom && tempDoms[props.id]) dom = tempDoms[props.id];
+    ref.current.appendChild(dom);
     return () => {
       $(ref.current).empty();
     };

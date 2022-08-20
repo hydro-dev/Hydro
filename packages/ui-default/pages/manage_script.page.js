@@ -1,7 +1,7 @@
-import { NamedPage } from 'vj/misc/Page';
-import Notification from 'vj/components/notification';
+import $ from 'jquery';
 import { ActionDialog } from 'vj/components/dialog';
-
+import Notification from 'vj/components/notification';
+import { NamedPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 
 const page = new NamedPage('manage_script', () => {

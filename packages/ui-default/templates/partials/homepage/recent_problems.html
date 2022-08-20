@@ -1,0 +1,17 @@
+{% set pdocs = payload[0] %}
+{% set psdict = payload[1] %}
+{% if pdocs.length %}
+  <div class="section side nojs--hide">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Recent Problems') }}</h1>
+    </div>
+    <div class="section__body typo no-media col--problem-name">
+      {%- for pdoc in pdocs -%}
+        <p>
+          {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false) }}
+          <span style="float: right">{{ datetimeSpan(pdoc._id)|safe }}</span>
+        </p>
+      {%- endfor -%}
+    </div>
+  </div>
+{% endif %}

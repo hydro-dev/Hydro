@@ -1,11 +1,10 @@
+import AnsiUp from 'ansi_up';
 import React from 'react';
 import { connect } from 'react-redux';
-import AnsiUp from 'ansi_up';
-
-import i18n from 'vj/utils/i18n';
 import Icon from 'vj/components/react/IconComponent';
-import Panel from './PanelComponent';
+import i18n from 'vj/utils/i18n';
 import DataInput from './DataInputComponent';
+import Panel from './PanelComponent';
 
 const AU = new AnsiUp();
 

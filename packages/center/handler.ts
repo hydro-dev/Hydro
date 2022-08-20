@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import yaml from 'js-yaml';
+import * as bus from 'hydrooj/src/service/bus';
 import db from 'hydrooj/src/service/db';
 import {
     Handler, post, Route, Types,
@@ -28,6 +29,7 @@ class DataReportHandler extends Handler {
     @post('payload', Types.String)
     async post(domainId: string, installId: string, _payload: string) {
         const payload: any = yaml.load(decrypt(_payload));
+        const old = await coll.findOne({ _id: installId });
         await coll.updateOne({ _id: installId }, {
             $set: {
                 version: payload.version,
@@ -45,9 +47,11 @@ class DataReportHandler extends Handler {
                 problemCount: payload.problemCount,
                 discussionCount: payload.discussionCount,
                 recordCount: payload.recordCount,
+                sandbox: payload.sandbox,
             },
         }, { upsert: true });
-        this.response.body = 'success';
+        bus.emit('center/report', this, installId, old, payload);
+        this.response.body = { code: 0 };
     }
 }
 

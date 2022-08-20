@@ -1,9 +1,10 @@
-import { NamedPage } from 'vj/misc/Page';
-import tpl from 'vj/utils/tpl';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
+import $ from 'jquery';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
+import { NamedPage } from 'vj/misc/Page';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 const page = new NamedPage([
   'problem_create', 'problem_edit', 'problem_solution', 'problem_submit',

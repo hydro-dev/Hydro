@@ -15,7 +15,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:'' if (secret or isFileConfig) else (current[setting.key]|default(setting.value)),
-          disabled:setting.disabled,
+          disabled:setting.flag|bitand(2),
           placeholder:'Please edit in ~/.hydro/env instead' if isFileConfig else (_('(Not changed)') if secret else '')
         }) }}
   {% elif setting.type == 'select' %}
@@ -25,7 +25,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:current[setting.key] or setting.value,
-          disabled:setting.disabled
+          disabled:setting.flag|bitand(2)
         }) }}
   {% elif setting.type == 'radio' %}
     {{ form.form_radio({
@@ -34,7 +34,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:current[setting.key] or setting.value,
-          disabled:setting.disabled
+          disabled:setting.flag|bitand(2)
         }) }}
   {% elif setting.type == 'image_radio' %}
     {{ form.form_image_radio({
@@ -44,7 +44,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:current[setting.key] or setting.value,
-          disabled:setting.disabled
+          disabled:setting.flag|bitand(2)
         }) }}
   {% elif setting.type == 'textarea' %}
     {{ form.form_textarea({
@@ -52,7 +52,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:'' if secret else (current[setting.key]|default(setting.value)),
-          disabled:setting.disabled,
+          disabled:setting.flag|bitand(2),
           placeholder:_('(Not changed)') if secret else '',
           extra_attr: 'data-yaml' if setting.subType == 'yaml' else ''
         }) }}
@@ -63,7 +63,7 @@
           name:setting.key,
           value:'' if secret else (current[setting.key]|default(setting.value)),
           markdown:true,
-          disabled:setting.disabled,
+          disabled:setting.flag|bitand(2),
           placeholder:_('(Not changed)') if secret else ''
         }) }}
   {% elif setting.type == 'boolean' %}
@@ -73,7 +73,7 @@
           help_text:setting.desc,
           name:setting.key,
           value:setting.value if (_val === undefined or _val === null) else _val,
-          disabled:setting.disabled
+          disabled:setting.flag|bitand(2)
     })}}
     {{ form.form_checkbox({
           label:setting.name,

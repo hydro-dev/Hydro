@@ -1,9 +1,11 @@
+import 'jquery-scroll-lock';
+import 'jquery.easing';
+
+import $ from 'jquery';
+import moment from 'moment';
 import React from 'react';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
-import moment from 'moment';
-import 'jquery-scroll-lock';
-import 'jquery.easing';
 import i18n from 'vj/utils/i18n';
 import { parse as parseMongoId } from 'vj/utils/mongoId';
 import Message from './MessageComponent';

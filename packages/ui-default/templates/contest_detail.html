@@ -37,12 +37,11 @@
       {% endif %}
       </div>
     </div>
-  {% if model.contest.isOngoing(tdoc, tsdoc) or model.contest.isDone(tdoc, tsdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if tsdoc.attend or model.contest.isDone(tdoc) %}
+    {% if pdict %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
@@ -79,18 +78,23 @@
               {% endif %}
             {% endif %}
               <td class="col--problem col--problem-name">
-                {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                {% if model.contest.isNotStarted(tdoc) %}
+                  {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false) }}
+                {% else %}
+                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                {% endif %}
               </td>
             </tr>
           {%- endfor -%}
           </tbody>
         </table>
       </div>
+    {% elif tsdoc.attend %}
+      {{ nothing.render('This contest is not live.') }}
     {% else %}
       {{ nothing.render('Please attend contest to see the problems.') }}
     {% endif %}
     </div>
-  {% endif %}
   </div>
   <div class="medium-3 columns">
   {% set owner_udoc = udict[tdoc.owner] %}

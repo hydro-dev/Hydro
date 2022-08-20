@@ -24,6 +24,10 @@ import {
 
 const argv = cac().parse();
 
+function removeNixPath(text: string) {
+    return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
+}
+
 class JudgeTask {
     stat: Record<string, Date>;
     session: any;
@@ -138,6 +142,8 @@ class JudgeTask {
         data.key = 'next';
         data.rid = new ObjectID(this.rid);
         if (data.case) data.case.message ||= '';
+        if (typeof data.message === 'string') data.message = removeNixPath(data.message);
+        if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
         this.ws.send(JSON.stringify(data));
     }
 
@@ -145,6 +151,8 @@ class JudgeTask {
         log.info('End: %o', data);
         data.key = 'end';
         data.rid = this.request.rid;
+        if (typeof data.message === 'string') data.message = removeNixPath(data.message);
+        if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
         this.ws.send(JSON.stringify(data));
     }
 }

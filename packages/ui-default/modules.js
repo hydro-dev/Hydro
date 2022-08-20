@@ -1,7 +1,3 @@
-import $ from 'jquery';
-import _ from 'lodash';
-import React from 'react';
-
 import './utils/delay';
 import './utils/emulateAnchorClick';
 import './utils/i18n';
@@ -17,13 +13,27 @@ import './utils/substitute';
 import './utils/tpl';
 import './utils/zIndexManager';
 import './utils/zip';
-
 import './components/autocomplete';
 import './components/dialog';
 import './components/notification';
 import './components/nprogress';
 import './components/monaco/loader';
 
-window.node_modules = { _, $, React };
+import $ from 'jquery';
+import _ from 'lodash';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as redux from 'react-redux';
+
+const modules = {
+  _, $, React, redux, ReactDOM,
+};
+export default async function load(name) {
+  if (modules[name]) return modules[name];
+  if (name === 'echarts') return import('echarts');
+  if (name === 'moment') return import('moment');
+  throw new Error(`Module ${name} not found`);
+}
+window.node_modules = { ...modules, load };
 window.$ = $;
 window.jQuery = $;

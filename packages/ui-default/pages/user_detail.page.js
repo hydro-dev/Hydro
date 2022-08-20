@@ -1,9 +1,10 @@
 import Clipboard from 'clipboard';
-import { NamedPage } from 'vj/misc/Page';
-import substitute from 'vj/utils/substitute';
+import $ from 'jquery';
 import Notification from 'vj/components/notification';
-import i18n from 'vj/utils/i18n';
+import { NamedPage } from 'vj/misc/Page';
 import base64 from 'vj/utils/base64';
+import i18n from 'vj/utils/i18n';
+import substitute from 'vj/utils/substitute';
 
 const page = new NamedPage('user_detail', () => {
   $('[data-copy]').get().forEach((el) => {

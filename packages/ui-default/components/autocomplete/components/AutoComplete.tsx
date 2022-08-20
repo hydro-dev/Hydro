@@ -1,12 +1,13 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import { debounce, uniqueId } from 'lodash';
+import PropTypes from 'prop-types';
 import React, {
-  forwardRef, useState, useRef, useImperativeHandle, useEffect,
+  forwardRef, useEffect,
+  useImperativeHandle, useRef, useState,
 } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import PropTypes from 'prop-types';
-import { debounce, uniqueId } from 'lodash';
 import Icon from 'vj/components/react/IconComponent';
 
 export interface AutoCompleteProps<Item> {

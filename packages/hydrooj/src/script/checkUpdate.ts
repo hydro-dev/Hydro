@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
+import Schema from 'schemastery';
 import * as semver from 'semver';
 import superagent from 'superagent';
+import { addScript } from '../loader';
 import MessageModel from '../model/message';
 import * as system from '../model/system';
-
-export const description = 'Daily update check';
 
 async function getRemoteVersion(id: string) {
     try {
@@ -38,6 +38,4 @@ export async function run(_: {}, report: Function) {
     return true;
 }
 
-export const validate = {};
-
-global.Hydro.script.checkUpdate = { run, description, validate };
+addScript('checkUpdate', 'Daily update check').args(Schema.any()).action(run);

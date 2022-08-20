@@ -1,14 +1,14 @@
+import {
+  Card, InputGroup, Tab, Tabs, Tag,
+} from '@blueprintjs/core';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
-import {
-  Card, Tab, Tabs, InputGroup, Tag,
-} from '@blueprintjs/core';
-import type { RootState } from './reducer/index';
 import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
 import { FormItem } from './BasicForm';
 import ProblemType from './ProblemType';
+import type { RootState } from './reducer/index';
 import { TaskConfig } from './SubtaskTable';
 
 function FileIOConfig() {

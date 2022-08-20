@@ -1,6 +1,7 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import tpl from 'vj/utils/tpl';
 import i18n from 'vj/utils/i18n';
+import tpl from 'vj/utils/tpl';
 
 const highlighterPage = new AutoloadPage('highlighterPage', () => {
   import('./prismjs').then(({ default: prismjs }) => {

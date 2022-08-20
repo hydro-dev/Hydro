@@ -2,7 +2,8 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    DiscussionTailReplyDoc, MessageDoc, RecordDoc, TestCase, TrainingNode,
+    addScript, DiscussionTailReplyDoc, MessageDoc,
+    RecordDoc, Schema, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const dst = global.Hydro.service.db;
@@ -506,9 +507,11 @@ export async function run({
     return true;
 }
 
-export const description = 'migrate from vijos';
-export const validate = {
-    host: 'string', port: 'number', name: 'string', username: 'string', password: 'string',
-};
-
-global.Hydro.script.migrateVijos = { run, description, validate };
+addScript('migrateVijos', 'migrate from vijos')
+    .args(Schema.object({
+        host: Schema.string().required(),
+        port: Schema.number().required(),
+        name: Schema.string().required(),
+        username: Schema.string().required(),
+        password: Schema.string().required(),
+    })).action(run);

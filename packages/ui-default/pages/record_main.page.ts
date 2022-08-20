@@ -1,8 +1,9 @@
-import { NamedPage } from 'vj/misc/Page';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import $ from 'jquery';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
-import tpl from 'vj/utils/tpl';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import { NamedPage } from 'vj/misc/Page';
 import getAvailableLangs from 'vj/utils/availableLangs';
+import tpl from 'vj/utils/tpl';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
@@ -13,11 +14,7 @@ const page = new NamedPage('record_main', async () => {
   const sock = new WebSocket(UiContext.socketUrl);
   const dd = new DiffDOM();
 
-  let firstLoad = true;
-  sock.onopen = () => {
-    if (firstLoad) sock.send(JSON.stringify({ rids: UiContext.rids }));
-    firstLoad = false;
-  };
+  sock.onopen = () => sock.send(JSON.stringify({ rids: UiContext.rids }));
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
     const $newTr = $(msg.html);

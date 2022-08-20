@@ -1,7 +1,7 @@
-import yaml from 'js-yaml';
-import type { ProblemConfigFile } from 'hydrooj/src/interface';
-import { cloneDeep } from 'lodash';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
+import type { ProblemConfigFile } from 'hydrooj/src/interface';
+import yaml from 'js-yaml';
+import { cloneDeep } from 'lodash';
 
 type State = ProblemConfigFile & { __loaded: boolean };
 

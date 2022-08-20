@@ -1,12 +1,13 @@
-import _ from 'lodash';
 import Clipboard from 'clipboard';
-import { NamedPage } from 'vj/misc/Page';
-import Notification from 'vj/components/notification';
+import $ from 'jquery';
+import _ from 'lodash';
 import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
-import request from 'vj/utils/request';
-import pjax from 'vj/utils/pjax';
-import tpl from 'vj/utils/tpl';
+import Notification from 'vj/components/notification';
+import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
+import pjax from 'vj/utils/pjax';
+import request from 'vj/utils/request';
+import tpl from 'vj/utils/tpl';
 
 function onBeforeUnload(e) {
   e.returnValue = '';

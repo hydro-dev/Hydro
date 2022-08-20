@@ -1,5 +1,6 @@
-import { NamedPage } from 'vj/misc/Page';
+import $ from 'jquery';
 import * as domainEnum from 'vj/constant/domain';
+import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('domain_join_applications', () => {
   const $role = $('[name="role"]');

@@ -1,10 +1,9 @@
-import Drop from 'tether-drop';
 import _ from 'lodash';
-import DOMAttachedObject from 'vj/components/DOMAttachedObject';
+import Drop from 'tether-drop';
 import responsiveCutoff from 'vj/breakpoints.json';
-
-import zIndexManager from 'vj/utils/zIndexManager';
+import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import { isBelow } from 'vj/utils/mediaQuery';
+import zIndexManager from 'vj/utils/zIndexManager';
 
 export default class Dropdown extends DOMAttachedObject {
   static DOMAttachKey = 'vjDropdownInstance';

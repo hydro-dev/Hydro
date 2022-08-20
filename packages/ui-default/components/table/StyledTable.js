@@ -1,8 +1,10 @@
 import 'sticky-kit/dist/sticky-kit';
+
+import $ from 'jquery';
 import _ from 'lodash';
+import responsiveCutoff from 'vj/breakpoints.json';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import { isBelow } from 'vj/utils/mediaQuery';
-import responsiveCutoff from 'vj/breakpoints.json';
 
 const navHeight = isBelow(responsiveCutoff.mobile)
   ? 0

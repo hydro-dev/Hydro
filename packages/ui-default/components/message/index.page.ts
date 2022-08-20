@@ -1,11 +1,11 @@
-import { AutoloadPage } from 'vj/misc/Page';
+import { nanoid } from 'nanoid';
+import ReconnectingWebsocket from 'reconnecting-websocket';
 import { InfoDialog } from 'vj/components/dialog';
 import VjNotification from 'vj/components/notification/index';
-import ReconnectingWebsocket from 'reconnecting-websocket';
 import { FLAG_ALERT } from 'vj/constant/message';
+import { AutoloadPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';
-import { nanoid } from 'nanoid';
 
 const onmessage = (msg) => {
   console.log('Received message', msg);

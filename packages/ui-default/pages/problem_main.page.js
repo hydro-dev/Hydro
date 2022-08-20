@@ -1,16 +1,16 @@
-import _ from 'lodash';
 import $ from 'jquery';
-import { NamedPage } from 'vj/misc/Page';
-import Notification from 'vj/components/notification';
+import _ from 'lodash';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
+import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
+import { NamedPage } from 'vj/misc/Page';
+import delay from 'vj/utils/delay';
+import i18n from 'vj/utils/i18n';
 import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
 
 const categories = {};
 const dirtyCategories = [];
@@ -249,11 +249,7 @@ const page = new NamedPage(['problem_main'], () => {
     updateSelection();
   });
   $('#searchForm').on('submit', updateSelection);
-  let update;
-  $('#searchForm').find('input').on('input', () => {
-    if (update) clearTimeout(update);
-    update = setTimeout(updateSelection, 500);
-  });
+  $('#searchForm').find('input').on('input', _.debounce(updateSelection, 500));
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));

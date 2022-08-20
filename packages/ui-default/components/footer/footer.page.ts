@@ -1,7 +1,8 @@
+import $ from 'jquery';
+import responsiveCutoff from 'vj/breakpoints.json';
 import { AutoloadPage } from 'vj/misc/Page';
 import { isBelow } from 'vj/utils/mediaQuery';
-import { slideUp, slideDown } from 'vj/utils/slide';
-import responsiveCutoff from 'vj/breakpoints.json';
+import { slideDown, slideUp } from 'vj/utils/slide';
 
 const footerPage = new AutoloadPage('footerPage', () => {
   if (!$('.footer').length) return;

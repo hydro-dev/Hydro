@@ -1,9 +1,10 @@
 /* eslint-disable react/function-component-definition */
-import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import 'graphiql/graphiql.css';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import 'graphiql/graphiql.css';
+import { NamedPage } from 'vj/misc/Page';
+import request from 'vj/utils/request';
 
 const Logo = () => <span>Hydro API Console </span>;
 const defaultQuery = `\

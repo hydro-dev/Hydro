@@ -1,3 +1,6 @@
+import $ from 'jquery';
+import * as bus from './bus';
+
 window.Hydro = {
   extraPages: [],
   preload: [],
@@ -5,6 +8,7 @@ window.Hydro = {
   utils: {},
   node_modules: {},
   version: process.env.VERSION,
+  bus,
 };
 window.externalModules = {};
 

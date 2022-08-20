@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';
 
@@ -32,6 +33,7 @@ export default new AutoloadPage('media', async () => {
         if (category === 'user' && Number.isInteger(+data) && !extra) resolve(ele, { type: 'user', id: +data });
         if (category === 'p' && !extra) resolve(ele, { type: 'problem', id: data, domainId });
         if (category === 'contest' && !extra) resolve(ele, { type: 'contest', id: data, domainId });
+        if (category === 'homework' && !extra) resolve(ele, { type: 'homework', id: data, domainId });
       });
     });
     if (!items.length) return;

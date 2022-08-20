@@ -1,19 +1,19 @@
 /* eslint-disable no-return-await */
 /* eslint-disable camelcase */
 import crypto from 'crypto';
-import { join } from 'path';
-import { ObjectID } from 'mongodb';
-import * as bus from 'hydrooj/src/service/bus';
-import { Route, Handler } from 'hydrooj/src/service/server';
+import esbuild from 'esbuild';
 import { PERM, PRIV } from 'hydrooj/src/model/builtin';
-import * as system from 'hydrooj/src/model/system';
-import user from 'hydrooj/src/model/user';
 import * as contest from 'hydrooj/src/model/contest';
 import problem from 'hydrooj/src/model/problem';
 import * as setting from 'hydrooj/src/model/setting';
-import esbuild from 'esbuild';
-import { tmpdir } from 'os';
+import * as system from 'hydrooj/src/model/system';
+import user from 'hydrooj/src/model/user';
+import * as bus from 'hydrooj/src/service/bus';
 import { UiContextBase } from 'hydrooj/src/service/layers/base';
+import { Handler, Route } from 'hydrooj/src/service/server';
+import { ObjectID } from 'mongodb';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import markdown from './backendlib/markdown';
 
 declare module 'hydrooj/src/interface' {
@@ -36,7 +36,7 @@ declare module 'hydrooj/src/service/layers/base' {
 let constant = '';
 let hash = '';
 
-async function run() {
+async function buildUI() {
   const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
   const build = await esbuild.build({
     format: 'iife',
@@ -61,13 +61,15 @@ async function run() {
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
-
+}
+function updateLogo() {
   [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
 }
-bus.on('app/started', run);
-bus.on('system/setting', run);
+bus.on('app/started', buildUI);
+bus.on('app/started', updateLogo);
+bus.on('system/setting', updateLogo);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -182,6 +184,15 @@ class RichMediaHandler extends Handler {
     return '';
   }
 
+  async renderHomework(domainId, payload) {
+    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_HOMEWORK)
+      ? await contest.get(payload.domainId || domainId, new ObjectID(payload.id))
+      : null;
+    if (tdoc) return await this.renderHTML('partials/homework.html', { tdoc });
+    return '';
+  }
+
   async post({ domainId, items }) {
     const res = [];
     for (const item of items) {
@@ -189,6 +200,7 @@ class RichMediaHandler extends Handler {
       if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));
       else if (item.type === 'problem') res.push(this.renderProblem(domainId, item).catch(() => ''));
       else if (item.type === 'contest') res.push(this.renderContest(domainId, item).catch(() => ''));
+      else if (item.type === 'homework') res.push(this.renderHomework(domainId, item).catch(() => ''));
       else res.push('');
     }
     this.response.body = await Promise.all(res);

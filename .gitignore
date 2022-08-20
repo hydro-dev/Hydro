@@ -35,6 +35,7 @@ packages/**/*.js
 !**/bin/*.js
 !*.page.js
 !/install/jssh.d.ts
+!packages/utils/lib/register.js
 ## ui-default
 !packages/ui-default/**/*.js
 !packages/geoip/download.js

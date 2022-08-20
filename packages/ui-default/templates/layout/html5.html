@@ -61,23 +61,11 @@
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}l/{{ _('__id') }}"></script>
-    {% if process.env.DEV and vite %}
-      <script type="module">
-        import RefreshRuntime from 'http://localhost:3000/@react-refresh'
-        RefreshRuntime.injectIntoGlobalHook(window)
-        window.$RefreshReg$ = () => {}
-        window.$RefreshSig$ = () => (type) => type
-        window.__vite_plugin_react_preamble_installed__ = true
-      </script>
-      <script type="module" src="http://localhost:3000/@vite/client"></script>
-      <script type="module" src="http://localhost:3000/entry.js"></script>
+    <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
+    {% if process.env.DEV %}
+      <script type="text/javascript" src="/hydro.js"></script>
     {% else %}
-      <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-      {% if process.env.DEV %}
-        <script type="text/javascript" src="/hydro.js"></script>
-      {% else %}
-        <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
-      {% endif %}
+      <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
     {% endif %}
   {% endif %}
   {% block script %}{% endblock %}

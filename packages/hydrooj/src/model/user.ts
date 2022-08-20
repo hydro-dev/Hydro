@@ -89,7 +89,7 @@ export class User {
         this.priv = udoc.priv;
         this.regat = udoc.regat;
         this.loginat = udoc.loginat;
-        this.perm = dudoc.perm;
+        this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
         this.tfa = !!udoc.tfa;

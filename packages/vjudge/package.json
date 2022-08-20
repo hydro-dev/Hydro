@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/vjudge",
-    "version": "1.5.0-next.5",
+    "version": "1.5.0-next.6",
     "description": "Submit problems to remote oj",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -10,17 +10,17 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "chrome-finder": "^1.0.7",
-        "jsdom": "^19.0.0",
+        "jsdom": "^20.0.0",
         "lodash": "^4.17.21",
-        "puppeteer-core": "^15.3.2",
+        "puppeteer-core": "^15.5.0",
         "puppeteer-extra": "3.3.0",
         "puppeteer-extra-plugin-portal": "3.1.0",
         "puppeteer-extra-plugin-stealth": "2.10.1",
-        "superagent": "^7.1.5",
+        "superagent": "^8.0.0",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {
-        "@types/jsdom": "^16.2.14",
+        "@types/jsdom": "^20.0.0",
         "@types/lodash": "^4.14.182",
         "@types/superagent": "^4.1.15",
         "@types/superagent-proxy": "^3.0.0"

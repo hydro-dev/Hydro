@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { omit } from 'lodash';
 import { Index, MeiliSearch } from 'meilisearch';
+import { addScript, Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
 import ProblemModel from 'hydrooj/src/model/problem';
 import * as system from 'hydrooj/src/model/system';
@@ -48,15 +49,6 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         total: res.estimatedTotalHits,
         hits: res.hits.map((i) => i.id.replace('-', '/')),
     };
-};
-
-export const description = 'Meilisearch reindex';
-
-export const validate = {
-    $or: [
-        { domainId: 'string' },
-        { domainId: 'undefined' },
-    ],
 };
 
 async function waitForTask(id: number) {
@@ -109,4 +101,8 @@ export async function run(_, report) {
     return true;
 }
 
-global.Hydro.script.ensureMeiliSearch = { run, description, validate };
+addScript('ensureMeiliSearch', 'Meilisearch reindex')
+    .args(Schema.object({
+        domainId: Schema.string(),
+    }))
+    .action(run);

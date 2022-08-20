@@ -8,7 +8,6 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
-import * as system from '../model/system';
 import task from '../model/task';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
@@ -138,9 +137,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     ip: string;
 
     async prepare() {
-        const xff = system.get('server.xff');
-        this.ip = xff ? this.request.headers[xff] || this.request.ip : this.request.ip;
-        logger.info('Judge daemon connected from ', this.ip);
+        logger.info('Judge daemon connected from ', this.request.ip);
         this.send({ language: setting.langs });
         this.sendLanguageConfig = this.sendLanguageConfig.bind(this);
         bus.on('system/setting', this.sendLanguageConfig);

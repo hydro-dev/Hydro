@@ -6,6 +6,7 @@ import mysql from 'mysql';
 import TurndownService from 'turndown';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { noop, Time } from '@hydrooj/utils/lib/utils';
+import { addScript, Schema } from 'hydrooj';
 import { NotFoundError } from 'hydrooj/src/error';
 import { postJudge } from 'hydrooj/src/handler/judge';
 import { RecordDoc } from 'hydrooj/src/interface';
@@ -310,16 +311,14 @@ export async function run({
     return true;
 }
 
-export const description = 'migrate from hustoj';
-export const validate = {
-    host: 'string',
-    port: 'number',
-    name: 'string',
-    username: 'string',
-    password: 'string',
-    domainId: 'string',
-    contestType: 'string',
-    dataDir: 'string',
-};
-
-global.Hydro.script.migrateHustoj = { run, description, validate };
+addScript('migrateHustoj', 'migrate from hustoj')
+    .args(Schema.object({
+        host: Schema.string().required(),
+        port: Schema.number().required(),
+        name: Schema.string().required(),
+        username: Schema.string().required(),
+        password: Schema.string().required(),
+        domainId: Schema.string().required(),
+        contestType: Schema.string().required(),
+        dataDir: Schema.string().required(),
+    })).action(run);

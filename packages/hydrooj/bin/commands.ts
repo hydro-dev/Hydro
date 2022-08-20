@@ -93,7 +93,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
             return;
         }
         if (operation === 'create') {
-            name ||= '/root/addon';
+            name ||= `${os.homedir()}/addon`;
             fs.mkdirSync(name);
             child.execSync('yarn init -y', { cwd: name });
             fs.mkdirSync(`${name}/templates`);

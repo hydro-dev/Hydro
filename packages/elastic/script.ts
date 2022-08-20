@@ -1,5 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { omit } from 'lodash';
+import { addScript, Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
 import ProblemModel from 'hydrooj/src/model/problem';
 import * as system from 'hydrooj/src/model/system';
@@ -61,9 +62,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     };
 };
 
-export const description = 'Elastic problem search re-index';
-
-export async function run({ domainId }, report) {
+async function run({ domainId }, report) {
     try {
         if (domainId) await client.deleteByQuery({ index: 'problem', query: { match: { domainId } } });
         else await client.deleteByQuery({ index: 'problem', query: { match_all: {} } });
@@ -86,11 +85,8 @@ export async function run({ domainId }, report) {
     return true;
 }
 
-export const validate = {
-    $or: [
-        { domainId: 'string' },
-        { domainId: 'undefined' },
-    ],
-};
-
-global.Hydro.script.ensureElasticSearch = { run, description, validate };
+addScript('ensureElasticSearch', 'Elastic problem search re-index')
+    .args(Schema.object({
+        domainId: Schema.string(),
+    }))
+    .action(run);

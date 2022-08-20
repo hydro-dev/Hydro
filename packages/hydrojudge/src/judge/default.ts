@@ -21,7 +21,8 @@ const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
-        if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
+        if (ctx.errored
+            || (ctxSubtask.subtask.type === 'min' && ctxSubtask.score === 0)
             || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
             || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
         ) {
@@ -88,7 +89,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         await Promise.all(
             Object.values(res.fileIds).map((id) => del(id)),
         ).catch(() => { /* Ignore file doesn't exist */ });
-        if (runner && ctx.rerun && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
+        if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             await runner(ctx, ctxSubtask);
             return;

@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import delay from 'vj/utils/delay';

@@ -1,5 +1,3 @@
-import { inspect } from 'util';
-
 declare global {
     interface StringConstructor {
         random: (digit?: number, dict?: string) => string;
@@ -33,24 +31,23 @@ String.random = function random(digit = 32, dict = defaultDict) {
     return str;
 };
 
-String.prototype.format = function formatStr(...args) {
-    let result = this;
-    if (args.length) {
-        if (args.length === 1 && typeof args[0] === 'object') {
-            const t = args[0];
-            for (const key in t) {
-                if (!key.startsWith('_') && t[key] !== undefined) {
-                    if (t._inspect && typeof t[key] === 'object') {
-                        t[key] = inspect(t[key], { colors: process?.stderr?.isTTY });
+if (!String.prototype.format) {
+    String.prototype.format = function formatStr(...args) {
+        let result = this;
+        if (args.length) {
+            if (args.length === 1 && typeof args[0] === 'object') {
+                const t = args[0];
+                for (const key in t) {
+                    if (!key.startsWith('_') && t[key] !== undefined) {
+                        const reg = new RegExp(`(\\{${key}\\})`, 'g');
+                        result = result.replace(reg, t[key]);
                     }
-                    const reg = new RegExp(`(\\{${key}\\})`, 'g');
-                    result = result.replace(reg, t[key]);
                 }
-            }
-        } else return this.formatFromArray(args);
-    }
-    return result;
-};
+            } else return this.formatFromArray(args);
+        }
+        return result;
+    };
+}
 
 String.prototype.formatFromArray = function formatStr(args) {
     let result = this;
@@ -173,7 +170,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+).(in|txt)$/,
+        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+)\.(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
             (a) => `${a[1] + a[2]}.ans`,
@@ -195,8 +192,11 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: 'sum',
     },
     {
-        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+).in$/,
-        output: [(a) => `${a[1] + a[2]}${a[3]}${a[4]}.out`],
+        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.in$/,
+        output: [
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.out`,
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.ans`,
+        ],
         id: (a) => +a[4],
         subtask: (a) => +a[2],
         preferredScorerType: 'min',

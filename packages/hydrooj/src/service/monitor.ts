@@ -33,6 +33,13 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         document.coll.find({ docType: document.TYPE_DISCUSSION }).count(),
         record.coll.find().count(),
     ]);
+    let sandbox = '';
+    try {
+        let host = system.get('hydrojudge.sandbox_host') || 'http://localhost:5050/';
+        if (!host.endsWith('/')) host += '/';
+        const res = await superagent.get(`${host}version`);
+        sandbox = res.body;
+    } catch (e) { }
     const payload = crypt(dump({
         mid: mid.toString(),
         version,
@@ -47,12 +54,14 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,
+        sandbox,
     }, {
         replacer: (key, value) => {
             if (typeof value === 'function') return '';
             return value;
         },
     }));
+    if (process.env.CI) return [mid, $update];
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })
         .then((res) => {

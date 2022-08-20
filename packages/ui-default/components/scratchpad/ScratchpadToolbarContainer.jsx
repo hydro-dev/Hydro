@@ -1,22 +1,20 @@
 /* eslint-disable react/static-property-placement */
 import _ from 'lodash';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
 import Icon from 'vj/components/react/IconComponent';
 import getAvailableLangs from 'vj/utils/availableLangs';
+import i18n from 'vj/utils/i18n';
+import request from 'vj/utils/request';
 import Toolbar, {
-  ToolbarItemComponent as ToolbarItem,
   ToolbarButtonComponent as ToolbarButton,
+  ToolbarItemComponent as ToolbarItem,
   ToolbarSplitComponent as ToolbarSplit,
 } from './ToolbarComponent';
 
 const mapStateToProps = (state) => ({
   pretestVisible: state.ui.pretest.visible,
-  sidebarVisible: state.ui.sidebar.visible,
   recordsVisible: state.ui.records.visible,
   isPosting: state.ui.isPosting,
   isRunning: state.pretest.isRunning,
@@ -185,16 +183,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
             {i18n('Records')}
           </ToolbarButton>
         )}
-        {/* <ToolbarButton
-          activated={this.props.sidebarVisible}
-          onClick={() => this.props.togglePanel('sidebar')}
-          data-global-hotkey="alt+w"
-          data-tooltip={`${i18n('Toggle Sidebar')} (Alt+L)`}
-        >
-          <Icon name="edit" />
-          {' '}
-          {i18n('Pretest')}
-        </ToolbarButton> */}
       </Toolbar>
     );
   }

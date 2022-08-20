@@ -1,7 +1,9 @@
 import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
-import { flattenDeep, intersection, isSafeInteger } from 'lodash';
+import {
+    escapeRegExp, flattenDeep, intersection, isSafeInteger,
+} from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
@@ -13,7 +15,7 @@ import {
     ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemStatusDoc, User,
+    ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -117,15 +119,33 @@ function buildQuery(udoc: User) {
     return q;
 }
 
+const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
+    const escaped = escapeRegExp(q.toLowerCase());
+    const $regex = new RegExp(q.length >= 3 ? escaped : `\\A${escaped}`, 'gmi');
+    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
+    const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
+        .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
+    if (!Number.isNaN(+q)) {
+        const pdoc = await problem.get(domainId, +q, ['domainId', 'docId', 'pid', 'title']);
+        if (pdoc) pdocs.unshift(pdoc);
+    }
+    return {
+        hits: pdocs.map((i) => `${i.domainId}/${i.docId}`),
+        total: await problem.count(domainId, filter),
+        countRelation: 'eq',
+    };
+};
+
 export class ProblemMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
-    async get(domainId: string, page = 1, q = '') {
+    @param('pjax', Types.Boolean)
+    async get(domainId: string, page = 1, q = '', pjax = false) {
         this.response.template = 'problem_main.html';
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
         const psdict = {};
-        const search = global.Hydro.lib.problemSearch;
+        const search = global.Hydro.lib.problemSearch || defaultSearch;
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
@@ -138,20 +158,18 @@ export class ProblemMainHandler extends Handler {
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (text) {
-            if (search) {
-                const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
-                total = result.total;
-                pcountRelation = result.countRelation;
-                if (!result.hits.length) fail = true;
-                if (!query.$and) query.$and = [];
-                query.$and.push({
-                    $or: result.hits.map((i) => {
-                        const [did, docId] = i.split('/');
-                        return { domainId: did, docId: +docId };
-                    }),
-                });
-                sort = result.hits;
-            } else query.$text = { $search: text };
+            const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
+            total = result.total;
+            pcountRelation = result.countRelation;
+            if (!result.hits.length) fail = true;
+            if (!query.$and) query.$and = [];
+            query.$and.push({
+                $or: result.hits.map((i) => {
+                    const [did, docId] = i.split('/');
+                    return { domainId: did, docId: +docId };
+                }),
+            });
+            sort = result.hits;
         }
         await bus.serial('problem/list', query, this);
         // eslint-disable-next-line prefer-const
@@ -186,7 +204,7 @@ export class ProblemMainHandler extends Handler {
                     ).then((res) => Object.assign(psdict, res))),
             );
         }
-        if (this.request.json) {
+        if (pjax) {
             this.response.body = {
                 title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
@@ -196,9 +214,6 @@ export class ProblemMainHandler extends Handler {
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { qs: q }),
                 ])).map((i) => ({ html: i })),
-                raw: {
-                    page, pcount, ppcount, pdocs, psdict, category,
-                },
             };
         } else {
             this.response.body = {
@@ -408,6 +423,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
             this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
+            this.response.body.htdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework');
         }
     }
 
@@ -634,7 +650,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
-        if (filename.endsWith('.zip')) {
+        if (filename.endsWith('.zip') && type === 'testdata') {
             const zip = new AdmZip(this.request.files.file.filepath);
             const entries = zip.getEntries();
             for (const entry of entries) {

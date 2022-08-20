@@ -105,17 +105,25 @@ export default class LuoguProvider implements IBasicProvider {
     }
 
     async submitProblem(id: string, lang: string, code: string, info) {
+        let enableO2 = 0;
         const comment = setting.langs[lang]?.comment;
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().toLocaleString()}`;
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
+        if (lang.endsWith('o2')) {
+            enableO2 = 1;
+            lang = lang.slice(0, -2);
+        }
         lang = lang.includes('luogu.') ? lang.split('luogu.')[1] : '0';
         const result = await this.post(`/fe/api/problem/submit/${id}${this.account.query || ''}`)
             .set('referer', `https://www.luogu.com.cn/problem/${id}`)
-            // TODO O2
-            .send({ code, lang: +lang, enableO2: 0 });
+            .send({
+                code,
+                lang: +lang,
+                enableO2,
+            });
         logger.info('RecordID:', result.body.rid);
         return result.body.rid;
     }

@@ -70,6 +70,7 @@ export const Setting = (
 
 export const PreferenceSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
+        if (PREFERENCE_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
         PREFERENCE_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
@@ -77,6 +78,7 @@ export const PreferenceSetting = (...settings: _Setting[]) => {
 };
 export const AccountSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
+        if (ACCOUNT_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
         ACCOUNT_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
@@ -84,18 +86,21 @@ export const AccountSetting = (...settings: _Setting[]) => {
 };
 export const DomainUserSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
+        if (DOMAIN_USER_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
         DOMAIN_USER_SETTINGS.push(setting);
         DOMAIN_USER_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
 export const DomainSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
+        if (DOMAIN_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
         DOMAIN_SETTINGS.push(setting);
         DOMAIN_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
 export const SystemSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
+        if (SYSTEM_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
         SYSTEM_SETTINGS.push(setting);
         SYSTEM_SETTINGS_BY_KEY[setting.key] = setting;
     }
@@ -193,7 +198,7 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.from', null, 'text', 'smtp.from', 'Mail From'),
     Setting('setting_smtp', 'smtp.secure', false, 'boolean', 'smtp.secure', 'SSL'),
     Setting('setting_smtp', 'smtp.verify', true, 'boolean', 'smtp.verify', 'Verify register email'),
-    Setting('setting_server', 'server.center', 'https://hydro.undefined.moe:8443/center', 'text', 'server.center', '', FLAG_HIDDEN),
+    Setting('setting_server', 'server.center', 'https://hydro.ac/center', 'text', 'server.center', '', FLAG_HIDDEN),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
     Setting('setting_server', 'server.displayName', 'Hydro', 'text', 'server.name', 'Server Name (Global Display)', FLAG_PRO),
     Setting('setting_server', 'server.url', '/', 'text', 'server.url', 'Server BaseURL'),

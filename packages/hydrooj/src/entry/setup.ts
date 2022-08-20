@@ -21,7 +21,7 @@ async function get(ctx: Context) {
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       <meta name="msapplication-TileColor" content="#579e9a">
       <meta name="theme-color" content="#56758f">
-      <link rel="stylesheet" media="all" href="/vj4.css">
+      <link rel="stylesheet" media="all" href="/default.theme.css">
       <title>Setup</title>
     </head>
     <body>

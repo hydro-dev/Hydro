@@ -1,7 +1,8 @@
+import $ from 'jquery';
 import _ from 'lodash';
-import Notification from 'vj/components/notification';
-import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import { nanoid } from 'nanoid';
+import DOMAttachedObject from 'vj/components/DOMAttachedObject';
+import Notification from 'vj/components/notification';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 

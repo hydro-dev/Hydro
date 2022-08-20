@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import Rotator from 'vj/components/rotator';
 import { AutoloadPage } from 'vj/misc/Page';
 import request from 'vj/utils/request';

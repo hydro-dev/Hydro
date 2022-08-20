@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { InfoDialog } from 'vj/components/dialog';
 import i18n from 'vj/utils/i18n';
 import tpl from 'vj/utils/tpl';

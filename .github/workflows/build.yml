@@ -16,14 +16,14 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
     - name: Check out
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 2
     - name: Set up Node
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
-        node-version: 14.x
+        node-version: 16.x
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
@@ -33,10 +33,11 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           yarn.lock
+          .cache
           **/tsconfig.tsbuildinfo
-        key: yarn-${{ hashFiles('**/package.json') }}
+        key: cache-${{ github.ref }}
         restore-keys: |
-          yarn-
+          cache-
     - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
@@ -55,7 +56,7 @@ jobs:
           .github/workflows/**
     - name: Build And Lint
       run: |
-        if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]]
+        if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
         then
           yarn build:ui:gulp
           parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test

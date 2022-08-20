@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import i18n from 'vj/utils/i18n';
@@ -19,7 +20,7 @@ export default function LanguageSelect({
     const subselections = Object.keys(options).length;
     if (options[sub]) return;
     if (!subselections) setSub('');
-    if (subselections === 1) setSub(Object.keys(options)[0]);
+    setSub(Object.keys(options)[0]);
   }, [main]);
 
   return (

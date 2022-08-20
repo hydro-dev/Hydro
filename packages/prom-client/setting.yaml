@@ -1,0 +1,15 @@
+name:
+  type: text
+  name: Auth Username
+  desc: basic auth username while requesting metrics
+  default: admin
+password:
+  type: password
+  name: Auth Password
+  desc: basic auth password while requesting metrics
+  default: admin
+collect_rate:
+  type: number
+  name: Collect Rate
+  desc: The collect rate scale (default:1)
+  default: 1

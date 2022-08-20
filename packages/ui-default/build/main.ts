@@ -1,16 +1,16 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable import/no-extraneous-dependencies */
 import cac from 'cac';
+import chalk from 'chalk';
+import log from 'fancy-log';
 import fs from 'fs-extra';
+import gulp from 'gulp';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import gulp from 'gulp';
-import log from 'fancy-log';
-import chalk from 'chalk';
 import pkg from '../package.json';
-import root from './utils/root';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
+import root from './utils/root';
 
 const argv = cac().parse();
 
@@ -19,19 +19,17 @@ async function runWebpack({
 }) {
   const compiler = webpack(webpackConfig({ watch, production, measure }));
   if (dev) {
-    const server = new WebpackDevServer(compiler, {
+    const server = new WebpackDevServer({
+      port: 8000,
       compress: true,
       hot: true,
-      disableHostCheck: true,
-      stats: 'none',
-      index: root('public'),
       proxy: {
-        context: (path) => !path.includes('sockjs-node'),
+        context: (path) => path !== '/ws',
         target: 'http://localhost:2333',
         ws: true,
       },
-    });
-    return server.listen(8000);
+    }, compiler);
+    return server.start();
   }
   return new Promise((resolve, reject) => {
     function compilerCallback(err, stats) {
@@ -89,11 +87,9 @@ async function main() {
       fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
     }
     if (argv.options.production) {
-      fs.removeSync('public/vditor/dist/js/mathjax');
       fs.removeSync('public/vditor/dist/js/echarts');
       fs.removeSync('public/vditor/dist/js/graphviz');
       fs.removeSync('public/vditor/dist/js/mermaid');
-      fs.removeSync('public/vditor/dist/js/abcjs');
       const files = fs.readdirSync('public');
       files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }

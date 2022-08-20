@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 import { Duplex } from 'stream';
+import { inspect } from 'util';
 import fs from 'fs-extra';
 import type { Moment } from 'moment-timezone';
 import { isMoment } from 'moment-timezone';
@@ -28,6 +29,25 @@ export function folderSize(folderPath: string) {
     _next(folderPath);
     return size;
 }
+
+String.prototype.format = function formatStr(...args) {
+    let result = this;
+    if (args.length) {
+        if (args.length === 1 && typeof args[0] === 'object') {
+            const t = args[0];
+            for (const key in t) {
+                if (!key.startsWith('_') && t[key] !== undefined) {
+                    if (t._inspect && typeof t[key] === 'object') {
+                        t[key] = inspect(t[key], { colors: process?.stderr?.isTTY });
+                    }
+                    const reg = new RegExp(`(\\{${key}\\})`, 'g');
+                    result = result.replace(reg, t[key]);
+                }
+            }
+        } else return this.formatFromArray(args);
+    }
+    return result;
+};
 
 export function isClass(obj: any, strict = false) {
     if (typeof obj !== 'function') return false;

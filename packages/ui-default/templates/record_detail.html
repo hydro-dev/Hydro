@@ -66,8 +66,10 @@
               <a href="{{ url('homework_detail' if tdoc.rule == 'homework' else 'contest_detail', tid=tdoc.docId) }}">{{ tdoc.title }}</a>
             </dd>
           {% endif %}
-          <dt>{{ _('Language') }}</dt>
-          <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
+          {% if pdoc.config.type != 'objective' %}
+            <dt>{{ _('Language') }}</dt>
+            <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
+          {% endif %}
           <dt>{{ _('Submit At') }}</dt>
           <dd>{{ datetimeSpan(rdoc._id)|safe }}</dd>
           {% if rdoc.judgeAt %}

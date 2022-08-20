@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('manage_dashboard', async () => {

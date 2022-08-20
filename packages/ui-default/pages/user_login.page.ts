@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import Notification from 'vj/components/notification';
