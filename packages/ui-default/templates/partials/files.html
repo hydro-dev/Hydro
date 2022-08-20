@@ -21,7 +21,7 @@
       </thead>
       <tbody>
         {%- for file in files -%}
-        <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
+        <tr data-filename="{{ file.name }}" data-size="{{ file.size }}" data-preview>
           <td class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" data-checkbox-group="files" data-checkbox-range>

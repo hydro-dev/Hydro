@@ -1,9 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import {
-  ActionDialog, ConfirmDialog, Dialog,
-  InfoDialog,
-} from 'vj/components/dialog/index';
+import { dataPreview } from 'vj/components/datapreview/datapreview.page.ts';
+import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import download from 'vj/components/zipDownloader';
@@ -172,100 +170,13 @@ const page = new NamedPage('problem_files', () => {
     handleClickUpload(type, files);
   }
 
-  async function startEdit(filename, value) {
-    const { default: Editor } = await import('vj/components/editor/index');
-    const promise = new ActionDialog({
-      $body: tpl`
-        <div class="typo" style="width: 100%; height: 100%">
-          <textarea name="fileContent" style="width: 100%; height: 100%"></textarea>
-        </div>`,
-      width: `${window.innerWidth - 200}px`,
-      height: `${window.innerHeight - 100}px`,
-      cancelByEsc: false,
-    }).open();
-    const languages = [
-      ['yaml', ['yaml', 'yml']],
-      ['cpp', ['c', 'cc', 'cpp', 'h', 'hpp']],
-      ['json', ['json']],
-      ['plain', ['in', 'out', 'ans']],
-    ];
-    const language = languages.filter((i) => i[1].includes(filename.split('.').pop()))[0]?.[0] || 'auto';
-    const editor = new Editor($('[name="fileContent"]'), {
-      value,
-      autoResize: false,
-      autoLayout: false,
-      language,
-      model: `hydro://problem/file/${filename}`,
-    });
-    const action = await promise;
-    value = editor.value().replace(/\r\n/g, '\n');
-    editor.destory();
-    if (action !== 'ok') return null;
-    return value;
-  }
-  /**
-   * @param {string} type
-   * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} ev
-   */
-  async function handleEdit(type, ev) {
-    if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return;
-    if (ev) ev.preventDefault();
-    const filename = ev
-      ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
-      // eslint-disable-next-line no-alert
-      : prompt('Filename');
-    if (!filename) return;
-    const filesize = ev
-      ? +ev.currentTarget.closest('[data-size]').getAttribute('data-size')
-      : 0;
-    let content = '';
-    if (ev) {
-      const link = $(ev.currentTarget).find('a').attr('href');
-      if (!link) return;
-      const ext = filename.split('.').pop();
-      if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
-        await new InfoDialog({
-          $body: tpl`<div class="typo"><img src="${link}"></img></div>`,
-        }).open();
-        return;
-      }
-      if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
-        const action = await new ActionDialog({
-          $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
-        }).open();
-        if (action === 'ok') window.open(link);
-        return;
-      }
-      Notification.info(i18n('Loading file...'));
-      try {
-        const res = await request.get(link);
-        content = await request.get(res.url, undefined, { dataType: 'text' });
-      } catch (e) {
-        window.captureException?.(e);
-        Notification.error(i18n('Failed to load file: {0}', e.message));
-        throw e;
-      }
-    } else Notification.info(i18n('Loading editor...'));
-    const val = await startEdit(filename, content);
-    if (typeof val !== 'string') return;
-    Notification.info(i18n('Saving file...'));
-    const data = new FormData();
-    data.append('filename', filename);
-    data.append('file', new Blob([val], { type: 'text/plain' }));
-    data.append('type', type);
-    data.append('operation', 'upload_file');
-    await request.postFile('', data);
-    Notification.success(i18n('File saved.'));
-    await pjax.request({ push: false });
-  }
-
   if ($('[name="upload_testdata"]').length) {
-    $(document).on('click', '.problem-files-testdata .col--name', (ev) => handleEdit('testdata', ev));
-    $(document).on('click', '.problem-files-additional_file .col--name', (ev) => handleEdit('additional_file', ev));
+    $(document).on('click', '.problem-files-testdata .col--name', (ev) => dataPreview(ev, 'testdata'));
+    $(document).on('click', '.problem-files-additional_file .col--name', (ev) => dataPreview(ev, 'additional_file'));
     $(document).on('click', '[name="upload_testdata"]', () => handleClickUpload('testdata'));
     $(document).on('click', '[name="upload_file"]', () => handleClickUpload('additional_file'));
-    $(document).on('click', '[name="create_testdata"]', () => handleEdit('testdata'));
-    $(document).on('click', '[name="create_file"]', () => handleEdit('additional_file'));
+    $(document).on('click', '[name="create_testdata"]', () => dataPreview(undefined, 'testdata'));
+    $(document).on('click', '[name="create_file"]', () => dataPreview(undefined, 'additional_file'));
     $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));
     $(document).on('click', '[name="remove_selected_file"]', () => handleClickRemoveSelected('additional_file'));
   }
