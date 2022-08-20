@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import { dataPreview } from 'vj/components/datapreview/datapreview.page.ts';
+import { dataPreview } from 'vj/components/datapreview/datapreview.page';
 import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';

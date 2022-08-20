@@ -40,6 +40,67 @@ async function startEdit(filename, value) {
   return value;
 }
 
+const dialogAction = [
+  tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
+  tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
+  tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
+];
+
+async function bindCopyLink(src) {
+  const clip = new Clipboard('.copybutton', { text: () => `${src}` });
+  clip.on('success', () => {
+    Notification.success(i18n('Download link copied to clipboard!'), 1000);
+  });
+  clip.on('error', () => {
+    Notification.error(i18n('Copy failed :('));
+  });
+}
+
+async function previewImage(link) {
+  const dialog = new InfoDialog({
+    $body: tpl`<div class="typo"><img src="${link}" style="max-height: calc(80vh - 45px);"></img></div>`,
+    $action: dialogAction,
+  });
+  bindCopyLink(link);
+  const action = await dialog.open();
+  if (action === 'download') window.open(link);
+}
+
+async function previewPDF(link, src) {
+  const uuidURL = URL.createObjectURL(new Blob());
+  const uuid = uuidURL.toString();
+  URL.revokeObjectURL(uuidURL);
+  const dialog = new InfoDialog({
+    $body: tpl`<div class="typo">
+      <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
+      <param name="SRC" value="${src}" >
+      <embed width="100%" style="height: 70vh;border: none;" src="${src}">
+        <noembed></noembed>
+      </embed>
+    </object></div>`,
+    width: `${window.innerWidth - 200}px`,
+    height: `${window.innerHeight - 100}px`,
+    $action: dialogAction,
+  });
+  bindCopyLink(src);
+  const action = await dialog.open();
+  if (action === 'download') window.open(link);
+}
+
+async function previewOffice(link, src) {
+  const dialog = new InfoDialog({
+    $body: tpl`<div class="typo">
+    <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(new URL(src, window.location.href).toString())}"
+    scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="height: 70vh;"></iframe></div>`,
+    width: `${window.innerWidth - 200}px`,
+    height: `${window.innerHeight - 100}px`,
+    $action: dialogAction,
+  });
+  bindCopyLink(link);
+  const action = await dialog.open();
+  if (action === 'download') window.open(link);
+}
+
 export async function dataPreview(ev, type = '') {
   if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return;
   if (ev) ev.preventDefault();
@@ -57,14 +118,7 @@ export async function dataPreview(ev, type = '') {
     if (!link) return;
     const ext = filename.split('.').pop();
     if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
-      await new InfoDialog({
-        $body: tpl`<div class="typo"><img src="${link}" style="max-height: calc(80vh - 45px);"></img></div>`,
-        $action: [
-          tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
-          tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
-          tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
-        ],
-      }).open();
+      await previewImage(link);
       return;
     }
     if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf'].includes(ext)) {
@@ -79,48 +133,9 @@ export async function dataPreview(ev, type = '') {
         throw e;
       }
       if (ext === 'pdf') {
-        const uuidURL = URL.createObjectURL(new Blob());
-        const uuid = uuidURL.toString();
-        URL.revokeObjectURL(uuidURL);
-        await new InfoDialog({
-          $body: tpl`<div class="typo">
-            <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
-            <param name="SRC" value="${src}" >
-            <embed width="100%" style="height: 70vh;border: none;" src="${src}">
-              <noembed></noembed>
-            </embed>
-          </object></div>`,
-          width: `${window.innerWidth - 200}px`,
-          height: `${window.innerHeight - 100}px`,
-          $action: [
-            tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
-            tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
-            tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
-          ],
-        }).open();
+        await previewPDF(link, src);
       } else {
-        const dialog = new InfoDialog({
-          $body: tpl`<div class="typo">
-          <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(new URL(src, window.location.href).toString())}"
-          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="height: 70vh;"></iframe></div>`,
-          width: `${window.innerWidth - 200}px`,
-          height: `${window.innerHeight - 100}px`,
-          $action: [
-            tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
-            tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
-            tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
-          ],
-        });
-        const clip = new Clipboard('.copybutton', { text: () => `${src}` });
-        clip.on('success', () => {
-          Notification.success(i18n('Download link copied to clipboard!'), 1000);
-        });
-        clip.on('error', () => {
-          Notification.error(i18n('Copy failed :('));
-        });
-        const action = await dialog.open();
-        if (action === 'download') window.open(link);
-        return;
+        await previewOffice(link, src);
       }
       return;
     }
