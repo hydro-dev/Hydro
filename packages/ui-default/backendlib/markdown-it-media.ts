@@ -105,7 +105,7 @@ export function Media(md: MarkdownIt) {
     if (service === 'msoffice') {
       return `\
         <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}"
-        scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
+          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
       `;
     }
     if (service === 'pdf') {

@@ -77,13 +77,15 @@ async function previewPDF(link, src) {
   const uuid = uuidURL.toString();
   URL.revokeObjectURL(uuidURL);
   const dialog = new InfoDialog({
-    $body: tpl`<div class="typo">
-      <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
-      <param name="SRC" value="${src}" >
-      <embed width="100%" style="height: 70vh;border: none;" src="${src}">
-        <noembed></noembed>
-      </embed>
-    </object></div>`,
+    $body: tpl`
+      <div class="typo">
+        <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
+          <param name="SRC" value="${src}" >
+          <embed width="100%" style="height: 70vh;border: none;" src="${src}">
+            <noembed></noembed>
+          </embed>
+        </object>
+      </div>`,
     width: `${window.innerWidth - 200}px`,
     height: `${window.innerHeight - 100}px`,
     $action: dialogAction,
@@ -95,9 +97,11 @@ async function previewPDF(link, src) {
 
 async function previewOffice(link, src) {
   const dialog = new InfoDialog({
-    $body: tpl`<div class="typo">
-    <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(new URL(src, window.location.href).toString())}"
-    scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="height: 70vh;"></iframe></div>`,
+    $body: tpl`
+      <div class="typo">
+        <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(new URL(src, window.location.href).toString())}"
+          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="height: 70vh;"></iframe>
+      </div>`,
     width: `${window.innerWidth - 200}px`,
     height: `${window.innerHeight - 100}px`,
     $action: dialogAction,
@@ -112,7 +116,7 @@ export async function dataPreview(ev, type = '') {
   if (ev) ev.preventDefault();
   const filename = ev
     ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
-  // eslint-disable-next-line no-alert
+    // eslint-disable-next-line no-alert
     : prompt('Filename');
   if (!filename) return;
   const filesize = ev
@@ -131,7 +135,7 @@ export async function dataPreview(ev, type = '') {
       Notification.info(i18n('Loading file...'));
       let src;
       try {
-        const res = await request.get(link + (link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'));
+        const res = await request.get(`${link}${link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'}`);
         src = res.url;
       } catch (e) {
         window.captureException?.(e);
