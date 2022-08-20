@@ -14,11 +14,12 @@ import {
     NotFoundError, PermissionError, PrivilegeError,
     UserFacingError,
 } from '../error';
-import { DomainDoc, User } from '../interface';
+import { DomainDoc } from '../interface';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as system from '../model/system';
+import { User } from '../model/user';
 import { errorMessage } from '../utils';
 import * as bus from './bus';
 import * as decorators from './decorators';
@@ -99,11 +100,12 @@ wsServer.on('error', (error) => {
 });
 
 const ignoredLimit = `,${argv.options.ignoredLimit},`;
-function serializer(k: string, v: any) {
+const serializer = (showDisplayName = false) => (k: string, v: any) => {
     if (k.startsWith('_') && k !== '_id') return undefined;
     if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+    if (v instanceof User && !showDisplayName) delete v.displayName;
     return v;
-}
+};
 
 export async function prepare() {
     app.keys = system.get('session.keys') as unknown as string[];
@@ -366,7 +368,7 @@ export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer));
+        this.conn.send(JSON.stringify(data, serializer(this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
     }
 
     close(code: number, reason: string) {

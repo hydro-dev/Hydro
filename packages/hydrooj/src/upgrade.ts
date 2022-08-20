@@ -12,7 +12,7 @@ import { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { size } from '@hydrooj/utils/lib/utils';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
-import { PRIV, STATUS } from './model/builtin';
+import { PERM, PRIV, STATUS } from './model/builtin';
 import * as contest from './model/contest';
 import * as discussion from './model/discussion';
 import * as document from './model/document';
@@ -790,6 +790,16 @@ const scripts: UpgradeScript[] = [
     },
     async function _64_65() {
         await system.set('server.center', 'https://hydro.ac/center');
+        return true;
+    },
+    async function _65_66() {
+        await iterateAllDomain(async (ddoc) => {
+            Object.keys(ddoc.roles).forEach((role) => {
+                if (['guest', 'root'].includes(role)) return;
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
+            });
+            await domain.setRoles(ddoc._id, ddoc.roles);
+        });
         return true;
     },
 ];

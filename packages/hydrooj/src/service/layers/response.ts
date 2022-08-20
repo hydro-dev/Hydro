@@ -1,12 +1,15 @@
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from 'hydrooj/src/error';
+import { PERM } from 'hydrooj/src/model/builtin';
+import { User } from 'hydrooj/src/model/user';
 import type { KoaContext } from '../server';
 
-function serializer(k: string, v: any) {
+const serializer = (showDisplayName = false) => (k: string, v: any) => {
     if (k.startsWith('_') && k !== '_id') return undefined;
     if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+    if (v instanceof User && !showDisplayName) delete v.displayName;
     return v;
-}
+};
 
 export default (logger) => async (ctx: KoaContext, next) => {
     const {
@@ -28,7 +31,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                         response.body.UiContext = UiContext;
                         response.body.UserContext = user;
                     }
-                    response.body = JSON.stringify(response.body, serializer);
+                    response.body = JSON.stringify(response.body, serializer(user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME)));
                 } catch (e) {
                     response.body = new SystemError('Serialize failure', e.message);
                 }
