@@ -57,9 +57,8 @@ export async function dataPreview(ev, type = '') {
     if (!link) return;
     const ext = filename.split('.').pop();
     if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
-      console.log('open image');
       await new InfoDialog({
-        $body: tpl`<div class="typo"><img src="${link}"></img></div>`,
+        $body: tpl`<div class="typo"><img src="${link}" style="max-height: calc(80vh - 45px);"></img></div>`,
         $action: [
           tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
           tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
