@@ -46,13 +46,19 @@ const dialogAction = [
   tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
 ];
 
-async function bindCopyLink(src) {
-  const clip = new Clipboard('.copybutton', { text: () => `${src}` });
+function bindCopyLink(src: string) {
+  const url = !(window.location.href.endsWith('file') || window.location.href.endsWith('files')) || window.location.href.match('contest/.*/file')
+    ? `file://${src.substring(src.lastIndexOf('/') + 1)}` : src;
+  const clip = new Clipboard('.copybutton', { text: () => `${url}` });
   clip.on('success', () => {
-    Notification.success(i18n('Download link copied to clipboard!'), 1000);
+    if (!url.startsWith('file://')) {
+      Notification.success(i18n('Download link copied to clipboard!'), 1000);
+    } else Notification.success(i18n('Reference link copied to clipboard!'), 1000);
+    clip.destroy();
   });
   clip.on('error', () => {
     Notification.error(i18n('Copy failed :('));
+    clip.destroy();
   });
 }
 
@@ -164,7 +170,9 @@ export async function dataPreview(ev, type = '') {
   data.append('file', new Blob([val], { type: 'text/plain' }));
   if (type) data.append('type', type);
   data.append('operation', 'upload_file');
-  await request.postFile('', data);
+  const postUrl = !window.location.href.endsWith('/files')
+    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/')) }/files` : '';
+  await request.postFile(postUrl, data);
   Notification.success(i18n('File saved.'));
   await pjax.request({ push: false });
 }
