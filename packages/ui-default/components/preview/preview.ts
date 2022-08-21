@@ -111,7 +111,7 @@ async function previewOffice(link, src) {
   if (action === 'download') window.open(link);
 }
 
-export async function dataPreview(ev, type = '') {
+export async function previewFile(ev, type = '') {
   if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return;
   if (ev) ev.preventDefault();
   const filename = ev
@@ -142,7 +142,6 @@ export async function dataPreview(ev, type = '') {
         const res = await request.get(`${link}${link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'}`);
         src = res.url;
       } catch (e) {
-        window.captureException?.(e);
         Notification.error(i18n('Failed to load file: {0}', e.message));
         throw e;
       }
@@ -161,7 +160,6 @@ export async function dataPreview(ev, type = '') {
       const res = await request.get(link);
       content = await request.get(res.url, undefined, { dataType: 'text' });
     } catch (e) {
-      window.captureException?.(e);
       Notification.error(i18n('Failed to load file: {0}', e.message));
       throw e;
     }
@@ -182,9 +180,7 @@ export async function dataPreview(ev, type = '') {
 }
 
 const dataPreviewPage = new AutoloadPage('dataPreview', async () => {
-  if ($('[data-preview]').length) {
-    $('[data-preview]').on('click', dataPreview);
-  }
+  $('[data-preview]').on('click', previewFile);
 });
 
 export default dataPreviewPage;

@@ -4,9 +4,9 @@ import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { dataPreview } from 'vj/components/datapreview/datapreview.page';
 import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
+import { previewFile } from 'vj/components/preview/preview';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
@@ -196,7 +196,7 @@ const page = new NamedPage('problem_config', () => {
   }
 
   mountComponent();
-  $(document).on('click', '.testdata-table .col--name', (ev) => dataPreview(ev, 'testdata'));
+  $(document).on('click', '.testdata-table .col--name', (ev) => previewFile(ev, 'testdata'));
   $(document).on('click', '[name="testdata__upload"]', () => handleClickUpload());
   $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="testdata__download__all"]', () => handleClickDownloadAll());
