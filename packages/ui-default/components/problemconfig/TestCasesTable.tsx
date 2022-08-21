@@ -54,19 +54,19 @@ export function TestCaseEntry({ index, subindex }) {
       }
     }
   };
-  if (!testcase || Object.keys(testcase).length === 0) {
-    return (
-      <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
-    );
-  }
   const refs = {
     input: useRef(),
     output: useRef(),
   };
   for (const type of ['input', 'output']) {
     useEffect(() => {
-      refs[type].current?.setSelectedItems([testcase[type]]);
+      if (testcase[type]) refs[type].current?.setSelectedItems([testcase[type]]);
     }, [testcase[type]]);
+  }
+  if (!testcase || Object.keys(testcase).length === 0) {
+    return (
+      <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
+    );
   }
   return (
     <tr>
