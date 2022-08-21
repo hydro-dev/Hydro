@@ -72,7 +72,7 @@ async function previewImage(link) {
   if (action === 'download') window.open(link);
 }
 
-async function previewPDF(link, src) {
+async function previewPDF(link) {
   const uuidURL = URL.createObjectURL(new Blob());
   const uuid = uuidURL.toString();
   URL.revokeObjectURL(uuidURL);
@@ -80,8 +80,8 @@ async function previewPDF(link, src) {
     $body: tpl`
       <div class="typo">
         <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
-          <param name="SRC" value="${src}" >
-          <embed width="100%" style="height: 70vh;border: none;" src="${src}">
+          <param name="SRC" value="${link}" >
+          <embed width="100%" style="height: 70vh;border: none;" src="${link}">
             <noembed></noembed>
           </embed>
         </object>
@@ -90,7 +90,7 @@ async function previewPDF(link, src) {
     height: `${window.innerHeight - 100}px`,
     $action: dialogAction,
   });
-  bindCopyLink(src);
+  bindCopyLink(link);
   const action = await dialog.open();
   if (action === 'download') window.open(link);
 }
@@ -131,7 +131,11 @@ export async function dataPreview(ev, type = '') {
       await previewImage(link);
       return;
     }
-    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf'].includes(ext)) {
+    if (ext === 'pdf') {
+      await previewPDF(`${link}${link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'}`);
+      return;
+    }
+    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
       Notification.info(i18n('Loading file...'));
       let src;
       try {
@@ -142,11 +146,7 @@ export async function dataPreview(ev, type = '') {
         Notification.error(i18n('Failed to load file: {0}', e.message));
         throw e;
       }
-      if (ext === 'pdf') {
-        await previewPDF(link, src);
-      } else {
-        await previewOffice(link, src);
-      }
+      await previewOffice(link, src);
       return;
     }
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
