@@ -2,7 +2,7 @@ import { NumericInput, Tag } from '@blueprintjs/core';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import type { SubtaskConfig } from 'hydrooj/src/interface';
 import { isEqual } from 'lodash';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from 'vj/utils/i18n';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
@@ -29,7 +29,40 @@ export function TestCaseEntry({ index, subindex }) {
       casesKey,
       value,
     });
+    if ((casesKey === 'input' && (value as string).endsWith('.in') && !testcase.output)
+      || (casesKey === 'output' && (value as string).endsWith('.out') && !testcase.input)) {
+      const filename = (value as string).substring(0, (value as string).lastIndexOf('.'));
+      if (!testcase.output && (Files.map((f) => f.name).includes(`${filename}.out`) || Files.map((f) => f.name).includes(`${filename}.ans`))) {
+        dispatch({
+          type: 'CONFIG_SUBTASK_UPDATE',
+          id: index,
+          key: 'cases-edit',
+          casesId: subindex,
+          casesKey: 'output',
+          value: Files.map((f) => f.name).includes(`${filename}.out`) ? `${filename}.out` : `${filename}.ans`,
+        });
+      }
+      if (!testcase.input && Files.map((f) => f.name).includes(`${filename}.in`)) {
+        dispatch({
+          type: 'CONFIG_SUBTASK_UPDATE',
+          id: index,
+          key: 'cases-edit',
+          casesId: subindex,
+          casesKey: 'input',
+          value: `${filename}.in`,
+        });
+      }
+    }
   };
+  const refs = {
+    input: useRef(),
+    output: useRef(),
+  };
+  for (const type of ['input', 'output']) {
+    useEffect(() => {
+      refs[type].current?.setSelectedItems(testcase[type] ? [testcase[type]] : []);
+    }, [testcase[type]]);
+  }
   if (!testcase || Object.keys(testcase).length === 0) {
     return (
       <tr><td colSpan={5}>{i18n('Failed to parse testcase.')}</td></tr>
@@ -60,6 +93,7 @@ export function TestCaseEntry({ index, subindex }) {
       {['input', 'output'].map((t) => (
         <td key={t}>
           <FileSelectAutoComplete
+            ref={refs[t]}
             width="100%"
             data={Files}
             selectedKeys={[testcase[t]]}

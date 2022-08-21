@@ -89,8 +89,6 @@ export default class LuoguProvider implements IBasicProvider {
     }
 
     async getProblem(id: string) {
-        logger.info(id);
-        // TODO
         return {
             title: id,
             data: {},
@@ -104,9 +102,16 @@ export default class LuoguProvider implements IBasicProvider {
         return [];
     }
 
-    async submitProblem(id: string, lang: string, code: string, info) {
+    async submitProblem(id: string, lang: string, code: string, info, next, end) {
         let enableO2 = 0;
         const comment = setting.langs[lang]?.comment;
+        if (code.length < 10) {
+            end({ status: STATUS.STATUS_COMPILE_ERROR, message: 'Code too short' });
+            return null;
+        }
+        if (!lang.startsWith('luogu.')) {
+            end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
+        }
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().toLocaleString()}`;
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
@@ -116,7 +121,7 @@ export default class LuoguProvider implements IBasicProvider {
             enableO2 = 1;
             lang = lang.slice(0, -2);
         }
-        lang = lang.includes('luogu.') ? lang.split('luogu.')[1] : '0';
+        lang = lang.split('luogu.')[1];
         const result = await this.post(`/fe/api/problem/submit/${id}${this.account.query || ''}`)
             .set('referer', `https://www.luogu.com.cn/problem/${id}`)
             .send({
