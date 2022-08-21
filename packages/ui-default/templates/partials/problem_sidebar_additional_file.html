@@ -32,7 +32,7 @@
         <tbody>
           {%- for file in additional_file -%}
           <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
-            <td class="col--name" title="{{ file.name }}">
+            <td class="col--name" title="{{ file.name }}" data-preview="additional_file">
               <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name}) }}">{{ file.name }}</a>
             </td>
             <td class="col--size">{{ size(file.size) }}</td>

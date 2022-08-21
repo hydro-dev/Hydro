@@ -30,7 +30,7 @@
               <input type="checkbox" data-checkbox-group="testdata" data-checkbox-range>
             </label>
           </td>
-          <td class="col--name">
+          <td class="col--name" data-preview="testdata">
             {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
               <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a>
             {% else %}

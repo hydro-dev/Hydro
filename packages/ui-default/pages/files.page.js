@@ -1,4 +1,3 @@
-import Clipboard from 'clipboard';
 import $ from 'jquery';
 import _ from 'lodash';
 import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
@@ -154,16 +153,6 @@ function handleDrop(ev) {
 }
 
 const page = new NamedPage(['home_files', 'contest_files'], () => {
-  const clip = new Clipboard('.files .col--name', {
-    text: (trigger) => new URL(trigger.children[0].href, window.location.href).toString(),
-  });
-  clip.on('success', () => {
-    Notification.success(i18n('Download link copied to clipboard!'), 1000);
-  });
-  clip.on('error', () => {
-    Notification.error(i18n('Copy failed :('));
-  });
-  $(document).on('click', '.files .col--name', (ev) => ev.preventDefault());
   $(document).on('click', '[name="upload_file"]', () => handleClickUpload());
   $(document).on('click', '[name="remove_selected"]', () => handleClickRemoveSelected());
   $(document).on('dragover', '.files', (ev) => handleDragOver(ev));
