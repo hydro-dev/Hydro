@@ -32,7 +32,7 @@ export interface IBasicProvider {
     }>;
     entryProblemLists?: string[];
     listProblem(page: number, resync: boolean, listId: string): Promise<string[]>;
-    submitProblem(id: string, lang: string, code: string, info: any, next: any, end: any): Promise<string>;
+    submitProblem(id: string, lang: string, code: string, info: any, next: any, end: any): Promise<string | void>;
     waitForSubmission(id: string, next: any, end: any): Promise<void>;
 }
 
