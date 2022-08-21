@@ -51,6 +51,7 @@ createMetric(Gauge, 'hydro_task', 'taskcount', {
         const data = await taskColl.aggregate([
             { $group: { _id: '$type', count: { $sum: 1 } } },
         ]).toArray();
+        this.reset();
         for (const line of data) {
             this.set({ type: line._id as unknown as string }, line.count);
         }
