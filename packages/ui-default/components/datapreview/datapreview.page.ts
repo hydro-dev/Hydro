@@ -12,9 +12,9 @@ async function startEdit(filename, value) {
   const { default: Editor } = await import('vj/components/editor/index');
   const promise = new ActionDialog({
     $body: tpl`
-        <div class="typo" style="width: 100%; height: 100%">
-          <textarea name="fileContent" style="width: 100%; height: 100%"></textarea>
-        </div>`,
+      <div class="typo" style="width: 100%; height: 100%">
+        <textarea name="fileContent" style="width: 100%; height: 100%"></textarea>
+      </div>`,
     width: `${window.innerWidth - 200}px`,
     height: `${window.innerHeight - 100}px`,
     cancelByEsc: false,
