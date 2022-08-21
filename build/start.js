@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable import/no-extraneous-dependencies */
 const os = require('os');
 const path = require('path');
 const fs = require('fs-extra');

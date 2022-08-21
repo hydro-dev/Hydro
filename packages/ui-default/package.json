@@ -27,7 +27,7 @@
     "@types/katex": "^0.14.0",
     "@types/markdown-it": "^12.2.3",
     "@types/pickadate": "^3.5.32",
-    "@types/qrcode": "^1.4.2",
+    "@types/qrcode": "^1.5.0",
     "@types/react-dom": "^18.0.6",
     "@types/redux-logger": "^3.0.9",
     "@vscode/codicons": "^0.0.32",
@@ -106,7 +106,7 @@
     "vinyl-buffer": "^1.0.1",
     "web-streams-polyfill": "^3.2.1",
     "webpack": "^5.74.0",
-    "webpack-bundle-analyzer": "^4.5.0",
+    "webpack-bundle-analyzer": "^4.6.0",
     "webpack-dev-server": "^4.10.0",
     "webpackbar": "^5.0.2"
   },
@@ -130,6 +130,6 @@
     "nunjucks": "^3.2.3",
     "p-queue": "^7.3.0",
     "streamsaver": "^2.0.6",
-    "xss": "^1.0.13"
+    "xss": "^1.0.14"
   }
 }

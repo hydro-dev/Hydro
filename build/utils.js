@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable import/no-extraneous-dependencies */
 const globby = require('globby');
 const spawn = require('cross-spawn');
 

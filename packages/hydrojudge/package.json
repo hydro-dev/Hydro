@@ -22,7 +22,7 @@
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/js-yaml": "^4.0.5",
-        "@types/lodash": "^4.14.182",
+        "@types/lodash": "^4.14.184",
         "@types/shell-quote": "^1.7.1",
         "@types/ws": "^8.5.3"
     }
