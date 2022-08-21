@@ -33,7 +33,7 @@
         <tbody>
           {%- for file in testdata -%}
           <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
-            <td class="col--name" title="{{ file.name }}"><a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a></td>
+            <td class="col--name" title="{{ file.name }}" data-preview="testdata"><a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a></td>
             <td class="col--size">{{ size(file.size) }}</td>
             <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
           </tr>

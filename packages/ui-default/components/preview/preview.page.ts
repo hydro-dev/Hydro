@@ -1,5 +1,6 @@
 import Clipboard from 'clipboard';
 import $ from 'jquery';
+import { nanoid } from 'nanoid';
 import { ActionDialog, InfoDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
@@ -40,34 +41,27 @@ async function startEdit(filename, value) {
   return value;
 }
 
-const dialogAction = [
-  tpl`<button class="copybutton rounded button" data-action="copy">${i18n('Copy Link')}</button>`,
+const dialogAction = (id) => [
+  tpl`<button class="rounded button" data-action="copy" id="copy-${id}">${i18n('Copy Link')}</button>`,
   tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
   tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
 ];
 
-function bindCopyLink(src: string) {
+function bindCopyLink(id, src: string) {
   const url = !(window.location.href.endsWith('file') || window.location.href.endsWith('files')) || window.location.href.match('contest/.*/file')
     ? `file://${src.substring(src.lastIndexOf('/') + 1)}` : src;
-  const clip = new Clipboard('.copybutton', { text: () => `${url}` });
-  clip.on('success', () => {
-    if (!url.startsWith('file://')) {
-      Notification.success(i18n('Download link copied to clipboard!'), 1000);
-    } else Notification.success(i18n('Reference link copied to clipboard!'), 1000);
-    clip.destroy();
-  });
-  clip.on('error', () => {
-    Notification.error(i18n('Copy failed :('));
-    clip.destroy();
-  });
+  const clip = new Clipboard(`#copy-${id}`, { text: () => `${url}` });
+  clip.on('success', () => Notification.success(i18n(`${url.startsWith('file://') ? 'Reference' : 'Download'} link copied to clipboard!`)));
+  clip.on('error', () => Notification.error(i18n('Copy failed :(')));
 }
 
 async function previewImage(link) {
+  const id = nanoid();
   const dialog = new InfoDialog({
     $body: tpl`<div class="typo"><img src="${link}" style="max-height: calc(80vh - 45px);"></img></div>`,
-    $action: dialogAction,
+    $action: dialogAction(id),
   });
-  bindCopyLink(link);
+  bindCopyLink(id, link);
   const action = await dialog.open();
   if (action === 'download') window.open(link);
 }
@@ -76,6 +70,7 @@ async function previewPDF(link) {
   const uuidURL = URL.createObjectURL(new Blob());
   const uuid = uuidURL.toString();
   URL.revokeObjectURL(uuidURL);
+  const id = nanoid();
   const dialog = new InfoDialog({
     $body: tpl`
       <div class="typo">
@@ -88,14 +83,15 @@ async function previewPDF(link) {
       </div>`,
     width: `${window.innerWidth - 200}px`,
     height: `${window.innerHeight - 100}px`,
-    $action: dialogAction,
+    $action: dialogAction(id),
   });
-  bindCopyLink(link);
+  bindCopyLink(id, link);
   const action = await dialog.open();
   if (action === 'download') window.open(link);
 }
 
 async function previewOffice(link, src) {
+  const id = nanoid();
   const dialog = new InfoDialog({
     $body: tpl`
       <div class="typo">
@@ -104,56 +100,48 @@ async function previewOffice(link, src) {
       </div>`,
     width: `${window.innerWidth - 200}px`,
     height: `${window.innerHeight - 100}px`,
-    $action: dialogAction,
+    $action: dialogAction(id),
   });
-  bindCopyLink(link);
+  bindCopyLink(id, link);
   const action = await dialog.open();
   if (action === 'download') window.open(link);
 }
 
 export async function previewFile(ev, type = '') {
-  if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return;
+  if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return null;
   if (ev) ev.preventDefault();
   const filename = ev
     ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
     // eslint-disable-next-line no-alert
     : prompt('Filename');
-  if (!filename) return;
+  if (!filename) return null;
   const filesize = ev
     ? +ev.currentTarget.closest('[data-size]').getAttribute('data-size')
     : 0;
   let content = '';
   if (ev) {
     const link = $(ev.currentTarget).find('a').attr('href');
-    if (!link) return;
+    if (!link) return null;
+    if (!type) type = ev.currentTarget.getAttribute('data-preview');
     const ext = filename.split('.').pop();
-    if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) {
-      await previewImage(link);
-      return;
-    }
-    if (ext === 'pdf') {
-      await previewPDF(`${link}${link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'}`);
-      return;
-    }
-    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-      Notification.info(i18n('Loading file...'));
-      let src;
-      try {
-        const res = await request.get(`${link}${link.includes('?') ? '&noDisposition=1' : '?noDisposition=1'}`);
-        src = res.url;
-      } catch (e) {
-        Notification.error(i18n('Failed to load file: {0}', e.message));
-        throw e;
-      }
-      await previewOffice(link, src);
-      return;
-    }
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
       const action = await new ActionDialog({
         $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
       }).open();
       if (action === 'ok') window.open(link);
-      return;
+      return null;
+    }
+    if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) return previewImage(link);
+    if (ext === 'pdf') return previewPDF(`${link}${link.includes('?') ? '&' : '?'}noDisposition=1`);
+    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+      Notification.info(i18n('Loading file...'));
+      try {
+        const res = await request.get(link);
+        return await previewOffice(link, res.url);
+      } catch (e) {
+        Notification.error(i18n('Failed to load file: {0}', e.message));
+        throw e;
+      }
     }
     Notification.info(i18n('Loading file...'));
     try {
@@ -165,7 +153,7 @@ export async function previewFile(ev, type = '') {
     }
   } else Notification.info(i18n('Loading editor...'));
   const val = await startEdit(filename, content);
-  if (typeof val !== 'string') return;
+  if (typeof val !== 'string') return null;
   Notification.info(i18n('Saving file...'));
   const data = new FormData();
   data.append('filename', filename);
@@ -173,14 +161,14 @@ export async function previewFile(ev, type = '') {
   if (type) data.append('type', type);
   data.append('operation', 'upload_file');
   const postUrl = !window.location.href.endsWith('/files')
-    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/')) }/files` : '';
+    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '';
   await request.postFile(postUrl, data);
   Notification.success(i18n('File saved.'));
-  await pjax.request({ push: false });
+  return pjax.request({ push: false });
 }
 
-const dataPreviewPage = new AutoloadPage('dataPreview', async () => {
-  $('[data-preview]').on('click', previewFile);
+const dataPreviewPage = new AutoloadPage('dataPreview', () => {
+  $(document).on('click', '[data-preview]', previewFile);
 });
 
 export default dataPreviewPage;

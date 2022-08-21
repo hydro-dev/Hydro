@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
-import { previewFile } from 'vj/components/preview/preview';
+import { previewFile } from 'vj/components/preview/preview.page';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
@@ -171,8 +171,6 @@ const page = new NamedPage('problem_files', () => {
   }
 
   if ($('[name="upload_testdata"]').length) {
-    $(document).on('click', '.problem-files-testdata .col--name', (ev) => previewFile(ev, 'testdata'));
-    $(document).on('click', '.problem-files-additional_file .col--name', (ev) => previewFile(ev, 'additional_file'));
     $(document).on('click', '[name="upload_testdata"]', () => handleClickUpload('testdata'));
     $(document).on('click', '[name="upload_file"]', () => handleClickUpload('additional_file'));
     $(document).on('click', '[name="create_testdata"]', () => previewFile(undefined, 'testdata'));
