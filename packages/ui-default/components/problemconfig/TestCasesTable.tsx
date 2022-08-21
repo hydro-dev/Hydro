@@ -60,7 +60,7 @@ export function TestCaseEntry({ index, subindex }) {
   };
   for (const type of ['input', 'output']) {
     useEffect(() => {
-      if (testcase[type]) refs[type].current?.setSelectedItems([testcase[type]]);
+      refs[type].current?.setSelectedItems(testcase[type] ? [testcase[type]] : []);
     }, [testcase[type]]);
   }
   if (!testcase || Object.keys(testcase).length === 0) {
