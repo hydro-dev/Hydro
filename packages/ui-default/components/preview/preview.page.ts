@@ -133,20 +133,11 @@ export async function previewFile(ev, type = '') {
     }
     if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) return previewImage(link);
     if (ext === 'pdf') return previewPDF(`${link}${link.includes('?') ? '&' : '?'}noDisposition=1`);
-    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-      Notification.info(i18n('Loading file...'));
-      try {
-        const res = await request.get(link);
-        return await previewOffice(link, res.url);
-      } catch (e) {
-        Notification.error(i18n('Failed to load file: {0}', e.message));
-        throw e;
-      }
-    }
     Notification.info(i18n('Loading file...'));
     try {
-      const res = await request.get(link);
-      content = await request.get(res.url, undefined, { dataType: 'text' });
+      const { url } = await request.get(link);
+      if (/^(doc|xls|ppt)x?$/.test(ext)) return previewOffice(link, url);
+      content = await request.get(url, undefined, { dataType: 'text' });
     } catch (e) {
       Notification.error(i18n('Failed to load file: {0}', e.message));
       throw e;
