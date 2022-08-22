@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import {
@@ -259,6 +259,7 @@ class LocalStorageService {
     async put(target: string, file: string | Buffer | Readable) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         target = resolve(this.dir, target);
+        await ensureDir(dirname(target));
         if (typeof file === 'string') await copyFile(file, target);
         else await writeFile(target, file);
     }
