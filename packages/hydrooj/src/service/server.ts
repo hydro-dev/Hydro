@@ -115,19 +115,9 @@ export async function prepare() {
         changeOrigin: true,
         rewrite: (p) => p.replace('/fs', ''),
     });
-    const bodyMiddleware = Body({
-        multipart: true,
-        jsonLimit: '8mb',
-        formLimit: '8mb',
-        formidable: {
-            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
-        },
-    });
     app.use(async (ctx, next) => {
         if (!ctx.path.startsWith('/fs/')) return await next();
-        if (ctx.request.search.includes('X-AMZ')) {
-            return await proxyMiddleware(ctx, next);
-        }
+        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
         ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
         return await next();
     });
@@ -148,7 +138,14 @@ export async function prepare() {
 ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }
-    app.use(bodyMiddleware);
+    app.use(Body({
+        multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
+        formidable: {
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
+        },
+    }));
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     layers.forEach((layer) => router.use(layer as any));

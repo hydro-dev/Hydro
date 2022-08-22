@@ -307,12 +307,10 @@ class LocalStorageService {
 
     async signUpload() {
         throw new Error('Not implemented');
-        return null;
     }
 
     async list() {
         throw new Error('deprecated');
-        return [];
     }
 }
 
