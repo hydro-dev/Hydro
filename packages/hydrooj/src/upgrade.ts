@@ -95,7 +95,7 @@ const scripts: UpgradeScript[] = [
                     try {
                         const [file, current] = await Promise.all([
                             streamToBuffer(gridfs.openDownloadStream(pdoc.data)),
-                            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
+                            storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`) as any,
                         ]);
                         const zip = new AdmZip(file);
                         const entries = zip.getEntries();
@@ -147,8 +147,8 @@ const scripts: UpgradeScript[] = [
         await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
             const [data, additional_file] = await Promise.all([
-                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`),
-                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`),
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/testdata/`) as any,
+                storage.list(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/`) as any,
             ]);
             await problem.edit(
                 pdoc.domainId, pdoc.docId,
