@@ -29,6 +29,7 @@ import {
 } from './pipelineUtils';
 import db from './service/db';
 import storage from './service/storage';
+import { setBuiltinConfig } from './settings';
 import { streamToBuffer } from './utils';
 import welcome from './welcome';
 
@@ -800,6 +801,32 @@ const scripts: UpgradeScript[] = [
             });
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
+        return true;
+    },
+    async function _66_67() {
+        const [
+            endPoint, accessKey, secretKey, bucket, region,
+            pathStyle, endPointForUser, endPointForJudge,
+        ] = system.getMany([
+            'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
+            'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
+        ]);
+        if ((endPoint && accessKey) || process.env.MINIO_ACCESS_KEY) {
+            await setBuiltinConfig('file', {
+                endPoint: process.env.MINIO_ACCESS_KEY ? 'http://127.0.0.1:9000/' : endPoint,
+                accessKey: process.env.MINIO_ACCESS_KEY || accessKey,
+                secretKey: process.env.MINIO_SECRET_KEY || secretKey,
+                bucket,
+                region,
+                pathStyle,
+                endPointForUser,
+                endPointForJudge,
+            });
+            setTimeout(() => {
+                logger.info('Upgrade done. please restart the server.');
+                process.exit(0);
+            }, 1000);
+        }
         return true;
     },
 ];

@@ -3,7 +3,9 @@ import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
 import * as bus from 'hydrooj/src/service/bus';
 import { Logger } from './logger';
+import { NestKeys } from './typeutils';
 
+const defaultPath = process.env.CI ? '/tmp/file' : '/data/file/hydro';
 const FileSetting = Schema.intersect([
     Schema.object({
         type: Schema.union([
@@ -16,7 +18,7 @@ const FileSetting = Schema.intersect([
     Schema.union([
         Schema.object({
             type: Schema.const('file').required(),
-            path: Schema.string().default('/data/file/hydro').description('Storage path').required(),
+            path: Schema.string().default(defaultPath).description('Storage path').required(),
             secret: Schema.string().description('Download file sign secret').default(nanoid()),
         }),
         Schema.object({
@@ -31,7 +33,7 @@ const FileSetting = Schema.intersect([
     ] as const),
 ] as const).default({
     type: 'file',
-    path: '/data/file/hydro',
+    path: defaultPath,
     endPointForUser: '/fs/',
     endPointForJudge: '/fs/',
     secret: nanoid(),
@@ -45,30 +47,6 @@ export let configSource = ''; // eslint-disable-line import/no-mutable-exports
 export let systemConfig: any = {}; // eslint-disable-line import/no-mutable-exports
 const logger = new Logger('settings');
 const update = [];
-
-export function requestConfig<T, S>(s: Schema<T, S>): ReturnType<Schema<T, S>> {
-    SystemSettings.push(s);
-    let curValue = s(systemConfig);
-    update.push(() => {
-        try {
-            console.log(systemConfig);
-            curValue = s(systemConfig);
-        } catch (e) {
-            logger.warn('Cannot read config: ', e.message);
-            curValue = null;
-        }
-    });
-    return new Proxy(curValue as any, {
-        get(self, key: string) {
-            return curValue?.[key];
-        },
-        set(self) {
-            throw new Error(`Not allowed to set setting ${self.p.join('.')}`);
-        },
-    });
-}
-
-export const builtinConfig = requestConfig(builtinSettings);
 
 export async function loadConfig() {
     const config = await global.Hydro.service.db.collection('system').findOne({ _id: 'config' });
@@ -87,4 +65,48 @@ export async function saveConfig(config: any) {
     await global.Hydro.service.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
     bus.broadcast('config/update');
 }
+export async function setConfig(key: string, value: any) {
+    const path = key.split('.');
+    const t = path.pop();
+    let cursor = systemConfig;
+    for (const p of path) {
+        if (!cursor[p]) cursor[p] = {};
+        cursor = cursor[p];
+    }
+    cursor[t] = value;
+    await saveConfig(systemConfig);
+}
+
+export function requestConfig<T, S>(s: Schema<T, S>): {
+    config: ReturnType<Schema<T, S>>,
+    setConfig: (key: NestKeys<ReturnType<Schema<T, S>>>, value: any) => Promise<void>,
+} {
+    SystemSettings.push(s);
+    let curValue = s(systemConfig);
+    update.push(() => {
+        try {
+            console.log(systemConfig);
+            curValue = s(systemConfig);
+        } catch (e) {
+            logger.warn('Cannot read config: ', e.message);
+            curValue = null;
+        }
+    });
+    return {
+        config: new Proxy(curValue as any, {
+            get(self, key: string) {
+                return curValue?.[key];
+            },
+            set(self) {
+                throw new Error(`Not allowed to set setting ${self.p.join('.')}`);
+            },
+        }),
+        setConfig,
+    };
+}
+
+const builtin = requestConfig(builtinSettings);
+export const builtinConfig = builtin.config;
+export const setBuiltinConfig = builtin.setConfig;
+
 bus.on('config/update', loadConfig);
