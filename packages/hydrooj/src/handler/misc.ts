@@ -105,13 +105,11 @@ export class FSDownloadHandler extends Handler {
 }
 
 export class StorageHandler extends Handler {
-    @param('r1', Types.Name)
-    @param('r2', Types.Name)
+    @param('target', Types.Name)
     @param('filename', Types.Name, true)
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
-    async get(domainId: string, r1: string, r2: string, filename: string, expire: number, secret: string) {
-        const target = `${r1}/${r2}`;
+    async get(domainId: string, target: string, filename: string, expire: number, secret: string) {
         const expected = md5(`${target}/${expire}/${builtinConfig.file.secret}`);
         if (expire < Date.now()) throw new ForbiddenError('Link expired');
         if (secret !== expected) throw new ForbiddenError('Invalid secret');
@@ -132,7 +130,7 @@ export async function apply() {
     Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     Route('home_files', '/file', FilesHandler);
     Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
-    Route('storage', '/storage/:r1/:r2', StorageHandler);
+    Route('storage', '/storage', StorageHandler);
     Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
 
