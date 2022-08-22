@@ -168,6 +168,13 @@ To disable this feature, checkout our sourcecode.`);
         ],
     },
     {
+        init: 'install.mongodb-tools',
+        skip: () => !exec('mongoexport --version').code,
+        operations: [
+            'nix-env -iA nixpkgs.mongodb-tools',
+        ],
+    },
+    {
         init: 'install.mongo',
         skip: () => !exec('mongo --version').code,
         operations: [
