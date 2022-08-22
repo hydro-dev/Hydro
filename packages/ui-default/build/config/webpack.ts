@@ -96,7 +96,7 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       chunkFilename: '[name].[chunkhash].chunk.js',
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
       },
@@ -148,8 +148,9 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
           },
         },
         {
-          test: /\.[jt]sx?$/,
+          test: /\.[mc]?[jt]sx?$/,
           exclude: /@types\//,
+          type: 'javascript/auto',
           use: [esbuildLoader()],
         },
         {

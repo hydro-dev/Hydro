@@ -4,7 +4,6 @@ tasks:
   - init: |
       yarn
       pm2 start mongod
-      pm2 start "MINIO_ACCESS_KEY=hydro MINIO_SECRET_KEY=hydrohydro minio server /home/gitpod/file" --name minio
       yarn build:ui
       npx hydrooj cli system set server.port 2333
       npx hydrooj cli user create root@hydro.local root rootroot 2

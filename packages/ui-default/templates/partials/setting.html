@@ -8,7 +8,6 @@
   {% if not setting.flag|bitand(model.setting.FLAG_HIDDEN) %}
   {% set secret = setting.flag|bitand(model.setting.FLAG_SECRET) != 0 %}
   {% if setting.type == 'text' or setting.type == 'password' or setting.type == 'number' or setting.type == 'float' %}
-    {% set isFileConfig = (setting.name === 'file.accessKey' or setting.name === 'file.secretKey') and process.env.MINIO_ACCESS_KEY %}
     {{ form.form_text({
           type:setting.type,
           label:setting.name,
@@ -16,7 +15,7 @@
           name:setting.key,
           value:'' if (secret or isFileConfig) else (current[setting.key]|default(setting.value)),
           disabled:setting.flag|bitand(2),
-          placeholder:'Please edit in ~/.hydro/env instead' if isFileConfig else (_('(Not changed)') if secret else '')
+          placeholder:_('(Not changed)') if secret else ''
         }) }}
   {% elif setting.type == 'select' %}
     {{ form.form_select({

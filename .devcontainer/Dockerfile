@@ -18,4 +18,3 @@ RUN npm i pm2 yarn -g && \
     sudo apt-get install clang -y --no-install-recommends && \
     mkdir -p ~/.hydro && \
     echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >~/.hydro/config.json && \
-    echo "MINIO_ACCESS_KEY=minioadmin\nMINIO_SECRET_KEY=minioadmin" >~/.hydro/env

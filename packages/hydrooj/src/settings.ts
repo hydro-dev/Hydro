@@ -1,136 +1,111 @@
-import { JSONSchema7Definition } from 'json-schema';
+import yaml from 'js-yaml';
+import { nanoid } from 'nanoid';
+import Schema from 'schemastery';
+import * as bus from 'hydrooj/src/service/bus';
+import { Logger } from './logger';
+import { NestKeys } from './typeutils';
 
-type Def = Exclude<JSONSchema7Definition, boolean>;
+const defaultPath = process.env.CI ? '/tmp/file' : '/data/file/hydro';
+const FileSetting = Schema.intersect([
+    Schema.object({
+        type: Schema.union([
+            Schema.const('file').description('local file provider').required(),
+            Schema.const('s3').description('s3 provider').required(),
+        ] as const).description('provider type').default('file'),
+        endPointForUser: Schema.string().default('/fs/').required(),
+        endPointForJudge: Schema.string().default('/fs/').required(),
+    }).description('setting_file'),
+    Schema.union([
+        Schema.object({
+            type: Schema.const('file').required(),
+            path: Schema.string().default(defaultPath).description('Storage path').required(),
+            secret: Schema.string().description('Download file sign secret').default(nanoid()),
+        }),
+        Schema.object({
+            type: Schema.const('s3').required(),
+            endPoint: Schema.string().required(),
+            accessKey: Schema.string().required().description('access key'),
+            secretKey: Schema.string().required().description('secret key').role('secret'),
+            bucket: Schema.string().default('hydro').required(),
+            region: Schema.string().default('us-east-1').required(),
+            pathStyle: Schema.boolean().default(true).required(),
+        }),
+    ] as const),
+] as const).default({
+    type: 'file',
+    path: defaultPath,
+    endPointForUser: '/fs/',
+    endPointForJudge: '/fs/',
+    secret: nanoid(),
+});
 
-function port(examples: number[] = []) {
-    const res: Def = {
-        type: 'integer', minimum: 1, maximum: 65535,
-    };
-    if (examples.length) {
-        res.default = examples[0];
-        res.examples = examples;
+const builtinSettings = Schema.object({
+    file: FileSetting,
+});
+export const SystemSettings: Schema[] = [builtinSettings];
+export let configSource = ''; // eslint-disable-line import/no-mutable-exports
+export let systemConfig: any = {}; // eslint-disable-line import/no-mutable-exports
+const logger = new Logger('settings');
+const update = [];
+
+export async function loadConfig() {
+    const config = await global.Hydro.service.db.collection('system').findOne({ _id: 'config' });
+    try {
+        configSource = config?.value || '{}';
+        systemConfig = yaml.load(configSource);
+        logger.info('Successfully loaded config');
+        for (const u of update) u();
+    } catch (e) {
+        logger.error('Failed to load config', e.message);
     }
-    return res;
+}
+export async function saveConfig(config: any) {
+    Schema.intersect(SystemSettings)(config);
+    const value = yaml.dump(config);
+    await global.Hydro.service.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
+    bus.broadcast('config/update');
+}
+export async function setConfig(key: string, value: any) {
+    const path = key.split('.');
+    const t = path.pop();
+    let cursor = systemConfig;
+    for (const p of path) {
+        if (!cursor[p]) cursor[p] = {};
+        cursor = cursor[p];
+    }
+    cursor[t] = value;
+    await saveConfig(systemConfig);
 }
 
-export const Schema = {
-    string<T extends Def>(title: string, defaultValue: string, extra?: T) {
-        return {
-            type: 'string' as 'string',
-            default: defaultValue,
-            title,
-            ...extra,
-        };
-    },
-    boolean<T extends Def>(title: string, defaultValue: boolean, extra?: T) {
-        return {
-            type: 'boolean' as 'boolean',
-            default: defaultValue,
-            title,
-            ...extra,
-        };
-    },
-    integer<T extends Def>(title: string, defaultValue: number, extra?: T) {
-        return {
-            type: 'integer' as 'integer',
-            default: defaultValue,
-            title,
-            ...extra,
-        };
-    },
-};
-
-const definitions: Record<string, Def> = {
-    smtp: {
-        type: 'object',
-        properties: {
-            user: Schema.string('SMTP Username', 'noreply@hydro.ac'),
-            from: Schema.string('Mail From', 'Hydro <noreply@hydro.ac>'),
-            pass: Schema.string('SMTP Password', '', { writeOnly: true }),
-            host: Schema.string('SMTP Server Host', 'smtp.hydro.ac', { pattern: '^[a-zA-Z0-9\\-\\.]+$' }),
-            port: Schema.integer('SMTP Server Port', 25, { examples: [25, 465], minimum: 1, maximum: 65535 }),
-            secure: Schema.boolean('Use SSL', false),
-            verify: Schema.boolean('Verify register email', false),
-        },
-        additionalProperties: false,
-    },
-    file: {
-        type: 'object',
-        properties: {
-            endPoint: Schema.string('Storage engine endPoint', 'http://localhost:9000', {
-                pattern: '^https?://[a-zA-Z0-9\\-\\.]+/?$',
-            }),
-            accessKey: Schema.string('Storage engine accessKey', ''),
-            secretKey: Schema.string('Storage engine secretKey', '', { writeOnly: true }),
-            bucket: Schema.string('Storage engine bucket', 'hydro'),
-            region: Schema.string('Storage engine region', 'us-east-1'),
-            pathStyle: Schema.boolean('pathStyle endpoint', true),
-            endPointForUser: Schema.string('EndPoint for user', '/fs/'),
-            endPointForJudge: Schema.string('EndPoint for judge', '/fs/'),
-        },
-        required: ['endPoint', 'accessKey', 'secretKey'],
-        additionalProperties: false,
-    },
-    server: {
-        type: 'object',
-        properties: {
-            name: Schema.string('Server Name', 'Hydro'),
-            url: Schema.string('Self URL', 'https://hydro.ac/', { pattern: '/$' }),
-            cdn: Schema.string('CDN prefix', '/', {
-                pattern: '/$', examples: ['/', 'https://cdn.hydro.ac/'],
-            }),
-            port: port([8888, 80, 443]),
-            xff: Schema.string('IP Header', '', { examples: ['x-forwarded-for', 'x-real-ip'], pattern: '^[a-z-]+$' }),
-            xhost: Schema.string('Host Header', '', { examples: ['x-real-host'], pattern: '^[a-z-]+$' }),
-            language: { type: 'string', enum: Object.keys(global.Hydro.locales) },
-            upload: Schema.string('Upload size limit', '256m', { pattern: '^[0-9]+[mkg]b?$' }),
-            login: Schema.boolean('Enable builtin login', true),
-            message: Schema.boolean('Enable message', true),
-            blog: Schema.boolean('Enable blog', true),
-            checkUpdate: Schema.boolean('Daily update check', true),
-        },
-        required: ['url', 'port', 'language'],
-    },
-    limit: {
-        type: 'object',
-        properties: {
-            problem_files_max: { type: 'integer', minimum: 0 },
-        },
-    },
-    session: {
-        type: 'object',
-        properties: {
-            keys: {
-                type: 'array', items: { type: 'string' }, default: [String.random(32)], writeOnly: true,
+export function requestConfig<T, S>(s: Schema<T, S>): {
+    config: ReturnType<Schema<T, S>>,
+    setConfig: (key: NestKeys<ReturnType<Schema<T, S>>>, value: any) => Promise<void>,
+} {
+    SystemSettings.push(s);
+    let curValue = s(systemConfig);
+    update.push(() => {
+        try {
+            curValue = s(systemConfig);
+        } catch (e) {
+            logger.warn('Cannot read config: ', e.message);
+            curValue = null;
+        }
+    });
+    return {
+        config: new Proxy(curValue as any, {
+            get(self, key: string) {
+                return curValue?.[key];
             },
-            secure: { type: 'boolean', default: false },
-            saved_expire_seconds: { type: 'integer', minimum: 300, default: 3600 * 24 * 30 },
-            unsaved_expire_seconds: { type: 'integer', minimum: 60, default: 3600 * 3 },
-        },
-    },
-    user: {
-        type: 'object',
-        properties: {
-            quota: { type: 'integer', minimum: 0 },
-        },
-    },
-};
-
-export const schema: Def = {
-    type: 'object',
-    definitions,
-    properties: {
-        smtp: definitions.smtp,
-        file: definitions.file,
-        server: definitions.server,
-        limit: definitions.limit,
-        session: definitions.session,
-        user: definitions.user,
-    },
-    additionalProperties: true,
-};
-
-export function addDef(key: string, def: Def) {
-    definitions[key] = def;
-    schema.properties[key] = definitions[key];
+            set(self) {
+                throw new Error(`Not allowed to set setting ${self.p.join('.')}`);
+            },
+        }),
+        setConfig,
+    };
 }
+
+const builtin = requestConfig(builtinSettings);
+export const builtinConfig = builtin.config;
+export const setBuiltinConfig = builtin.setConfig;
+
+bus.on('config/update', loadConfig);

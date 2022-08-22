@@ -20,6 +20,7 @@ import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as system from '../model/system';
 import { User } from '../model/user';
+import { builtinConfig } from '../settings';
 import { errorMessage } from '../utils';
 import * as bus from './bus';
 import * as decorators from './decorators';
@@ -29,6 +30,7 @@ import rendererLayer from './layers/renderer';
 import responseLayer from './layers/response';
 import userLayer from './layers/user';
 import { Router } from './router';
+import { encodeRFC5987ValueChars } from './storage';
 
 export * from './decorators';
 
@@ -109,11 +111,17 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
 
 export async function prepare() {
     app.keys = system.get('session.keys') as unknown as string[];
-    app.use(proxy('/fs', {
-        target: system.get('file.endPoint'),
+    const proxyMiddleware = proxy('/fs', {
+        target: builtinConfig.file.endPoint,
         changeOrigin: true,
         rewrite: (p) => p.replace('/fs', ''),
-    }));
+    });
+    app.use(async (ctx, next) => {
+        if (!ctx.path.startsWith('/fs/')) return await next();
+        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
+        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
+        return await next();
+    });
     app.use(Compress());
     for (const dir of global.publicDirs) {
         app.use(cache(dir, {
@@ -122,9 +130,9 @@ export async function prepare() {
     }
     if (process.env.DEV) {
         app.use(async (ctx: Context, next: Function) => {
-            const startTime = new Date().getTime();
+            const startTime = Date.now();
             await next();
-            const endTime = new Date().getTime();
+            const endTime = Date.now();
             if (ctx.nolog || ctx.response.headers.nolog) return;
             ctx._remoteAddress = ctx.request.ip;
             logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
@@ -216,7 +224,7 @@ export class Handler extends HandlerCommon {
         this.response.body = data;
         this.response.template = null;
         this.response.type = 'application/octet-stream';
-        if (name) this.response.disposition = `attachment; filename="${encodeURIComponent(name)}"`;
+        if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
     async init() {

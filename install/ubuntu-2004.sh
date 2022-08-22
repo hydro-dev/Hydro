@@ -7,8 +7,6 @@ echo "详情请参阅文档 -> https://hydro.js.org"
 echo "使用 Ctrl-C 退出该脚本，或是等待十秒后继续。"
 echo "Will continue installation in 10 secs, press Ctrl-C to exit"
 sleep 10
-MINIO_ACCESS_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
-MINIO_SECRET_KEY=$(cat /dev/urandom | head -n 10 | md5sum | head -c 20)
 
 # Basic
 echo "apt-get update"
@@ -54,11 +52,6 @@ pm2 del mongod >/dev/null
 echo 'Starting mongodb'
 pm2 start "mongod --auth --bind_ip 0.0.0.0" --name mongodb
 
-# Install MinIO
-wget http://dl.minio.org.cn/server/minio/release/linux-amd64/minio
-chmod +x minio
-pm2 start "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY MINIO_SECRET_KEY=$MINIO_SECRET_KEY ./minio server /data/file" --name minio
-
 # Install Compiler
 echo 'Installing g++'
 apt-get install -y g++ >/dev/null
@@ -81,5 +74,3 @@ pm2 save
 echo "Done"
 echo "Database username: hydro"
 echo "Database password: $db_password"
-echo "MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
-MINIO_SECRET_KEY=$MINIO_SECRET_KEY" >~/.hydro/env

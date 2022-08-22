@@ -214,7 +214,6 @@ export default class CodeforcesProvider implements IBasicProvider {
         await page.waitForRequest((req) => {
             if (req.method() !== 'POST') return false;
             if (!req.url().endsWith('/enter')) return false;
-            console.log(req);
             return true;
         }, { timeout: 24 * 3600 * 1000 });
         await page.waitForTimeout(10 * 1000);

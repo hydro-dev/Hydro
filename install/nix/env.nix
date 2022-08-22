@@ -6,7 +6,6 @@ in pkgs.buildEnv {
   name = "hydro-env";
   paths = [
     mongo
-    pkgs.minio
     pkgs.nodejs
     pkgs.yarn
     pkgs.git

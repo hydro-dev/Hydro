@@ -9,6 +9,7 @@ services:
         VARIANT: 16
     volumes:
       - ..:/workspace:cached
+      - testdata:/data/file
     command: sleep infinity
     network_mode: service:db
   db:
@@ -16,14 +17,7 @@ services:
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    volumes:
-      - minio-data:/data
-    network_mode: service:db
-    command: minio server /data --console-address ":9001"
 
 volumes:
   mongodb-data:
-  minio-data:
+  testdata:
