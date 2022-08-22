@@ -298,7 +298,7 @@ class LocalStorageService {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         const url = new URL('https://localhost/storage');
         url.searchParams.set('target', target);
-        url.searchParams.set('filename', filename);
+        if (filename) url.searchParams.set('filename', filename);
         const expire = (Date.now() + (noExpire ? 7 * 24 * 3600 : 600) * 1000).toString();
         url.searchParams.set('expire', expire);
         url.searchParams.set('secret', md5(`${target}/${expire}/${builtinConfig.file.secret}`));
