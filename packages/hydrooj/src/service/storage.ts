@@ -25,38 +25,38 @@ interface StorageOptions {
     endPointForJudge?: string;
 }
 
-interface MinioEndpointConfig {
+interface EndpointConfig {
     endPoint: string;
     port: number;
     useSSL: boolean;
 }
 
-function parseMainEndpointUrl(endpoint: string): MinioEndpointConfig {
+function parseMainEndpointUrl(endpoint: string): EndpointConfig {
     if (!endpoint) throw new Error('Empty endpoint');
     const url = new URL(endpoint);
-    const result: Partial<MinioEndpointConfig> = {};
-    if (url.pathname !== '/') throw new Error('Main MinIO endpoint URL of a sub-directory is not supported.');
+    const result: Partial<EndpointConfig> = {};
+    if (url.pathname !== '/') throw new Error('Main endpoint URL of a sub-directory is not supported.');
     if (url.username || url.password || url.hash || url.search) {
-        throw new Error('Authorization, search parameters and hash are not supported for main MinIO endpoint URL.');
+        throw new Error('Authorization, search parameters and hash are not supported for main endpoint URL.');
     }
     if (url.protocol === 'http:') result.useSSL = false;
     else if (url.protocol === 'https:') result.useSSL = true;
     else {
         throw new Error(
-            `Invalid protocol "${url.protocol}" for main MinIO endpoint URL. Only HTTP and HTTPS are supported.`,
+            `Invalid protocol "${url.protocol}" for main endpoint URL. Only HTTP and HTTPS are supported.`,
         );
     }
     result.endPoint = url.hostname;
     result.port = url.port ? Number(url.port) : result.useSSL ? 443 : 80;
-    return result as MinioEndpointConfig;
+    return result as EndpointConfig;
 }
 function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) => string {
     if (!endpoint) return (originalUrl) => originalUrl;
     const pathonly = endpoint.startsWith('/');
     if (pathonly) endpoint = `https://localhost${endpoint}`;
     const url = new URL(endpoint);
-    if (url.hash || url.search) throw new Error('Search parameters and hash are not supported for alternative MinIO endpoint URL.');
-    if (!url.pathname.endsWith('/')) throw new Error("Alternative MinIO endpoint URL's pathname must ends with '/'.");
+    if (url.hash || url.search) throw new Error('Search parameters and hash are not supported for alternative endpoint URL.');
+    if (!url.pathname.endsWith('/')) throw new Error("Alternative endpoint URL's pathname must ends with '/'.");
     return (originalUrl) => {
         const parsedOriginUrl = new URL(originalUrl);
         const replaced = new URL(parsedOriginUrl.pathname.slice(1) + parsedOriginUrl.search + parsedOriginUrl.hash, url).toString();

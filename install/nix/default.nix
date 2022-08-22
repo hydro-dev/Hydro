@@ -15,7 +15,6 @@ in pkgs.dockerTools.buildImage {
     name = "hydro-web";
     paths = [
       hydro.mongodb4
-      pkgs.minio
       pkgs.nodejs
       pkgs.yarn
     ];

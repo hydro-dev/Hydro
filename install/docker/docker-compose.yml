@@ -1,16 +1,6 @@
 version: '3.7'
 
 services:
-  oj-minio:
-    image: minio/minio
-    container_name: oj-minio
-    command: server /data
-    restart: always
-    volumes:
-      - ./data/minio:/data
-    environment:
-      - MINIO_ACCESS_KEY=CHANGE_THIS
-      - MINIO_SECRET_KEY=CHANGE_THIS
     
   # Warning: mongodb here is not password-protected.
   # DO NOT EXPOSE THIS SERVICE TO THE PUBLIC.
@@ -26,13 +16,10 @@ services:
     container_name: oj-backend
     restart: always
     depends_on:
-      - oj-minio
       - oj-mongo
     volumes:
+      - ./data/file:/data/file
       - ./data/backend:/root/.hydro
-    environment:
-      - MINIO_ACCESS_KEY=CHANGE_THIS
-      - MINIO_SECRET_KEY=CHANGE_THIS
     ports:
       - "0.0.0.0:80:8888" # In docker mode, change THIS port instead of port in system settings!
 
