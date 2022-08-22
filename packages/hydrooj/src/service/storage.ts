@@ -303,7 +303,7 @@ class LocalStorageService {
         url.searchParams.set('expire', expire);
         url.searchParams.set('secret', md5(`${target}/${expire}/${builtinConfig.file.secret}`));
         if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url.toString());
-        return url.toString().split('localhost/')[1];
+        return `/${url.toString().split('localhost/')[1]}`;
     }
 
     async signUpload() {
