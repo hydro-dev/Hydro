@@ -13,7 +13,6 @@ import user from '../model/user';
 import {
     Handler, param, post, Route, Types,
 } from '../service/server';
-import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
 import { sortFiles } from '../utils';
 

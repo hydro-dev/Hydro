@@ -30,6 +30,7 @@ import rendererLayer from './layers/renderer';
 import responseLayer from './layers/response';
 import userLayer from './layers/user';
 import { Router } from './router';
+import { encodeRFC5987ValueChars } from './storage';
 
 export * from './decorators';
 
@@ -223,7 +224,7 @@ export class Handler extends HandlerCommon {
         this.response.body = data;
         this.response.template = null;
         this.response.type = 'application/octet-stream';
-        if (name) this.response.disposition = `attachment; filename="${encodeURIComponent(name)}"`;
+        if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
     async init() {
