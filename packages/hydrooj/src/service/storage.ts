@@ -294,7 +294,7 @@ class LocalStorageService {
         };
     }
 
-    async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+    async signDownloadLink(target: string, filename = '', noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         const url = new URL('https://localhost/storage');
         url.searchParams.set('target', target);
