@@ -109,12 +109,11 @@ export class StorageHandler extends Handler {
     @param('filename', Types.Name, true)
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
-    async get(domainId: string, target: string, filename: string, expire: number, secret: string) {
+    async get(domainId: string, target: string, filename = '', expire: number, secret: string) {
         const expected = md5(`${target}/${expire}/${builtinConfig.file.secret}`);
         if (expire < Date.now()) throw new ForbiddenError('Link expired');
         if (secret !== expected) throw new ForbiddenError('Invalid secret');
-        if (filename) this.response.addHeader('Content-Disposition', `attachment; filename="${encodeRFC5987ValueChars(filename)}"`);
-        this.response.body = await storage.get(target);
+        this.binary(await storage.get(target), filename);
     }
 }
 
