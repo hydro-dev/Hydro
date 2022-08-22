@@ -1,9 +1,16 @@
+import { resolve } from 'path';
 import { Readable } from 'stream';
 import { URL } from 'url';
-import { createReadStream } from 'fs-extra';
+import {
+    copyFile, createReadStream, ensureDir,
+    remove, stat, writeFile,
+} from 'fs-extra';
+import { lookup } from 'mime-types';
 import { BucketItem, Client, ItemBucketMetadata } from 'minio';
+import { md5 } from '../lib/crypto';
 import { Logger } from '../logger';
-import * as system from '../model/system';
+import { builtinConfig } from '../settings';
+import { MaybeArray } from '../typeutils';
 
 const logger = new Logger('storage');
 
@@ -59,7 +66,7 @@ function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) =>
     };
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
-function encodeRFC5987ValueChars(str: string) {
+export function encodeRFC5987ValueChars(str: string) {
     return (
         encodeURIComponent(str)
             // Note that although RFC3986 reserves "!", RFC5987 does not,
@@ -72,7 +79,7 @@ function encodeRFC5987ValueChars(str: string) {
     );
 }
 
-class StorageService {
+class RemoteStorageService {
     public client: Client;
     public error = '';
     public opts: StorageOptions;
@@ -80,13 +87,17 @@ class StorageService {
 
     async start() {
         try {
-            const [
-                endPoint, accessKey, secretKey, bucket, region,
-                pathStyle, endPointForUser, endPointForJudge,
-            ] = system.getMany([
-                'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
-                'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
-            ]);
+            logger.info('Starting storage service with endpoint:', builtinConfig.file.endPoint);
+            const {
+                endPoint,
+                accessKey,
+                secretKey,
+                bucket,
+                region,
+                pathStyle,
+                endPointForUser,
+                endPointForJudge,
+            } = builtinConfig.file;
             this.opts = {
                 endPoint,
                 accessKey,
@@ -97,11 +108,6 @@ class StorageService {
                 endPointForUser,
                 endPointForJudge,
             };
-            if (process.env.MINIO_ACCESS_KEY) {
-                logger.info('Using MinIO key from environment variables');
-                this.opts.accessKey = process.env.MINIO_ACCESS_KEY;
-                this.opts.secretKey = process.env.MINIO_SECRET_KEY;
-            }
             this.client = new Client({
                 ...parseMainEndpointUrl(this.opts.endPoint),
                 pathStyle: this.opts.pathStyle,
@@ -133,7 +139,7 @@ class StorageService {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (typeof file === 'string') file = createReadStream(file);
         try {
-            return await this.client.putObject(this.opts.bucket, target, file, meta);
+            await this.client.putObject(this.opts.bucket, target, file, meta);
         } catch (e) {
             e.stack = new Error().stack;
             throw e;
@@ -154,11 +160,7 @@ class StorageService {
     async del(target: string | string[]) {
         if (typeof target === 'string') {
             if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        } else {
-            for (const t of target) {
-                if (t.includes('..') || t.includes('//')) throw new Error('Invalid path');
-            }
-        }
+        } else if (target.find((t) => t.includes('..') || t.includes('//'))) throw new Error('Invalid path');
         try {
             if (typeof target === 'string') return await this.client.removeObject(this.opts.bucket, target);
             return await this.client.removeObjects(this.opts.bucket, target);
@@ -173,7 +175,7 @@ class StorageService {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         try {
             const stream = this.client.listObjects(this.opts.bucket, target, recursive);
-            return await new Promise<BucketItem[]>((resolve, reject) => {
+            return await new Promise<BucketItem[]>((r, reject) => {
                 const results: BucketItem[] = [];
                 stream.on('data', (result) => {
                     if (result.size) {
@@ -184,7 +186,7 @@ class StorageService {
                         });
                     }
                 });
-                stream.on('end', () => resolve(results));
+                stream.on('end', () => r(results));
                 stream.on('error', reject);
             });
         } catch (e) {
@@ -237,6 +239,89 @@ class StorageService {
     }
 }
 
-const service = new StorageService();
-global.Hydro.service.storage = service;
-export = service;
+class LocalStorageService {
+    client: null;
+    error: null;
+    dir: string;
+    opts: null;
+    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+
+    async start() {
+        logger.debug('Loading local storage service with path:', builtinConfig.file.path);
+        await ensureDir(builtinConfig.file.path);
+        this.dir = builtinConfig.file.path;
+        this.replaceWithAlternativeUrlFor = {
+            user: parseAlternativeEndpointUrl(builtinConfig.file.endPointForUser),
+            judge: parseAlternativeEndpointUrl(builtinConfig.file.endPointForJudge),
+        };
+    }
+
+    async put(target: string, file: string | Buffer | Readable) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = resolve(this.dir, target);
+        if (typeof file === 'string') await copyFile(file, target);
+        else await writeFile(target, file);
+    }
+
+    async get(target: string, path?: string) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = resolve(this.dir, target);
+        if (path) await copyFile(target, path);
+        return createReadStream(target);
+    }
+
+    async del(target: MaybeArray<string>) {
+        const targets = typeof target === 'string' ? [target] : target;
+        if (targets.find((i) => i.includes('..') || i.includes('//'))) throw new Error('Invalid path');
+        await Promise.all(targets.map((i) => remove(resolve(this.dir, i))));
+    }
+
+    async getMeta(target: string) {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = resolve(this.dir, target);
+        const file = await stat(target);
+        return {
+            size: file.size,
+            etag: Buffer.from(target).toString('base64'),
+            lastModified: file.mtime,
+            metaData: {
+                'Content-Type': (target.endsWith('.ans') || target.endsWith('.out'))
+                    ? 'text/plain'
+                    : lookup(target) || 'application/octet-stream',
+                'Content-Length': file.size,
+            },
+        };
+    }
+
+    async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        const url = new URL('https://localhost/storage');
+        url.searchParams.set('target', target);
+        url.searchParams.set('filename', filename);
+        const expire = (Date.now() + (noExpire ? 7 * 24 * 3600 : 600) * 1000).toString();
+        url.searchParams.set('expire', expire);
+        url.searchParams.set('secret', md5(`${target}/${expire}/${builtinConfig.file.secret}`));
+        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url.toString());
+        return url.toString().split('localhost/')[1];
+    }
+
+    async signUpload() {
+        throw new Error('Not implemented');
+        return null;
+    }
+
+    async list() {
+        throw new Error('deprecated');
+        return [];
+    }
+}
+
+let service; // eslint-disable-line import/no-mutable-exports
+
+export async function loadStorageService() {
+    service = builtinConfig.file.type === 's3' ? new RemoteStorageService() : new LocalStorageService();
+    global.Hydro.service.storage = service;
+    await service.start();
+}
+
+export default service;

@@ -183,14 +183,6 @@ const ignoreUA = [
 ].join('\n');
 
 SystemSetting(
-    Setting('setting_file', 'file.endPoint', 'http://127.0.0.1:9000', 'text', 'file.endPoint', 'Storage engine endPoint'),
-    Setting('setting_file', 'file.accessKey', null, 'text', 'file.accessKey', 'Storage engine accessKey'),
-    Setting('setting_file', 'file.secretKey', null, 'password', 'file.secretKey', 'Storage engine secret', FLAG_SECRET),
-    Setting('setting_file', 'file.bucket', 'hydro', 'text', 'file.bucket', 'Storage engine bucket'),
-    Setting('setting_file', 'file.region', 'us-east-1', 'text', 'file.region', 'Storage engine region'),
-    Setting('setting_file', 'file.pathStyle', true, 'boolean', 'file.pathStyle', 'pathStyle endpoint'),
-    Setting('setting_file', 'file.endPointForUser', '/fs/', 'text', 'file.endPointForUser', 'EndPoint for user'),
-    Setting('setting_file', 'file.endPointForJudge', '/fs/', 'text', 'file.endPointForJudge', 'EndPoint for judge'),
     Setting('setting_smtp', 'smtp.user', null, 'text', 'smtp.user', 'SMTP Username'),
     Setting('setting_smtp', 'smtp.pass', null, 'password', 'smtp.pass', 'SMTP Password', FLAG_SECRET),
     Setting('setting_smtp', 'smtp.host', null, 'text', 'smtp.host', 'SMTP Server Host'),

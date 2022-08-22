@@ -15,7 +15,6 @@ mongo 127.0.0.1:27017/hydro /tmp/createUser.js
 echo "{\"host\":\"127.0.0.1\",\"port\":\"27017\",\"name\":\"hydro\",\"username\":\"hydro\",\"password\":\"$db_password\"}" >~/.hydro/config.json
 pm2 stop mongod
 pm2 del mongod
-pm2 restart minio
 pm2 start mongodb
-pm2 restart hydrooj
+pm2 restart all
 pm2 save

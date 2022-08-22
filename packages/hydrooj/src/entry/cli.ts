@@ -88,8 +88,9 @@ export async function load() {
     require('../options');
     const opts = options();
     await db.start(opts);
+    await require('../settings').loadConfig();
     const storage = require('../service/storage');
-    await storage.start();
+    await storage.loadStorageService();
     require('../lib/index');
     await lib(pending, fail);
     const systemModel = require('../model/system');

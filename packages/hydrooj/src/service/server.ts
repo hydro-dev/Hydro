@@ -20,6 +20,7 @@ import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as system from '../model/system';
 import { User } from '../model/user';
+import { builtinConfig } from '../settings';
 import { errorMessage } from '../utils';
 import * as bus from './bus';
 import * as decorators from './decorators';
@@ -109,11 +110,27 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
 
 export async function prepare() {
     app.keys = system.get('session.keys') as unknown as string[];
-    app.use(proxy('/fs', {
-        target: system.get('file.endPoint'),
+    const proxyMiddleware = proxy('/fs', {
+        target: builtinConfig.file.endPoint,
         changeOrigin: true,
         rewrite: (p) => p.replace('/fs', ''),
-    }));
+    });
+    const bodyMiddleware = Body({
+        multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
+        formidable: {
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
+        },
+    });
+    app.use(async (ctx, next) => {
+        if (!ctx.path.startsWith('/fs/')) return await next();
+        if (ctx.request.search.includes('X-AMZ')) {
+            return await proxyMiddleware(ctx, next);
+        }
+        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
+        return await next();
+    });
     app.use(Compress());
     for (const dir of global.publicDirs) {
         app.use(cache(dir, {
@@ -122,23 +139,16 @@ export async function prepare() {
     }
     if (process.env.DEV) {
         app.use(async (ctx: Context, next: Function) => {
-            const startTime = new Date().getTime();
+            const startTime = Date.now();
             await next();
-            const endTime = new Date().getTime();
+            const endTime = Date.now();
             if (ctx.nolog || ctx.response.headers.nolog) return;
             ctx._remoteAddress = ctx.request.ip;
             logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
 ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }
-    app.use(Body({
-        multipart: true,
-        jsonLimit: '8mb',
-        formLimit: '8mb',
-        formidable: {
-            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
-        },
-    }));
+    app.use(bodyMiddleware);
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     layers.forEach((layer) => router.use(layer as any));

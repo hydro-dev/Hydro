@@ -1,7 +1,6 @@
 import { extname } from 'path';
 import { escapeRegExp } from 'lodash';
 import { lookup } from 'mime-types';
-import { ItemBucketMetadata } from 'minio';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
@@ -14,11 +13,8 @@ import TaskModel from './task';
 export class StorageModel {
     static coll = db.collection('storage');
 
-    static async put(path: string, file: string | Buffer | Readable, meta?: ItemBucketMetadata, owner?: number);
-    static async put(path: string, file: string | Buffer | Readable, owner?: number);
-    static async put(path: string, file: string | Buffer | Readable, arg0?: ItemBucketMetadata | number, arg1?: number) {
-        const meta = typeof arg0 === 'object' ? arg0 : {};
-        const owner = (typeof arg0 === 'number' ? arg0 : arg1) ?? 1;
+    static async put(path: string, file: string | Buffer | Readable, owner?: number) {
+        const meta = {};
         await StorageModel.del([path]);
         meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
             ? 'text/plain'
@@ -27,7 +23,7 @@ export class StorageModel {
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
-        await storage.put(_id, file, meta);
+        await storage.put(_id, file);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
@@ -63,15 +59,10 @@ export class StorageModel {
     static async list(target: string, recursive = true) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (target.length && !target.endsWith('/')) target += '/';
-        const results = recursive
-            ? await StorageModel.coll.find({
-                path: { $regex: new RegExp(`^${escapeRegExp(target)}`, 'i') },
-                autoDelete: null,
-            }).toArray()
-            : await StorageModel.coll.find({
-                path: { $regex: new RegExp(`^${escapeRegExp(target)}[^/]+$`) },
-                autoDelete: null,
-            }).toArray();
+        const results = await StorageModel.coll.find({
+            path: { $regex: new RegExp(`^${escapeRegExp(target)}${recursive ? '' : '[^/]+$'}`, 'i') },
+            autoDelete: null,
+        }).toArray();
         return results.map((i) => ({
             ...i, name: i.path.split(target)[1], prefix: target,
         }));

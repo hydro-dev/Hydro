@@ -37,12 +37,13 @@ export async function load() {
     if (detail) logger.info('finish: locale/template/static');
     const opts = options();
     await db.start(opts);
+    await require('../settings').loadConfig();
     if (detail) logger.info('finish: db.connect');
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
     if (detail) logger.info('finish: config');
     const storage = require('../service/storage');
-    await storage.start();
+    await storage.loadStorageService();
     if (detail) logger.info('finish: storage.connect');
     require('../lib/index');
     if (detail) logger.info('finish: lib.builtin');

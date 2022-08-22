@@ -20,7 +20,6 @@ const locales = {
         'error.nodeVersionPraseFail': '无法解析 Node 版本号，请尝试手动安装。',
         'install.pm2': '正在安装 PM2...',
         'install.createDatabaseUser': '正在创建数据库用户...',
-        'install.minio': '正在安装 MinIO...',
         'install.compiler': '正在安装编译器...',
         'install.hydro': '正在安装 Hydro...',
         'install.done': 'Hydro 安装成功！',
@@ -45,7 +44,6 @@ const locales = {
         'error.nodeVersionPraseFail': 'Unable to parse Node version, please try to install manually.',
         'install.pm2': 'Installing PM2...',
         'install.createDatabaseUser': 'Creating database user...',
-        'install.minio': 'Installing MinIO...',
         'install.compiler': 'Installing compiler...',
         'install.hydro': 'Installing Hydro...',
         'install.done': 'Hydro installation completed!',
@@ -83,8 +81,6 @@ if (!cpuInfoFile.includes('avx2')) {
 let migration;
 let retry = 0;
 log.info('install.start');
-const MINIO_ACCESS_KEY = randomstring(32);
-const MINIO_SECRET_KEY = randomstring(32);
 let DATABASE_PASSWORD = randomstring(32);
 // TODO read from args
 const CN = true;
@@ -194,13 +190,6 @@ To disable this feature, checkout our sourcecode.`);
         operations: ['yarn global add pm2'],
     },
     {
-        init: 'install.minio',
-        skip: () => !exec('minio -v').code,
-        operations: [
-            'nix-env -iA nixpkgs.minio',
-        ],
-    },
-    {
         init: 'install.compiler',
         operations: [
             'nix-env -iA nixpkgs.gcc nixpkgs.fpc',
@@ -249,8 +238,6 @@ To disable this feature, checkout our sourcecode.`);
         operations: [
             ['pm2 stop all', { ignore: true }],
             () => fs.writefile(`${__env.HOME}/.hydro/mount.yaml`, mount),
-            `echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >/root/.hydro/env`,
-            `pm2 start "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY} MINIO_SECRET_KEY=${MINIO_SECRET_KEY} minio server /data/file" --name minio`,
             'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
             () => sleep(1000),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${__env.HOME}/.hydro/mount.yaml"`,
@@ -291,8 +278,6 @@ To disable this feature, checkout our sourcecode.`);
             () => log.info('extra.restartTerm'),
             () => log.info('extra.dbUser'),
             () => log.info('extra.dbPassword', DATABASE_PASSWORD),
-            () => log.info('MINIO_ACCESS_KEY=%s', MINIO_ACCESS_KEY),
-            () => log.info('MINIO_SECRET_KEY=%s', MINIO_SECRET_KEY),
         ],
     },
 ];
