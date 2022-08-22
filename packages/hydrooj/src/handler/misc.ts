@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { statSync } from 'fs';
 import { pick } from 'lodash';
+import { lookup } from 'mime-types';
 import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
@@ -114,7 +115,9 @@ export class StorageHandler extends Handler {
         if (expire < Date.now()) throw new ForbiddenError('Link expired');
         if (secret !== expected) throw new ForbiddenError('Invalid secret');
         this.response.body = await storage.get(target);
-        this.response.type = 'application/octet-stream';
+        this.response.type = (target.endsWith('.out') || target.endsWith('.ans'))
+            ? 'text/plain'
+            : lookup(target) || 'application/octet-stream';
         if (filename) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
     }
 }
