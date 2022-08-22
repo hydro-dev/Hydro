@@ -11,9 +11,12 @@ import user from 'hydrooj/src/model/user';
 import * as bus from 'hydrooj/src/service/bus';
 import { UiContextBase } from 'hydrooj/src/service/layers/base';
 import { Handler, Route } from 'hydrooj/src/service/server';
+import { SystemSettings } from 'hydrooj/src/settings';
 import { ObjectID } from 'mongodb';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import Schema from 'schemastery';
+import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
 
 declare module 'hydrooj/src/interface' {
@@ -157,6 +160,13 @@ class LanguageHandler extends ResourceHandler {
   }
 }
 
+class SystemConfigSchemaHandler extends Handler {
+  async get() {
+    const schema = convert(Schema.intersect(SystemSettings) as any, true);
+    this.response.body = schema;
+  }
+}
+
 class RichMediaHandler extends Handler {
   async renderUser(domainId, payload) {
     let d = payload.domainId || domainId;
@@ -213,6 +223,7 @@ global.Hydro.handler.ui = async () => {
   Route('set_theme', '/set_theme/:theme', SetThemeHandler);
   Route('constant', '/constant/:version', UiConstantsHandler);
   Route('markdown', '/markdown', MarkdownHandler);
+  Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
   Route('lang', '/l/:lang', LanguageHandler);
   Route('media', '/media', RichMediaHandler);
 };

@@ -97,5 +97,9 @@ setDiagnosticsOptions({
       fileMatch: ['hydro://problem/file/config.yaml'],
       schema: problemConfigSchema as any,
     },
+    {
+      uri: '/manage/config/schema.json',
+      fileMatch: ['hydro://system/setting.yaml'],
+    },
   ],
 });

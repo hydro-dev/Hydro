@@ -42,7 +42,7 @@ const FileSetting = Schema.intersect([
 const builtinSettings = Schema.object({
     file: FileSetting,
 });
-export const SystemSettings: Schema<any, any>[] = [builtinSettings];
+export const SystemSettings: Schema[] = [builtinSettings];
 export let configSource = ''; // eslint-disable-line import/no-mutable-exports
 export let systemConfig: any = {}; // eslint-disable-line import/no-mutable-exports
 const logger = new Logger('settings');
@@ -85,7 +85,6 @@ export function requestConfig<T, S>(s: Schema<T, S>): {
     let curValue = s(systemConfig);
     update.push(() => {
         try {
-            console.log(systemConfig);
             curValue = s(systemConfig);
         } catch (e) {
             logger.warn('Cannot read config: ', e.message);

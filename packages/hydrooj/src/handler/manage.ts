@@ -19,7 +19,7 @@ import {
     Connection, ConnectionHandler, Handler,
     param, Route, Types,
 } from '../service/server';
-import { configSource, SystemSettings } from '../settings';
+import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
 
 const logger = new Logger('manage');
@@ -194,9 +194,14 @@ class SystemConfigHandler extends SystemHandler {
 
     @param('value', Types.String)
     async post(domainId: string, value: string) {
-        const config = yaml.load(value);
-        const validated = Schema.intersect(SystemSettings)(config);
-        console.log(validated);
+        let config;
+        try {
+            config = yaml.load(value);
+            Schema.intersect(SystemSettings)(config);
+        } catch (e) {
+            throw new ValidationError('value');
+        }
+        await saveConfig(config);
     }
 }
 

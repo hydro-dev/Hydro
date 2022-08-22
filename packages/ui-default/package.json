@@ -129,6 +129,7 @@
     "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
     "p-queue": "^7.3.0",
+    "schemastery-jsonschema": "^1.0.2",
     "streamsaver": "^2.0.6",
     "xss": "^1.0.14"
   }

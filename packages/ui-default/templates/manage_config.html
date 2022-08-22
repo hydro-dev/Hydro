@@ -8,7 +8,7 @@
         <label>
           config
           <div name="form_item_config" class="textarea-container">
-            <textarea id="config" data-yaml placeholder="" class="textbox">{{ value }}</textarea>
+            <textarea id="config" data-yaml data-model="hydro://system/setting.yaml" placeholder="" class="textbox">{{ value }}</textarea>
           </div>
         </label>
         <p class="help-text" id="info"></p>
@@ -16,7 +16,7 @@
     </div>
     <div class="row">
       <div class="medium-10 columns form__item end">
-        <input id="submit" class="rounded primary button" value="保存所有修改">
+        <button id="submit" class="rounded primary button">{{ _('Save All Changes') }}</button>
       </div>
     </div>
   </div>

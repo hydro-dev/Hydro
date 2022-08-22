@@ -324,4 +324,8 @@ export async function loadStorageService() {
     await service.start();
 }
 
-export default service;
+export default new Proxy({}, {
+    get(self, key) {
+        return service[key];
+    },
+}) as RemoteStorageService | LocalStorageService;

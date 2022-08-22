@@ -107,7 +107,6 @@ async function onCommentClickReplyComment(ev, options: any = {}) {
 }
 
 async function onCommentClickReplyReply(ev) {
-  console.log(ev);
   const $evTarget = $(ev.currentTarget);
   const $mediaBody = $evTarget.closest('.media__body');
   const uid = $mediaBody

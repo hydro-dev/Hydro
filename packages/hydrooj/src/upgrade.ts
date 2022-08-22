@@ -813,6 +813,7 @@ const scripts: UpgradeScript[] = [
         ]);
         if ((endPoint && accessKey) || process.env.MINIO_ACCESS_KEY) {
             await setBuiltinConfig('file', {
+                type: 's3',
                 endPoint: process.env.MINIO_ACCESS_KEY ? 'http://127.0.0.1:9000/' : endPoint,
                 accessKey: process.env.MINIO_ACCESS_KEY || accessKey,
                 secretKey: process.env.MINIO_SECRET_KEY || secretKey,
