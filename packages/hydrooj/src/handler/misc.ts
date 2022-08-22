@@ -13,6 +13,7 @@ import user from '../model/user';
 import {
     Handler, param, post, Route, Types,
 } from '../service/server';
+import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
 import { sortFiles } from '../utils';
 
@@ -112,7 +113,9 @@ export class StorageHandler extends Handler {
         const expected = md5(`${target}/${expire}/${builtinConfig.file.secret}`);
         if (expire < Date.now()) throw new ForbiddenError('Link expired');
         if (secret !== expected) throw new ForbiddenError('Invalid secret');
-        this.binary(await storage.get(target), filename);
+        this.response.body = await storage.get(target);
+        this.response.type = 'application/octet-stream';
+        if (filename) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
     }
 }
 
