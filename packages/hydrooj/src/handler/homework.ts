@@ -74,7 +74,7 @@ class HomeworkDetailHandler extends Handler {
             tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
         if (
-            (contest.isNotStarted(tdoc) || !tsdoc?.attend)
+            (contest.isNotStarted(tdoc) || (!tsdoc?.attend && !contest.isDone(tdoc)))
             && !this.user.own(tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
         ) return;
