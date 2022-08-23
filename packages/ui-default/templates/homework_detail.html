@@ -53,8 +53,12 @@
                 {% endif %}
               {% endif %}
               <td class="col--problem col--problem-name">
-                {% if model.contest.isNotStarted(tdoc) %}
-                  {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false) }}
+                {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD) %}
+                  {% if model.contest.isDone(tdoc) or (tsdoc.attend and not model.contest.isNotStarted(tdoc)) %}
+                    {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                  {% else %}
+                    {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false) }}
+                  {% endif %}
                 {% else %}
                   {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
                 {% endif %}
