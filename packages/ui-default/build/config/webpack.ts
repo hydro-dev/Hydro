@@ -7,13 +7,10 @@ import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import { dirname } from 'path';
-import SpeedMeasurePlugin from 'speed-measure-webpack-plugin';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import WebpackBar from 'webpackbar';
 import root from '../utils/root';
-
-const smp = new SpeedMeasurePlugin();
 
 export default function (env: { production?: boolean, measure?: boolean } = {}) {
   function esbuildLoader() {
@@ -252,11 +249,18 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
             id: 'vs/language/yaml/yamlWorker',
             entry: require.resolve('monaco-yaml/yaml.worker.js'),
           },
+        }, {
+          label: 'graphql',
+          entry: require.resolve('monaco-graphql/esm/monaco.contribution.js'),
+          worker: {
+            id: 'vs/language/graphql/graphqlWorker',
+            entry: require.resolve('monaco-graphql/esm/graphql.worker.js'),
+          },
         }],
       }),
       ...env.measure ? [new BundleAnalyzerPlugin({ analyzerPort: 'auto' })] : [],
     ],
   };
 
-  return env.measure ? smp.wrap(config) : config;
+  return config;
 }
