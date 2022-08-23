@@ -25,7 +25,6 @@ import 'vj/misc/section.styl';
 import 'vj/misc/nothing.styl';
 import 'vj/components/editor/cmeditor.styl';
 import 'vj/components/datepicker/datepicker.styl';
-import 'vj/components/katex/katex.styl';
 
 // load all page stylesheets
 const pageStyleReq = require.context('../', true, /\.page\.styl$/i);

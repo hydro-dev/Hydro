@@ -1,4 +1,5 @@
-export default `#include <world.h>
+export default `\
+#include <world.h>
 
 int main() {
     // ~ Switch on the power line / Remember to put on PROTECTION ~

@@ -217,7 +217,6 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
         $: 'jquery',
         jQuery: 'jquery',
         'window.jQuery': 'jquery',
-        katex: 'katex/dist/katex.js',
         React: 'react',
         monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),

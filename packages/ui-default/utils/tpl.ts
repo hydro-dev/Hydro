@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-type Substitution = string | { templateRaw: true, html: string };
+type Substitution = string | number | { templateRaw: true, html: string };
 
 export default function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]) {
   let result = pieces[0];

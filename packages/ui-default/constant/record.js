@@ -1,5 +1,3 @@
-import attachObjectMeta from './util/objectMeta';
-
 // Please note that accepted < others, rp system uses this feature.
 export const STATUS_WAITING = 0;
 export const STATUS_ACCEPTED = 1;
@@ -34,7 +32,6 @@ export const STATUS_TEXTS = {
   [STATUS_FETCHED]: 'Fetched',
   [STATUS_IGNORED]: 'Ignored',
 };
-attachObjectMeta(STATUS_TEXTS, 'intKey', true);
 
 export const STATUS_CODES = {
   [STATUS_WAITING]: 'pending',
@@ -53,7 +50,6 @@ export const STATUS_CODES = {
   [STATUS_FETCHED]: 'progress',
   [STATUS_IGNORED]: 'ignored',
 };
-attachObjectMeta(STATUS_CODES, 'intKey', true);
 
 /**
  * Whether to show detail about each test case for a submission status
@@ -74,7 +70,6 @@ export const STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS = {
   [STATUS_FETCHED]: false,
   [STATUS_IGNORED]: false,
 };
-attachObjectMeta(STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS, 'exportToPython', false);
 
 /**
  * Short text to show in Scratchpad mode
@@ -86,4 +81,3 @@ export const STATUS_SCRATCHPAD_SHORT_TEXTS = {
   [STATUS_MEMORY_LIMIT_EXCEEDED]: 'MLE',
   [STATUS_RUNTIME_ERROR]: 'RTE',
 };
-attachObjectMeta(STATUS_SCRATCHPAD_SHORT_TEXTS, 'exportToPython', false);

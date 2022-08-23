@@ -4,7 +4,6 @@ import './utils/i18n';
 import './utils/loadReactRedux';
 import './utils/mediaQuery';
 import './utils/mongoId';
-import './utils/parseQueryString';
 import './utils/pipeStream';
 import './utils/pjax';
 import './utils/request';
@@ -16,7 +15,6 @@ import './utils/zip';
 import './components/autocomplete';
 import './components/dialog';
 import './components/notification';
-import './components/nprogress';
 import './components/monaco/loader';
 
 import $ from 'jquery';

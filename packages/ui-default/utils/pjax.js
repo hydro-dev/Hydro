@@ -3,8 +3,8 @@
 
 import $ from 'jquery';
 import { nanoid } from 'nanoid';
+import NProgress from 'nprogress';
 import Notification from 'vj/components/notification';
-import NProgress from 'vj/components/nprogress';
 import request from 'vj/utils/request';
 
 const pjax = {};

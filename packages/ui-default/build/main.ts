@@ -1,11 +1,14 @@
 /* eslint-disable import/no-import-module-exports */
-/* eslint-disable import/no-extraneous-dependencies */
+import { size } from '@hydrooj/utils/lib/utils';
 import cac from 'cac';
 import chalk from 'chalk';
+import { build } from 'esbuild';
 import log from 'fancy-log';
 import fs from 'fs-extra';
 import gulp from 'gulp';
-import webpack from 'webpack';
+import { sum } from 'lodash';
+import path from 'path';
+import webpack, { Stats } from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import pkg from '../package.json';
 import gulpConfig from './config/gulp';
@@ -24,14 +27,15 @@ async function runWebpack({
       compress: true,
       hot: true,
       proxy: {
-        context: (path) => path !== '/ws',
+        context: (p) => p !== '/ws',
         target: 'http://localhost:2333',
         ws: true,
       },
     }, compiler);
-    return server.start();
+    server.start();
+    return;
   }
-  return new Promise((resolve, reject) => {
+  const res = await new Promise<Stats>((resolve, reject) => {
     function compilerCallback(err, stats) {
       if (err) {
         console.error(err.stack || err);
@@ -42,11 +46,40 @@ async function runWebpack({
       }
       if (argv.options.detail) console.log(stats.toString());
       if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
-      resolve(null);
+      resolve(stats);
     }
     if (watch) compiler.watch({}, compilerCallback);
     else compiler.run(compilerCallback);
   });
+  if (production && res && !res.hasErrors()) {
+    const stats = {};
+    const files = fs.readdirSync(root('public'), { withFileTypes: true });
+    for (const file of files) {
+      if (!file.isFile() || file.name.endsWith('.map')) continue;
+      const data = await fs.stat(path.join(root('public'), file.name));
+      stats[file.name.replace(/\.[a-f0-9]{10}\./, '.')] = data.size;
+    }
+    const statsPath = root('__bundleInfo');
+    if (fs.existsSync(statsPath)) {
+      log('Compare to last production bundle:');
+      const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
+      for (const key in stats) if (!oldStats[key]) oldStats[key] = 0;
+      const entries: [filename: string, orig: number, curr: number][] = [];
+      for (const [key, value] of Object.entries(oldStats)) {
+        if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
+      }
+      const sorted = entries.sort((i) => i[1] - i[2]);
+      sorted.push(['Total', sum(sorted.map((i) => i[1])), sum(sorted.map((i) => i[2]))]);
+      for (const entry of sorted) {
+        const [name, orig, curr] = entry;
+        const diff = 100 * (curr - orig) / orig;
+        if (Math.abs(diff) < 0.01 && name !== 'Total') continue;
+        const color = orig > curr ? chalk.green : chalk.red;
+        log(color(`${name.padStart(35)} ${size(orig).padStart(10)} -> ${size(curr).padEnd(10)} (${diff.toPrecision(5)}%)`), chalk.reset());
+      }
+    }
+    await fs.writeFile(statsPath, JSON.stringify(stats));
+  }
 }
 
 async function runGulp() {

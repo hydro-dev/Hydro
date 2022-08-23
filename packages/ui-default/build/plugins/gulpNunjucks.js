@@ -1,5 +1,5 @@
-import through from 'through2';
 import nunjucks from 'nunjucks';
+import through from 'through2';
 
 export default function compile(data, options = {}) {
   return through.obj(function (file, encoding, callback) {

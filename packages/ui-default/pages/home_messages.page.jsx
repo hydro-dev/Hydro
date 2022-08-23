@@ -7,7 +7,6 @@ import VjNotification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import api, { gql } from 'vj/utils/api';
 import loadReactRedux from 'vj/utils/loadReactRedux';
-import parseQueryString from 'vj/utils/parseQueryString';
 
 const page = new NamedPage('home_messages', () => {
   let reduxStore;
@@ -92,10 +91,10 @@ const page = new NamedPage('home_messages', () => {
    * A target user id may be assigned in the query string.
    */
   async function loadSendTarget() {
-    const queryString = parseQueryString();
-    if (!queryString.target) return;
+    const target = new URL(window.location.href).searchParams.get('target');
+    if (!target) return;
     const user = await api(gql`
-      users(search: ${queryString.target}, exact: true) {
+      users(search: ${target}, exact: true) {
         _id
         uname
         avatarUrl

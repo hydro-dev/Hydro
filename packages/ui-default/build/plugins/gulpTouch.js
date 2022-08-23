@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import fs from 'fs-extra';
 import PluginError from 'plugin-error';
 import through from 'through2';
-import fs from 'fs-extra';
 
 export default function touch(mtime) {
   async function touchFile(file) {

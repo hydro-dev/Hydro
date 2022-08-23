@@ -88,7 +88,6 @@ async function handleClickUpload(files) {
     Notification.success(i18n('File uploaded successfully.'));
     await pjax.request({ push: false });
   } catch (e) {
-    window.captureException?.(e);
     console.error(e);
     Notification.error(i18n('File upload failed: {0}', e.toString()));
   } finally {
