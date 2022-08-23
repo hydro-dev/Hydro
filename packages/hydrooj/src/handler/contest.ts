@@ -127,7 +127,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
                 .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
         }
         if (
-            (contest.isNotStarted(this.tdoc) || !this.tsdoc?.attend)
+            (contest.isNotStarted(this.tdoc) || (!this.tsdoc?.attend && !contest.isDone(this.tdoc)))
             && !this.user.own(this.tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
         ) return;
