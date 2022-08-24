@@ -11,6 +11,8 @@ dist/
 *.tsbuildinfo
 *.hydro
 .coverage
+coverage
+.nyc_output
 benchmark.json
 globalConfig.json
 *.out

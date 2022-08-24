@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import path from 'path';
 import fs from 'fs-extra';
@@ -15,14 +14,6 @@ export function parseFilename(filePath: string) {
     const t = filePath.split('/');
     return t[t.length - 1];
 }
-
-const encrypt = (algorithm: string, content: crypto.BinaryLike) => {
-    const hash = crypto.createHash(algorithm);
-    hash.update(content);
-    return hash.digest('hex');
-};
-
-export const md5 = (content: string) => encrypt('md5', content);
 
 export class Queue<T> extends EventEmitter {
     queue: T[] = [];

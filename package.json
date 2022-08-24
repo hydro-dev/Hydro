@@ -58,6 +58,7 @@
         "mocha": "^10.0.0",
         "mongodb": "^3.7.3",
         "mongodb-memory-server": "^8.8.0",
+        "nyc": "^15.1.0",
         "ora": "^6.1.2",
         "semver": "^7.3.7",
         "supertest": "^6.2.4",

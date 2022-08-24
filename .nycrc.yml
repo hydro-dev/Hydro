@@ -1,0 +1,3 @@
+extension: [.js, .ts, .jsx, .tsx]
+exclude: [node_modules, .yarn]
+reporter: [text, lcov]
