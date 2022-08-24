@@ -7,10 +7,10 @@ import {
 } from 'fs-extra';
 import { lookup } from 'mime-types';
 import { BucketItem, Client, ItemBucketMetadata } from 'minio';
-import { md5 } from '../lib/crypto';
 import { Logger } from '../logger';
 import { builtinConfig } from '../settings';
 import { MaybeArray } from '../typeutils';
+import { md5 } from '../utils';
 
 const logger = new Logger('storage');
 

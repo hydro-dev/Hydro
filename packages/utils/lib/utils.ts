@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
 import { Duplex } from 'stream';
@@ -6,6 +7,10 @@ import fs from 'fs-extra';
 import type { Moment } from 'moment-timezone';
 import { isMoment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
+
+const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
+export const sha1 = (content: string) => encrypt('sha1', content);
+export const md5 = (content: string) => encrypt('md5', content);
 
 export function folderSize(folderPath: string) {
     // eslint-disable-next-line @typescript-eslint/no-shadow

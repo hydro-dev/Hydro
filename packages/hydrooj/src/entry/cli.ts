@@ -23,9 +23,15 @@ function parseParameters(fn: Function) {
 }
 
 async function runScript(name: string, arg: any) {
-    if (!global.Hydro.script[name]) return console.error('Script %s not found.', name);
-    validate(global.Hydro.script[name].validate, arg);
-    return await global.Hydro.script[name].run(arg, console.info);
+    const s = global.Hydro.script[name];
+    if (!s) return console.error('Script %s not found.', name);
+    if (typeof s.validate === 'function') {
+        arg = s.validate(arg);
+    } else {
+        console.warn('You are using the legacy script validation API, which will be dropped in the future.');
+        validate(s.validate, arg);
+    }
+    return await s.run(arg, console.info);
 }
 
 async function cli() {

@@ -810,7 +810,7 @@ const scripts: UpgradeScript[] = [
         ] = system.getMany([
             'file.endPoint', 'file.accessKey', 'file.secretKey', 'file.bucket', 'file.region',
             'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
-        ]);
+        ] as any[]) as any;
         if ((endPoint && accessKey) || process.env.MINIO_ACCESS_KEY) {
             await setBuiltinConfig('file', {
                 type: 's3',

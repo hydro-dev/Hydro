@@ -1,33 +1,22 @@
-import { Dictionary, isNull } from 'lodash';
 import { PERM, PRIV } from '../model/builtin';
 
 const trueChecker = () => true;
-const Checker = (perm: bigint, priv: number, checker: Function = trueChecker) => (handler) => (
+const Checker = (perm: bigint | bigint[], priv: number | number[], checker: Function = trueChecker) => (handler) => (
     checker(handler)
     && (perm ? handler.user.hasPerm(perm) : true)
     && (priv ? handler.user.hasPriv(priv) : true)
 );
-const buildChecker = (...permPrivChecker: Array<number | bigint | Function>) => {
-    let _priv: number;
-    let _perm: bigint;
+const buildChecker = (...permPrivChecker: Array<number | bigint | Function | number[] | bigint[]>) => {
+    let _priv: number | number[];
+    let _perm: bigint | bigint[];
     let checker: Function = trueChecker;
     for (const item of permPrivChecker) {
-        if (item instanceof Object && !isNull(item)) {
-            if (item instanceof Array) {
-                if (typeof item[0] === 'number') {
-                    // @ts-ignore
-                    _priv = item;
-                } else if (typeof item[0] === 'bigint') {
-                    // @ts-ignore
-                    _perm = item;
-                }
-            } else if (typeof item.call !== 'undefined') {
-                checker = item;
-            }
-        } else if (typeof item === 'number') {
-            _priv = item;
-        } else if (typeof item === 'bigint') {
-            _perm = item;
+        if (typeof item === 'function') checker = item;
+        else if (typeof item === 'number') _priv = item;
+        else if (typeof item === 'bigint') _perm = item;
+        else if (item instanceof Array) {
+            if (typeof item[0] === 'number') _priv = item as number[];
+            else _perm = item as bigint[];
         }
     }
     return Checker(_perm, _priv, checker);
@@ -51,7 +40,7 @@ export const Nav = (
 };
 
 export const ProblemAdd = (
-    name: string, args: Dictionary<any> = {}, icon = 'add', text = 'Create Problem',
+    name: string, args: Record<string, any> = {}, icon = 'add', text = 'Create Problem',
 ) => {
     global.Hydro.ui.nodes.problem_add.push({
         name, args, icon, text,
@@ -59,7 +48,7 @@ export const ProblemAdd = (
 };
 
 export const UserDropdown = (
-    name: string, args: Dictionary<any> = {}, ...permPrivChecker: Array<number | bigint | Function>
+    name: string, args: Record<string, any> = {}, ...permPrivChecker: Array<number | bigint | Function>
 ) => {
     global.Hydro.ui.nodes.user_dropdown.push({
         name, args: args || {}, checker: buildChecker(...permPrivChecker),

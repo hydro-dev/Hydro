@@ -2,7 +2,6 @@
 import { size } from '@hydrooj/utils/lib/utils';
 import cac from 'cac';
 import chalk from 'chalk';
-import { build } from 'esbuild';
 import log from 'fancy-log';
 import fs from 'fs-extra';
 import gulp from 'gulp';

@@ -1,4 +1,4 @@
-import { md5, sha1 } from 'hydrooj/src/lib/crypto';
+import { md5, sha1 } from '@hydrooj/utils/lib/utils';
 
 const RE_MD5 = /^[\da-f]{32}$/;
 

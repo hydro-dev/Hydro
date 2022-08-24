@@ -23,6 +23,29 @@ async function get() {
     this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=${state}`;
 }
 
+function unescapedString(escapedString: string) {
+    escapedString += new Array(5 - (escapedString.length % 4)).join('=');
+    return escapedString.replace(/-/g, '+').replace(/_/g, '/');
+}
+
+function decodeJWT(idToken: string) {
+    const token = idToken.split('.');
+    if (token.length !== 3) throw new Error('Invalid idToken');
+    try {
+        const headerSegment = JSON.parse(Buffer.from(token[0], 'base64').toString('utf8'));
+        const payloadSegment = JSON.parse(Buffer.from(token[1], 'base64').toString('utf8'));
+        const signature = unescapedString(token[2]);
+        return {
+            dataToSign: [token[0], token[1]].join('.'),
+            header: headerSegment,
+            payload: payloadSegment,
+            signature,
+        };
+    } catch (e) {
+        throw new Error('Invalid payload');
+    }
+}
+
 async function callback({
     state, code, error,
 }) {
@@ -46,7 +69,7 @@ async function callback({
             grant_type: 'authorization_code',
             redirect_uri: `${url}oauth/google/callback`,
         });
-    const payload = global.Hydro.lib.jwt.decode(res.body.id_token);
+    const payload = decodeJWT(res.body.id_token).payload;
     await token.del(state, token.TYPE_OAUTH);
     this.response.redirect = s.redirect;
     return {

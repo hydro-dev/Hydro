@@ -5,7 +5,6 @@ import { lookup } from 'mime-types';
 import {
     BadRequestError, ForbiddenError, ValidationError,
 } from '../error';
-import { md5 } from '../lib/crypto';
 import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import storage from '../model/storage';
@@ -16,7 +15,7 @@ import {
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
-import { sortFiles } from '../utils';
+import { md5, sortFiles } from '../utils';
 
 class SwitchLanguageHandler extends Handler {
     @param('lang', Types.Name)

@@ -14,6 +14,7 @@ import './ui';
 // This is the main entry. So let's re-export some modules.
 export * from './interface';
 export { Schema, Logger };
+export { requestConfig } from './settings';
 
 const argv = cac().parse();
 const logger = new Logger('loader');

@@ -12,14 +12,6 @@ export interface System {
 }
 
 export interface SystemKeys {
-    'file.endPoint': string,
-    'file.accessKey': string,
-    'file.secretKey': string,
-    'file.bucket': string,
-    'file.region': string,
-    'file.pathStyle': boolean,
-    'file.endPointForUser': string,
-    'file.endPointForJudge': string,
     'smtp.user': string,
     'smtp.from': string,
     'smtp.pass': string,
@@ -657,15 +649,11 @@ export interface ProblemSearchOptions {
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
-    download: typeof import('./lib/download'),
     difficulty: typeof import('./lib/difficulty'),
     buildContent: typeof import('./lib/content').buildContent,
     'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
-    jwt: typeof import('./lib/jwt'),
     mail: typeof import('./lib/mail'),
-    md5: typeof import('./lib/crypto').md5,
-    sha1: typeof import('./lib/crypto').sha1,
     paginate: typeof import('./lib/paginate'),
     rank: typeof import('./lib/rank'),
     rating: typeof import('./lib/rating'),

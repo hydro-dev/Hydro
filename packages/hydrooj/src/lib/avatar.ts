@@ -1,4 +1,4 @@
-import { md5 } from './crypto';
+import { md5 } from '../utils';
 
 type AvatarProvider = (src: string, size: number) => string;
 

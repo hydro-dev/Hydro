@@ -8,7 +8,6 @@ import {
 } from '../error';
 import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar from '../lib/avatar';
-import { md5 } from '../lib/crypto';
 import * as mail from '../lib/mail';
 import { isDomainId, isEmail, isPassword } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
@@ -27,6 +26,7 @@ import * as bus from '../service/bus';
 import {
     Connection, ConnectionHandler, Handler, param, query, Route, Types,
 } from '../service/server';
+import { md5 } from '../utils';
 
 const { geoip, useragent } = global.Hydro.lib;
 

@@ -2,7 +2,6 @@ const base = 'https://hydro.ac';
 const target = [
   'https://hydro.ac',
   'https://us.hydro.ac',
-  'https://proxy1.hydro.workers.dev',
 ];
 
 this.addEventListener('install', () => {
