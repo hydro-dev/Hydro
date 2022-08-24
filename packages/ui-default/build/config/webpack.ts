@@ -89,8 +89,8 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
-      filename: '[name].js?[contenthash]',
-      chunkFilename: '[name].[chunkhash].chunk.js',
+      filename: '[name].js?[contenthash:4]',
+      chunkFilename: '[name].[chunkhash:4].chunk.js',
     },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
@@ -124,15 +124,15 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
                 const extra = p.split('node_modules')[1];
                 const moduleName = extra.split('/')[0];
                 if (extra.includes('@fontsource')) {
-                  return `fonts/${filename}?[hash]`;
+                  return `fonts/${filename}?[hash:4]`;
                 }
                 if (['katex', 'monaco-editor'].includes(moduleName)) {
-                  return `modules/${moduleName}/${filename}?[hash]`;
+                  return `modules/${moduleName}/${filename}?[hash:4]`;
                 }
-                return `modules/${extra.substr(1)}?[hash]`;
+                return `modules/${extra.substr(1)}?[hash:4]`;
               }
-              if (p.includes('.iconfont')) return `${filename}?[hash]`;
-              return `${p.split('ui-default')[1].substring(1)}?[hash]`;
+              if (p.includes('.iconfont')) return `${filename}?[hash:4]`;
+              return `${p.split('ui-default')[1].substring(1)}?[hash:4]`;
             },
           },
         },
@@ -207,8 +207,8 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],
-      moduleIds: env.production ? 'size' : 'named',
-      chunkIds: env.production ? 'size' : 'named',
+      moduleIds: env.production ? 'deterministic' : 'named',
+      chunkIds: env.production ? 'deterministic' : 'named',
     },
     plugins: [
       new CleanWebpackPlugin(),
@@ -221,7 +221,7 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
         monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
-        filename: '[name].css?[fullhash:10]',
+        filename: '[name].css?[fullhash:4]',
       }),
       new FriendlyErrorsPlugin(),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs)/ }),
@@ -240,7 +240,7 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({
-        filename: '[name].[hash:10].worker.js',
+        filename: '[name].[hash:4].worker.js',
         customLanguages: [{
           label: 'yaml',
           entry: require.resolve('monaco-yaml/index.js'),

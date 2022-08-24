@@ -4,19 +4,16 @@ import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Dialog, { ConfirmDialog } from 'vj/components/dialog/index';
+import { ConfirmDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEditor';
+import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import loadReactRedux from 'vj/utils/loadReactRedux';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
-
-function onBeforeUnload(e) {
-  e.returnValue = '';
-}
 
 const page = new NamedPage('problem_config', () => {
   let reduxStore;
@@ -27,54 +24,9 @@ const page = new NamedPage('problem_config', () => {
     input.multiple = true;
     input.click();
     await new Promise((resolve) => { input.onchange = resolve; });
-    const { files } = input;
-    const dialog = new Dialog({
-      $body: `
-        <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
-        </div>
-        <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
-        </div>`,
-    });
-    try {
-      Notification.info(i18n('Uploading files...'));
-      window.addEventListener('beforeunload', onBeforeUnload);
-      dialog.open();
-      const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
-      const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
-      const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
-      const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
-      for (const i in files) {
-        if (Number.isNaN(+i)) continue;
-        const file = files[i];
-        const data = new FormData();
-        data.append('filename', file.name);
-        data.append('file', file);
-        data.append('type', 'testdata');
-        data.append('operation', 'upload_file');
-        await request.postFile('./files', data, {
-          xhr() {
-            const xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener('loadstart', () => {
-              $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name}`);
-              $fileProgress.width(`${Math.round((+i + 1) / files.length * 100)}%`);
-              $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
-              $uploadProgress.width(0);
-            });
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                const percentComplete = Math.round((e.loaded / e.total) * 100);
-                if (percentComplete === 100) $uploadLabel.text(i18n('Processing...'));
-                else $uploadLabel.text(i18n('Uploading... ({0}%)', percentComplete));
-                $uploadProgress.width(`${percentComplete}%`);
-              }
-            }, false);
-            return xhr;
-          },
-        });
+    await uploadFiles('./files', input.files, {
+      type: 'testdata',
+      singleFileUploadCallback: (file) => {
         reduxStore.dispatch({
           type: 'CONFIG_ADD_TESTDATA',
           value: {
@@ -90,15 +42,8 @@ const page = new NamedPage('problem_config', () => {
             <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
           </tr>`),
         );
-      }
-      window.removeEventListener('beforeunload', onBeforeUnload);
-      Notification.success(i18n('File uploaded successfully.'));
-    } catch (e) {
-      console.error(e);
-      Notification.error(i18n('File upload failed: {0}', e.toString()));
-    } finally {
-      dialog.close();
-    }
+      },
+    });
   }
 
   async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {

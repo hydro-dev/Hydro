@@ -1,9 +1,10 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import { ConfirmDialog, Dialog } from 'vj/components/dialog/index';
+import { ConfirmDialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import { previewFile } from 'vj/components/preview/preview.page';
+import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
@@ -16,10 +17,6 @@ async function downloadProblemFilesAsArchive(type, files) {
   const targets = [];
   for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
   await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
-}
-
-function onBeforeUnload(e) {
-  e.returnValue = '';
 }
 
 const page = new NamedPage('problem_files', () => {
@@ -48,63 +45,7 @@ const page = new NamedPage('problem_files', () => {
       Notification.warn(i18n('No file selected.'));
       return;
     }
-    const dialog = new Dialog({
-      $body: `
-        <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-          <div class="file-progress bp4-progress-meter" style="width: 0"></div>
-        </div>
-        <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-        <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-          <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
-        </div>`,
-    });
-    try {
-      Notification.info(i18n('Uploading files...'));
-      window.addEventListener('beforeunload', onBeforeUnload);
-      dialog.open();
-      const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
-      const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
-      const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
-      const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
-      for (const i in files) {
-        if (Number.isNaN(+i)) continue;
-        const file = files[i];
-        const data = new FormData();
-        data.append('filename', file.name);
-        data.append('file', file);
-        data.append('type', type);
-        data.append('operation', 'upload_file');
-        await request.postFile('', data, {
-          xhr() {
-            const xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener('loadstart', () => {
-              $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name}`);
-              $fileProgress.width(`${Math.round((+i + 1) / files.length * 100)}%`);
-              $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
-              $uploadProgress.width(0);
-            });
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                const percentComplete = Math.round((e.loaded / e.total) * 100);
-                if (percentComplete === 100) $uploadLabel.text(i18n('Processing...'));
-                else $uploadLabel.text(i18n('Uploading... ({0}%)', percentComplete));
-                $uploadProgress.width(`${percentComplete}%`);
-              }
-            }, false);
-            return xhr;
-          },
-        });
-      }
-      window.removeEventListener('beforeunload', onBeforeUnload);
-      Notification.success(i18n('File uploaded successfully.'));
-      await pjax.request({ push: false });
-    } catch (e) {
-      console.error(e);
-      Notification.error(i18n('File upload failed: {0}', e.toString()));
-    } finally {
-      dialog.close();
-    }
+    await uploadFiles('', files, { type, pjax: true });
   }
 
   async function handleClickDownloadSelected(type) {
