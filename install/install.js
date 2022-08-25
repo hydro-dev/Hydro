@@ -61,6 +61,7 @@ log.fatal = ((orig) => (str, ...args) => orig(locales[locale][str] || str, ...ar
 
 if (__user !== 'root') log.fatal('error.rootRequired');
 if (__arch !== 'amd64') log.fatal('error.unsupportedArch', __arch);
+if (__os !== 'linux') log.fatal('error.unsupportedOS', __os);
 if (!__env.HOME) log.fatal('$HOME not found');
 if (!fs.exist('/etc/os-release')) log.fatal('error.osreleaseNotFound');
 const osinfoFile = fs.readfile('/etc/os-release');
@@ -119,6 +120,22 @@ domainName: executor_server
 uid: 1536
 gid: 1536
 `;
+
+function removeOptionalEsbuildDeps() {
+    const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
+    if (!yarnGlobalPath) return false;
+    const file = fs.readfile(`${yarnGlobalPath}/package.json`);
+    const data = JSON.parse(file);
+    data.resolutions = data.resolutions || {};
+    Object.assign(data.resolutions, Object.fromEntries([
+        '@esbuild/linux-loong64',
+        ...['android', 'windows', 'darwin', 'freebsd'].flatMap((i) => [`${i}-64`, `${i}-arm64`, `${i}-32`]),
+        ...['32', 'arm', 'arm64', 'mips64', 'ppc64', 'riscv64', 's390x'].map((i) => `esbuild-linux-${i}`),
+        ...['netbsd', 'openbsd', 'sunos'].map((i) => `esbuild-${i}-64`),
+    ].map((i) => [i, 'link:/dev/null'])));
+    fs.writefile(`${yarnGlobalPath}/package.json`, JSON.stringify(data, null, 2));
+    return true;
+}
 
 const steps = [
     {
@@ -181,18 +198,20 @@ To disable this feature, checkout our sourcecode.`);
         init: 'install.nodejs',
         skip: () => !exec('node -v').code && !exec('yarn -v').code,
         operations: [
-            'nix-env -iA nixpkgs.nodejs nixpkgs.yarn',
+            'nix-env -iA nixpkgs.nodejs nixpkgs.yarn nixpkgs.esbuild',
         ],
     },
     {
         init: 'install.pm2',
         skip: () => !exec('pm2 -v').code,
-        operations: ['yarn global add pm2'],
+        operations: [
+            ['yarn global add pm2', { retry: true }],
+        ],
     },
     {
         init: 'install.compiler',
         operations: [
-            'nix-env -iA nixpkgs.gcc nixpkgs.fpc',
+            'nix-env -iA nixpkgs.gcc nixpkgs.fpc nixpkgs.python3',
         ],
     },
     {
@@ -205,6 +224,7 @@ To disable this feature, checkout our sourcecode.`);
     {
         init: 'install.hydro',
         operations: [
+            () => removeOptionalEsbuildDeps(),
             ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }],
             () => fs.writefile(`${__env.HOME}/.hydro/addon.json`, '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
         ],
