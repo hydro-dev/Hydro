@@ -10,7 +10,7 @@ import { BucketItem, Client, ItemBucketMetadata } from 'minio';
 import { Logger } from '../logger';
 import { builtinConfig } from '../settings';
 import { MaybeArray } from '../typeutils';
-import { md5 } from '../utils';
+import { md5, streamToBuffer } from '../utils';
 
 const logger = new Logger('storage');
 
@@ -261,7 +261,8 @@ class LocalStorageService {
         target = resolve(this.dir, target);
         await ensureDir(dirname(target));
         if (typeof file === 'string') await copyFile(file, target);
-        else await writeFile(target, file);
+        else if (file instanceof Buffer) await writeFile(target, file);
+        else await writeFile(target, await streamToBuffer(file));
     }
 
     async get(target: string, path?: string) {
