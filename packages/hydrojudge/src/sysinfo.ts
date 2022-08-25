@@ -15,6 +15,7 @@ async function stackSize() {
     try {
         const context: Context = {
             lang: 'cc',
+            request: {},
             code: {
                 content: `#include <iostream>
 using namespace std;

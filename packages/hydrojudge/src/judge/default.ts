@@ -111,6 +111,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
             },
             addProgress: 100 / ctx.config.count,
         });
+        if (ctx.request.rejudged) return; // Skip analysis for rejudged submissions
         if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             const langConfig = ctx.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {

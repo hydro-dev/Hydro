@@ -20,6 +20,7 @@ export interface JudgeTaskInterface {
     clean: Function[];
     config: Config;
     env?: Record<string, string>;
+    request: Record<string, any>;
 }
 
 export interface RuntimeContext {
