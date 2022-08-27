@@ -149,15 +149,15 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       });
     };
 
-    const root = createRoot($('#scratchpad').get(0));
     renderReact = () => {
+      const root = createRoot($('#scratchpad').get(0));
       root.render(
         <Provider store={store}>
           <ScratchpadApp />
         </Provider>,
       );
+      unmountReact = () => root.unmount();
     };
-    unmountReact = () => root.unmount();
     reactLoaded = true;
     $('.loader-container').hide();
   }
