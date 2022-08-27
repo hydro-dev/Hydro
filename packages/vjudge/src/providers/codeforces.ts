@@ -142,7 +142,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     async checkLogin() {
         await this.ensureBrowser();
         const page = await this.getPage();
-        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2' });
+        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2', timeout: 180000 });
         const html = await page.content();
         let cookies = await page.cookies();
         let c = 0;
@@ -179,12 +179,10 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     get loggedIn() {
-        return this.puppeteer
-            ? this.checkLogin().then(([, , loggedIn]) => loggedIn)
-            : this.get('/enter').then(({ text: html }) => {
-                if (html.includes('Login into Codeforces')) return false;
-                return true;
-            });
+        return this.get('/enter').then(({ text: html }) => {
+            if (html.includes('Login into Codeforces')) return false;
+            return true;
+        });
     }
 
     async normalLogin() {
@@ -360,7 +358,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         });
     }
 
-    async submitProblem(id: string, lang: string, code: string, info) {
+    async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
         const comment = setting.langs[lang].comment;
         if (comment) {
@@ -373,7 +371,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             ? '/problemset/submit'
             : `/gym/${contestId}/submit`);
         // TODO check submit time to ensure submission
-        await this.post(`/${type !== 'GYM' ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
+        const { text: submit } = await this.post(`/${type !== 'GYM' ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
@@ -391,6 +389,13 @@ export default class CodeforcesProvider implements IBasicProvider {
                     submittedProblemIndex: problemId,
                 },
         });
+        const { window: { document: statusDocument } } = new JSDOM(submit);
+        const message = Array.from(statusDocument.querySelectorAll('.error'))
+            .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
+        if (message) {
+            end({ status: STATUS.STATUS_COMPILE_ERROR, message });
+            return null;
+        }
         const { text: status } = await this.get(type !== 'GYM'
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
