@@ -6,6 +6,9 @@
   "main": "hydro.js",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "preferUnplugged": true,
+  "scripts": {
+    "lint": "eslint"
+  },
   "devDependencies": {
     "@blueprintjs/core": "^4.9.3",
     "@fontsource/dm-mono": "^4.5.9",

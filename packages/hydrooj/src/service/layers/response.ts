@@ -12,11 +12,10 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
 };
 
 export default (logger) => async (ctx: KoaContext, next) => {
-    const {
-        request, response, UiContext, user, args,
-    } = ctx.HydroContext;
+    const { request, response } = ctx.HydroContext;
     try {
         await next();
+        const { UiContext, user, args } = ctx.HydroContext;
         if (response.redirect) {
             response.body ||= {};
             response.body.url = response.redirect;

@@ -67,6 +67,7 @@ export async function saveConfig(config: any) {
 }
 export async function setConfig(key: string, value: any) {
     const path = key.split('.');
+    if (path.filter((i) => ['__proto__', 'prototype'].includes(i)).length) throw new Error('Invalid key');
     const t = path.pop();
     let cursor = systemConfig;
     for (const p of path) {
