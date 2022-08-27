@@ -24,7 +24,7 @@
         "debug": "node --trace-warnings --async-stack-traces --trace-deprecation node_modules/hydrooj/bin/hydrooj --debug --template",
         "start:all": "node build/start",
         "start": "node_modules/.bin/hydrooj",
-        "postinstall": "node build/hack && node build/prepare.js"
+        "postinstall": "node build/prepare.js"
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
@@ -61,6 +61,6 @@
         "ora": "^6.1.2",
         "semver": "^7.3.7",
         "supertest": "^6.2.4",
-        "typescript": "4.8.2"
+        "typescript": "4.7.4"
     }
 }

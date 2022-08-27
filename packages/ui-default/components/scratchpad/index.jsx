@@ -35,7 +35,7 @@ function buildNestedPane([a, ...panes], mode = 'horizontal') {
 const pages = {
   problem: {
     icon: () => <ProblemIcon />,
-    component: () => <Dom childDom={$('.problem-content').get(0)} id="problem-content" />,
+    component: () => <Dom childDom={$('.problem-content').get(0)} />,
   },
 };
 

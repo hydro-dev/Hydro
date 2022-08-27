@@ -24,6 +24,7 @@ export default class AutoComplete extends DOMAttachedObject {
   ref = null;
   container = document.createElement('div');
   options: AutoCompleteOptions;
+  component = ReactDOM.createRoot(this.container);
   changeListener = [
     (val) => this.$dom.val(val),
   ];
@@ -64,7 +65,7 @@ export default class AutoComplete extends DOMAttachedObject {
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.createRoot(this.container).render(
+    this.component.render(
       <AutoCompleteFC
         ref={(ref) => { this.ref = ref; }}
         height="34px"
@@ -97,7 +98,7 @@ export default class AutoComplete extends DOMAttachedObject {
   detach() {
     if (this.detached) return;
     super.detach();
-    ReactDOM.unmountComponentAtNode(this.container);
+    this.component.unmount();
     this.$dom.removeClass('autocomplete-dummy');
     this.container.parentNode.removeChild(this.container);
   }
