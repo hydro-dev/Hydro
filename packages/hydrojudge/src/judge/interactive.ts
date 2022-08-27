@@ -96,15 +96,15 @@ function judgeSubtask(subtask: NormalizedSubtask) {
     };
 }
 
-export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
-    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
+export const judge = async (ctx: Context) => {
+    ctx.next({ status: STATUS.STATUS_COMPILING });
     [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
         (() => {
             const copyIn = {};
             for (const file of ctx.config.user_extra_files) {
                 copyIn[parseFilename(file)] = { src: file };
             }
-            return compile(ctx.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
+            return compile(ctx.session.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
         })(),
         (() => {
             const copyIn = {
@@ -115,14 +115,13 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
                 copyIn[parseFilename(file)] = { src: file };
             }
             return compile(
-                ctx.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
+                ctx.session.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
                 { src: ctx.config.interactor },
                 copyIn,
             );
         })(),
     ]);
     ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
-    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = ctx.total_score = ctx.total_memory_usage_kb = ctx.total_time_usage_ms = 0;

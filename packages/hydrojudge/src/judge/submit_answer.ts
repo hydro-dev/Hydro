@@ -22,6 +22,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ) {
             ctx.next({
                 case: {
+                    id: c.id,
                     status: STATUS.STATUS_CANCELED,
                     score: 0,
                     time: 0,
@@ -29,7 +30,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                     message: '',
                 },
                 addProgress: 100 / ctx.config.count,
-            }, c.id);
+            });
             return;
         }
         const chars = /[a-zA-Z0-9_.-]/;
@@ -119,23 +120,22 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
     };
 }
 
-export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
+export const judge = async (ctx: Context) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
-    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
+    ctx.next({ status: STATUS.STATUS_COMPILING });
     ctx.checker = await (() => {
         const copyIn = { user_code: ctx.code };
         for (const file of ctx.config.judge_extra_files) {
             copyIn[parseFilename(file)] = { src: file };
         }
         return compileChecker(
-            ctx.getLang,
+            ctx.session.getLang,
             ctx.config.checker_type,
             ctx.config.checker,
             copyIn,
         );
     })();
     ctx.clean.push(ctx.checker.clean);
-    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = 0;

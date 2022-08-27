@@ -24,7 +24,7 @@ export const judge = async (ctx: Context) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
     try {
         ctx.execute = await compile(
-            ctx.getLang(ctx.lang), ctx.code,
+            ctx.session.getLang(ctx.lang), ctx.code,
             Object.fromEntries(
                 (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
             ),
@@ -97,7 +97,7 @@ export const judge = async (ctx: Context) => {
         },
     });
     if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-        const langConfig = ctx.getLang(ctx.lang);
+        const langConfig = ctx.session.getLang(ctx.lang);
         if (langConfig.analysis) {
             try {
                 ctx.analysis = true;

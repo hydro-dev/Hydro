@@ -1,16 +1,10 @@
-import { CopyInFile } from './sandbox/interface';
+import { CopyInFile } from './sandbox';
 
 export interface Execute {
-    execute: string,
-    clean: Function,
-    copyIn: Record<string, CopyInFile>,
-    time?: number,
-}
-
-export interface CompileErrorInfo {
-    stdout?: string,
-    stderr?: string,
-    status?: number
+    execute: string;
+    clean: () => Promise<any>;
+    copyIn: Record<string, CopyInFile>;
+    time?: number;
 }
 
 export interface CheckConfig {
@@ -24,11 +18,4 @@ export interface CheckConfig {
     score: number;
     detail: boolean;
     env?: Record<string, string>;
-}
-
-export interface CheckResult {
-    status: number,
-    score: number,
-    message: string,
-    code?: number,
 }

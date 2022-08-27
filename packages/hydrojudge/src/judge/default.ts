@@ -5,8 +5,7 @@ import compile from '../compile';
 import { getConfig } from '../config';
 import { CompileError, FormatError } from '../error';
 import { Logger } from '../log';
-import { del, run } from '../sandbox';
-import { CmdFile } from '../sandbox/interface';
+import { CmdFile, del, run } from '../sandbox';
 import signals from '../signals';
 import { NormalizedCase, NormalizedSubtask, parseFilename } from '../utils';
 import { Context, ContextSubTask } from './interface';
@@ -113,7 +112,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         });
         if (ctx.request.rejudged) return; // Skip analysis for rejudged submissions
         if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-            const langConfig = ctx.getLang(ctx.lang);
+            const langConfig = ctx.session.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {
                 ctx.analysis = true;
                 try {
@@ -165,9 +164,9 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
     };
 }
 
-export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
+export const judge = async (ctx: Context) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
-    startPromise.then(() => ctx.next({ status: STATUS.STATUS_COMPILING }));
+    ctx.next({ status: STATUS.STATUS_COMPILING });
     if (ctx.config.template && 'content' in ctx.code) {
         if (ctx.config.template[ctx.lang]) {
             const tpl = ctx.config.template[ctx.lang];
@@ -176,14 +175,14 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
     }
     [ctx.execute, ctx.checker] = await Promise.all([
         compile(
-            ctx.getLang(ctx.lang), ctx.code,
+            ctx.session.getLang(ctx.lang), ctx.code,
             Object.fromEntries(
                 (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
             ),
             ctx.next,
         ),
         compileChecker(
-            ctx.getLang,
+            ctx.session.getLang,
             ctx.config.checker_type,
             ctx.config.checker,
             {
@@ -195,7 +194,6 @@ export const judge = async (ctx: Context, startPromise = Promise.resolve()) => {
         ),
     ]);
     ctx.clean.push(ctx.execute.clean, ctx.checker.clean);
-    await startPromise;
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];
     ctx.total_status = 0;

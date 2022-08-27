@@ -198,3 +198,5 @@ const queue = new PQueue({ concurrency: getConfig('parallelism') });
 export function runQueued(execute: string, params?: Parameter, priority = 0) {
     return queue.add(() => run(execute, params), { priority });
 }
+
+export * from './sandbox/interface';

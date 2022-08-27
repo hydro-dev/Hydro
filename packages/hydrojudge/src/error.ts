@@ -1,5 +1,10 @@
 import { STATUS_TEXTS } from '@hydrooj/utils/lib/status';
-import { CompileErrorInfo } from './interface';
+
+interface CompileErrorInfo {
+    stdout?: string,
+    stderr?: string,
+    status?: number
+}
 
 export class CompileError extends Error {
     stdout: string;
