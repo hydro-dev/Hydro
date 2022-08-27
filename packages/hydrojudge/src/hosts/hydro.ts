@@ -13,7 +13,7 @@ import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import log from '../log';
 import { JudgeTask } from '../task';
-import { Lock, Queue } from '../utils';
+import { Lock } from '../utils';
 
 function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
@@ -150,7 +150,7 @@ export default class Hydro {
         };
     }
 
-    async consume(queue: Queue<any>) {
+    async consume(queue: PQueue) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
             headers: {
@@ -165,7 +165,7 @@ export default class Hydro {
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
-            if (request.task) queue.push(new JudgeTask(this, request.task));
+            if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
         });
         this.ws.on('close', (data, reason) => {
             log.warn(`[${this.config.host}] Websocket 断开:`, data, reason.toString());
@@ -222,7 +222,7 @@ export default class Hydro {
         }
     }
 
-    async retry(queue: Queue<any>) {
+    async retry(queue: PQueue) {
         this.consume(queue).catch(() => {
             setTimeout(() => this.retry(queue), 30000);
         });

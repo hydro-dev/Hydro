@@ -15,10 +15,10 @@
        ~                   */
 import './utils';
 
+import PQueue from 'p-queue';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
 import log from './log';
-import { Queue } from './utils';
 
 declare global {
     namespace NodeJS {
@@ -51,18 +51,11 @@ process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise ', p);
 });
 
-async function worker(queue: Queue<any>) {
-    while ('Orz Soha') {
-        const [task] = await queue.get();
-        task.handle();
-    }
-}
-
 async function daemon() {
     const _hosts = getConfig('hosts');
     const hosts = {};
-    const queue = new Queue<any>();
-    worker(queue).catch((e) => log.error(e));
+    const queue = new PQueue({ concurrency: Infinity });
+    queue.on('error', (e) => log.error(e));
     for (const i in _hosts) {
         _hosts[i].host = _hosts[i].host || i;
         hosts[i] = new HydroHost(_hosts[i]);
