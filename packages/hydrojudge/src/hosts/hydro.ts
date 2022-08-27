@@ -1,160 +1,22 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import axios from 'axios';
-import cac from 'cac';
+import { ObjectID } from 'bson';
 import fs from 'fs-extra';
-import { noop } from 'lodash';
-import { ObjectID } from 'mongodb';
 import PQueue from 'p-queue';
 import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
-import readCases, { processTestdata } from '../cases';
+import { processTestdata } from '../cases';
 import { getConfig } from '../config';
-import { CompileError, FormatError, SystemError } from '../error';
-import judge from '../judge';
+import { FormatError, SystemError } from '../error';
 import log from '../log';
-import type { CopyInFile } from '../sandbox/interface';
-import * as sysinfo from '../sysinfo';
-import * as tmpfs from '../tmpfs';
-import {
-    compilerText, Lock, md5, Queue,
-} from '../utils';
-
-const argv = cac().parse();
+import { JudgeTask } from '../task';
+import { Lock, Queue } from '../utils';
 
 function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
-}
-
-class JudgeTask {
-    stat: Record<string, Date>;
-    session: any;
-    host: string;
-    request: any;
-    ws: WebSocket;
-    source: string;
-    rid: string;
-    lang: string;
-    code: CopyInFile;
-    tmpdir: string;
-    input?: string;
-    clean: (() => Promise<any>)[];
-    data: any[];
-    folder: string;
-    config: any;
-    env: Record<string, string>;
-    getLang: (name: string) => LangConfig;
-
-    constructor(session: Hydro, request, ws: WebSocket) {
-        this.stat = {};
-        this.stat.receive = new Date();
-        this.session = session;
-        this.host = session.config.host;
-        this.request = request;
-        this.ws = ws;
-        this.getLang = session.getLang;
-    }
-
-    async handle(startPromise = Promise.resolve()) {
-        this.next = this.next.bind(this);
-        this.end = this.end.bind(this);
-        this.stat.handle = new Date();
-        this.rid = this.request.rid;
-        this.lang = this.request.lang;
-        this.code = { content: this.request.code };
-        this.config = this.request.config;
-        this.input = this.request.input;
-        this.data = this.request.data;
-        this.source = this.request.source;
-        this.tmpdir = path.resolve(getConfig('tmp_dir'), this.host, this.rid);
-        this.clean = [];
-        let tid = this.request.contest?.toString() || '';
-        if (tid === '000000000000000000000000') tid = '';
-        this.env = {
-            HYDRO_DOMAIN: this.request.domainId.toString(),
-            HYDRO_RECORD: this.rid,
-            HYDRO_LANG: this.lang,
-            HYDRO_USER: this.request.uid.toString(),
-            HYDRO_CONTEST: tid,
-        };
-        await Lock.acquire(`${this.host}/${this.source}/${this.rid}`);
-        fs.ensureDirSync(this.tmpdir);
-        tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
-        log.info('Submission: %s/%s/%s', this.host, this.source, this.rid);
-        try {
-            await this.doSubmission(startPromise);
-        } catch (e) {
-            if (e instanceof CompileError) {
-                this.next({ compilerText: compilerText(e.stdout, e.stderr) });
-                this.end({
-                    status: STATUS.STATUS_COMPILE_ERROR, score: 0, time: 0, memory: 0,
-                });
-            } else if (e instanceof FormatError) {
-                this.next({ message: 'Testdata configuration incorrect.' });
-                this.next({ message: { message: e.message, params: e.params } });
-                this.end({
-                    status: STATUS.STATUS_FORMAT_ERROR, score: 0, time: 0, memory: 0,
-                });
-            } else {
-                log.error(e);
-                this.next({ message: { message: e.message, params: e.params || [], ...argv.options.debug ? { stack: e.stack } : {} } });
-                this.end({
-                    status: STATUS.STATUS_SYSTEM_ERROR, score: 0, time: 0, memory: 0,
-                });
-            }
-        } finally {
-            Lock.release(`${this.host}/${this.source}/${this.rid}`);
-            for (const clean of this.clean) await clean()?.catch(noop);
-            tmpfs.umount(this.tmpdir);
-            fs.removeSync(this.tmpdir);
-        }
-    }
-
-    async doSubmission(startPromise = Promise.resolve()) {
-        this.stat.cache_start = new Date();
-        this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
-        if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
-            const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
-            const target = await this.session.fetchCodeFile(id);
-            this.code = { src: target };
-            this.clean.push(() => fs.remove(target));
-        }
-        this.stat.read_cases = new Date();
-        this.config = await readCases(
-            this.folder,
-            {
-                detail: this.session.config.detail,
-                isSelfSubmission: this.config.problemOwner === this.request.uid,
-                ...this.config,
-            },
-            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
-        );
-        this.stat.judge = new Date();
-        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
-        if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
-        await judge[type].judge(this, startPromise);
-    }
-
-    next(data: Partial<JudgeResultBody>) {
-        log.debug('Next: %d %o', data);
-        data.key = 'next';
-        data.rid = new ObjectID(this.rid);
-        if (data.case) data.case.message ||= '';
-        if (typeof data.message === 'string') data.message = removeNixPath(data.message);
-        if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
-        this.ws.send(JSON.stringify(data));
-    }
-
-    end(data: Partial<JudgeResultBody>) {
-        log.info('End: %o', data);
-        data.key = 'end';
-        data.rid = this.request.rid;
-        if (typeof data.message === 'string') data.message = removeNixPath(data.message);
-        if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
-        this.ws.send(JSON.stringify(data));
-    }
 }
 
 export default class Hydro {
@@ -265,6 +127,29 @@ export default class Hydro {
         return null;
     }
 
+    send(rid: string, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
+        data.rid = new ObjectID(rid);
+        data.key = key;
+        if (data.case) data.case.message ||= '';
+        if (typeof data.message === 'string') data.message = removeNixPath(data.message);
+        if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
+        this.ws.send(JSON.stringify(data));
+    }
+
+    getNext(t: JudgeTask) {
+        return (data: Partial<JudgeResultBody>) => {
+            log.debug('Next: %d %o', data);
+            this.send(t.request.rid, 'next', data);
+        };
+    }
+
+    getEnd(t: JudgeTask) {
+        return (data: Partial<JudgeResultBody>) => {
+            log.info('End: %o', data);
+            this.send(t.request.rid, 'end', data);
+        };
+    }
+
     async consume(queue: Queue<any>) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
@@ -280,7 +165,7 @@ export default class Hydro {
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
-            if (request.task) queue.push(new JudgeTask(this, request.task, this.ws));
+            if (request.task) queue.push(new JudgeTask(this, request.task));
         });
         this.ws.on('close', (data, reason) => {
             log.warn(`[${this.config.host}] Websocket 断开:`, data, reason.toString());

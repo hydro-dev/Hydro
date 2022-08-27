@@ -1,11 +1,16 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { SystemError } from './error';
-import { CheckConfig, CheckResult } from './interface';
+import { CheckConfig } from './interface';
 import { run } from './sandbox';
 import { parse } from './testlib';
 
-type Checker = (config: CheckConfig) => Promise<CheckResult>;
+type Checker = (config: CheckConfig) => Promise<{
+    status: number,
+    score: number,
+    message: string,
+    code?: number,
+}>;
 
 const checkers: Record<string, Checker> = {
     async default(config) {

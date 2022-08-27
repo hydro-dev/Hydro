@@ -7,4 +7,4 @@ import * as submit_answer from './submit_answer';
 
 export = {
     default: def, interactive, run, submit_answer, objective,
-} as Record<string, { judge(ctx: Context, startPromise?: Promise<any>): Promise<void> }>;
+} as Record<string, { judge(ctx: Context): Promise<void> }>;
