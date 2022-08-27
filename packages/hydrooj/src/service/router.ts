@@ -2,12 +2,10 @@ import { IncomingMessage } from 'http';
 import KoaRouter from 'koa-router';
 import parseUrl from 'parseurl';
 import { pathToRegexp } from 'path-to-regexp';
-import tx2 from 'tx2';
 import type WebSocket from 'ws';
 import type { KoaContext } from './server';
 
 type WebSocketCallback = (socket: WebSocket, request: IncomingMessage, ctx: KoaContext) => void;
-const connCount = tx2.counter({ name: 'connections' });
 
 export class WebSocketLayer {
     clients = new Set<WebSocket>();
@@ -20,9 +18,7 @@ export class WebSocketLayer {
     accept(socket: WebSocket, request: IncomingMessage, ctx: KoaContext) {
         if (!this.regexp.test(parseUrl(request).pathname)) return false;
         this.clients.add(socket);
-        connCount.inc();
         socket.on('close', () => {
-            connCount.dec();
             this.clients.delete(socket);
         });
         this.callback?.(socket, request, ctx);
