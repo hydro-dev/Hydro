@@ -67,10 +67,6 @@
         "@types/semver": "^7.3.12",
         "@types/serialize-javascript": "^5.0.2",
         "@types/superagent": "^4.1.15",
-        "moment": "^2.29.4",
-        "pm2": "^5.2.0"
-    },
-    "peerDependencies": {
-        "pm2": "*"
+        "moment": "^2.29.4"
     }
 }

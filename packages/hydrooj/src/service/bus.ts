@@ -3,6 +3,7 @@ import cac from 'cac';
 import type {
     Db, FilterQuery, ObjectID, OnlyFieldsOfType,
 } from 'mongodb';
+import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
@@ -191,8 +192,7 @@ export function broadcast<K extends keyof EventMap>(event: K, ...payload: Parame
 }
 
 try {
-    if (!process.send) throw new Error();
-    const pm2: typeof import('pm2') = require('pm2');
+    if (!process.send || !pm2 || process.env.exec_mode !== 'cluster_mode') throw new Error();
     pm2.launchBus((err, bus) => {
         if (err) throw new Error();
         bus.on('hydro:broadcast', (packet) => {

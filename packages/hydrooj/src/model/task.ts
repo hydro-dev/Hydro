@@ -1,6 +1,7 @@
 import { hostname } from 'os';
 import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { BaseService, EventDoc, Task } from '../interface';
 import { Logger } from '../logger';
@@ -139,7 +140,7 @@ class TaskModel {
     static Worker = Worker;
 }
 
-const id = hostname();
+const id = process.env.exec_mode === 'cluster_mode' ? hostname() : nanoid();
 Worker.addHandler('task.daily', async () => {
     await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
