@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "^4.9.3",
+    "@blueprintjs/select": "^4.6.3",
     "@fontsource/dm-mono": "^4.5.9",
     "@fontsource/fira-code": "^4.5.11",
     "@fontsource/inconsolata": "^4.5.7",
@@ -47,6 +48,7 @@
     "emojis-list": "2.1.0",
     "esbuild-loader": "^2.19.0",
     "fancy-log": "^2.0.0",
+    "flatpickr": "^4.6.13",
     "friendly-errors-webpack-plugin": "^1.7.0",
     "graphiql": "1.8.9",
     "gulp": "^4.0.2",

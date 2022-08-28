@@ -52,8 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }` : ''}`;
   document.body.appendChild(e);
 
-  const res = await fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' });
-  const data = await res.json();
+  const [data] = await Promise.all([
+    (await fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' })).json(),
+    await import('./modules'),
+  ]);
   eval(data[0]); // eslint-disable-line no-eval
   data.shift();
   window.Hydro.preload = data;

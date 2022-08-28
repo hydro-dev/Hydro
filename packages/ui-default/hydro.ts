@@ -1,4 +1,3 @@
-import './modules';
 import 'jquery.transit';
 
 import $ from 'jquery';
