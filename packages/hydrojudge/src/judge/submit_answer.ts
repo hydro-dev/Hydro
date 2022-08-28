@@ -1,11 +1,9 @@
 import { readFile } from 'fs-extra';
-import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
-import { getConfig } from '../config';
-import { FormatError } from '../error';
+import { runFlow } from '../flow';
 import { del, run } from '../sandbox';
-import { NormalizedCase, NormalizedSubtask, parseFilename } from '../utils';
+import { NormalizedCase, parseFilename } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 const Score = {
@@ -16,23 +14,6 @@ const Score = {
 
 function judgeCase(c: NormalizedCase, sid: string) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
-        if (ctx.errored || (ctx.failed[sid] && ctxSubtask.subtask.type === 'min')
-            || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-            || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
-        ) {
-            ctx.next({
-                case: {
-                    id: c.id,
-                    status: STATUS.STATUS_CANCELED,
-                    score: 0,
-                    time: 0,
-                    memory: 0,
-                    message: '',
-                },
-                addProgress: 100 / ctx.config.count,
-            });
-            return;
-        }
         const chars = /[a-zA-Z0-9_.-]/;
         const name = (ctx.config.filename && /^[a-zA-Z0-9-_#.]+$/.test(ctx.config.filename))
             ? ctx.config.filename.replace('#', c.id.toString())
@@ -96,67 +77,23 @@ function judgeCase(c: NormalizedCase, sid: string) {
     };
 }
 
-function judgeSubtask(subtask: NormalizedSubtask, sid: string) {
-    return async (ctx: Context) => {
-        subtask.type = subtask.type || 'min';
-        const ctxSubtask = {
-            subtask,
-            status: 0,
-            score: subtask.type === 'min'
-                ? subtask.score
-                : 0,
-        };
-        const cases = [];
-        for (const cid in subtask.cases) {
-            const runner = judgeCase(subtask.cases[cid], sid);
-            cases.push(ctx.queue.add(() => runner(ctx, ctxSubtask)));
-        }
-        await Promise.all(cases).catch((e) => {
-            ctx.errored = true;
-            throw e;
-        });
-        ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
-        return ctxSubtask.score;
-    };
-}
-
 export const judge = async (ctx: Context) => {
-    if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
-    ctx.next({ status: STATUS.STATUS_COMPILING });
-    ctx.checker = await (() => {
-        const copyIn = { user_code: ctx.code };
-        for (const file of ctx.config.judge_extra_files) {
-            copyIn[parseFilename(file)] = { src: file };
-        }
-        return compileChecker(
-            ctx.session.getLang,
-            ctx.config.checker_type,
-            ctx.config.checker,
-            copyIn,
-        );
-    })();
-    ctx.clean.push(ctx.checker.clean);
-    ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const tasks = [];
-    ctx.total_status = 0;
-    ctx.total_score = 0;
-    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
-    ctx.failed = {};
-    for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid)(ctx));
-    const scores = await Promise.all(tasks);
-    for (const sid in ctx.config.subtasks) {
-        let effective = true;
-        for (const required of ctx.config.subtasks[sid].if || []) {
-            if (ctx.failed[required.toString()]) effective = false;
-        }
-        if (effective) ctx.total_score += scores[sid];
-    }
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({
-        status: ctx.total_status,
-        score: ctx.total_score,
-        time: 0,
-        memory: 0,
+    await runFlow(ctx, {
+        compile: async () => {
+            ctx.checker = await (() => {
+                const copyIn = { user_code: ctx.code };
+                for (const file of ctx.config.judge_extra_files) {
+                    copyIn[parseFilename(file)] = { src: file };
+                }
+                return compileChecker(
+                    ctx.session.getLang,
+                    ctx.config.checker_type,
+                    ctx.config.checker,
+                    copyIn,
+                );
+            })();
+            ctx.clean.push(ctx.checker.clean);
+        },
+        judgeCase,
     });
 };
