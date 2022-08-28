@@ -5,5 +5,5 @@ RUN npm i pm2 -g && \
     cargo install sonic-server --version 1.3.0 && \
     mkdir -p /home/gitpod/.hydro && \
     echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >/home/gitpod/.hydro/config.json && \
-    mkdir /data/file -p && \
+    mkdir -p /data/file && \
     chmod 777 /data/file
