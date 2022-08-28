@@ -1,9 +1,10 @@
+import { basename } from 'path';
 import { readFile } from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
 import { runFlow } from '../flow';
 import { del, run } from '../sandbox';
-import { NormalizedCase, parseFilename } from '../utils';
+import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 const Score = {
@@ -80,18 +81,16 @@ function judgeCase(c: NormalizedCase, sid: string) {
 export const judge = async (ctx: Context) => {
     await runFlow(ctx, {
         compile: async () => {
-            ctx.checker = await (() => {
-                const copyIn = { user_code: ctx.code };
-                for (const file of ctx.config.judge_extra_files) {
-                    copyIn[parseFilename(file)] = { src: file };
-                }
-                return compileChecker(
-                    ctx.session.getLang,
-                    ctx.config.checker_type,
-                    ctx.config.checker,
-                    copyIn,
-                );
-            })();
+            const copyIn = { user_code: ctx.code };
+            for (const file of ctx.config.judge_extra_files) {
+                copyIn[basename(file)] = { src: file };
+            }
+            ctx.checker = await compileChecker(
+                ctx.session.getLang,
+                ctx.config.checker_type,
+                ctx.config.checker,
+                copyIn,
+            );
             ctx.clean.push(ctx.checker.clean);
         },
         judgeCase,

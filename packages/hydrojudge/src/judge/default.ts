@@ -1,3 +1,4 @@
+import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { check, compileChecker } from '../check';
 import compile from '../compile';
@@ -5,7 +6,7 @@ import { runFlow } from '../flow';
 import { Logger } from '../log';
 import { CmdFile, del, run } from '../sandbox';
 import signals from '../signals';
-import { NormalizedCase, parseFilename } from '../utils';
+import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 const Score = {
@@ -136,7 +137,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
                 {
                     user_code: ctx.code,
                     ...Object.fromEntries(
-                        (ctx.config.judge_extra_files || []).map((i) => [parseFilename(i), { src: i }]),
+                        (ctx.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
                     ),
                 },
             ),
