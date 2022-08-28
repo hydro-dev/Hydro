@@ -5,7 +5,8 @@ import * as bus from 'hydrooj/src/service/bus';
 import { Logger } from './logger';
 import { NestKeys } from './typeutils';
 
-const defaultPath = process.env.CI ? '/tmp/file' : '/data/file/hydro';
+const defaultPath = process.env.CI ? '/tmp/file'
+    : process.env.DEFAULT_STORE_PATH || '/data/file/hydro';
 const FileSetting = Schema.intersect([
     Schema.object({
         type: Schema.union([

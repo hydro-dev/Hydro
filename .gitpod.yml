@@ -1,14 +1,17 @@
-image:
-  file: .gitpod.Dockerfile
+image: gitpod/workspace-mongodb
 tasks:
+  - command: mongod --dbpath /home/gitpod/db
   - init: |
+      mkdir -p /home/gitpod/.hydro
+      echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >/home/gitpod/.hydro/config.json && \
       yarn
-      pm2 start mongod
-      yarn build:ui
+      yarn build:ui:production
       npx hydrooj cli system set server.port 2333
       npx hydrooj cli user create root@hydro.local root rootroot 2
       npx hydrooj cli user setSuperAdmin 2
-      yarn debug
+    command: yarn debug
+    env:
+      DEFAULT_STORE_PATH: /home/gitpod/file
 vscode:
   extensions:
     - dbaeumer.vscode-eslint

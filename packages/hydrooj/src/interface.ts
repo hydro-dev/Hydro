@@ -628,7 +628,7 @@ export interface Service {
     db: typeof import('./service/db'),
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
-    storage: typeof import('./service/storage'),
+    storage: typeof import('./service/storage').default,
 }
 
 export interface GeoIP {
