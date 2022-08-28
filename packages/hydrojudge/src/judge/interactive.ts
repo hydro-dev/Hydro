@@ -1,12 +1,11 @@
-import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
-import { getConfig } from '../config';
+import { runFlow } from '../flow';
 import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
 import {
-    findFileSync, NormalizedCase, NormalizedSubtask, parseFilename,
+    findFileSync, NormalizedCase, parseFilename,
 } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
@@ -76,66 +75,32 @@ function judgeCase(c: NormalizedCase) {
     };
 }
 
-function judgeSubtask(subtask: NormalizedSubtask) {
-    return async (ctx: Context) => {
-        subtask.type = subtask.type || 'min';
-        const ctxSubtask = {
-            subtask,
-            status: 0,
-            score: subtask.type === 'min'
-                ? subtask.score
-                : 0,
-        };
-        const cases = [];
-        for (const cid in subtask.cases) {
-            cases.push(ctx.queue.add(() => judgeCase(subtask.cases[cid])(ctx, ctxSubtask)));
-        }
-        await Promise.all(cases);
-        ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
-        ctx.total_score += ctxSubtask.score;
-    };
-}
-
-export const judge = async (ctx: Context) => {
-    ctx.next({ status: STATUS.STATUS_COMPILING });
-    [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
-        (() => {
-            const copyIn = {};
-            for (const file of ctx.config.user_extra_files) {
-                copyIn[parseFilename(file)] = { src: file };
-            }
-            return compile(ctx.session.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
-        })(),
-        (() => {
-            const copyIn = {
-                'testlib.h': { src: testlibSrc },
-                user_code: ctx.code,
-            };
-            for (const file of ctx.config.judge_extra_files) {
-                copyIn[parseFilename(file)] = { src: file };
-            }
-            return compile(
-                ctx.session.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
-                { src: ctx.config.interactor },
-                copyIn,
-            );
-        })(),
-    ]);
-    ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
-    ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const tasks = [];
-    ctx.total_status = ctx.total_score = ctx.total_memory_usage_kb = ctx.total_time_usage_ms = 0;
-    ctx.queue = new Queue({ concurrency: getConfig('parallelism') });
-    for (const sid in ctx.config.subtasks) {
-        tasks.push(judgeSubtask(ctx.config.subtasks[sid])(ctx));
-    }
-    await Promise.all(tasks);
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({
-        status: ctx.total_status,
-        score: ctx.total_score,
-        time: ctx.total_time_usage_ms,
-        memory: ctx.total_memory_usage_kb,
-    });
-};
+export const judge = async (ctx: Context) => await runFlow(ctx, {
+    compile: async () => {
+        [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
+            (() => {
+                const copyIn = {};
+                for (const file of ctx.config.user_extra_files) {
+                    copyIn[parseFilename(file)] = { src: file };
+                }
+                return compile(ctx.session.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
+            })(),
+            (() => {
+                const copyIn = {
+                    'testlib.h': { src: testlibSrc },
+                    user_code: ctx.code,
+                };
+                for (const file of ctx.config.judge_extra_files) {
+                    copyIn[parseFilename(file)] = { src: file };
+                }
+                return compile(
+                    ctx.session.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
+                    { src: ctx.config.interactor },
+                    copyIn,
+                );
+            })(),
+        ]);
+        ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
+    },
+    judgeCase,
+});
