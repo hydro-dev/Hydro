@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import fs from 'fs-extra';
-import { ObjectID } from 'mongodb';
 import type { JudgeResultBody } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
 import { Logger } from 'hydrooj/src/logger';
@@ -28,7 +27,7 @@ const session = {
     getNext(t: Context) {
         return (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %d %o', data);
-            data.rid = new ObjectID(t.rid);
+            data.rid = t.rid as any;
             if (data.case) data.case.message ||= '';
             next(data);
         };
@@ -36,7 +35,7 @@ const session = {
     getEnd(t: Context) {
         return (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
-            data.rid = new ObjectID(t.rid);
+            data.rid = t.rid as any;
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
             end(data);
         };

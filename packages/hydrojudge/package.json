@@ -12,8 +12,8 @@
         "fs-extra": "^10.1.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
-        "mongodb": "^3.7.3",
         "p-queue": "^7.3.0",
+        "schemastery": "^3.5.3",
         "shell-quote": "^1.7.3",
         "ws": "^8.8.1"
     },
