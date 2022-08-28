@@ -8,11 +8,6 @@ const EMPTY_STR = /^[ \r\n\t]*$/i;
 
 export const cmd = parse;
 
-export function parseFilename(filePath: string) {
-    const t = filePath.split('/');
-    return t[t.length - 1];
-}
-
 export namespace Lock {
     const data = {};
 
@@ -34,7 +29,7 @@ export function compilerText(stdout: string, stderr: string) {
     return ret.join('\n');
 }
 
-export function restrictFile(p: string) {
+function restrictFile(p: string) {
     if (!p) return '/';
     if (p[0] === '/') p = '';
     return p.replace(/\.\./gmi, '');

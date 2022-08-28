@@ -14,7 +14,7 @@ interface Task {
 
 function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['judgeCase']) {
     return async (ctx: Context) => {
-        subtask.type = subtask.type || 'min';
+        subtask.type ||= 'min';
         const ctxSubtask = {
             subtask,
             status: 0,
@@ -27,9 +27,9 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
             const runner = judgeCase(subtask.cases[cid], subtask.id.toString() ?? sid);
             cases.push(ctx.queue.add(async () => {
                 if (ctx.errored
-                    || (ctxSubtask.subtask.type === 'min' && ctxSubtask.score === 0)
-                    || (ctxSubtask.subtask.type === 'max' && ctxSubtask.score === ctxSubtask.subtask.score)
-                    || ((ctxSubtask.subtask.if || []).filter((i) => ctx.failed[i]).length)
+                    || (subtask.type === 'min' && ctxSubtask.score === 0)
+                    || (subtask.type === 'max' && ctxSubtask.score === subtask.score)
+                    || (subtask.if || []).filter((i) => ctx.failed[i]).length
                 ) {
                     ctx.next({
                         case: {
@@ -46,10 +46,12 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                 } else await runner(ctx, ctxSubtask, runner);
             }));
         }
-        await Promise.all(cases).catch((e) => {
+        try {
+            await Promise.all(cases);
+        } catch (e) {
             ctx.errored = true;
             throw e;
-        });
+        }
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
         return ctxSubtask.score;
     };

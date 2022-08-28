@@ -1,12 +1,11 @@
+import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { runFlow } from '../flow';
 import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
-import {
-    findFileSync, NormalizedCase, parseFilename,
-} from '../utils';
+import { findFileSync, NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
@@ -81,7 +80,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
             (() => {
                 const copyIn = {};
                 for (const file of ctx.config.user_extra_files) {
-                    copyIn[parseFilename(file)] = { src: file };
+                    copyIn[basename(file)] = { src: file };
                 }
                 return compile(ctx.session.getLang(ctx.lang), ctx.code, copyIn, ctx.next);
             })(),
@@ -91,10 +90,10 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
                     user_code: ctx.code,
                 };
                 for (const file of ctx.config.judge_extra_files) {
-                    copyIn[parseFilename(file)] = { src: file };
+                    copyIn[basename(file)] = { src: file };
                 }
                 return compile(
-                    ctx.session.getLang(parseFilename(ctx.config.interactor).split('.')[1].replace('@', '.')),
+                    ctx.session.getLang(basename(ctx.config.interactor).split('.')[1].replace('@', '.')),
                     { src: ctx.config.interactor },
                     copyIn,
                 );

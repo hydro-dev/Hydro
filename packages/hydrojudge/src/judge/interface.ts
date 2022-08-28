@@ -23,31 +23,6 @@ export interface RuntimeContext {
     executeUser?: Execute;
 }
 
-export interface Config {
-    type: string;
-    subType?: string;
-    time: string;
-    memory: string;
-
-    subtasks?: NormalizedSubtask[];
-    count?: number;
-    checker_type?: string;
-    detail?: boolean;
-    filename?: string;
-
-    judge_extra_files: string[];
-    user_extra_files: string[];
-    template?: Record<string, [string, string]>;
-
-    checker?: string;
-    validator?: string;
-    std?: string;
-    hack?: string;
-    interactor?: string;
-
-    answers?: Record<string, [answer: string | string[], score: number]>;
-}
-
 export interface ContextSubTask {
     subtask: NormalizedSubtask;
     score: number;

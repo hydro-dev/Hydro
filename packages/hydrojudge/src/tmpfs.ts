@@ -1,3 +1,4 @@
+import assert from 'assert';
 import child from 'child_process';
 import os from 'os';
 import fs from 'fs-extra';
@@ -12,6 +13,7 @@ if (uid !== 0) log.warn('Not running by root. tmpfs disabled.');
 
 export function mount(path: string, size = '32m') {
     fs.ensureDirSync(path);
+    assert(size.match(/^\d+[kmg]b?$/gi));
     if (linux && uid === 0) child.execSync(`mount tmpfs ${path} -t tmpfs -o size=${size}`);
 }
 

@@ -9,7 +9,6 @@ import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
 import * as system from 'hydrooj/src/model/system';
 import task from 'hydrooj/src/model/task';
-import * as monitor from 'hydrooj/src/service/monitor';
 import storage from 'hydrooj/src/service/storage';
 import { processTestdata } from '../cases';
 import { getConfig } from '../config';
@@ -77,6 +76,7 @@ const session = {
 
 export async function postInit() {
     if (system.get('hydrojudge.disable')) return;
-    task.consume({ type: 'judge' }, (t) => (new JudgeTask(session, t)).handle().catch(logger.error));
-    task.consume({ type: 'judge', priority: { $gt: -50 } }, (t) => (new JudgeTask(session, t)).handle().catch(logger.error));
+    const handle = (t) => (new JudgeTask(session, t)).handle().catch(logger.error);
+    task.consume({ type: 'judge' }, handle);
+    task.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
 }
