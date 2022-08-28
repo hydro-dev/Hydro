@@ -1,7 +1,10 @@
 image: gitpod/workspace-mongodb
 tasks:
-  - command: mongod --dbpath /home/gitpod/db
-  - init: |
+  - name: MongoDB
+    init: mkdir -p /home/gitpod/db
+    command: mongod --dbpath /home/gitpod/db
+  - name: App
+    init: |
       mkdir -p /home/gitpod/.hydro
       echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >/home/gitpod/.hydro/config.json && \
       yarn
@@ -19,3 +22,4 @@ vscode:
     - samuelcolvin.jinjahtml
     - tabnine.tabnine-vscode
     - gruntfuggly.todo-tree
+    - ryanluker.vscode-coverage-gutters
