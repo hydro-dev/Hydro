@@ -6,4 +6,4 @@ RUN npm i pm2 -g && \
     mkdir -p /home/gitpod/.hydro && \
     echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >/home/gitpod/.hydro/config.json && \
     mkdir -p /data/file && \
-    chmod 777 /data/file
+    sudo chmod 777 /data/file
