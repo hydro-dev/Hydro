@@ -776,8 +776,8 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('content', Types.Content)
     async postSubmit(domainId: string, content: string) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM_SOLUTION);
-        await solution.add(domainId, this.pdoc.docId, this.user._id, content);
-        this.back();
+        const psid = await solution.add(domainId, this.pdoc.docId, this.user._id, content);
+        this.back({ psid });
     }
 
     @param('content', Types.Content)

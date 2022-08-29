@@ -245,8 +245,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
         for (const uid of uids) {
             message.send(1, uid, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
         }
-        await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
-        this.back();
+        const drid = await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
+        this.back({ drid });
     }
 
     @param('drid', Types.ObjectID)
