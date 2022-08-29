@@ -16,6 +16,7 @@ import domain from '../model/domain';
 import oauth from '../model/oauth';
 import * as oplog from '../model/oplog';
 import problem, { ProblemDoc } from '../model/problem';
+import SolutionModel from '../model/solution';
 import * as system from '../model/system';
 import task from '../model/task';
 import token from '../model/token';
@@ -323,6 +324,16 @@ class UserDetailHandler extends Handler {
         this.response.body = {
             isSelfProfile, udoc, sdoc, pdocs, tags,
         };
+        if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION)) {
+            const psdocs = await SolutionModel.getByUser(domainId, uid).limit(10).toArray();
+            this.response.body.psdocs = psdocs;
+            if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
+                this.response.body.pdict = await problem.getList(
+                    domainId, psdocs.map((i) => i.parentId), canViewHidden,
+                    this.user.group, false, problem.PROJECTION_LIST,
+                );
+            }
+        }
         this.UiContext.extraTitleContent = udoc.uname;
     }
 }

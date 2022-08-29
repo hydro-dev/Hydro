@@ -46,6 +46,13 @@ class SolutionModel {
         ).sort({ vote: -1 });
     }
 
+    static getByUser(domainId: string, uid: number) {
+        return document.getMulti(
+            domainId, document.TYPE_PROBLEM_SOLUTION,
+            { parentType: document.TYPE_PROBLEM, owner: uid },
+        ).sort({ _id: -1 });
+    }
+
     static reply(domainId: string, psid: ObjectID, owner: number, content: string) {
         return document.push(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'reply', content, owner);
     }
