@@ -32,6 +32,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       const config = {
         theme: 'vs-light',
         ...customOptions,
+        fontFamily: UserContext.codeFontFamily,
         lineNumbers: true,
         glyphMargin: true,
         lightbulb: { enabled: true },

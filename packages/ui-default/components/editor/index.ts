@@ -97,6 +97,7 @@ export default class Editor extends DOMAttachedObject {
       hideCursorInOverviewRuler: true,
       overviewRulerLanes: 0,
       overviewRulerBorder: false,
+      fontFamily: UserContext.codeFontFamily,
     };
     if (autoLayout) cfg.automaticLayout = true;
     let prevHeight = 0;
