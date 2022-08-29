@@ -738,18 +738,24 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
 export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('page', Types.PositiveInt, true)
     @param('tid', Types.ObjectID, true)
-    async get(domainId: string, page = 1, tid?: ObjectID) {
+    @param('sid', Types.ObjectID, true)
+    async get(domainId: string, page = 1, tid?: ObjectID, sid?: ObjectID) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.response.template = 'problem_solution.html';
         const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
         if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
-        const [psdocs, pcount, pscount] = await paginate(
+        // eslint-disable-next-line prefer-const
+        let [psdocs, pcount, pscount] = await paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
             system.get('pagination.solution'),
         );
+        if (sid) {
+            psdocs = [await solution.get(domainId, sid)];
+            if (!psdocs[0]) throw new SolutionNotFoundError(domainId, sid);
+        }
         const uids = [this.pdoc.owner];
         const docids = [];
         for (const psdoc of psdocs) {
@@ -762,7 +768,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         const udict = await user.getList(domainId, uids);
         const pssdict = await solution.getListStatus(domainId, docids, this.user._id);
         this.response.body = {
-            psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc,
+            psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc, sid,
         };
         await bus.serial('handler/solution/get', this);
     }
@@ -934,6 +940,7 @@ export async function apply() {
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
+    Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);

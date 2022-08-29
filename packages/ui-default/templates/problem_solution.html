@@ -33,12 +33,19 @@
           reply_delete_perm = perm.PERM_DELETE_PROBLEM_SOLUTION_REPLY,
           reply_delete_self_perm = perm.PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF
         ) }}
-        {{ paginator.render(page, pcount) }}
+        {% if not sid %}
+          {{ paginator.render(page, pcount) }}
+        {% endif %}
       {% if drcount == 0 %}
         {{ nothing.render('No solutions so far...') }}
       {% endif %}
       </div>
     </div>
+    {% if sid %}
+      <div class="section">
+        <a href="{{ url('problem_solution', pid=pdoc.pid|default(pdoc.docId)) }}" class="menu__link" style="width: 100%">{{ _('View all {0} solutions').format(pscount) }}</a>
+      </div>
+    {% endif %}
   </div>
   <div class="medium-3 columns">
     {% set owner_udoc = udict[pdoc.owner] %}
