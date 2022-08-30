@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/vjudge",
-    "version": "1.5.0-next.8",
+    "version": "1.5.0-next.10",
     "description": "Submit problems to remote oj",
     "main": "package.json",
     "repository": "https://github.com/hydro-dev/Hydro.git",

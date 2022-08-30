@@ -57,6 +57,25 @@ export function getDifficulty(tags: string[]) {
     return 10;
 }
 
+const sampleParser = (mode: 'input' | 'output') =>
+    function parseSample(node: Element, index: number) {
+        if (!node.innerHTML.includes('test-example-line')) {
+            return `\n
+\`\`\`${mode}${index + 1}
+${node.innerHTML.trim()}
+\`\`\`
+\n`;
+        }
+        const lines = [...node.children];
+        const highlighted = lines.map((i, l) => [i, l] as [Element, number])
+            .filter(([i]) => i.className.includes('odd')).map(([, i]) => i + 1);
+        return `\n
+\`\`\`${mode}${index + 1}|${highlighted.join(',')}
+${lines.map((i) => i.innerHTML).join('\n').trim()}
+\`\`\`
+\n`;
+    };
+
 export default class CodeforcesProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
@@ -285,8 +304,8 @@ export default class CodeforcesProvider implements IBasicProvider {
         document.querySelector('.note')?.firstChild.remove();
         const input = document.querySelector('.input-specification')?.innerHTML.trim();
         const output = document.querySelector('.output-specification')?.innerHTML.trim();
-        const inputs = Array.from(document.querySelectorAll('.input>pre')).map((i) => i.innerHTML.trim().replace(/<br>/g, '\n'));
-        const outputs = Array.from(document.querySelectorAll('.output>pre')).map((i) => i.innerHTML.trim().replace(/<br>/g, '\n'));
+        const inputs = Array.from(document.querySelectorAll('.input>pre')).map(sampleParser('input'));
+        const outputs = Array.from(document.querySelectorAll('.output>pre')).map(sampleParser('output'));
         const note = document.querySelector('.note')?.innerHTML.trim();
         document.querySelector('.note')?.remove();
         document.querySelector('.sample-tests')?.remove();
@@ -314,9 +333,9 @@ export default class CodeforcesProvider implements IBasicProvider {
                 ...output ? [{
                     type: 'Text', sectionTitle: 'Output', subType: 'markdown', text: output,
                 }] : [],
-                ...inputs.map((_, i) => ({
-                    type: 'Sample', payload: [inputs[i], outputs[i]], text: '', sectionTitle: 'Samples',
-                }) as any),
+                ...inputs.length ? [{
+                    type: 'Plain', text: [...inputs, ...outputs].join('\n'),
+                }] : [] as any,
                 ...note ? [{
                     type: 'Text', sectionTitle: 'Note', subType: 'markdown', text: note,
                 }] : [],
