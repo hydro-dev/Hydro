@@ -25,6 +25,18 @@ code
 [data-syntax-hl-show-line-number] pre.line-numbers > code
   white-space: pre
 
+.line-highlight 
+  position: absolute
+  left: 0
+  right: 0
+  padding: inherit 0
+  margin-top: 1em /* Same as .prism’s padding-top */
+  background: hsla(24, 20%, 50%,.08)
+  background: linear-gradient(to right, hsla(24, 20%, 50%,.1) 70%, hsla(24, 20%, 50%,0))
+  pointer-events: none
+  line-height: inherit
+  white-space: pre
+
 .sample > .toolbar
   right: 0.9375em !important
   top: 3.7875em !important

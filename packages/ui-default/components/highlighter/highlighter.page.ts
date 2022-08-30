@@ -6,14 +6,22 @@ import tpl from 'vj/utils/tpl';
 const highlighterPage = new AutoloadPage('highlighterPage', () => {
   import('./prismjs').then(({ default: prismjs }) => {
     function runHighlight($container) {
+      $container.find('pre code').get().forEach((code) => {
+        const language = ($(code).attr('class') || '').trim();
+        const m = language.match(/language-([a-z0-9]+)(\|[\d,-]+)/);
+        if (m?.[2]) {
+          $(code).parent().attr('data-line', m[2].substring(1));
+          $(code).attr('class', `language-${m[1]}`);
+        }
+      });
       prismjs.highlightBlocks($container);
       $container.find('pre code').get().forEach((code) => {
         const $code = $(code);
         const $root = $code.parent().parent();
         const language = ($(code).attr('class') || '').trim();
-        const m = language.match(/language-([a-z0-9]+)/);
-        if (m && m[1] && m[1].toLowerCase().startsWith('input')) {
-          const id = +m[1].substr(5, m[1].length - 5);
+        const m = language.match(/language-input([0-9]+)/);
+        if (m?.[1]) {
+          const id = +m[1];
           if (Number.isSafeInteger(id)) {
             const $output = $container.find(`pre.language-output${id}`);
             if ($output.length) {
