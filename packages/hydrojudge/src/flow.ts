@@ -71,8 +71,8 @@ export const runFlow = async (ctx: Context, task: Task) => {
     const tasks = [];
     ctx.total_status = 0;
     ctx.total_score = 0;
-    ctx.total_memory_usage_kb = 0;
-    ctx.total_time_usage_ms = 0;
+    ctx.total_memory = 0;
+    ctx.total_time = 0;
     ctx.rerun = getConfig('rerun') || 0;
     ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
     ctx.failed = {};
@@ -90,7 +90,7 @@ export const runFlow = async (ctx: Context, task: Task) => {
     ctx.end({
         status: ctx.total_status,
         score: ctx.total_score,
-        time: Math.floor(ctx.total_time_usage_ms * 1000000) / 1000000,
-        memory: ctx.total_memory_usage_kb,
+        time: Math.floor(ctx.total_time * 1000000) / 1000000,
+        memory: ctx.total_memory,
     });
 };

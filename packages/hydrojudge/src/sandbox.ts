@@ -30,7 +30,7 @@ const statusMap: Map<SandboxStatus, number> = new Map([
 
 interface Parameter {
     time?: number;
-    stdin?: string;
+    stdin?: CopyInFile;
     stdout?: string;
     stderr?: string;
     execute?: string;
@@ -46,8 +46,10 @@ interface Parameter {
 interface SandboxAdaptedResult {
     status: number;
     code: number;
-    time_usage_ms: number;
-    memory_usage_kb?: number;
+    /** in miliseconds */
+    time: number;
+    /** in kilobytes */
+    memory?: number;
     files: Record<string, string>;
     fileIds?: Record<string, string>;
     stdout?: string;
@@ -72,7 +74,7 @@ function proc({
     time = 16000,
     memory = parseMemoryMB(getConfig('memoryMax')),
     processLimit = getConfig('processLimit'),
-    stdin = '', copyIn = {}, copyOut = [], copyOutCached = [],
+    stdin = { content: '' }, copyIn = {}, copyOut = [], copyOutCached = [],
     cacheStdoutAndStderr = false,
     env = {},
 }: Parameter = {}): Cmd {
@@ -89,7 +91,7 @@ function proc({
         args: parseArgs(execute),
         env: [...getConfig('env').split('\n'), ...Object.keys(env).map((i) => `${i}=${env[i].replace(/=/g, '\\=')}`)],
         files: [
-            stdin ? { src: stdin } : { content: '' },
+            stdin,
             { name: 'stdout', max: Math.floor(1024 * 1024 * size) },
             { name: 'stderr', max: Math.floor(1024 * 1024 * size) },
         ],
@@ -110,12 +112,12 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     // FIXME: Signalled?
     const ret: SandboxAdaptedResult = {
         status: statusMap.get(result.status) || STATUS.STATUS_ACCEPTED,
-        time_usage_ms: result.time / 1000000 / rate,
-        memory_usage_kb: result.memory / 1024,
+        time: result.time / 1000000 / rate,
+        memory: result.memory / 1024,
         files: result.files,
         code: result.exitStatus,
     };
-    if (ret.time_usage_ms >= (params.time || 16000)) {
+    if (ret.time >= (params.time || 16000)) {
         ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
     }
     ret.files = result.files || {};

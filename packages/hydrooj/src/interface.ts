@@ -514,7 +514,9 @@ export interface JudgeResultBody {
     case?: TestCase,
     status?: number;
     score?: number;
+    /** in miliseconds */
     time?: number;
+    /** in kilobytes */
     memory?: number;
     message?: string | JudgeMessage;
     compilerText?: string;

@@ -8,8 +8,8 @@ export type Context = JudgeTask & RuntimeContext;
 export interface RuntimeContext {
     total_score?: number;
     total_status?: number;
-    total_time_usage_ms?: number;
-    total_memory_usage_kb?: number;
+    total_time?: number;
+    total_memory?: number;
 
     queue?: PQueue;
     errored?: boolean;

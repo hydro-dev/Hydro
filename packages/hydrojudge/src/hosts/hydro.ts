@@ -105,7 +105,7 @@ export default class Hydro {
         return filePath;
     }
 
-    async fetchCodeFile(name: string) {
+    async fetchFile(name: string) {
         const res = await this.axios.post('judge/code', { id: name });
         const f = await this.axios.get(res.data.url, { responseType: 'stream' })
             .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));

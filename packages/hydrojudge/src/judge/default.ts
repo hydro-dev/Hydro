@@ -23,7 +23,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
         const copyIn = { ...ctx.execute.copyIn };
         if (filename) copyIn[`${filename}.in`] = c.input ? { src: c.input } : { content: '' };
         const copyOutCached = filename ? [`${filename}.out?`] : [];
-        const stdin = filename ? null : c.input;
+        const stdin = filename ? null : { src: c.input };
         const res = await run(
             ctx.execute.execute,
             {
@@ -35,7 +35,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 cacheStdoutAndStderr: true,
             },
         );
-        const { code, time_usage_ms, memory_usage_kb } = res;
+        const { code, time, memory } = res;
         let { status } = res;
         let stdout: CmdFile = { fileId: res.fileIds[filename ? `${filename}.out` : 'stdout'] };
         const stderr = { fileId: res.fileIds['stderr'] };
@@ -43,9 +43,9 @@ function judgeCase(c: NormalizedCase, sid: string) {
         let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
-            if (time_usage_ms > c.time * ctx.execute.time) {
+            if (time > c.time * ctx.execute.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-            } else if (memory_usage_kb > c.memory * 1024) {
+            } else if (memory > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 ({ status, score, message } = await checkers[ctx.config.checker_type]({
@@ -75,16 +75,16 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
         if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
-        ctx.total_time_usage_ms += time_usage_ms;
-        ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
+        ctx.total_time += time;
+        ctx.total_memory = Math.max(ctx.total_memory, memory);
         ctx.next({
             case: {
                 id: c.id,
                 subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
-                time: time_usage_ms,
-                memory: memory_usage_kb,
+                time,
+                memory,
                 message,
             },
             addProgress: 100 / ctx.config.count,
@@ -98,7 +98,7 @@ function judgeCase(c: NormalizedCase, sid: string) {
                     const r = await run(langConfig.analysis, {
                         copyIn: {
                             ...copyIn,
-                            input: stdin ? { src: stdin } : { content: '' },
+                            input: stdin || { content: '' },
                             [langConfig.code_file || 'foo']: ctx.code,
                             compile: { content: langConfig.compile || '' },
                             execute: { content: langConfig.execute || '' },

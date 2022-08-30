@@ -52,14 +52,12 @@ export const judge = async (ctx: Context) => {
     const { filename } = ctx.config;
     if (filename) copyIn[`${filename}.in`] = { content: ctx.input };
     const copyOut = filename ? [`${filename}.out?`] : [];
-    const stdin = path.resolve(ctx.tmpdir, '0.in');
-    await fs.writeFile(stdin, ctx.input || '');
     const stdout = path.resolve(ctx.tmpdir, '0.out');
     const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
         ctx.execute.execute,
         {
-            stdin: filename ? null : stdin,
+            stdin: filename ? null : { content: ctx.input },
             stdout: filename ? null : stdout,
             stderr,
             copyIn,
@@ -68,14 +66,14 @@ export const judge = async (ctx: Context) => {
             memory: parseMemoryMB(ctx.config.memory || '128m'),
         },
     );
-    const { code, time_usage_ms, memory_usage_kb } = res;
+    const { code, time, memory } = res;
     let { status } = res;
     if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
     const message: string[] = [];
     if (status === STATUS.STATUS_ACCEPTED) {
-        if (time_usage_ms > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
+        if (time > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
+        } else if (memory > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         }
     } else if (code) {
@@ -91,8 +89,8 @@ export const judge = async (ctx: Context) => {
             subtaskId: 0,
             status,
             score: 100,
-            time: time_usage_ms,
-            memory: memory_usage_kb,
+            time,
+            memory,
             message: message.join('\n').substring(0, 102400),
         },
     });
@@ -104,7 +102,7 @@ export const judge = async (ctx: Context) => {
                 const r = await run(langConfig.analysis, {
                     copyIn: {
                         ...copyIn,
-                        input: { src: stdin },
+                        input: { content: ctx.input },
                         [langConfig.code_file || 'foo']: ctx.code,
                         compile: { content: langConfig.compile || '' },
                         execute: { content: langConfig.execute || '' },
@@ -130,7 +128,7 @@ export const judge = async (ctx: Context) => {
     ctx.end({
         status,
         score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-        time: Math.floor(time_usage_ms * 1000000) / 1000000,
-        memory: memory_usage_kb,
+        time: Math.floor(time * 1000000) / 1000000,
+        memory,
     });
 };
