@@ -1,11 +1,13 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { CompileError } from './error';
+import { findFileSync } from '@hydrooj/utils/lib/utils';
+import checkers from './checkers';
+import { CompileError, FormatError } from './error';
 import { Execute } from './interface';
 import { CopyInFile, del, run } from './sandbox';
 import { compilerText } from './utils';
 
-export = async function compile(
+export default async function compile(
     lang: LangConfig, code: CopyInFile, copyIn: Record<string, CopyInFile> = {}, next?: Function,
 ): Promise<Execute> {
     const target = lang.target || 'foo';
@@ -24,7 +26,7 @@ export = async function compile(
         );
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
-        if (next) next({ compilerText: compilerText(stdout, stderr) });
+        next?.({ compilerText: compilerText(stdout, stderr) });
         return {
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
@@ -38,4 +40,25 @@ export = async function compile(
         clean: () => Promise.resolve(null),
         time,
     };
-};
+}
+
+const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
+
+export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
+    if (['default', 'strict'].includes(checkerType)) {
+        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+    }
+    if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
+    const s = checker.replace('@', '.').split('.');
+    let lang;
+    let langId = s.pop();
+    while (s.length) {
+        lang = getLang(langId, false);
+        if (lang) break;
+        langId = `${s.pop()}.${langId}`;
+    }
+    if (!lang) throw new FormatError('Unknown checker language.');
+    // TODO cache compiled checker
+    return await compile(lang, { src: checker }, copyIn);
+}

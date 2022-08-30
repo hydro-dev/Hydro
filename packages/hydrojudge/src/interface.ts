@@ -9,7 +9,6 @@ export interface Execute {
 
 export interface CheckConfig {
     execute: string;
-    checker_type: string;
     input: CopyInFile;
     output: CopyInFile;
     user_stdout: CopyInFile;
