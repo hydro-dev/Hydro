@@ -19,7 +19,7 @@ function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        const [{ code, time_usage_ms, memory_usage_kb }, resInteractor] = await runPiped(
+        const [{ code, time, memory }, resInteractor] = await runPiped(
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
@@ -39,9 +39,9 @@ function judgeCase(c: NormalizedCase) {
         let status: number;
         let score = 0;
         let message: any = '';
-        if (time_usage_ms > c.time * ctx.executeUser.time) {
+        if (time > c.time * ctx.executeUser.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory_usage_kb > c.memory * 1024) {
+        } else if (memory > c.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else if ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code)) {
             status = STATUS.STATUS_RUNTIME_ERROR;
@@ -56,8 +56,8 @@ function judgeCase(c: NormalizedCase) {
         }
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
         ctxSubtask.status = Math.max(ctxSubtask.status, status);
-        ctx.total_time_usage_ms += time_usage_ms;
-        ctx.total_memory_usage_kb = Math.max(ctx.total_memory_usage_kb, memory_usage_kb);
+        ctx.total_time += time;
+        ctx.total_memory = Math.max(ctx.total_memory, memory);
         ctx.next({
             status: STATUS.STATUS_JUDGING,
             case: {
@@ -65,8 +65,8 @@ function judgeCase(c: NormalizedCase) {
                 subtaskId: ctxSubtask.subtask.id,
                 status,
                 score,
-                time: time_usage_ms,
-                memory: memory_usage_kb,
+                time,
+                memory,
                 message,
             },
             addProgress: 100 / ctx.config.count,

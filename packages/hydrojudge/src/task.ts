@@ -19,7 +19,7 @@ interface Session {
     getNext: (task: JudgeTask) => NextFunction;
     getEnd: (task: JudgeTask) => NextFunction;
     cacheOpen: (source: string, files: any[], next?: NextFunction) => Promise<string>;
-    fetchCodeFile: (target: string) => Promise<string>;
+    fetchFile: (target: string) => Promise<string>;
     config: { detail: boolean, host?: string };
 }
 
@@ -110,7 +110,7 @@ export class JudgeTask {
         if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
             const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
             if (!id) throw new SystemError('Submission File Not Found');
-            const target = await this.session.fetchCodeFile(id);
+            const target = await this.session.fetchFile(id);
             this.code = { src: target };
             this.clean.push(() => fs.remove(target));
         }

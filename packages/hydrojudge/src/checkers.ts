@@ -1,9 +1,20 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { FormatError, SystemError } from './error';
-import { CheckConfig } from './interface';
-import { run } from './sandbox';
+import { CopyInFile, run } from './sandbox';
 import { parse } from './testlib';
+
+export interface CheckConfig {
+    execute: string;
+    input: CopyInFile;
+    output: CopyInFile;
+    user_stdout: CopyInFile;
+    user_stderr: CopyInFile;
+    copyIn: Record<string, CopyInFile>;
+    score: number;
+    detail: boolean;
+    env?: Record<string, string>;
+}
 
 type Checker = (config: CheckConfig) => Promise<{
     status: number,
@@ -202,4 +213,4 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 });
 
-export = checkers;
+export default checkers;
