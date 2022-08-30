@@ -1,7 +1,7 @@
 import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { check, compileChecker } from '../check';
-import compile from '../compile';
+import checkers from '../checkers';
+import compile, { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { Logger } from '../log';
 import { CmdFile, del, run } from '../sandbox';
@@ -48,18 +48,17 @@ function judgeCase(c: NormalizedCase, sid: string) {
             } else if (memory_usage_kb > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
-                [status, score, message] = await check({
+                ({ status, score, message } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
                     input: { src: c.input },
                     output: { src: c.output },
                     user_stdout: stdout,
                     user_stderr: stderr,
-                    checker_type: ctx.config.checker_type,
                     score: c.score,
                     detail: ctx.config.detail ?? true,
                     env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
-                });
+                }));
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
             if (code < 32) message = signals[code];

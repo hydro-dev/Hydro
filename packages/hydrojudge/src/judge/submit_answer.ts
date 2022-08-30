@@ -1,7 +1,8 @@
 import { basename } from 'path';
 import { readFile } from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { check, compileChecker } from '../check';
+import checkers from '../checkers';
+import { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { del, run } from '../sandbox';
 import { NormalizedCase } from '../utils';
@@ -47,18 +48,17 @@ function judgeCase(c: NormalizedCase, sid: string) {
             fileIds.push(...Object.values(res.fileIds));
         }
         if (status === STATUS.STATUS_ACCEPTED) {
-            [status, score, message] = await check({
+            ({ status, score, message } = await checkers[ctx.config.checker_type]({
                 execute: ctx.checker.execute,
                 copyIn: ctx.checker.copyIn || {},
                 input: { src: c.input },
                 output: { src: c.output },
                 user_stdout: file,
                 user_stderr: { content: '' },
-                checker_type: ctx.config.checker_type,
                 score: c.score,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
-            });
+            }));
         }
         await Promise.all(fileIds.map(del)).catch(() => { /* Ignore file doesn't exist */ });
         ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
