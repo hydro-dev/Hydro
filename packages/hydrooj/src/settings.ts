@@ -10,26 +10,26 @@ const defaultPath = process.env.CI ? '/tmp/file'
 const FileSetting = Schema.intersect([
     Schema.object({
         type: Schema.union([
-            Schema.const('file').description('local file provider').required(),
-            Schema.const('s3').description('s3 provider').required(),
-        ] as const).description('provider type').default('file'),
-        endPointForUser: Schema.string().default('/fs/').required(),
-        endPointForJudge: Schema.string().default('/fs/').required(),
+            Schema.const('file').description('local file provider'),
+            Schema.const('s3').description('s3 provider'),
+        ] as const).description('provider type'),
+        endPointForUser: Schema.string().default('/fs/'),
+        endPointForJudge: Schema.string().default('/fs/'),
     }).description('setting_file'),
     Schema.union([
         Schema.object({
             type: Schema.const('file').required(),
-            path: Schema.string().default(defaultPath).description('Storage path').required(),
+            path: Schema.string().default(defaultPath).description('Storage path'),
             secret: Schema.string().description('Download file sign secret').default(nanoid()),
         }),
         Schema.object({
             type: Schema.const('s3').required(),
-            endPoint: Schema.string().required(),
-            accessKey: Schema.string().required().description('access key'),
-            secretKey: Schema.string().required().description('secret key').role('secret'),
-            bucket: Schema.string().default('hydro').required(),
-            region: Schema.string().default('us-east-1').required(),
-            pathStyle: Schema.boolean().default(true).required(),
+            endPoint: Schema.string(),
+            accessKey: Schema.string().description('access key'),
+            secretKey: Schema.string().description('secret key').role('secret'),
+            bucket: Schema.string().default('hydro'),
+            region: Schema.string().default('us-east-1'),
+            pathStyle: Schema.boolean().default(true),
         }),
     ] as const),
 ] as const).default({
