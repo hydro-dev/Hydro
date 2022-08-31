@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.39.20",
+  "version": "4.39.21",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -31,6 +31,7 @@
     "@types/qrcode": "^1.5.0",
     "@types/react-dom": "^18.0.6",
     "@types/redux-logger": "^3.0.9",
+    "@types/serviceworker": "^0.0.51",
     "@types/sharedworker": "^0.0.80",
     "@vscode/codicons": "^0.0.32",
     "autoprefixer": "^10.4.8",

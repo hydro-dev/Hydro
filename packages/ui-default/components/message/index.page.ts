@@ -46,12 +46,18 @@ const initWorkerMode = () => {
   console.log('Messages: using SharedWorker');
   const worker = new SharedWorker(new URL('./worker', import.meta.url), { name: 'Hydro Messages Worker' });
   worker.port.start();
+  window.addEventListener('beforeunload', () => {
+    worker.port.postMessage({ type: 'unload' });
+  });
   worker.port.postMessage({ type: 'conn', path: endpoint, cookie: document.cookie });
   worker.port.onmessage = async (message) => {
     if (process.env.NODE_ENV !== 'production') console.log('onmessage: ', message);
     const { payload, type } = message.data;
     if (type === 'message') {
       if (onmessage(payload)) worker.port.postMessage({ type: 'ack', id: payload.mdoc._id });
+    } else if (type === 'open-page') {
+      console.log('opening page');
+      window.open('/home/messages');
     }
   };
 };

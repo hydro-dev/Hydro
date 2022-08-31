@@ -146,13 +146,13 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          exclude: [/@types\//, /components\/message\//],
+          exclude: [/@types\//, /components\/message\//, /entry\.js/],
           type: 'javascript/auto',
           use: [esbuildLoader()],
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          include: /components\/message\//,
+          include: [/components\/message\//, /entry\.js/],
           type: 'javascript/auto',
           use: [{
             loader: 'ts-loader',
