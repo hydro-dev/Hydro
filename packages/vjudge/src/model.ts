@@ -63,6 +63,7 @@ class Service {
                     await this.addProblemList(id.split('::')[1]);
                     continue;
                 }
+                if (id.search('\\\\#') !== -1) continue;
                 const [pid, metastr = '{}'] = id.split('#');
                 const meta = JSON.parse(metastr);
                 if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;

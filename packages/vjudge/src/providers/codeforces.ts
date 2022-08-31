@@ -31,7 +31,7 @@ puppeteer.use(StealthPlugin()).use(PortalPlugin({
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
         ? ['', '921', '01']
-        : /^(P|GYM)(\d+)([A-Z][0-9]*)$/.exec(id);
+        : /^(P|GYM)(\d+)([A-Z]+[0-9]*)$/.exec(id);
     if (type === 'GYM' && (+contestId) < 100000) {
         return [type, ((+contestId) + 100000).toString(), problemId];
     }
@@ -276,12 +276,19 @@ export default class CodeforcesProvider implements IBasicProvider {
     async getProblem(id: string, meta: Record<string, any>) {
         logger.info(id);
         if (id === 'P936E') return null; // Problem Missing
+        if (id.startsWith('GYM') && !Number.isNaN(Number(id[9]))) return null; // GYM Problem Missing
         const [, contestId, problemId] = parseProblemId(id);
         const res = await this.get(id.startsWith('GYM')
             ? `/gym/${contestId}/problem/${problemId}`
             : `/problemset/problem/${contestId}/${problemId}`);
         if (!res.text) return await this.getPdfProblem(id, meta);
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
+        const judgestatement = $dom.window.document.querySelector('html').innerHTML;
+        if (['<th>Actions</th>',
+            'Statement is not available on English language',
+            'ограничение по времени на тест'].find((i) => judgestatement.includes(i))) {
+            return null;
+        }
         const tag = Array.from($dom.window.document.querySelectorAll('.tag-box')).map((i) => i.textContent.trim());
         const text = $dom.window.document.querySelector('.problem-statement').innerHTML;
         const { window: { document } } = new JSDOM(text);
@@ -364,7 +371,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             return Array.from(document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
         }
         if (listName === 'gym') {
-            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${(+i.getAttribute('data-contestId')) - 100000}`);
+            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${i.getAttribute('data-contestId')}`);
         }
         return Array.from(document.querySelectorAll('.id a')).map((i) => {
             const detail = i.parentElement.parentElement.children[1].children[0];
