@@ -9,9 +9,11 @@ __langname: 简体中文
 '{0} sections': '{0} 小节'
 '{0} solutions': '{0} 条题解'
 '{0} views': '{0} 次查看'
+'{0}: Groups': '{0}: 小组'
 '{0}: Permissions': '{0}: 权限'
 '{0}: Roles': '{0}: 角色'
 '{0}: Users': '{0}: 用户'
+"{0}'s blog": "{0} 的博客"
 '# My Submissions': '我的递交数'
 '# Submissions': '递交数'
 '↓ # Comments': '↓ 评论数'
@@ -178,6 +180,7 @@ Copyright Complaint: 版权申诉
 CPU Info: CPU信息
 Create a contest: 创建一个比赛
 Create a Discussion: 创建一个讨论
+Create a Post: 创建一个博文
 Create a problem: 创建一个题目
 Create Contest: 创建比赛
 Create contests: 创建比赛
@@ -207,6 +210,7 @@ Current Password: 当前密码
 Current Status: 当前状态
 currently offline: 目前离线
 Daily update check: 每日自动检查更新
+Dark: 暗色
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。
@@ -219,6 +223,7 @@ Default Code Template: 默认代码模板
 Delete discussion replies of own discussion: 删除自己讨论中的回复
 Delete discussion replies: 删除讨论回复
 Delete discussions: 删除讨论
+Delete Domain: 删除域
 Delete own discussion replies: 删除讨论中自己的回复
 Delete own discussions: 删除自己的讨论
 Delete own problem solution replies: 删除题解中自己的回复
@@ -443,6 +448,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
+Light: 亮色
 Limitations: 限制
 Links: 链接
 List View: 列表视图
@@ -463,6 +469,7 @@ Logout This Session: 注销该会话
 Logout: 登出
 Lost Password: 忘记密码
 Lucky: 手气不错
+manage_config: 配置管理
 manage_dashboard: 控制面板
 manage_join_applications: 加域申请
 manage_module: 管理模块
@@ -795,6 +802,7 @@ The uploaded file is too long.: 上传的文件太长。
 The user is already a member of the domain.: 该用户已是域的成员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)
 Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
+Theme: 主题
 There are no contests...: 没有比赛…
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯
 This contest is not live.: 比赛没有开始。
@@ -828,6 +836,7 @@ training_edit: 编辑训练
 training_main: 训练
 Training: 训练
 Tried: 尝试
+Two Factor Authentication: 两步验证码
 Type: 类型
 UI Language: 用户界面语言
 Uncompleted: 未完成

@@ -51,7 +51,7 @@
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
           <li class="footer__extra-link-item"><a href="https://hydro.js.org/#%E8%81%94%E7%B3%BB%E6%88%91%E4%BB%AC">{{ _('Copyright Complaint') }}</a></li>
           <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-lang">
-            <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
+            <span><span class="icon icon-global"></span> {{ _('Language') }} <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-lang">
             {%- for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range -%}
               <li class="menu__item"><a class="menu__link" href="{{ url('switch_language', lang=k) }}">{{ v }}</a></li>
@@ -59,10 +59,10 @@
             </ol>
           </li>
           <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-theme">
-            <span><span class="icon icon-global"></span> Theme <span class="icon icon-expand_less"></span></span>
+            <span><span class="icon icon-global"></span> {{ _('Theme') }} <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-theme">
-              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='light') }}">Light</a></li>
-              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='dark') }}">Dark</a></li>
+              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='light') }}">{{ _('Light') }}</a></li>
+              <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='dark') }}">{{ _('Dark') }}</a></li>
             </ol>
           </li>
         </ol>

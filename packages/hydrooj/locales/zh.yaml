@@ -438,6 +438,7 @@ Live: 正在进行
 Live...: 正在进行…
 Location: 位置
 Lock Topic: 锁定主题
+Lock discussions: 锁定讨论
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -472,6 +473,7 @@ Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
+monacoTheme: 编辑器主题
 Month: 月
 Monthly Popular: 月度最受欢迎
 Most Upvoted Solutions: 最被赞同的题解
@@ -558,9 +560,11 @@ perm_record: 记录
 perm_training: 训练
 Permission: 权限
 Permissions: 权限
+Phone: 手机号
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
 pid: 题目 ID
 Pin discussions: 置顶讨论
+Pin training plans: 置顶训练计划
 Plan: 计划
 Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
@@ -615,6 +619,8 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
+React to discussion: 反应公告
+Read record codes after accept: 题目通过后读取记录的代码
 Recalculates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
 Recommended: 推荐
 Record {0} not found.: 记录 {0} 不存在。
@@ -663,6 +669,7 @@ Sample: 样例
 Save All Changes: 保存所有修改
 Saved session expire seconds: 保存的会话的过期秒数
 Saved session: 已保存的会话
+School: 学校
 score canceled: 成绩取消
 Score: 分数
 Scoreboard (Hidden): 成绩表 (隐藏)
@@ -736,6 +743,7 @@ Storage engine bucket: 存储桶名称
 Storage engine endPoint: 存储桶 endPoint
 Storage engine region: 存储桶地域
 Storage engine secret: 存储桶 secretKey
+Student ID: 学号
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
@@ -761,6 +769,7 @@ The uploaded file is too long.: 上传的文件太长。
 The user is already a member of the domain.: 该用户已是域的成员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)
 Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
+theme: 主题
 There are no contests...: 没有比赛…
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯
 This contest is not live.: 比赛没有开始。
@@ -847,6 +856,7 @@ View Contest: 查看比赛
 View contests: 查看比赛
 View Details: 查看详情
 View discussions: 查看讨论
+View domain user displayname: 显示域中用户的显示名
 View hidden contest submission status and scoreboard: 查看隐藏的比赛递交状态和成绩表
 View hidden homework submission status and scoreboard: 查看隐藏的作业递交状态和成绩表
 View hidden problems: 查看隐藏的题目
@@ -858,6 +868,7 @@ View or submit solution: 查看与发表题解
 View Owned Problems: 查看自己的题目
 View Owned Training Plans: 查看自己的训练计划
 View problem solutions: 查看题解
+View problem solutions after accept: 题目通过后查看题解
 View Problem: 查看题目
 View problems: 查看题目
 View ranking: 查看排名
