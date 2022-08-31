@@ -9,9 +9,10 @@ import tpl from 'vj/utils/tpl';
 
 const onmessage = (msg) => {
   console.log('Received message', msg);
+  if (document.hidden) return false;
   if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
-    return new InfoDialog({
+    new InfoDialog({
       cancelByClickingBack: false,
       $body: tpl`
         <div class="typo">
@@ -19,9 +20,10 @@ const onmessage = (msg) => {
           <p>${i18n(msg.mdoc.content)}</p>
         </div>`,
     }).open();
+    return true;
   }
   // Is message
-  return new VjNotification({
+  new VjNotification({
     ...(msg.udoc._id === 1 && msg.mdoc.flag & 4)
       ? { message: i18n('You received a system message, click here to view.') }
       : {
@@ -32,6 +34,26 @@ const onmessage = (msg) => {
     duration: 15000,
     action: () => window.open(`/home/messages?uid=${msg.udoc._id}`, '_blank'),
   }).show();
+  return true;
+};
+
+const url = new URL('/home/messages-conn', window.location.href);
+// TODO handle a better way for cookie
+url.searchParams.append('sid', document.cookie);
+const endpoint = url.toString().replace('http', 'ws');
+
+const initWorkerMode = () => {
+  console.log('Messages: using SharedWorker');
+  const worker = new SharedWorker(new URL('./worker', import.meta.url), { name: 'Hydro Messages Worker' });
+  worker.port.start();
+  worker.port.postMessage({ type: 'conn', path: endpoint, cookie: document.cookie });
+  worker.port.onmessage = async (message) => {
+    if (process.env.NODE_ENV !== 'production') console.log('onmessage: ', message);
+    const { payload, type } = message.data;
+    if (type === 'message') {
+      if (onmessage(payload)) worker.port.postMessage({ type: 'ack', id: payload.mdoc._id });
+    }
+  };
 };
 
 const messagePage = new AutoloadPage('messagePage', (pagename) => {
@@ -44,11 +66,16 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
       action: () => window.open('/home/messages', '_blank'),
     }).show();
   }
+  if (window.SharedWorker) {
+    initWorkerMode();
+    return;
+  }
   if (!window.BroadcastChannel) {
     console.error('BoardcastChannel not supported');
     return;
   }
 
+  console.log('Messages: using BroadcastChannel');
   let isMaster = false;
   const selfId = nanoid();
   const channel = new BroadcastChannel('hydro-messages');
@@ -70,45 +97,19 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     isMaster = true;
     localStorage.setItem('page.master', selfId);
     const masterChannel = new BroadcastChannel('hydro-messages');
-    const url = new URL('/home/messages-conn', window.location.href.replace('http', 'ws'));
-    // TODO handle a better way for cookie
-    url.searchParams.append('sid', document.cookie);
     const sock = new ReconnectingWebsocket(url.toString());
-    const pending = {};
     sock.onopen = () => console.log('Connected');
     sock.onerror = console.error;
     sock.onclose = (...args) => console.log('Closed', ...args);
     sock.onmessage = async (message) => {
       if (process.env.NODE_ENV !== 'production') console.log('onmessage: ', message);
       const payload = JSON.parse(message.data);
-      const id = nanoid();
-      masterChannel.postMessage({ type: 'message', id, payload });
-      const success = await new Promise<boolean>((resolve) => {
-        pending[id] = resolve;
-        setTimeout(() => {
-          delete pending[id];
-          resolve(false);
-        }, 1000);
-      });
-      if (!success && window.Notification?.permission === 'granted') {
-        const notification = new window.Notification(
-          payload.udoc.uname || 'Hydro Notification',
-          {
-            icon: payload.udoc.avatarUrl || '/android-chrome-192x192.png',
-            body: payload.mdoc.content,
-          },
-        );
-        notification.onclick = () => window.open('/home/messages');
-      }
-    };
-    masterChannel.onmessage = (msg) => {
-      if (msg.data.type === 'message-push') pending[msg.data.id]?.(true);
+      masterChannel.postMessage({ type: 'message', payload });
     };
   }
 
   channel.onmessage = (msg) => {
     if (msg.data.type === 'message' && !document.hidden) {
-      channel.postMessage({ type: 'message-push', id: msg.data.id });
       onmessage(msg.data.payload);
     }
     if (msg.data.type === 'master') {

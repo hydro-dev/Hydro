@@ -146,9 +146,20 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          exclude: /@types\//,
+          exclude: [/@types\//, /components\/message\//],
           type: 'javascript/auto',
           use: [esbuildLoader()],
+        },
+        {
+          test: /\.[mc]?[jt]sx?$/,
+          include: /components\/message\//,
+          type: 'javascript/auto',
+          use: [{
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true,
+            },
+          }],
         },
         {
           test: /\.styl$/,
