@@ -371,7 +371,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             return Array.from(document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
         }
         if (listName === 'gym') {
-            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${(+i.getAttribute('data-contestId'))}`);
+            return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${i.getAttribute('data-contestId')}`);
         }
         return Array.from(document.querySelectorAll('.id a')).map((i) => {
             const detail = i.parentElement.parentElement.children[1].children[0];
