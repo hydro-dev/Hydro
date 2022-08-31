@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
+const files = fs.readdirSync(dir);
+
 const compilerOptionsBase = {
     target: 'es2020',
     module: 'commonjs',
@@ -14,6 +17,7 @@ const compilerOptionsBase = {
     // emitDecoratorMetadata: true,
     noEmit: true,
     incremental: true,
+    types: files.filter((i) => !['sharedworker', 'serviceworker'].includes(i)),
 };
 const config = {
     compilerOptions: compilerOptionsBase,
