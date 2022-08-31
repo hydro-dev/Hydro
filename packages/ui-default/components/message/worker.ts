@@ -1,4 +1,6 @@
 /* eslint-disable no-restricted-globals */
+/// <reference no-default-lib="true" />
+/// <reference lib="ES2015" />
 /// <reference types="@types/sharedworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
 
@@ -71,8 +73,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   };
 }
 
-// eslint-disable-next-line no-undef
-onconnect = function (e) {
+onconnect = function (e) { // eslint-disable-line no-undef
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {

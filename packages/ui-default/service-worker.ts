@@ -1,3 +1,5 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="ES2015" />
 /// <reference types="@types/serviceworker" />
 /* global clients */
 // eslint-disable-next-line no-restricted-globals
@@ -10,5 +12,6 @@ addEventListener('notificationclick', (event) => {
       if (client.url === '/home/messages' && 'focus' in client) return client.focus();
     }
     if (clients.openWindow) clients.openWindow('/home/messages');
+    return null;
   }));
 });
