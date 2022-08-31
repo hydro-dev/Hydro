@@ -31,7 +31,7 @@ puppeteer.use(StealthPlugin()).use(PortalPlugin({
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
         ? ['', '921', '01']
-        : /^(P|GYM)(\d+)([A-Z]*[0-9]*)$/.exec(id);
+        : /^(P|GYM)(\d+)([A-Z]+[0-9]*)$/.exec(id);
     if (type === 'GYM' && (+contestId) < 100000) {
         return [type, ((+contestId) + 100000).toString(), problemId];
     }
@@ -284,9 +284,9 @@ export default class CodeforcesProvider implements IBasicProvider {
         if (!res.text) return await this.getPdfProblem(id, meta);
         const $dom = new JSDOM(res.text.replace(/\$\$\$/g, '$'));
         const judgestatement = $dom.window.document.querySelector('html').innerHTML;
-        if (judgestatement.search('<th>Actions</th>') !== -1
-            || judgestatement.search('Statement is not available on English language') !== -1
-            || judgestatement.search('ограничение по времени на тест') !== -1) {
+        if (['<th>Actions</th>',
+            'Statement is not available on English language',
+            'ограничение по времени на тест'].find((i) => judgestatement.includes(i))) {
             return null;
         }
         const tag = Array.from($dom.window.document.querySelectorAll('.tag-box')).map((i) => i.textContent.trim());
