@@ -408,8 +408,8 @@ const homework = buildContestRule({
             row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
             for (const pid of tdoc.pids) {
                 const rid = tsddict[pid]?.rid;
-                const colScore = tsddict[pid]?.penaltyScore || '';
-                const colOriginalScore = tsddict[pid]?.score || '';
+                const colScore = tsddict[pid]?.penaltyScore === 0 ? 0 : tsddict[pid]?.penaltyScore || '';
+                const colOriginalScore = tsddict[pid]?.score === 0 ? 0 : tsddict[pid]?.score || '';
                 const colTime = tsddict[pid]?.time || '';
                 const colTimeStr = colTime ? formatSeconds(colTime, false) : '';
                 if (isExport) {
