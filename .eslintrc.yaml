@@ -73,7 +73,7 @@ rules:
     - selector: enum
       format: [PascalCase]
     - selector: [class, interface, typeAlias, enumMember]
-      format: [PascalCase, camelCase]
+      format: [PascalCase, camelCase, UPPER_CASE]
     - selector: typeParameter
       format: [camelCase, PascalCase, UPPER_CASE]
 

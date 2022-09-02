@@ -42,15 +42,12 @@ export default async function compile(
     };
 }
 
-const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
+const testlibFile = {
+    src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h')
+};
 
-export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
-    if (['default', 'strict'].includes(checkerType)) {
-        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-    }
-    if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
-    if (checkerType === 'testlib') copyIn['testlib.h'] = { src: testlibSrc };
-    const s = checker.replace('@', '.').split('.');
+const guessLanguage = (filename: string, getLang: Function) => {
+    const s = filename.replace('@', '.').split('.');
     let lang;
     let langId = s.pop();
     while (s.length) {
@@ -58,7 +55,24 @@ export async function compileChecker(getLang: Function, checkerType: string, che
         if (lang) break;
         langId = `${s.pop()}.${langId}`;
     }
+    return lang;
+};
+
+export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: any): Promise<Execute> {
+    if (['default', 'strict'].includes(checkerType)) {
+        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+    }
+    if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+    if (checkerType === 'testlib') copyIn['testlib.h'] = testlibFile;
+    const lang = guessLanguage(checker, getLang);
     if (!lang) throw new FormatError('Unknown checker language.');
     // TODO cache compiled checker
     return await compile(lang, { src: checker }, copyIn);
+}
+
+export async function compileValidator(getLang: Function, validator: string, copyIn: any): Promise<Execute> {
+    const lang = guessLanguage(validator, getLang);
+    if (!lang) throw new FormatError('Unknown validator language.');
+    // TODO cache compiled checker
+    return await compile(lang, { src: validator }, { ...copyIn, 'testlib.h': testlibFile });
 }

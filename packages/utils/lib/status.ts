@@ -1,24 +1,26 @@
-export const STATUS = {
-    STATUS_WAITING: 0,
-    STATUS_ACCEPTED: 1,
-    STATUS_WRONG_ANSWER: 2,
-    STATUS_TIME_LIMIT_EXCEEDED: 3,
-    STATUS_MEMORY_LIMIT_EXCEEDED: 4,
-    STATUS_OUTPUT_LIMIT_EXCEEDED: 5,
-    STATUS_RUNTIME_ERROR: 6,
-    STATUS_COMPILE_ERROR: 7,
-    STATUS_SYSTEM_ERROR: 8,
-    STATUS_CANCELED: 9,
-    STATUS_ETC: 10,
-    STATUS_HACKED: 11,
-    STATUS_JUDGING: 20,
-    STATUS_COMPILING: 21,
-    STATUS_FETCHED: 22,
-    STATUS_IGNORED: 30,
-    STATUS_FORMAT_ERROR: 31,
-};
+export enum STATUS {
+    STATUS_WAITING = 0,
+    STATUS_ACCEPTED = 1,
+    STATUS_WRONG_ANSWER = 2,
+    STATUS_TIME_LIMIT_EXCEEDED = 3,
+    STATUS_MEMORY_LIMIT_EXCEEDED = 4,
+    STATUS_OUTPUT_LIMIT_EXCEEDED = 5,
+    STATUS_RUNTIME_ERROR = 6,
+    STATUS_COMPILE_ERROR = 7,
+    STATUS_SYSTEM_ERROR = 8,
+    STATUS_CANCELED = 9,
+    STATUS_ETC = 10,
+    STATUS_HACKED = 11,
+    STATUS_JUDGING = 20,
+    STATUS_COMPILING = 21,
+    STATUS_FETCHED = 22,
+    STATUS_IGNORED = 30,
+    STATUS_FORMAT_ERROR = 31,
+    STATUS_HACK_SUCCESSFUL = 32,
+    STATUS_HACK_UNSUCCESSFUL = 33,
+}
 
-export const STATUS_TEXTS = {
+export const STATUS_TEXTS: Record<STATUS, string> = {
     [STATUS.STATUS_WAITING]: 'Waiting',
     [STATUS.STATUS_ACCEPTED]: 'Accepted',
     [STATUS.STATUS_WRONG_ANSWER]: 'Wrong Answer',
@@ -36,9 +38,11 @@ export const STATUS_TEXTS = {
     [STATUS.STATUS_FETCHED]: 'Fetched',
     [STATUS.STATUS_IGNORED]: 'Ignored',
     [STATUS.STATUS_FORMAT_ERROR]: 'Format Error',
+    [STATUS.STATUS_HACK_SUCCESSFUL]: 'Hack Successful',
+    [STATUS.STATUS_HACK_UNSUCCESSFUL]: 'Hack Unsuccessful',
 };
 
-export const STATUS_SHORT_TEXTS = {
+export const STATUS_SHORT_TEXTS: Partial<Record<STATUS, string>> = {
     [STATUS.STATUS_ACCEPTED]: 'AC',
     [STATUS.STATUS_WRONG_ANSWER]: 'WA',
     [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'TLE',
@@ -53,24 +57,26 @@ export const STATUS_SHORT_TEXTS = {
     [STATUS.STATUS_FORMAT_ERROR]: 'FE',
 };
 
-export const STATUS_CODES = {
-    0: 'pending',
-    1: 'pass',
-    2: 'fail',
-    3: 'fail',
-    4: 'fail',
-    5: 'fail',
-    6: 'fail',
-    7: 'fail',
-    8: 'fail',
-    9: 'ignored',
-    10: 'fail',
-    11: 'fail',
-    20: 'progress',
-    21: 'progress',
-    22: 'progress',
-    30: 'ignored',
-    31: 'ignored',
+export const STATUS_CODES: Record<STATUS, string> = {
+    [STATUS.STATUS_WAITING]: 'pending',
+    [STATUS.STATUS_ACCEPTED]: 'pass',
+    [STATUS.STATUS_WRONG_ANSWER]: 'fail',
+    [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'fail',
+    [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'fail',
+    [STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED]: 'fail',
+    [STATUS.STATUS_RUNTIME_ERROR]: 'fail',
+    [STATUS.STATUS_COMPILE_ERROR]: 'fail',
+    [STATUS.STATUS_SYSTEM_ERROR]: 'fail',
+    [STATUS.STATUS_CANCELED]: 'ignored',
+    [STATUS.STATUS_ETC]: 'fail',
+    [STATUS.STATUS_HACKED]: 'fail',
+    [STATUS.STATUS_JUDGING]: 'progress',
+    [STATUS.STATUS_COMPILING]: 'progress',
+    [STATUS.STATUS_FETCHED]: 'progress',
+    [STATUS.STATUS_IGNORED]: 'ignored',
+    [STATUS.STATUS_FORMAT_ERROR]: 'ignored',
+    [STATUS.STATUS_HACK_SUCCESSFUL]: 'pass',
+    [STATUS.STATUS_HACK_UNSUCCESSFUL]: 'fail',
 };
 
 export function getScoreColor(score: number | string): string {
