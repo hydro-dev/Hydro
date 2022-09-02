@@ -73,8 +73,12 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     }).show();
   }
   if (window.SharedWorker) {
-    initWorkerMode();
-    return;
+    try {
+      initWorkerMode();
+      return;
+    } catch (e) {
+      console.error('SharedWorker init fail: ', e.message);
+    }
   }
   if (!window.BroadcastChannel) {
     console.error('BoardcastChannel not supported');
