@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-export default function reducer(state = {}, action) {
+export default function reducer(state = {}, action = {}) {
   switch (action.type) {
     case 'DIALOGUES_LOAD_DIALOGUES_FULFILLED': {
       const { messages } = action.payload;

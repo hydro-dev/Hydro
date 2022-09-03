@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
 
 function isBailed(value: any) {
@@ -45,12 +46,12 @@ export function prependListener<K extends keyof EventMap>(name: K, listener: Eve
 
 export function once<K extends keyof EventMap>(name: K, listener: EventMap[K]) {
   let dispose;
-  function _listener(...args: any[]) {
+  function l(...args: any[]) {
     dispose();
     return listener.apply(this, args);
   }
-  _listener.toString = () => `// Once \n${listener.toString()}`;
-  dispose = addListener(name, _listener);
+  l.toString = () => `// Once \n${listener.toString()}`;
+  dispose = addListener(name, l);
   return dispose;
 }
 

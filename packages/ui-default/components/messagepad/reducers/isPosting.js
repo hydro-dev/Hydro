@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Notification from 'vj/components/notification';
 
-export default function reducer(state = {}, action) {
+export default function reducer(state = {}, action: any = {}) {
   switch (action.type) {
     case 'DIALOGUES_LOAD_DIALOGUES_FULFILLED': {
       const dialogues = action.payload.messages;

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import en_GB from 'monaco-editor-nls/locale/en-gb.json';
 
-function _format(message, args) {
+function format(message, args) {
   let result;
   if (args.length === 0) {
     result = message;
@@ -33,7 +33,7 @@ function find(path, message) {
 }
 
 export function localize(path, message, ...args) {
-  return _format(find(path.key || path, message), args);
+  return format(find(path.key || path, message), args);
 }
 
 export function setLocaleData(data) {

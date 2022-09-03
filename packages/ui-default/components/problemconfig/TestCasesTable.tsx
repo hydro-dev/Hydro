@@ -59,7 +59,7 @@ export function TestCaseEntry({ index, subindex }) {
     output: useRef(),
   };
   for (const type of ['input', 'output']) {
-    useEffect(() => {
+    useEffect(() => { // eslint-disable-line
       refs[type].current?.setSelectedItems(testcase[type] ? [testcase[type]] : []);
     }, [testcase[type]]);
   }

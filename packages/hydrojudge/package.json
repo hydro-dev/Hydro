@@ -8,7 +8,7 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "axios": "^0.27.2",
-        "cac": "^6.7.12",
+        "cac": "^6.7.14",
         "fs-extra": "^10.1.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",

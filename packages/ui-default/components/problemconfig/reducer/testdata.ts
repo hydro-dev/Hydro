@@ -1,4 +1,4 @@
-export default function reducer(state = [], action) {
+export default function reducer(state = [], action: any = {}) {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
       return state.concat(action.payload.testdata);

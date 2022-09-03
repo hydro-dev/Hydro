@@ -21,7 +21,7 @@ export default function reducer(state = {
   waitSec: 0,
   isWaiting: false,
   activePage: 'problem',
-}, action) {
+}, action: any = {}) {
   switch (action.type) {
     case 'SCRATCHPAD_UI_CHANGE_SIZE': {
       const { uiElement, size } = action.payload;

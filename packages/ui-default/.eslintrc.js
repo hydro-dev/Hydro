@@ -10,7 +10,11 @@ module.exports = {
     jquery: true,
     commonjs: true,
   },
-  extends: ['airbnb'],
+  extends: [
+    'airbnb',
+    'airbnb/hooks',
+    'airbnb-typescript',
+  ],
   parserOptions: {
     sourceType: 'module',
     ecmaVersion: 2020,
@@ -49,15 +53,19 @@ module.exports = {
     JQuery: true,
   },
   rules: {
+    'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/dot-notation': 'off',
     '@typescript-eslint/no-implied-eval': 'off',
     '@typescript-eslint/no-throw-literal': 'off',
     '@typescript-eslint/return-await': 'off',
     '@typescript-eslint/no-shadow': 'warn',
     'no-shadow': 'off',
+    '@typescript-eslint/quotes': ['warn', 'single', { avoidEscape: true }],
 
     // FIXME A bug with eslint-parser
     'template-curly-spacing': 'off',
+    // FIXME A bug with eslint-plugin-react
+    'react/no-unknown-property': ['error', { ignore: ['key'] }],
 
     // Note: must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
@@ -86,7 +94,7 @@ module.exports = {
       { SwitchCase: 1 },
     ],
     'max-len': ['error', 150],
-    quotes: 'warn',
+    quotes: ['warn', 'single', { avoidEscape: true }],
     'class-methods-use-this': 'off',
     'consistent-return': 'warn',
     'func-names': 'off',

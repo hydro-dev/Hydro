@@ -109,9 +109,12 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const inputRef = useRef<HTMLInputElement>();
   const listRef = useRef<HTMLUListElement>();
 
-  if (props.cacheKey) superCache[props.cacheKey] ||= { query: {}, value: {} };
-  const queryCache = props.cacheKey ? superCache[props.cacheKey].query : useRef({}).current;
-  const valueCache = props.cacheKey ? superCache[props.cacheKey].value : useRef({}).current;
+  let [queryCache, valueCache] = [useRef({}).current, useRef({}).current];
+  if (props.cacheKey) {
+    superCache[props.cacheKey] ||= { query: {}, value: {} };
+    queryCache = superCache[props.cacheKey].query;
+    valueCache = superCache[props.cacheKey].value;
+  }
 
   const queryList = async (query) => {
     if (!query && !allowEmptyQuery) {

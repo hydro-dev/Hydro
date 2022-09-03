@@ -21,7 +21,7 @@ function scrollToViewport() {
   }
 }
 
-export default function reducer(state = null, action) {
+export default function reducer(state = null, action: any = {}) {
   switch (action.type) {
     case 'DIALOGUES_SWITCH_TO': {
       scrollToViewport();

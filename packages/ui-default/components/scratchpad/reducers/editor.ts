@@ -4,7 +4,7 @@ if (UiContext.tdoc?._id && UiContext.tdoc.rule !== 'homework') cacheKey += `@${U
 export default function reducer(state = {
   lang: localStorage.getItem(`${cacheKey}#lang`) || UiContext.codeLang,
   code: localStorage.getItem(cacheKey) || UiContext.codeTemplate,
-}, action) {
+}, action: any = {}) {
   if (action.type === 'SCRATCHPAD_EDITOR_UPDATE_CODE') {
     localStorage.setItem(cacheKey, action.payload);
     return {

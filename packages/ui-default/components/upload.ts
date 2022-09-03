@@ -14,7 +14,7 @@ interface UploadOptions {
   pjax?: boolean;
   singleFileUploadCallback?: (file: File) => any;
 }
-export default async function uploadFiles(endpoint = '', files: File[] | FileList, options: UploadOptions = {}) {
+export default async function uploadFiles(endpoint = '', files: File[] | FileList = [], options: UploadOptions = {}) {
   const dialog = new Dialog({
     $body: `
       <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>

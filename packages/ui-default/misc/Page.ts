@@ -1,12 +1,12 @@
-type callback = (pagename: string, loadPage: (name: string) => Promise<any>) => any;
+type Callback = (pagename: string, loadPage: (name: string) => Promise<any>) => any;
 
 export class Page {
   moduleName?: string;
   autoload = false;
-  afterLoading?: callback;
-  beforeLoading?: callback;
-  constructor(pagename: string | string[], afterLoading?: callback, beforeLoading?: callback);
-  constructor(pagename: string | string[], moduleName: string, afterLoading?: callback, beforeLoading?: callback);
+  afterLoading?: Callback;
+  beforeLoading?: Callback;
+  constructor(pagename: string | string[], afterLoading?: Callback, beforeLoading?: Callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading?: Callback, beforeLoading?: Callback);
   constructor(pagename: string | string[], ...args: any[]);
   constructor(public name: string | string[], ...args: any[]) {
     if (typeof args[0] === 'string') {
@@ -16,16 +16,13 @@ export class Page {
     }
     if (process.env.NODE_ENV !== 'production') {
       if (typeof name !== 'string' && !(name instanceof Array)) {
-        // eslint-disable-next-line quotes
-        throw new Error(`'name' should be a string or string[]`);
+        throw new Error("'name' should be a string or string[]");
       }
       if (typeof this.afterLoading !== 'function' && this.afterLoading != null) {
-        // eslint-disable-next-line quotes
-        throw new Error(`'afterLoading' should be a function`);
+        throw new Error("'afterLoading' should be a function");
       }
       if (typeof this.beforeLoading !== 'function' && this.beforeLoading != null) {
-        // eslint-disable-next-line quotes
-        throw new Error(`'beforeLoading' should be a function`);
+        throw new Error("'beforeLoading' should be a function");
       }
     }
   }
@@ -40,8 +37,8 @@ export class Page {
 export class NamedPage extends Page { }
 
 export class AutoloadPage extends Page {
-  constructor(pagename: string | string[], afterLoading?: callback, beforeLoading?: callback);
-  constructor(pagename: string | string[], moduleName: string, afterLoading?: callback, beforeLoading?: callback);
+  constructor(pagename: string | string[], afterLoading?: Callback, beforeLoading?: Callback);
+  constructor(pagename: string | string[], moduleName: string, afterLoading?: Callback, beforeLoading?: Callback);
   constructor(pagename: string | string[], ...args: any[]) {
     super(pagename, ...args);
     this.autoload = true;

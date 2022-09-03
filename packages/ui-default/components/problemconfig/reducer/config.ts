@@ -5,7 +5,7 @@ import { cloneDeep } from 'lodash';
 
 type State = ProblemConfigFile & { __loaded: boolean };
 
-export default function reducer(state = { type: 'default', __loaded: false } as State, action): State {
+export default function reducer(state = { type: 'default', __loaded: false } as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
       return { ...state, ...yaml.load(action.payload.config) as object, __loaded: true };

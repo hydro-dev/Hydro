@@ -93,29 +93,25 @@ pjax.request = async (opt) => {
     data.fragments.forEach((fragment) => {
       if (process.env.NODE_ENV !== 'production') {
         if (fragment.html === undefined) {
-          // eslint-disable-next-line quotes
-          throw new Error(`Fragement should contain 'html'`);
+          throw new Error("Fragement should contain 'html'");
         }
       }
       const $el = $(fragment.html.trim());
       if (process.env.NODE_ENV !== 'production') {
         if ($el.length === 0) {
-          // eslint-disable-next-line quotes
-          throw new Error(`Unable to build elements from fragment 'html'`);
+          throw new Error("Unable to build elements from fragment 'html'");
         }
       }
       const fragmentId = $el.attr('data-fragment-id');
       if (process.env.NODE_ENV !== 'production') {
         if (!fragmentId) {
-          // eslint-disable-next-line quotes
-          throw new Error(`Unable to extract fragment id from fragment 'html'`);
+          throw new Error("Unable to extract fragment id from fragment 'html'");
         }
       }
       const $target = $(`[data-fragment-id="${fragmentId}"]`);
       if (process.env.NODE_ENV !== 'production') {
         if ($target.length === 0) {
-          // eslint-disable-next-line quotes
-          throw new Error(`Unable to get target fragment from fragment id`);
+          throw new Error('Unable to get target fragment from fragment id');
         }
       }
       $target.trigger('vjContentRemove');
