@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { sleep } from '@hydrooj/utils/lib/utils';
+import { writeFileSync } from 'fs-extra';
 import * as Judge from 'hydrooj/src/handler/judge';
 import { Logger } from 'hydrooj/src/logger';
 import { STATUS } from 'hydrooj/src/model/builtin';
@@ -55,6 +56,8 @@ class Service {
 
     async sync(domainId: string, resync = false, list: string) {
         let page = 1;
+        const res = await this.api.getProblem('P1721D', {});
+        writeFileSync('a.md', res.content);
         let pids = await this.api.listProblem(page, resync, list);
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);

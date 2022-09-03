@@ -1,10 +1,16 @@
-import child from 'child_process';
+import child, { execSync } from 'child_process';
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
 
 const argv = cac().parse();
+let isGlobal = null;
+try {
+    isGlobal = __dirname.startsWith(execSync('yarn global dir').toString().trim());
+} catch (e) {
+    // yarn 2 does not support global dir
+}
 
 const exec = (...args) => {
     console.log('Executing: ', args[0], args[1].join(' '));
@@ -114,6 +120,15 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
+    });
+    cli.command('install [package]').action((name) => {
+        if (!isGlobal) {
+            console.warn('This is not a global installation, unable to install.');
+            return;
+        }
+        // TODO support install from tarball
+        child.execSync(`yarn global install '${name}'`, { stdio: 'inherit' });
+        child.execSync(`hydrooj addon add '${name}'`);
     });
     cli.help();
     cli.parse();
