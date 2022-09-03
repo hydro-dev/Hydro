@@ -44,7 +44,7 @@ const endpoint = url.toString().replace('http', 'ws');
 
 const initWorkerMode = () => {
   console.log('Messages: using SharedWorker');
-  const worker = new SharedWorker(new URL('./worker', import.meta.url), { name: 'Hydro Messages Worker' });
+  const worker = new SharedWorker(new URL('./worker?inline', import.meta.url), { name: 'HydroMessagesWorker' });
   worker.port.start();
   window.addEventListener('beforeunload', () => {
     worker.port.postMessage({ type: 'unload' });
@@ -107,7 +107,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     isMaster = true;
     localStorage.setItem('page.master', selfId);
     const masterChannel = new BroadcastChannel('hydro-messages');
-    const sock = new ReconnectingWebsocket(url.toString());
+    const sock = new ReconnectingWebsocket(endpoint);
     sock.onopen = () => console.log('Connected');
     sock.onerror = console.error;
     sock.onclose = (...args) => console.log('Closed', ...args);

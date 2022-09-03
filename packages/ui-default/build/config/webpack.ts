@@ -114,6 +114,10 @@ export default function (env: { production?: boolean, measure?: boolean } = {}) 
           ],
         },
         {
+          resourceQuery: /inline/,
+          type: 'asset/inline',
+        },
+        {
           test: /\.(ttf|eot|woff|woff2|png|jpg|jpeg|gif)$/,
           type: 'asset/resource',
           generator: {
