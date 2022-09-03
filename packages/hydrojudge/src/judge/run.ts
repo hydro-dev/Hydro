@@ -53,16 +53,15 @@ export const judge = async (ctx: Context) => {
     if (filename) copyIn[`${filename}.in`] = { content: ctx.input };
     const copyOut = filename ? [`${filename}.out?`] : [];
     const stdout = path.resolve(ctx.tmpdir, '0.out');
-    const stderr = path.resolve(ctx.tmpdir, '0.err');
     const res = await run(
         ctx.execute.execute,
         {
             stdin: filename ? null : { content: ctx.input },
             stdout: filename ? null : stdout,
-            stderr,
             copyIn,
             copyOut,
-            time: parseTimeMS(ctx.config.time || '1s') * ctx.execute.time,
+            // Allow 2x limits for better debugging
+            time: parseTimeMS(ctx.config.time || '1s') * ctx.execute.time * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
         },
     );
@@ -70,19 +69,17 @@ export const judge = async (ctx: Context) => {
     let { status } = res;
     if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
     const message: string[] = [];
-    if (status === STATUS.STATUS_ACCEPTED) {
-        if (time > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
-            status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
-            status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-        }
+    if (time > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
+        status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
+    } else if (memory > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
+        status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
     } else if (code) {
         status = STATUS.STATUS_RUNTIME_ERROR;
         if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
     }
     message.push(fs.readFileSync(stdout).toString());
-    message.push(fs.readFileSync(stderr).toString());
+    message.push(res.stderr);
     ctx.next({
         status,
         case: {
