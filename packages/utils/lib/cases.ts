@@ -8,7 +8,9 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         user_extra_files: [],
     };
     if (cfg.type === 'objective') {
-        if (cfg.checker || cfg.interactor) throw new Error('You cannot use checker or interactor for objective questions');
+        if (cfg.checker || cfg.interactor || cfg.validator) {
+            throw new Error('You cannot use checker, interactor or validator for objective questions');
+        }
     } else {
         if (cfg.checker) {
             if (!cfg.checker.includes('.')) {
@@ -17,6 +19,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
             if (!config.checker) config.checker = checkFile(cfg.checker, 'Cannot find checker {0}.');
         }
         if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
+        if (cfg.validator) config.validator = checkFile(cfg.validator, 'Cannot find validator {0}.');
         ['judge', 'user'].forEach((n) => {
             const conf = cfg[`${n}_extra_files`];
             if (!conf) return;

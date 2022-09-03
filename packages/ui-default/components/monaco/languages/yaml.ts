@@ -49,6 +49,7 @@ const problemConfigSchema = {
     checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj'] },
     checker: { type: 'string', pattern: '\\.' },
     interactor: { type: 'string', pattern: '\\.' },
+    validator: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },
     cases: { $ref: '#/def/cases' },

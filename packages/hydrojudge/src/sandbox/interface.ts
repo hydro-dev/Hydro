@@ -26,6 +26,7 @@ export interface Collector {
 }
 
 export type CopyInFile = LocalFile | MemoryFile | PreparedFile;
+export type CopyIn = Record<string, CopyInFile>;
 export type CmdFile = LocalFile | MemoryFile | PreparedFile | Collector | null;
 
 /**

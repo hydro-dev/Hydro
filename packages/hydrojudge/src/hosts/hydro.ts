@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import axios from 'axios';
 import { ObjectID } from 'bson';
 import fs from 'fs-extra';
 import PQueue from 'p-queue';
+import superagent from 'superagent';
 import WebSocket from 'ws';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
@@ -20,13 +20,10 @@ function removeNixPath(text: string) {
 }
 
 export default class Hydro {
-    config: any;
-    axios: any;
     ws: WebSocket;
     language: Record<string, LangConfig>;
 
-    constructor(config) {
-        this.config = config;
+    constructor(public config) {
         this.config.detail = this.config.detail ?? true;
         this.config.cookie = this.config.cookie || '';
         this.config.last_update_at = this.config.last_update_at || 0;
@@ -35,10 +32,20 @@ export default class Hydro {
         this.getLang = this.getLang.bind(this);
     }
 
+    get(url) {
+        return superagent.get(this.config.server_url + url).set('Cookie', this.config.cookie);
+    }
+
+    post(url, data) {
+        return superagent.post(this.config.server_url + url).send(data)
+            .set('Cookie', this.config.cookie)
+            .set('Accept', 'application/json');
+    }
+
     async init() {
         await this.setCookie(this.config.cookie || '');
         await this.ensureLogin();
-        setInterval(() => { this.axios.get(''); }, 30000000); // Cookie refresh only
+        setInterval(() => { this.get(''); }, 30000000); // Cookie refresh only
     }
 
     async cacheOpen(source: string, files: any[], next?) {
@@ -74,18 +81,15 @@ export default class Hydro {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
             if (next) next({ message: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
-            const res = await this.axios.post(`/d/${domainId}/judge/files`, {
+            const res = await this.post(`/d/${domainId}/judge/files`, {
                 pid: +pid,
                 files: filenames,
             });
             // eslint-disable-next-line no-inner-declarations
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                const f = await this.axios.get(res.data.links[name], { responseType: 'stream' })
-                    .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
-                if (f instanceof Error) throw f;
                 const w = fs.createWriteStream(path.join(filePath, name));
-                f.data.pipe(w);
+                this.get(res.body.links[name]).pipe(w);
                 await new Promise((resolve, reject) => {
                     w.on('finish', resolve);
                     w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
@@ -93,7 +97,7 @@ export default class Hydro {
             }
             const tasks = [];
             const queue = new PQueue({ concurrency: 10 });
-            for (const name in res.data.links) {
+            for (const name in res.body.links) {
                 tasks.push(queue.add(() => download.call(this, name)));
             }
             queue.start();
@@ -106,13 +110,10 @@ export default class Hydro {
     }
 
     async fetchFile(name: string) {
-        const res = await this.axios.post('judge/code', { id: name });
-        const f = await this.axios.get(res.data.url, { responseType: 'stream' })
-            .catch((e) => new Error(`DownloadFail(${name}): ${e.message}`));
-        if (f instanceof Error) throw f;
+        const res = await this.post('judge/code', { id: name });
         const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
         const w = fs.createWriteStream(target);
-        f.data.pipe(w);
+        this.get(res.body.url).pipe(w);
         await new Promise((resolve, reject) => {
             w.on('finish', resolve);
             w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
@@ -127,7 +128,7 @@ export default class Hydro {
         return null;
     }
 
-    send(rid: string, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
+    send(rid: string | ObjectID, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
         data.rid = new ObjectID(rid);
         data.key = key;
         if (data.case) data.case.message ||= '';
@@ -193,20 +194,11 @@ export default class Hydro {
 
     async setCookie(cookie: string) {
         this.config.cookie = cookie;
-        this.axios = axios.create({
-            baseURL: this.config.server_url,
-            timeout: 30000,
-            headers: {
-                accept: 'application/json',
-                'Content-Type': 'application/json',
-                cookie: this.config.cookie,
-            },
-        });
     }
 
     async login() {
         log.info('[%s] Updating session', this.config.host);
-        const res = await this.axios.post('login', {
+        const res = await this.post('login', {
             uname: this.config.uname, password: this.config.password, rememberme: 'on',
         });
         await this.setCookie(res.headers['set-cookie'].join(';'));
@@ -214,9 +206,9 @@ export default class Hydro {
 
     async ensureLogin() {
         try {
-            const res = await this.axios.get('judge/files');
+            const res = await this.get('judge/files');
             // Redirected to /login
-            if (res.data.url) await this.login();
+            if (res.body.url) await this.login();
         } catch (e) {
             await this.login();
         }
