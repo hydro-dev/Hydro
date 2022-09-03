@@ -35,8 +35,9 @@ jobs:
           yarn.lock
           .cache
           **/tsconfig.tsbuildinfo
-        key: cache-${{ github.ref }}
+        key: cache-${{ github.ref }}-${{ github.sha }}
         restore-keys: |
+          cache-${{ github.ref }}-
           cache-
     - name: Config And Install
       run: |
