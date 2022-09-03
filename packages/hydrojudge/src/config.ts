@@ -20,11 +20,13 @@ const JudgeSettings = Schema.object({
     processLimit: Schema.number().default(32),
     parallelism: Schema.number().default(2),
     singleTaskParallelism: Schema.number().default(2),
-    rerun: Schema.number().default(0),
+    rerun: Schema.number().description('Re-Run testcase if time-limit-exceeded (max per submission)').default(0),
     rate: Schema.number().default(1),
     env: Schema.string().default('PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nHOME=/w'),
     host: Schema.any(),
-    secret: Schema.string().default(String.random(32)),
+    secret: Schema.string().description('Judge Token Secret').default(String.random(32)),
+    disable: Schema.boolean().description('Disable builtin judge').default(false),
+    detail: Schema.boolean().description('Show diff detail').default(true),
 });
 
 const config = global.Hydro

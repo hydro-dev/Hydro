@@ -3,7 +3,9 @@ import fs from 'fs-extra';
 import { noop } from 'lodash';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import type { JudgeResultBody } from 'hydrooj';
+import type {
+    FileInfo, JudgeRequest, JudgeResultBody, ProblemConfigFile,
+} from 'hydrooj';
 import { Logger } from 'hydrooj/src/logger';
 import readCases from './cases';
 import { getConfig } from './config';
@@ -34,14 +36,14 @@ export class JudgeTask {
     tmpdir: string;
     input?: string;
     clean: (() => Promise<any>)[];
-    data: any[];
+    data: FileInfo[];
     folder: string;
-    config: any;
+    config: ProblemConfigFile & { problemOwner: number };
     next: (data: Partial<JudgeResultBody>) => void;
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
 
-    constructor(public session: Session, public request) {
+    constructor(public session: Session, public request: JudgeRequest) {
         this.stat = {};
         this.stat.receive = new Date();
         logger.debug('%o', request);
@@ -75,7 +77,9 @@ export class JudgeTask {
             fs.ensureDirSync(this.tmpdir);
             tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
-            await this.doSubmission();
+            this.stat.cache_start = new Date();
+            if (tid === '000000000000000000000001') await this.doHack();
+            else await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compilerText: compilerText(e.stdout, e.stderr) });
@@ -105,7 +109,6 @@ export class JudgeTask {
     }
 
     async doSubmission() {
-        this.stat.cache_start = new Date();
         this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
         if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
             const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
@@ -128,5 +131,30 @@ export class JudgeTask {
         const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
+    }
+
+    async doHack() {
+        this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
+        if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
+            const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
+            if (!id) throw new SystemError('Submission File Not Found');
+            const target = await this.session.fetchFile(id);
+            this.code = { src: target };
+            this.clean.push(() => fs.remove(target));
+        }
+        this.stat.read_cases = new Date();
+        this.config = await readCases(
+            this.folder,
+            {
+                detail: this.session.config.detail,
+                isSelfSubmission: this.config.problemOwner === this.request.uid,
+                ...this.config,
+            },
+            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
+        );
+        this.stat.judge = new Date();
+        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
+        if (type !== 'default') throw new FormatError('Cannot hack: only type=default allowed');
+        await judge.hack.judge(this);
     }
 }

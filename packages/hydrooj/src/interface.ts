@@ -167,6 +167,7 @@ export interface ProblemConfigFile {
     cases?: TestCaseConfig[];
     subtasks?: SubtaskConfig[];
     langs?: string[];
+    validator?: string;
 }
 
 export interface ProblemConfig {
@@ -296,6 +297,15 @@ export interface RecordDoc {
     input?: string;
     /** 0 if pretest&script */
     contest?: ObjectID;
+}
+
+export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
+    priority: number;
+    type: 'judge';
+    rid: ObjectID;
+    config: ProblemConfigFile & { problemOwner: number };
+    data: FileInfo[];
+    source: string;
 }
 
 export interface ScoreboardNode {

@@ -1,30 +1,28 @@
-import axios, { AxiosInstance } from 'axios';
+import superagent from 'superagent';
 import { SandboxRequest, SandboxResult, SandboxVersion } from './interface';
 
 export class SandboxClient {
-    private client: AxiosInstance;
-
-    constructor(baseURL: string) {
-        this.client = axios.create({ baseURL });
+    constructor(public baseURL: string) {
+        if (baseURL.endsWith('/')) baseURL = baseURL.substring(0, baseURL.length - 1);
     }
 
     public run(req: SandboxRequest): Promise<SandboxResult[]> {
-        return this.client.post('/run', req).then((res) => res.data);
+        return superagent.post(`${this.baseURL}/run`).send(req).then((res) => res.body);
     }
 
     public getFile(fileId: string): Promise<Buffer> {
-        return this.client.get(`/file/${fileId}`).then((res) => res.data);
+        return superagent.get(`${this.baseURL}/file/${fileId}`).then((res) => res.body);
     }
 
-    public deleteFile(fileId: string): Promise<never> {
-        return this.client.delete(`/file/${fileId}`);
+    public deleteFile(fileId: string): Promise<void> {
+        return superagent.delete(`${this.baseURL}/file/${fileId}`).then((res) => res.body);
     }
 
     public listFiles(): Promise<Record<string, string>> {
-        return this.client.get('/file').then((res) => res.data);
+        return superagent.get(`${this.baseURL}/file`).then((res) => res.body);
     }
 
     public version(): Promise<SandboxVersion> {
-        return this.client.get('/version').then((res) => res.data);
+        return superagent.get(`${this.baseURL}/version`).then((res) => res.body);
     }
 }

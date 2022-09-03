@@ -8,7 +8,7 @@ import { FormatError, SystemError } from './error';
 import { Logger } from './log';
 import { SandboxClient } from './sandbox/client';
 import {
-    Cmd, CopyInFile, SandboxResult, SandboxStatus,
+    Cmd, CopyIn, CopyInFile, SandboxResult, SandboxStatus,
 } from './sandbox/interface';
 import { cmd, parseMemoryMB } from './utils';
 
@@ -36,7 +36,7 @@ interface Parameter {
     execute?: string;
     memory?: number;
     processLimit?: number;
-    copyIn?: Record<string, CopyInFile>;
+    copyIn?: CopyIn;
     copyOut?: string[];
     copyOutCached?: string[];
     cacheStdoutAndStderr?: boolean;
@@ -162,7 +162,8 @@ export async function runPiped(execute0: Parameter, execute1: Parameter): Promis
         res = await new SandboxClient(getConfig('sandbox_host')).run(body);
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res));
     } catch (e) {
-        if (e instanceof FormatError) throw e;
+        if (e instanceof FormatError || e instanceof SystemError) throw e;
+        console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
     return await Promise.all(res.map((r) => adaptResult(r, {}))) as [SandboxAdaptedResult, SandboxAdaptedResult];
@@ -188,7 +189,8 @@ export async function run(execute: string, params?: Parameter): Promise<SandboxA
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res));
         [result] = res;
     } catch (e) {
-        if (e instanceof FormatError) throw e;
+        if (e instanceof FormatError || e instanceof SystemError) throw e;
+        console.error(e);
         // FIXME request body larger than maxBodyLength limit
         throw new SystemError('Sandbox Error', e.message);
     }

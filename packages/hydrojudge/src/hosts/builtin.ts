@@ -6,9 +6,9 @@ import type { JudgeResultBody } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
 import { Logger } from 'hydrooj/src/logger';
 import * as setting from 'hydrooj/src/model/setting';
+import storage from 'hydrooj/src/model/storage';
 import * as system from 'hydrooj/src/model/system';
 import task from 'hydrooj/src/model/task';
-import storage from 'hydrooj/src/service/storage';
 import { processTestdata } from '../cases';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
@@ -26,7 +26,7 @@ const session = {
     },
     getNext(t: Context) {
         return (data: Partial<JudgeResultBody>) => {
-            logger.debug('Next: %d %o', data);
+            logger.debug('Next: %o', data);
             data.rid = t.rid as any;
             if (data.case) data.case.message ||= '';
             next(data);
