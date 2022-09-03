@@ -43,7 +43,7 @@ export default async function compile(
 }
 
 const testlibFile = {
-    src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h')
+    src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
 };
 
 const guessLanguage = (filename: string, getLang: Function) => {
@@ -68,6 +68,13 @@ export async function compileChecker(getLang: Function, checkerType: string, che
     if (!lang) throw new FormatError('Unknown checker language.');
     // TODO cache compiled checker
     return await compile(lang, { src: checker }, copyIn);
+}
+
+export async function compileInteractor(getLang: Function, interactor: string, copyIn: any): Promise<Execute> {
+    const lang = guessLanguage(interactor, getLang);
+    if (!lang) throw new FormatError('Unknown interactor language.');
+    // TODO cache compiled checker
+    return await compile(lang, { src: interactor }, { ...copyIn, 'testlib.h': testlibFile });
 }
 
 export async function compileValidator(getLang: Function, validator: string, copyIn: any): Promise<Execute> {
