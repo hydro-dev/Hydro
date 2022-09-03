@@ -1,3 +1,4 @@
+import { debounce, omit } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, PermissionError,
@@ -275,7 +276,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
-        if (this.pretest) this.send({ rdoc });
+        if (this.pretest) this.send({ rdoc: omit(rdoc, ['code', 'input']) });
         else {
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
@@ -290,6 +291,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
+    debounceSend: any;
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
@@ -320,9 +322,17 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
+        this.debounceSend = debounce(this.send, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
+    }
+
+    async sendUpdate(rdoc: RecordDoc) {
+        this.send({
+            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
+            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
+        });
     }
 
     // eslint-disable-next-line
@@ -334,13 +344,10 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         }
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
-        this.send({
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
-            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
-        });
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
-            this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 10000);
-        }
+            this.sendUpdate(rdoc);
+            this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 30000);
+        } else this.debounceSend(rdoc);
     }
 }
 
