@@ -106,6 +106,5 @@ export async function load() {
     await model(pending, fail);
     require('../script/index');
     await script(pending, fail, []);
-    await bus.parallel('app/started');
     await cli();
 }

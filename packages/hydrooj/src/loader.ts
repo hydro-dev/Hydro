@@ -74,6 +74,7 @@ export async function load() {
 }
 
 export async function loadCli() {
+    process.env.HYDRO_CLI = 'true';
     await require('./entry/cli').load();
     setTimeout(() => process.exit(0), 300);
 }
