@@ -48,6 +48,7 @@ class DataReportHandler extends Handler {
                 discussionCount: payload.discussionCount,
                 recordCount: payload.recordCount,
                 sandbox: payload.sandbox,
+                dbVersion: payload.dbVersion,
             },
         }, { upsert: true });
         bus.emit('center/report', this, installId, old, payload);
