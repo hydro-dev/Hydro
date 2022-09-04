@@ -46,13 +46,14 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                         memory: 0,
                         message: '',
                     } : await runner(ctx, ctxSubtask, runner);
-                if (!res) return;
-                ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, res.score);
-                ctxSubtask.status = Math.max(ctxSubtask.status, res.status);
-                if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
-                ctx.total_time += res.time;
-                ctx.total_memory = Math.max(ctx.total_memory, res.memory);
-                ctx.next({ case: res, addProgress: 100 / ctx.config.count });
+                if (res?.status !== STATUS.STATUS_CANCELED) {
+                    ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, res.score);
+                    ctxSubtask.status = Math.max(ctxSubtask.status, res.status);
+                    if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
+                    ctx.total_time += res.time;
+                    ctx.total_memory = Math.max(ctx.total_memory, res.memory);
+                }
+                ctx.next({ ...res ? { case: res } : {}, addProgress: 100 / ctx.config.count });
             }));
         }
         try {
