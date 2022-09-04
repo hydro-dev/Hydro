@@ -63,8 +63,6 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         const url = buildUrl(JSON.parse(dbConfig));
         const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
         exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
-        const env = `${os.homedir()}/.hydro/env`;
-        if (fs.existsSync(env)) fs.copySync(env, `${dir}/env`);
         const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
         exec('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
         if (!argv.options.dbOnly) {
@@ -84,11 +82,8 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         exec('unzip', [filename, '-d', dir], { stdio: 'inherit' });
         exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/hydro`, '--drop'], { stdio: 'inherit' });
         if (fs.existsSync(`${dir}/file`)) {
-            exec('rm', ['-rf', '/data/file/*'], { stdio: 'inherit' });
+            exec('rm', ['-rf', '/data/file/hydro'], { stdio: 'inherit' });
             exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });
-        }
-        if (fs.existsSync(`${dir}/env`)) {
-            fs.copySync(`${dir}/env`, `${os.homedir()}/.hydro/env`, { overwrite: true });
         }
         fs.removeSync(dir);
         console.log('Successfully restored.');
