@@ -186,9 +186,13 @@ class SystemSettingHandler extends SystemHandler {
 class SystemConfigHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_config.html';
+        let value = configSource;
+        try {
+            value = yaml.dump(Schema.intersect(SystemSettings)(yaml.load(configSource)));
+        } catch (e) { }
         this.response.body = {
             schema: Schema.intersect(SystemSettings).toJSON(),
-            value: configSource,
+            value,
         };
     }
 
