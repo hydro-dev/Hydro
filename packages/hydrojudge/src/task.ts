@@ -4,18 +4,18 @@ import { noop } from 'lodash';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
-    FileInfo, JudgeRequest, JudgeResultBody, ProblemConfigFile,
+    FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody,
 } from 'hydrooj';
 import { Logger } from 'hydrooj/src/logger';
 import readCases from './cases';
 import { getConfig } from './config';
-import { CompileError, FormatError, SystemError } from './error';
+import { CompileError, FormatError } from './error';
+import { NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
 import { CopyInFile } from './sandbox';
 import * as tmpfs from './tmpfs';
 import { compilerText, Lock, md5 } from './utils';
 
-type NextFunction = (data: Partial<JudgeResultBody>) => void;
 interface Session {
     getLang: (name: string) => LangConfig;
     getNext: (task: JudgeTask) => NextFunction;
@@ -38,7 +38,9 @@ export class JudgeTask {
     clean: (() => Promise<any>)[];
     data: FileInfo[];
     folder: string;
-    config: ProblemConfigFile & { problemOwner: number };
+    config: ParsedConfig;
+    meta: JudgeMeta;
+    files?:Record<string, string>;
     next: (data: Partial<JudgeResultBody>) => void;
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
@@ -58,7 +60,8 @@ export class JudgeTask {
             this.code = { content: this.request.code };
             this.data = this.request.data;
             this.source = this.request.source;
-            this.config = this.request.config;
+            this.meta = this.request.meta;
+            this.files = this.request.files;
             this.input = this.request.input;
             let tid = this.request.contest?.toString() || '';
             if (tid === '000000000000000000000000') tid = '';
@@ -77,9 +80,7 @@ export class JudgeTask {
             fs.ensureDirSync(this.tmpdir);
             tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
-            this.stat.cache_start = new Date();
-            if (tid === '000000000000000000000001') await this.doHack();
-            else await this.doSubmission();
+            await this.doSubmission();
         } catch (e) {
             if (e instanceof CompileError) {
                 this.next({ compilerText: compilerText(e.stdout, e.stderr) });
@@ -109,11 +110,10 @@ export class JudgeTask {
     }
 
     async doSubmission() {
+        this.stat.cache_start = new Date();
         this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
-        if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
-            const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
-            if (!id) throw new SystemError('Submission File Not Found');
-            const target = await this.session.fetchFile(id);
+        if (this.files?.code) {
+            const target = await this.session.fetchFile(this.files?.code);
             this.code = { src: target };
             this.clean.push(() => fs.remove(target));
         }
@@ -122,39 +122,20 @@ export class JudgeTask {
             this.folder,
             {
                 detail: this.session.config.detail,
-                isSelfSubmission: this.config.problemOwner === this.request.uid,
-                ...this.config,
+                ...this.request.config,
             },
-            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
+            {
+                next: this.next,
+                isSelfSubmission: this.meta.problemOwner === this.request.uid,
+                key: md5(`${this.source}/${getConfig('secret')}`),
+            },
         );
         this.stat.judge = new Date();
-        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
+        const type = this.request.contest?.toString() === '000000000000000000000000' ? 'run'
+            : this.files?.hack
+                ? 'hack'
+                : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
-    }
-
-    async doHack() {
-        this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
-        if ((this.code as any).content.startsWith('@@hydro_submission_file@@')) {
-            const id = (this.code as any).content.split('@@hydro_submission_file@@')[1]?.split('#')?.[0];
-            if (!id) throw new SystemError('Submission File Not Found');
-            const target = await this.session.fetchFile(id);
-            this.code = { src: target };
-            this.clean.push(() => fs.remove(target));
-        }
-        this.stat.read_cases = new Date();
-        this.config = await readCases(
-            this.folder,
-            {
-                detail: this.session.config.detail,
-                isSelfSubmission: this.config.problemOwner === this.request.uid,
-                ...this.config,
-            },
-            { next: this.next, key: md5(`${this.source}/${getConfig('secret')}`) },
-        );
-        this.stat.judge = new Date();
-        const type = typeof this.input === 'string' ? 'run' : this.config.type || 'default';
-        if (type !== 'default') throw new FormatError('Cannot hack: only type=default allowed');
-        await judge.hack.judge(this);
     }
 }

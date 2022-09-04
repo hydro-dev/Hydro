@@ -5,7 +5,7 @@
 <div class="row">
   <div class="medium-9 columns">
     {% include 'record_detail_status.html' %}
-    {% if rdoc['code'] %}
+    {% if rdoc['code'] or rdoc.files.code %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Code') }}</h1>
@@ -13,11 +13,9 @@
           <a class="primary rounded button" href="?download=true"><span class="icon icon-download"></span> {{ _('Download') }}</a>
         </div>
       </div>
-      {% if not rdoc.code.startsWith('@@hydro_submission_file@@') %}
-        <div class="section__body">
-          <pre><code class="line-numbers language-{{ model.setting.langs[rdoc.lang].highlight }}">{{ rdoc['code'] }}</code></pre>
-        </div>
-      {% endif %}
+      <div class="section__body">
+        <pre><code class="line-numbers language-{{ model.setting.langs[rdoc.lang].highlight }}">{{ rdoc['code'] }}</code></pre>
+      </div>
     </div>
     {% endif %}
   </div>
@@ -46,6 +44,17 @@
                 <span class="icon icon-close"></span> {{ _('Cancel Score') }}
               </button>
             </form>
+          </li>
+        </ol>
+      </div>
+    {% endif %}
+    {% if handler.user.hasPerm(perm.PERM_SUBMIT_PROBLEM) and pdoc.config.hackable and rdoc.status === STATUS.STATUS_ACCEPTED %}
+      <div class="section__body no-padding">
+        <ol class="menu">
+          <li class="menu__item">
+            <a class="menu__link" href="{{ url('problem_hack', pid=pdoc.pid|default(pdoc.docId), rid=rdoc._id) }}">
+              <span class="icon icon-close"></span> {{ _('Hack') }}
+            </a>
           </li>
         </ol>
       </div>

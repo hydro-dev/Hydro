@@ -11,11 +11,11 @@ import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
     ContestNotFoundError, ContestNotLiveError,
     ForbiddenError, NoProblemError, NotFoundError,
-    PermissionError, ProblemNotFoundError, SolutionNotFoundError,
+    PermissionError, ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError,
     ValidationError,
 } from '../error';
 import {
-    ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, User,
+    ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
 import { isPid, parsePid as convertPid } from '../lib/validator';
@@ -498,9 +498,12 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 throw new BadRequestError('unable to run pretest');
             }
         }
+        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
+        const files: Record<string, string> = {};
         if (!code) {
             const file = this.request.files?.file;
-            if (!file) throw new ValidationError('code');
+            if (!file || file.size === 0) throw new ValidationError('code');
             const config = this.response.body.pdoc.config;
             if (typeof config !== 'object' || config === null) throw new BadRequestError('Incorrect problem config');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
@@ -508,15 +511,16 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (file.size > 65535 || await isBinaryFile(file.filepath, file.size)) {
                 const id = nanoid();
                 await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
-                code = `@@hydro_submission_file@@${this.user._id}/${id}#${file.originalFilename}`;
+                files.code = `${this.user._id}/${id}#${file.originalFilename}`;
             } else {
                 // TODO auto detect & convert encoding
                 code = await readFile(file.filepath, 'utf-8');
             }
-        } else if (code.startsWith('@@hydro_submission_file@@')) throw new ValidationError('code');
-        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
-        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, lang, code, true, pretest ? input : tid, tid && !pretest);
+        }
+        const rid = await record.add(
+            domainId, this.pdoc.docId, this.user._id, lang, code, true,
+            pretest ? { input, type: 'pretest' } : { contest: tid, files, type: tid ? 'contest' : 'judge' },
+        );
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
@@ -534,6 +538,61 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             this.response.body = { rid };
             this.response.redirect = this.url('record_detail', { rid });
         }
+    }
+}
+
+export class ProblemHackHandler extends ProblemDetailHandler {
+    rdoc: RecordDoc;
+
+    @param('rid', Types.ObjectID)
+    @param('tid', Types.ObjectID, true)
+    async prepare(domainId: string, rid: ObjectID, tid?: ObjectID) {
+        this.rdoc = await record.get(domainId, rid);
+        if (!this.rdoc || this.rdoc.pid !== this.pdoc.docId
+            || this.rdoc.contest?.toString() !== tid?.toString()) throw new RecordNotFoundError(domainId, rid);
+        if (tid) {
+            if (this.tdoc.rule !== 'codeforces') throw new ForbiddenError('This contest is not hackable.');
+            if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        }
+        if (this.rdoc.uid === this.user._id) throw new BadRequestError('You cannot hack your own submission');
+        if (this.psdoc.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You must accept this problem before hacking.');
+        if (this.rdoc.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You cannot hack a unsuccessful submission.');
+    }
+
+    async get() {
+        this.response.template = 'problem_hack.html';
+        this.response.body = {
+            pdoc: this.pdoc,
+            udoc: this.udoc,
+            title: this.pdoc.title,
+            page_name: this.tdoc ? 'contest_detail_problem_hack' : 'problem_hack',
+        };
+    }
+
+    @param('input', Types.String, true)
+    @param('tid', Types.ObjectID, true)
+    async post(domainId: string, input = '', tid?: ObjectID) {
+        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
+        const id = `${this.user._id}/${nanoid()}`;
+        console.log(input);
+        if (this.request.files?.file?.size > 0) {
+            const file = this.request.files.file;
+            if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');
+            await storage.put(`submission/${id}`, file.filepath, this.user._id);
+        } else if (input) {
+            await storage.put(`submission/${id}`, Buffer.from(input), this.user._id);
+        }
+        const rid = await record.add(
+            domainId, this.pdoc.docId, this.user._id,
+            this.rdoc.lang, this.rdoc.code, true,
+            { contest: tid, type: 'hack', files: { hack: `${id}#input.txt` } },
+        );
+        const rdoc = await record.get(domainId, rid);
+        // TODO contest: update status;
+        bus.broadcast('record/change', rdoc);
+        this.response.body = { rid };
+        this.response.redirect = this.url('record_detail', { rid });
     }
 }
 
@@ -935,6 +994,7 @@ export async function apply() {
     Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
     Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
+    Route('problem_hack', '/p/:pid/hack/:rid', ProblemHackHandler, PERM.PERM_SUBMIT_PROBLEM);
     Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     Route('problem_config', '/p/:pid/config', ProblemConfigHandler);
     Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
