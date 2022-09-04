@@ -7,7 +7,7 @@ tmp_dir:
   type: text
   name: tmp_dir
   desc: Temp directory
-  default: $TEMP/hydro/judge.tmp
+  default: $TEMP/hydro/judge
 tmpfs_size:
   type: text
   name: tmpfs_size
