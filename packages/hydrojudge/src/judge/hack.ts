@@ -23,23 +23,24 @@ export async function judge(ctx: Context) {
         compile(session.getLang(ctx.lang), ctx.code, userExtraFiles, ctx.next).then(markCleanup),
         compileChecker(session.getLang, config.checker_type, config.checker, judgeExtraFiles).then(markCleanup),
         compileValidator(session.getLang, config.validator, judgeExtraFiles).then(markCleanup),
-        ctx.session.fetchFile(ctx.input),
+        ctx.session.fetchFile(ctx.files.hack),
     ]);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const validateResult = await run(
         validator.execute,
         {
             stdin: { src: input },
-            copyIn: judgeExtraFiles,
+            copyIn: { ...validator.copyIn, ...judgeExtraFiles },
             time: parseTimeMS(ctx.config.time || '1s') * execute.time,
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
     );
+    console.log(validateResult);
     if (validateResult.status !== STATUS.STATUS_ACCEPTED) {
-        const message = `${validateResult.files.stdout || ''}\n${validateResult.files.stderr || ''}`.trim();
+        const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
-    const copyIn = { ...ctx.execute.copyIn };
+    const copyIn = { ...execute.copyIn };
     const { filename } = ctx.config;
     if (filename) copyIn[`${filename}.in`] = { src: input };
     const res = await run(
@@ -47,7 +48,7 @@ export async function judge(ctx: Context) {
         {
             stdin: filename ? null : { src: input },
             copyIn,
-            copyOutCached: [filename ? `${filename}.out?` : 'stdout'],
+            copyOutCached: [filename ? `${filename}.out?` : 'stdout', 'stderr'],
             time: parseTimeMS(ctx.config.time || '1s') * execute.time,
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
@@ -55,7 +56,7 @@ export async function judge(ctx: Context) {
     const { code, time, memory } = res;
     let { status } = res;
     let stdout: CmdFile = { fileId: res.fileIds[filename ? `${filename}.out` : 'stdout'] };
-    const stderr = { fileId: res.fileIds['stderr'] };
+    console.log(res);
     if (!stdout.fileId) stdout = { content: '' };
     let message: any = '';
     if (status === STATUS.STATUS_ACCEPTED) {
@@ -68,9 +69,9 @@ export async function judge(ctx: Context) {
                 execute: checker.execute,
                 copyIn: checker.copyIn || {},
                 input: { src: input },
-                output: null,
+                output: { content: '' },
                 user_stdout: stdout,
-                user_stderr: stderr,
+                user_stderr: { fileId: res.fileIds['stderr'] },
                 score: 100,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: '0' },

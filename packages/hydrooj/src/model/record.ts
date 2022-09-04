@@ -8,7 +8,7 @@ import {
 } from 'mongodb';
 import { ProblemNotFoundError } from '../error';
 import {
-    FileInfo, ProblemConfigFile, RecordDoc,
+    FileInfo, JudgeMeta, JudgeRequest, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -67,6 +67,7 @@ class RecordModel {
         if (!rdoc) return null;
         let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
+        const meta: JudgeMeta = { problemOwner: 1 };
         if (rdoc.pid) {
             let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
             if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
@@ -74,7 +75,7 @@ class RecordModel {
                 pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
                 if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
             }
-            (config as any).problemOwner = pdoc.owner;
+            meta.problemOwner = pdoc.owner;
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
@@ -103,12 +104,19 @@ class RecordModel {
             config,
             data,
             source,
-        });
+            meta,
+        } as unknown as JudgeRequest);
     }
 
     static async add(
         domainId: string, pid: number, uid: number,
-        lang: string, code: string, addTask: boolean, tidOrInput?: ObjectID | string, isContest = false,
+        lang: string, code: string, addTask: boolean,
+        args: {
+            contest?: ObjectID,
+            input?: string,
+            files?: Record<string, string>,
+            type: 'judge' | 'contest' | 'pretest' | 'hack',
+        } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
@@ -128,15 +136,16 @@ class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
-        if (typeof tidOrInput === 'string') {
-            // is Run
-            data.input = tidOrInput;
+        if (args.contest) data.contest = args.contest;
+        if (args.files) data.files = args.files;
+        if (args.type === 'pretest') {
+            data.input = args.input || '';
             data.contest = new ObjectID('000000000000000000000000');
-        } else data.contest = tidOrInput;
+        }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, typeof tidOrInput === 'string' ? -20 : (isContest ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {});
+            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
+            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {});
         }
         return res.insertedId;
     }

@@ -1,7 +1,7 @@
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { getConfig } from './config';
-import { CompileError, FormatError } from './error';
+import { FormatError } from './error';
 import { Context, ContextSubTask } from './judge/interface';
 import { NormalizedCase, NormalizedSubtask } from './utils';
 
@@ -60,12 +60,6 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
 export const runFlow = async (ctx: Context, task: Task) => {
     if (!ctx.config.subtasks.length) throw new FormatError('Problem data not found.');
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    if (ctx.config.template && 'content' in ctx.code) {
-        if (ctx.config.template[ctx.lang]) {
-            const tpl = ctx.config.template[ctx.lang];
-            ctx.code.content = tpl[0] + ctx.code.content + tpl[1];
-        } else throw new CompileError('Language not supported by provided templates');
-    }
     await task.compile();
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const tasks = [];

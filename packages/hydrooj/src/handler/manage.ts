@@ -110,7 +110,7 @@ class SystemScriptHandler extends SystemHandler {
             logger.warn('You are using the legacy script validation API, which will be dropped in the future.');
             validate(global.Hydro.script[id].validate, args);
         }
-        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, raw);
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
         const report = (data) => judge.next({ domainId, rid, ...data });
         report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();

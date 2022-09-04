@@ -1,0 +1,33 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'pdoc', pdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Hack a submission') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post" enctype="multipart/form-data">
+          {{ form.form_textarea({label:'Input', columns:12, name:'input', extra_class:'monospace', autofocus:true}) }}
+          <div class="row">
+            <div class="medium-12 columns">
+              <p>{{ _('Or upload a file:') }} <input type="file" name="file"></p>
+              <br />
+            </div>
+          </div>
+          <div class="row"><div class="columns">
+            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+            <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% set owner_udoc = udoc %}
+    {% include "partials/problem_sidebar.html" %}
+  </div>
+</div>
+
+{% endblock %}

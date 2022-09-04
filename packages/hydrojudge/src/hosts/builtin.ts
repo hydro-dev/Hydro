@@ -20,6 +20,7 @@ const logger = new Logger('judge');
 const session = {
     config: { detail: system.get('hydrojudge.detail') },
     async fetchFile(name: string) {
+        name = name.split('#')[0];
         const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
         await storage.get(`submission/${name}`, target);
         return target;

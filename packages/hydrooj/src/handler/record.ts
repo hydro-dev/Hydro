@@ -107,13 +107,34 @@ class RecordListHandler extends Handler {
 }
 
 class RecordDetailHandler extends Handler {
+    rdoc: RecordDoc;
+    @param('rid', Types.ObjectID)
+    async prepare(domainId: string, rid: ObjectID) {
+        this.rdoc = await record.get(domainId, rid);
+        if (!this.rdoc) throw new RecordNotFoundError(rid);
+    }
+
+    async download() {
+        for (const file of ['code', 'hack']) {
+            if (!this.rdoc.files?.[file]) continue;
+            const [id, filename] = this.rdoc.files?.[file]?.split('#') || [];
+            // eslint-disable-next-line no-await-in-loop
+            this.response.redirect = await storage.signDownloadLink(`submission/${id}`, filename || file, true, 'user');
+            return;
+        }
+        const lang = langs[this.rdoc.lang]?.pretest || this.rdoc.lang;
+        this.response.body = this.rdoc.code;
+        this.response.type = 'text/plain';
+        this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${this.rdoc.lang}`}"`;
+    }
+
     @param('rid', Types.ObjectID)
     @param('download', Types.Boolean)
+    // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
-        const rdoc = await record.get(domainId, rid);
-        if (!rdoc) throw new RecordNotFoundError(rid);
+        const rdoc = this.rdoc;
         let tdoc;
-        if (rdoc.contest?.toHexString() === '000000000000000000000000') {
+        if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
             tdoc = await contest.get(domainId, rdoc.contest);
@@ -136,21 +157,9 @@ class RecordDetailHandler extends Handler {
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
+            rdoc.files = {};
             rdoc.compilerTexts = [];
-        }
-
-        if (download && rdoc.code.startsWith('@@hydro_submission_file@@')) {
-            const [id, filename] = rdoc.code.split('@@hydro_submission_file@@')[1].split('#');
-            this.response.redirect = await storage.signDownloadLink(`submission/${id}`, filename || 'code', true, 'judge');
-            return;
-        }
-        if (download) {
-            const lang = langs[rdoc.lang]?.pretest || rdoc.lang;
-            this.response.body = rdoc.code;
-            this.response.type = 'text/plain';
-            this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${rdoc.lang}`}"`;
-            return;
-        }
+        } else if (download) return await this.download();
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -165,34 +174,28 @@ class RecordDetailHandler extends Handler {
     async postRejudge(domainId: string, rid: ObjectID) {
         this.checkPerm(PERM.PERM_REJUDGE);
         const priority = await record.submissionPriority(this.user._id, -20);
-        const rdoc = await record.get(domainId, rid);
-        if (rdoc) {
-            const isContest = rdoc.contest && rdoc.contest.toHexString() !== '000000000000000000000000';
-            await record.reset(domainId, rid, true);
-            await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
-        }
+        const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
+        await record.reset(domainId, rid, true);
+        await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
         this.back();
     }
 
     @param('rid', Types.ObjectID)
     async postCancel(domainId: string, rid: ObjectID) {
-        const rdoc = await record.get(domainId, rid);
-        if (rdoc) {
-            const $set = {
-                status: STATUS.STATUS_CANCELED,
-                score: 0,
-                time: 0,
-                memory: 0,
-                testCases: [{
-                    id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
-                }],
-            };
-            const [latest] = await Promise.all([
-                record.update(domainId, rid, $set),
-                TaskModel.deleteMany({ rid: rdoc._id }),
-            ]);
-            if (latest) await postJudge(latest);
-        }
+        const $set = {
+            status: STATUS.STATUS_CANCELED,
+            score: 0,
+            time: 0,
+            memory: 0,
+            testCases: [{
+                id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
+            }],
+        };
+        const [latest] = await Promise.all([
+            record.update(domainId, rid, $set),
+            TaskModel.deleteMany({ rid: this.rdoc._id }),
+        ]);
+        if (latest) await postJudge(latest);
         this.back();
     }
 }

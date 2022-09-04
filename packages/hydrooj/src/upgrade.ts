@@ -830,6 +830,17 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _67_78() {
+        const rdocs = RecordModel.coll.find({ code: /^@@hydro_submission_file@@/ });
+        let rdoc;
+        while (rdoc = await rdocs.next()) { // eslint-disable-line
+            await RecordModel.update(rdoc.domainId, rdoc._id, {
+                files: { code: rdoc.code.split('@@hydro_submission_file@@')[1] },
+                code: '',
+            });
+        }
+        return true;
+    },
 ];
 
 export default scripts;
