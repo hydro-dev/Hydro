@@ -3,7 +3,7 @@ import { SandboxRequest, SandboxResult, SandboxVersion } from './interface';
 
 export class SandboxClient {
     constructor(public baseURL: string) {
-        if (baseURL.endsWith('/')) baseURL = baseURL.substring(0, baseURL.length - 1);
+        if (baseURL.endsWith('/')) this.baseURL = baseURL.substring(0, baseURL.length - 1);
     }
 
     public run(req: SandboxRequest): Promise<SandboxResult[]> {
