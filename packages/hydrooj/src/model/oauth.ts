@@ -1,12 +1,6 @@
-import { Collection } from 'mongodb';
 import db from '../service/db';
 
-interface OauthMap {
-    _id: string, // source openId
-    uid: number, // target uid
-}
-
-const coll: Collection<OauthMap> = db.collection('oauth');
+const coll = db.collection('oauth');
 
 class OauthModel {
     static async get(_id: string) {

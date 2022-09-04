@@ -517,7 +517,7 @@ export interface JudgeResultBody {
     time?: number;
     memory?: number;
     message?: string | JudgeMessage;
-    compilerText?: string,
+    compilerText?: string;
 }
 
 export interface Task {
@@ -568,6 +568,13 @@ export interface OpCountDoc {
     opcount: number;
 }
 
+export interface OauthMap {
+    /** source openId */
+    _id: string;
+    /** target uid */
+    uid: number;
+}
+
 export interface Collections {
     'blacklist': BlacklistDoc;
     'contest': Tdoc;
@@ -582,11 +589,11 @@ export interface Collections {
     'user.preference': UserPreferenceDoc;
     'vuser': VUdoc;
     'user.group': GDoc;
-    'check': any;
+    'check': System;
     'message': MessageDoc;
     'token': TokenDoc;
     'status': any;
-    'oauth': any;
+    'oauth': OauthMap;
     'system': System;
     'task': Task;
     'storage': FileNode;
@@ -685,7 +692,6 @@ export interface HydroGlobal {
     script: Record<string, Script>,
     service: Service,
     lib: Lib,
-    stat: any,
     ui: UI,
     error: typeof import('./error'),
     Logger: typeof import('./logger').Logger,
