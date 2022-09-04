@@ -6,16 +6,10 @@ import { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { del, run } from '../sandbox';
 import { NormalizedCase } from '../utils';
-import { Context, ContextSubTask } from './interface';
+import { Context } from './interface';
 
-const Score = {
-    sum: (a: number, b: number) => (a + b),
-    max: Math.max,
-    min: Math.min,
-};
-
-function judgeCase(c: NormalizedCase, sid: string) {
-    return async (ctx: Context, ctxSubtask: ContextSubTask) => {
+function judgeCase(c: NormalizedCase) {
+    return async (ctx: Context) => {
         const chars = /[a-zA-Z0-9_.-]/;
         const name = (ctx.config.filename && /^[a-zA-Z0-9-_#.]+$/.test(ctx.config.filename))
             ? ctx.config.filename.replace('#', c.id.toString())
@@ -61,20 +55,14 @@ function judgeCase(c: NormalizedCase, sid: string) {
             }));
         }
         await Promise.all(fileIds.map(del)).catch(() => { /* Ignore file doesn't exist */ });
-        ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
-        ctxSubtask.status = Math.max(ctxSubtask.status, status);
-        if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
-        ctx.next({
-            case: {
-                id: c.id,
-                status,
-                score: 0,
-                time: 0,
-                memory: 0,
-                message,
-            },
-            addProgress: 100 / ctx.config.count,
-        });
+        return {
+            id: c.id,
+            status,
+            score,
+            time: 0,
+            memory: 0,
+            message,
+        };
     };
 }
 

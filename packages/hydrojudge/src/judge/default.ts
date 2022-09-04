@@ -10,15 +10,9 @@ import signals from '../signals';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
-const Score = {
-    sum: (a: number, b: number) => (a + b),
-    max: Math.max,
-    min: Math.min,
-};
-
 const logger = new Logger('judge/default');
 
-function judgeCase(c: NormalizedCase, sid: string) {
+function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { filename } = ctx.config;
         const copyIn = { ...ctx.execute.copyIn };
@@ -70,28 +64,9 @@ function judgeCase(c: NormalizedCase, sid: string) {
         ).catch(() => { /* Ignore file doesn't exist */ });
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
-            await runner(ctx, ctxSubtask);
-            return;
+            return await runner(ctx, ctxSubtask);
         }
-        ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
-        ctxSubtask.status = Math.max(ctxSubtask.status, status);
-        if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
-        ctx.total_time += time;
-        ctx.total_memory = Math.max(ctx.total_memory, memory);
-        ctx.next({
-            case: {
-                id: c.id,
-                subtaskId: ctxSubtask.subtask.id,
-                status,
-                score,
-                time,
-                memory,
-                message,
-            },
-            addProgress: 100 / ctx.config.count,
-        });
-        if (ctx.request.rejudged) return; // Skip analysis for rejudged submissions
-        if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+        if (!ctx.request.rejudged && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             const langConfig = ctx.session.getLang(ctx.lang);
             if (langConfig.analysis && !ctx.analysis) {
                 ctx.analysis = true;
@@ -117,6 +92,15 @@ function judgeCase(c: NormalizedCase, sid: string) {
                 }
             }
         }
+        return {
+            id: c.id,
+            subtaskId: ctxSubtask.subtask.id,
+            status,
+            score,
+            time,
+            memory,
+            message,
+        };
     };
 }
 
