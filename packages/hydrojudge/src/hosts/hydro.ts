@@ -112,7 +112,7 @@ export default class Hydro {
     async fetchFile(name: string) {
         name = name.split('#')[0];
         const res = await this.post('judge/code', { id: name });
-        const target = path.join('/tmp/hydro/judge', name.replace(/\//g, '_'));
+        const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
         const w = fs.createWriteStream(target);
         this.get(res.body.url).pipe(w);
         await new Promise((resolve, reject) => {
