@@ -18,13 +18,14 @@ export async function judge({
         answers = yaml.load(answer) as any;
         assert(typeof answers === 'object');
     } catch (e) {
-        return end({
+        end({
             status: STATUS.STATUS_WRONG_ANSWER,
             score: 0,
             message: 'Unable to parse answer.',
             time: 0,
             memory: 0,
         });
+        return null;
     }
     let totalScore = 0;
     let totalStatus = 0;
@@ -107,7 +108,8 @@ export async function judge({
             }
         }
     }
-    return end({
+    end({
         status: totalStatus, score: totalScore, time: 0, memory: 0,
     });
+    return null;
 }

@@ -6,15 +6,8 @@ import { Execute } from '../interface';
 import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
-import { findFileSync, NormalizedCase } from '../utils';
+import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
-
-const testlibSrc = findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h');
-const Score = {
-    sum: (a: number, b: number) => (a + b),
-    max: Math.max,
-    min: Math.min,
-};
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
@@ -55,23 +48,15 @@ function judgeCase(c: NormalizedCase) {
             message = result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
         }
-        ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, score);
-        ctxSubtask.status = Math.max(ctxSubtask.status, status);
-        ctx.total_time += time;
-        ctx.total_memory = Math.max(ctx.total_memory, memory);
-        ctx.next({
-            status: STATUS.STATUS_JUDGING,
-            case: {
-                id: c.id,
-                subtaskId: ctxSubtask.subtask.id,
-                status,
-                score,
-                time,
-                memory,
-                message,
-            },
-            addProgress: 100 / ctx.config.count,
-        });
+        return {
+            id: c.id,
+            subtaskId: ctxSubtask.subtask.id,
+            status,
+            score,
+            time,
+            memory,
+            message,
+        };
     };
 }
 
@@ -84,10 +69,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
         const userExtraFiles = Object.fromEntries(
             (ctx.config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
         );
-        const interactorFiles = {
-            'testlib.h': { src: testlibSrc },
-            user_code: ctx.code,
-        };
+        const interactorFiles = { user_code: ctx.code };
         for (const file of ctx.config.judge_extra_files) {
             interactorFiles[basename(file)] = { src: file };
         }
@@ -95,7 +77,6 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
             compile(ctx.session.getLang(ctx.lang), ctx.code, userExtraFiles, ctx.next).then(markCleanup),
             compileInteractor(ctx.session.getLang, ctx.config.interactor, interactorFiles).then(markCleanup),
         ]);
-        ctx.clean.push(ctx.executeUser.clean, ctx.executeInteractor.clean);
     },
     judgeCase,
 });

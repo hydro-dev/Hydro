@@ -1,5 +1,6 @@
 import Queue from 'p-queue';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import type { JudgeResultBody } from 'hydrooj';
 import { getConfig } from './config';
 import { FormatError } from './error';
 import { Context, ContextSubTask } from './judge/interface';
@@ -7,10 +8,16 @@ import { NormalizedCase, NormalizedSubtask } from './utils';
 
 interface Task {
     compile: () => Promise<void>;
-    judgeCase: (c: NormalizedCase, sid: string) => (
-        (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => Promise<any>
+    judgeCase: (c: NormalizedCase) => (
+        (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => Promise<JudgeResultBody['case']>
     )
 }
+
+const Score = {
+    sum: (a: number, b: number) => (a + b),
+    max: Math.max,
+    min: Math.min,
+};
 
 function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['judgeCase']) {
     return async (ctx: Context) => {
@@ -24,26 +31,28 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
         };
         const cases = [];
         for (const cid in subtask.cases) {
-            const runner = judgeCase(subtask.cases[cid], subtask.id.toString() ?? sid);
+            const runner = judgeCase(subtask.cases[cid]);
             cases.push(ctx.queue.add(async () => {
-                if (ctx.errored
+                const res = (ctx.errored
                     || (subtask.type === 'min' && ctxSubtask.score === 0)
                     || (subtask.type === 'max' && ctxSubtask.score === subtask.score)
-                    || (subtask.if || []).filter((i) => ctx.failed[i]).length
-                ) {
-                    ctx.next({
-                        case: {
-                            id: subtask.cases[cid].id,
-                            status: STATUS.STATUS_CANCELED,
-                            subtaskId: subtask.id,
-                            score: 0,
-                            time: 0,
-                            memory: 0,
-                            message: '',
-                        },
-                        addProgress: 100 / ctx.config.count,
-                    });
-                } else await runner(ctx, ctxSubtask, runner);
+                    || (subtask.if || []).filter((i) => ctx.failed[i]).length)
+                    ? {
+                        id: subtask.cases[cid].id,
+                        status: STATUS.STATUS_CANCELED,
+                        subtaskId: subtask.id,
+                        score: 0,
+                        time: 0,
+                        memory: 0,
+                        message: '',
+                    } : await runner(ctx, ctxSubtask, runner);
+                if (!res) return;
+                ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, res.score);
+                ctxSubtask.status = Math.max(ctxSubtask.status, res.status);
+                if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
+                ctx.total_time += res.time;
+                ctx.total_memory = Math.max(ctx.total_memory, res.memory);
+                ctx.next({ case: res, addProgress: 100 / ctx.config.count });
             }));
         }
         try {
