@@ -223,7 +223,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async cleanup() {
-        logger.info('Judge daemon disconnected from ', this.ip);
+        logger.info('Judge daemon disconnected from ', this.request.ip);
         bus.off('system/setting', this.sendLanguageConfig);
         if (this.processing) {
             await record.reset(this.processing.domainId, this.processing.rid, false);

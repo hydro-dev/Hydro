@@ -28,16 +28,17 @@ export default class Hydro {
         this.config.cookie = this.config.cookie || '';
         this.config.last_update_at = this.config.last_update_at || 0;
         if (!this.config.server_url.startsWith('http')) this.config.server_url = `http://${this.config.server_url}`;
-        if (!this.config.server_url.endsWith('/')) this.config.server_url = `${this.config.server_url}/`;
         this.getLang = this.getLang.bind(this);
     }
 
-    get(url) {
-        return superagent.get(this.config.server_url + url).set('Cookie', this.config.cookie);
+    get(url: string) {
+        url = new URL(url, this.config.server_url).toString();
+        return superagent.get(url).set('Cookie', this.config.cookie);
     }
 
-    post(url, data) {
-        return superagent.post(this.config.server_url + url).send(data)
+    post(url: string, data: any) {
+        url = new URL(url, this.config.server_url).toString();
+        return superagent.post(url).send(data)
             .set('Cookie', this.config.cookie)
             .set('Accept', 'application/json');
     }
@@ -51,7 +52,7 @@ export default class Hydro {
     async cacheOpen(source: string, files: any[], next?) {
         await Lock.acquire(`${this.config.host}/${source}`);
         try {
-            return this._cacheOpen(source, files, next);
+            return await this._cacheOpen(source, files, next);
         } finally {
             Lock.release(`${this.config.host}/${source}`);
         }
@@ -79,7 +80,7 @@ export default class Hydro {
         }
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
-            if (next) next({ message: 'Syncing testdata, please wait...' });
+            next?.({ message: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
             const res = await this.post(`/d/${domainId}/judge/files`, {
                 pid: +pid,
@@ -140,7 +141,7 @@ export default class Hydro {
 
     getNext(t: JudgeTask) {
         return (data: Partial<JudgeResultBody>) => {
-            log.debug('Next: %d %o', data);
+            log.debug('Next: %o', data);
             this.send(t.request.rid, 'next', data);
         };
     }
@@ -207,7 +208,7 @@ export default class Hydro {
 
     async ensureLogin() {
         try {
-            const res = await this.get('judge/files');
+            const res = await this.get('judge/files').set('Accept', 'application/json');
             // Redirected to /login
             if (res.body.url) await this.login();
         } catch (e) {
