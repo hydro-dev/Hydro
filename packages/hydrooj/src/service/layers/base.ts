@@ -18,7 +18,9 @@ export default async (ctx, next) => {
     const { domainId, domainInfo } = ctx;
     const isWebsocket = ctx.request.headers.upgrade === 'websocket';
     const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
-    const ip = ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip;
+    // ignore reverse_proxy chains
+    const ipHeader = ctx.request.headers[xff?.toLowerCase() || ''];
+    const ip = (typeof ipHeader === 'string' ? ipHeader : ipHeader[0] || ctx.request.ip).split(',')[0].trim();
     const host = ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host;
     const request: HydroRequest = {
         method: ctx.request.method.toLowerCase(),

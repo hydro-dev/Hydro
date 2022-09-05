@@ -1,7 +1,6 @@
 hydro.ac {
   reverse_proxy http://localhost:8888 {
-    header_up x-real-ip {remote_host}
-    # caddy now add x-forwarded-host automatically.
-    # header_up x-forwarded-host {hostport}
+    header_up x-forwarded-for {remote_host}
+    header_up x-forwarded-host {hostport}
   }
 }
