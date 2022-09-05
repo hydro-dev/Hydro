@@ -80,22 +80,25 @@ export const runFlow = async (ctx: Context, task: Task) => {
     ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
     ctx.failed = {};
     if (ctx.meta.hackRejudge) {
-        const subtask = ctx.config.subtasks.find((i) => i.cases.find((j) => j.input === ctx.meta.hackRejudge));
+        const subtask = ctx.config.subtasks.find((i) => i.cases.find((j) => j.input.endsWith(ctx.meta.hackRejudge)));
         const ctxSubtask = {
             subtask,
             status: STATUS.STATUS_ACCEPTED,
             score: subtask.type === 'min' ? subtask.score : 0,
         };
-        const runner = task.judgeCase(subtask.cases.find((i) => i.input === ctx.meta.hackRejudge));
+        const runner = task.judgeCase(subtask.cases.find((i) => i.input.endsWith(ctx.meta.hackRejudge)));
         const res = await runner(ctx, ctxSubtask, runner);
-        if (res) ctx.next({ case: res });
-        const totalScore = Math.sum(ctx.config.subtasks.map((i) => i.score));
-        if (ctxSubtask.status !== STATUS.STATUS_ACCEPTED) {
+        if (res) ctx.next(res);
+        if (res.status !== STATUS.STATUS_ACCEPTED) {
+            const totalScore = Math.sum(ctx.config.subtasks.map((i) => i.score));
             ctx.end({
                 status: STATUS.STATUS_HACKED,
                 score: totalScore - subtask.score,
             });
-        } else ctx.end({ nop: true });
+        } else {
+            ctx.next({ status: STATUS.STATUS_ACCEPTED });
+            ctx.end({ nop: true });
+        }
     } else {
         const tasks = [];
         for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid, task.judgeCase)(ctx));
