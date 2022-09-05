@@ -555,7 +555,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
             if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
         if (this.rdoc.uid === this.user._id) throw new BadRequestError('You cannot hack your own submission');
-        if (this.psdoc.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You must accept this problem before hacking.');
+        if (this.psdoc?.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You must accept this problem before hacking.');
         if (this.rdoc.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You cannot hack a unsuccessful submission.');
     }
 
@@ -575,7 +575,6 @@ export class ProblemHackHandler extends ProblemDetailHandler {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const id = `${this.user._id}/${nanoid()}`;
-        console.log(input);
         if (this.request.files?.file?.size > 0) {
             const file = this.request.files.file;
             if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');

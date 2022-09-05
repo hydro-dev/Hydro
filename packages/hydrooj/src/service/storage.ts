@@ -6,7 +6,9 @@ import {
     remove, stat, writeFile,
 } from 'fs-extra';
 import { lookup } from 'mime-types';
-import { BucketItem, Client, ItemBucketMetadata } from 'minio';
+import {
+    BucketItem, Client, CopyConditions, ItemBucketMetadata,
+} from 'minio';
 import { Logger } from '../logger';
 import { builtinConfig } from '../settings';
 import { MaybeArray } from '../typeutils';
@@ -237,6 +239,18 @@ class RemoteStorageService {
             extraFormData: policyResult.formData,
         };
     }
+
+    async copy(src: string, target: string) {
+        if (src.includes('..') || src.includes('//')) throw new Error('Invalid path');
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        try {
+            const result = await this.client.copyObject(this.opts.bucket, target, src, new CopyConditions());
+            return result;
+        } catch (e) {
+            e.stack = new Error().stack;
+            throw e;
+        }
+    }
 }
 
 class LocalStorageService {
@@ -313,6 +327,15 @@ class LocalStorageService {
 
     async list() {
         throw new Error('deprecated');
+    }
+
+    async copy(src: string, target: string) {
+        if (src.includes('..') || src.includes('//')) throw new Error('Invalid path');
+        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        src = resolve(this.dir, src);
+        target = resolve(this.dir, target);
+        await copyFile(src, target);
+        return { etag: target, lastModified: new Date() };
     }
 }
 

@@ -1,7 +1,12 @@
+import assert from 'assert';
+import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
-import { JudgeResultBody, RecordDoc, TestCase } from '../interface';
+import {
+    JudgeResultBody, ProblemConfigFile, RecordDoc, TestCase,
+} from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
+import { STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
@@ -17,28 +22,6 @@ import {
 import { sleep } from '../utils';
 
 const logger = new Logger('judge');
-
-export async function postJudge(rdoc: RecordDoc) {
-    if (typeof rdoc.input === 'string') return;
-    const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
-    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
-    if (rdoc.contest) {
-        await contest.updateStatus(
-            rdoc.domainId, rdoc.contest, rdoc.uid, rdoc._id,
-            rdoc.pid, rdoc.status, rdoc.score,
-        );
-    } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
-    const pdoc = (accept && updated)
-        ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
-        : await problem.get(rdoc.domainId, rdoc.pid);
-    if (pdoc) {
-        await Promise.all([
-            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
-        ]);
-    }
-    await bus.serial('record/judge', rdoc, updated);
-}
 
 export async function next(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectID(body.rid);
@@ -74,6 +57,58 @@ export async function next(body: Partial<JudgeResultBody>) {
     bus.broadcast('record/change', rdoc!, $set, $push);
 }
 
+export async function postJudge(rdoc: RecordDoc) {
+    if (typeof rdoc.input === 'string') return;
+    const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
+    const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
+    if (rdoc.contest) {
+        await contest.updateStatus(
+            rdoc.domainId, rdoc.contest, rdoc.uid, rdoc._id,
+            rdoc.pid, rdoc.status, rdoc.score,
+        );
+    } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
+    const pdoc = (accept && updated)
+        ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
+        : await problem.get(rdoc.domainId, rdoc.pid, undefined, true);
+    if (pdoc) {
+        await Promise.all([
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
+        ]);
+        if (rdoc.status === STATUS.STATUS_HACK_SUCCESSFUL) {
+            try {
+                const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
+                assert(config.subtasks instanceof Array);
+                const file = await storage.get(`submission/${rdoc.files.hack}`);
+                assert(file);
+                const hackSubtask = config.subtasks[config.subtasks.length - 1];
+                hackSubtask.cases ||= [];
+                const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
+                hackSubtask.cases.push({ input, output: '/dev/null' });
+                await Promise.all([
+                    problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
+                    problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+                ]);
+                // trigger rejudge
+                const rdocs = await record.getMulti(rdoc.domainId, {
+                    pid: rdoc.pid,
+                    status: STATUS.STATUS_ACCEPTED,
+                    contest: { $ne: new ObjectID('0'.repeat(24)) },
+                }).project({ _id: 1, contest: 1 }).toArray();
+                const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
+                await Promise.all(rdocs.map(
+                    (r) => record.judge(r.domainId, r._id, priority, r.contest ? { detail: false } : {}, { hackRejudge: input }),
+                ));
+            } catch (e) {
+                next({
+                    rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                });
+            }
+        }
+    }
+    await bus.serial('record/judge', rdoc, updated);
+}
+
 export async function end(body: Partial<JudgeResultBody>) {
     if (body.rid) body.rid = new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
@@ -90,9 +125,9 @@ export async function end(body: Partial<JudgeResultBody>) {
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
-    if (body.score !== undefined) $set.score = body.score;
-    if (body.time !== undefined) $set.time = body.time;
-    if (body.memory !== undefined) $set.memory = body.memory;
+    if (Number.isSafeInteger(body.score)) $set.score = body.score;
+    if (Number.isFinite(body.time)) $set.time = body.time;
+    if (Number.isFinite(body.memory)) $set.memory = body.memory;
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
     await sleep(100); // Make sure that all 'next' event already triggered
